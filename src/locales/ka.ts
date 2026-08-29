@@ -4496,6 +4496,10 @@ export const ka = {
     mpGameStartFailed: "თამაშის დაწყება ვერ მოხერხდა. ცადე თავიდან.",
     mpQuestionsNotFound: "კითხვები ვერ მოიძებნა",
     mpGameStartError: "თამაშის დაწყება ვერ მოხერხდა",
+    // "Most Likely To" vote rounds
+    mltWaitingVotes: "ველოდებით ყველას ხმას…",
+    mltMostVoted: "ყველაზე მეტი ხმა: {names}",
+    mltNoVotes: "ამ კითხვაზე ხმები არ არის",
     mpSomeonePlayedTrivia: "{name} ითამაშა შენი ტრივია",
     mpSomeonePlayedTriviaFallback: "ვიღაცამ ითამაშა შენი ტრივია",
     // FriendChatSheet

@@ -7,6 +7,7 @@ import { SafeAvatar } from '@/components/shared/SafeAvatar';
 import { DynamicIcon } from '@/components/shared/DynamicIcon';
 import { supabase } from '@/integrations/supabase/client';
 import { filterCategoriesForLanguage } from '@/utils/languageCategoryFilter';
+import { excludePartyCategories } from '@/config/partyCategories';
 import retroTvIcon from '@/assets/retro-tv-colored.png';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -40,7 +41,7 @@ export const ControllerLobby: React.FC = () => {
       .order('sort_order', { ascending: true });
 
     if (!error && data) {
-      setCategories(filterCategoriesForLanguage(data));
+      setCategories(excludePartyCategories(filterCategoriesForLanguage(data)));
     }
     setLoadingCategories(false);
   };

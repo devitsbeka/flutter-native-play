@@ -177,6 +177,19 @@ jobs:
           psql -h localhost -p 5432 -U postgres \
             -v ON_ERROR_STOP=1 -f supabase/tests/07-level17-backfill.sql
 
+      # "Most Likely To" vote settlement. The party category has no fixed
+      # correct answer — players vote for a player and the majority wins —
+      # so points are minted by a SECURITY DEFINER tally, not by the client.
+      # These assert the tally's contract: exactly-once per question, ties
+      # all win, timeouts never count, and a normal trivia question can
+      # never be "settled" into free points.
+      - name: Assert most-likely-to vote settlement
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -p 5432 -U postgres \
+            -v ON_ERROR_STOP=1 -f supabase/tests/09-most-likely-votes.sql
+
       # Nothing that moves money is reachable by an unauthenticated caller.
       # claim_daily_reward was: Supabase's bootstrap grants anon EXECUTE on
       # every new function in `public`, and `REVOKE ... FROM public` revokes

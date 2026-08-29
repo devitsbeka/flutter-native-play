@@ -16,6 +16,13 @@ import { useUserPresence } from "@/hooks/useUserPresence";
 import { createNotification } from "@/hooks/useNotifications";
 import { calculatePoints, FIRST_ANSWER_BONUS } from "@/utils/scoring";
 import { activeRoundPlayers } from "@/utils/roundPlayers";
+import { getMostLikelyPrompts } from "@/services/questionService";
+import {
+  MOST_LIKELY_CATEGORY_ID,
+  MOST_LIKELY_QUESTIONS_PER_ROUND,
+  MOST_LIKELY_VOTE_SENTINEL,
+  mostLikelyAnswerOptions,
+} from "@/config/partyCategories";
 
 // Helper to notify trivia creator when their trivia is played in multiplayer
 const notifyTriviaCreator = async (userTriviaId: string, playerId: string) => {
@@ -138,6 +145,71 @@ const resetAllParticipants = async (roomId: string, status: "playing" | "joined"
   }
 };
 
+// Whether a room is set to the "Most Likely To" party category.
+// game_rooms.category_id holds either the slug or the category UUID depending
+// on which path wrote it (see utils/categoryIdentity.ts), so a uuid has to be
+// resolved through the category row rather than compared to the slug.
+const isMostLikelyCategoryId = async (categoryId: string | null | undefined): Promise<boolean> => {
+  if (!categoryId) return false;
+  if (categoryId === MOST_LIKELY_CATEGORY_ID) return true;
+  if (!categoryId.includes("-")) return false; // some other slug
+  const { data } = await supabase
+    .from("categories")
+    .select("category_id")
+    .eq("id", categoryId)
+    .maybeSingle();
+  return data?.category_id === MOST_LIKELY_CATEGORY_ID;
+};
+
+// Build a "Most Likely To" round: vote prompts in the initiator's language,
+// with the room's player names as every question's answers. correctAnswer
+// carries the '__vote__' sentinel — there IS no correct answer until the
+// votes are tallied server-side (settle_most_likely_votes).
+const buildMostLikelyQuestions = async (
+  categoryId: string,
+  categoryName: string | null,
+  players: Array<{ user_id: string; nickname: string }>,
+  usedIds: string[],
+): Promise<TriviaQuestion[]> => {
+  const options = mostLikelyAnswerOptions(players);
+  if (options.length === 0) return [];
+  const prompts = await getMostLikelyPrompts(categoryId, MOST_LIKELY_QUESTIONS_PER_ROUND, usedIds);
+  return prompts.map(p => ({
+    id: p.id,
+    question: p.question,
+    correctAnswer: MOST_LIKELY_VOTE_SENTINEL,
+    incorrectAnswers: [],
+    allAnswers: options,
+    difficulty: "easy" as const,
+    category: categoryName || "Party",
+    iconSlug: p.iconSlug || undefined,
+  }));
+};
+
+// Settle a vote question (or, with null, every still-open one of the game).
+// Idempotent server-side; every device calls it when it sees all votes in and
+// exactly one claim wins. Cast needed until Supabase types are regenerated.
+// Exported for the results screen's catch-all sweep before complete_room_round.
+export const settleMostLikelyVotes = async (
+  roomId: string,
+  gameId: string,
+  questionIndex: number | null
+): Promise<boolean> => {
+  const { error } = await (supabase.rpc as unknown as (
+    fn: string,
+    args: Record<string, unknown>
+  ) => Promise<{ error: { message: string } | null }>)("settle_most_likely_votes", {
+    p_room_id: roomId,
+    p_game_id: gameId,
+    p_question_index: questionIndex,
+  });
+  if (error) {
+    console.error("[MP] settle_most_likely_votes failed:", error);
+    return false;
+  }
+  return true;
+};
+
 // Read-back barrier: non-host clients start fetching by game_id the moment
 // status flips to "playing", so every question row must be visible before that
 // write. A fixed setTimeout can't guarantee this - poll the actual count.
@@ -247,6 +319,13 @@ export interface PlayerAnswer {
   answered_at: string;
 }
 
+/** The settled outcome of one "Most Likely To" question, as written by
+ *  settle_most_likely_votes and delivered over realtime. */
+export interface VoteResult {
+  winners: string[];
+  voteCounts: Record<string, number>;
+}
+
 interface MultiplayerState {
   phase: GamePhase;
   currentRoom: GameRoom | null;
@@ -267,6 +346,9 @@ interface MultiplayerState {
   // Keyed by question_index -> user_id so late-arriving realtime inserts are
   // never dropped when a player has already advanced to the next question
   opponentAnswers: Record<number, Record<string, PlayerAnswer>>;
+  // "Most Likely To" rounds: settled outcomes by question_index for the
+  // CURRENT game (reset wherever opponentAnswers is). Empty on trivia rounds.
+  voteResults: Record<number, VoteResult>;
   hostIsObserver: boolean; // Host can't answer but earns points from player mistakes
   observerBonusThisRound: number; // Accumulated observer bonus for current round
   lastPlayedTriviaId: string | null; // Track the last played trivia ID for "already played" indicator
@@ -279,7 +361,11 @@ interface MultiplayerContextType extends MultiplayerState {
   loading: boolean;
   // Answers for the question currently on screen (derived from opponentAnswers)
   currentOpponentAnswers: Record<string, PlayerAnswer>;
-  
+  // True when the current round is a "Most Likely To" vote round — derived
+  // from the sentinel every vote question carries, so it is right on every
+  // device (initiator and synced) without resolving the category.
+  isMostLikelyRound: boolean;
+
   // Actions
   createRoom: (categoryId?: string, categoryName?: string, customQuestions?: any[], roomName?: string | null, roomIcon?: string | null, preferredRoomCode?: string) => Promise<GameRoom | null>;
   enterRoom: (roomCode: string) => Promise<boolean>;
@@ -313,6 +399,7 @@ const initialState: MultiplayerState = {
   lastQuestionResult: null,
   timePerQuestion: 15,
   opponentAnswers: {},
+  voteResults: {},
   hostIsObserver: false,
   observerBonusThisRound: 0,
   lastPlayedTriviaId: null,
@@ -332,6 +419,7 @@ const MultiplayerContext = createContext<MultiplayerContextType>({
   isHost: false,
   loading: false,
   currentOpponentAnswers: {},
+  isMostLikelyRound: false,
   createRoom: async () => { missingProvider(); return null; },
   enterRoom: async () => { missingProvider(); return false; },
   startGame: async () => missingProvider(),
@@ -402,6 +490,19 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
   const isHost = state.currentRoom?.host_user_id === user?.id;
   // NOTE: room-start sync no longer keys off isHost - any player can start a
   // round, and initiator-vs-follower is tracked via expectedGameIdRef instead
+
+  // A "Most Likely To" round is recognised by the sentinel its questions
+  // carry — identical on the initiator and on devices that synced the round
+  // from room_questions, with no category resolution needed.
+  const isMostLikelyRound =
+    state.questions.length > 0 &&
+    state.questions[0]?.correctAnswer === MOST_LIKELY_VOTE_SENTINEL;
+
+  // Vote bookkeeping for the settlement trigger below. Keyed by
+  // `${gameId}:${questionIndex}` so stale entries from finished rounds are
+  // never read and nothing needs clearing on round changes.
+  const ownVoteKeysRef = useRef<Set<string>>(new Set());
+  const settleRequestedRef = useRef<Set<string>>(new Set());
 
   // Ref for current question index to avoid stale closure in subscriptions
   const currentQuestionIndexRef = useRef(state.currentQuestionIndex);
@@ -514,6 +615,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
                 currentQuestionIndex: 0,
                 myScore: 0,
                 opponentAnswers: {},
+                voteResults: {},
                 lastQuestionResult: null, // CRITICAL: Reset to prevent answer reveal on new round
                 currentRoom: updated, // Sync room state immediately
               }));
@@ -619,6 +721,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
                   phase: "playing",
                   lastQuestionResult: null, // CRITICAL: Reset to prevent answer reveal on new round
                   opponentAnswers: {}, // Reset opponent answers for fresh round
+                  voteResults: {},
                   currentRoom: updated, // Ensure room state is synced
                   hostIsObserver: updated.host_is_observer || false, // FIX: Read from room for non-hosts
                   observerBonusThisRound: 0,
@@ -679,6 +782,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
               myScore: 0,
               lastQuestionResult: null,
               opponentAnswers: {},
+              voteResults: {},
               currentRoom: updated,
             }));
           }
@@ -711,6 +815,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
                 currentQuestionIndex: 0,
                 myScore: 0,
                 opponentAnswers: {},
+                voteResults: {},
                 lastQuestionResult: null,
                 currentRoom: freshRoom as GameRoom,
               }));
@@ -788,6 +893,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
                   phase: "playing",
                   lastQuestionResult: null,
                   opponentAnswers: {},
+                  voteResults: {},
                   currentRoom: freshRoom as GameRoom,
                 }));
               } else {
@@ -943,6 +1049,35 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           }
         }
       )
+      // "Most Likely To" settlements. Written only by settle_most_likely_votes;
+      // the moment the row exists every device learns the winners. Rows from a
+      // previous game (a stale settle racing a new round) are dropped by game id.
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "room_vote_results", filter: `room_id=eq.${roomId}` },
+        (payload) => {
+          const row = payload.new as {
+            game_id: string;
+            question_index: number;
+            winners: string[] | null;
+            vote_counts: Record<string, number> | null;
+          };
+          setState(prev => {
+            const currentGameId = prev.currentRoom?.current_game_id;
+            if (currentGameId && row.game_id !== currentGameId) return prev;
+            return {
+              ...prev,
+              voteResults: {
+                ...prev.voteResults,
+                [row.question_index]: {
+                  winners: row.winners || [],
+                  voteCounts: row.vote_counts || {},
+                },
+              },
+            };
+          });
+        }
+      )
       .subscribe();
     
     channelsRef.current = [roomChannel, participantsChannel, profilesChannel, answersChannel];
@@ -975,6 +1110,33 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         });
       });
 
+    // Backfill vote settlements the same way: a device syncing into a
+    // "Most Likely To" round mid-game missed the INSERT events for questions
+    // already settled. Cast needed until Supabase types are regenerated.
+    void (supabase as any)
+      .from("room_vote_results")
+      .select("game_id, question_index, winners, vote_counts")
+      .eq("room_id", roomId)
+      .then(({ data }: { data: Array<{ game_id: string; question_index: number; winners: string[] | null; vote_counts: Record<string, number> | null }> | null }) => {
+        if (!data || data.length === 0) return;
+        setState(prev => {
+          const currentGameId = prev.currentRoom?.current_game_id;
+          const merged = { ...prev.voteResults };
+          for (const row of data) {
+            if (currentGameId && row.game_id !== currentGameId) continue;
+            // Live events win over the backfill for the same question
+            merged[row.question_index] = merged[row.question_index] || {
+              winners: row.winners || [],
+              voteCounts: row.vote_counts || {},
+            };
+          }
+          return { ...prev, voteResults: merged };
+        });
+      })
+      .catch(() => {
+        // Table not migrated yet — vote rounds simply won't settle visibly
+      });
+
     return () => {
       if (fetchParticipantsDebounceRef.current) {
         clearTimeout(fetchParticipantsDebounceRef.current);
@@ -983,6 +1145,50 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       cleanupChannels();
     };
   }, [state.currentRoom?.id, user?.id, fetchParticipants, debouncedFetchParticipants, cleanupChannels]); // Removed state.phase and isHost - use refs instead
+
+  // "Most Likely To" settlement trigger. Every device watches the votes land
+  // (its own via ownVoteKeysRef, everyone else's via opponentAnswers) and
+  // calls the settle RPC for a question the moment all active players have a
+  // vote row for it. The RPC's claim makes concurrent calls harmless, so no
+  // device needs to be elected — whoever sees completeness first settles.
+  // Questions abandoned mid-round (a player quits without a vote row) are
+  // caught by the results screen's sweep instead.
+  useEffect(() => {
+    if (!isMostLikelyRound || !user) return;
+    const room = state.currentRoom;
+    const gameId = room?.current_game_id;
+    if (!room || !gameId) return;
+
+    const expectedVoters = activeRoundPlayers(participants, {
+      hostIsObserver: state.hostIsObserver,
+      hostUserId: room.host_user_id,
+    }).length;
+    if (expectedVoters === 0) return;
+
+    for (let idx = 0; idx < state.questions.length; idx++) {
+      if (state.voteResults[idx]) continue;
+      const key = `${gameId}:${idx}`;
+      if (settleRequestedRef.current.has(key)) continue;
+      const opponentVotes = Object.keys(state.opponentAnswers[idx] || {}).length;
+      const ownVote = ownVoteKeysRef.current.has(key) ? 1 : 0;
+      if (opponentVotes + ownVote < expectedVoters) continue;
+
+      settleRequestedRef.current.add(key);
+      void settleMostLikelyVotes(room.id, gameId, idx).then(ok => {
+        // A failed call may retry on the next answer/participant event
+        if (!ok) settleRequestedRef.current.delete(key);
+      });
+    }
+  }, [
+    isMostLikelyRound,
+    state.opponentAnswers,
+    state.voteResults,
+    state.questions.length,
+    state.currentRoom,
+    state.hostIsObserver,
+    participants,
+    user,
+  ]);
 
   // Generate room code locally - the server-side uniqueness RPC cost a full
   // round-trip on every create for a collision chance of ~1 in a billion
@@ -1291,6 +1497,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
               hostIsObserver: room.host_is_observer || false,
               lastQuestionResult: null,
               opponentAnswers: {},
+              voteResults: {},
             }));
           } else {
             // No questions yet, go to lobby
@@ -1576,6 +1783,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           myScore: 0,
           lastQuestionResult: null,
           opponentAnswers: {},
+          voteResults: {},
           hostIsObserver: shouldObserve,
           observerBonusThisRound: 0,
           justReturnedFromResults: false,
@@ -1617,33 +1825,50 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       // Old-question cleanup is independent of the question fetch - overlap
       // the two waits (the old rows belong to an already-finished round)
       const pendingDelete = safeDeleteRoomQuestions(roomId);
-      const result = await getQuestions({
-        mode: 'vs',
-        categorySlug: isMixedCategory ? undefined : (freshRoom.category_id || undefined),
-        count: questionCount,
-        excludeIds: usedIds,
-      });
 
-      if (result.questions.length === 0) {
+      let questions: TriviaQuestion[];
+      if (!isMixedCategory && await isMostLikelyCategoryId(freshRoom.category_id)) {
+        // "Most Likely To": vote prompts with the room's player names as the
+        // answers. Everything downstream (room_questions rows, non-host sync,
+        // rendering) rides the normal shape; the '__vote__' sentinel in
+        // correct_answer is what flips play into vote mode.
+        questions = await buildMostLikelyQuestions(
+          freshRoom.category_id!,
+          freshRoom.category_name,
+          activeRoundPlayers(participants, {
+            hostIsObserver: shouldObserve,
+            hostUserId: freshRoom.host_user_id,
+          }),
+          usedIds,
+        );
+      } else {
+        const result = await getQuestions({
+          mode: 'vs',
+          categorySlug: isMixedCategory ? undefined : (freshRoom.category_id || undefined),
+          count: questionCount,
+          excludeIds: usedIds,
+        });
+        // Map to TriviaQuestion format using FRESH category name
+        questions = result.questions.map(q => ({
+          id: q.id,
+          question: q.question,
+          correctAnswer: q.correctAnswer,
+          incorrectAnswers: q.incorrectAnswers,
+          allAnswers: q.allAnswers,
+          difficulty: q.difficulty,
+          category: freshRoom.category_name || q.category || "General",
+          iconSlug: q.iconSlug,
+          imageUrl: q.imageUrl,
+          videoUrl: q.videoUrl,
+          audioUrl: q.audioUrl,
+        }));
+      }
+
+      if (questions.length === 0) {
         await pendingDelete;
         toast.error(tStandalone("extra.mpQuestionsNotFound"));
         return;
       }
-
-      // Map to TriviaQuestion format using FRESH category name
-      const questions: TriviaQuestion[] = result.questions.map(q => ({
-        id: q.id,
-        question: q.question,
-        correctAnswer: q.correctAnswer,
-        incorrectAnswers: q.incorrectAnswers,
-        allAnswers: q.allAnswers,
-        difficulty: q.difficulty,
-        category: freshRoom.category_name || q.category || "General",
-        iconSlug: q.iconSlug,
-        imageUrl: q.imageUrl,
-        videoUrl: q.videoUrl,
-        audioUrl: q.audioUrl,
-      }));
 
       // Mark questions as seen globally (unified tracking)
       markQuestionsAsSeen(questions.map(q => q.id));
@@ -1666,7 +1891,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       console.error("Error starting game:", error);
       toast.error(tStandalone("extra.mpGameStartError"));
     }
-  }, [state.currentRoom, isHost, user, stampRoomStarted]);
+  }, [state.currentRoom, isHost, user, participants, stampRoomStarted]);
 
   // Helper to save questions and update room status.
   // pendingDelete: callers can start safeDeleteRoomQuestions BEFORE fetching
@@ -1778,6 +2003,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       myScore: 0,
       lastQuestionResult: null,
       opponentAnswers: {},
+      voteResults: {},
       hostIsObserver: hostShouldObserve,
       observerBonusThisRound: 0,
       currentGame: game ? {
@@ -1804,6 +2030,43 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
 
     const currentQuestion = state.questions[state.currentQuestionIndex];
     if (!currentQuestion) return;
+
+    // "Most Likely To": the answer is a VOTE for a player, and nobody is
+    // right or wrong until every vote is in. Record it with no points — the
+    // idempotent server-side tally (settle_most_likely_votes) marks the
+    // majority answers correct and pays them once all votes exist. No
+    // first-correct claim, no local score: speed is irrelevant to a vote.
+    if (currentQuestion.correctAnswer === MOST_LIKELY_VOTE_SENTINEL) {
+      const gameId = state.currentRoom.current_game_id;
+      if (gameId) {
+        ownVoteKeysRef.current.add(`${gameId}:${state.currentQuestionIndex}`);
+      }
+      await supabase.from("player_answers").insert({
+        room_id: state.currentRoom.id,
+        user_id: user.id,
+        question_index: state.currentQuestionIndex,
+        answer,
+        is_correct: false,
+        time_remaining: timeRemaining,
+        points_earned: 0,
+      });
+      await supabase
+        .from("room_participants")
+        .update({ current_question: state.currentQuestionIndex + 1 })
+        .eq("room_id", state.currentRoom.id)
+        .eq("user_id", user.id);
+      setState(prev => ({
+        ...prev,
+        // Same stamp the reveal and applyMissedTime key off; points arrive
+        // later, via the participants subscription, when the vote settles.
+        lastQuestionResult: {
+          correct: false,
+          points: 0,
+          questionIndex: state.currentQuestionIndex,
+        },
+      }));
+      return;
+    }
 
     const isCorrect = answer === currentQuestion.correctAnswer;
     correctAnswersRef.current = state.currentQuestionIndex === 0
@@ -1988,6 +2251,15 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       )
     );
 
+    // Vote rounds: the skipped empty answers ARE this player's (non-)votes -
+    // record them so the settlement trigger counts this device as done
+    const missedGameId = state.currentRoom.current_game_id;
+    if (isMostLikelyRound && missedGameId) {
+      for (let i = 0; i < skipCount; i++) {
+        ownVoteKeysRef.current.add(`${missedGameId}:${firstUnanswered + i}`);
+      }
+    }
+
     // Advance own progress; marking "finished" lets the (game-aware)
     // completion check close the round when everyone is done
     await supabase
@@ -2016,7 +2288,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     }));
 
     return { skipped: skipCount, finished };
-  }, [state.currentRoom, state.phase, state.questions.length, state.currentQuestionIndex, state.lastQuestionResult, state.timePerQuestion, state.hostIsObserver, isHost, user]);
+  }, [state.currentRoom, state.phase, state.questions.length, state.currentQuestionIndex, state.lastQuestionResult, state.timePerQuestion, state.hostIsObserver, isHost, user, isMostLikelyRound]);
 
   // Exit room (UI only - stay as participant)
   const exitRoom = useCallback(() => {
@@ -2091,6 +2363,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       myScore: 0,
       lastQuestionResult: null,
       opponentAnswers: {},
+      voteResults: {},
       lastPlayedTriviaId: justPlayedTriviaId || null, // Store for "already played" indicator
       justReturnedFromResults: !hasQueueItems, // Only set if queue is empty - allows proper display when queue has items
       // Also clear in local state if queue is empty
@@ -2279,6 +2552,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           myScore: 0,
           lastQuestionResult: null,
           opponentAnswers: {},
+          voteResults: {},
           hostIsObserver: hostShouldObserve, // FIX: Set observer mode
           observerBonusThisRound: 0,
           lastPlayedTriviaId: freshRoom.user_trivia_id,
@@ -2305,33 +2579,48 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       // independent old-round cleanup with the fetch
       console.log('[startNewRound] Fetching questions for category:', freshRoom.category_id);
       const pendingDelete4 = safeDeleteRoomQuestions(roomId);
-      const result = await getQuestions({
-        mode: 'vs',
-        categorySlug: freshRoom.category_id || undefined,
-        count: questionCount,
-        excludeIds: usedIds,
-      });
 
-      if (result.questions.length === 0) {
+      let questions: TriviaQuestion[];
+      if (await isMostLikelyCategoryId(freshRoom.category_id)) {
+        // "Most Likely To" replay: fresh prompts (used ids excluded), same
+        // vote mechanic — see startGame for the shape.
+        questions = await buildMostLikelyQuestions(
+          freshRoom.category_id!,
+          freshRoom.category_name,
+          activeRoundPlayers(participants, {
+            hostIsObserver: hostShouldObserve,
+            hostUserId: freshRoom.host_user_id,
+          }),
+          usedIds,
+        );
+      } else {
+        const result = await getQuestions({
+          mode: 'vs',
+          categorySlug: freshRoom.category_id || undefined,
+          count: questionCount,
+          excludeIds: usedIds,
+        });
+        // Map to TriviaQuestion format using FRESH category name
+        questions = result.questions.map(q => ({
+          id: q.id,
+          question: q.question,
+          correctAnswer: q.correctAnswer,
+          incorrectAnswers: q.incorrectAnswers,
+          allAnswers: q.allAnswers,
+          difficulty: q.difficulty,
+          category: freshRoom.category_name || q.category || "General",
+          iconSlug: q.iconSlug,
+          imageUrl: q.imageUrl || undefined,
+          videoUrl: q.videoUrl || undefined,
+          audioUrl: q.audioUrl || undefined,
+        }));
+      }
+
+      if (questions.length === 0) {
         await pendingDelete4;
         toast.error(tStandalone("extra.mpQuestionsNotFound"));
         return;
       }
-      
-      // Map to TriviaQuestion format using FRESH category name
-      const questions: TriviaQuestion[] = result.questions.map(q => ({
-        id: q.id,
-        question: q.question,
-        correctAnswer: q.correctAnswer,
-        incorrectAnswers: q.incorrectAnswers,
-        allAnswers: q.allAnswers,
-        difficulty: q.difficulty,
-        category: freshRoom.category_name || q.category || "General",
-        iconSlug: q.iconSlug,
-        imageUrl: q.imageUrl || undefined,
-        videoUrl: q.videoUrl || undefined,
-        audioUrl: q.audioUrl || undefined,
-      }));
 
       // Clear old questions/answers with verification (overlapped with the
       // question fetch above)
@@ -2432,6 +2721,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         myScore: 0,
         lastQuestionResult: null,
         opponentAnswers: {},
+        voteResults: {},
         hostIsObserver: hostShouldObserve, // FIX: Set observer mode (always false for library categories)
         observerBonusThisRound: 0,
         currentGame: game ? {
@@ -2449,7 +2739,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       console.error("Error starting new round:", error);
       toast.error(tStandalone("extra.mpGameStartError"));
     }
-  }, [state.currentRoom, user, stampRoomStarted]);
+  }, [state.currentRoom, user, participants, stampRoomStarted]);
 
   // Start next round from queue - pop queue item and start with that category
   // This function DIRECTLY fetches questions with the new category to avoid race conditions
@@ -2658,6 +2948,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             myScore: 0,
             lastQuestionResult: null,
             opponentAnswers: {},
+            voteResults: {},
             hostIsObserver: hostShouldObserve, // FIX: Set observer mode
             observerBonusThisRound: 0,
             currentGame: game ? {
@@ -2710,33 +3001,46 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       const usedIds = (freshRoom?.used_question_ids as string[]) || [];
       
       // Fetch questions with the NEW category (not from stale state!)
-      const result = await getQuestions({
-        mode: 'vs',
-        categorySlug: newCategoryId || undefined,
-        count: questionCount,
-        excludeIds: usedIds,
-      });
-      
-      if (result.questions.length === 0) {
+      let questions: TriviaQuestion[];
+      if (newCategoryId && await isMostLikelyCategoryId(newCategoryId)) {
+        // "Most Likely To" queued round — see startGame for the shape.
+        questions = await buildMostLikelyQuestions(
+          newCategoryId,
+          newCategoryName,
+          activeRoundPlayers(participants, {
+            hostIsObserver: hostShouldObserve,
+            hostUserId: state.currentRoom.host_user_id,
+          }),
+          usedIds,
+        );
+      } else {
+        const result = await getQuestions({
+          mode: 'vs',
+          categorySlug: newCategoryId || undefined,
+          count: questionCount,
+          excludeIds: usedIds,
+        });
+        // Map to TriviaQuestion format with iconSlug
+        questions = result.questions.map(q => ({
+          id: q.id,
+          question: q.question,
+          correctAnswer: q.correctAnswer,
+          incorrectAnswers: q.incorrectAnswers,
+          allAnswers: q.allAnswers,
+          difficulty: q.difficulty,
+          category: newCategoryName,
+          iconSlug: q.iconSlug,
+          imageUrl: q.imageUrl || undefined,
+          videoUrl: q.videoUrl || undefined,
+          audioUrl: q.audioUrl || undefined,
+        }));
+      }
+
+      if (questions.length === 0) {
         await pendingDelete5;
         toast.error(tStandalone("extra.mpQuestionsNotFound"));
         return;
       }
-
-      // Map to TriviaQuestion format with iconSlug
-      const questions: TriviaQuestion[] = result.questions.map(q => ({
-        id: q.id,
-        question: q.question,
-        correctAnswer: q.correctAnswer,
-        incorrectAnswers: q.incorrectAnswers,
-        allAnswers: q.allAnswers,
-        difficulty: q.difficulty,
-        category: newCategoryName,
-        iconSlug: q.iconSlug,
-        imageUrl: q.imageUrl || undefined,
-        videoUrl: q.videoUrl || undefined,
-        audioUrl: q.audioUrl || undefined,
-      }));
 
       // Clear old data with verification (started before the question fetch,
       // the two network waits overlap)
@@ -2848,6 +3152,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         myScore: 0,
         lastQuestionResult: null,
         opponentAnswers: {},
+        voteResults: {},
         hostIsObserver: hostShouldObserve, // FIX: Set observer mode (always false for library categories)
         observerBonusThisRound: 0,
         currentGame: game ? {
@@ -2866,7 +3171,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       console.error("Error starting next from queue:", error);
       toast.error(tStandalone("extra.mpGameStartError"));
     }
-  }, [state.currentRoom, user, startNewRound, stampRoomStarted]);
+  }, [state.currentRoom, user, participants, startNewRound, stampRoomStarted]);
 
   // Leave room permanently
   const leaveRoomPermanently = useCallback(async () => {
@@ -2979,6 +3284,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     isHost,
     loading,
     currentOpponentAnswers: state.opponentAnswers[state.currentQuestionIndex] || {},
+    isMostLikelyRound,
     createRoom,
     enterRoom,
     startGame,
@@ -3001,6 +3307,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     state,
     participants,
     isHost,
+    isMostLikelyRound,
     loading,
     createRoom,
     enterRoom,
