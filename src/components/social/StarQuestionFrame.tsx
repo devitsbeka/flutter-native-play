@@ -410,12 +410,25 @@ export function StarQuestionFrame({
           <div style={{ display: "flex", flexDirection: "column", gap: 28 * c }}>
             {rows(rowS, Math.min(860 * c, boxW))}
           </div>
-          <img
-            src={`${ASSETS}/powerups-row.png`}
-            alt=""
-            style={{ width: 620 * c, height: 171 * c, objectFit: "contain" }}
-          />
         </div>
+        {/* Power-ups sit at the actual bottom of the canvas, outside the
+            safe box: they are decoration, not information, so platform
+            chrome overlapping them costs nothing — while keeping them in
+            the box glued them to the answers and left the page bottom
+            empty. */}
+        <img
+          src={`${ASSETS}/powerups-row.png`}
+          alt=""
+          style={{
+            position: "absolute",
+            left: "50%",
+            transform: "translateX(-50%)",
+            bottom: 90 * c,
+            width: 620 * c,
+            height: 171 * c,
+            objectFit: "contain",
+          }}
+        />
       </div>
     );
   }
