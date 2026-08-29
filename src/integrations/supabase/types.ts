@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.17"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -2484,6 +2484,72 @@ export type Database = {
           sort_order?: number | null
           updated_at?: string | null
           value?: Json | null
+        }
+        Relationships: []
+      }
+      social_frame_drafts: {
+        Row: {
+          caption: string
+          created_at: string
+          created_by: string | null
+          format_key: string
+          h: number
+          id: string
+          language: string
+          last_error: string | null
+          late_post_id: string | null
+          payload: Json
+          platform_post_url: string | null
+          platforms: string[]
+          posted_at: string | null
+          question_id: string | null
+          reveal: boolean
+          scheduled_for: string | null
+          status: string
+          updated_at: string
+          w: number
+        }
+        Insert: {
+          caption?: string
+          created_at?: string
+          created_by?: string | null
+          format_key: string
+          h: number
+          id?: string
+          language: string
+          last_error?: string | null
+          late_post_id?: string | null
+          payload: Json
+          platform_post_url?: string | null
+          platforms?: string[]
+          posted_at?: string | null
+          question_id?: string | null
+          reveal?: boolean
+          scheduled_for?: string | null
+          status?: string
+          updated_at?: string
+          w: number
+        }
+        Update: {
+          caption?: string
+          created_at?: string
+          created_by?: string | null
+          format_key?: string
+          h?: number
+          id?: string
+          language?: string
+          last_error?: string | null
+          late_post_id?: string | null
+          payload?: Json
+          platform_post_url?: string | null
+          platforms?: string[]
+          posted_at?: string | null
+          question_id?: string | null
+          reveal?: boolean
+          scheduled_for?: string | null
+          status?: string
+          updated_at?: string
+          w?: number
         }
         Relationships: []
       }
