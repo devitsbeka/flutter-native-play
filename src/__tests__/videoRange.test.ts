@@ -76,4 +76,30 @@ describe("the route that lets any of this run", () => {
     ).not.toBeNull();
     expect(line![1]).toContain('"/videos/*"');
   });
+
+  // The SPA fallback is greedier than the /videos case: with
+  // not_found_handling = "single-page-application" the asset server answers
+  // every GET — a path with no file behind it gets index.html — so a route
+  // the Worker handles only ever sees non-GET methods unless it is listed
+  // here. /img served index.html instead of images; the client's preload
+  // validation then dropped every Wikimedia-backed question, and the
+  // picture-guess categories collapsed to one-or-two-question levels and a
+  // false "you answered everything" screen. /room/* is the same failure for
+  // invite link previews.
+  it("wrangler.toml routes /img and /room/* through the worker first", () => {
+    const wrangler = readFileSync(
+      resolve(__dirname, "../../wrangler.toml"),
+      "utf8",
+    );
+    const line = wrangler.match(/^run_worker_first\s*=\s*(.+)$/m);
+    expect(
+      line,
+      "run_worker_first is gone from wrangler.toml — the SPA fallback will " +
+        "answer /img with index.html, image preload validation will drop " +
+        "every question, and picture-guess levels shrink to nothing with " +
+        "nothing red in CI",
+    ).not.toBeNull();
+    expect(line![1]).toContain('"/img"');
+    expect(line![1]).toContain('"/room/*"');
+  });
 });
