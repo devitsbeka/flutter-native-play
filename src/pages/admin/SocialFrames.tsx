@@ -2,6 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Shuffle, Eye, EyeOff } from "lucide-react";
+import { seededShuffle, type Question } from "@/components/social/QotdFrame";
+import { StarQuestionFrame } from "@/components/social/StarQuestionFrame";
+import "@/components/social/star-frame.css";
 
 /**
  * Social Frames — post templates at each network's exact pixel size, filled
@@ -14,252 +17,63 @@ import { Shuffle, Eye, EyeOff } from "lucide-react";
  * CSS transform, so a browser screenshot of the unscaled frame (or a
  * screenshot tool set to the frame's box) is already the right size.
  *
- * Everything inside a frame is styled with literal colors, not theme tokens:
- * a post must look identical whether the admin runs light or dark.
+ * The frame itself lives in @/components/social/QotdFrame so the posting
+ * pipeline can render the identical component headlessly.
  */
-
-interface Question {
-  id: string;
-  question_text: string;
-  correct_answer: string;
-  incorrect_answers: unknown;
-  difficulty: string;
-  category_id: string;
-}
 
 const LANGUAGES = ["ka", "en", "de", "es", "fr", "it", "pt"] as const;
 
-const FORMATS = [
-  { key: "story", label: "Story / Reel / TikTok / Short", w: 1080, h: 1920 },
-  { key: "portrait", label: "IG · FB Feed", w: 1080, h: 1350 },
-  { key: "square", label: "Square", w: 1080, h: 1080 },
-  { key: "link", label: "FB Link / Open Graph", w: 1200, h: 630 },
-  { key: "x", label: "X Post", w: 1600, h: 900 },
-  { key: "yt", label: "YouTube Thumbnail", w: 1280, h: 720 },
-] as const;
-
-/** The frame's own copy, per app language, so a Georgian post is Georgian. */
-const FRAME_COPY: Record<string, { eyebrow: string; cta: string }> = {
-  ka: { eyebrow: "დღის კითხვა", cta: "უპასუხე აპლიკაციაში" },
-  en: { eyebrow: "Question of the Day", cta: "Answer in the app" },
-  de: { eyebrow: "Frage des Tages", cta: "Antworte in der App" },
-  es: { eyebrow: "Pregunta del día", cta: "Responde en la app" },
-  fr: { eyebrow: "Question du jour", cta: "Répondez dans l'app" },
-  it: { eyebrow: "Domanda del giorno", cta: "Rispondi nell'app" },
-  pt: { eyebrow: "Pergunta do dia", cta: "Responda no app" },
-};
-
-/** Stable per-question shuffle so the same question always shows the same order. */
-function seededShuffle<T>(items: T[], seed: string): T[] {
-  let h = 2166136261;
-  for (const ch of seed) h = (h ^ ch.charCodeAt(0)) * 16777619;
-  const out = [...items];
-  for (let i = out.length - 1; i > 0; i--) {
-    h = (h * 1103515245 + 12345) & 0x7fffffff;
-    const j = h % (i + 1);
-    [out[i], out[j]] = [out[j], out[i]];
-  }
-  return out;
-}
-
-/** Brand colors as literals — frames must not follow the admin theme. */
-const INK = {
-  bgFrom: "hsl(263 60% 52%)",
-  bgTo: "hsl(263 55% 34%)",
-  card: "rgba(255 255 255 / 0.14)",
-  cardBorder: "rgba(255 255 255 / 0.22)",
-  text: "#FFFFFF",
-  dim: "rgba(255 255 255 / 0.72)",
-  accent: "hsl(30 95% 58%)",
-} as const;
-
-function QotdFrame({
-  w,
-  h,
-  question,
-  answers,
-  reveal,
-  lang,
-  dateLabel,
-}: {
+/**
+ * One entry per surface the pipeline posts to, at the size that network
+ * renders best, with the platform chrome's keep-clear zones (safeInsets, in
+ * canvas px) so nothing important sits under UI:
+ *  - IG Stories/Reels: ~250px of UI at the top, ~310px at the bottom
+ *  - TikTok: ~140px right rail (like/comment/share), ~500px caption zone at
+ *    the bottom, ~130px top
+ *  - YouTube Shorts: title/controls, ~120px top / ~360px bottom
+ * Feed and thumbnail canvases have no overlaid chrome.
+ */
+const FORMATS: {
+  key: string;
+  label: string;
   w: number;
   h: number;
-  question: Question;
-  answers: string[];
-  reveal: boolean;
-  lang: string;
-  dateLabel: string;
-}) {
-  const wide = w / h > 1.2;
-  const copy = FRAME_COPY[lang] ?? FRAME_COPY.en;
-  // Long questions shrink; the breakpoints were eyeballed against the pool.
-  const qLen = question.question_text.length;
-  const base = wide ? Math.round(h / 11) : Math.round(w / 13);
-  const qSize = qLen > 140 ? Math.round(base * 0.62) : qLen > 80 ? Math.round(base * 0.78) : base;
-  const answerSize = Math.round((wide ? h : w) / (wide ? 26 : 30));
-  const pad = Math.round(w * (wide ? 0.05 : 0.08));
-
-  const letters = ["A", "B", "C", "D"];
-
-  const answerCards = (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: wide ? "1fr" : "1fr 1fr",
-        gap: Math.round(w * 0.018),
-        width: "100%",
-      }}
-    >
-      {answers.map((a, i) => {
-        const isCorrect = a === question.correct_answer;
-        return (
-          <div
-            key={i}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: Math.round(answerSize * 0.5),
-              background: INK.card,
-              border: `2px solid ${reveal && isCorrect ? INK.accent : INK.cardBorder}`,
-              boxShadow: reveal && isCorrect ? `0 0 0 6px ${INK.accent}44` : undefined,
-              borderRadius: Math.round(answerSize * 0.8),
-              padding: `${Math.round(answerSize * 0.55)}px ${Math.round(answerSize * 0.7)}px`,
-              color: INK.text,
-              fontSize: answerSize,
-              fontWeight: 600,
-              lineHeight: 1.25,
-              minWidth: 0,
-            }}
-          >
-            <span
-              style={{
-                flexShrink: 0,
-                width: Math.round(answerSize * 1.6),
-                height: Math.round(answerSize * 1.6),
-                borderRadius: "50%",
-                background: reveal && isCorrect ? INK.accent : "rgba(255 255 255 / 0.2)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: Math.round(answerSize * 0.85),
-                fontWeight: 800,
-              }}
-            >
-              {letters[i]}
-            </span>
-            <span style={{ overflowWrap: "break-word", minWidth: 0 }}>{a}</span>
-          </div>
-        );
-      })}
-    </div>
-  );
-
-  const header = (
-    <div style={{ display: "flex", flexDirection: "column", gap: Math.round(w * 0.012) }}>
-      <div
-        style={{
-          alignSelf: "flex-start",
-          background: INK.accent,
-          color: "#2B1A05",
-          fontSize: Math.round(base * 0.42),
-          fontWeight: 800,
-          letterSpacing: "0.06em",
-          textTransform: "uppercase",
-          padding: `${Math.round(base * 0.18)}px ${Math.round(base * 0.45)}px`,
-          borderRadius: 999,
-        }}
-      >
-        {copy.eyebrow}
-      </div>
-      <div style={{ color: INK.dim, fontSize: Math.round(base * 0.38), fontWeight: 600 }}>
-        {dateLabel}
-      </div>
-    </div>
-  );
-
-  const questionBlock = (
-    <div
-      style={{
-        color: INK.text,
-        fontSize: qSize,
-        fontWeight: 800,
-        lineHeight: 1.18,
-        overflowWrap: "break-word",
-      }}
-    >
-      {question.question_text}
-    </div>
-  );
-
-  const footer = (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: 16,
-        color: INK.text,
-      }}
-    >
-      <div style={{ fontSize: Math.round(base * 0.5), fontWeight: 800 }}>
-        My<span style={{ color: INK.accent }}>Trivia</span>
-      </div>
-      <div style={{ color: INK.dim, fontSize: Math.round(base * 0.36), fontWeight: 600 }}>
-        {copy.cta} · mytrivia.io
-      </div>
-    </div>
-  );
-
-  return (
-    <div
-      style={{
-        width: w,
-        height: h,
-        background: `radial-gradient(circle at 85% -10%, rgba(255 255 255 / 0.16), transparent 45%), linear-gradient(150deg, ${INK.bgFrom} 0%, ${INK.bgTo} 100%)`,
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between",
-        padding: pad,
-        overflow: "hidden",
-        fontFamily: "inherit",
-      }}
-    >
-      {wide ? (
-        <div style={{ display: "flex", gap: pad, flex: 1, minHeight: 0 }}>
-          <div
-            style={{
-              flex: 1.15,
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-between",
-              minWidth: 0,
-            }}
-          >
-            {header}
-            {questionBlock}
-            {footer}
-          </div>
-          <div style={{ flex: 1, display: "flex", alignItems: "center", minWidth: 0 }}>
-            {answerCards}
-          </div>
-        </div>
-      ) : (
-        <>
-          {header}
-          {questionBlock}
-          {answerCards}
-          {footer}
-        </>
-      )}
-    </div>
-  );
-}
+  safeInsets?: { top?: number; bottom?: number; left?: number; right?: number };
+}[] = [
+  { key: "ig-feed", label: "Instagram · FB Feed (4:5)", w: 1080, h: 1350 },
+  {
+    key: "ig-story",
+    label: "IG Story / Reel",
+    w: 1080,
+    h: 1920,
+    safeInsets: { top: 250, bottom: 310 },
+  },
+  {
+    key: "tiktok",
+    label: "TikTok",
+    w: 1080,
+    h: 1920,
+    safeInsets: { top: 130, bottom: 500, right: 140 },
+  },
+  {
+    key: "yt-short",
+    label: "YouTube Short",
+    w: 1080,
+    h: 1920,
+    safeInsets: { top: 120, bottom: 360 },
+  },
+  { key: "square", label: "IG · FB Square", w: 1080, h: 1080 },
+  { key: "fb-land", label: "Facebook Landscape / Link", w: 1200, h: 630 },
+  { key: "yt-thumb", label: "YouTube Thumbnail", w: 1280, h: 720 },
+  { key: "appstore", label: "App Store 6.5″", w: 1242, h: 2688 },
+];
 
 export default function SocialFrames() {
   const [lang, setLang] = useState<string>("ka");
   const [pool, setPool] = useState<Question[]>([]);
   const [index, setIndex] = useState(0);
   const [reveal, setReveal] = useState(false);
+  const [showSafeZones, setShowSafeZones] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -300,16 +114,6 @@ export default function SocialFrames() {
     return seededShuffle([question.correct_answer, ...incorrect.slice(0, 3)], question.id);
   }, [question]);
 
-  const dateLabel = useMemo(
-    () =>
-      new Date().toLocaleDateString(lang === "ka" ? "ka-GE" : lang, {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      }),
-    [lang],
-  );
-
   const shuffle = () => {
     if (pool.length > 1) {
       let next = index;
@@ -323,9 +127,9 @@ export default function SocialFrames() {
       <div>
         <h1 className="text-2xl font-bold">Social Frames</h1>
         <p className="text-muted-foreground text-sm mt-1 max-w-2xl">
-          Question of the Day on every network&apos;s canvas, at its exact pixel size. Screenshot
-          the frame you need — the 9:16 one covers TikTok, Reels, Shorts and Stories from a single
-          render.
+          The Step07 post design on every canvas the pipeline posts to, at exact pixel size and
+          with each platform&apos;s keep-clear zones respected. Scroll sideways through the
+          carousel; screenshot the frame you need.
         </p>
       </div>
 
@@ -351,6 +155,9 @@ export default function SocialFrames() {
           {reveal ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
           {reveal ? "Hide answer" : "Reveal answer"}
         </Button>
+        <Button variant="outline" size="sm" onClick={() => setShowSafeZones((z) => !z)}>
+          {showSafeZones ? "Hide safe zones" : "Show safe zones"}
+        </Button>
         {question && (
           <span className="text-xs text-muted-foreground">
             {pool.length} in pool · difficulty {question.difficulty}
@@ -367,13 +174,16 @@ export default function SocialFrames() {
       )}
 
       {question && (
-        <div className="flex flex-wrap gap-8 items-start">
+        /* One horizontal carousel: every canvas at the same preview height,
+           side by side, scrolled through sideways. The inner frame is still
+           real pixels scaled down, so a screenshot of the unscaled frame is
+           already post-ready. */
+        <div className="flex gap-8 items-start overflow-x-auto snap-x snap-mandatory pb-4 -mx-6 px-6">
           {FORMATS.map((f) => {
-            // Preview width caps the on-screen size; the inner frame is real pixels.
-            const previewW = f.w >= f.h ? 480 : 300;
-            const scale = previewW / f.w;
+            const previewH = 560;
+            const scale = previewH / f.h;
             return (
-              <figure key={f.key} className="m-0">
+              <figure key={f.key} className="m-0 shrink-0 snap-center">
                 <figcaption className="mb-2 text-sm font-medium">
                   {f.label}{" "}
                   <span className="text-muted-foreground font-normal">
@@ -381,20 +191,50 @@ export default function SocialFrames() {
                   </span>
                 </figcaption>
                 <div
-                  className="rounded-lg overflow-hidden ring-1 ring-border shadow-sm"
+                  className="relative rounded-lg overflow-hidden ring-1 ring-border shadow-sm"
                   style={{ width: f.w * scale, height: f.h * scale }}
                 >
                   <div style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}>
-                    <QotdFrame
+                    <StarQuestionFrame
                       w={f.w}
                       h={f.h}
                       question={question}
                       answers={answers}
                       reveal={reveal}
                       lang={lang}
-                      dateLabel={dateLabel}
+                      safeInsets={f.safeInsets}
                     />
                   </div>
+                  {/* Preview-only guides for the platform chrome; never part
+                      of the frame itself, so screenshots stay clean. */}
+                  {showSafeZones && f.safeInsets && (
+                    <div className="absolute inset-0 pointer-events-none">
+                      {f.safeInsets.top && (
+                        <div
+                          className="absolute top-0 left-0 right-0 bg-red-500/25 border-b border-red-400"
+                          style={{ height: f.safeInsets.top * scale }}
+                        />
+                      )}
+                      {f.safeInsets.bottom && (
+                        <div
+                          className="absolute bottom-0 left-0 right-0 bg-red-500/25 border-t border-red-400"
+                          style={{ height: f.safeInsets.bottom * scale }}
+                        />
+                      )}
+                      {f.safeInsets.right && (
+                        <div
+                          className="absolute top-0 bottom-0 right-0 bg-red-500/25 border-l border-red-400"
+                          style={{ width: f.safeInsets.right * scale }}
+                        />
+                      )}
+                      {f.safeInsets.left && (
+                        <div
+                          className="absolute top-0 bottom-0 left-0 bg-red-500/25 border-r border-red-400"
+                          style={{ width: f.safeInsets.left * scale }}
+                        />
+                      )}
+                    </div>
+                  )}
                 </div>
               </figure>
             );

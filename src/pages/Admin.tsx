@@ -159,7 +159,9 @@ const toolsNavItems: NavItem[] = [
 ];
 
 export default function Admin() {
-  const [collapsed, setCollapsed] = useState(false);
+  // Collapsed by default: the admin pages (Social Frames especially) want
+  // the width; the rail expands on demand from the menu button.
+  const [collapsed, setCollapsed] = useState(true);
   const [toolsOpen, setToolsOpen] = useState(false);
   const location = useLocation();
 
