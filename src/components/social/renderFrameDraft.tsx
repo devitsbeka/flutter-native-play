@@ -69,7 +69,13 @@ export async function renderDraftToImages(draft: FrameDraft): Promise<string[]> 
       if (!spec) throw new Error(`Unknown promo slide "${slide.promo}"`);
       out.push(
         await renderNode(
-          <PromoSlide w={w} h={h} spec={spec} safeInsets={format?.safeInsets} />,
+          <PromoSlide
+            w={w}
+            h={h}
+            spec={spec}
+            lang={draft.language}
+            safeInsets={format?.safeInsets}
+          />,
           w,
           h,
         ),
