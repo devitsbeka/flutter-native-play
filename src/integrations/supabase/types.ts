@@ -2360,9 +2360,11 @@ export type Database = {
           room_id: string
           score: number | null
           status: Database["public"]["Enums"]["participant_status"] | null
+          team: string | null
           total_rounds_played: number | null
           total_score: number | null
           total_wins: number | null
+          turn_order: number | null
           user_id: string
         }
         Insert: {
@@ -2379,9 +2381,11 @@ export type Database = {
           room_id: string
           score?: number | null
           status?: Database["public"]["Enums"]["participant_status"] | null
+          team?: string | null
           total_rounds_played?: number | null
           total_score?: number | null
           total_wins?: number | null
+          turn_order?: number | null
           user_id: string
         }
         Update: {
@@ -2398,9 +2402,11 @@ export type Database = {
           room_id?: string
           score?: number | null
           status?: Database["public"]["Enums"]["participant_status"] | null
+          team?: string | null
           total_rounds_played?: number | null
           total_score?: number | null
           total_wins?: number | null
+          turn_order?: number | null
           user_id?: string
         }
         Relationships: [
@@ -2604,6 +2610,157 @@ export type Database = {
           w?: number
         }
         Relationships: []
+      }
+      team_battle_board: {
+        Row: {
+          category_id: string | null
+          category_name: string
+          claimed_by_team: string | null
+          correct_count: number
+          created_at: string
+          difficulty: string
+          game_id: string
+          id: string
+          played_at: string | null
+          played_by: string | null
+          points_earned: number
+          price: number
+          questions: Json
+          room_id: string
+          tile_index: number
+        }
+        Insert: {
+          category_id?: string | null
+          category_name: string
+          claimed_by_team?: string | null
+          correct_count?: number
+          created_at?: string
+          difficulty: string
+          game_id: string
+          id?: string
+          played_at?: string | null
+          played_by?: string | null
+          points_earned?: number
+          price: number
+          questions: Json
+          room_id: string
+          tile_index: number
+        }
+        Update: {
+          category_id?: string | null
+          category_name?: string
+          claimed_by_team?: string | null
+          correct_count?: number
+          created_at?: string
+          difficulty?: string
+          game_id?: string
+          id?: string
+          played_at?: string | null
+          played_by?: string | null
+          points_earned?: number
+          price?: number
+          questions?: Json
+          room_id?: string
+          tile_index?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_battle_board_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "game_rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_battle_board_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "room_games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_battle_state: {
+        Row: {
+          active_player: string | null
+          active_team: string | null
+          active_tile: string | null
+          deadline: string | null
+          game_id: string
+          phase: string
+          room_id: string
+          rps: Json
+          settled: boolean
+          super: Json
+          target_correct: number
+          team_a_score: number
+          team_b_score: number
+          turn_answers: number
+          turn_seconds: number
+          updated_at: string
+          winner_team: string | null
+        }
+        Insert: {
+          active_player?: string | null
+          active_team?: string | null
+          active_tile?: string | null
+          deadline?: string | null
+          game_id: string
+          phase: string
+          room_id: string
+          rps?: Json
+          settled?: boolean
+          super?: Json
+          target_correct?: number
+          team_a_score?: number
+          team_b_score?: number
+          turn_answers?: number
+          turn_seconds?: number
+          updated_at?: string
+          winner_team?: string | null
+        }
+        Update: {
+          active_player?: string | null
+          active_team?: string | null
+          active_tile?: string | null
+          deadline?: string | null
+          game_id?: string
+          phase?: string
+          room_id?: string
+          rps?: Json
+          settled?: boolean
+          super?: Json
+          target_correct?: number
+          team_a_score?: number
+          team_b_score?: number
+          turn_answers?: number
+          turn_seconds?: number
+          updated_at?: string
+          winner_team?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_battle_state_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: true
+            referencedRelation: "game_rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_battle_state_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "room_games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_battle_state_active_tile_fkey"
+            columns: ["active_tile"]
+            isOneToOne: false
+            referencedRelation: "team_battle_board"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       trivia_drafts: {
         Row: {
@@ -4627,6 +4784,32 @@ export type Database = {
           p_time_remaining: number
         }
         Returns: Json
+      }
+      tb_advance: { Args: { p_room_id: string }; Returns: string }
+      tb_pick_tile: {
+        Args: { p_room_id: string; p_tile_id: string }
+        Returns: string
+      }
+      tb_settle: { Args: { p_room_id: string }; Returns: Json }
+      tb_start_match: {
+        Args: { p_board: Json; p_room_id: string; p_turn_seconds?: number }
+        Returns: string
+      }
+      tb_submit_answer: {
+        Args: { p_answer: string; p_question_index: number; p_room_id: string }
+        Returns: Json
+      }
+      tb_submit_rps: {
+        Args: { p_room_id: string; p_throw: string }
+        Returns: undefined
+      }
+      tb_submit_super: {
+        Args: { p_answer: string; p_question_index: number; p_room_id: string }
+        Returns: Json
+      }
+      tb_vote_super: {
+        Args: { p_candidate: string; p_room_id: string }
+        Returns: undefined
       }
       transfer_room_host: {
         Args: { p_new_host: string; p_room_id: string }

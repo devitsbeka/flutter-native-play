@@ -72,9 +72,13 @@ export const GAME_TYPES: GameTypeDescriptor[] = [
     minPlayers: 2,
     maxPlayers: 10,
     approxMinutes: 15,
+    // Dark-launched: the client flow exists (/team-battle) but stays a
+    // teaser until the DB registry flips is_live — the schema has to be
+    // deployed through Lovable before anyone can create one of these rooms.
     status: "coming_soon",
     badge: "beta",
     sortOrder: 30,
+    launch: (navigate) => navigate("/team-battle"),
   },
   {
     key: "king",

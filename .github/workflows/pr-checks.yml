@@ -201,3 +201,16 @@ jobs:
         run: |
           psql -h localhost -p 5432 -U postgres \
             -v ON_ERROR_STOP=1 -f supabase/tests/09-game-types.sql
+
+      # Team Battle is decided entirely in SECURITY DEFINER plpgsql —
+      # rotation, prices, scoring, the tie-breaker, the payouts. This plays
+      # two full matches through the public RPCs (one decided on the board,
+      # one tied into the super round) and asserts every refusal that keeps
+      # the match honest: wrong player at every phase, client-named prices
+      # ignored, out-of-order and double answers, double settlement.
+      - name: Assert team battle rules
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -p 5432 -U postgres \
+            -v ON_ERROR_STOP=1 -f supabase/tests/10-team-battle.sql
