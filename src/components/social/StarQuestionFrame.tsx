@@ -238,8 +238,16 @@ function AvatarCluster({
   );
 }
 
+/**
+ * Continuous size ramp: full size up to 45 chars, then easing down ~0.45%
+ * per character, floored at 52% — so a 60-char question is only slightly
+ * smaller while a 140-char one drops to about half. Continuous beats
+ * breakpoints here: one character over a threshold used to change the size
+ * by a fifth.
+ */
 function questionFontSize(text: string, base: number) {
-  return text.length > 110 ? base * 0.62 : text.length > 70 ? base * 0.78 : base;
+  const factor = Math.min(1, Math.max(0.52, 1 - (text.length - 45) * 0.0045));
+  return base * factor;
 }
 
 export function StarQuestionFrame({
