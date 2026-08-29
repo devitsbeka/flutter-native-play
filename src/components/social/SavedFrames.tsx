@@ -5,10 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Send, CalendarClock, Trash2, ExternalLink } from "lucide-react";
-import { frameDrafts, type FrameDraft } from "@/components/social/frameDrafts";
+import { Loader2, Send, CalendarClock, Trash2, ExternalLink, Eye, EyeOff } from "lucide-react";
+import { frameDrafts, type CarouselSlide, type FrameDraft } from "@/components/social/frameDrafts";
 import { formatByKey } from "@/components/social/frameFormats";
-import { renderDraftToPngs } from "@/components/social/renderFrameDraft";
+import { renderDraftToImages } from "@/components/social/renderFrameDraft";
+import { StarQuestionFrame } from "@/components/social/StarQuestionFrame";
+import { PromoSlide, promoByKey } from "@/components/social/PromoSlide";
 
 /**
  * The posting queue — saved frames in a right-side sheet. Saving a frame
@@ -36,6 +38,60 @@ const POSTABLE_PLATFORMS = ["instagram", "facebook"] as const;
 
 type Phase = "rendering" | "publishing";
 
+/**
+ * The draft's slides at preview size — the same components that get posted,
+ * scaled down, so the preview IS the post.
+ */
+function DraftPreview({ draft }: { draft: FrameDraft }) {
+  const fmt = formatByKey(draft.format_key);
+  const w = fmt?.w ?? draft.w;
+  const h = fmt?.h ?? draft.h;
+  const previewH = 240;
+  const scale = previewH / h;
+  const slides: CarouselSlide[] = draft.payload.slides ?? [
+    { type: "question", question: draft.payload },
+  ];
+  return (
+    <div className="flex gap-3 overflow-x-auto pb-2">
+      {slides.map((slide, i) => {
+        const spec = slide.type === "promo" ? promoByKey(slide.promo) : undefined;
+        return (
+          <div key={i} className="shrink-0">
+            <div
+              className="rounded-md overflow-hidden ring-1 ring-border"
+              style={{ width: w * scale, height: previewH }}
+            >
+              <div style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}>
+                {slide.type === "promo" ? (
+                  spec ? (
+                    <PromoSlide w={w} h={h} spec={spec} safeInsets={fmt?.safeInsets} />
+                  ) : (
+                    <div style={{ width: w, height: h }} />
+                  )
+                ) : (
+                  <StarQuestionFrame
+                    w={w}
+                    h={h}
+                    question={slide.question}
+                    answers={slide.question.answers}
+                    reveal={draft.reveal}
+                    lang={draft.language}
+                    safeInsets={fmt?.safeInsets}
+                    categoryKey={slide.question.category_key}
+                  />
+                )}
+              </div>
+            </div>
+            <p className="mt-1 text-center text-[11px] text-muted-foreground">
+              {i + 1} · {slide.type === "promo" ? "promo" : "question"}
+            </p>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export function SavedFramesSheet({
   open,
   onOpenChange,
@@ -52,6 +108,7 @@ export function SavedFramesSheet({
   // Inline outcome line: app toasts are delivery-suppressed (see lib/toast),
   // so the sheet reports results itself.
   const [notice, setNotice] = useState<{ ok: boolean; text: string } | null>(null);
+  const [previewId, setPreviewId] = useState<string | null>(null);
 
   const reload = useCallback(async () => {
     try {
@@ -95,7 +152,7 @@ export function SavedFramesSheet({
       setBusy({ id: draft.id, phase: "rendering" });
       setNotice(null);
       try {
-        const imagesBase64 = await renderDraftToPngs(draft);
+        const imagesBase64 = await renderDraftToImages(draft);
         setBusy({ id: draft.id, phase: "publishing" });
         const { data, error } = await supabase.functions.invoke("social-post", {
           body: {
@@ -107,7 +164,22 @@ export function SavedFramesSheet({
             ...(scheduledFor ? { scheduledFor } : {}),
           },
         });
-        if (error) throw new Error(error.message);
+        if (error) {
+          // invoke() wraps non-2xx as a generic message; the function's own
+          // error body is on error.context and says what actually failed
+          // (e.g. the deployed function predating the carousel contract).
+          let message = error.message;
+          const ctx = (error as { context?: Response }).context;
+          if (ctx && typeof ctx.json === "function") {
+            try {
+              const body = await ctx.json();
+              if (body?.error) message = body.error;
+            } catch {
+              /* keep the generic message */
+            }
+          }
+          throw new Error(message);
+        }
         if (data?.error) throw new Error(data.error);
         const text = scheduledFor
           ? `Scheduled for ${new Date(scheduledFor).toLocaleString()}`
@@ -264,7 +336,20 @@ export function SavedFramesSheet({
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="ml-auto text-destructive"
+                    className="ml-auto"
+                    onClick={() => setPreviewId((id) => (id === d.id ? null : d.id))}
+                  >
+                    {previewId === d.id ? (
+                      <EyeOff className="w-4 h-4 mr-1" />
+                    ) : (
+                      <Eye className="w-4 h-4 mr-1" />
+                    )}
+                    Preview
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-destructive"
                     disabled={anyBusy}
                     onClick={async () => {
                       await frameDrafts.remove(d.id);
@@ -276,6 +361,8 @@ export function SavedFramesSheet({
                 </div>
 
                 <p className="text-sm">{d.payload.question_text}</p>
+
+                {previewId === d.id && <DraftPreview draft={d} />}
 
                 {d.last_error && d.status === "failed" && (
                   <p className="text-xs text-destructive">{d.last_error}</p>

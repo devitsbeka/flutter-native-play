@@ -124,8 +124,13 @@ serve(async (req) => {
     const mediaItems: Record<string, unknown>[] = [];
     for (let i = 0; i < images.length; i++) {
       const bytes = Uint8Array.from(atob(images[i]), (c) => c.charCodeAt(0));
+      // JPEG (FF D8) vs PNG, by magic bytes — the client sends JPEG now but
+      // the single-image form may still send PNG.
+      const isJpeg = bytes[0] === 0xff && bytes[1] === 0xd8;
+      const mime = isJpeg ? "image/jpeg" : "image/png";
+      const name = `slide-${i + 1}.${isJpeg ? "jpg" : "png"}`;
       const form = new FormData();
-      form.append("file", new Blob([bytes], { type: "image/png" }), `slide-${i + 1}.png`);
+      form.append("file", new Blob([bytes], { type: mime }), name);
       const uploadRes = await fetch(`${LATE_API}/media/upload-direct`, {
         method: "POST",
         headers: { Authorization: `Bearer ${lateKey}` },
@@ -141,8 +146,8 @@ serve(async (req) => {
       mediaItems.push({
         type: "image",
         url: mediaUrl,
-        filename: `slide-${i + 1}.png`,
-        mimeType: "image/png",
+        filename: name,
+        mimeType: mime,
         ...(altText && i === 0 ? { altText } : {}),
       });
     }
