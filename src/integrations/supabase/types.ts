@@ -4656,6 +4656,15 @@ export type Database = {
         Args: { p_player_identifier: string; p_session_id: string }
         Returns: boolean
       }
+      king_abandon_match: { Args: { p_match_id: string }; Returns: Json }
+      king_draw_question: { Args: { p_match_id: string }; Returns: Json }
+      king_expire_question: { Args: { p_match_id: string }; Returns: Json }
+      king_show_options: { Args: { p_match_id: string }; Returns: Json }
+      king_start_match: { Args: { p_language?: string }; Returns: Json }
+      king_submit_answer: {
+        Args: { p_answer: string; p_match_id: string }
+        Returns: Json
+      }
       national_question_progress: {
         Args: never
         Returns: {

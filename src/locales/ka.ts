@@ -1727,6 +1727,30 @@ export const ka = {
     finalScore: "საბოლოო ანგარიში {a} : {b}",
   },
 
+  // MyTrivia King (docs/GAME_TYPES_DESIGN.md §3)
+  king: {
+    title: "MyTrivia King",
+    you: "შენ",
+    king: "მეფე",
+    firstTo6: "6 ქულამდე",
+    introTitle: "ურთულესი კითხვები. წინასწარი ცოდნა არ გჭირდება.",
+    introBody: "ერთი წუთი ფიქრისთვის — პასუხის ვარიანტების გარეშე. მერე 10 წამი არჩევანისთვის. გატეხე კითხვა და ქულა შენია; შეცდი — და ქულას მეფე იღებს. ვინც პირველი მიაღწევს 6-ს, იგებს.",
+    start: "გამოწვევა მეფესთან",
+    questionNo: "კითხვა {n}",
+    thinkHint: "ვარიანტები ჯერ არ ჩანს. იფიქრე.",
+    haveIt: "ვიცი პასუხი!",
+    commitHint: "აირჩიე პასუხი",
+    cracked: "გატეხე!",
+    kingScores: "ქულა მეფეს ერგო",
+    answerLabel: "პასუხი",
+    logicLabel: "ლოგიკა",
+    next: "შემდეგი კითხვა",
+    youWon: "შენ დაამარცხე მეფე!",
+    kingWon: "ამჯერად მეფემ მოიგო",
+    playAgain: "კიდევ ერთხელ",
+    noQuestions: "შენს ენაზე კითხვები ჯერ არ არის",
+  },
+
   extra: {
     questionsAnsweredLabel: "გაცემული პასუხი",
     successRateLabel: "წარმატება",

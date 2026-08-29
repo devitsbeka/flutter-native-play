@@ -90,8 +90,11 @@ export const GAME_TYPES: GameTypeDescriptor[] = [
     minPlayers: 1,
     maxPlayers: 1,
     approxMinutes: 10,
+    // Dark-launched like team_battle: /king works once the King migrations
+    // are deployed, and the card goes live via the DB registry's is_live.
     status: "coming_soon",
     badge: "beta",
     sortOrder: 40,
+    launch: (navigate) => navigate("/king"),
   },
 ];
