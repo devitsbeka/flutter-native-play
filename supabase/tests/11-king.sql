@@ -103,6 +103,17 @@ BEGIN
       OR jsonb_array_length(incorrect_answers) <> 3;
   PERFORM pg_temp.must_equal(n, 0::bigint,
     'every question carries an explanation and exactly 3 distractors');
+  -- The Georgian pool: the launch-day bug was a ka-language player against
+  -- an EN-only pool — king_draw_question draws strictly by language.
+  SELECT count(*) INTO n FROM public.king_questions
+   WHERE language = 'ka' AND is_active;
+  IF n < 20 THEN
+    RAISE EXCEPTION 'expected a seeded Georgian pool of at least 20, found %', n;
+  END IF;
+  SELECT count(*) INTO n FROM public.king_questions
+   WHERE source = 'seed-ka-1' AND translated_from IS NULL;
+  PERFORM pg_temp.must_equal(n, 0::bigint,
+    'every Georgian question points at its English source');
 END $$;
 
 -- ── a full match ───────────────────────────────────────────────────────────

@@ -116,6 +116,12 @@ function Board() {
   const secondsLeft = useServerDeadline(state?.deadline, advance);
   const picker = participants.find((p) => p.user_id === state?.active_player);
 
+  // A bot never taps: any device pumping tb_advance makes the server play
+  // the bot's whole turn. First caller wins; the rest no-op.
+  useEffect(() => {
+    if (state?.phase === "board" && picker?.is_bot) void advance();
+  }, [state?.phase, state?.active_player, picker?.is_bot, advance]);
+
   return (
     <div className="flex flex-col gap-3">
       <ScoreBar />

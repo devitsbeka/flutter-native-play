@@ -55,6 +55,8 @@ interface TeamBattleContextValue {
   enterRoom: (roomId: string) => Promise<boolean>;
   leaveRoom: () => Promise<void>;
   setTeam: (team: TBTeam) => Promise<void>;
+  addBot: (team: TBTeam) => Promise<void>;
+  removeBot: (botId: string) => Promise<void>;
   startMatch: (categories: { uuid: string; name: string }[]) => Promise<boolean>;
   submitRps: (gesture: TBGesture) => Promise<void>;
   pickTile: (tileId: string) => Promise<void>;
@@ -347,6 +349,25 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
     [user],
   );
 
+  // Host-only, lobby-only: the server inserts a clearly-labeled AI player
+  // (is_bot) whose turns it plays itself.
+  const addBot = useCallback(async (team: TBTeam) => {
+    const roomId = roomIdRef.current;
+    if (!roomId) return;
+    const { error } = await supabase.rpc("tb_add_bot", { p_room_id: roomId, p_team: team });
+    if (error) {
+      console.error("[TB] add bot failed", error);
+      toast.error(error.message);
+    }
+  }, []);
+
+  const removeBot = useCallback(async (botId: string) => {
+    const roomId = roomIdRef.current;
+    if (!roomId) return;
+    const { error } = await supabase.rpc("tb_remove_bot", { p_room_id: roomId, p_bot_id: botId });
+    if (error) console.error("[TB] remove bot failed", error);
+  }, []);
+
   // The host's device assembles the board material through the golden-standard
   // question pipeline and hands it over; the server prices and validates it.
   const startMatch = useCallback(
@@ -523,6 +544,8 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
       enterRoom,
       leaveRoom,
       setTeam,
+      addBot,
+      removeBot,
       startMatch,
       submitRps,
       pickTile,
@@ -533,8 +556,9 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
       settle,
     }),
     [room, participants, tiles, state, loading, isHost, myTeam, isSpotlight,
-     createRoom, joinRoom, enterRoom, leaveRoom, setTeam, startMatch, submitRps,
-     pickTile, submitAnswer, voteSuper, submitSuper, advance, settle],
+     createRoom, joinRoom, enterRoom, leaveRoom, setTeam, addBot, removeBot,
+     startMatch, submitRps, pickTile, submitAnswer, voteSuper, submitSuper,
+     advance, settle],
   );
 
   return <TeamBattleContext.Provider value={value}>{children}</TeamBattleContext.Provider>;

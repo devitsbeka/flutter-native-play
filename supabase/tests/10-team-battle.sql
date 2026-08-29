@@ -127,6 +127,10 @@ DECLARE
   v_alice_coins_before integer;
   v_bob_coins_before integer;
   v_settle jsonb;
+  v_bot_a uuid;
+  v_bot_b uuid;
+  v_iter integer;
+  v_is_bot boolean;
   i integer;
 BEGIN
   INSERT INTO auth.users (id, email) VALUES
@@ -463,6 +467,107 @@ BEGIN
   v_settle := public.tb_settle(v_room);
   PERFORM pg_temp.must_equal((v_settle ->> 'applied')::boolean, true,
     'a rematch settles under its own game id');
+
+  -- ── match 3: bots fill the empty seats ───────────────────────────────────
+  -- 2 humans + 2 bots, 2v2. The humans throw, pick and answer; the bots'
+  -- turns are played entirely by tb_advance. Whatever the dice do, the match
+  -- must converge — through the super round if the bots tie it up.
+
+  PERFORM pg_temp.as_user(v_bob);
+  PERFORM pg_temp.must_fail(
+    format('SELECT public.tb_add_bot(%L, %L)', v_room, 'a'),
+    'only the host adds bots');
+  PERFORM pg_temp.as_user(v_alice);
+  v_bot_a := public.tb_add_bot(v_room, 'a');
+  v_bot_b := public.tb_add_bot(v_room, 'b');
+  PERFORM pg_temp.must_equal(
+    (SELECT count(*)::int FROM public.room_participants
+      WHERE room_id = v_room AND is_bot), 2,
+    'two bots seated');
+
+  v_board := jsonb_build_object(
+    'tiles', jsonb_build_array(
+      pg_temp.mk_tile('w0', 'easy', 5), pg_temp.mk_tile('w1', 'easy', 5),
+      pg_temp.mk_tile('w2', 'easy', 5), pg_temp.mk_tile('w3', 'easy', 5)),
+    'super_questions', pg_temp.mk_super(5));
+  v_game := public.tb_start_match(v_room, v_board);
+
+  PERFORM public.tb_submit_rps(v_room, 'rock');
+  PERFORM pg_temp.as_user(v_bob);
+  PERFORM public.tb_submit_rps(v_room, 'scissors');
+  SELECT * INTO v_state FROM public.team_battle_state WHERE room_id = v_room;
+  PERFORM pg_temp.must_equal(v_state.phase, 'board',
+    'the opener resolves on the human throws alone');
+
+  v_iter := 0;
+  LOOP
+    v_iter := v_iter + 1;
+    IF v_iter > 40 THEN
+      RAISE EXCEPTION 'bot match did not converge (stuck in %)', v_state.phase;
+    END IF;
+    SELECT * INTO v_state FROM public.team_battle_state WHERE room_id = v_room;
+    EXIT WHEN v_state.phase = 'done';
+
+    SELECT COALESCE(is_bot, false) INTO v_is_bot
+      FROM public.room_participants
+     WHERE room_id = v_room AND user_id = v_state.active_player;
+
+    IF v_state.phase = 'board' THEN
+      IF v_is_bot THEN
+        PERFORM pg_temp.as_user(v_alice);
+        PERFORM public.tb_advance(v_room);  -- the server plays the bot's turn
+      ELSE
+        PERFORM pg_temp.as_user(v_state.active_player);
+        PERFORM public.tb_pick_tile(v_room,
+          (SELECT id FROM public.team_battle_board
+            WHERE game_id = v_game AND claimed_by_team IS NULL
+            ORDER BY tile_index LIMIT 1));
+      END IF;
+    ELSIF v_state.phase = 'rapid_fire' THEN
+      IF v_is_bot THEN
+        PERFORM pg_temp.as_user(NULL);
+        UPDATE public.team_battle_state SET deadline = now() - interval '1 second'
+         WHERE room_id = v_room;
+        PERFORM pg_temp.as_user(v_alice);
+        PERFORM public.tb_advance(v_room);
+      ELSE
+        PERFORM pg_temp.as_user(v_state.active_player);
+        FOR i IN v_state.turn_answers..4 LOOP
+          PERFORM public.tb_submit_answer(v_room, i,
+            (SELECT questions -> i ->> 'correct_answer'
+               FROM public.team_battle_board WHERE id = v_state.active_tile));
+        END LOOP;
+        PERFORM public.tb_advance(v_room);
+      END IF;
+    ELSIF v_state.phase = 'super_vote' THEN
+      PERFORM pg_temp.as_user(v_alice);
+      PERFORM public.tb_vote_super(v_room, v_alice);
+      PERFORM pg_temp.as_user(v_bob);
+      PERFORM public.tb_vote_super(v_room, v_bob);
+    ELSIF v_state.phase = 'super_round' THEN
+      PERFORM pg_temp.must_equal(v_state.super ->> 'champion_a', v_alice::text,
+        'a human champions the team, never the bot');
+      PERFORM pg_temp.as_user(v_alice);
+      PERFORM public.tb_submit_super(v_room,
+        COALESCE((v_state.super ->> 'question_index')::int, 0),
+        v_state.super -> 'questions'
+          -> COALESCE((v_state.super ->> 'question_index')::int, 0) ->> 'correct_answer');
+    END IF;
+  END LOOP;
+
+  PERFORM pg_temp.as_user(v_alice);
+  v_settle := public.tb_settle(v_room);
+  PERFORM pg_temp.must_equal((v_settle ->> 'applied')::boolean, true, 'the bot match settles');
+  PERFORM pg_temp.must_equal(
+    (SELECT count(*)::int FROM public.currency_grants
+      WHERE user_id IN (v_bot_a, v_bot_b)), 0,
+    'bots are never paid');
+
+  PERFORM public.tb_remove_bot(v_room, v_bot_a);
+  PERFORM public.tb_remove_bot(v_room, v_bot_b);
+  PERFORM pg_temp.must_equal(
+    (SELECT count(*)::int FROM public.room_participants WHERE room_id = v_room), 2,
+    'bots can be cleared out after the match');
 
   -- Cleanup so reruns start clean — the mode goes back to dark.
   PERFORM pg_temp.as_user(NULL);

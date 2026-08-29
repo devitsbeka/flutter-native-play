@@ -42,6 +42,9 @@ export default function KingPage() {
   const [state, setState] = useState<KingState | null>(null);
   const [reveal, setReveal] = useState<KingState | null>(null);
   const [busy, setBusy] = useState(false);
+  // The pool for the player's language can be empty; a toast alone made the
+  // start button look dead, so the intro card says it in place.
+  const [noPool, setNoPool] = useState(false);
 
   const matchIdRef = useRef<string | null>(null);
   matchIdRef.current = state?.match_id ?? matchIdRef.current;
@@ -49,13 +52,14 @@ export default function KingPage() {
   const fail = useCallback(
     (error: { message?: string } | null) => {
       if (error?.message?.includes("KING_NO_QUESTIONS")) {
-        toast.error(t("king.noQuestions"));
+        setNoPool(true);
+        setStage("intro");
       } else if (error) {
         console.error("[King]", error);
         toast.error(error.message ?? "error");
       }
     },
-    [t],
+    [],
   );
 
   // Where a state row puts the UI: mid-question resumes into the right
@@ -87,6 +91,7 @@ export default function KingPage() {
     const { data, error } = await supabase.rpc("king_draw_question", { p_match_id: matchId });
     setBusy(false);
     if (error) return fail(error);
+    setNoPool(false);
     applyState(data as unknown as KingState);
   }, [busy, applyState, fail]);
 
@@ -199,6 +204,11 @@ export default function KingPage() {
               <p className="font-bold text-[#402666] mb-2">{t("king.introTitle")}</p>
               <p className="text-sm text-[#402666]/60">{t("king.introBody")}</p>
             </div>
+            {noPool && (
+              <div className="rounded-[16px] px-4 py-3 bg-amber-500/10 border border-amber-500/30">
+                <p className="text-sm font-medium text-[#402666]">{t("king.noQuestions")}</p>
+              </div>
+            )}
             <button
               onClick={() => void draw()}
               disabled={busy || !state}

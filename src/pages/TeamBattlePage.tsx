@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ChevronLeft, Copy, Crown, Swords } from "lucide-react";
+import { Bot, ChevronLeft, Copy, Crown, Plus, Swords, X } from "lucide-react";
 import { toast } from "@/lib/toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -128,8 +128,10 @@ function TBEntry() {
 function TBLobby() {
   const { t } = useLanguage();
   const { user } = useAuth();
-  const { room, participants, isHost, myTeam, setTeam, startMatch, leaveRoom, loading, state, settle } =
-    useTeamBattle();
+  const {
+    room, participants, isHost, myTeam, setTeam, addBot, removeBot,
+    startMatch, leaveRoom, loading, state, settle,
+  } = useTeamBattle();
   const { categories } = useCategories();
 
   // A finished match parks the room back at "waiting" with a done state row;
@@ -188,7 +190,11 @@ function TBLobby() {
             <div className="flex flex-col gap-2">
               {teamOf(team).map((p) => (
                 <div key={p.user_id} className="flex items-center gap-2">
-                  {p.avatar_url ? (
+                  {p.is_bot ? (
+                    <div className="w-7 h-7 rounded-full bg-[#7C3AED]/15 flex items-center justify-center">
+                      <Bot className="w-4 h-4 text-[#7C3AED]" />
+                    </div>
+                  ) : p.avatar_url ? (
                     <img src={p.avatar_url} alt="" className="w-7 h-7 rounded-full object-cover" />
                   ) : (
                     <div className="w-7 h-7 rounded-full bg-[#7C3AED]/20" />
@@ -198,17 +204,38 @@ function TBLobby() {
                     {p.user_id === user?.id ? ` (${t("teamBattle.you")})` : ""}
                   </span>
                   {p.is_host && <Crown className="w-3.5 h-3.5 text-amber-500 shrink-0" />}
+                  {p.is_bot && isHost && (
+                    <button
+                      onClick={() => void removeBot(p.user_id)}
+                      aria-label={t("common.close")}
+                      className="ml-auto text-[#402666]/40 hover:text-[#402666]"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
-            {myTeam !== team && (
-              <button
-                onClick={() => void setTeam(team)}
-                className="mt-3 text-xs font-bold text-[#7C3AED]"
-              >
-                {t("teamBattle.joinTeam")}
-              </button>
-            )}
+            <div className="flex items-center gap-3 mt-3">
+              {myTeam !== team && (
+                <button
+                  onClick={() => void setTeam(team)}
+                  className="text-xs font-bold text-[#7C3AED]"
+                >
+                  {t("teamBattle.joinTeam")}
+                </button>
+              )}
+              {isHost && teamOf(team).length < 5 && (
+                <button
+                  onClick={() => void addBot(team)}
+                  className="text-xs font-bold text-[#402666]/50 flex items-center gap-1"
+                >
+                  <Plus className="w-3 h-3" />
+                  <Bot className="w-3.5 h-3.5" />
+                  {t("teamBattle.addBot")}
+                </button>
+              )}
+            </div>
           </div>
         ))}
       </div>

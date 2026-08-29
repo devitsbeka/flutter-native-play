@@ -1690,6 +1690,7 @@ export const ka = {
     teamB: "გუნდი B",
     you: "შენ",
     joinTeam: "ამ გუნდში გადასვლა",
+    addBot: "AI მოთამაშე",
     start: "მატჩის დაწყება",
     starting: "დაფა მზადდება…",
     waitingHost: "ველოდებით ჰოსტს…",

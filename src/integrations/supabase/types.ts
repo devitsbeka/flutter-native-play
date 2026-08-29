@@ -2352,6 +2352,7 @@ export type Database = {
           current_question: number | null
           has_seen_results: boolean | null
           id: string
+          is_bot: boolean
           is_host: boolean | null
           joined_at: string | null
           last_played_at: string | null
@@ -2373,6 +2374,7 @@ export type Database = {
           current_question?: number | null
           has_seen_results?: boolean | null
           id?: string
+          is_bot?: boolean
           is_host?: boolean | null
           joined_at?: string | null
           last_played_at?: string | null
@@ -2394,6 +2396,7 @@ export type Database = {
           current_question?: number | null
           has_seen_results?: boolean | null
           id?: string
+          is_bot?: boolean
           is_host?: boolean | null
           joined_at?: string | null
           last_played_at?: string | null
@@ -4800,10 +4803,18 @@ export type Database = {
         }
         Returns: Json
       }
+      tb_add_bot: {
+        Args: { p_room_id: string; p_team: string }
+        Returns: string
+      }
       tb_advance: { Args: { p_room_id: string }; Returns: string }
       tb_pick_tile: {
         Args: { p_room_id: string; p_tile_id: string }
         Returns: string
+      }
+      tb_remove_bot: {
+        Args: { p_bot_id: string; p_room_id: string }
+        Returns: undefined
       }
       tb_settle: { Args: { p_room_id: string }; Returns: Json }
       tb_start_match: {

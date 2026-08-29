@@ -1412,6 +1412,7 @@ export const de: KaTranslations = {
     teamB: "Team B",
     you: "du",
     joinTeam: "Zu diesem Team wechseln",
+    addBot: "KI-Spieler",
     start: "Match starten",
     starting: "Brett wird vorbereitet…",
     waitingHost: "Warten auf den Host…",
