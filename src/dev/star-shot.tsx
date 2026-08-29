@@ -8,6 +8,7 @@
  */
 import { createRoot } from "react-dom/client";
 import { StarQuestionFrame } from "@/components/social/StarQuestionFrame";
+import { PromoSlide, promoByKey } from "@/components/social/PromoSlide";
 import "@/components/social/star-frame.css";
 
 const params = new URLSearchParams(window.location.search);
@@ -25,7 +26,18 @@ const question = {
 
 const [st, sb, sl, sr] = get("safe", "0,0,0,0").split(",").map(Number);
 
+// ?promo=<key> renders a promo slide instead of a question frame.
+const promoSpec = promoByKey(get("promo", ""));
+
 createRoot(document.getElementById("root")!).render(
+  promoSpec ? (
+    <PromoSlide
+      w={w}
+      h={h}
+      spec={promoSpec}
+      safeInsets={{ top: st, bottom: sb, left: sl, right: sr }}
+    />
+  ) : (
   <StarQuestionFrame
     w={w}
     h={h}
@@ -35,5 +47,6 @@ createRoot(document.getElementById("root")!).render(
     lang={get("lang", "ka")}
     safeInsets={{ top: st, bottom: sb, left: sl, right: sr }}
     categoryKey={params.get("categoryKey") ?? undefined}
-  />,
+  />
+  ),
 );

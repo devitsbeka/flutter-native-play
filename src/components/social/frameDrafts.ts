@@ -11,13 +11,27 @@ import type { SupabaseClient } from "@supabase/supabase-js";
  * one place that talks to the table, with its row shape kept by hand.
  */
 
-export interface FramePayload {
+export interface QuestionSnapshot {
   id: string;
   question_text: string;
   correct_answer: string;
   icon_slug?: string | null;
   answers: string[];
   category_key?: string;
+}
+
+/** One slide of a carousel post: a question frame or a promo slide. */
+export type CarouselSlide =
+  | { type: "question"; question: QuestionSnapshot }
+  | { type: "promo"; promo: string };
+
+export interface FramePayload extends QuestionSnapshot {
+  /**
+   * Present on carousel drafts: the full slide plan, in posting order. The
+   * flat QuestionSnapshot fields then mirror the first question slide so
+   * lists have something to show without unpacking.
+   */
+  slides?: CarouselSlide[];
 }
 
 export interface FrameDraft {
@@ -80,6 +94,17 @@ export const frameDrafts = {
     if (error) throw error;
   },
 };
+
+/** Default Georgian caption for a carousel post: tease the set, not the answers. */
+export function carouselCaption(questionTexts: string[]): string {
+  return `🧠 ${questionTexts.length} კითხვა — რამდენს გასცემ სწორ პასუხს? ⏱️
+
+გადაფურცლე და დაწერე შენი პასუხები კომენტარებში 👇
+
+ითამაშე ათასობით ქართული კითხვა სრულიად უფასოდ MyTrivia-ზე 🎮 → mytrivia.io
+
+#MyTrivia #დღისკითხვა #ტრივია #კვიზი #ვიქტორინა #კითხვაპასუხი #თამაში #საქართველო #ქართული #quiz #trivia #quizoftheday #georgia`;
+}
 
 /** Default Georgian caption for a question post, hashtags included. */
 export function defaultCaption(questionText: string): string {

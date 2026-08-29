@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Send, CalendarClock, Trash2, ExternalLink } from "lucide-react";
 import { frameDrafts, type FrameDraft } from "@/components/social/frameDrafts";
 import { formatByKey } from "@/components/social/frameFormats";
-import { renderDraftToPng } from "@/components/social/renderFrameDraft";
+import { renderDraftToPngs } from "@/components/social/renderFrameDraft";
 
 /**
  * The posting queue — saved frames in a right-side sheet. Saving a frame
@@ -95,12 +95,12 @@ export function SavedFramesSheet({
       setBusy({ id: draft.id, phase: "rendering" });
       setNotice(null);
       try {
-        const imageBase64 = await renderDraftToPng(draft);
+        const imagesBase64 = await renderDraftToPngs(draft);
         setBusy({ id: draft.id, phase: "publishing" });
         const { data, error } = await supabase.functions.invoke("social-post", {
           body: {
             draftId: draft.id,
-            imageBase64,
+            imagesBase64,
             caption: draft.caption,
             platforms: draft.platforms,
             altText: draft.payload.question_text,
@@ -222,7 +222,9 @@ export function SavedFramesSheet({
                     <Loader2 className="w-5 h-5 animate-spin" />
                     <span className="text-sm font-medium">
                       {busy.phase === "rendering"
-                        ? "Rendering frame…"
+                        ? d.payload.slides
+                          ? `Rendering ${d.payload.slides.length} slides…`
+                          : "Rendering frame…"
                         : "Uploading & publishing…"}
                     </span>
                   </div>
@@ -235,6 +237,11 @@ export function SavedFramesSheet({
                     {d.status}
                   </span>
                   <span className="text-sm font-medium">{fmt?.label ?? d.format_key}</span>
+                  {d.payload.slides && (
+                    <span className="text-xs font-semibold text-primary">
+                      carousel · {d.payload.slides.length} slides
+                    </span>
+                  )}
                   <span className="text-xs text-muted-foreground uppercase">{d.language}</span>
                   {d.reveal && (
                     <span className="text-xs text-muted-foreground">answer revealed</span>

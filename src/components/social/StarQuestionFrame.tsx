@@ -21,6 +21,7 @@
  */
 
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
+import { fitQuestionFont } from "@/components/social/questionFit";
 
 export interface StarFrameQuestion {
   id: string;
@@ -146,7 +147,7 @@ function AnswerRow({
 }
 
 /** Background stack — node 771:1508 plus the template overlay of 915:1843. */
-function Background() {
+export function Background() {
   return (
     <div aria-hidden style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
       <div style={{ position: "absolute", inset: 0, background: "#0c161c" }} />
@@ -239,8 +240,6 @@ function AvatarCluster({
     </div>
   );
 }
-
-import { fitQuestionFont } from "@/components/social/questionFit";
 
 export function StarQuestionFrame({
   w,

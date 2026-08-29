@@ -15,12 +15,16 @@ import { getCorsHeaders } from "../_shared/cors.ts";
  *
  * Body: {
  *   draftId?: string,        // social_frame_drafts row to update with the outcome
- *   imageBase64: string,     // the rendered frame, PNG, no data: prefix
+ *   imagesBase64?: string[], // rendered slides in order, PNG, no data: prefix
+ *   imageBase64?: string,    // single-image form (kept for older clients)
  *   caption: string,
  *   platforms: string[],     // subset of ["instagram", "facebook"]
  *   scheduledFor?: string,   // RFC3339; omitted = publish now
  *   altText?: string,
  * }
+ *
+ * More than one image makes the post a carousel on platforms that support
+ * it (Instagram, Facebook) — Late takes the mediaItems array as-is.
  *
  * Secrets: LATE_API_KEY (Supabase platform secret — never in the client).
  */
@@ -68,11 +72,19 @@ serve(async (req) => {
       });
     }
 
-    const { draftId, imageBase64, caption, platforms, scheduledFor, altText } =
+    const { draftId, imagesBase64, imageBase64, caption, platforms, scheduledFor, altText } =
       await req.json();
 
-    if (!imageBase64 || typeof imageBase64 !== "string") {
-      return json(400, { error: "imageBase64 is required" });
+    const images: string[] = Array.isArray(imagesBase64)
+      ? imagesBase64.filter((i: unknown) => typeof i === "string" && i.length > 0)
+      : typeof imageBase64 === "string" && imageBase64.length > 0
+        ? [imageBase64]
+        : [];
+    if (images.length === 0) {
+      return json(400, { error: "imagesBase64 (or imageBase64) is required" });
+    }
+    if (images.length > 10) {
+      return json(400, { error: "At most 10 slides per post" });
     }
     const wanted: string[] = Array.isArray(platforms) && platforms.length
       ? platforms
@@ -108,32 +120,37 @@ serve(async (req) => {
       return await fail(400, `No connected Late account for: ${wanted.join(", ")}`);
     }
 
-    // Upload the rendered frame
-    const bytes = Uint8Array.from(atob(imageBase64), (c) => c.charCodeAt(0));
-    const form = new FormData();
-    form.append("file", new Blob([bytes], { type: "image/png" }), "frame.png");
-    const uploadRes = await fetch(`${LATE_API}/media/upload-direct`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${lateKey}` },
-      body: form,
-    });
-    if (!uploadRes.ok) {
-      return await fail(502, `Late media upload failed: HTTP ${uploadRes.status}`);
+    // Upload every rendered slide, in order
+    const mediaItems: Record<string, unknown>[] = [];
+    for (let i = 0; i < images.length; i++) {
+      const bytes = Uint8Array.from(atob(images[i]), (c) => c.charCodeAt(0));
+      const form = new FormData();
+      form.append("file", new Blob([bytes], { type: "image/png" }), `slide-${i + 1}.png`);
+      const uploadRes = await fetch(`${LATE_API}/media/upload-direct`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${lateKey}` },
+        body: form,
+      });
+      if (!uploadRes.ok) {
+        return await fail(
+          502,
+          `Late media upload failed on slide ${i + 1}/${images.length}: HTTP ${uploadRes.status}`,
+        );
+      }
+      const { url: mediaUrl } = await uploadRes.json();
+      mediaItems.push({
+        type: "image",
+        url: mediaUrl,
+        filename: `slide-${i + 1}.png`,
+        mimeType: "image/png",
+        ...(altText && i === 0 ? { altText } : {}),
+      });
     }
-    const { url: mediaUrl } = await uploadRes.json();
 
     // Create the post
     const postBody: Record<string, unknown> = {
       content: caption ?? "",
-      mediaItems: [
-        {
-          type: "image",
-          url: mediaUrl,
-          filename: "frame.png",
-          mimeType: "image/png",
-          ...(altText ? { altText } : {}),
-        },
-      ],
+      mediaItems,
       platforms: targets,
       timezone: "UTC",
       ...(scheduledFor ? { scheduledFor } : { publishNow: true }),

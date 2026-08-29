@@ -6,8 +6,15 @@ import { toast } from "@/lib/toast";
 import { Shuffle, Eye, EyeOff, BookmarkPlus, ListTodo } from "lucide-react";
 import { seededShuffle, type Question } from "@/components/social/QotdFrame";
 import { StarQuestionFrame } from "@/components/social/StarQuestionFrame";
+import { PROMO_SLIDES } from "@/components/social/PromoSlide";
 import { FORMATS } from "@/components/social/frameFormats";
-import { frameDrafts, defaultCaption } from "@/components/social/frameDrafts";
+import {
+  frameDrafts,
+  defaultCaption,
+  carouselCaption,
+  type CarouselSlide,
+  type QuestionSnapshot,
+} from "@/components/social/frameDrafts";
 import { SavedFramesSheet } from "@/components/social/SavedFrames";
 import "@/components/social/star-frame.css";
 
@@ -37,6 +44,9 @@ export default function SocialFrames() {
   const [pool, setPool] = useState<PoolQuestion[]>([]);
   const [savedRefresh, setSavedRefresh] = useState(0);
   const [queueOpen, setQueueOpen] = useState(false);
+  const [promoPlacement, setPromoPlacement] = useState<"bookends" | "start" | "middle" | "end">(
+    "bookends",
+  );
   // categories.id (uuid) → categories.category_id (ascii key the icon
   // library understands), for the icon fallback chain.
   const [categoryKeys, setCategoryKeys] = useState<Record<string, string>>({});
@@ -156,6 +166,81 @@ export default function SocialFrames() {
     }
   };
 
+  /** Snapshot a pool question with its seeded answer order. */
+  const snapshot = (q: PoolQuestion): QuestionSnapshot => {
+    const incorrect = Array.isArray(q.incorrect_answers)
+      ? (q.incorrect_answers as string[]).filter((a) => typeof a === "string")
+      : [];
+    return {
+      id: q.id,
+      question_text: q.question_text,
+      correct_answer: q.correct_answer,
+      icon_slug: q.icon_slug,
+      answers: seededShuffle([q.correct_answer, ...incorrect.slice(0, 3)], q.id),
+      category_key: categoryKeys[q.category_id],
+    };
+  };
+
+  /**
+   * Save a 5-slide carousel: questions from the pool (current one first)
+   * with promo slides at the chosen spots. Promos rotate through the set so
+   * consecutive carousels don't repeat the same ad.
+   */
+  const saveCarousel = async () => {
+    if (!question) return;
+    const f = FORMATS.find((x) => x.key === "ig-feed")!;
+    try {
+      const promoCount = promoPlacement === "bookends" ? 2 : 1;
+      const questionCount = 5 - promoCount;
+      const others = pool.filter((q) => q.id !== question.id);
+      // Deterministic-enough variety: random picks from the filtered pool.
+      const picked: PoolQuestion[] = [question];
+      while (picked.length < questionCount && others.length) {
+        const i = Math.floor(Math.random() * others.length);
+        picked.push(others.splice(i, 1)[0]);
+      }
+      if (picked.length < questionCount) {
+        toast.error("Not enough questions in the pool for a carousel");
+        return;
+      }
+
+      const promoOffset = Math.floor(Math.random() * PROMO_SLIDES.length);
+      const promoAt = (i: number): CarouselSlide => ({
+        type: "promo",
+        promo: PROMO_SLIDES[(promoOffset + i) % PROMO_SLIDES.length].key,
+      });
+      const qSlides: CarouselSlide[] = picked.map((q) => ({
+        type: "question",
+        question: snapshot(q),
+      }));
+
+      let slides: CarouselSlide[];
+      if (promoPlacement === "bookends") slides = [promoAt(0), ...qSlides, promoAt(1)];
+      else if (promoPlacement === "start") slides = [promoAt(0), ...qSlides];
+      else if (promoPlacement === "end") slides = [...qSlides, promoAt(0)];
+      else slides = [...qSlides.slice(0, 2), promoAt(0), ...qSlides.slice(2)];
+
+      const first = snapshot(question);
+      await frameDrafts.insert({
+        language: lang,
+        format_key: f.key,
+        w: f.w,
+        h: f.h,
+        reveal,
+        question_id: question.id,
+        payload: { ...first, slides },
+        caption: carouselCaption(picked.map((q) => q.question_text)),
+        platforms: ["instagram"],
+        created_by: user?.id ?? null,
+      });
+      setSavedRefresh((n) => n + 1);
+      setQueueOpen(true);
+      toast.success("Saved carousel to the queue");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Save failed");
+    }
+  };
+
   return (
     <div className="p-6 space-y-6">
       <div>
@@ -196,6 +281,22 @@ export default function SocialFrames() {
           <ListTodo className="w-4 h-4 mr-2" />
           Queue
         </Button>
+        <div className="flex items-center gap-2 pl-2 border-l">
+          <select
+            value={promoPlacement}
+            onChange={(e) => setPromoPlacement(e.target.value as typeof promoPlacement)}
+            className="border rounded-md px-2 py-1.5 text-sm bg-background"
+          >
+            <option value="bookends">Promo: start + end · 3 questions</option>
+            <option value="start">Promo: start · 4 questions</option>
+            <option value="middle">Promo: middle · 4 questions</option>
+            <option value="end">Promo: end · 4 questions</option>
+          </select>
+          <Button size="sm" onClick={saveCarousel} disabled={!question}>
+            <BookmarkPlus className="w-4 h-4 mr-2" />
+            Save carousel
+          </Button>
+        </div>
         {question && (
           <span className="text-xs text-muted-foreground">
             {pool.length} in pool · difficulty {question.difficulty}
