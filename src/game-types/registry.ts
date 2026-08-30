@@ -92,11 +92,13 @@ export const GAME_TYPES: GameTypeDescriptor[] = [
     icon: "crown",
     tileBg: "linear-gradient(135deg, #4ADE80 0%, #34D399 45%, #14B8A6 100%)",
     tileShadow: "0 6px 14px rgba(20,184,166,0.35), inset 0 1px 0 rgba(255,255,255,0.4)",
-    minPlayers: 1,
-    maxPlayers: 1,
-    approxMinutes: 10,
+    minPlayers: 2,
+    maxPlayers: 10,
+    approxMinutes: 15,
     // Dark-launched like team_battle: /king works once the King migrations
     // are deployed, and the card goes live via the DB registry's is_live.
+    // Versus King (20260921100000): a co-op room against the King — captain
+    // vote, six rounds of five, the captain locks the team's answers.
     status: "coming_soon",
     badge: "beta",
     sortOrder: 40,

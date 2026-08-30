@@ -60,7 +60,7 @@ interface TeamBattleContextValue {
   setTeam: (team: TBTeam) => Promise<void>;
   addBot: (team: TBTeam) => Promise<void>;
   removeBot: (botId: string) => Promise<void>;
-  startMatch: (categories: { uuid: string; name: string }[]) => Promise<boolean>;
+  startMatch: (categories: { uuid: string; name: string }[], tileCount?: number) => Promise<boolean>;
   submitRps: (gesture: TBGesture) => Promise<void>;
   pickTile: (tileId: string) => Promise<void>;
   submitAnswer: (questionIndex: number, answer: string) => Promise<{ correct: boolean } | null>;
@@ -389,7 +389,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
   // The host's device assembles the board material through the golden-standard
   // question pipeline and hands it over; the server prices and validates it.
   const startMatch = useCallback(
-    async (categories: { uuid: string; name: string }[]): Promise<boolean> => {
+    async (categories: { uuid: string; name: string }[], requestedTiles?: number): Promise<boolean> => {
       const roomId = roomIdRef.current;
       if (!roomId) return false;
       if (categories.length === 0) return false;
@@ -398,7 +398,12 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
         const teamSize = participants.filter((p) => p.team === "a").length;
         // Even by construction (both operands of max are even), within the
         // server's 12-tile cap, and large enough that everyone gets a turn.
-        const tileCount = Math.min(12, Math.max(6, 2 * teamSize));
+        // The lobby's match-length picker can ask for a larger board; the
+        // same floor and cap still apply, so the server never refuses it.
+        const minTiles = Math.max(6, 2 * teamSize);
+        const tileCount = requestedTiles
+          ? Math.min(12, Math.max(minTiles, requestedTiles - (requestedTiles % 2)))
+          : Math.min(12, minTiles);
         const difficulties: string[] = [];
         for (let i = 0; i < tileCount; i++) {
           difficulties.push(i < tileCount / 3 ? "easy" : i < (2 * tileCount) / 3 ? "medium" : "hard");

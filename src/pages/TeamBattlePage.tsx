@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Bot, ChevronLeft, Copy, Crown, Plus, Swords, X } from "lucide-react";
+import { Bot, ChevronLeft, Copy, Crown, Plus, Share2, Swords, X } from "lucide-react";
+import { siteUrl } from "@/config/site";
+import { shareOrCopy } from "@/utils/shareLink";
 import { toast } from "@/lib/toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -146,6 +148,10 @@ function TBLobby() {
   } = useTeamBattle();
   const { categories } = useCategories();
   const gradient = getGradientById(room?.background_gradient ?? undefined);
+  // Match length: total board tiles (each tile is one team's turn). The
+  // engine wants an even count between max(6, 2×team size) and 12; the
+  // context clamps whatever is picked into that window.
+  const [boardSize, setBoardSize] = useState(8);
 
   // A finished match parks the room back at "waiting" with a done state row;
   // the settle claim is idempotent, so any device landing here fires it.
@@ -164,9 +170,16 @@ function TBLobby() {
     toast.success(t("teamBattle.codeCopied"));
   };
 
+  const shareInvite = async () => {
+    const link = siteUrl(`/team-battle?code=${room?.room_code ?? ""}`);
+    const outcome = await shareOrCopy({ title: t("teamBattle.title"), url: link });
+    if (outcome === "copied") toast.success(t("teamBattle.linkCopied"));
+    if (outcome === "failed") toast.error(t("common.error"));
+  };
+
   const start = () => {
     const usable = categories.filter((c) => c.tier === "free" || c.tier === "standard");
-    void startMatch(usable.map((c) => ({ uuid: c.uuid, name: c.name })));
+    void startMatch(usable.map((c) => ({ uuid: c.uuid, name: c.name })), boardSize);
   };
 
   return (
@@ -188,20 +201,54 @@ function TBLobby() {
         </div>
 
         <div className="flex-1 min-h-0 overflow-y-auto px-5 flex flex-col gap-4">
-          <button
-            onClick={copyCode}
-            className="rounded-2xl bg-white/10 backdrop-blur-sm border border-white/[0.12] p-4 flex items-center justify-between"
-          >
-            <div className="text-left">
-              <p className="text-[11px] text-white/60 font-semibold uppercase tracking-wide">
-                {t("teamBattle.shareCode")}
+          <div className="grid grid-cols-[1fr_auto] gap-3">
+            <button
+              onClick={copyCode}
+              className="rounded-2xl bg-white/10 backdrop-blur-sm border border-white/[0.12] p-4 flex items-center justify-between"
+            >
+              <div className="text-left">
+                <p className="text-[11px] text-white/60 font-semibold uppercase tracking-wide">
+                  {t("teamBattle.shareCode")}
+                </p>
+                <p className="font-mono text-2xl font-bold tracking-[0.3em] text-white">
+                  {room?.room_code}
+                </p>
+              </div>
+              <Copy className="w-5 h-5 text-white/60 ml-3" />
+            </button>
+            <button
+              onClick={() => void shareInvite()}
+              aria-label={t("teamBattle.invite")}
+              className="rounded-2xl bg-white/10 backdrop-blur-sm border border-white/[0.12] px-5 flex flex-col items-center justify-center gap-1"
+            >
+              <Share2 className="w-5 h-5 text-white" />
+              <span className="text-[11px] text-white/70 font-semibold">{t("teamBattle.invite")}</span>
+            </button>
+          </div>
+
+          {isHost && (
+            <div>
+              <p className="text-[11px] text-white/60 font-semibold uppercase tracking-wide mb-2">
+                {t("teamBattle.duration")}
               </p>
-              <p className="font-mono text-2xl font-bold tracking-[0.3em] text-white">
-                {room?.room_code}
-              </p>
+              <div className="grid grid-cols-3 gap-2">
+                {[6, 8, 12].map((n) => (
+                  <button
+                    key={n}
+                    onClick={() => setBoardSize(n)}
+                    className="rounded-xl py-2.5 text-sm font-bold transition-colors"
+                    style={{
+                      background: boardSize === n ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.1)",
+                      color: boardSize === n ? "#402666" : "rgba(255,255,255,0.75)",
+                      border: "1px solid rgba(255,255,255,0.15)",
+                    }}
+                  >
+                    {t("teamBattle.roundsN", { n })}
+                  </button>
+                ))}
+              </div>
             </div>
-            <Copy className="w-5 h-5 text-white/60" />
-          </button>
+          )}
 
           <div className="grid grid-cols-2 gap-3">
             {(["a", "b"] as TBTeam[]).map((team) => (

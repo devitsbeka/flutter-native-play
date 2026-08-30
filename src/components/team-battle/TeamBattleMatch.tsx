@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Bot, Star } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -41,6 +41,17 @@ const GESTURES: { key: TBGesture; emoji: string }[] = [
 
 const teamLabel = (t: (k: string) => string, team: TBTeam | null | undefined) =>
   team === "a" ? t("teamBattle.teamA") : t("teamBattle.teamB");
+
+/** The phase as it was on the previous render — how the turn-result
+ *  interstitial knows a board phase arrived FROM a finished turn. */
+function usePrevPhase(phase: string | undefined): string | undefined {
+  const ref = useRef<string | undefined>(undefined);
+  const prev = ref.current;
+  useEffect(() => {
+    ref.current = phase;
+  });
+  return prev;
+}
 
 /** Category slug + icon for a tile, resolved from the tile's category uuid. */
 function useTileCategory(tile: TBTile | undefined) {
@@ -85,8 +96,30 @@ function ScoreHeader({ seconds, maxSeconds }: { seconds?: number; maxSeconds?: n
 }
 
 export function TeamBattleMatch({ onResultDismiss }: { onResultDismiss?: () => void }) {
-  const { state } = useTeamBattle();
+  const { state, tiles } = useTeamBattle();
+
+  // Turn-result interstitial: when a rapid-fire turn closes, the room reads
+  // the outcome — which tile, how many were right, what it paid, the totals —
+  // for three seconds before the board comes back. Purely presentational;
+  // the server has already moved to 'board'.
+  const [turnResultTile, setTurnResultTile] = useState<TBTile | null>(null);
+  const prevPhase = usePrevPhase(state?.phase);
+  useEffect(() => {
+    if (prevPhase !== "rapid_fire" || state?.phase !== "board") return;
+    const latest = tiles
+      .filter((tl) => tl.played_at)
+      .sort((a, b) => ((a.played_at ?? "") < (b.played_at ?? "") ? 1 : -1))[0];
+    if (!latest) return;
+    setTurnResultTile(latest);
+    const timer = setTimeout(() => setTurnResultTile(null), 3000);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state?.phase]);
+
   if (!state) return null;
+  if (turnResultTile && state.phase === "board") {
+    return <PhaseTurnResult tile={turnResultTile} />;
+  }
   switch (state.phase) {
     case "rps":
       return <PhaseRps />;
@@ -253,6 +286,63 @@ function PhaseBoard() {
   );
 }
 
+/** Three seconds of "what that turn was worth" between a turn and the board. */
+function PhaseTurnResult({ tile }: { tile: TBTile }) {
+  const { t } = useLanguage();
+  const { state, participants } = useTeamBattle();
+  const player = participants.find((p) => p.user_id === tile.played_by);
+  const total = tileQuestions(tile).length;
+  return (
+    <div className={SHELL}>
+      <div className={`${COLUMN} items-center justify-center gap-4 px-6`}>
+        <motion.div
+          initial={{ scale: 0.7, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="flex flex-col items-center gap-2"
+        >
+          {player &&
+            (player.is_bot ? (
+              <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center">
+                <Bot className="w-7 h-7 text-white" />
+              </div>
+            ) : (
+              <SmartAvatar avatarUrl={player.avatar_url} fallback={player.nickname} size="lg" />
+            ))}
+          <h1
+            className="text-2xl font-black text-white text-center"
+            style={{ fontFamily: "'TASolivare', sans-serif", textShadow: "0 2px 10px rgba(0,0,0,0.35)" }}
+          >
+            {tile.category_name}
+          </h1>
+          <p className="text-white/80 text-sm">
+            {t("teamBattle.turnTally", { correct: tile.correct_count, total })}
+          </p>
+          <motion.p
+            initial={{ scale: 1.4 }}
+            animate={{ scale: 1 }}
+            className="font-display text-4xl font-black text-white"
+          >
+            +{tile.points_earned}
+          </motion.p>
+          <p className="text-white/60 text-xs">
+            {t("teamBattle.turnFor", { team: teamLabel(t, tile.claimed_by_team as TBTeam) })}
+          </p>
+        </motion.div>
+        <div className="flex items-center gap-8 mt-2">
+          {(["a", "b"] as TBTeam[]).map((team) => (
+            <div key={team} className="flex flex-col items-center">
+              <span className="text-white/70 text-xs font-semibold">{teamLabel(t, team)}</span>
+              <span className="font-display text-3xl font-black text-white">
+                {team === "a" ? state?.team_a_score ?? 0 : state?.team_b_score ?? 0}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /** The shared question card for a rapid-fire question, image treatment and all. */
 function TurnQuestionCard({
   tile,
@@ -388,6 +478,7 @@ function PhaseRapidFire() {
               />
             </div>
           ))}
+          {!isSpotlight && <SpectatorLastAnswer tile={tile} />}
           {!isSpotlight && (
             <p className="text-center text-white/60 text-xs pt-1">
               {t("teamBattle.tileWorth", { n: tile.price })}
@@ -396,6 +487,44 @@ function PhaseRapidFire() {
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * What the spotlight player just tapped, for everyone watching: the option,
+ * the verdict, and what it paid the team. Carried in
+ * team_battle_state.last_answer (20260922100000) so it rides the state
+ * channel the room already holds. The column is newer than the generated
+ * types, hence the cast.
+ */
+function SpectatorLastAnswer({ tile }: { tile: TBTile }) {
+  const { t } = useLanguage();
+  const { state, participants } = useTeamBattle();
+  const last = (state as unknown as {
+    last_answer?: {
+      tile_id: string;
+      question_index: number;
+      user_id: string;
+      option: string;
+      correct: boolean;
+      points: number;
+    } | null;
+  })?.last_answer;
+  if (!last || last.tile_id !== tile.id) return null;
+  const who = participants.find((p) => p.user_id === last.user_id);
+  return (
+    <motion.div
+      key={last.question_index}
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex items-center gap-2 rounded-xl bg-white/10 px-3 py-2"
+    >
+      {who && <SmartAvatar avatarUrl={who.avatar_url} fallback={who.nickname} size="xs" />}
+      <span className="text-white/90 text-sm truncate flex-1">“{last.option}”</span>
+      <span className={`text-sm font-bold ${last.correct ? "text-[#83F7DA]" : "text-red-300"}`}>
+        {last.correct ? t("teamBattle.lastRight", { points: last.points }) : t("teamBattle.lastWrong")}
+      </span>
+    </motion.div>
   );
 }
 

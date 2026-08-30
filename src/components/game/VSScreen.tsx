@@ -291,6 +291,26 @@ export function VSScreen() {
     }
   };
 
+  // Free category re-spins: the rolled category can be re-rolled up to three
+  // times before the match starts. Only the category wheel re-spins — the
+  // opponent stays — and a spin invalidates any questions prefetched for the
+  // discarded category.
+  const [categorySpinsLeft, setCategorySpinsLeft] = useState(3);
+  const handleCategorySpin = useCallback(() => {
+    if (categorySpinsLeft <= 0) return;
+    setCategorySpinsLeft((n) => n - 1);
+    setSelectedCategory(null);
+    setCurrentCategoryIndex(0);
+    prefetchedQuestionsRef.current = null;
+    setIsStarting(false);
+    if (categories.length > 0) {
+      const shuffled = [...categories].sort(() => Math.random() - 0.5);
+      const poolWithMixed = [MIXED_CATEGORY as typeof categories[0], ...shuffled.slice(0, Math.min(7, shuffled.length))];
+      setCategoryPool(poolWithMixed);
+    }
+    setStage("finding-category");
+  }, [categorySpinsLeft, categories]);
+
   // Handle refresh - re-spin for new opponent and category
   const handleRefresh = useCallback(() => {
     // Reset local state
@@ -300,7 +320,7 @@ export function VSScreen() {
     setConnectionError(false);
     categoryPoolSetForStageRef.current = false;
     prefetchedQuestionsRef.current = null;
-    
+    setCategorySpinsLeft(3); // a full restart is a fresh match — fresh spins too
     setIsStarting(false);
     
     // Shuffle category pool for new selection - includes Mixed Category
@@ -533,9 +553,10 @@ export function VSScreen() {
               shouldAnimate={showCategorySlot && !isCategoryLocked}
             />
 
-            {/* Refresh button - BELOW blob */}
+            {/* Category spin button - BELOW blob. Three free re-rolls of the
+                category only (the opponent stays); gone once they're spent. */}
             <AnimatePresence>
-              {isCategoryLocked && (
+              {isCategoryLocked && categorySpinsLeft > 0 && (
                 <motion.button
                   className="flex items-center justify-center gap-2 px-4 py-2 rounded-full backdrop-blur-md"
                   style={{
@@ -546,11 +567,13 @@ export function VSScreen() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 10 }}
                   transition={{ delay: 0.3 }}
-                  onClick={handleRefresh}
+                  onClick={handleCategorySpin}
                   whileTap={{ scale: 0.95 }}
                 >
                   <RefreshCw className="w-4 h-4 text-white" />
-                  <span className="text-white font-bold text-sm">{t("extra.refreshBtn")}</span>
+                  <span className="text-white font-bold text-sm">
+                    {t("extra.spinCategoryBtn", { count: categorySpinsLeft })}
+                  </span>
                 </motion.button>
               )}
             </AnimatePresence>

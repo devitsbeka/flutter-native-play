@@ -1,333 +1,274 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ChevronLeft, Crown } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { ChevronLeft, Copy, Crown, Share2 } from "lucide-react";
+import { toast } from "@/lib/toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { useServerDeadline } from "@/hooks/useServerDeadline";
-import { readAppLanguage } from "@/utils/appLanguage";
-import { toast } from "@/lib/toast";
-
-const CARD_SHADOW = "0px 2px 8px 0px rgba(102,51,153,0.06), 0px 8px 24px 0px rgba(102,51,153,0.12)";
-
-// What king_state() sends back; the reveal fields ride only on submit/expire.
-interface KingState {
-  match_id: string;
-  status: "playing" | "won" | "lost" | "abandoned";
-  player_score: number;
-  king_score: number;
-  question_number: number;
-  question?: { question_text: string; image_url?: string | null; think_deadline: string };
-  options?: string[];
-  commit_deadline?: string;
-  correct?: boolean;
-  correct_answer?: string;
-  explanation?: string;
-}
-
-type Stage = "intro" | "thinking" | "commit" | "reveal" | "result";
+import { ChunkyButton } from "@/components/ui/chunky-button";
+import { SmartAvatar } from "@/components/shared/SmartAvatar";
+import { getGradientById } from "@/config/roomGradients";
+import { siteUrl } from "@/config/site";
+import { shareOrCopy } from "@/utils/shareLink";
+import { useCategories } from "@/hooks/useCategories";
+import { excludePartyCategories } from "@/config/partyCategories";
+import kingIcon from "@/assets/play-modes/trivia-king.png";
+import {
+  VersusKingProvider,
+  useVersusKing,
+} from "@/contexts/VersusKingContext";
+import { VersusKingMatch } from "@/components/versus-king/VersusKingMatch";
 
 /**
- * /king — MyTrivia King (docs/GAME_TYPES_DESIGN.md §3). Solo and entirely
- * RPC-driven: the server holds the question pool, both deadlines, the
- * judgment, and the payout. This page's whole job is the ritual — a minute
- * of thinking with nothing to tap, a short commit, and the explanation.
+ * /king — Versus King (docs/GAME_TYPES_DESIGN.md §3): a room of friends
+ * against the King. Entry (create or join by code) → lobby → the
+ * server-driven match phases in VersusKingMatch. Same page shape as
+ * /team-battle.
  */
 export default function KingPage() {
+  return (
+    <VersusKingProvider>
+      <VersusKingInner />
+    </VersusKingProvider>
+  );
+}
+
+function VersusKingInner() {
+  const { user } = useAuth();
+  const { room, state, joinRoom } = useVersusKing();
+  const [params] = useSearchParams();
+  // Settling flips the room back to "waiting" within a round-trip; the
+  // result screen stays up until the player dismisses it.
+  const [resultSeen, setResultSeen] = useState(false);
+
+  useEffect(() => {
+    if (state?.phase !== "done") setResultSeen(false);
+  }, [state?.phase, state?.game_id]);
+
+  // /king?code=ABC123 joins straight into the lobby (shared invite links,
+  // and the round-start watcher pulling a wandering teammate in).
+  useEffect(() => {
+    const code = params.get("code");
+    if (code && !room && user) void joinRoom(code);
+  }, [params, room, user, joinRoom]);
+
+  const inMatch =
+    room &&
+    state &&
+    ((room.status === "playing" && !state.settled) ||
+      (state.phase === "done" && !resultSeen));
+
+  if (inMatch) return <VersusKingMatch onResultDismiss={() => setResultSeen(true)} />;
+  if (room) return <VKLobby />;
+  return <VKEntry />;
+}
+
+function VKEntry() {
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const { user } = useAuth();
-  const [stage, setStage] = useState<Stage>("intro");
-  const [state, setState] = useState<KingState | null>(null);
-  const [reveal, setReveal] = useState<KingState | null>(null);
-  const [busy, setBusy] = useState(false);
-  // The pool for the player's language can be empty; a toast alone made the
-  // start button look dead, so the intro card says it in place.
-  const [noPool, setNoPool] = useState(false);
-
-  const matchIdRef = useRef<string | null>(null);
-  matchIdRef.current = state?.match_id ?? matchIdRef.current;
-
-  const fail = useCallback(
-    (error: { message?: string } | null) => {
-      if (error?.message?.includes("KING_NO_QUESTIONS")) {
-        setNoPool(true);
-        setStage("intro");
-      } else if (error) {
-        console.error("[King]", error);
-        toast.error(error.message ?? "error");
-      }
-    },
-    [],
-  );
-
-  // Where a state row puts the UI: mid-question resumes into the right
-  // stage; a finished match goes straight to the scoreboard.
-  const applyState = useCallback((s: KingState) => {
-    setState(s);
-    if (s.status !== "playing") setStage("result");
-    else if (s.options) setStage("commit");
-    else if (s.question) setStage("thinking");
-    else setStage("intro");
-  }, []);
-
-  const start = useCallback(async () => {
-    if (busy) return;
-    setBusy(true);
-    const { data, error } = await supabase.rpc("king_start_match", {
-      p_language: readAppLanguage("en"),
-    });
-    setBusy(false);
-    if (error) return fail(error);
-    applyState(data as unknown as KingState);
-  }, [busy, applyState, fail]);
-
-  const draw = useCallback(async () => {
-    const matchId = matchIdRef.current;
-    if (!matchId || busy) return;
-    setBusy(true);
-    setReveal(null);
-    const { data, error } = await supabase.rpc("king_draw_question", { p_match_id: matchId });
-    setBusy(false);
-    if (error) return fail(error);
-    setNoPool(false);
-    applyState(data as unknown as KingState);
-  }, [busy, applyState, fail]);
-
-  const showOptions = useCallback(async () => {
-    const matchId = matchIdRef.current;
-    if (!matchId) return;
-    const { data, error } = await supabase.rpc("king_show_options", { p_match_id: matchId });
-    if (error) return fail(error);
-    applyState(data as unknown as KingState);
-  }, [applyState, fail]);
-
-  const submit = useCallback(
-    async (answer: string) => {
-      const matchId = matchIdRef.current;
-      if (!matchId || busy) return;
-      setBusy(true);
-      const { data, error } = await supabase.rpc("king_submit_answer", {
-        p_match_id: matchId,
-        p_answer: answer,
-      });
-      setBusy(false);
-      if (error) return fail(error);
-      const s = data as unknown as KingState;
-      setState(s);
-      setReveal(s);
-      setStage("reveal");
-    },
-    [busy, fail],
-  );
-
-  const stageRef = useRef<Stage>("intro");
-  stageRef.current = stage;
-
-  // The expiry claim is retried by useServerDeadline until the SERVER clock
-  // agrees (it refuses inside the 2s wire grace, and a fast device clock
-  // just means a couple of refused early tries). A claim that fails because
-  // a submit landed meanwhile is not an error worth showing.
-  const expire = useCallback(async () => {
-    const matchId = matchIdRef.current;
-    if (!matchId || stageRef.current !== "commit") return;
-    const { data, error } = await supabase.rpc("king_expire_question", { p_match_id: matchId });
-    if (error || stageRef.current !== "commit") {
-      if (error) console.warn("[King] expire not accepted yet:", error.message);
-      return;
-    }
-    const s = data as unknown as KingState;
-    setState(s);
-    setReveal(s);
-    setStage("reveal");
-  }, []);
-
-  const abandon = useCallback(async () => {
-    const matchId = matchIdRef.current;
-    if (!matchId) return navigate(-1);
-    await supabase.rpc("king_abandon_match", { p_match_id: matchId });
-    navigate(-1);
-  }, [navigate]);
-
-  // Resume a running match the moment a signed-in player lands here.
-  useEffect(() => {
-    if (user) void start();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
-
-  const thinkSeconds = useServerDeadline(
-    stage === "thinking" ? state?.question?.think_deadline : undefined,
-    showOptions,
-  );
-  const commitSeconds = useServerDeadline(
-    stage === "commit" ? state?.commit_deadline : undefined,
-    () => void expire(),
-  );
+  const { createRoom, joinRoom, loading } = useVersusKing();
+  const [code, setCode] = useState("");
 
   return (
-    <div className="h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] overflow-y-auto bg-background">
-      <div className="max-w-md mx-auto px-5 pb-10">
-        <div className="flex items-center gap-2 pt-4 pb-2">
+    <div className="h-[100dvh] w-full overflow-hidden safe-bleed bg-[#7E7ADB] relative">
+      <Crown
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] h-[340px] text-white/[0.05] pointer-events-none"
+        aria-hidden
+      />
+      <div className="w-full h-full flex flex-col max-w-[520px] mx-auto relative px-6">
+        <div className="flex items-center pt-[calc(var(--safe-top)_+_0.75rem)]">
           <button
-            onClick={() => void abandon()}
+            onClick={() => navigate(-1)}
             aria-label={t("common.back")}
-            className="w-10 h-10 -ml-2 rounded-full flex items-center justify-center text-[#402666] active:scale-95 transition-transform"
+            className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
           >
-            <ChevronLeft className="w-6 h-6" />
+            <ChevronLeft className="w-5 h-5 text-white" />
           </button>
-          <h1 className="font-display text-xl font-bold text-[#402666] flex items-center gap-2">
-            <Crown className="w-5 h-5 text-amber-500" /> {t("king.title")}
-          </h1>
         </div>
 
-        {state && stage !== "intro" && (
-          <div className="flex items-center justify-center gap-6 py-3">
-            <div className="text-center">
-              <p className="text-[11px] text-[#402666]/50">{t("king.you")}</p>
-              <p className="font-display text-2xl font-bold text-[#402666]">{state.player_score}</p>
-            </div>
-            <span className="text-[#402666]/30 text-xs">{t("king.firstTo6")}</span>
-            <div className="text-center">
-              <p className="text-[11px] text-[#402666]/50">{t("king.king")}</p>
-              <p className="font-display text-2xl font-bold text-[#402666]">{state.king_score}</p>
-            </div>
-          </div>
-        )}
-
-        {stage === "intro" && (
-          <div className="flex flex-col gap-4 mt-6">
-            <div
-              className="rounded-[24px] p-6"
-              style={{ background: "rgba(252,247,255,0.92)", boxShadow: CARD_SHADOW }}
-            >
-              <p className="font-bold text-[#402666] mb-2">{t("king.introTitle")}</p>
-              <p className="text-sm text-[#402666]/60">{t("king.introBody")}</p>
-            </div>
-            {noPool && (
-              <div className="rounded-[16px] px-4 py-3 bg-amber-500/10 border border-amber-500/30">
-                <p className="text-sm font-medium text-[#402666]">{t("king.noQuestions")}</p>
-              </div>
-            )}
-            <button
-              onClick={() => void draw()}
-              disabled={busy || !state}
-              className="rounded-[20px] p-4 bg-[#7C3AED] text-white font-bold disabled:opacity-50"
-            >
-              {t("king.start")}
-            </button>
-          </div>
-        )}
-
-        {stage === "thinking" && state?.question && (
-          <div className="flex flex-col gap-4 mt-2">
-            <p className="text-xs text-[#402666]/40 text-center">
-              {t("king.questionNo", { n: state.question_number })}
-            </p>
-            <div
-              className="rounded-[24px] p-6"
-              style={{ background: "rgba(252,247,255,0.92)", boxShadow: CARD_SHADOW }}
-            >
-              <p className="font-bold text-[17px] text-[#402666] leading-relaxed">
-                {state.question.question_text}
-              </p>
-              {state.question.image_url && (
-                <img src={state.question.image_url} alt="" className="mt-4 rounded-xl max-w-full" />
-              )}
-            </div>
-            <p className="font-mono text-4xl text-[#7C3AED] font-bold text-center">{thinkSeconds}</p>
-            <p className="text-sm text-[#402666]/50 text-center -mt-2">{t("king.thinkHint")}</p>
-            <button
-              onClick={() => void showOptions()}
-              className="rounded-[20px] p-4 bg-[#7C3AED] text-white font-bold"
-            >
-              {t("king.haveIt")}
-            </button>
-          </div>
-        )}
-
-        {stage === "commit" && state?.question && (
-          <div className="flex flex-col gap-3 mt-2">
-            <div
-              className="rounded-[24px] p-5"
-              style={{ background: "rgba(252,247,255,0.92)", boxShadow: CARD_SHADOW }}
-            >
-              <p className="font-bold text-[#402666]">{state.question.question_text}</p>
-            </div>
-            <p className="font-mono text-3xl text-red-400 font-bold text-center">{commitSeconds}</p>
-            <p className="text-sm text-[#402666]/50 text-center -mt-2">{t("king.commitHint")}</p>
-            <div className="flex flex-col gap-2">
-              {(state.options ?? []).map((option) => (
-                <motion.button
-                  key={option}
-                  whileTap={{ scale: 0.97 }}
-                  disabled={busy}
-                  onClick={() => void submit(option)}
-                  className="rounded-xl px-4 py-3 text-left text-sm font-medium text-[#402666] disabled:opacity-60"
-                  style={{ background: "rgba(252,247,255,0.92)", boxShadow: CARD_SHADOW }}
-                >
-                  {option}
-                </motion.button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {stage === "reveal" && reveal && (
-          <div className="flex flex-col gap-4 mt-4">
-            <motion.p
+        <div className="flex-1 flex flex-col justify-center gap-8 pb-16">
+          <div className="text-center">
+            <motion.img
+              src={kingIcon}
+              alt=""
               initial={{ scale: 0.7, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className={`font-display text-2xl font-bold text-center ${
-                reveal.correct ? "text-emerald-500" : "text-red-400"
-              }`}
+              className="w-24 h-24 mx-auto mb-3 object-contain"
+              draggable={false}
+            />
+            <motion.h1
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-4xl font-black text-white"
+              style={{ fontFamily: "'TASolivare', sans-serif", textShadow: "0 2px 10px rgba(0,0,0,0.35)" }}
             >
-              {reveal.correct ? t("king.cracked") : t("king.kingScores")}
-            </motion.p>
-            <div
-              className="rounded-[24px] p-5"
-              style={{ background: "rgba(252,247,255,0.92)", boxShadow: CARD_SHADOW }}
+              {t("kingTeam.title")}
+            </motion.h1>
+            <p className="text-white/70 text-sm mt-3 max-w-[300px] mx-auto">
+              {t("kingTeam.entryHint")}
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-4">
+            <ChunkyButton
+              variant="white"
+              size="xl"
+              className="w-full"
+              icon={<Crown className="w-5 h-5" />}
+              disabled={loading}
+              onClick={() => void createRoom()}
             >
-              <p className="text-xs text-[#402666]/40 mb-1">{t("king.answerLabel")}</p>
-              <p className="font-bold text-[#402666] mb-3">{reveal.correct_answer}</p>
-              <p className="text-xs text-[#402666]/40 mb-1">{t("king.logicLabel")}</p>
-              <p className="text-sm text-[#402666]/80 leading-relaxed">{reveal.explanation}</p>
+              {t("kingTeam.createRoom")}
+            </ChunkyButton>
+
+            <div className="flex items-center gap-2 rounded-2xl bg-white/10 backdrop-blur-sm p-2 pl-4 border border-white/[0.12]">
+              <input
+                value={code}
+                onChange={(e) => setCode(e.target.value.toUpperCase())}
+                placeholder={t("kingTeam.codePlaceholder")}
+                maxLength={6}
+                className="flex-1 min-w-0 bg-transparent outline-none font-mono text-lg tracking-[0.3em] text-white placeholder:text-white/40"
+              />
+              <ChunkyButton
+                variant="mint"
+                size="md"
+                disabled={code.length < 6 || loading}
+                onClick={() => void joinRoom(code)}
+              >
+                {t("kingTeam.joinRoom")}
+              </ChunkyButton>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function VKLobby() {
+  const { t } = useLanguage();
+  const { user } = useAuth();
+  const {
+    room, participants, isHost, startMatch, leaveRoom, loading, state, settle,
+  } = useVersusKing();
+  const { categories } = useCategories();
+  const gradient = getGradientById(room?.background_gradient ?? undefined);
+
+  // A finished match parks the room back at "waiting" with a done state row;
+  // the settle claim is idempotent, so any device landing here fires it.
+  useEffect(() => {
+    if (state?.phase === "done" && !state.settled) void settle();
+  }, [state?.phase, state?.settled, settle]);
+
+  const players = participants.filter((p) => !p.is_bot);
+  const canStart = players.length >= 2;
+
+  const copyCode = () => {
+    void navigator.clipboard?.writeText(room?.room_code ?? "");
+    toast.success(t("kingTeam.codeCopied"));
+  };
+
+  const shareInvite = async () => {
+    const link = siteUrl(`/king?code=${room?.room_code ?? ""}`);
+    const outcome = await shareOrCopy({ title: t("kingTeam.title"), url: link });
+    if (outcome === "copied") toast.success(t("kingTeam.linkCopied"));
+    if (outcome === "failed") toast.error(t("common.error"));
+  };
+
+  const start = () => {
+    // Random categories: the party categories have no fixed answers and the
+    // team should not meet a paywalled bank mid-match.
+    const usable = excludePartyCategories(categories).filter(
+      (c) => c.tier === "free" || c.tier === "standard",
+    );
+    void startMatch(usable.map((c) => ({ uuid: c.uuid, name: c.name })));
+  };
+
+  return (
+    <div
+      className="h-[100dvh] w-full flex flex-col overflow-hidden safe-bleed"
+      style={{ background: gradient?.gradient ?? "#7E7ADB" }}
+    >
+      <div className="w-full flex-1 min-h-0 flex flex-col max-w-[520px] mx-auto">
+        <div className="flex items-center justify-between px-5 pt-[calc(var(--safe-top)_+_0.75rem)] pb-3">
+          <h1
+            className="text-2xl font-black text-white flex items-center gap-2"
+            style={{ fontFamily: "'TASolivare', sans-serif" }}
+          >
+            <Crown className="w-5 h-5" /> {t("kingTeam.title")}
+          </h1>
+          <button onClick={() => void leaveRoom()} className="text-white/60 text-xs font-bold">
+            {t("kingTeam.leave")}
+          </button>
+        </div>
+
+        <div className="flex-1 min-h-0 overflow-y-auto px-5 flex flex-col gap-4">
+          <div className="grid grid-cols-[1fr_auto] gap-3">
             <button
-              onClick={() => (state?.status === "playing" ? void draw() : setStage("result"))}
-              disabled={busy}
-              className="rounded-[20px] p-4 bg-[#7C3AED] text-white font-bold disabled:opacity-50"
+              onClick={copyCode}
+              className="rounded-2xl bg-white/10 backdrop-blur-sm border border-white/[0.12] p-4 flex items-center justify-between"
             >
-              {state?.status === "playing" ? t("king.next") : t("common.continue")}
+              <div className="text-left">
+                <p className="text-[11px] text-white/60 font-semibold uppercase tracking-wide">
+                  {t("kingTeam.shareCode")}
+                </p>
+                <p className="font-mono text-2xl font-bold tracking-[0.3em] text-white">
+                  {room?.room_code}
+                </p>
+              </div>
+              <Copy className="w-5 h-5 text-white/60 ml-3" />
+            </button>
+            <button
+              onClick={() => void shareInvite()}
+              aria-label={t("kingTeam.invite")}
+              className="rounded-2xl bg-white/10 backdrop-blur-sm border border-white/[0.12] px-5 flex flex-col items-center justify-center gap-1"
+            >
+              <Share2 className="w-5 h-5 text-white" />
+              <span className="text-[11px] text-white/70 font-semibold">{t("kingTeam.invite")}</span>
             </button>
           </div>
-        )}
 
-        {stage === "result" && state && (
-          <div className="flex flex-col items-center gap-4 pt-16">
-            <Crown
-              className={`w-16 h-16 ${state.status === "won" ? "text-amber-500" : "text-[#402666]/20"}`}
-            />
-            <p className="font-display text-2xl font-bold text-[#402666] text-center">
-              {state.status === "won" ? t("king.youWon") : t("king.kingWon")}
+          <div className="rounded-2xl bg-white/10 backdrop-blur-sm border border-white/[0.12] p-4">
+            <div className="flex items-center gap-3 mb-3">
+              <img src={kingIcon} alt="" className="w-12 h-12 object-contain" draggable={false} />
+              <p className="text-white/80 text-sm">{t("kingTeam.lobbyHint")}</p>
+            </div>
+            <div className="flex flex-col gap-2">
+              {players.map((p) => (
+                <div key={p.user_id} className="flex items-center gap-2 rounded-xl px-1 py-0.5">
+                  <SmartAvatar avatarUrl={p.avatar_url} fallback={p.nickname} size="xs" />
+                  <span className="text-sm text-white truncate">
+                    {p.nickname}
+                    {p.user_id === user?.id ? ` (${t("kingTeam.you")})` : ""}
+                  </span>
+                  {p.is_host && <Crown className="w-3.5 h-3.5 text-amber-400 fill-amber-400 shrink-0" />}
+                </div>
+              ))}
+            </div>
+            <p className="text-white/50 text-xs mt-3">
+              {t("kingTeam.playerCount", { n: players.length, max: 10 })}
             </p>
-            <p className="text-[#402666]/60">
-              {state.player_score} : {state.king_score}
-            </p>
-            <button
-              onClick={() => {
-                setState(null);
-                matchIdRef.current = null;
-                setStage("intro");
-                void start();
-              }}
-              className="rounded-[20px] px-8 py-4 bg-[#7C3AED] text-white font-bold"
+          </div>
+
+          {!canStart && (
+            <p className="text-center text-xs text-white/60">{t("kingTeam.needTwoPlayers")}</p>
+          )}
+          {!isHost && (
+            <p className="text-center text-sm text-white/60">{t("kingTeam.waitingHost")}</p>
+          )}
+        </div>
+
+        {isHost && (
+          <div className="px-5 pt-4 pb-[calc(1.25rem_+_var(--safe-bottom))] bg-gradient-to-t from-black/50 via-black/20 to-transparent">
+            <ChunkyButton
+              variant="white"
+              size="xl"
+              className="w-full"
+              disabled={!canStart || loading}
+              onClick={start}
             >
-              {t("king.playAgain")}
-            </button>
-            <button onClick={() => navigate(-1)} className="text-sm text-[#402666]/40">
-              {t("common.back")}
-            </button>
+              {loading ? t("kingTeam.starting") : t("kingTeam.start")}
+            </ChunkyButton>
           </div>
         )}
       </div>
