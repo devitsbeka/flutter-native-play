@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeftRight, Bot, ChevronLeft, Plus, UserPlus } from "lucide-react";
+import { Bot, ChevronLeft, UserPlus } from "lucide-react";
 import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
 import { FriendsStoriesBar } from "@/components/team/FriendsStoriesBar";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -296,14 +296,6 @@ function TBLobby() {
         onPress: () => void addBot(team),
       });
     }
-    if (myTeam !== team) {
-      options.push({
-        icon: <ArrowLeftRight className="w-5 h-5" />,
-        label: t("lobby.sitHere"),
-        sub: team === "a" ? t("teamBattle.teamA") : t("teamBattle.teamB"),
-        onPress: () => void setTeam(team),
-      });
-    }
     return options;
   };
 
@@ -380,7 +372,7 @@ function TBLobby() {
             <Seat
               key={`${team}${i}`}
               left={left}
-              top={top - 255}
+              top={top - 305}
               avatarUrl={entry.p.avatar_url}
               nickname={entry.p.nickname}
               ring={ring}
@@ -389,7 +381,7 @@ function TBLobby() {
               onLongPress={() => seatHold(entry.p, entry.pending)}
             />
           ) : (
-            <PlusSeat key={`${team}${i}`} left={left} top={top - 255} onClick={() => seatAction(team)} />
+            <PlusSeat key={`${team}${i}`} left={left} top={top - 305} onClick={() => seatAction(team)} />
           );
         })}
       </>
@@ -437,9 +429,11 @@ function TBLobby() {
         />
       </div>
 
+      <div className="w-full max-w-[468px] mx-auto shrink-0 border-t border-[#523b76]/[0.08]" />
+
       {/* Pick duration (940:7647 + chips) — in flow, left-aligned with the
           friends strip's 16px edge */}
-      <div className="relative z-10 w-full max-w-[500px] mx-auto shrink-0 px-4 pt-1">
+      <div className="relative z-10 w-full max-w-[500px] mx-auto shrink-0 px-4 pt-2">
         <p className="font-[Nunito] font-medium leading-[24px] text-[#0c172c] text-[15px] tracking-[-0.16px]">
           {t("lobby.pickDuration")}
         </p>
@@ -452,7 +446,7 @@ function TBLobby() {
                 key={n}
                 onClick={() => !tooSmall && setRounds(n)}
                 disabled={tooSmall}
-                className={`relative h-[48px] w-[115px] rounded-[16.85px] border border-solid ${
+                className={`relative h-[48px] px-[19px] inline-flex items-center justify-center rounded-[16.85px] border border-solid ${
                   selected
                     ? "border-[#e8e0f5] shadow-[0px_3.389px_0px_0px_#d8d0e8,0px_5.083px_13.556px_0px_rgba(0,0,0,0.1)]"
                     : "border-[#b897c4]"
@@ -476,47 +470,29 @@ function TBLobby() {
       </div>
 
       <div className="flex-1 min-h-0 overflow-hidden">
-      <FitBox width={500} height={575}>
+      <FitBox width={500} height={525}>
         {/* arena scene (938:6267) + edge fade */}
-        <div className="absolute left-[32px] top-[-89px] w-[435px] h-[780px] pointer-events-none">
+        <div className="absolute left-[32px] top-[-139px] w-[435px] h-[780px] pointer-events-none">
           <img alt="" className="absolute inset-0 max-w-none object-cover size-full" src={sceneArena} />
           <div className="absolute inset-0" style={{ backgroundImage: ARENA_FADE }} />
         </div>
 
         {/* the pot (943:21933) — the winning team's real take: 50 coins a
             round to every winning human (tb_settle, 20260921130000) */}
-        <AnimatedCoinPill left={158} top={242} width={190} value={potValue} />
+        <AnimatedCoinPill left={158} top={192} width={190} value={potValue} />
 
         {renderTeamSeats("a", TEAM_A_SLOTS, PODIUM_A)}
         {renderTeamSeats("b", TEAM_B_SLOTS, PODIUM_B)}
 
         {/* team names row (943:21929), with the host's labeled AI-player buttons */}
-        <div className="absolute left-[26px] top-[458px] w-[441px] flex items-center justify-between">
+        <div className="absolute left-[26px] top-[408px] w-[441px] flex items-center justify-between">
           <div className="flex gap-[10px] items-center">
             <img alt="" className="size-[36px] -scale-y-100 rotate-180 object-contain" src={teamPenguins} />
             <p className="font-[Nunito] font-black leading-[24px] text-[#0c172c] text-[18px] tracking-[-0.16px] whitespace-nowrap">
               {t("teamBattle.teamA")}
             </p>
-            {isHost && teamA.length < 5 && (
-              <button
-                onClick={() => void addBot("a")}
-                className="flex items-center gap-[4px] rounded-[9999px] border border-[#b897c4] bg-white/40 px-[8px] py-[3px] active:scale-95 transition-transform"
-              >
-                <Bot className="w-3.5 h-3.5 text-[#523b76]" />
-                <Plus className="w-3 h-3 text-[#523b76]" />
-              </button>
-            )}
           </div>
           <div className="flex gap-[10px] items-center">
-            {isHost && teamB.length < 5 && (
-              <button
-                onClick={() => void addBot("b")}
-                className="flex items-center gap-[4px] rounded-[9999px] border border-[#b897c4] bg-white/40 px-[8px] py-[3px] active:scale-95 transition-transform"
-              >
-                <Plus className="w-3 h-3 text-[#523b76]" />
-                <Bot className="w-3.5 h-3.5 text-[#523b76]" />
-              </button>
-            )}
             <p className="font-[Nunito] font-extrabold leading-[24px] text-[#0c172c] text-[18px] text-right tracking-[-0.16px] whitespace-nowrap">
               {t("teamBattle.teamB")}
             </p>
@@ -533,7 +509,7 @@ function TBLobby() {
           onClick={() => cycleCaptain(teamA)}
         />
         <p
-          className="absolute left-[191px] top-[519px] w-[118px] text-[77px] leading-[43px] text-center not-italic text-[#f5d9ff]"
+          className="absolute left-[191px] top-[469px] w-[118px] text-[77px] leading-[43px] text-center not-italic text-[#f5d9ff]"
           style={{ fontFamily: "'Slackey', 'TASolivare', cursive", textShadow: "0px 4px 4px #c7bccc" }}
         >
           VS
@@ -545,12 +521,6 @@ function TBLobby() {
           avatarUrl={captainB?.avatar_url}
           onClick={() => cycleCaptain(teamB)}
         />
-
-        {isHost && !teamsEqual && (
-          <p className="absolute left-[33px] top-[433px] w-[434px] text-center font-[Nunito] font-medium text-[13px] text-[#523b76]/60">
-            {t("teamBattle.needEqualTeams")}
-          </p>
-        )}
 
         {helpOpen && (
           <div
@@ -642,7 +612,7 @@ function TBCaptainChip({
       style={{
         left,
         right,
-        top: 503,
+        top: 453,
         borderColor: accent,
         background: "linear-gradient(to bottom, rgba(255,255,255,0.5), rgba(254,254,254,0.5))",
       }}
