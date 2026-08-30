@@ -1495,6 +1495,18 @@ export const fr: KaTranslations = {
     empty: "Pas encore de salons — crée le premier !",
   },
 
+  // Lilac lobby screens (Figma 940:7474 Versus King / 938:6019 Team Battle)
+  lobby: {
+    vkTitle: "Versus King",
+    invite: "Inviter",
+    winnerTakes: "Le gagnant remporte :",
+    captainLabel: "Capitaine :",
+    chooseCaptain: "Choisir le capitaine",
+    startGame: "Lancer la partie",
+    pickDuration: "Choisir la durée",
+    roundsN: "{n} manches",
+  },
+
   extra: {
     ...en.extra,
     questionsAnsweredLabel: "Questions répondues",

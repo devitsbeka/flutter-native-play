@@ -5,9 +5,23 @@ import { ChevronLeft, Crown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useFriends } from "@/contexts/FriendsContext";
 import { useServerDeadline } from "@/hooks/useServerDeadline";
 import { readAppLanguage } from "@/utils/appLanguage";
 import { toast } from "@/lib/toast";
+import {
+  CaptainChip,
+  CoinPill,
+  Divider,
+  InviteRow,
+  LILAC_BG,
+  LilacHeader,
+  PlusSeat,
+  ScaledCanvas,
+  Seat,
+  StartButton,
+} from "@/components/lobby/LilacLobby";
+import sceneKing from "@/assets/vk-lobby/scene-king.png";
 
 const CARD_SHADOW = "0px 2px 8px 0px rgba(102,51,153,0.06), 0px 8px 24px 0px rgba(102,51,153,0.12)";
 
@@ -34,14 +48,27 @@ type Stage = "intro" | "thinking" | "commit" | "reveal" | "result";
  * judgment, and the payout. This page's whole job is the ritual — a minute
  * of thinking with nothing to tap, a short commit, and the explanation.
  */
+// Seat coordinates around the King's lounge, straight from the frame
+// (940:7477…943:21899) — filled slots first, in the design's own order.
+const KING_SEATS: [number, number][] = [
+  [137, 458], [75, 480], [49, 546], [61, 618], [127, 670],
+  [309, 458], [379, 480], [410, 546], [397, 618], [323, 668],
+];
+
+// The scene's edge fade (940:7551, applied twice in the frame).
+const KING_SCENE_FADE =
+  "url(\"data:image/svg+xml;utf8,<svg viewBox='0 0 435 780' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)' opacity='1'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(1.5933e-14 42.3 -23.59 1.991e-14 217.5 390)'><stop stop-color='rgba(213,186,255,0)' offset='0'/><stop stop-color='rgba(229,202,255,0.51)' offset='0.5'/><stop stop-color='rgba(245,217,255,1)' offset='0.97596'/></radialGradient></defs></svg>\")";
+
 export default function KingPage() {
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
+  const { friends, refreshFriendsIfStale } = useFriends();
   const [stage, setStage] = useState<Stage>("intro");
   const [state, setState] = useState<KingState | null>(null);
   const [reveal, setReveal] = useState<KingState | null>(null);
   const [busy, setBusy] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   // The pool for the player's language can be empty; a toast alone made the
   // start button look dead, so the intro card says it in place.
   const [noPool, setNoPool] = useState(false);
@@ -156,6 +183,8 @@ export default function KingPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
+  useEffect(() => refreshFriendsIfStale(), [refreshFriendsIfStale]);
+
   const thinkSeconds = useServerDeadline(
     stage === "thinking" ? state?.question?.think_deadline : undefined,
     showOptions,
@@ -164,6 +193,100 @@ export default function KingPage() {
     stage === "commit" ? state?.commit_deadline : undefined,
     () => void expire(),
   );
+
+  // The lobby is the Versus King frame (Figma 940:7474) rendered at design
+  // coordinates: the King's lounge scene, your friends in the invite row,
+  // seats around the couch, and the Start CTA driving the existing match.
+  if (stage === "intro") {
+    return (
+      <div
+        className="h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] overflow-y-auto overflow-x-hidden"
+        style={{ background: LILAC_BG }}
+      >
+        <ScaledCanvas>
+          {/* scene (940:7476) + its double edge fade (940:7551/7666) */}
+          <div className="absolute left-[32px] top-[27px] w-[435px] h-[780px] pointer-events-none">
+            <img alt="" className="absolute inset-0 max-w-none object-cover size-full" src={sceneKing} />
+            <div className="absolute inset-0" style={{ backgroundImage: KING_SCENE_FADE }} />
+            <div className="absolute inset-0" style={{ backgroundImage: KING_SCENE_FADE }} />
+          </div>
+
+          <LilacHeader
+            title={t("lobby.vkTitle")}
+            onBack={() => navigate(-1)}
+            onHelp={() => setHelpOpen((v) => !v)}
+          />
+
+          <InviteRow
+            top={92}
+            inviteLabel={t("lobby.invite")}
+            entries={friends.map((f) => ({
+              id: f.friendId,
+              nickname: f.nickname,
+              avatarUrl: f.avatarUrl,
+              online: !!f.isOnline,
+            }))}
+            onInvite={() => navigate("/team")}
+            onEntry={(entry) => navigate(`/profile/${entry.id}`)}
+          />
+
+          {/* Winner takes: (940:7510) + the coins pill (940:7560) */}
+          <p className="absolute left-[32px] top-[267px] w-[435px] font-[Nunito] font-medium leading-[24px] text-[#0c172c] text-[18px] text-center tracking-[-0.16px]">
+            {t("lobby.winnerTakes")}
+          </p>
+          <CoinPill left={174} top={299} width={152} value="200" />
+
+          {/* seats around the couch — you first, the rest open (940:7477…) */}
+          {KING_SEATS.map(([left, top], i) =>
+            i === 0 ? (
+              <Seat
+                key={i}
+                left={left}
+                top={top}
+                avatarUrl={profile?.avatar_url ?? null}
+                nickname={profile?.nickname ?? "P"}
+              />
+            ) : (
+              <PlusSeat key={i} left={left} top={top} onClick={() => navigate("/team")} />
+            ),
+          )}
+
+          {/* Captain (940:7788 + 936:21188) — solo: the captain is you */}
+          <p className="absolute left-[38px] top-[736px] font-[Nunito] font-medium leading-[24px] text-[#0c172c] text-[15px] tracking-[-0.16px]">
+            {t("lobby.captainLabel")}
+          </p>
+          <CaptainChip
+            left={38}
+            top={770}
+            avatarUrl={profile?.avatar_url}
+            name={profile?.nickname}
+            placeholder={t("lobby.chooseCaptain")}
+          />
+
+          <Divider top={841} />
+          <StartButton
+            label={t("lobby.startGame")}
+            onClick={() => void draw()}
+            disabled={busy || !state}
+          />
+
+          {(helpOpen || noPool) && (
+            <div
+              className="absolute left-[32px] top-[190px] w-[435px] rounded-[24px] p-5 bg-white/90 border border-[#e8e0f5]"
+              style={{ boxShadow: CARD_SHADOW }}
+              onClick={() => setHelpOpen(false)}
+            >
+              <p className="font-bold text-[#402666] mb-1">{t("king.introTitle")}</p>
+              <p className="text-sm text-[#402666]/60">{t("king.introBody")}</p>
+              {noPool && (
+                <p className="text-sm font-medium text-amber-700 mt-3">{t("king.noQuestions")}</p>
+              )}
+            </div>
+          )}
+        </ScaledCanvas>
+      </div>
+    );
+  }
 
   return (
     <div className="h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] overflow-y-auto bg-background">
@@ -181,7 +304,7 @@ export default function KingPage() {
           </h1>
         </div>
 
-        {state && stage !== "intro" && (
+        {state && (
           <div className="flex items-center justify-center gap-6 py-3">
             <div className="text-center">
               <p className="text-[11px] text-[#402666]/50">{t("king.you")}</p>
@@ -192,30 +315,6 @@ export default function KingPage() {
               <p className="text-[11px] text-[#402666]/50">{t("king.king")}</p>
               <p className="font-display text-2xl font-bold text-[#402666]">{state.king_score}</p>
             </div>
-          </div>
-        )}
-
-        {stage === "intro" && (
-          <div className="flex flex-col gap-4 mt-6">
-            <div
-              className="rounded-[24px] p-6"
-              style={{ background: "rgba(252,247,255,0.92)", boxShadow: CARD_SHADOW }}
-            >
-              <p className="font-bold text-[#402666] mb-2">{t("king.introTitle")}</p>
-              <p className="text-sm text-[#402666]/60">{t("king.introBody")}</p>
-            </div>
-            {noPool && (
-              <div className="rounded-[16px] px-4 py-3 bg-amber-500/10 border border-amber-500/30">
-                <p className="text-sm font-medium text-[#402666]">{t("king.noQuestions")}</p>
-              </div>
-            )}
-            <button
-              onClick={() => void draw()}
-              disabled={busy || !state}
-              className="rounded-[20px] p-4 bg-[#7C3AED] text-white font-bold disabled:opacity-50"
-            >
-              {t("king.start")}
-            </button>
           </div>
         )}
 

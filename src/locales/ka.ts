@@ -1781,6 +1781,18 @@ export const ka = {
     empty: "ოთახები ჯერ არ არის — შექმენი პირველი!",
   },
 
+  // Lilac lobby screens (Figma 940:7474 Versus King / 938:6019 Team Battle)
+  lobby: {
+    vkTitle: "Versus King",
+    invite: "მოწვევა",
+    winnerTakes: "გამარჯვებული იღებს:",
+    captainLabel: "კაპიტანი:",
+    chooseCaptain: "აირჩიე კაპიტანი",
+    startGame: "თამაშის დაწყება",
+    pickDuration: "აირჩიე ხანგრძლივობა",
+    roundsN: "{n} რაუნდი",
+  },
+
   extra: {
     questionsAnsweredLabel: "გაცემული პასუხი",
     successRateLabel: "წარმატება",
