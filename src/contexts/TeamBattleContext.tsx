@@ -25,6 +25,7 @@ import { t as tStandalone } from "@/utils/standaloneTranslation";
 import { getQuestions } from "@/services/questionService";
 import { shuffleArray } from "@/utils/shuffle";
 import { getRandomGradient } from "@/config/roomGradients";
+import { botAvatarFor } from "@/utils/avatarUtils";
 
 export type TBPhase = "rps" | "board" | "rapid_fire" | "super_vote" | "super_round" | "done";
 export type TBTeam = "a" | "b";
@@ -144,8 +145,13 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
       .in("status", ["joined", "ready", "playing", "invited"])
       .order("joined_at", { ascending: true });
     if (data) {
-      setParticipants(data.filter((p) => p.status !== "invited"));
-      setPendingInvites(data.filter((p) => p.status === "invited"));
+      // AI players wear one of the preset bot faces, keyed by their id, so
+      // every surface shows the same face instead of an initial circle.
+      const dressed = data.map((p) =>
+        p.is_bot && !p.avatar_url ? { ...p, avatar_url: botAvatarFor(p.user_id) } : p,
+      );
+      setParticipants(dressed.filter((p) => p.status !== "invited"));
+      setPendingInvites(dressed.filter((p) => p.status === "invited"));
     }
   }, []);
 

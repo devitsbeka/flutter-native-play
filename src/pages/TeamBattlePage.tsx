@@ -205,11 +205,10 @@ function TBLobby() {
   const teamsEqual =
     teamA.length > 0 && teamA.length === teamB.length && participants.every((p) => p.team);
   const minTiles = Math.max(6, 2 * teamA.length);
-  // What the winning team will actually take home: 50 coins per round for
-  // each winning HUMAN (bots are never paid — the pot doesn't move for them).
-  const humansA = teamA.filter((p) => !p.is_bot).length;
-  const humansB = teamB.filter((p) => !p.is_bot).length;
-  const potValue = 50 * rounds * Math.max(1, humansA, humansB);
+  // The match pool: every seat stakes 50 coins a round, AI players
+  // included. Each winning human collects their 50/round share at settle;
+  // a bot's share simply goes uncollected.
+  const potValue = 50 * rounds * Math.max(1, teamA.length, teamB.length);
 
   const start = () => {
     const usable = categories.filter((c) => c.tier === "free" || c.tier === "standard");
