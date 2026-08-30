@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import type { Tables } from "@/integrations/supabase/types";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, Crown, Share2, UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -200,6 +200,8 @@ export default function KingPage() {
   const [kingPending, setKingPending] = useState<Tables<"room_participants">[]>([]);
   const [seatMenu, setSeatMenu] = useState<Tables<"room_participants"> | null>(null);
   const roomAttempted = useRef(false);
+  const kingRoomRef = useRef<Tables<"game_rooms"> | null>(null);
+  kingRoomRef.current = kingRoom;
   const channelRef = useRef<RealtimeChannel | null>(null);
 
   useEffect(() => {
@@ -269,20 +271,24 @@ export default function KingPage() {
     })();
   }, [user, profile, searchParams, navigate]);
 
+  const refreshKingParts = useCallback(async () => {
+    const roomId = kingRoomRef.current?.id;
+    if (!roomId) return;
+    const { data } = await supabase
+      .from("room_participants")
+      .select("*")
+      .eq("room_id", roomId)
+      .in("status", ["joined", "ready", "playing", "invited"])
+      .order("joined_at", { ascending: true });
+    if (data) {
+      setKingParts(data.filter((part) => part.status !== "invited"));
+      setKingPending(data.filter((part) => part.status === "invited"));
+    }
+  }, []);
+
   useEffect(() => {
     if (!kingRoom) return;
-    const fetchParts = async () => {
-      const { data } = await supabase
-        .from("room_participants")
-        .select("*")
-        .eq("room_id", kingRoom.id)
-        .in("status", ["joined", "ready", "playing", "invited"])
-        .order("joined_at", { ascending: true });
-      if (data) {
-        setKingParts(data.filter((part) => part.status !== "invited"));
-        setKingPending(data.filter((part) => part.status === "invited"));
-      }
-    };
+    const fetchParts = refreshKingParts;
     void fetchParts();
     const ch = supabase
       .channel(`king-room-${kingRoom.id}`)
@@ -300,7 +306,7 @@ export default function KingPage() {
       channelRef.current = null;
       void supabase.removeChannel(ch);
     };
-  }, [kingRoom, draw]);
+  }, [kingRoom, draw, refreshKingParts]);
 
   // The host's Start begins the duel for the whole couch; a broadcast never
   // reaches its own sender, so the host draws locally too.
@@ -404,13 +410,14 @@ export default function KingPage() {
 
             {/* seats around the couch — participants first, then pending
                 invitees greyed until they accept, the rest open */}
+            <AnimatePresence>
             {KING_SEATS.map(([left, top], i) => {
               const active = kingParts[i];
               const pending = !active ? kingPending[i - kingParts.length] : undefined;
               const part = active ?? pending;
               return part ? (
                 <Seat
-                  key={i}
+                  key={part.user_id}
                   left={left}
                   top={top - 160}
                   avatarUrl={part.avatar_url}
@@ -428,9 +435,10 @@ export default function KingPage() {
                   }
                 />
               ) : (
-                <PlusSeat key={i} left={left} top={top - 160} onClick={inviteFriends} />
+                <PlusSeat key={`plus-${i}`} left={left} top={top - 160} onClick={inviteFriends} />
               );
             })}
+            </AnimatePresence>
 
             {/* Captain (940:7788 + 936:21188) — the room's host */}
             <p className="absolute left-[38px] top-[576px] font-[Nunito] font-medium leading-[24px] text-[#0c172c] text-[15px] tracking-[-0.16px]">
@@ -514,14 +522,21 @@ export default function KingPage() {
                     destructive: true,
                     onPress: () => {
                       if (!kingRoom) return;
+                      const target = seatMenu.user_id;
+                      // Instant: the seat pops out now; a refusal restores it.
+                      setKingParts((prev) => prev.filter((part) => part.user_id !== target));
+                      setKingPending((prev) => prev.filter((part) => part.user_id !== target));
                       void supabase
                         .rpc("lobby_manage_seat", {
                           p_room_id: kingRoom.id,
-                          p_user_id: seatMenu.user_id,
+                          p_user_id: target,
                           p_action: "remove",
                         })
                         .then(({ error }) => {
-                          if (error) toast.error(error.message);
+                          if (error) {
+                            toast.error(error.message);
+                            void refreshKingParts();
+                          }
                         });
                     },
                   },

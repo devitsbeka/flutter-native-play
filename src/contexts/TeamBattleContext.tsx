@@ -426,11 +426,23 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
   }, []);
 
   // Host-only seat management (lobby_manage_seat): remove a pending invite,
-  // a bot, or a player, or move someone to a team.
+  // a bot, or a player, or move someone to a team. Optimistic — the seat
+  // changes instantly (realtime DELETE events don't reliably reach filtered
+  // channels), and a server refusal restores the truth with a toast.
   const manageSeat = useCallback(
     async (userId: string, action: "remove" | "move_a" | "move_b") => {
       const roomId = roomIdRef.current;
       if (!roomId) return;
+      if (action === "remove") {
+        setParticipants((prev) => prev.filter((p) => p.user_id !== userId));
+        setPendingInvites((prev) => prev.filter((p) => p.user_id !== userId));
+      } else {
+        const team = action === "move_a" ? "a" : "b";
+        const move = (prev: TBParticipant[]) =>
+          prev.map((p) => (p.user_id === userId ? { ...p, team, is_captain: false } : p));
+        setParticipants(move);
+        setPendingInvites(move);
+      }
       const { error } = await supabase.rpc("lobby_manage_seat", {
         p_room_id: roomId,
         p_user_id: userId,
@@ -439,9 +451,10 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
       if (error) {
         console.error("[TB] manage seat failed", error);
         toast.error(error.message);
+        void fetchParticipants(roomId);
       }
     },
-    [],
+    [fetchParticipants],
   );
 
   // The host's device assembles the board material through the golden-standard

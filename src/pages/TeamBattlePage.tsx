@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Bot, ChevronLeft, UserPlus } from "lucide-react";
 import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
 import { FriendsStoriesBar } from "@/components/team/FriendsStoriesBar";
@@ -365,12 +365,12 @@ function TBLobby() {
     const ring = team === "a" ? ("blue" as const) : ("red" as const);
     const all: [number, number][] = [...slots, podium];
     return (
-      <>
+      <AnimatePresence>
         {all.map(([left, top], i) => {
           const entry = entries[i];
           return entry ? (
             <Seat
-              key={`${team}${i}`}
+              key={`${team}-${entry.p.user_id}`}
               left={left}
               top={top - 305}
               avatarUrl={entry.p.avatar_url}
@@ -381,10 +381,10 @@ function TBLobby() {
               onLongPress={() => seatHold(entry.p, entry.pending)}
             />
           ) : (
-            <PlusSeat key={`${team}${i}`} left={left} top={top - 305} onClick={() => seatAction(team)} />
+            <PlusSeat key={`plus-${team}-${i}`} left={left} top={top - 305} onClick={() => seatAction(team)} />
           );
         })}
-      </>
+      </AnimatePresence>
     );
   };
 

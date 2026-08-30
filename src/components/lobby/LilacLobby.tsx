@@ -1,5 +1,5 @@
 import { type ReactNode, useEffect, useRef, useState } from "react";
-import { animate, motion, useMotionValue } from "framer-motion";
+import { AnimatePresence, animate, motion, useMotionValue } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import iconInvite from "@/assets/vk-lobby/icon-invite.svg";
@@ -282,7 +282,11 @@ export function Seat({
         ? "3px solid #ed6149"
         : "1px solid #ffffff";
   return (
-    <button
+    <motion.button
+      initial={{ scale: 0.5, opacity: 0 }}
+      animate={{ scale: 1, opacity: pending ? 0.5 : 1 }}
+      exit={{ scale: 0.3, opacity: 0 }}
+      transition={{ type: "spring", stiffness: 480, damping: 26 }}
       onPointerDown={startHold}
       onPointerUp={clearHold}
       onPointerLeave={clearHold}
@@ -295,7 +299,7 @@ export function Seat({
         }
         onClick?.();
       }}
-      className={`absolute rounded-[9999px] size-[52px] overflow-clip select-none ${pending ? "opacity-50" : ""}`}
+      className="absolute rounded-[9999px] size-[52px] overflow-clip select-none"
       style={{
         left,
         top,
@@ -305,7 +309,7 @@ export function Seat({
       }}
     >
       <InviteAvatar url={avatarUrl} nickname={nickname} />
-    </button>
+    </motion.button>
   );
 }
 
@@ -440,7 +444,11 @@ export function SeatMenu({
 /** An open seat — the translucent green plus circle (940:7478…). */
 export function PlusSeat({ left, top, onClick }: { left: number; top: number; onClick?: () => void }) {
   return (
-    <button
+    <motion.button
+      initial={{ scale: 0.7, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      exit={{ scale: 0.7, opacity: 0 }}
+      transition={{ type: "spring", stiffness: 420, damping: 28 }}
       onClick={onClick}
       className="absolute bg-[rgba(51,192,84,0.6)] border border-solid border-white overflow-clip rounded-[9999px] size-[52px] active:scale-95 transition-transform"
       style={{ left, top }}
@@ -448,7 +456,7 @@ export function PlusSeat({ left, top, onClick }: { left: number; top: number; on
       <div className="absolute inset-[30%]">
         <img alt="" className="block max-w-none size-full" src={plusSeat} />
       </div>
-    </button>
+    </motion.button>
   );
 }
 
