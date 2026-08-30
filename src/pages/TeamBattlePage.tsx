@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Bot, ChevronLeft, Plus } from "lucide-react";
+import { ArrowLeftRight, Bot, ChevronLeft, Plus, UserPlus } from "lucide-react";
 import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
 import { FriendsStoriesBar } from "@/components/team/FriendsStoriesBar";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -21,6 +21,8 @@ import {
   LILAC_BG,
   LilacHeader,
   FitBox,
+  PlusChooser,
+  type ChooserOption,
   PlusSeat,
   Seat,
   SeatMenu,
@@ -270,15 +272,39 @@ function TBLobby() {
     if (data) void manageSeat(data.user_id, team === "a" ? "move_a" : "move_b");
   };
 
-  // An open seat on the other team seats YOU there; one on your own team
-  // opens the invite modal for that seat. AI players have their own labeled
-  // button — a seat press never silently conjures a bot.
-  const seatAction = (team: TBTeam) => {
-    if (myTeam !== team) void setTeam(team);
-    else {
-      inviteTeamRef.current = team;
-      setInviteOpen(true);
+  // A + seat asks who takes it — invite a friend, seat an AI player (host),
+  // or sit there yourself — and does exactly what was picked.
+  const [chooserTeam, setChooserTeam] = useState<TBTeam | null>(null);
+  const seatAction = (team: TBTeam) => setChooserTeam(team);
+  const chooserOptions = (team: TBTeam): ChooserOption[] => {
+    const options: ChooserOption[] = [
+      {
+        icon: <UserPlus className="w-5 h-5" />,
+        label: t("lobby.inviteFriend"),
+        sub: t("lobby.inviteToGame"),
+        onPress: () => {
+          inviteTeamRef.current = team;
+          setInviteOpen(true);
+        },
+      },
+    ];
+    if (isHost) {
+      options.push({
+        icon: <Bot className="w-5 h-5" />,
+        label: t("lobby.aiPlayer"),
+        sub: t("teamBattle.addBot"),
+        onPress: () => void addBot(team),
+      });
     }
+    if (myTeam !== team) {
+      options.push({
+        icon: <ArrowLeftRight className="w-5 h-5" />,
+        label: t("lobby.sitHere"),
+        sub: team === "a" ? t("teamBattle.teamA") : t("teamBattle.teamB"),
+        onPress: () => void setTeam(team),
+      });
+    }
+    return options;
   };
 
   // Hold a seat to manage it: the host moves anyone between teams or
@@ -563,6 +589,13 @@ function TBLobby() {
           onInviteSuccess={() => void assignPendingTeam()}
         />
       )}
+
+      <PlusChooser
+        open={chooserTeam !== null}
+        title={t("lobby.seatChooserTitle")}
+        options={chooserTeam ? chooserOptions(chooserTeam) : []}
+        onClose={() => setChooserTeam(null)}
+      />
 
       <SeatMenu
         target={seatMenu ? { nickname: seatMenu.p.nickname, avatarUrl: seatMenu.p.avatar_url } : null}

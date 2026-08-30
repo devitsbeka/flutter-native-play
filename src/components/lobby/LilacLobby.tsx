@@ -283,6 +283,77 @@ export function Seat({
   );
 }
 
+export interface ChooserOption {
+  icon: ReactNode;
+  label: string;
+  sub?: string;
+  onPress: () => void;
+}
+
+/**
+ * The + seat's question: who takes this seat? A soft white sheet over the
+ * lilac wash with one rich row per real option (invite a friend, seat an AI
+ * player, sit here yourself…) — each row does exactly what it says.
+ */
+export function PlusChooser({
+  open,
+  title,
+  options,
+  onClose,
+}: {
+  open: boolean;
+  title: string;
+  options: ChooserOption[];
+  onClose: () => void;
+}) {
+  if (!open) return null;
+  return (
+    <div
+      className="fixed inset-0 z-[130] flex items-center justify-center px-7 backdrop-blur-[10px] bg-[rgba(245,217,255,0.6)]"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9, y: 14 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 420, damping: 28 }}
+        className="w-full max-w-[340px] rounded-[28px] bg-white/95 border border-[#e8e0f5] p-5 flex flex-col gap-3 shadow-[0px_8px_24px_0px_rgba(102,51,153,0.18),0px_2px_8px_0px_rgba(102,51,153,0.08)]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <p
+          className="text-[20px] text-[#523b76] text-center pb-1"
+          style={{ fontFamily: "'TASolivare', sans-serif" }}
+        >
+          {title}
+        </p>
+        {options.map((option) => (
+          <button
+            key={option.label}
+            onClick={() => {
+              onClose();
+              option.onPress();
+            }}
+            className="w-full flex items-center gap-3 rounded-[18px] bg-[#f8f5ff] border border-[#efe9fb] px-4 py-3 text-left active:scale-[0.98] transition-transform"
+          >
+            <span className="flex items-center justify-center shrink-0 size-[42px] rounded-full bg-[#ede4fb] text-[#8858d5]">
+              {option.icon}
+            </span>
+            <span className="min-w-0">
+              <span className="block font-[Nunito] font-bold text-[15px] text-[#402666]">
+                {option.label}
+              </span>
+              {option.sub && (
+                <span className="block font-[Nunito] text-[12px] text-[#402666]/55 truncate">
+                  {option.sub}
+                </span>
+              )}
+            </span>
+          </button>
+        ))}
+      </motion.div>
+    </div>
+  );
+}
+
 export interface SeatMenuAction {
   label: string;
   destructive?: boolean;
