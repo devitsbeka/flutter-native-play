@@ -15,6 +15,8 @@ import {
   CaptainChip,
   CoinPill,
   Divider,
+  FriendPeek,
+  type InviteEntry,
   InviteRow,
   LILAC_BG,
   LilacHeader,
@@ -192,6 +194,7 @@ export default function KingPage() {
   // co-op engine is the next phase — so picking a friend hands you the
   // share sheet with the challenge link to send them.
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [peek, setPeek] = useState<InviteEntry | null>(null);
   const inviteFriends = useCallback(() => setInviteOpen(true), []);
   const shareKingLink = useCallback(() => {
     setInviteOpen(false);
@@ -243,7 +246,7 @@ export default function KingPage() {
               online: !!f.isOnline,
             }))}
             onInvite={inviteFriends}
-            onEntry={inviteFriends}
+            onEntry={setPeek}
           />
 
           {/* Winner takes: (940:7510) + the coins pill (940:7560) */}
@@ -306,6 +309,20 @@ export default function KingPage() {
           onClose={() => setInviteOpen(false)}
           inviteLink="https://mytrivia.io/king"
           onFriendSelect={shareKingLink}
+        />
+
+        {/* King has no joinable room yet, so the peek's action hands over
+            the share sheet with the challenge link. */}
+        <FriendPeek
+          friend={peek}
+          onClose={() => setPeek(null)}
+          actionLabel={t("lobby.sendLink")}
+          invitedLabel={t("lobby.invitedState")}
+          invited={false}
+          onAction={() => {
+            setPeek(null);
+            shareKingLink();
+          }}
         />
       </div>
     );

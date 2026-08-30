@@ -1,4 +1,6 @@
 import { type ReactNode, useEffect, useRef, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useLanguage } from "@/contexts/LanguageContext";
 import iconInvite from "@/assets/vk-lobby/icon-invite.svg";
 import iconBack from "@/assets/vk-lobby/icon-back.svg";
 import iconHelp from "@/assets/vk-lobby/icon-help.svg";
@@ -290,6 +292,90 @@ export function StartButton({
               {label}
             </p>
           </div>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * A friend tapped in the invite strip peeks here — an overlay ON the lounge
+ * (blurred lilac wash, no navigation) with their profile and one clear
+ * action: invite them to this game. The lobby decides what inviting means.
+ */
+export function FriendPeek({
+  friend,
+  onClose,
+  actionLabel,
+  invitedLabel,
+  invited,
+  onAction,
+}: {
+  friend: InviteEntry | null;
+  onClose: () => void;
+  actionLabel: string;
+  invitedLabel: string;
+  invited: boolean;
+  onAction: () => void;
+}) {
+  const { t } = useLanguage();
+  const [points, setPoints] = useState<number | null>(null);
+
+  useEffect(() => {
+    setPoints(null);
+    if (!friend) return;
+    let alive = true;
+    void supabase
+      .from("profiles")
+      .select("total_points")
+      .eq("user_id", friend.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (alive) setPoints(data?.total_points ?? null);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [friend]);
+
+  if (!friend) return null;
+  return (
+    <div
+      className="fixed inset-0 z-[120] flex items-center justify-center px-8 backdrop-blur-[10px] bg-[rgba(245,217,255,0.6)]"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-[340px] rounded-[24px] bg-white/95 border border-[#e8e0f5] p-6 flex flex-col items-center gap-3 shadow-[0px_8px_24px_0px_rgba(102,51,153,0.18),0px_2px_8px_0px_rgba(102,51,153,0.08)]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="relative rounded-full size-[88px] overflow-clip">
+          <InviteAvatar url={friend.avatarUrl} nickname={friend.nickname} />
+        </div>
+        <p
+          className="text-[22px] text-[#523b76]"
+          style={{ fontFamily: "'TASolivare', sans-serif" }}
+        >
+          {friend.nickname}
+        </p>
+        {points !== null && (
+          <p className="font-[Nunito] text-sm text-[#523b76]/60 -mt-2">
+            {points.toLocaleString()} {t("extra.pointsLabel", { count: "" }).trim()}
+          </p>
+        )}
+        <button
+          onClick={invited ? undefined : onAction}
+          disabled={invited}
+          className="w-full h-[52px] rounded-[18px] text-white font-[Nunito] font-bold text-[16px] active:scale-[0.98] transition-transform disabled:opacity-80"
+          style={{
+            background: invited
+              ? "#4ade80"
+              : "linear-gradient(to bottom, #8858d5, rgba(136,88,213,0.9))",
+          }}
+        >
+          {invited ? `✓ ${invitedLabel}` : actionLabel}
+        </button>
+        <button onClick={onClose} className="font-[Nunito] text-sm font-semibold text-[#523b76]/50">
+          {t("common.close")}
         </button>
       </div>
     </div>

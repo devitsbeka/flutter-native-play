@@ -17,6 +17,8 @@ import { useCategories } from "@/hooks/useCategories";
 import {
   CoinPill,
   Divider,
+  FriendPeek,
+  type InviteEntry,
   InviteRow,
   LILAC_BG,
   LilacHeader,
@@ -25,6 +27,8 @@ import {
   Seat,
   StartButton,
 } from "@/components/lobby/LilacLobby";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/lib/toast";
 import sceneArena from "@/assets/tb-lobby/scene-arena.webp";
 import podiumSeatA from "@/assets/tb-lobby/podium-seat-a.png";
 import podiumSeatB from "@/assets/tb-lobby/podium-seat-b.png";
@@ -178,6 +182,8 @@ function TBLobby() {
   const [rounds, setRounds] = useState(6);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [peek, setPeek] = useState<InviteEntry | null>(null);
+  const [invitedIds, setInvitedIds] = useState<Set<string>>(new Set());
   const [params, setParams] = useSearchParams();
 
   useEffect(() => refreshFriendsIfStale(), [refreshFriendsIfStale]);
@@ -206,6 +212,38 @@ function TBLobby() {
   const start = () => {
     const usable = categories.filter((c) => c.tier === "free" || c.tier === "standard");
     void startMatch(usable.map((c) => ({ uuid: c.uuid, name: c.name })), rounds);
+  };
+
+  // The peek's Invite button sends the real room invite — the same
+  // invited-participant row the invite modal writes, whose DB trigger
+  // delivers the notification.
+  const inviteToGame = async (entry: InviteEntry) => {
+    if (!room) return;
+    const { data: existing } = await supabase
+      .from("room_participants")
+      .select("id")
+      .eq("room_id", room.id)
+      .eq("user_id", entry.id)
+      .maybeSingle();
+    if (existing) {
+      setInvitedIds((prev) => new Set([...prev, entry.id]));
+      return;
+    }
+    const { error } = await supabase.from("room_participants").insert({
+      room_id: room.id,
+      user_id: entry.id,
+      status: "invited",
+      nickname: entry.nickname,
+      avatar_url: entry.avatarUrl,
+      is_host: false,
+    });
+    if (error) {
+      console.error("[TB] invite failed", error);
+      toast.error(t("extra.inviteFailed"));
+      return;
+    }
+    setInvitedIds((prev) => new Set([...prev, entry.id]));
+    toast.success(t("extra.inviteSent"));
   };
 
   // An open seat on the other team seats YOU there; one on your own team
@@ -317,7 +355,7 @@ function TBLobby() {
             online: !!f.isOnline,
           }))}
           onInvite={() => setInviteOpen(true)}
-          onEntry={() => setInviteOpen(true)}
+          onEntry={setPeek}
         />
 
         {/* Pick duration (940:7647 + chips 940:7648/936:21181/936:21183) */}
@@ -457,6 +495,18 @@ function TBLobby() {
           roomCode={room.room_code}
         />
       )}
+
+      <FriendPeek
+        friend={peek}
+        onClose={() => setPeek(null)}
+        actionLabel={t("lobby.inviteToGame")}
+        invitedLabel={t("lobby.invitedState")}
+        invited={
+          !!peek &&
+          (invitedIds.has(peek.id) || participants.some((p) => p.user_id === peek.id))
+        }
+        onAction={() => peek && void inviteToGame(peek)}
+      />
     </div>
   );
 }
