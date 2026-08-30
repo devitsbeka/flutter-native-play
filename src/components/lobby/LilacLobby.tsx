@@ -91,7 +91,11 @@ export function FitBox({
   );
 }
 
-/** Header row — back, TASolivare title, help (940:7493 / 938:6022). */
+/**
+ * Header row — back, TASolivare title, help (940:7493 / 938:6022). Same box
+ * as the home header (px-4 py-3, 40px buttons) so the chrome height never
+ * jumps between pages.
+ */
 export function LilacHeader({
   title,
   onBack,
@@ -102,7 +106,7 @@ export function LilacHeader({
   onHelp?: () => void;
 }) {
   return (
-    <div className="w-full max-w-[500px] mx-auto shrink-0 flex items-center justify-between px-[24px] pt-[12px] pb-[4px]">
+    <div className="w-full max-w-[500px] mx-auto shrink-0 flex items-center justify-between px-4 py-3">
       <div className="flex gap-[12px] items-center">
         <button onClick={onBack} className="flex items-center justify-center rounded-[9999px] size-[40px] active:scale-95 transition-transform">
           <img alt="" className="block size-[20px]" src={iconBack} />
@@ -433,7 +437,6 @@ export function FriendPeek({
 export function CaptainChip({
   left,
   top,
-  width = 221,
   avatarUrl,
   name,
   placeholder,
@@ -442,7 +445,6 @@ export function CaptainChip({
 }: {
   left: number;
   top: number;
-  width?: number;
   avatarUrl?: string | null;
   name?: string;
   placeholder?: string;
@@ -453,8 +455,8 @@ export function CaptainChip({
   return (
     <button
       onClick={onClick}
-      className="absolute bg-[#faecff] border-[1.153px] border-solid flex gap-[11px] h-[52px] items-center pl-[12px] pr-[8px] rounded-[16.85px] shadow-[0px_3.389px_0px_0px_#d8d0e8,0px_5.083px_13.556px_0px_rgba(0,0,0,0.1)]"
-      style={{ left, top, width, borderColor: accent ?? "#e8e0f5" }}
+      className="absolute bg-[#faecff] border-[1.153px] border-solid inline-flex gap-[11px] h-[52px] items-center pl-[12px] pr-[18px] max-w-[300px] rounded-[16.85px] shadow-[0px_3.389px_0px_0px_#d8d0e8,0px_5.083px_13.556px_0px_rgba(0,0,0,0.1)]"
+      style={{ left, top, borderColor: accent ?? "#e8e0f5" }}
     >
       {filled ? (
         <div className="relative rounded-[9999px] shrink-0 size-[32.5px] overflow-clip">

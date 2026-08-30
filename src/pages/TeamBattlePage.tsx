@@ -3,9 +3,9 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Bot, ChevronLeft, Plus } from "lucide-react";
 import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
+import { FriendsStoriesBar } from "@/components/team/FriendsStoriesBar";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { useFriends } from "@/contexts/FriendsContext";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import {
   TeamBattleProvider,
@@ -19,7 +19,6 @@ import {
   Divider,
   FriendPeek,
   type InviteEntry,
-  InviteRow,
   LILAC_BG,
   LilacHeader,
   FitBox,
@@ -172,7 +171,6 @@ const DURATIONS = [6, 10, 12];
 function TBLobby() {
   const { t } = useLanguage();
   const { user } = useAuth();
-  const { friends, refreshFriendsIfStale } = useFriends();
   const navigate = useNavigate();
   const {
     room, participants, isHost, myTeam, setTeam, addBot, removeBot, setCaptain,
@@ -185,8 +183,6 @@ function TBLobby() {
   const [peek, setPeek] = useState<InviteEntry | null>(null);
   const [invitedIds, setInvitedIds] = useState<Set<string>>(new Set());
   const [params, setParams] = useSearchParams();
-
-  useEffect(() => refreshFriendsIfStale(), [refreshFriendsIfStale]);
 
   // Keep the room's code in the URL: refresh, share, and the round-start
   // watcher all address this exact room by it.
@@ -338,17 +334,15 @@ function TBLobby() {
         onHelp={() => setHelpOpen((v) => !v)}
       />
 
-      <InviteRow
-        inviteLabel={t("lobby.invite")}
-        entries={friends.map((f) => ({
-          id: f.friendId,
-          nickname: f.nickname,
-          avatarUrl: f.avatarUrl,
-          online: !!f.isOnline,
-        }))}
-        onInvite={() => setInviteOpen(true)}
-        onEntry={setPeek}
-      />
+      {/* the same friends reel the home page uses — identical sizes/fonts */}
+      <div className="w-full shrink-0 px-4">
+        <FriendsStoriesBar
+          onAddFriendClick={() => setInviteOpen(true)}
+          onFriendClick={(f) =>
+            setPeek({ id: f.friendId, nickname: f.nickname, avatarUrl: f.avatarUrl, online: !!f.isOnline })
+          }
+        />
+      </div>
 
       <div className="flex-1 min-h-0">
       <FitBox width={500} height={670}>
@@ -448,7 +442,7 @@ function TBLobby() {
           VS
         </p>
         <TBCaptainChip
-          left={351}
+          right={33}
           accent="#ed6149"
           name={captainB?.nickname}
           avatarUrl={captainB?.avatar_url}
@@ -512,15 +506,18 @@ function TBLobby() {
   );
 }
 
-// The TB captain pill (940:7751): name on the left, round avatar docked right.
+// The TB captain pill (940:7751): name on the left, round avatar docked
+// right. Hugs its content — a short name makes a short pill.
 function TBCaptainChip({
   left,
+  right,
   accent,
   name,
   avatarUrl,
   onClick,
 }: {
-  left: number;
+  left?: number;
+  right?: number;
   accent: string;
   name?: string;
   avatarUrl?: string | null;
@@ -529,18 +526,19 @@ function TBCaptainChip({
   return (
     <button
       onClick={onClick}
-      className="absolute h-[50px] w-[116px] rounded-[16.85px] border-[1.153px] border-solid shadow-[0px_3.389px_0px_0px_#d8d0e8,0px_5.083px_13.556px_0px_rgba(0,0,0,0.1)]"
+      className="absolute h-[50px] inline-flex items-center gap-[8px] pl-[14px] pr-[8px] max-w-[180px] rounded-[16.85px] border-[1.153px] border-solid shadow-[0px_3.389px_0px_0px_#d8d0e8,0px_5.083px_13.556px_0px_rgba(0,0,0,0.1)]"
       style={{
         left,
+        right,
         top: 598,
         borderColor: accent,
         background: "linear-gradient(to bottom, rgba(255,255,255,0.5), rgba(254,254,254,0.5))",
       }}
     >
-      <p className="absolute left-[8px] right-[42px] top-1/2 -translate-y-1/2 font-[Nunito] font-black leading-[28.974px] text-[#334155] text-[16px] text-center tracking-[-0.1686px] whitespace-nowrap overflow-hidden text-ellipsis">
+      <p className="font-[Nunito] font-black leading-[28.974px] text-[#334155] text-[16px] tracking-[-0.1686px] whitespace-nowrap overflow-hidden text-ellipsis">
         {name ?? "—"}
       </p>
-      <div className="absolute left-[74px] top-[5px] size-[33px] rounded-[9999px] overflow-clip bg-[rgba(192,192,192,0.24)]">
+      <div className="relative shrink-0 size-[33px] rounded-[9999px] overflow-clip bg-[rgba(192,192,192,0.24)]">
         {avatarUrl && (
           <img alt="" className="absolute inset-0 max-w-none object-cover size-full rounded-[9999px]" src={avatarUrl} />
         )}

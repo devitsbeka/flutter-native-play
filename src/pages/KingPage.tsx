@@ -1,23 +1,23 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import type { RealtimeChannel } from "@supabase/supabase-js";
+import type { Tables } from "@/integrations/supabase/types";
 import { motion } from "framer-motion";
 import { ChevronLeft, Crown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { useFriends } from "@/contexts/FriendsContext";
 import { useServerDeadline } from "@/hooks/useServerDeadline";
 import { readAppLanguage } from "@/utils/appLanguage";
 import { toast } from "@/lib/toast";
-import { shareOrCopy } from "@/utils/shareLink";
 import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
+import { FriendsStoriesBar } from "@/components/team/FriendsStoriesBar";
 import {
   CaptainChip,
   CoinPill,
   Divider,
   FriendPeek,
   type InviteEntry,
-  InviteRow,
   LILAC_BG,
   LilacHeader,
   FitBox,
@@ -67,7 +67,6 @@ export default function KingPage() {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { user, profile } = useAuth();
-  const { friends, refreshFriendsIfStale } = useFriends();
   const [stage, setStage] = useState<Stage>("intro");
   const [state, setState] = useState<KingState | null>(null);
   const [reveal, setReveal] = useState<KingState | null>(null);
@@ -187,22 +186,161 @@ export default function KingPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  useEffect(() => refreshFriendsIfStale(), [refreshFriendsIfStale]);
+  // ── the lounge is a real room ────────────────────────────────────────────
+  // /king carries a king-typed game_rooms row: created on arrival (the code
+  // goes into the URL so refresh and share address the same room), or joined
+  // via ?code. Friends invited from here land IN this room. Everyone still
+  // plays their own duel against the King — the host's Start broadcasts so
+  // the whole couch begins together; the co-op captain engine comes next.
+  const [searchParams] = useSearchParams();
+  const [kingRoom, setKingRoom] = useState<Tables<"game_rooms"> | null>(null);
+  const [kingParts, setKingParts] = useState<Tables<"room_participants">[]>([]);
+  const roomAttempted = useRef(false);
+  const channelRef = useRef<RealtimeChannel | null>(null);
 
-  // Inviting from the King lobby opens the app's invite modal (search,
-  // friends, copy link, social share). King has no joinable room yet — the
-  // co-op engine is the next phase — so picking a friend hands you the
-  // share sheet with the challenge link to send them.
+  useEffect(() => {
+    if (!user || !profile || roomAttempted.current) return;
+    roomAttempted.current = true;
+    const code = searchParams.get("code");
+    void (async () => {
+      if (code) {
+        const { data: row } = await supabase
+          .from("game_rooms")
+          .select("*")
+          .eq("room_code", code.toUpperCase())
+          .eq("game_type_key", "king")
+          .maybeSingle();
+        if (row) {
+          const { data: existing } = await supabase
+            .from("room_participants")
+            .select("id, status")
+            .eq("room_id", row.id)
+            .eq("user_id", user.id)
+            .maybeSingle();
+          if (existing?.status === "invited") {
+            await supabase.from("room_participants").update({ status: "joined" }).eq("id", existing.id);
+          } else if (!existing) {
+            await supabase.from("room_participants").insert({
+              room_id: row.id,
+              user_id: user.id,
+              nickname: profile.nickname || "Player",
+              avatar_url: profile.avatar_url,
+              country_code: profile.country_code,
+              is_host: false,
+              status: "joined",
+            });
+          }
+          setKingRoom(row);
+          return;
+        }
+      }
+      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      const newCode = Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+      const { data: room, error } = await supabase
+        .from("game_rooms")
+        .insert({
+          host_user_id: user.id,
+          room_code: newCode,
+          status: "waiting",
+          game_type_key: "king",
+          game_mode: "king",
+          min_players: 1,
+          max_players: 11,
+          last_activity_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
+      if (error || !room) return;
+      await supabase.from("room_participants").insert({
+        room_id: room.id,
+        user_id: user.id,
+        nickname: profile.nickname || "Player",
+        avatar_url: profile.avatar_url,
+        country_code: profile.country_code,
+        is_host: true,
+        status: "joined",
+      });
+      setKingRoom(room);
+      navigate(`/king?code=${room.room_code}`, { replace: true });
+    })();
+  }, [user, profile, searchParams, navigate]);
+
+  useEffect(() => {
+    if (!kingRoom) return;
+    const fetchParts = async () => {
+      const { data } = await supabase
+        .from("room_participants")
+        .select("*")
+        .eq("room_id", kingRoom.id)
+        .in("status", ["joined", "ready", "playing"])
+        .order("joined_at", { ascending: true });
+      if (data) setKingParts(data);
+    };
+    void fetchParts();
+    const ch = supabase
+      .channel(`king-room-${kingRoom.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "room_participants", filter: `room_id=eq.${kingRoom.id}` },
+        () => void fetchParts(),
+      )
+      .on("broadcast", { event: "start" }, () => {
+        if (stageRef.current === "intro") void draw();
+      })
+      .subscribe();
+    channelRef.current = ch;
+    return () => {
+      channelRef.current = null;
+      void supabase.removeChannel(ch);
+    };
+  }, [kingRoom, draw]);
+
+  // The host's Start begins the duel for the whole couch; a broadcast never
+  // reaches its own sender, so the host draws locally too.
+  const startForEveryone = useCallback(() => {
+    void channelRef.current?.send({ type: "broadcast", event: "start", payload: {} });
+    void draw();
+  }, [draw]);
+
+  const [invitedIds, setInvitedIds] = useState<Set<string>>(new Set());
+  const inviteToGame = useCallback(
+    async (entry: InviteEntry) => {
+      if (!kingRoom) return;
+      const { data: existing } = await supabase
+        .from("room_participants")
+        .select("id")
+        .eq("room_id", kingRoom.id)
+        .eq("user_id", entry.id)
+        .maybeSingle();
+      if (existing) {
+        setInvitedIds((prev) => new Set([...prev, entry.id]));
+        return;
+      }
+      const { error } = await supabase.from("room_participants").insert({
+        room_id: kingRoom.id,
+        user_id: entry.id,
+        status: "invited",
+        nickname: entry.nickname,
+        avatar_url: entry.avatarUrl,
+        is_host: false,
+      });
+      if (error) {
+        console.error("[King] invite failed", error);
+        toast.error(t("extra.inviteFailed"));
+        return;
+      }
+      setInvitedIds((prev) => new Set([...prev, entry.id]));
+      toast.success(t("extra.inviteSent"));
+    },
+    [kingRoom, t],
+  );
+
+  // Inviting opens the app's invite modal (search, friends, copy link,
+  // social share) wired to this lounge's real room — an invited friend gets
+  // the notification and lands on this couch.
   const [inviteOpen, setInviteOpen] = useState(false);
   const [peek, setPeek] = useState<InviteEntry | null>(null);
   const inviteFriends = useCallback(() => setInviteOpen(true), []);
-  const shareKingLink = useCallback(() => {
-    setInviteOpen(false);
-    void shareOrCopy({ url: "https://mytrivia.io/king" }).then((outcome) => {
-      if (outcome === "copied") toast.success(t("lobby.linkCopied"));
-      else if (outcome === "failed") toast.error(t("common.error"));
-    });
-  }, [t]);
 
   const thinkSeconds = useServerDeadline(
     stage === "thinking" ? state?.question?.think_deadline : undefined,
@@ -231,17 +369,15 @@ export default function KingPage() {
           onHelp={() => setHelpOpen((v) => !v)}
         />
 
-        <InviteRow
-          inviteLabel={t("lobby.invite")}
-          entries={friends.map((f) => ({
-            id: f.friendId,
-            nickname: f.nickname,
-            avatarUrl: f.avatarUrl,
-            online: !!f.isOnline,
-          }))}
-          onInvite={inviteFriends}
-          onEntry={setPeek}
-        />
+        {/* the same friends reel the home page uses — identical sizes/fonts */}
+        <div className="w-full shrink-0 px-4">
+          <FriendsStoriesBar
+            onAddFriendClick={inviteFriends}
+            onFriendClick={(f) =>
+              setPeek({ id: f.friendId, nickname: f.nickname, avatarUrl: f.avatarUrl, online: !!f.isOnline })
+            }
+          />
+        </div>
 
         <div className="flex-1 min-h-0">
           <FitBox width={500} height={681}>
@@ -258,30 +394,31 @@ export default function KingPage() {
             </p>
             <CoinPill left={174} top={139} width={152} value="200" />
 
-            {/* seats around the couch — you first, the rest open (940:7477…) */}
-            {KING_SEATS.map(([left, top], i) =>
-              i === 0 ? (
+            {/* seats around the couch — real room participants, the rest open */}
+            {KING_SEATS.map(([left, top], i) => {
+              const part = kingParts[i];
+              return part ? (
                 <Seat
                   key={i}
                   left={left}
                   top={top - 160}
-                  avatarUrl={profile?.avatar_url ?? null}
-                  nickname={profile?.nickname ?? "P"}
+                  avatarUrl={part.avatar_url}
+                  nickname={part.nickname}
                 />
               ) : (
                 <PlusSeat key={i} left={left} top={top - 160} onClick={inviteFriends} />
-              ),
-            )}
+              );
+            })}
 
-            {/* Captain (940:7788 + 936:21188) — solo: the captain is you */}
+            {/* Captain (940:7788 + 936:21188) — the room's host */}
             <p className="absolute left-[38px] top-[576px] font-[Nunito] font-medium leading-[24px] text-[#0c172c] text-[15px] tracking-[-0.16px]">
               {t("lobby.captainLabel")}
             </p>
             <CaptainChip
               left={38}
               top={610}
-              avatarUrl={profile?.avatar_url}
-              name={profile?.nickname}
+              avatarUrl={(kingParts.find((p) => p.is_host) ?? kingParts[0])?.avatar_url ?? profile?.avatar_url}
+              name={(kingParts.find((p) => p.is_host) ?? kingParts[0])?.nickname ?? profile?.nickname}
               placeholder={t("lobby.chooseCaptain")}
             />
 
@@ -304,29 +441,28 @@ export default function KingPage() {
         <Divider />
         <StartButton
           label={t("lobby.startGame")}
-          onClick={() => void draw()}
+          onClick={startForEveryone}
           disabled={busy || !state}
         />
 
         <InviteFriendsModal
           isOpen={inviteOpen}
           onClose={() => setInviteOpen(false)}
-          inviteLink="https://mytrivia.io/king"
-          onFriendSelect={shareKingLink}
+          inviteLink={kingRoom ? `https://mytrivia.io/king?code=${kingRoom.room_code}` : "https://mytrivia.io/king"}
+          roomId={kingRoom?.id}
+          roomCode={kingRoom?.room_code}
         />
 
-        {/* King has no joinable room yet, so the peek's action hands over
-            the share sheet with the challenge link. */}
         <FriendPeek
           friend={peek}
           onClose={() => setPeek(null)}
-          actionLabel={t("lobby.sendLink")}
+          actionLabel={t("lobby.inviteToGame")}
           invitedLabel={t("lobby.invitedState")}
-          invited={false}
-          onAction={() => {
-            setPeek(null);
-            shareKingLink();
-          }}
+          invited={
+            !!peek &&
+            (invitedIds.has(peek.id) || kingParts.some((p) => p.user_id === peek.id))
+          }
+          onAction={() => peek && void inviteToGame(peek)}
         />
       </div>
     );

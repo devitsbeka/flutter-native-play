@@ -491,6 +491,8 @@ function TeamContentV2() {
         .then(({ data: typed }) => {
           if (typed?.game_type_key === "team_battle") {
             navigate(`/team-battle?code=${joinCode.toUpperCase()}`, { replace: true });
+          } else if (typed?.game_type_key === "king") {
+            navigate(`/king?code=${joinCode.toUpperCase()}`, { replace: true });
           } else {
             setClassicJoinCode(joinCode);
           }

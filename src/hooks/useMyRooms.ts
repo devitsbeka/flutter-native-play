@@ -156,10 +156,11 @@ async function fetchRoomsForUser(userId: string, options?: FetchRoomsOptions): P
     .select("*")
     .in("id", roomIds)
     .neq("status", "cancelled")
-    // Team Battle rooms live on /team-battle; opening one through the
-    // classic hub would run the classic lobby against a room whose match
-    // state it cannot drive. (is.null keeps every pre-registry room.)
-    .or("game_type_key.is.null,game_type_key.neq.team_battle")
+    // Team Battle rooms live on /team-battle and King lounges on /king;
+    // opening either through the classic hub would run the classic lobby
+    // against a room whose match state it cannot drive. (is.null keeps
+    // every pre-registry room.)
+    .or("game_type_key.is.null,and(game_type_key.neq.team_battle,game_type_key.neq.king)")
     .order("last_activity_at", { ascending: false, nullsFirst: false });
 
   if (!includeArchived) {
