@@ -1800,6 +1800,8 @@ export const en: KaTranslations = {
     sitHere: "Sit here yourself",
     withFriends: "With Friends",
     newBang: "New!",
+    captainInfoTitle: "Team Captain",
+    captainInfoBody: "The captain leads the team: if the match ends in a tie, the captain steps up as the team's champion in the super round and answers for everyone. The host picks the captain before the game starts.",
   },
 
   extra: {

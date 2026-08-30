@@ -1525,6 +1525,8 @@ export const it: KaTranslations = {
     sitHere: "Siediti tu",
     withFriends: "Con gli amici",
     newBang: "Novità!",
+    captainInfoTitle: "Capitano della squadra",
+    captainInfoBody: "Il capitano guida la squadra: se la partita finisce in parità, è lui il campione della squadra nel super round e risponde per tutti. L'host sceglie il capitano prima dell'inizio.",
   },
 
   extra: {

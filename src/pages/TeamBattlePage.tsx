@@ -10,12 +10,14 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import {
   TeamBattleProvider,
   useTeamBattle,
+  type TBParticipant,
   type TBTeam,
 } from "@/contexts/TeamBattleContext";
 import { TeamBattleMatch } from "@/components/team-battle/TeamBattleMatch";
 import { useCategories } from "@/hooks/useCategories";
 import {
   AnimatedCoinPill,
+  CaptainInfoModal,
   FriendPeek,
   type InviteEntry,
   LILAC_BG,
@@ -33,6 +35,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast";
 import sceneArena from "@/assets/tb-lobby/scene-arena.webp";
+import crownIcon from "@/assets/crown-icon.png";
 import teamPenguins from "@/assets/tb-lobby/team-penguins.png";
 import teamFormula from "@/assets/tb-lobby/team-formula.png";
 
@@ -184,6 +187,9 @@ function TBLobby() {
   const [helpOpen, setHelpOpen] = useState(false);
   const [peek, setPeek] = useState<InviteEntry | null>(null);
   const [invitedIds, setInvitedIds] = useState<Set<string>>(new Set());
+  const [captainInfo, setCaptainInfo] = useState<TBTeam | null>(null);
+  const [rollFace, setRollFace] = useState<{ [k in TBTeam]?: TBParticipant }>({});
+  const rollTimers = useRef<{ [k in TBTeam]?: number }>({});
   const [params, setParams] = useSearchParams();
 
   // Keep the room's code in the URL: refresh, share, and the round-start
@@ -377,6 +383,10 @@ function TBLobby() {
               nickname={entry.p.nickname}
               ring={ring}
               pending={entry.pending}
+              crown={
+                !entry.pending &&
+                entry.p.user_id === (team === "a" ? captainA : captainB)?.user_id
+              }
               onClick={() => seatTap(entry.p, entry.pending)}
               onLongPress={() => seatHold(entry.p, entry.pending)}
             />
@@ -395,13 +405,46 @@ function TBLobby() {
   const captainA = captainOf(teamA);
   const captainB = captainOf(teamB);
 
-  // Host taps a captain pill to hand the armband to the team's next member.
-  const cycleCaptain = (members: typeof participants) => {
-    if (!isHost || members.length === 0) return;
-    const current = members.findIndex((p) => p.is_captain);
-    const next = members[(current + 1) % members.length];
-    void setCaptain(next.user_id);
-  };
+  // An all-AI team can't elect anyone — the host's device rolls the crown
+  // like a slot reel: the chip flips through the bots' faces, lands on one,
+  // and commits it with tb_set_captain. A sentinel (-1) marks a team already
+  // rolled so a failed RPC doesn't loop; it clears once the team changes.
+  useEffect(() => {
+    (["a", "b"] as TBTeam[]).forEach((team) => {
+      const members = participants.filter((p) => p.team === team);
+      const allBots = members.length > 0 && members.every((p) => p.is_bot);
+      const hasCaptain = members.some((p) => p.is_captain);
+      if (!isHost || !allBots || hasCaptain) {
+        if (rollTimers.current[team] === -1) rollTimers.current[team] = undefined;
+        return;
+      }
+      if (rollTimers.current[team] !== undefined) return;
+      const winner = members[Math.floor(Math.random() * members.length)];
+      let tick = 0;
+      const id = window.setInterval(() => {
+        tick += 1;
+        if (tick >= 14) {
+          window.clearInterval(id);
+          rollTimers.current[team] = -1;
+          setRollFace((prev) => ({ ...prev, [team]: undefined }));
+          void setCaptain(winner.user_id);
+        } else {
+          setRollFace((prev) => ({ ...prev, [team]: members[tick % members.length] }));
+        }
+      }, 100);
+      rollTimers.current[team] = id;
+    });
+  }, [participants, isHost, setCaptain]);
+
+  useEffect(() => {
+    const timers = rollTimers.current;
+    return () => {
+      (["a", "b"] as TBTeam[]).forEach((team) => {
+        const id = timers[team];
+        if (id !== undefined && id !== -1) window.clearInterval(id);
+      });
+    };
+  }, []);
 
   return (
     <div
@@ -485,9 +528,10 @@ function TBLobby() {
         <TBCaptainChip
           left={37}
           accent="#e7ba87"
-          name={captainA?.nickname}
-          avatarUrl={captainA?.avatar_url}
-          onClick={() => cycleCaptain(teamA)}
+          name={(rollFace.a ?? captainA)?.nickname}
+          avatarUrl={(rollFace.a ?? captainA)?.avatar_url}
+          rolling={!!rollFace.a}
+          onClick={() => setCaptainInfo("a")}
         />
         <p
           className="absolute left-[191px] top-[469px] w-[118px] text-[77px] leading-[43px] text-center not-italic text-[#f5d9ff]"
@@ -498,9 +542,10 @@ function TBLobby() {
         <TBCaptainChip
           right={33}
           accent="#ed6149"
-          name={captainB?.nickname}
-          avatarUrl={captainB?.avatar_url}
-          onClick={() => cycleCaptain(teamB)}
+          name={(rollFace.b ?? captainB)?.nickname}
+          avatarUrl={(rollFace.b ?? captainB)?.avatar_url}
+          rolling={!!rollFace.b}
+          onClick={() => setCaptainInfo("b")}
         />
 
         {helpOpen && (
@@ -554,6 +599,26 @@ function TBLobby() {
         actions={seatMenu ? seatMenuActions(seatMenu.p) : []}
       />
 
+      <CaptainInfoModal
+        open={captainInfo !== null}
+        onClose={() => setCaptainInfo(null)}
+        title={t("lobby.captainInfoTitle")}
+        body={t("lobby.captainInfoBody")}
+        chooseLabel={isHost ? t("lobby.chooseCaptain") : undefined}
+        members={
+          captainInfo
+            ? teamOf(captainInfo).map((p) => ({
+                userId: p.user_id,
+                nickname: p.nickname,
+                avatarUrl: p.avatar_url,
+                isCaptain:
+                  p.user_id === (captainInfo === "a" ? captainA : captainB)?.user_id,
+              }))
+            : []
+        }
+        onChoose={isHost ? (userId) => void setCaptain(userId) : undefined}
+      />
+
       <FriendPeek
         friend={peek}
         onClose={() => setPeek(null)}
@@ -570,13 +635,16 @@ function TBLobby() {
 }
 
 // The TB captain pill (940:7751): name on the left, round avatar docked
-// right. Hugs its content — a short name makes a short pill.
+// right. Hugs its content — a short name makes a short pill. While an
+// all-AI team's crown is being rolled, each face drops through like a slot
+// reel; the settled captain's avatar wears the crown.
 function TBCaptainChip({
   left,
   right,
   accent,
   name,
   avatarUrl,
+  rolling,
   onClick,
 }: {
   left?: number;
@@ -584,12 +652,15 @@ function TBCaptainChip({
   accent: string;
   name?: string;
   avatarUrl?: string | null;
+  rolling?: boolean;
   onClick?: () => void;
 }) {
   return (
-    <button
+    <motion.button
       onClick={onClick}
-      className="absolute h-[50px] inline-flex items-center gap-[8px] pl-[14px] pr-[8px] max-w-[180px] rounded-[16.85px] border-[1.153px] border-solid shadow-[0px_3.389px_0px_0px_#d8d0e8,0px_5.083px_13.556px_0px_rgba(0,0,0,0.1)]"
+      whileTap={{ scale: 0.95, y: 3 }}
+      transition={{ type: "spring", stiffness: 520, damping: 28 }}
+      className="absolute h-[50px] inline-flex items-center max-w-[180px] rounded-[16.85px] border-[1.153px] border-solid shadow-[0px_3.389px_0px_0px_#d8d0e8,0px_5.083px_13.556px_0px_rgba(0,0,0,0.1)]"
       style={{
         left,
         right,
@@ -598,15 +669,36 @@ function TBCaptainChip({
         background: "linear-gradient(to bottom, rgba(255,255,255,0.5), rgba(254,254,254,0.5))",
       }}
     >
-      <p className="font-[Nunito] font-black leading-[28.974px] text-[#334155] text-[16px] tracking-[-0.1686px] whitespace-nowrap overflow-hidden text-ellipsis">
-        {name ?? "—"}
-      </p>
-      <div className="relative shrink-0 size-[33px] rounded-[9999px] overflow-clip bg-[rgba(192,192,192,0.24)]">
-        {avatarUrl && (
-          <img alt="" className="absolute inset-0 max-w-none object-cover size-full rounded-[9999px]" src={avatarUrl} />
-        )}
-      </div>
+      <motion.div
+        key={name ?? "-"}
+        initial={rolling ? { y: -16, opacity: 0 } : false}
+        animate={{ y: 0, opacity: 1 }}
+        transition={
+          rolling
+            ? { duration: 0.09, ease: "easeOut" }
+            : { type: "spring", stiffness: 480, damping: 22 }
+        }
+        className="flex items-center gap-[8px] pl-[14px] pr-[8px] min-w-0"
+      >
+        <p className="font-[Nunito] font-black leading-[28.974px] text-[#334155] text-[16px] tracking-[-0.1686px] whitespace-nowrap overflow-hidden text-ellipsis">
+          {name ?? "—"}
+        </p>
+        <div className="relative shrink-0 size-[33px]">
+          <div className="absolute inset-0 rounded-[9999px] overflow-clip bg-[rgba(192,192,192,0.24)]">
+            {avatarUrl && (
+              <img alt="" className="absolute inset-0 max-w-none object-cover size-full rounded-[9999px]" src={avatarUrl} />
+            )}
+          </div>
+          {!rolling && !!name && (
+            <img
+              alt=""
+              src={crownIcon}
+              className="pointer-events-none absolute -top-[8px] left-[8px] w-[17px] object-contain drop-shadow -rotate-12"
+            />
+          )}
+        </div>
+      </motion.div>
       <div className="absolute inset-0 pointer-events-none rounded-[inherit] shadow-[inset_0px_1.695px_0px_0px_white]" />
-    </button>
+    </motion.button>
   );
 }

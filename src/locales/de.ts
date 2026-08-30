@@ -1522,6 +1522,8 @@ export const de: KaTranslations = {
     sitHere: "Selbst hier sitzen",
     withFriends: "Mit Freunden",
     newBang: "Neu!",
+    captainInfoTitle: "Team-Kapitän",
+    captainInfoBody: "Der Kapitän führt das Team an: Endet das Match unentschieden, tritt der Kapitän in der Superrunde als Champion des Teams an und antwortet für alle. Der Host wählt den Kapitän vor Spielbeginn.",
   },
 
   extra: {

@@ -8,6 +8,7 @@ import iconHelp from "@/assets/vk-lobby/icon-help.svg";
 import iconPlay from "@/assets/vk-lobby/icon-play.svg";
 import plusSeat from "@/assets/vk-lobby/plus-seat.svg";
 import coinPng from "@/assets/tb-lobby/coin.png";
+import crownIcon from "@/assets/crown-icon.png";
 
 /**
  * Shared pieces of the lilac lobby screens, extracted from Figma
@@ -257,6 +258,7 @@ export function Seat({
   nickname,
   ring = "white",
   pending,
+  crown,
   onClick,
   onLongPress,
 }: {
@@ -266,6 +268,7 @@ export function Seat({
   nickname: string;
   ring?: "white" | "blue" | "red";
   pending?: boolean;
+  crown?: boolean;
   onClick?: () => void;
   onLongPress?: () => void;
 }) {
@@ -310,16 +313,30 @@ export function Seat({
         }
         onClick?.();
       }}
-      className="absolute rounded-[9999px] size-[52px] overflow-clip select-none"
+      className="absolute rounded-[9999px] size-[52px] select-none"
       style={{
         left,
         top,
-        border: pending ? "2px dashed rgba(255,255,255,0.95)" : border,
         filter: pending ? "grayscale(0.4)" : undefined,
         WebkitTouchCallout: "none",
       }}
     >
-      <InviteAvatar url={avatarUrl} nickname={nickname} />
+      <div
+        className="absolute inset-0 rounded-[9999px] overflow-clip"
+        style={{ border: pending ? "2px dashed rgba(255,255,255,0.95)" : border }}
+      >
+        <InviteAvatar url={avatarUrl} nickname={nickname} />
+      </div>
+      {crown && (
+        <motion.img
+          alt=""
+          src={crownIcon}
+          initial={{ scale: 0, y: 8, rotate: -30 }}
+          animate={{ scale: 1, y: 0, rotate: -10 }}
+          transition={{ type: "spring", stiffness: 420, damping: 16 }}
+          className="pointer-events-none absolute -top-[13px] left-[13px] w-[24px] object-contain drop-shadow"
+        />
+      )}
     </motion.button>
   );
 }
@@ -448,6 +465,103 @@ export function SeatMenu({
           {t("common.close")}
         </button>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Tap a captain pill and this explains what the armband means — blurred
+ * lilac wash, subtle white card, the app's crown dropping in. When the
+ * host opens it, the team's faces sit below and a tap hands the crown over.
+ */
+export function CaptainInfoModal({
+  open,
+  onClose,
+  title,
+  body,
+  chooseLabel,
+  members,
+  onChoose,
+}: {
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  body: string;
+  chooseLabel?: string;
+  members?: { userId: string; nickname: string; avatarUrl: string | null; isCaptain: boolean }[];
+  onChoose?: (userId: string) => void;
+}) {
+  const { t } = useLanguage();
+  if (!open) return null;
+  return (
+    <div
+      className="fixed inset-0 z-[130] flex items-center justify-center px-7 backdrop-blur-[10px] bg-[rgba(245,217,255,0.6)]"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9, y: 14 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 420, damping: 28 }}
+        className="w-full max-w-[340px] rounded-[28px] bg-white/95 border border-[#e8e0f5] p-6 flex flex-col items-center gap-3 shadow-[0px_8px_24px_0px_rgba(102,51,153,0.18),0px_2px_8px_0px_rgba(102,51,153,0.08)]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <motion.img
+          alt=""
+          src={crownIcon}
+          initial={{ scale: 0.4, y: -16, rotate: -20 }}
+          animate={{ scale: 1, y: 0, rotate: 0 }}
+          transition={{ type: "spring", stiffness: 320, damping: 15 }}
+          className="size-[56px] object-contain drop-shadow"
+        />
+        <p className="text-[20px] text-[#523b76] text-center" style={{ fontFamily: "'TASolivare', sans-serif" }}>
+          {title}
+        </p>
+        <p className="font-[Nunito] text-[14px] leading-relaxed text-[#402666]/70 text-center">
+          {body}
+        </p>
+        {onChoose && members && members.length > 0 && (
+          <>
+            {chooseLabel && (
+              <p className="font-[Nunito] font-bold text-[13px] text-[#523b76]/60 pt-1">{chooseLabel}</p>
+            )}
+            <div className="flex flex-wrap justify-center gap-3">
+              {members.map((m) => (
+                <motion.button
+                  key={m.userId}
+                  whileTap={{ scale: 0.88 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 26 }}
+                  onClick={() => {
+                    onChoose(m.userId);
+                    onClose();
+                  }}
+                  className="relative flex flex-col items-center gap-1 w-[64px]"
+                >
+                  <span
+                    className={`relative block size-[48px] rounded-full overflow-clip ${
+                      m.isCaptain ? "ring-2 ring-[#e7ba87]" : ""
+                    }`}
+                  >
+                    <InviteAvatar url={m.avatarUrl} nickname={m.nickname} />
+                  </span>
+                  {m.isCaptain && (
+                    <img
+                      alt=""
+                      src={crownIcon}
+                      className="pointer-events-none absolute -top-[10px] left-[22px] w-[20px] object-contain drop-shadow -rotate-12"
+                    />
+                  )}
+                  <span className="font-[Nunito] text-[11px] font-semibold text-[#402666] max-w-full truncate">
+                    {m.nickname}
+                  </span>
+                </motion.button>
+              ))}
+            </div>
+          </>
+        )}
+        <button onClick={onClose} className="font-[Nunito] text-sm font-semibold text-[#523b76]/50 pt-1">
+          {t("common.close")}
+        </button>
+      </motion.div>
     </div>
   );
 }

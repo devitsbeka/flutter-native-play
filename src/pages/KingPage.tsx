@@ -428,6 +428,7 @@ export default function KingPage() {
                   avatarUrl={part.avatar_url}
                   nickname={part.nickname}
                   pending={!active}
+                  crown={!!active && part.user_id === kingRoom?.host_user_id}
                   onLongPress={
                     kingRoom?.host_user_id === user?.id && part.user_id !== user?.id
                       ? () => setSeatMenu(part)
