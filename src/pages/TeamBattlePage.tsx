@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ChevronLeft } from "lucide-react";
-import { toast } from "@/lib/toast";
-import { shareOrCopy } from "@/utils/shareLink";
+import { Bot, ChevronLeft, Plus } from "lucide-react";
+import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFriends } from "@/contexts/FriendsContext";
@@ -177,6 +176,8 @@ function TBLobby() {
   } = useTeamBattle();
   const { categories } = useCategories();
   const [rounds, setRounds] = useState(6);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const [params, setParams] = useSearchParams();
 
   useEffect(() => refreshFriendsIfStale(), [refreshFriendsIfStale]);
@@ -202,29 +203,17 @@ function TBLobby() {
     teamA.length > 0 && teamA.length === teamB.length && participants.every((p) => p.team);
   const minTiles = Math.max(6, 2 * teamA.length);
 
-  // Inviting shares the room's join link through the shareLink helper —
-  // the real share sheet on device, the clipboard elsewhere.
-  const copyCode = () => {
-    if (!room) return;
-    void shareOrCopy({ url: `https://mytrivia.io/team-battle?code=${room.room_code}` }).then(
-      (outcome) => {
-        if (outcome === "copied") toast.success(t("teamBattle.codeCopied"));
-        else if (outcome === "failed") toast.error(t("common.error"));
-      },
-    );
-  };
-
   const start = () => {
     const usable = categories.filter((c) => c.tier === "free" || c.tier === "standard");
     void startMatch(usable.map((c) => ({ uuid: c.uuid, name: c.name })), rounds);
   };
 
-  // A seat press does the useful thing: move yourself to that team, or (as
-  // host, already on it) seat an AI player there.
+  // An open seat on the other team seats YOU there; one on your own team
+  // opens the invite modal. AI players have their own labeled button — a
+  // seat press never silently conjures a bot.
   const seatAction = (team: TBTeam) => {
     if (myTeam !== team) void setTeam(team);
-    else if (isHost) void addBot(team);
-    else copyCode();
+    else setInviteOpen(true);
   };
 
   const memberAction = (p: (typeof participants)[number]) => {
@@ -315,7 +304,7 @@ function TBLobby() {
             navigate("/");
             void leaveRoom();
           }}
-          onHelp={copyCode}
+          onHelp={() => setHelpOpen((v) => !v)}
         />
 
         <InviteRow
@@ -327,8 +316,8 @@ function TBLobby() {
             avatarUrl: f.avatarUrl,
             online: !!f.isOnline,
           }))}
-          onInvite={copyCode}
-          onEntry={copyCode}
+          onInvite={() => setInviteOpen(true)}
+          onEntry={() => setInviteOpen(true)}
         />
 
         {/* Pick duration (940:7647 + chips 940:7648/936:21181/936:21183) */}
@@ -372,15 +361,33 @@ function TBLobby() {
         {renderTeamSeats("a", TEAM_A_SLOTS, PODIUM_A, podiumSeatA)}
         {renderTeamSeats("b", TEAM_B_SLOTS, PODIUM_B, podiumSeatB)}
 
-        {/* team names row (943:21929) */}
+        {/* team names row (943:21929), with the host's labeled AI-player buttons */}
         <div className="absolute left-[26px] top-[713px] w-[441px] flex items-center justify-between">
           <div className="flex gap-[10px] items-center">
             <img alt="" className="size-[36px] -scale-y-100 rotate-180 object-contain" src={teamPenguins} />
             <p className="font-[Nunito] font-black leading-[24px] text-[#0c172c] text-[18px] tracking-[-0.16px] whitespace-nowrap">
               {t("teamBattle.teamA")}
             </p>
+            {isHost && teamA.length < 5 && (
+              <button
+                onClick={() => void addBot("a")}
+                className="flex items-center gap-[4px] rounded-[9999px] border border-[#b897c4] bg-white/40 px-[8px] py-[3px] active:scale-95 transition-transform"
+              >
+                <Bot className="w-3.5 h-3.5 text-[#523b76]" />
+                <Plus className="w-3 h-3 text-[#523b76]" />
+              </button>
+            )}
           </div>
           <div className="flex gap-[10px] items-center">
+            {isHost && teamB.length < 5 && (
+              <button
+                onClick={() => void addBot("b")}
+                className="flex items-center gap-[4px] rounded-[9999px] border border-[#b897c4] bg-white/40 px-[8px] py-[3px] active:scale-95 transition-transform"
+              >
+                <Plus className="w-3 h-3 text-[#523b76]" />
+                <Bot className="w-3.5 h-3.5 text-[#523b76]" />
+              </button>
+            )}
             <p className="font-[Nunito] font-extrabold leading-[24px] text-[#0c172c] text-[18px] text-right tracking-[-0.16px] whitespace-nowrap">
               {t("teamBattle.teamB")}
             </p>
@@ -429,7 +436,27 @@ function TBLobby() {
             {t("teamBattle.needEqualTeams")}
           </p>
         )}
+
+        {helpOpen && (
+          <div
+            className="absolute left-[32px] top-[190px] w-[435px] rounded-[24px] p-5 bg-white/95 border border-[#e8e0f5] z-10 shadow-[0px_8px_24px_0px_rgba(102,51,153,0.18)]"
+            onClick={() => setHelpOpen(false)}
+          >
+            <p className="font-bold text-[#402666] mb-1">{t("teamBattle.title")}</p>
+            <p className="text-sm text-[#402666]/70 leading-relaxed">{t("lobby.tbRules")}</p>
+          </div>
+        )}
       </ScaledCanvas>
+
+      {room && (
+        <InviteFriendsModal
+          isOpen={inviteOpen}
+          onClose={() => setInviteOpen(false)}
+          inviteLink={`https://mytrivia.io/team-battle?code=${room.room_code}`}
+          roomId={room.id}
+          roomCode={room.room_code}
+        />
+      )}
     </div>
   );
 }

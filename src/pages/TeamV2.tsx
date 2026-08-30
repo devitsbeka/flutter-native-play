@@ -468,9 +468,36 @@ function TeamContentV2() {
   // Each code is attempted once — without this, a ?room= code that fails to
   // join (expired room) would retry on every render forever.
   const attemptedJoinCodeRef = useRef<string | null>(null);
+  const peekedJoinCodeRef = useRef<string | null>(null);
+  // The code whose game type resolved as classic — the join below waits on it.
+  const [classicJoinCode, setClassicJoinCode] = useState<string | null>(null);
   useEffect(() => {
     const joinCode = searchParams.get("join") || searchParams.get("room");
     if (!joinCode) return;
+
+    // Every invite path in the app converges on /team?join=CODE — including
+    // room-invite notifications for the new game types. A Team Battle room
+    // must open its own page, not the classic lobby, so peek at the type and
+    // hold the classic join until the answer is in. A missing or unreadable
+    // row falls through to the classic flow, where enterRoom reports the
+    // real error.
+    if (peekedJoinCodeRef.current !== joinCode) {
+      peekedJoinCodeRef.current = joinCode;
+      void supabase
+        .from("game_rooms")
+        .select("game_type_key")
+        .eq("room_code", joinCode.toUpperCase())
+        .maybeSingle()
+        .then(({ data: typed }) => {
+          if (typed?.game_type_key === "team_battle") {
+            navigate(`/team-battle?code=${joinCode.toUpperCase()}`, { replace: true });
+          } else {
+            setClassicJoinCode(joinCode);
+          }
+        });
+      return;
+    }
+    if (classicJoinCode !== joinCode) return;
 
     // Already in a room. If the code IS that room, the lobby on screen is
     // the destination and the cleanup effect above strips the param. If it
@@ -547,7 +574,7 @@ function TeamContentV2() {
         // The useEffect will re-trigger with the new user and auto-join
       })();
     }
-  }, [searchParams, user, authLoading, phase, currentRoom, enterRoom, leaveRoomPermanently, setSearchParams, showGuestJoinModal, pendingGuestJoinCode, guestSignInBlocked]);
+  }, [searchParams, user, authLoading, phase, currentRoom, enterRoom, leaveRoomPermanently, setSearchParams, showGuestJoinModal, pendingGuestJoinCode, guestSignInBlocked, classicJoinCode, navigate]);
 
   // Handle guest joining a room via invite link
   const handleGuestJoinRoom = async (nickname: string) => {

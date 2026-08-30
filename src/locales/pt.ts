@@ -1517,6 +1517,7 @@ export const pt: KaTranslations = {
     pickDuration: "Escolher duração",
     roundsN: "{n} rodadas",
     linkCopied: "Link copiado — compartilhe com os amigos!",
+    tbRules: "Duas equipes diante de um tabuleiro de categorias com valores. A cada turno um jogador responde contra o relógio — o valor da casa vai para sua equipe. As equipes devem ser iguais. Em caso de empate, os capitães se enfrentam numa super rodada até 3.",
     withFriends: "Com amigos",
     newBang: "Novo!",
   },

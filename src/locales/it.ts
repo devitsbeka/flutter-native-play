@@ -1512,6 +1512,7 @@ export const it: KaTranslations = {
     pickDuration: "Scegli la durata",
     roundsN: "{n} round",
     linkCopied: "Link copiato — condividilo con gli amici!",
+    tbRules: "Due squadre davanti a un tabellone di categorie con punteggio. A ogni turno un giocatore risponde a raffica contro il tempo — il valore della casella va alla sua squadra. Le squadre devono essere pari. In caso di parità, i capitani si sfidano in un super round al meglio di 3.",
     withFriends: "Con gli amici",
     newBang: "Novità!",
   },

@@ -10,6 +10,7 @@ import { useServerDeadline } from "@/hooks/useServerDeadline";
 import { readAppLanguage } from "@/utils/appLanguage";
 import { toast } from "@/lib/toast";
 import { shareOrCopy } from "@/utils/shareLink";
+import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
 import {
   CaptainChip,
   CoinPill,
@@ -186,10 +187,14 @@ export default function KingPage() {
 
   useEffect(() => refreshFriendsIfStale(), [refreshFriendsIfStale]);
 
-  // Inviting from the King lobby shares the challenge link through the
-  // shareLink helper (real share sheet on device, clipboard fallback).
-  // Never a navigation: leaving the lobby to "invite" read as a crash.
-  const inviteFriends = useCallback(() => {
+  // Inviting from the King lobby opens the app's invite modal (search,
+  // friends, copy link, social share). King has no joinable room yet — the
+  // co-op engine is the next phase — so picking a friend hands you the
+  // share sheet with the challenge link to send them.
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const inviteFriends = useCallback(() => setInviteOpen(true), []);
+  const shareKingLink = useCallback(() => {
+    setInviteOpen(false);
     void shareOrCopy({ url: "https://mytrivia.io/king" }).then((outcome) => {
       if (outcome === "copied") toast.success(t("lobby.linkCopied"));
       else if (outcome === "failed") toast.error(t("common.error"));
@@ -295,6 +300,13 @@ export default function KingPage() {
             </div>
           )}
         </ScaledCanvas>
+
+        <InviteFriendsModal
+          isOpen={inviteOpen}
+          onClose={() => setInviteOpen(false)}
+          inviteLink="https://mytrivia.io/king"
+          onFriendSelect={shareKingLink}
+        />
       </div>
     );
   }

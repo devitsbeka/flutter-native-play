@@ -130,10 +130,14 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
   const isSpotlight = !!state && !!user && state.active_player === user.id;
 
   const fetchParticipants = useCallback(async (roomId: string) => {
+    // Invite-modal invitees sit at status "invited" until they accept; they
+    // are not in the lobby yet, must not occupy seats, and must not block
+    // the equal-teams gate. The realtime channel refetches when they join.
     const { data } = await supabase
       .from("room_participants")
       .select("*")
       .eq("room_id", roomId)
+      .in("status", ["joined", "ready", "playing"])
       .order("joined_at", { ascending: true });
     if (data) setParticipants(data);
   }, []);
@@ -274,10 +278,18 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
       if (!user || !profile) return false;
       const { data: existing } = await supabase
         .from("room_participants")
-        .select("id")
+        .select("id, status")
         .eq("room_id", row.id)
         .eq("user_id", user.id)
         .maybeSingle();
+      // An invite-modal invitee arrives holding an "invited" row — accepting
+      // means flipping it to joined, or they stay invisible in the lobby.
+      if (existing && existing.status === "invited") {
+        await supabase
+          .from("room_participants")
+          .update({ status: "joined" })
+          .eq("id", existing.id);
+      }
       if (!existing) {
         // A running match takes no new players — the server-side rotation
         // and vote counts ignore mid-match joiners anyway, so don't let
