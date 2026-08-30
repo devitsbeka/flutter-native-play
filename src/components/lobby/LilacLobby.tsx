@@ -39,11 +39,22 @@ export function ScaledCanvas({ children }: { children: ReactNode }) {
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
+  const boxW = Math.round(500 * scale);
+  const snapped = boxW / 500;
   return (
     <div ref={ref} className="w-full h-full flex items-center justify-center overflow-hidden">
       {scale > 0 && (
-        <div style={{ width: 500 * scale, height: 946 * scale }}>
-          <div style={{ width: 500, height: 946, transform: `scale(${scale})`, transformOrigin: "top left" }}>
+        <div style={{ width: boxW, height: Math.round(946 * snapped) }}>
+          <div
+            style={{
+              width: 500,
+              height: 946,
+              transform: `scale(${snapped})`,
+              transformOrigin: "top left",
+              backfaceVisibility: "hidden",
+              outline: "1px solid transparent",
+            }}
+          >
             {children}
           </div>
         </div>
@@ -79,11 +90,26 @@ export function FitBox({
     ro.observe(el);
     return () => ro.disconnect();
   }, [width, height]);
+  // Snap the box to whole pixels and derive the scale from the snapped
+  // width: a fractional layer edge over the lilac gradient renders as a
+  // 1px hairline seam on iOS.
+  const boxW = Math.round(width * scale);
+  const snapped = boxW / width;
   return (
     <div ref={ref} className="w-full h-full flex items-center justify-center">
       {scale > 0 && (
-        <div style={{ width: width * scale, height: height * scale }}>
-          <div style={{ width, height, transform: `scale(${scale})`, transformOrigin: "top left", position: "relative" }}>
+        <div style={{ width: boxW, height: Math.round(height * snapped) }}>
+          <div
+            style={{
+              width,
+              height,
+              transform: `scale(${snapped})`,
+              transformOrigin: "top left",
+              position: "relative",
+              backfaceVisibility: "hidden",
+              outline: "1px solid transparent",
+            }}
+          >
             {children}
           </div>
         </div>
