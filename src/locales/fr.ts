@@ -1505,6 +1505,8 @@ export const fr: KaTranslations = {
     startGame: "Lancer la partie",
     pickDuration: "Choisir la durée",
     roundsN: "{n} manches",
+    withFriends: "Entre amis",
+    newBang: "Nouveau !",
   },
 
   extra: {

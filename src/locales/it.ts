@@ -1511,6 +1511,8 @@ export const it: KaTranslations = {
     startGame: "Avvia la partita",
     pickDuration: "Scegli la durata",
     roundsN: "{n} round",
+    withFriends: "Con gli amici",
+    newBang: "Novità!",
   },
 
   extra: {
