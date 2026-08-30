@@ -83,9 +83,9 @@ export const GAME_TYPES: GameTypeDescriptor[] = [
     badge: "beta",
     sortOrder: 30,
     supportsMatchmaking: true,
-    // Lands on the Online Game hub (Figma 938:5472); rooms there hand off
-    // to /team-battle for the match itself.
-    launch: (navigate) => navigate("/lobby/team_battle"),
+    // Straight into the Team Battle arena lobby (Figma 938:6019) — the page
+    // creates the room itself, so there is no entry step.
+    launch: (navigate) => navigate("/team-battle"),
   },
   {
     key: "king",
@@ -103,8 +103,7 @@ export const GAME_TYPES: GameTypeDescriptor[] = [
     badge: "beta",
     sortOrder: 40,
     supportsMatchmaking: false,
-    // Lands on the Online Game hub (Figma 940:6983); a room's Play button
-    // hands off to the /king match.
-    launch: (navigate) => navigate("/lobby/king"),
+    // Straight into the Versus King lounge lobby (Figma 940:7474).
+    launch: (navigate) => navigate("/king"),
   },
 ];

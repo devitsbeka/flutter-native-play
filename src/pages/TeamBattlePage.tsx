@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ChevronLeft, Swords } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { toast } from "@/lib/toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -74,80 +74,70 @@ function TeamBattleInner() {
 
   if (inMatch) return <TeamBattleMatch onResultDismiss={() => setResultSeen(true)} />;
   if (room) return <TBLobby />;
-  return <TBEntry />;
+  return <TBGate joining={!!params.get("code")} />;
 }
 
-function TBEntry() {
+/**
+ * There is no entry step in the design — arriving here without a room means
+ * one gets created for you (or joined, when a ?code is in the URL) and the
+ * arena lobby opens. This gate is just the lilac wash while that happens,
+ * with a retry if the round-trip fails.
+ */
+function TBGate({ joining }: { joining: boolean }) {
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const { createRoom, joinRoom, loading } = useTeamBattle();
-  const [code, setCode] = useState("");
+  const { user } = useAuth();
+  const { createRoom } = useTeamBattle();
+  const [failed, setFailed] = useState(false);
+  const attempted = useRef(false);
+
+  useEffect(() => {
+    if (joining || !user || attempted.current) return;
+    attempted.current = true;
+    void createRoom().then((created) => {
+      if (!created) setFailed(true);
+    });
+  }, [joining, user, createRoom]);
 
   return (
-    <div className="h-[100dvh] w-full overflow-hidden safe-bleed bg-[#7E7ADB] relative">
-      {/* The VS-screen watermark treatment, with this mode's own mark */}
-      <Swords
-        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] h-[340px] text-white/[0.05] pointer-events-none"
-        aria-hidden
-      />
-      <div className="w-full h-full flex flex-col max-w-[520px] mx-auto relative px-6">
-        <div className="flex items-center pt-[calc(var(--safe-top)_+_0.75rem)]">
-          <button
-            onClick={() => navigate(-1)}
-            aria-label={t("common.back")}
-            className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
-          >
-            <ChevronLeft className="w-5 h-5 text-white" />
-          </button>
-        </div>
-
-        <div className="flex-1 flex flex-col justify-center gap-8 pb-16">
-          <div className="text-center">
-            <motion.h1
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-4xl font-black text-white"
-              style={{ fontFamily: "'TASolivare', sans-serif", textShadow: "0 2px 10px rgba(0,0,0,0.35)" }}
-            >
-              {t("teamBattle.title")}
-            </motion.h1>
-            <p className="text-white/70 text-sm mt-3 max-w-[300px] mx-auto">
-              {t("teamBattle.entryHint")}
-            </p>
-          </div>
-
-          <div className="flex flex-col gap-4">
-            <ChunkyButton
-              variant="white"
-              size="xl"
-              className="w-full"
-              icon={<Swords className="w-5 h-5" />}
-              disabled={loading}
-              onClick={() => void createRoom()}
-            >
-              {t("teamBattle.createRoom")}
-            </ChunkyButton>
-
-            <div className="flex items-center gap-2 rounded-2xl bg-white/10 backdrop-blur-sm p-2 pl-4 border border-white/[0.12]">
-              <input
-                value={code}
-                onChange={(e) => setCode(e.target.value.toUpperCase())}
-                placeholder={t("teamBattle.codePlaceholder")}
-                maxLength={6}
-                className="flex-1 min-w-0 bg-transparent outline-none font-mono text-lg tracking-[0.3em] text-white placeholder:text-white/40"
-              />
-              <ChunkyButton
-                variant="mint"
-                size="md"
-                disabled={code.length < 6 || loading}
-                onClick={() => void joinRoom(code)}
-              >
-                {t("teamBattle.joinRoom")}
-              </ChunkyButton>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div
+      className="h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] flex flex-col items-center justify-center gap-6"
+      style={{ background: LILAC_BG }}
+    >
+      <button
+        onClick={() => navigate(-1)}
+        aria-label={t("common.back")}
+        className="absolute left-5 top-[calc(var(--safe-top)_+_1rem)] w-10 h-10 flex items-center justify-center rounded-full bg-white/40"
+      >
+        <ChevronLeft className="w-5 h-5 text-[#523b76]" />
+      </button>
+      <p
+        className="text-[26px] text-[#523b76]"
+        style={{ fontFamily: "'TASolivare', sans-serif" }}
+      >
+        {t("teamBattle.title")}
+      </p>
+      {failed ? (
+        <ChunkyButton
+          variant="white"
+          size="lg"
+          onClick={() => {
+            setFailed(false);
+            attempted.current = false;
+            void createRoom().then((created) => {
+              if (!created) setFailed(true);
+            });
+          }}
+        >
+          {t("common.retry")}
+        </ChunkyButton>
+      ) : (
+        <motion.div
+          className="w-8 h-8 rounded-full border-[3px] border-[#8858d5]/30 border-t-[#8858d5]"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 0.9, repeat: Infinity, ease: "linear" }}
+        />
+      )}
     </div>
   );
 }
@@ -288,7 +278,12 @@ function TBLobby() {
 
         <LilacHeader
           title={t("teamBattle.title")}
-          onBack={() => void leaveRoom()}
+          onBack={() => {
+            // Navigate away first so the gate never re-creates a room the
+            // instant this one clears.
+            navigate("/");
+            void leaveRoom();
+          }}
           onHelp={copyCode}
         />
 
