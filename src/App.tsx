@@ -57,7 +57,6 @@ const Leaderboards = lazy(() => import("./pages/Leaderboards"));
 const Profile = lazy(() => import("./pages/Profile"));
 const PublicProfile = lazy(() => import("./pages/PublicProfile"));
 const TeamV2 = lazy(() => import("./pages/TeamV2"));
-const PlaySelect = lazy(() => import("./pages/PlaySelect"));
 const TeamBattlePage = lazy(() => import("./pages/TeamBattlePage"));
 const KingPage = lazy(() => import("./pages/KingPage"));
 const QueuePage = lazy(() => import("./pages/QueuePage"));
@@ -274,9 +273,12 @@ const App = () => (
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/profile/:userId" element={<PublicProfile />} />
                 <Route path="/game" element={<Game />} />
-                {/* Game type chooser behind "Play with friends" — coexists
-                    with /play/:categoryId/:levelId (exact match wins). */}
-                <Route path="/play" element={<PlaySelect />} />
+                {/* The /play chooser page is gone — the play-options modal on
+                    the home screen offers every game type now. Old links and
+                    the queue page's "play with friends instead" land home,
+                    where that modal lives. Coexists with
+                    /play/:categoryId/:levelId (exact match wins). */}
+                <Route path="/play" element={<Navigate to="/" replace />} />
                 <Route path="/play/queue" element={<QueuePage />} />
                 <Route path="/team-battle" element={<TeamBattlePage />} />
                 <Route path="/king" element={<KingPage />} />

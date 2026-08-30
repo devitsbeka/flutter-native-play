@@ -92,7 +92,7 @@ export default function QueuePage() {
               {t("matchmaking.retry")}
             </button>
             <button
-              onClick={() => navigate("/play", { replace: true })}
+              onClick={() => navigate("/", { replace: true })}
               className="rounded-[20px] p-4 font-bold text-[#402666]"
               style={{ background: "rgba(252,247,255,0.92)", boxShadow: CARD_SHADOW }}
             >
