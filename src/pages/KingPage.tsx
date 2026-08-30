@@ -375,7 +375,7 @@ export default function KingPage() {
         />
 
         {/* the same friends reel the home page uses — identical sizes/fonts */}
-        <div className="relative z-10 w-full shrink-0 px-4">
+        <div className="relative z-10 w-full shrink-0 px-4" style={{ transform: "translateZ(0)" }}>
           <FriendsStoriesBar
             onAddFriendClick={inviteFriends}
             onFriendClick={(f) =>
@@ -384,7 +384,7 @@ export default function KingPage() {
           />
         </div>
 
-        <div className="flex-1 min-h-0">
+        <div className="flex-1 min-h-0 overflow-hidden">
           <FitBox width={500} height={681}>
             {/* scene (940:7476) + its double edge fade (940:7551/7666) */}
             <div className="absolute left-[32px] top-[-133px] w-[435px] h-[780px] pointer-events-none">

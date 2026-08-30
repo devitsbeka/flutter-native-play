@@ -402,7 +402,7 @@ function TBLobby() {
       />
 
       {/* the same friends reel the home page uses — identical sizes/fonts */}
-      <div className="relative z-10 w-full shrink-0 px-4">
+      <div className="relative z-10 w-full shrink-0 px-4" style={{ transform: "translateZ(0)" }}>
         <FriendsStoriesBar
           onAddFriendClick={() => setInviteOpen(true)}
           onFriendClick={(f) =>
@@ -449,7 +449,7 @@ function TBLobby() {
         </div>
       </div>
 
-      <div className="flex-1 min-h-0">
+      <div className="flex-1 min-h-0 overflow-hidden">
       <FitBox width={500} height={575}>
         {/* arena scene (938:6267) + edge fade */}
         <div className="absolute left-[32px] top-[-89px] w-[435px] h-[780px] pointer-events-none">
