@@ -106,7 +106,7 @@ export function LilacHeader({
   onHelp?: () => void;
 }) {
   return (
-    <div className="w-full max-w-[500px] mx-auto shrink-0 flex items-center justify-between px-4 py-3">
+    <div className="relative z-10 w-full max-w-[500px] mx-auto shrink-0 flex items-center justify-between px-4 py-3">
       <div className="flex gap-[12px] items-center">
         <button onClick={onBack} className="flex items-center justify-center rounded-[9999px] size-[40px] active:scale-95 transition-transform">
           <img alt="" className="block size-[20px]" src={iconBack} />

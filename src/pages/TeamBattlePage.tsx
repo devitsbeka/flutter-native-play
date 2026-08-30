@@ -16,7 +16,6 @@ import { TeamBattleMatch } from "@/components/team-battle/TeamBattleMatch";
 import { useCategories } from "@/hooks/useCategories";
 import {
   CoinPill,
-  Divider,
   FriendPeek,
   type InviteEntry,
   LILAC_BG,
@@ -335,7 +334,7 @@ function TBLobby() {
       />
 
       {/* the same friends reel the home page uses — identical sizes/fonts */}
-      <div className="w-full shrink-0 px-4">
+      <div className="relative z-10 w-full shrink-0 px-4">
         <FriendsStoriesBar
           onAddFriendClick={() => setInviteOpen(true)}
           onFriendClick={(f) =>
@@ -466,8 +465,6 @@ function TBLobby() {
         )}
       </FitBox>
       </div>
-
-      <Divider />
 
       {isHost ? (
         <StartButton

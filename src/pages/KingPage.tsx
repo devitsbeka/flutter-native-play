@@ -15,7 +15,6 @@ import { FriendsStoriesBar } from "@/components/team/FriendsStoriesBar";
 import {
   CaptainChip,
   CoinPill,
-  Divider,
   FriendPeek,
   type InviteEntry,
   LILAC_BG,
@@ -370,7 +369,7 @@ export default function KingPage() {
         />
 
         {/* the same friends reel the home page uses — identical sizes/fonts */}
-        <div className="w-full shrink-0 px-4">
+        <div className="relative z-10 w-full shrink-0 px-4">
           <FriendsStoriesBar
             onAddFriendClick={inviteFriends}
             onFriendClick={(f) =>
@@ -438,7 +437,6 @@ export default function KingPage() {
           </FitBox>
         </div>
 
-        <Divider />
         <StartButton
           label={t("lobby.startGame")}
           onClick={startForEveryone}
