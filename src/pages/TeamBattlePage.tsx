@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ChevronLeft } from "lucide-react";
 import { toast } from "@/lib/toast";
+import { shareOrCopy } from "@/utils/shareLink";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFriends } from "@/contexts/FriendsContext";
@@ -96,8 +97,11 @@ function TBGate({ joining }: { joining: boolean }) {
     attempted.current = true;
     void createRoom().then((created) => {
       if (!created) setFailed(true);
+      // The room's code goes into the URL so a refresh rejoins this room
+      // instead of minting a new one.
+      else navigate(`/team-battle?code=${created.room_code}`, { replace: true });
     });
-  }, [joining, user, createRoom]);
+  }, [joining, user, createRoom, navigate]);
 
   return (
     <div
@@ -126,6 +130,7 @@ function TBGate({ joining }: { joining: boolean }) {
             attempted.current = false;
             void createRoom().then((created) => {
               if (!created) setFailed(true);
+              else navigate(`/team-battle?code=${created.room_code}`, { replace: true });
             });
           }}
         >
@@ -167,13 +172,22 @@ function TBLobby() {
   const { friends, refreshFriendsIfStale } = useFriends();
   const navigate = useNavigate();
   const {
-    room, participants, isHost, myTeam, setTeam, addBot, removeBot,
+    room, participants, isHost, myTeam, setTeam, addBot, removeBot, setCaptain,
     startMatch, leaveRoom, loading, state, settle,
   } = useTeamBattle();
   const { categories } = useCategories();
   const [rounds, setRounds] = useState(6);
+  const [params, setParams] = useSearchParams();
 
   useEffect(() => refreshFriendsIfStale(), [refreshFriendsIfStale]);
+
+  // Keep the room's code in the URL: refresh, share, and the round-start
+  // watcher all address this exact room by it.
+  useEffect(() => {
+    if (room && params.get("code") !== room.room_code) {
+      setParams({ code: room.room_code }, { replace: true });
+    }
+  }, [room, params, setParams]);
 
   // A finished match parks the room back at "waiting" with a done state row;
   // the settle claim is idempotent, so any device landing here fires it.
@@ -188,9 +202,16 @@ function TBLobby() {
     teamA.length > 0 && teamA.length === teamB.length && participants.every((p) => p.team);
   const minTiles = Math.max(6, 2 * teamA.length);
 
+  // Inviting shares the room's join link through the shareLink helper —
+  // the real share sheet on device, the clipboard elsewhere.
   const copyCode = () => {
-    void navigator.clipboard?.writeText(room?.room_code ?? "");
-    toast.success(t("teamBattle.codeCopied"));
+    if (!room) return;
+    void shareOrCopy({ url: `https://mytrivia.io/team-battle?code=${room.room_code}` }).then(
+      (outcome) => {
+        if (outcome === "copied") toast.success(t("teamBattle.codeCopied"));
+        else if (outcome === "failed") toast.error(t("common.error"));
+      },
+    );
   };
 
   const start = () => {
@@ -259,10 +280,20 @@ function TBLobby() {
     );
   };
 
+  // The named captain (tb_set_captain), falling back to the first human so
+  // the pill is never empty on a filled team.
   const captainOf = (members: typeof participants) =>
-    members.find((p) => !p.is_bot) ?? members[0];
+    members.find((p) => p.is_captain) ?? members.find((p) => !p.is_bot) ?? members[0];
   const captainA = captainOf(teamA);
   const captainB = captainOf(teamB);
+
+  // Host taps a captain pill to hand the armband to the team's next member.
+  const cycleCaptain = (members: typeof participants) => {
+    if (!isHost || members.length === 0) return;
+    const current = members.findIndex((p) => p.is_captain);
+    const next = members[(current + 1) % members.length];
+    void setCaptain(next.user_id);
+  };
 
   return (
     <div
@@ -358,14 +389,26 @@ function TBLobby() {
         </div>
 
         {/* captains + VS (940:7751 / 936:21185 / 940:7825) */}
-        <TBCaptainChip left={37} accent="#e7ba87" name={captainA?.nickname} avatarUrl={captainA?.avatar_url} />
+        <TBCaptainChip
+          left={37}
+          accent="#e7ba87"
+          name={captainA?.nickname}
+          avatarUrl={captainA?.avatar_url}
+          onClick={() => cycleCaptain(teamA)}
+        />
         <p
           className="absolute left-[191px] top-[774px] w-[118px] text-[77px] leading-[43px] text-center not-italic text-[#f5d9ff]"
           style={{ fontFamily: "'Slackey', 'TASolivare', cursive", textShadow: "0px 4px 4px #c7bccc" }}
         >
           VS
         </p>
-        <TBCaptainChip left={351} accent="#ed6149" name={captainB?.nickname} avatarUrl={captainB?.avatar_url} />
+        <TBCaptainChip
+          left={351}
+          accent="#ed6149"
+          name={captainB?.nickname}
+          avatarUrl={captainB?.avatar_url}
+          onClick={() => cycleCaptain(teamB)}
+        />
 
         <Divider top={830} />
 
@@ -397,14 +440,17 @@ function TBCaptainChip({
   accent,
   name,
   avatarUrl,
+  onClick,
 }: {
   left: number;
   accent: string;
   name?: string;
   avatarUrl?: string | null;
+  onClick?: () => void;
 }) {
   return (
-    <div
+    <button
+      onClick={onClick}
       className="absolute h-[50px] w-[116px] rounded-[16.85px] border-[1.153px] border-solid shadow-[0px_3.389px_0px_0px_#d8d0e8,0px_5.083px_13.556px_0px_rgba(0,0,0,0.1)]"
       style={{
         left,
@@ -422,6 +468,6 @@ function TBCaptainChip({
         )}
       </div>
       <div className="absolute inset-0 pointer-events-none rounded-[inherit] shadow-[inset_0px_1.695px_0px_0px_white]" />
-    </div>
+    </button>
   );
 }

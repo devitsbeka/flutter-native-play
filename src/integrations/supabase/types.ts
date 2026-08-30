@@ -2353,6 +2353,7 @@ export type Database = {
           has_seen_results: boolean | null
           id: string
           is_bot: boolean
+          is_captain: boolean
           is_host: boolean | null
           joined_at: string | null
           last_played_at: string | null
@@ -2375,6 +2376,7 @@ export type Database = {
           has_seen_results?: boolean | null
           id?: string
           is_bot?: boolean
+          is_captain?: boolean
           is_host?: boolean | null
           joined_at?: string | null
           last_played_at?: string | null
@@ -2397,6 +2399,7 @@ export type Database = {
           has_seen_results?: boolean | null
           id?: string
           is_bot?: boolean
+          is_captain?: boolean
           is_host?: boolean | null
           joined_at?: string | null
           last_played_at?: string | null
@@ -4814,6 +4817,10 @@ export type Database = {
       }
       tb_remove_bot: {
         Args: { p_bot_id: string; p_room_id: string }
+        Returns: undefined
+      }
+      tb_set_captain: {
+        Args: { p_room_id: string; p_user_id: string }
         Returns: undefined
       }
       tb_settle: { Args: { p_room_id: string }; Returns: Json }

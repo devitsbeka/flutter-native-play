@@ -1791,6 +1791,7 @@ export const ka = {
     startGame: "თამაშის დაწყება",
     pickDuration: "აირჩიე ხანგრძლივობა",
     roundsN: "{n} რაუნდი",
+    linkCopied: "ბმული დაკოპირდა — გაუზიარე მეგობრებს!",
     withFriends: "მეგობრებთან",
     newBang: "ახალი!",
   },

@@ -569,6 +569,66 @@ BEGIN
     (SELECT count(*)::int FROM public.room_participants WHERE room_id = v_room), 2,
     'bots can be cleared out after the match');
 
+  -- ── captains (20260921100000): host-named, outrank votes, never a bot ────
+
+  PERFORM pg_temp.as_user(v_bob);
+  PERFORM pg_temp.must_fail(
+    format('SELECT public.tb_set_captain(%L, %L)', v_room, v_bob),
+    'only the host names captains');
+
+  -- Third human on team a, and a bot back on each side, to make the
+  -- champion ordering observable: humans > captaincy > votes.
+  PERFORM pg_temp.as_user(NULL);
+  INSERT INTO public.room_participants (room_id, user_id, nickname, is_host, status, team, is_bot)
+  VALUES (v_room, v_out, 'Trace', false, 'playing', 'a', false);
+  PERFORM pg_temp.as_user(v_alice);
+  PERFORM public.tb_add_bot(v_room, 'a');
+  PERFORM public.tb_add_bot(v_room, 'b');
+
+  PERFORM public.tb_set_captain(v_room, v_alice);
+  PERFORM pg_temp.must_equal(
+    (SELECT is_captain FROM public.room_participants WHERE room_id = v_room AND user_id = v_alice),
+    true, 'the host can captain a teammate');
+  PERFORM public.tb_set_captain(v_room, v_out);
+  PERFORM pg_temp.must_equal(
+    (SELECT count(*)::int FROM public.room_participants
+      WHERE room_id = v_room AND team = 'a' AND is_captain), 1,
+    'a team has exactly one captain — naming a new one clears the old');
+
+  -- Resolve with every vote against the captain: the captain still champions.
+  PERFORM pg_temp.as_user(NULL);
+  UPDATE public.team_battle_state
+     SET phase = 'super_vote', deadline = now() - interval '1 second',
+         super = jsonb_build_object('questions', COALESCE(super -> 'questions', '[]'::jsonb),
+                                    'votes', jsonb_build_object('x', v_alice::text))
+   WHERE room_id = v_room;
+  SELECT * INTO v_state FROM public.team_battle_state WHERE room_id = v_room;
+  PERFORM public.tb_resolve_super_vote(v_state);
+  SELECT * INTO v_state FROM public.team_battle_state WHERE room_id = v_room;
+  PERFORM pg_temp.must_equal(v_state.super ->> 'champion_a', v_out::text,
+    'the named captain outranks the vote tally');
+  PERFORM pg_temp.must_equal(v_state.super ->> 'champion_b', v_bob::text,
+    'a captainless team falls back to the human vote order');
+
+  -- A captained bot still never outranks a human teammate.
+  SELECT user_id INTO v_bot_a FROM public.room_participants
+   WHERE room_id = v_room AND team = 'a' AND is_bot LIMIT 1;
+  PERFORM pg_temp.as_user(v_alice);
+  PERFORM public.tb_set_captain(v_room, v_bot_a);
+  PERFORM pg_temp.as_user(NULL);
+  UPDATE public.team_battle_state
+     SET phase = 'super_vote', deadline = now() - interval '1 second',
+         super = jsonb_build_object('questions', COALESCE(super -> 'questions', '[]'::jsonb),
+                                    'votes', '{}'::jsonb)
+   WHERE room_id = v_room;
+  SELECT * INTO v_state FROM public.team_battle_state WHERE room_id = v_room;
+  PERFORM public.tb_resolve_super_vote(v_state);
+  SELECT * INTO v_state FROM public.team_battle_state WHERE room_id = v_room;
+  PERFORM pg_temp.must_equal(
+    (SELECT is_bot FROM public.room_participants
+      WHERE room_id = v_room AND user_id = (v_state.super ->> 'champion_a')::uuid),
+    false, 'a captained bot never champions over a human');
+
   -- Cleanup so reruns start clean — the mode goes back to dark.
   PERFORM pg_temp.as_user(NULL);
   UPDATE public.game_types SET is_live = false WHERE key = 'team_battle';

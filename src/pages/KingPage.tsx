@@ -9,6 +9,7 @@ import { useFriends } from "@/contexts/FriendsContext";
 import { useServerDeadline } from "@/hooks/useServerDeadline";
 import { readAppLanguage } from "@/utils/appLanguage";
 import { toast } from "@/lib/toast";
+import { shareOrCopy } from "@/utils/shareLink";
 import {
   CaptainChip,
   CoinPill,
@@ -185,6 +186,16 @@ export default function KingPage() {
 
   useEffect(() => refreshFriendsIfStale(), [refreshFriendsIfStale]);
 
+  // Inviting from the King lobby shares the challenge link through the
+  // shareLink helper (real share sheet on device, clipboard fallback).
+  // Never a navigation: leaving the lobby to "invite" read as a crash.
+  const inviteFriends = useCallback(() => {
+    void shareOrCopy({ url: "https://mytrivia.io/king" }).then((outcome) => {
+      if (outcome === "copied") toast.success(t("lobby.linkCopied"));
+      else if (outcome === "failed") toast.error(t("common.error"));
+    });
+  }, [t]);
+
   const thinkSeconds = useServerDeadline(
     stage === "thinking" ? state?.question?.think_deadline : undefined,
     showOptions,
@@ -226,8 +237,8 @@ export default function KingPage() {
               avatarUrl: f.avatarUrl,
               online: !!f.isOnline,
             }))}
-            onInvite={() => navigate("/team")}
-            onEntry={(entry) => navigate(`/profile/${entry.id}`)}
+            onInvite={inviteFriends}
+            onEntry={inviteFriends}
           />
 
           {/* Winner takes: (940:7510) + the coins pill (940:7560) */}
@@ -247,7 +258,7 @@ export default function KingPage() {
                 nickname={profile?.nickname ?? "P"}
               />
             ) : (
-              <PlusSeat key={i} left={left} top={top} onClick={() => navigate("/team")} />
+              <PlusSeat key={i} left={left} top={top} onClick={inviteFriends} />
             ),
           )}
 

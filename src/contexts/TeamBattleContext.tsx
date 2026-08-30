@@ -59,6 +59,7 @@ interface TeamBattleContextValue {
   leaveRoom: () => Promise<void>;
   setTeam: (team: TBTeam) => Promise<void>;
   addBot: (team: TBTeam) => Promise<void>;
+  setCaptain: (userId: string) => Promise<void>;
   removeBot: (botId: string) => Promise<void>;
   startMatch: (
     categories: { uuid: string; name: string }[],
@@ -389,6 +390,21 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
     if (error) console.error("[TB] remove bot failed", error);
   }, []);
 
+  // Host-only: name a team's captain — on a tied match that captain plays
+  // the super round (20260921100000_tb_captains.sql).
+  const setCaptain = useCallback(async (userId: string) => {
+    const roomId = roomIdRef.current;
+    if (!roomId) return;
+    const { error } = await supabase.rpc("tb_set_captain", {
+      p_room_id: roomId,
+      p_user_id: userId,
+    });
+    if (error) {
+      console.error("[TB] set captain failed", error);
+      toast.error(error.message);
+    }
+  }, []);
+
   // The host's device assembles the board material through the golden-standard
   // question pipeline and hands it over; the server prices and validates it.
   const startMatch = useCallback(
@@ -576,6 +592,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
       setTeam,
       addBot,
       removeBot,
+      setCaptain,
       startMatch,
       submitRps,
       pickTile,
@@ -587,8 +604,8 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
     }),
     [room, participants, tiles, state, loading, isHost, myTeam, isSpotlight,
      createRoom, joinRoom, enterRoom, leaveRoom, setTeam, addBot, removeBot,
-     startMatch, submitRps, pickTile, submitAnswer, voteSuper, submitSuper,
-     advance, settle],
+     setCaptain, startMatch, submitRps, pickTile, submitAnswer, voteSuper,
+     submitSuper, advance, settle],
   );
 
   return <TeamBattleContext.Provider value={value}>{children}</TeamBattleContext.Provider>;

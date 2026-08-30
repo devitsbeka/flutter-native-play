@@ -1505,6 +1505,7 @@ export const fr: KaTranslations = {
     startGame: "Lancer la partie",
     pickDuration: "Choisir la durée",
     roundsN: "{n} manches",
+    linkCopied: "Lien copié — partage-le avec tes amis !",
     withFriends: "Entre amis",
     newBang: "Nouveau !",
   },
