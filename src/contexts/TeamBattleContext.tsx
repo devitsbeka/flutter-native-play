@@ -24,6 +24,7 @@ import { toast } from "@/lib/toast";
 import { t as tStandalone } from "@/utils/standaloneTranslation";
 import { getQuestions } from "@/services/questionService";
 import { shuffleArray } from "@/utils/shuffle";
+import { getRandomGradient } from "@/config/roomGradients";
 
 export type TBPhase = "rps" | "board" | "rapid_fire" | "super_vote" | "super_round" | "done";
 export type TBTeam = "a" | "b";
@@ -228,6 +229,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
             game_mode: "team_battle",
             min_players: 2,
             max_players: 10,
+            background_gradient: getRandomGradient(),
             last_activity_at: new Date().toISOString(),
           })
           .select()
@@ -497,14 +499,17 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
     const result = data as { correct?: boolean; answered?: number } | null;
     // The RPC result is authoritative about where the turn stands — advance
     // the local counter from it directly, so the spotlight player's next
-    // question never waits on (or is lost to) a realtime round-trip.
+    // question never waits on (or is lost to) a realtime round-trip. The
+    // small delay is the green/red reveal on the tapped answer.
     if (typeof result?.answered === "number") {
       const answered = result.answered;
-      setState((prev) =>
-        prev && prev.phase === "rapid_fire" && answered > prev.turn_answers
-          ? { ...prev, turn_answers: answered }
-          : prev,
-      );
+      setTimeout(() => {
+        setState((prev) =>
+          prev && prev.phase === "rapid_fire" && answered > prev.turn_answers
+            ? { ...prev, turn_answers: answered }
+            : prev,
+        );
+      }, 550);
     }
     return { correct: !!result?.correct };
   }, []);
