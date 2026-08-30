@@ -16,12 +16,8 @@ import iconPeople from "@/assets/online-game/imgIcon5.svg";
 import iconBack from "@/assets/online-game/imgIcon6.svg";
 import iconPlusBold from "@/assets/online-game/imgGroup2131327621.svg";
 import crownPng from "@/assets/online-game/imgImage9.png";
-import mascotShip from "@/assets/online-game/imgImage10.png";
-import mascotBig from "@/assets/online-game/imgImage765.png";
-import mascotA from "@/assets/online-game/imgContainer.png";
-import mascotB from "@/assets/online-game/imgContainer1.png";
-import mascotC from "@/assets/online-game/imgImage11.png";
-import mascotD from "@/assets/online-game/imgImage12.png";
+import medalPng from "@/assets/online-game/imgImage10.png";
+import tokenPng from "@/assets/online-game/imgImage12.png";
 
 /**
  * The "Online Game" hub — implemented by direct extraction from the Figma
@@ -33,7 +29,10 @@ import mascotD from "@/assets/online-game/imgImage12.png";
  * in the grid, Play for rooms you're in, Join for rooms you're not.
  */
 
-const MASCOTS = [mascotShip, mascotA, mascotB, mascotC, mascotD, mascotBig];
+// The design's room-card artwork: the gold 3D badges from the frame
+// (940:7271 shows the medal in the 56px slot). The other exported images are
+// avatar photos or hidden-layer backgrounds — not card art.
+const MASCOTS = [medalPng, tokenPng];
 
 // The card backgrounds, byte-identical to the design's own SVG encoding:
 // same viewBox, same radialGradient transform, per-card stop sets.
@@ -81,6 +80,44 @@ const generateRoomCode = (): string => {
   return code;
 };
 
+// An avatar URL that 404s must fall back to the initial circle, not the
+// browser's broken-image glyph (seen live on the stories strip).
+function FallbackAvatarImg({
+  src,
+  nickname,
+  imgClassName,
+  fallbackClassName,
+  textClassName,
+}: {
+  src: string | null | undefined;
+  nickname: string | null | undefined;
+  imgClassName: string;
+  fallbackClassName: string;
+  textClassName: string;
+}) {
+  const [failed, setFailed] = useState(false);
+  useEffect(() => setFailed(false), [src]);
+  if (src && !failed) {
+    return (
+      <img
+        alt=""
+        className={imgClassName}
+        src={src}
+        loading="lazy"
+        onError={() => setFailed(true)}
+      />
+    );
+  }
+  return (
+    <div
+      className={fallbackClassName}
+      style={{ backgroundImage: "linear-gradient(135deg, rgb(168,85,247) 0%, rgb(236,72,153) 100%)" }}
+    >
+      <p className={textClassName}>{nickname?.charAt(0)?.toUpperCase()}</p>
+    </div>
+  );
+}
+
 // The 3px ring + soft drop the design puts on every cluster avatar.
 const ringShadow = (online: boolean) =>
   `0px 0px 0px 1px rgba(0,0,0,0), 0px 0px 0px 3px ${online ? "#22c55e" : "rgba(148,163,184,0.7)"}, 0px 4px 6px -1px rgba(10,13,18,0.1), 0px 2px 4px -2px rgba(10,13,18,0.06)`;
@@ -93,16 +130,13 @@ function ClusterAvatar({ p, left, top, crowned }: { p: Participant; left: number
         className="bg-[rgba(255,255,255,0.2)] flex flex-col items-start overflow-clip relative rounded-[9999px] shrink-0 size-[32px]"
         style={{ boxShadow: ringShadow(online) }}
       >
-        {p.avatar_url ? (
-          <img alt="" className="absolute inset-0 max-w-none object-cover pointer-events-none size-full" src={p.avatar_url} loading="lazy" />
-        ) : (
-          <div
-            className="absolute inset-0 flex items-center justify-center"
-            style={{ backgroundImage: "linear-gradient(135deg, rgb(168,85,247) 0%, rgb(236,72,153) 100%)" }}
-          >
-            <p className="font-[Nunito] font-bold text-[13px] text-white">{p.nickname?.charAt(0)?.toUpperCase()}</p>
-          </div>
-        )}
+        <FallbackAvatarImg
+          src={p.avatar_url}
+          nickname={p.nickname}
+          imgClassName="absolute inset-0 max-w-none object-cover pointer-events-none size-full"
+          fallbackClassName="absolute inset-0 flex items-center justify-center"
+          textClassName="font-[Nunito] font-bold text-[13px] text-white"
+        />
       </div>
       {crowned && (
         <div className="absolute left-[-4px] top-[-8px] size-[14px] shadow-[0px_1px_4px_0px_rgba(0,0,0,0.1),0px_1px_2px_0px_rgba(0,0,0,0.06)]">
@@ -396,13 +430,13 @@ export default function OnlineGameHub() {
                     <div className="absolute flex flex-col items-start left-0 p-[3px] rounded-[9999px] top-0" style={{ backgroundImage: storyRing(entry.isOnline) }}>
                       <div className="bg-white flex flex-col items-start p-[2px] relative rounded-[9999px] shrink-0 w-[58px]">
                         <div className="h-[54px] overflow-clip relative rounded-[9999px] shrink-0 w-full">
-                          {entry.avatarUrl ? (
-                            <img alt="" className="absolute inset-0 max-w-none object-cover pointer-events-none rounded-[9999px] size-[54px]" src={entry.avatarUrl} loading="lazy" />
-                          ) : (
-                            <div className="absolute flex items-center justify-center rounded-[9999px] size-[54px]" style={{ backgroundImage: "linear-gradient(135deg, rgb(168, 85, 247) 0%, rgb(236, 72, 153) 100%)" }}>
-                              <p className="font-[Nunito] font-bold leading-[24px] text-[16px] text-white tracking-[-0.16px]">{entry.nickname.charAt(0).toUpperCase()}</p>
-                            </div>
-                          )}
+                          <FallbackAvatarImg
+                            src={entry.avatarUrl}
+                            nickname={entry.nickname}
+                            imgClassName="absolute inset-0 max-w-none object-cover pointer-events-none rounded-[9999px] size-[54px]"
+                            fallbackClassName="absolute flex items-center justify-center rounded-[9999px] size-[54px]"
+                            textClassName="font-[Nunito] font-bold leading-[24px] text-[16px] text-white tracking-[-0.16px]"
+                          />
                         </div>
                       </div>
                     </div>
