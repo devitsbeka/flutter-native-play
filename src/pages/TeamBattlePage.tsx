@@ -2,8 +2,6 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Bot, ChevronLeft, Copy, Crown, Plus, Share2, Swords, X } from "lucide-react";
-import { siteUrl } from "@/config/site";
-import { shareOrCopy } from "@/utils/shareLink";
 import { toast } from "@/lib/toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,6 +14,7 @@ import {
   type TBTeam,
 } from "@/contexts/TeamBattleContext";
 import { TeamBattleMatch } from "@/components/team-battle/TeamBattleMatch";
+import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
 import { useCategories } from "@/hooks/useCategories";
 import { excludePartyCategories } from "@/config/partyCategories";
 
@@ -160,23 +159,27 @@ function TBLobby() {
     if (state?.phase === "done" && !state.settled) void settle();
   }, [state?.phase, state?.settled, settle]);
 
-  const teamOf = (team: TBTeam) => participants.filter((p) => p.team === team);
+  // The app's Invite Friends screen — see KingPage's lobby for the pattern.
+  const [showInvite, setShowInvite] = useState(false);
+
+  // An unanswered invite is a reserved seat, not a player. The server start
+  // gate counts joined/ready/playing only, so the client gate must too — an
+  // invited friend who has not arrived must not hold the whole room hostage.
+  const arrived = participants.filter(
+    (p) => p.status !== "invited" && p.status !== "disconnected",
+  );
+  const pendingInvites = participants.filter((p) => p.status === "invited").length;
+  const teamOf = (team: TBTeam) => arrived.filter((p) => p.team === team);
   const teamsEqual =
     teamOf("a").length > 0 &&
     teamOf("a").length === teamOf("b").length &&
-    participants.every((p) => p.team);
+    arrived.every((p) => p.team);
 
   const copyCode = () => {
     void navigator.clipboard?.writeText(room?.room_code ?? "");
     toast.success(t("teamBattle.codeCopied"));
   };
 
-  const shareInvite = async () => {
-    const link = siteUrl(`/team-battle?code=${room?.room_code ?? ""}`);
-    const outcome = await shareOrCopy({ title: t("teamBattle.title"), url: link });
-    if (outcome === "copied") toast.success(t("teamBattle.linkCopied"));
-    if (outcome === "failed") toast.error(t("common.error"));
-  };
 
   const start = () => {
     // Party categories (Most Likely To) carry vote prompts, not trivia — a
@@ -222,7 +225,7 @@ function TBLobby() {
               <Copy className="w-5 h-5 text-white/60 ml-3" />
             </button>
             <button
-              onClick={() => void shareInvite()}
+              onClick={() => setShowInvite(true)}
               aria-label={t("teamBattle.invite")}
               className="rounded-2xl bg-white/10 backdrop-blur-sm border border-white/[0.12] px-5 flex flex-col items-center justify-center gap-1"
             >
@@ -319,6 +322,11 @@ function TBLobby() {
             ))}
           </div>
 
+          {pendingInvites > 0 && (
+            <p className="text-center text-xs text-white/60">
+              {t("teamBattle.invitedPendingCount", { n: pendingInvites })}
+            </p>
+          )}
           {!teamsEqual && isHost && (
             <p className="text-center text-xs text-white/60">{t("teamBattle.needEqualTeams")}</p>
           )}
@@ -343,6 +351,13 @@ function TBLobby() {
           </div>
         )}
       </div>
+
+      <InviteFriendsModal
+        isOpen={showInvite}
+        onClose={() => setShowInvite(false)}
+        roomId={room?.id}
+        roomCode={room?.room_code}
+      />
     </div>
   );
 }

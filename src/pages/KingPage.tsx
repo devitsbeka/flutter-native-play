@@ -8,8 +8,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { getGradientById } from "@/config/roomGradients";
-import { siteUrl } from "@/config/site";
-import { shareOrCopy } from "@/utils/shareLink";
 import { useCategories } from "@/hooks/useCategories";
 import { excludePartyCategories } from "@/config/partyCategories";
 import kingIcon from "@/assets/play-modes/trivia-king.png";
@@ -18,6 +16,7 @@ import {
   useVersusKing,
 } from "@/contexts/VersusKingContext";
 import { VersusKingMatch } from "@/components/versus-king/VersusKingMatch";
+import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
 
 /**
  * /king — Versus King (docs/GAME_TYPES_DESIGN.md §3): a room of friends
@@ -160,20 +159,22 @@ function VKLobby() {
     if (state?.phase === "done" && !state.settled) void settle();
   }, [state?.phase, state?.settled, settle]);
 
+  // The app's Invite Friends screen: pick from the friend list (lands them
+  // in this room as an invited seat + a notification) or share/copy a link.
+  const [showInvite, setShowInvite] = useState(false);
+
   const players = participants.filter((p) => !p.is_bot);
-  const canStart = players.length >= 2;
+  // An invite that has not been answered is a reserved seat, not a player:
+  // the server only counts joined/ready/playing at start, so the button
+  // must not light up on pending invites alone.
+  const arrived = players.filter((p) => p.status !== "invited" && p.status !== "disconnected");
+  const canStart = arrived.length >= 2;
 
   const copyCode = () => {
     void navigator.clipboard?.writeText(room?.room_code ?? "");
     toast.success(t("kingTeam.codeCopied"));
   };
 
-  const shareInvite = async () => {
-    const link = siteUrl(`/king?code=${room?.room_code ?? ""}`);
-    const outcome = await shareOrCopy({ title: t("kingTeam.title"), url: link });
-    if (outcome === "copied") toast.success(t("kingTeam.linkCopied"));
-    if (outcome === "failed") toast.error(t("common.error"));
-  };
 
   const start = () => {
     // Random categories: the party categories have no fixed answers and the
@@ -219,7 +220,7 @@ function VKLobby() {
               <Copy className="w-5 h-5 text-white/60 ml-3" />
             </button>
             <button
-              onClick={() => void shareInvite()}
+              onClick={() => setShowInvite(true)}
               aria-label={t("kingTeam.invite")}
               className="rounded-2xl bg-white/10 backdrop-blur-sm border border-white/[0.12] px-5 flex flex-col items-center justify-center gap-1"
             >
@@ -234,19 +235,31 @@ function VKLobby() {
               <p className="text-white/80 text-sm">{t("kingTeam.lobbyHint")}</p>
             </div>
             <div className="flex flex-col gap-2">
-              {players.map((p) => (
-                <div key={p.user_id} className="flex items-center gap-2 rounded-xl px-1 py-0.5">
-                  <SmartAvatar avatarUrl={p.avatar_url} fallback={p.nickname} size="xs" />
-                  <span className="text-sm text-white truncate">
-                    {p.nickname}
-                    {p.user_id === user?.id ? ` (${t("kingTeam.you")})` : ""}
-                  </span>
-                  {p.is_host && <Crown className="w-3.5 h-3.5 text-amber-400 fill-amber-400 shrink-0" />}
-                </div>
-              ))}
+              {players.map((p) => {
+                const pending = p.status === "invited";
+                return (
+                  <div
+                    key={p.user_id}
+                    className="flex items-center gap-2 rounded-xl px-1 py-0.5"
+                    style={{ opacity: pending ? 0.55 : 1 }}
+                  >
+                    <SmartAvatar avatarUrl={p.avatar_url} fallback={p.nickname} size="xs" />
+                    <span className="text-sm text-white truncate">
+                      {p.nickname}
+                      {p.user_id === user?.id ? ` (${t("kingTeam.you")})` : ""}
+                    </span>
+                    {p.is_host && <Crown className="w-3.5 h-3.5 text-amber-400 fill-amber-400 shrink-0" />}
+                    {pending && (
+                      <span className="ml-auto text-[10px] font-bold text-white/60 uppercase">
+                        {t("kingTeam.invitedPending")}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
             </div>
             <p className="text-white/50 text-xs mt-3">
-              {t("kingTeam.playerCount", { n: players.length, max: 10 })}
+              {t("kingTeam.playerCount", { n: arrived.length, max: 10 })}
             </p>
           </div>
 
@@ -272,6 +285,13 @@ function VKLobby() {
           </div>
         )}
       </div>
+
+      <InviteFriendsModal
+        isOpen={showInvite}
+        onClose={() => setShowInvite(false)}
+        roomId={room?.id}
+        roomCode={room?.room_code}
+      />
     </div>
   );
 }
