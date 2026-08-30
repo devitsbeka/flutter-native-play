@@ -17,6 +17,7 @@ import {
 } from "@/contexts/TeamBattleContext";
 import { TeamBattleMatch } from "@/components/team-battle/TeamBattleMatch";
 import { useCategories } from "@/hooks/useCategories";
+import { excludePartyCategories } from "@/config/partyCategories";
 
 /**
  * /team-battle — the Team Battle flow (docs/GAME_TYPES_DESIGN.md §2), its own
@@ -178,7 +179,11 @@ function TBLobby() {
   };
 
   const start = () => {
-    const usable = categories.filter((c) => c.tier === "free" || c.tier === "standard");
+    // Party categories (Most Likely To) carry vote prompts, not trivia — a
+    // tile drawn from one would come back empty and burn a refetch walk.
+    const usable = excludePartyCategories(categories).filter(
+      (c) => c.tier === "free" || c.tier === "standard",
+    );
     void startMatch(usable.map((c) => ({ uuid: c.uuid, name: c.name })), boardSize);
   };
 
