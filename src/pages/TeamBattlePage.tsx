@@ -28,8 +28,6 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast";
 import sceneArena from "@/assets/tb-lobby/scene-arena.webp";
-import podiumSeatA from "@/assets/tb-lobby/podium-seat-a.png";
-import podiumSeatB from "@/assets/tb-lobby/podium-seat-b.png";
 import teamPenguins from "@/assets/tb-lobby/team-penguins.png";
 import teamFormula from "@/assets/tb-lobby/team-formula.png";
 
@@ -258,7 +256,6 @@ function TBLobby() {
     team: TBTeam,
     slots: [number, number][],
     podium: [number, number],
-    podiumImg: string,
   ) => {
     const members = teamOf(team);
     const ring = team === "a" ? ("blue" as const) : ("red" as const);
@@ -290,13 +287,7 @@ function TBLobby() {
             onClick={() => memberAction(members[4])}
           />
         ) : (
-          <button
-            className="absolute size-[48px] -scale-y-100 rotate-180"
-            style={{ left: podium[0], top: podium[1] - 160 }}
-            onClick={() => seatAction(team)}
-          >
-            <img alt="" className="absolute inset-0 max-w-none size-full" src={podiumImg} />
-          </button>
+          <PlusSeat left={podium[0]} top={podium[1] - 160} onClick={() => seatAction(team)} />
         )}
       </>
     );
@@ -389,8 +380,8 @@ function TBLobby() {
         {/* the pot (943:21933) — what each winner is actually paid */}
         <CoinPill left={158} top={337} width={190} value="300" />
 
-        {renderTeamSeats("a", TEAM_A_SLOTS, PODIUM_A, podiumSeatA)}
-        {renderTeamSeats("b", TEAM_B_SLOTS, PODIUM_B, podiumSeatB)}
+        {renderTeamSeats("a", TEAM_A_SLOTS, PODIUM_A)}
+        {renderTeamSeats("b", TEAM_B_SLOTS, PODIUM_B)}
 
         {/* team names row (943:21929), with the host's labeled AI-player buttons */}
         <div className="absolute left-[26px] top-[553px] w-[441px] flex items-center justify-between">
