@@ -25,7 +25,7 @@ import {
   Seat,
   StartButton,
 } from "@/components/lobby/LilacLobby";
-import sceneArena from "@/assets/tb-lobby/scene-arena.png";
+import sceneArena from "@/assets/tb-lobby/scene-arena.webp";
 import podiumSeatA from "@/assets/tb-lobby/podium-seat-a.png";
 import podiumSeatB from "@/assets/tb-lobby/podium-seat-b.png";
 import teamPenguins from "@/assets/tb-lobby/team-penguins.png";

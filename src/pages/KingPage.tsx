@@ -21,7 +21,7 @@ import {
   Seat,
   StartButton,
 } from "@/components/lobby/LilacLobby";
-import sceneKing from "@/assets/vk-lobby/scene-king.png";
+import sceneKing from "@/assets/vk-lobby/scene-king.webp";
 
 const CARD_SHADOW = "0px 2px 8px 0px rgba(102,51,153,0.06), 0px 8px 24px 0px rgba(102,51,153,0.12)";
 

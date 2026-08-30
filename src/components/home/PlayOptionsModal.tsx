@@ -4,11 +4,11 @@ import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useGameTypes } from "@/hooks/useGameTypes";
 import { ScaledCanvas } from "@/components/lobby/LilacLobby";
-import bandOne from "@/assets/play-chooser/band-1.png";
-import bandTwo from "@/assets/play-chooser/band-2.png";
+import bandOne from "@/assets/play-chooser/band-1.webp";
+import bandTwo from "@/assets/play-chooser/band-2.webp";
 import iconButton from "@/assets/play-chooser/icon-button.png";
 import iconHearts from "@/assets/play-chooser/icon-hearts.png";
-import iconKing from "@/assets/play-chooser/icon-king.png";
+import iconKing from "@/assets/play-chooser/icon-king.webp";
 import iconCrate from "@/assets/play-chooser/icon-crate.png";
 import iconBack from "@/assets/play-chooser/icon-back.svg";
 
