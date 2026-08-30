@@ -127,6 +127,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
   const [loading, setLoading] = useState(false);
   const channelsRef = useRef<ReturnType<typeof supabase.channel>[]>([]);
   const roomIdRef = useRef<string | null>(null);
+  const seatOpsRef = useRef(0);
 
   const me = participants.find((p) => p.user_id === user?.id) ?? null;
   const isHost = !!room && room.host_user_id === user?.id;
@@ -134,6 +135,11 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
   const isSpotlight = !!state && !!user && state.active_player === user.id;
 
   const fetchParticipants = useCallback(async (roomId: string) => {
+    // While a seat operation is in flight, a realtime-triggered refetch can
+    // read the row the host just optimistically removed (the server delete
+    // hasn't committed yet) and resurrect the seat for a frame. manageSeat
+    // refetches once the server has answered, so skipping here loses nothing.
+    if (seatOpsRef.current > 0) return;
     // Invitees sit at status "invited" until they accept: shown greyed in
     // their reserved seat, but kept OUT of `participants` so they never
     // count toward the equal-teams gate or the board size. The realtime
@@ -439,6 +445,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
     async (userId: string, action: "remove" | "move_a" | "move_b") => {
       const roomId = roomIdRef.current;
       if (!roomId) return;
+      seatOpsRef.current += 1;
       if (action === "remove") {
         setParticipants((prev) => prev.filter((p) => p.user_id !== userId));
         setPendingInvites((prev) => prev.filter((p) => p.user_id !== userId));
@@ -449,14 +456,20 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
         setParticipants(move);
         setPendingInvites(move);
       }
-      const { error } = await supabase.rpc("lobby_manage_seat", {
-        p_room_id: roomId,
-        p_user_id: userId,
-        p_action: action,
-      });
-      if (error) {
-        console.error("[TB] manage seat failed", error);
-        toast.error(error.message);
+      try {
+        const { error } = await supabase.rpc("lobby_manage_seat", {
+          p_room_id: roomId,
+          p_user_id: userId,
+          p_action: action,
+        });
+        if (error) {
+          console.error("[TB] manage seat failed", error);
+          toast.error(error.message);
+        }
+      } finally {
+        seatOpsRef.current -= 1;
+        // Converge on the server's truth either way: confirms the change on
+        // success, restores the seat on a refusal.
         void fetchParticipants(roomId);
       }
     },

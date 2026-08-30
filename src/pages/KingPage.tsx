@@ -203,6 +203,7 @@ export default function KingPage() {
   const kingRoomRef = useRef<Tables<"game_rooms"> | null>(null);
   kingRoomRef.current = kingRoom;
   const channelRef = useRef<RealtimeChannel | null>(null);
+  const seatOpRef = useRef(0);
 
   useEffect(() => {
     if (!user || !profile || roomAttempted.current) return;
@@ -274,6 +275,10 @@ export default function KingPage() {
   const refreshKingParts = useCallback(async () => {
     const roomId = kingRoomRef.current?.id;
     if (!roomId) return;
+    // Skip realtime refetches while a seat removal is in flight — reading the
+    // not-yet-deleted row would resurrect the seat for a frame. The removal
+    // handler refetches once the server answers.
+    if (seatOpRef.current > 0) return;
     const { data } = await supabase
       .from("room_participants")
       .select("*")
@@ -524,6 +529,7 @@ export default function KingPage() {
                       if (!kingRoom) return;
                       const target = seatMenu.user_id;
                       // Instant: the seat pops out now; a refusal restores it.
+                      seatOpRef.current += 1;
                       setKingParts((prev) => prev.filter((part) => part.user_id !== target));
                       setKingPending((prev) => prev.filter((part) => part.user_id !== target));
                       void supabase
@@ -533,10 +539,9 @@ export default function KingPage() {
                           p_action: "remove",
                         })
                         .then(({ error }) => {
-                          if (error) {
-                            toast.error(error.message);
-                            void refreshKingParts();
-                          }
+                          if (error) toast.error(error.message);
+                          seatOpRef.current -= 1;
+                          void refreshKingParts();
                         });
                     },
                   },

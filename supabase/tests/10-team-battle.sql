@@ -489,6 +489,11 @@ BEGIN
     (SELECT count(*)::int FROM public.room_participants
       WHERE room_id = v_room AND is_bot), 2,
     'two bots seated');
+  -- 20260921140000: bots wear ordinary one-word names, not robo-prefixes.
+  PERFORM pg_temp.must_equal(
+    (SELECT count(*)::int FROM public.room_participants
+      WHERE room_id = v_room AND is_bot AND nickname LIKE '% %'), 0,
+    'bot names are one word');
 
   v_board := jsonb_build_object(
     'tiles', jsonb_build_array(
