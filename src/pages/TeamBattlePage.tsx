@@ -22,8 +22,8 @@ import {
   InviteRow,
   LILAC_BG,
   LilacHeader,
+  FitBox,
   PlusSeat,
-  ScaledCanvas,
   Seat,
   StartButton,
 } from "@/components/lobby/LilacLobby";
@@ -275,20 +275,20 @@ function TBLobby() {
             <Seat
               key={`${team}${i}`}
               left={left}
-              top={top}
+              top={top - 160}
               avatarUrl={p.avatar_url}
               nickname={p.nickname}
               ring={ring}
               onClick={() => memberAction(p)}
             />
           ) : (
-            <PlusSeat key={`${team}${i}`} left={left} top={top} onClick={() => seatAction(team)} />
+            <PlusSeat key={`${team}${i}`} left={left} top={top - 160} onClick={() => seatAction(team)} />
           );
         })}
         {members[4] ? (
           <Seat
             left={podium[0]}
-            top={podium[1]}
+            top={podium[1] - 160}
             avatarUrl={members[4].avatar_url}
             nickname={members[4].nickname}
             ring={ring}
@@ -297,7 +297,7 @@ function TBLobby() {
         ) : (
           <button
             className="absolute size-[48px] -scale-y-100 rotate-180"
-            style={{ left: podium[0], top: podium[1] }}
+            style={{ left: podium[0], top: podium[1] - 160 }}
             onClick={() => seatAction(team)}
           >
             <img alt="" className="absolute inset-0 max-w-none size-full" src={podiumImg} />
@@ -324,42 +324,42 @@ function TBLobby() {
 
   return (
     <div
-      className="h-[100dvh] w-full overflow-hidden safe-bleed"
+      className="h-[100dvh] w-full overflow-hidden safe-bleed flex flex-col"
       style={{ background: LILAC_BG }}
     >
-      <ScaledCanvas>
+      <LilacHeader
+        title={t("teamBattle.title")}
+        onBack={() => {
+          // Navigate away first so the gate never re-creates a room the
+          // instant this one clears.
+          navigate("/");
+          void leaveRoom();
+        }}
+        onHelp={() => setHelpOpen((v) => !v)}
+      />
+
+      <InviteRow
+        inviteLabel={t("lobby.invite")}
+        entries={friends.map((f) => ({
+          id: f.friendId,
+          nickname: f.nickname,
+          avatarUrl: f.avatarUrl,
+          online: !!f.isOnline,
+        }))}
+        onInvite={() => setInviteOpen(true)}
+        onEntry={setPeek}
+      />
+
+      <div className="flex-1 min-h-0">
+      <FitBox width={500} height={670}>
         {/* arena scene (938:6267) + edge fade */}
-        <div className="absolute left-[32px] top-[166px] w-[435px] h-[780px] pointer-events-none">
+        <div className="absolute left-[32px] top-[6px] w-[435px] h-[780px] pointer-events-none">
           <img alt="" className="absolute inset-0 max-w-none object-cover size-full" src={sceneArena} />
           <div className="absolute inset-0" style={{ backgroundImage: ARENA_FADE }} />
         </div>
 
-        <LilacHeader
-          title={t("teamBattle.title")}
-          onBack={() => {
-            // Navigate away first so the gate never re-creates a room the
-            // instant this one clears.
-            navigate("/");
-            void leaveRoom();
-          }}
-          onHelp={() => setHelpOpen((v) => !v)}
-        />
-
-        <InviteRow
-          top={94}
-          inviteLabel={t("lobby.invite")}
-          entries={friends.map((f) => ({
-            id: f.friendId,
-            nickname: f.nickname,
-            avatarUrl: f.avatarUrl,
-            online: !!f.isOnline,
-          }))}
-          onInvite={() => setInviteOpen(true)}
-          onEntry={setPeek}
-        />
-
         {/* Pick duration (940:7647 + chips 940:7648/936:21181/936:21183) */}
-        <p className="absolute left-[39px] top-[216px] font-[Nunito] font-medium leading-[24px] text-[#0c172c] text-[15px] tracking-[-0.16px]">
+        <p className="absolute left-[39px] top-[56px] font-[Nunito] font-medium leading-[24px] text-[#0c172c] text-[15px] tracking-[-0.16px]">
           {t("lobby.pickDuration")}
         </p>
         {DURATIONS.map((n, i) => {
@@ -377,7 +377,7 @@ function TBLobby() {
               } ${tooSmall ? "opacity-30" : ""}`}
               style={{
                 left: 39 + i * 130,
-                top: 251,
+                top: 91,
                 background: selected
                   ? "linear-gradient(to bottom, rgba(255,255,255,0.5), rgba(254,254,254,0.5))"
                   : "rgba(255,255,255,0.2)",
@@ -394,13 +394,13 @@ function TBLobby() {
         })}
 
         {/* the pot (943:21933) — what each winner is actually paid */}
-        <CoinPill left={158} top={497} width={190} value="300" />
+        <CoinPill left={158} top={337} width={190} value="300" />
 
         {renderTeamSeats("a", TEAM_A_SLOTS, PODIUM_A, podiumSeatA)}
         {renderTeamSeats("b", TEAM_B_SLOTS, PODIUM_B, podiumSeatB)}
 
         {/* team names row (943:21929), with the host's labeled AI-player buttons */}
-        <div className="absolute left-[26px] top-[713px] w-[441px] flex items-center justify-between">
+        <div className="absolute left-[26px] top-[553px] w-[441px] flex items-center justify-between">
           <div className="flex gap-[10px] items-center">
             <img alt="" className="size-[36px] -scale-y-100 rotate-180 object-contain" src={teamPenguins} />
             <p className="font-[Nunito] font-black leading-[24px] text-[#0c172c] text-[18px] tracking-[-0.16px] whitespace-nowrap">
@@ -442,7 +442,7 @@ function TBLobby() {
           onClick={() => cycleCaptain(teamA)}
         />
         <p
-          className="absolute left-[191px] top-[774px] w-[118px] text-[77px] leading-[43px] text-center not-italic text-[#f5d9ff]"
+          className="absolute left-[191px] top-[614px] w-[118px] text-[77px] leading-[43px] text-center not-italic text-[#f5d9ff]"
           style={{ fontFamily: "'Slackey', 'TASolivare', cursive", textShadow: "0px 4px 4px #c7bccc" }}
         >
           VS
@@ -455,36 +455,37 @@ function TBLobby() {
           onClick={() => cycleCaptain(teamB)}
         />
 
-        <Divider top={830} />
-
-        {isHost ? (
-          <StartButton
-            label={loading ? t("teamBattle.starting") : t("lobby.startGame")}
-            onClick={start}
-            disabled={!teamsEqual || loading}
-          />
-        ) : (
-          <p className="absolute left-[33px] top-[870px] w-[434px] text-center font-[Nunito] font-semibold text-[15px] text-[#523b76]/70">
-            {t("teamBattle.waitingHost")}
-          </p>
-        )}
-
         {isHost && !teamsEqual && (
-          <p className="absolute left-[33px] top-[688px] w-[434px] text-center font-[Nunito] font-medium text-[13px] text-[#523b76]/60">
+          <p className="absolute left-[33px] top-[528px] w-[434px] text-center font-[Nunito] font-medium text-[13px] text-[#523b76]/60">
             {t("teamBattle.needEqualTeams")}
           </p>
         )}
 
         {helpOpen && (
           <div
-            className="absolute left-[32px] top-[190px] w-[435px] rounded-[24px] p-5 bg-white/95 border border-[#e8e0f5] z-10 shadow-[0px_8px_24px_0px_rgba(102,51,153,0.18)]"
+            className="absolute left-[32px] top-[20px] w-[435px] rounded-[24px] p-5 bg-white/95 border border-[#e8e0f5] z-10 shadow-[0px_8px_24px_0px_rgba(102,51,153,0.18)]"
             onClick={() => setHelpOpen(false)}
           >
             <p className="font-bold text-[#402666] mb-1">{t("teamBattle.title")}</p>
             <p className="text-sm text-[#402666]/70 leading-relaxed">{t("lobby.tbRules")}</p>
           </div>
         )}
-      </ScaledCanvas>
+      </FitBox>
+      </div>
+
+      <Divider />
+
+      {isHost ? (
+        <StartButton
+          label={loading ? t("teamBattle.starting") : t("lobby.startGame")}
+          onClick={start}
+          disabled={!teamsEqual || loading}
+        />
+      ) : (
+        <p className="w-full max-w-[500px] mx-auto shrink-0 px-[24px] pt-[14px] pb-[20px] text-center font-[Nunito] font-semibold text-[15px] text-[#523b76]/70">
+          {t("teamBattle.waitingHost")}
+        </p>
+      )}
 
       {room && (
         <InviteFriendsModal
@@ -531,7 +532,7 @@ function TBCaptainChip({
       className="absolute h-[50px] w-[116px] rounded-[16.85px] border-[1.153px] border-solid shadow-[0px_3.389px_0px_0px_#d8d0e8,0px_5.083px_13.556px_0px_rgba(0,0,0,0.1)]"
       style={{
         left,
-        top: 758,
+        top: 598,
         borderColor: accent,
         background: "linear-gradient(to bottom, rgba(255,255,255,0.5), rgba(254,254,254,0.5))",
       }}

@@ -51,6 +51,46 @@ export function ScaledCanvas({ children }: { children: ReactNode }) {
   );
 }
 
+/**
+ * Fits a fixed-coordinate design region into whatever box the flex layout
+ * gives it: scaled by the tighter dimension, centered. Used for the scene
+ * region only — chrome (header, strip, CTA) lives in normal flow so it can
+ * own the screen edges and safe areas.
+ */
+export function FitBox({
+  width,
+  height,
+  children,
+}: {
+  width: number;
+  height: number;
+  children: ReactNode;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(0);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const update = () =>
+      setScale(Math.min(el.clientWidth / width, el.clientHeight / height));
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [width, height]);
+  return (
+    <div ref={ref} className="w-full h-full flex items-center justify-center">
+      {scale > 0 && (
+        <div style={{ width: width * scale, height: height * scale }}>
+          <div style={{ width, height, transform: `scale(${scale})`, transformOrigin: "top left", position: "relative" }}>
+            {children}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /** Header row — back, TASolivare title, help (940:7493 / 938:6022). */
 export function LilacHeader({
   title,
@@ -62,25 +102,23 @@ export function LilacHeader({
   onHelp?: () => void;
 }) {
   return (
-    <div className="absolute left-[17px] top-[21px] flex flex-col items-start">
-      <div className="flex items-center justify-between p-[16px] w-[466px]">
-        <div className="flex gap-[12px] items-center">
-          <button onClick={onBack} className="flex items-center justify-center rounded-[9999px] size-[40px] active:scale-95 transition-transform">
-            <img alt="" className="block size-[20px]" src={iconBack} />
-          </button>
-          <p
-            className="leading-[28px] not-italic text-[26px] tracking-[-0.16px] whitespace-nowrap"
-            style={{ fontFamily: "'TASolivare', sans-serif", color: HEADING_COLOR }}
-          >
-            {title}
-          </p>
-        </div>
-        {onHelp && (
-          <button onClick={onHelp} className="bg-[#f3f4f6] flex items-center justify-center rounded-[9999px] size-[40px] active:scale-95 transition-transform">
-            <img alt="" className="block size-[20px]" src={iconHelp} />
-          </button>
-        )}
+    <div className="w-full max-w-[500px] mx-auto shrink-0 flex items-center justify-between px-[24px] pt-[12px] pb-[4px]">
+      <div className="flex gap-[12px] items-center">
+        <button onClick={onBack} className="flex items-center justify-center rounded-[9999px] size-[40px] active:scale-95 transition-transform">
+          <img alt="" className="block size-[20px]" src={iconBack} />
+        </button>
+        <p
+          className="leading-[28px] not-italic text-[26px] tracking-[-0.16px] whitespace-nowrap"
+          style={{ fontFamily: "'TASolivare', sans-serif", color: HEADING_COLOR }}
+        >
+          {title}
+        </p>
       </div>
+      {onHelp && (
+        <button onClick={onHelp} className="bg-[#f3f4f6] flex items-center justify-center rounded-[9999px] size-[40px] active:scale-95 transition-transform">
+          <img alt="" className="block size-[20px]" src={iconHelp} />
+        </button>
+      )}
     </div>
   );
 }
@@ -116,23 +154,25 @@ function InviteAvatar({ url, nickname }: { url: string | null; nickname: string 
   );
 }
 
-/** The friends invite row (940:7796 / 950:8514): dashed Invite + friend cards. */
+/**
+ * The friends invite row (940:7796 / 950:8514): dashed Invite + friend
+ * cards. Full-bleed and horizontally scrollable — the cards run to the
+ * physical screen edge instead of clipping mid-card.
+ */
 export function InviteRow({
-  top,
   inviteLabel,
   entries,
   onInvite,
   onEntry,
 }: {
-  top: number;
   inviteLabel: string;
   entries: InviteEntry[];
   onInvite: () => void;
   onEntry: (entry: InviteEntry) => void;
 }) {
   return (
-    <div className="absolute left-[25px] flex flex-col h-[98px] items-start overflow-x-auto overflow-y-clip scrollbar-hide w-[450px]" style={{ top }}>
-      <div className="flex gap-[12px] items-start pl-[4px] py-[4px]">
+    <div className="w-full shrink-0 flex h-[98px] items-start overflow-x-auto overflow-y-clip scrollbar-hide">
+      <div className="flex gap-[12px] items-start px-[20px] py-[4px] mx-auto">
         <button onClick={onInvite} className="flex flex-col gap-[6px] items-center justify-center min-w-[68px] p-[8px] shrink-0 active:scale-95 transition-transform">
           <div className="border-2 border-[rgba(136,88,213,0.4)] border-dashed flex items-center justify-center rounded-[9999px] size-[52px]">
             <img alt="" className="block size-[24px]" src={iconInvite} />
@@ -245,16 +285,17 @@ export function CoinPill({
 }
 
 /** Divider line above the CTA (Line 16). */
-export function Divider({ top }: { top: number }) {
+export function Divider() {
   return (
     <div
-      className="absolute left-[39px] w-[428px] border-t"
-      style={{ top, borderColor: "rgba(136,88,213,0.25)" }}
+      className="w-full max-w-[452px] mx-auto shrink-0 border-t"
+      style={{ borderColor: "rgba(136,88,213,0.25)" }}
     />
   );
 }
 
-/** The big gradient Start CTA (940:7538 / 938:6291). */
+/** The big gradient Start CTA (940:7538 / 938:6291), pinned in flow above
+ * the safe bottom inset. */
 export function StartButton({
   label,
   onClick,
@@ -265,43 +306,41 @@ export function StartButton({
   disabled?: boolean;
 }) {
   return (
-    <div className="absolute left-[17px] top-[844px] flex flex-col items-start">
-      <div className="h-[92px] relative w-[466px]">
-        <button
-          onClick={onClick}
-          disabled={disabled}
-          className="absolute left-[16px] top-[16px] h-[60px] w-[434px] rounded-[20px] active:scale-[0.98] transition-transform disabled:opacity-50"
+    <div className="w-full max-w-[500px] mx-auto shrink-0 px-[24px] pt-[12px] pb-[16px]">
+      <button
+        onClick={onClick}
+        disabled={disabled}
+        className="relative h-[60px] w-full rounded-[20px] active:scale-[0.98] transition-transform disabled:opacity-50 overflow-hidden"
+        style={{
+          background:
+            "linear-gradient(to bottom, #8858d5 0%, #8858d5 50%, rgba(136,88,213,0.9) 100%)",
+        }}
+      >
+        <div
+          className="absolute h-px left-[8px] right-[8px] rounded-[9999px] top-0"
           style={{
             background:
-              "linear-gradient(to bottom, #8858d5 0%, #8858d5 50%, rgba(136,88,213,0.9) 100%)",
+              "linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0) 100%)",
           }}
-        >
-          <div
-            className="absolute h-px left-[8px] rounded-[9999px] top-0 w-[418px]"
-            style={{
-              background:
-                "linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0) 100%)",
-            }}
-          />
-          <div
-            className="absolute h-[20px] left-0 rounded-bl-[20px] rounded-br-[20px] top-[40px] w-[434px]"
-            style={{ background: "linear-gradient(to top, rgba(0,0,0,0.1), rgba(0,0,0,0))" }}
-          />
-          <div
-            className="absolute inset-0 rounded-[20px]"
-            style={{
-              background:
-                "linear-gradient(to bottom, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0) 100%)",
-            }}
-          />
-          <div className="absolute flex gap-[8px] h-[28px] items-center justify-center left-[8px] top-[16px] w-[418px]">
-            <img alt="" className="block size-[20px]" src={iconPlay} />
-            <p className="font-[Nunito] font-semibold leading-[28px] text-[18px] text-center text-white tracking-[-0.16px] whitespace-nowrap">
-              {label}
-            </p>
-          </div>
-        </button>
-      </div>
+        />
+        <div
+          className="absolute h-[20px] left-0 right-0 rounded-bl-[20px] rounded-br-[20px] bottom-0"
+          style={{ background: "linear-gradient(to top, rgba(0,0,0,0.1), rgba(0,0,0,0))" }}
+        />
+        <div
+          className="absolute inset-0 rounded-[20px]"
+          style={{
+            background:
+              "linear-gradient(to bottom, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0) 100%)",
+          }}
+        />
+        <div className="relative flex gap-[8px] h-full items-center justify-center">
+          <img alt="" className="block size-[20px]" src={iconPlay} />
+          <p className="font-[Nunito] font-semibold leading-[28px] text-[18px] text-center text-white tracking-[-0.16px] whitespace-nowrap">
+            {label}
+          </p>
+        </div>
+      </button>
     </div>
   );
 }

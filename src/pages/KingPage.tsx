@@ -20,8 +20,8 @@ import {
   InviteRow,
   LILAC_BG,
   LilacHeader,
+  FitBox,
   PlusSeat,
-  ScaledCanvas,
   Seat,
   StartButton,
 } from "@/components/lobby/LilacLobby";
@@ -216,93 +216,97 @@ export default function KingPage() {
   // The lobby is the Versus King frame (Figma 940:7474) rendered at design
   // coordinates: the King's lounge scene, your friends in the invite row,
   // seats around the couch, and the Start CTA driving the existing match.
+  // Header, friends strip, and the Start CTA are flow elements — always on
+  // screen, strip scrolling edge to edge. Only the scene region (design
+  // y160–841, re-based below) is scale-fitted into the flexible middle.
   if (stage === "intro") {
     return (
       <div
-        className="h-[100dvh] w-full overflow-hidden safe-bleed"
+        className="h-[100dvh] w-full overflow-hidden safe-bleed flex flex-col"
         style={{ background: LILAC_BG }}
       >
-        <ScaledCanvas>
-          {/* scene (940:7476) + its double edge fade (940:7551/7666) */}
-          <div className="absolute left-[32px] top-[27px] w-[435px] h-[780px] pointer-events-none">
-            <img alt="" className="absolute inset-0 max-w-none object-cover size-full" src={sceneKing} />
-            <div className="absolute inset-0" style={{ backgroundImage: KING_SCENE_FADE }} />
-            <div className="absolute inset-0" style={{ backgroundImage: KING_SCENE_FADE }} />
-          </div>
+        <LilacHeader
+          title={t("lobby.vkTitle")}
+          onBack={() => navigate(-1)}
+          onHelp={() => setHelpOpen((v) => !v)}
+        />
 
-          <LilacHeader
-            title={t("lobby.vkTitle")}
-            onBack={() => navigate(-1)}
-            onHelp={() => setHelpOpen((v) => !v)}
-          />
+        <InviteRow
+          inviteLabel={t("lobby.invite")}
+          entries={friends.map((f) => ({
+            id: f.friendId,
+            nickname: f.nickname,
+            avatarUrl: f.avatarUrl,
+            online: !!f.isOnline,
+          }))}
+          onInvite={inviteFriends}
+          onEntry={setPeek}
+        />
 
-          <InviteRow
-            top={92}
-            inviteLabel={t("lobby.invite")}
-            entries={friends.map((f) => ({
-              id: f.friendId,
-              nickname: f.nickname,
-              avatarUrl: f.avatarUrl,
-              online: !!f.isOnline,
-            }))}
-            onInvite={inviteFriends}
-            onEntry={setPeek}
-          />
-
-          {/* Winner takes: (940:7510) + the coins pill (940:7560) */}
-          <p className="absolute left-[32px] top-[267px] w-[435px] font-[Nunito] font-medium leading-[24px] text-[#0c172c] text-[18px] text-center tracking-[-0.16px]">
-            {t("lobby.winnerTakes")}
-          </p>
-          <CoinPill left={174} top={299} width={152} value="200" />
-
-          {/* seats around the couch — you first, the rest open (940:7477…) */}
-          {KING_SEATS.map(([left, top], i) =>
-            i === 0 ? (
-              <Seat
-                key={i}
-                left={left}
-                top={top}
-                avatarUrl={profile?.avatar_url ?? null}
-                nickname={profile?.nickname ?? "P"}
-              />
-            ) : (
-              <PlusSeat key={i} left={left} top={top} onClick={inviteFriends} />
-            ),
-          )}
-
-          {/* Captain (940:7788 + 936:21188) — solo: the captain is you */}
-          <p className="absolute left-[38px] top-[736px] font-[Nunito] font-medium leading-[24px] text-[#0c172c] text-[15px] tracking-[-0.16px]">
-            {t("lobby.captainLabel")}
-          </p>
-          <CaptainChip
-            left={38}
-            top={770}
-            avatarUrl={profile?.avatar_url}
-            name={profile?.nickname}
-            placeholder={t("lobby.chooseCaptain")}
-          />
-
-          <Divider top={841} />
-          <StartButton
-            label={t("lobby.startGame")}
-            onClick={() => void draw()}
-            disabled={busy || !state}
-          />
-
-          {(helpOpen || noPool) && (
-            <div
-              className="absolute left-[32px] top-[190px] w-[435px] rounded-[24px] p-5 bg-white/90 border border-[#e8e0f5]"
-              style={{ boxShadow: CARD_SHADOW }}
-              onClick={() => setHelpOpen(false)}
-            >
-              <p className="font-bold text-[#402666] mb-1">{t("king.introTitle")}</p>
-              <p className="text-sm text-[#402666]/60">{t("king.introBody")}</p>
-              {noPool && (
-                <p className="text-sm font-medium text-amber-700 mt-3">{t("king.noQuestions")}</p>
-              )}
+        <div className="flex-1 min-h-0">
+          <FitBox width={500} height={681}>
+            {/* scene (940:7476) + its double edge fade (940:7551/7666) */}
+            <div className="absolute left-[32px] top-[-133px] w-[435px] h-[780px] pointer-events-none">
+              <img alt="" className="absolute inset-0 max-w-none object-cover size-full" src={sceneKing} />
+              <div className="absolute inset-0" style={{ backgroundImage: KING_SCENE_FADE }} />
+              <div className="absolute inset-0" style={{ backgroundImage: KING_SCENE_FADE }} />
             </div>
-          )}
-        </ScaledCanvas>
+
+            {/* Winner takes: (940:7510) + the coins pill (940:7560) */}
+            <p className="absolute left-[32px] top-[107px] w-[435px] font-[Nunito] font-medium leading-[24px] text-[#0c172c] text-[18px] text-center tracking-[-0.16px]">
+              {t("lobby.winnerTakes")}
+            </p>
+            <CoinPill left={174} top={139} width={152} value="200" />
+
+            {/* seats around the couch — you first, the rest open (940:7477…) */}
+            {KING_SEATS.map(([left, top], i) =>
+              i === 0 ? (
+                <Seat
+                  key={i}
+                  left={left}
+                  top={top - 160}
+                  avatarUrl={profile?.avatar_url ?? null}
+                  nickname={profile?.nickname ?? "P"}
+                />
+              ) : (
+                <PlusSeat key={i} left={left} top={top - 160} onClick={inviteFriends} />
+              ),
+            )}
+
+            {/* Captain (940:7788 + 936:21188) — solo: the captain is you */}
+            <p className="absolute left-[38px] top-[576px] font-[Nunito] font-medium leading-[24px] text-[#0c172c] text-[15px] tracking-[-0.16px]">
+              {t("lobby.captainLabel")}
+            </p>
+            <CaptainChip
+              left={38}
+              top={610}
+              avatarUrl={profile?.avatar_url}
+              name={profile?.nickname}
+              placeholder={t("lobby.chooseCaptain")}
+            />
+
+            {(helpOpen || noPool) && (
+              <div
+                className="absolute left-[32px] top-[20px] w-[435px] rounded-[24px] p-5 bg-white/90 border border-[#e8e0f5] z-10"
+                style={{ boxShadow: CARD_SHADOW }}
+                onClick={() => setHelpOpen(false)}
+              >
+                <p className="font-bold text-[#402666] mb-1">{t("king.introTitle")}</p>
+                <p className="text-sm text-[#402666]/60">{t("king.introBody")}</p>
+                {noPool && (
+                  <p className="text-sm font-medium text-amber-700 mt-3">{t("king.noQuestions")}</p>
+                )}
+              </div>
+            )}
+          </FitBox>
+        </div>
+
+        <Divider />
+        <StartButton
+          label={t("lobby.startGame")}
+          onClick={() => void draw()}
+          disabled={busy || !state}
+        />
 
         <InviteFriendsModal
           isOpen={inviteOpen}
