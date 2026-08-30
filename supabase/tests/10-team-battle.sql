@@ -629,6 +629,28 @@ BEGIN
       WHERE room_id = v_room AND user_id = (v_state.super ->> 'champion_a')::uuid),
     false, 'a captained bot never champions over a human');
 
+  -- ── seat management (20260921120000): host-only, lobby-only ────────────
+
+  PERFORM pg_temp.as_user(v_bob);
+  PERFORM pg_temp.must_fail(
+    format('SELECT public.lobby_manage_seat(%L, %L, %L)', v_room, v_out, 'remove'),
+    'only the host manages seats');
+
+  PERFORM pg_temp.as_user(v_alice);
+  PERFORM public.lobby_manage_seat(v_room, v_bob, 'move_a');
+  PERFORM pg_temp.must_equal(
+    (SELECT team FROM public.room_participants WHERE room_id = v_room AND user_id = v_bob),
+    'a', 'the host can move a player between teams');
+  PERFORM public.lobby_manage_seat(v_room, v_bob, 'move_b');
+  PERFORM public.lobby_manage_seat(v_room, v_out, 'remove');
+  PERFORM pg_temp.must_equal(
+    (SELECT count(*)::int FROM public.room_participants
+      WHERE room_id = v_room AND user_id = v_out), 0,
+    'the host can remove a seat');
+  PERFORM pg_temp.must_fail(
+    format('SELECT public.lobby_manage_seat(%L, %L, %L)', v_room, v_alice, 'remove'),
+    'the host cannot remove their own seat');
+
   -- Cleanup so reruns start clean — the mode goes back to dark.
   PERFORM pg_temp.as_user(NULL);
   UPDATE public.game_types SET is_live = false WHERE key = 'team_battle';

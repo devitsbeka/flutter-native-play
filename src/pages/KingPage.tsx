@@ -22,6 +22,7 @@ import {
   FitBox,
   PlusSeat,
   Seat,
+  SeatMenu,
   StartButton,
 } from "@/components/lobby/LilacLobby";
 import sceneKing from "@/assets/vk-lobby/scene-king.webp";
@@ -194,6 +195,8 @@ export default function KingPage() {
   const [searchParams] = useSearchParams();
   const [kingRoom, setKingRoom] = useState<Tables<"game_rooms"> | null>(null);
   const [kingParts, setKingParts] = useState<Tables<"room_participants">[]>([]);
+  const [kingPending, setKingPending] = useState<Tables<"room_participants">[]>([]);
+  const [seatMenu, setSeatMenu] = useState<Tables<"room_participants"> | null>(null);
   const roomAttempted = useRef(false);
   const channelRef = useRef<RealtimeChannel | null>(null);
 
@@ -271,9 +274,12 @@ export default function KingPage() {
         .from("room_participants")
         .select("*")
         .eq("room_id", kingRoom.id)
-        .in("status", ["joined", "ready", "playing"])
+        .in("status", ["joined", "ready", "playing", "invited"])
         .order("joined_at", { ascending: true });
-      if (data) setKingParts(data);
+      if (data) {
+        setKingParts(data.filter((part) => part.status !== "invited"));
+        setKingPending(data.filter((part) => part.status === "invited"));
+      }
     };
     void fetchParts();
     const ch = supabase
@@ -393,9 +399,12 @@ export default function KingPage() {
             </p>
             <CoinPill left={174} top={139} width={152} value="200" />
 
-            {/* seats around the couch — real room participants, the rest open */}
+            {/* seats around the couch — participants first, then pending
+                invitees greyed until they accept, the rest open */}
             {KING_SEATS.map(([left, top], i) => {
-              const part = kingParts[i];
+              const active = kingParts[i];
+              const pending = !active ? kingPending[i - kingParts.length] : undefined;
+              const part = active ?? pending;
               return part ? (
                 <Seat
                   key={i}
@@ -403,6 +412,17 @@ export default function KingPage() {
                   top={top - 160}
                   avatarUrl={part.avatar_url}
                   nickname={part.nickname}
+                  pending={!active}
+                  onLongPress={
+                    kingRoom?.host_user_id === user?.id && part.user_id !== user?.id
+                      ? () => setSeatMenu(part)
+                      : undefined
+                  }
+                  onClick={
+                    !active && kingRoom?.host_user_id === user?.id
+                      ? () => setSeatMenu(part)
+                      : undefined
+                  }
                 />
               ) : (
                 <PlusSeat key={i} left={left} top={top - 160} onClick={inviteFriends} />
@@ -449,6 +469,33 @@ export default function KingPage() {
           inviteLink={kingRoom ? `https://mytrivia.io/king?code=${kingRoom.room_code}` : "https://mytrivia.io/king"}
           roomId={kingRoom?.id}
           roomCode={kingRoom?.room_code}
+        />
+
+        <SeatMenu
+          target={seatMenu ? { nickname: seatMenu.nickname, avatarUrl: seatMenu.avatar_url } : null}
+          onClose={() => setSeatMenu(null)}
+          actions={
+            seatMenu
+              ? [
+                  {
+                    label: t("lobby.removeSeat"),
+                    destructive: true,
+                    onPress: () => {
+                      if (!kingRoom) return;
+                      void supabase
+                        .rpc("lobby_manage_seat", {
+                          p_room_id: kingRoom.id,
+                          p_user_id: seatMenu.user_id,
+                          p_action: "remove",
+                        })
+                        .then(({ error }) => {
+                          if (error) toast.error(error.message);
+                        });
+                    },
+                  },
+                ]
+              : []
+          }
         />
 
         <FriendPeek

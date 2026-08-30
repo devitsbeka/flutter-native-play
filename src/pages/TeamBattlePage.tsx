@@ -23,6 +23,8 @@ import {
   FitBox,
   PlusSeat,
   Seat,
+  SeatMenu,
+  type SeatMenuAction,
   StartButton,
 } from "@/components/lobby/LilacLobby";
 import { supabase } from "@/integrations/supabase/client";
@@ -170,8 +172,8 @@ function TBLobby() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const {
-    room, participants, isHost, myTeam, setTeam, addBot, removeBot, setCaptain,
-    startMatch, leaveRoom, loading, state, settle,
+    room, participants, pendingInvites, isHost, myTeam, setTeam, addBot,
+    setCaptain, manageSeat, startMatch, leaveRoom, loading, state, settle,
   } = useTeamBattle();
   const { categories } = useCategories();
   const [rounds, setRounds] = useState(6);
@@ -207,9 +209,15 @@ function TBLobby() {
     void startMatch(usable.map((c) => ({ uuid: c.uuid, name: c.name })), rounds);
   };
 
+  // The team the last-pressed + seat belonged to: peek invites carry it
+  // directly, and a modal invite gets moved onto it right after it lands
+  // (the modal itself cannot write a team).
+  const inviteTeamRef = useRef<TBTeam | null>(null);
+
   // The peek's Invite button sends the real room invite — the same
   // invited-participant row the invite modal writes, whose DB trigger
-  // delivers the notification.
+  // delivers the notification. The invitee holds the tapped seat greyed
+  // until they accept.
   const inviteToGame = async (entry: InviteEntry) => {
     if (!room) return;
     const { data: existing } = await supabase
@@ -229,6 +237,7 @@ function TBLobby() {
       nickname: entry.nickname,
       avatar_url: entry.avatarUrl,
       is_host: false,
+      ...(inviteTeamRef.current ? { team: inviteTeamRef.current } : {}),
     });
     if (error) {
       console.error("[TB] invite failed", error);
@@ -239,56 +248,119 @@ function TBLobby() {
     toast.success(t("extra.inviteSent"));
   };
 
-  // An open seat on the other team seats YOU there; one on your own team
-  // opens the invite modal. AI players have their own labeled button — a
-  // seat press never silently conjures a bot.
-  const seatAction = (team: TBTeam) => {
-    if (myTeam !== team) void setTeam(team);
-    else setInviteOpen(true);
+  // A modal invite lands teamless; when it was launched from a + seat, park
+  // the newest teamless invite on that seat's team.
+  const assignPendingTeam = async () => {
+    const team = inviteTeamRef.current;
+    if (!team || !room) return;
+    const { data } = await supabase
+      .from("room_participants")
+      .select("user_id")
+      .eq("room_id", room.id)
+      .eq("status", "invited")
+      .is("team", null)
+      .order("joined_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (data) void manageSeat(data.user_id, team === "a" ? "move_a" : "move_b");
   };
 
-  const memberAction = (p: (typeof participants)[number]) => {
-    if (p.is_bot && isHost) void removeBot(p.user_id);
-    else if (!p.is_bot) navigate(`/profile/${p.user_id}`);
+  // An open seat on the other team seats YOU there; one on your own team
+  // opens the invite modal for that seat. AI players have their own labeled
+  // button — a seat press never silently conjures a bot.
+  const seatAction = (team: TBTeam) => {
+    if (myTeam !== team) void setTeam(team);
+    else {
+      inviteTeamRef.current = team;
+      setInviteOpen(true);
+    }
   };
+
+  // Hold a seat to manage it: the host moves anyone between teams or
+  // removes them (pending invites and bots included); a player can switch
+  // their own team.
+  const [seatMenu, setSeatMenu] = useState<{ p: TBParticipant; pending: boolean } | null>(null);
+  type TBParticipant = (typeof participants)[number];
+
+  const seatMenuActions = (p: TBParticipant): SeatMenuAction[] => {
+    const actions: SeatMenuAction[] = [];
+    if (isHost) {
+      if (p.team !== "a")
+        actions.push({
+          label: t("lobby.moveTo", { team: t("teamBattle.teamA") }),
+          onPress: () => void manageSeat(p.user_id, "move_a"),
+        });
+      if (p.team !== "b")
+        actions.push({
+          label: t("lobby.moveTo", { team: t("teamBattle.teamB") }),
+          onPress: () => void manageSeat(p.user_id, "move_b"),
+        });
+      if (p.user_id !== user?.id)
+        actions.push({
+          label: t("lobby.removeSeat"),
+          destructive: true,
+          onPress: () => void manageSeat(p.user_id, "remove"),
+        });
+    } else if (p.user_id === user?.id) {
+      actions.push({
+        label: t("lobby.switchTeam"),
+        onPress: () => void setTeam(p.team === "a" ? "b" : "a"),
+      });
+    }
+    return actions;
+  };
+
+  const seatTap = (p: TBParticipant, pending: boolean) => {
+    if (pending || p.is_bot) {
+      if (isHost) setSeatMenu({ p, pending });
+    } else {
+      navigate(`/profile/${p.user_id}`);
+    }
+  };
+  const seatHold = (p: TBParticipant, pending: boolean) => {
+    if (seatMenuActions(p).length > 0) setSeatMenu({ p, pending });
+  };
+
+  // Teamless pending invites still occupy a seat — the emptier side.
+  const pendingA = pendingInvites.filter((p) => p.team === "a");
+  const pendingB = pendingInvites.filter((p) => p.team === "b");
+  pendingInvites
+    .filter((p) => !p.team)
+    .forEach((p) => {
+      (teamA.length + pendingA.length <= teamB.length + pendingB.length ? pendingA : pendingB).push(p);
+    });
 
   const renderTeamSeats = (
     team: TBTeam,
     slots: [number, number][],
     podium: [number, number],
   ) => {
-    const members = teamOf(team);
+    const entries = [
+      ...teamOf(team).map((p) => ({ p, pending: false })),
+      ...(team === "a" ? pendingA : pendingB).map((p) => ({ p, pending: true })),
+    ];
     const ring = team === "a" ? ("blue" as const) : ("red" as const);
+    const all: [number, number][] = [...slots, podium];
     return (
       <>
-        {slots.map(([left, top], i) => {
-          const p = members[i];
-          return p ? (
+        {all.map(([left, top], i) => {
+          const entry = entries[i];
+          return entry ? (
             <Seat
               key={`${team}${i}`}
               left={left}
               top={top - 255}
-              avatarUrl={p.avatar_url}
-              nickname={p.nickname}
+              avatarUrl={entry.p.avatar_url}
+              nickname={entry.p.nickname}
               ring={ring}
-              onClick={() => memberAction(p)}
+              pending={entry.pending}
+              onClick={() => seatTap(entry.p, entry.pending)}
+              onLongPress={() => seatHold(entry.p, entry.pending)}
             />
           ) : (
             <PlusSeat key={`${team}${i}`} left={left} top={top - 255} onClick={() => seatAction(team)} />
           );
         })}
-        {members[4] ? (
-          <Seat
-            left={podium[0]}
-            top={podium[1] - 255}
-            avatarUrl={members[4].avatar_url}
-            nickname={members[4].nickname}
-            ring={ring}
-            onClick={() => memberAction(members[4])}
-          />
-        ) : (
-          <PlusSeat left={podium[0]} top={podium[1] - 255} onClick={() => seatAction(team)} />
-        )}
       </>
     );
   };
@@ -475,12 +547,22 @@ function TBLobby() {
       {room && (
         <InviteFriendsModal
           isOpen={inviteOpen}
-          onClose={() => setInviteOpen(false)}
+          onClose={() => {
+            setInviteOpen(false);
+            inviteTeamRef.current = null;
+          }}
           inviteLink={`https://mytrivia.io/team-battle?code=${room.room_code}`}
           roomId={room.id}
           roomCode={room.room_code}
+          onInviteSuccess={() => void assignPendingTeam()}
         />
       )}
+
+      <SeatMenu
+        target={seatMenu ? { nickname: seatMenu.p.nickname, avatarUrl: seatMenu.p.avatar_url } : null}
+        onClose={() => setSeatMenu(null)}
+        actions={seatMenu ? seatMenuActions(seatMenu.p) : []}
+      />
 
       <FriendPeek
         friend={peek}

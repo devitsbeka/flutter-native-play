@@ -47,6 +47,7 @@ export type TBState = Tables<"team_battle_state">;
 interface TeamBattleContextValue {
   room: TBRoom | null;
   participants: TBParticipant[];
+  pendingInvites: TBParticipant[];
   tiles: TBTile[];
   state: TBState | null;
   loading: boolean;
@@ -60,6 +61,7 @@ interface TeamBattleContextValue {
   setTeam: (team: TBTeam) => Promise<void>;
   addBot: (team: TBTeam) => Promise<void>;
   setCaptain: (userId: string) => Promise<void>;
+  manageSeat: (userId: string, action: "remove" | "move_a" | "move_b") => Promise<void>;
   removeBot: (botId: string) => Promise<void>;
   startMatch: (
     categories: { uuid: string; name: string }[],
@@ -118,6 +120,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
   const { user, profile } = useAuth();
   const [room, setRoom] = useState<TBRoom | null>(null);
   const [participants, setParticipants] = useState<TBParticipant[]>([]);
+  const [pendingInvites, setPendingInvites] = useState<TBParticipant[]>([]);
   const [tiles, setTiles] = useState<TBTile[]>([]);
   const [state, setState] = useState<TBState | null>(null);
   const [loading, setLoading] = useState(false);
@@ -130,16 +133,20 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
   const isSpotlight = !!state && !!user && state.active_player === user.id;
 
   const fetchParticipants = useCallback(async (roomId: string) => {
-    // Invite-modal invitees sit at status "invited" until they accept; they
-    // are not in the lobby yet, must not occupy seats, and must not block
-    // the equal-teams gate. The realtime channel refetches when they join.
+    // Invitees sit at status "invited" until they accept: shown greyed in
+    // their reserved seat, but kept OUT of `participants` so they never
+    // count toward the equal-teams gate or the board size. The realtime
+    // channel refetches when they join.
     const { data } = await supabase
       .from("room_participants")
       .select("*")
       .eq("room_id", roomId)
-      .in("status", ["joined", "ready", "playing"])
+      .in("status", ["joined", "ready", "playing", "invited"])
       .order("joined_at", { ascending: true });
-    if (data) setParticipants(data);
+    if (data) {
+      setParticipants(data.filter((p) => p.status !== "invited"));
+      setPendingInvites(data.filter((p) => p.status === "invited"));
+    }
   }, []);
 
   const fetchMatch = useCallback(async (roomId: string) => {
@@ -364,6 +371,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
     }
     setRoom(null);
     setParticipants([]);
+    setPendingInvites([]);
     setTiles([]);
     setState(null);
   }, [user]);
@@ -416,6 +424,25 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
       toast.error(error.message);
     }
   }, []);
+
+  // Host-only seat management (lobby_manage_seat): remove a pending invite,
+  // a bot, or a player, or move someone to a team.
+  const manageSeat = useCallback(
+    async (userId: string, action: "remove" | "move_a" | "move_b") => {
+      const roomId = roomIdRef.current;
+      if (!roomId) return;
+      const { error } = await supabase.rpc("lobby_manage_seat", {
+        p_room_id: roomId,
+        p_user_id: userId,
+        p_action: action,
+      });
+      if (error) {
+        console.error("[TB] manage seat failed", error);
+        toast.error(error.message);
+      }
+    },
+    [],
+  );
 
   // The host's device assembles the board material through the golden-standard
   // question pipeline and hands it over; the server prices and validates it.
@@ -591,6 +618,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
     () => ({
       room,
       participants,
+      pendingInvites,
       tiles,
       state,
       loading,
@@ -605,6 +633,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
       addBot,
       removeBot,
       setCaptain,
+      manageSeat,
       startMatch,
       submitRps,
       pickTile,
@@ -614,10 +643,10 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
       advance,
       settle,
     }),
-    [room, participants, tiles, state, loading, isHost, myTeam, isSpotlight,
+    [room, participants, pendingInvites, tiles, state, loading, isHost, myTeam, isSpotlight,
      createRoom, joinRoom, enterRoom, leaveRoom, setTeam, addBot, removeBot,
-     setCaptain, startMatch, submitRps, pickTile, submitAnswer, voteSuper,
-     submitSuper, advance, settle],
+     setCaptain, manageSeat, startMatch, submitRps, pickTile, submitAnswer,
+     voteSuper, submitSuper, advance, settle],
   );
 
   return <TeamBattleContext.Provider value={value}>{children}</TeamBattleContext.Provider>;

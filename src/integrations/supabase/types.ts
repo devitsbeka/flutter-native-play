@@ -4671,6 +4671,10 @@ export type Database = {
         Args: { p_answer: string; p_match_id: string }
         Returns: Json
       }
+      lobby_manage_seat: {
+        Args: { p_room_id: string; p_user_id: string; p_action: string }
+        Returns: undefined
+      }
       mm_cancel: { Args: never; Returns: Json }
       mm_enqueue: {
         Args: { p_game_type_key: string; p_language: string; p_team_size?: number }

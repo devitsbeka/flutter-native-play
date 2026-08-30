@@ -208,22 +208,46 @@ export function InviteRow({
   );
 }
 
-/** An occupied seat over the scene — white/team ring avatar (940:7477…). */
+/**
+ * An occupied seat over the scene — white/team ring avatar (940:7477…).
+ * A pending invitee holds the seat greyed with a dashed ring until they
+ * accept. Hold the seat to open the host's manage menu.
+ */
 export function Seat({
   left,
   top,
   avatarUrl,
   nickname,
   ring = "white",
+  pending,
   onClick,
+  onLongPress,
 }: {
   left: number;
   top: number;
   avatarUrl: string | null;
   nickname: string;
   ring?: "white" | "blue" | "red";
+  pending?: boolean;
   onClick?: () => void;
+  onLongPress?: () => void;
 }) {
+  const timer = useRef<number | null>(null);
+  const fired = useRef(false);
+  const startHold = () => {
+    if (!onLongPress) return;
+    fired.current = false;
+    timer.current = window.setTimeout(() => {
+      fired.current = true;
+      onLongPress();
+    }, 450);
+  };
+  const clearHold = () => {
+    if (timer.current) {
+      clearTimeout(timer.current);
+      timer.current = null;
+    }
+  };
   const border =
     ring === "blue"
       ? "3px solid rgba(68,111,238,0.61)"
@@ -232,12 +256,86 @@ export function Seat({
         : "1px solid #ffffff";
   return (
     <button
-      onClick={onClick}
-      className="absolute rounded-[9999px] size-[52px] overflow-clip"
-      style={{ left, top, border }}
+      onPointerDown={startHold}
+      onPointerUp={clearHold}
+      onPointerLeave={clearHold}
+      onPointerCancel={clearHold}
+      onContextMenu={(e) => e.preventDefault()}
+      onClick={() => {
+        if (fired.current) {
+          fired.current = false;
+          return;
+        }
+        onClick?.();
+      }}
+      className={`absolute rounded-[9999px] size-[52px] overflow-clip select-none ${pending ? "opacity-50" : ""}`}
+      style={{
+        left,
+        top,
+        border: pending ? "2px dashed rgba(255,255,255,0.95)" : border,
+        filter: pending ? "grayscale(0.4)" : undefined,
+        WebkitTouchCallout: "none",
+      }}
     >
       <InviteAvatar url={avatarUrl} nickname={nickname} />
     </button>
+  );
+}
+
+export interface SeatMenuAction {
+  label: string;
+  destructive?: boolean;
+  onPress: () => void;
+}
+
+/** Hold-a-seat menu: the target's face plus the actions the holder may take. */
+export function SeatMenu({
+  target,
+  onClose,
+  actions,
+}: {
+  target: { nickname: string; avatarUrl: string | null } | null;
+  onClose: () => void;
+  actions: SeatMenuAction[];
+}) {
+  const { t } = useLanguage();
+  if (!target) return null;
+  return (
+    <div
+      className="fixed inset-0 z-[130] flex items-center justify-center px-8 backdrop-blur-[10px] bg-[rgba(245,217,255,0.6)]"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-[320px] rounded-[24px] bg-white/95 border border-[#e8e0f5] p-5 flex flex-col items-center gap-3 shadow-[0px_8px_24px_0px_rgba(102,51,153,0.18)]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="relative rounded-full size-[64px] overflow-clip">
+          <InviteAvatar url={target.avatarUrl} nickname={target.nickname} />
+        </div>
+        <p className="text-[19px] text-[#523b76]" style={{ fontFamily: "'TASolivare', sans-serif" }}>
+          {target.nickname}
+        </p>
+        {actions.map((action) => (
+          <button
+            key={action.label}
+            onClick={() => {
+              onClose();
+              action.onPress();
+            }}
+            className={`w-full h-[46px] rounded-[16px] font-[Nunito] font-bold text-[15px] active:scale-[0.98] transition-transform ${
+              action.destructive
+                ? "bg-[#fee2e2] text-[#b91c1c]"
+                : "bg-[#f3ebfd] text-[#523b76]"
+            }`}
+          >
+            {action.label}
+          </button>
+        ))}
+        <button onClick={onClose} className="font-[Nunito] text-sm font-semibold text-[#523b76]/50">
+          {t("common.close")}
+        </button>
+      </div>
+    </div>
   );
 }
 
