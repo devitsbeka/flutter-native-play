@@ -34,6 +34,8 @@ export interface TBQuestion {
   correct_answer: string;
   shuffled_answers: string[];
   image_url?: string | null;
+  video_url?: string | null;
+  audio_url?: string | null;
 }
 
 export type TBRoom = Tables<"game_rooms">;
@@ -76,11 +78,25 @@ const generateRoomCode = (): string => {
   return code;
 };
 
-const asQuestions = (qs: { question: string; correctAnswer: string; incorrectAnswers: string[] }[]): TBQuestion[] =>
+// Media rides along — dropping imageUrl here is what once shipped "Which
+// athlete is pictured?" with no picture.
+const asQuestions = (
+  qs: {
+    question: string;
+    correctAnswer: string;
+    incorrectAnswers: string[];
+    imageUrl?: string | null;
+    videoUrl?: string | null;
+    audioUrl?: string | null;
+  }[],
+): TBQuestion[] =>
   qs.map((q) => ({
     question_text: q.question,
     correct_answer: q.correctAnswer,
     shuffled_answers: shuffleArray([q.correctAnswer, ...q.incorrectAnswers]),
+    image_url: q.imageUrl ?? null,
+    video_url: q.videoUrl ?? null,
+    audio_url: q.audioUrl ?? null,
   }));
 
 export function tileQuestions(tile: TBTile | undefined): TBQuestion[] {
