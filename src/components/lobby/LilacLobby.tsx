@@ -135,9 +135,14 @@ export function LilacHeader({
   return (
     <div className="relative z-10 w-full max-w-[500px] mx-auto shrink-0 flex items-center justify-between px-4 py-3" style={{ transform: "translateZ(0)" }}>
       <div className="flex gap-[12px] items-center">
-        <button onClick={onBack} className="flex items-center justify-center rounded-[9999px] size-[40px] active:scale-95 transition-transform">
+        <motion.button
+          onClick={onBack}
+          whileTap={{ scale: 0.82 }}
+          transition={{ type: "spring", stiffness: 500, damping: 26 }}
+          className="flex items-center justify-center rounded-[9999px] size-[40px]"
+        >
           <img alt="" className="block size-[20px]" src={iconBack} />
-        </button>
+        </motion.button>
         <p
           className="leading-[28px] not-italic text-[26px] tracking-[-0.16px] whitespace-nowrap"
           style={{ fontFamily: "'TASolivare', sans-serif", color: HEADING_COLOR }}
@@ -146,9 +151,14 @@ export function LilacHeader({
         </p>
       </div>
       {onHelp && (
-        <button onClick={onHelp} className="bg-[#f3f4f6] flex items-center justify-center rounded-[9999px] size-[40px] active:scale-95 transition-transform">
+        <motion.button
+          onClick={onHelp}
+          whileTap={{ scale: 0.82, rotate: 12 }}
+          transition={{ type: "spring", stiffness: 500, damping: 26 }}
+          className="bg-[#f3f4f6] flex items-center justify-center rounded-[9999px] size-[40px]"
+        >
           <img alt="" className="block size-[20px]" src={iconHelp} />
-        </button>
+        </motion.button>
       )}
     </div>
   );
@@ -286,6 +296,7 @@ export function Seat({
       initial={{ scale: 0.5, opacity: 0 }}
       animate={{ scale: 1, opacity: pending ? 0.5 : 1 }}
       exit={{ scale: 0.3, opacity: 0 }}
+      whileTap={{ scale: 0.86 }}
       transition={{ type: "spring", stiffness: 480, damping: 26 }}
       onPointerDown={startHold}
       onPointerUp={clearHold}
@@ -448,14 +459,20 @@ export function PlusSeat({ left, top, onClick }: { left: number; top: number; on
       initial={{ scale: 0.7, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       exit={{ scale: 0.7, opacity: 0 }}
+      whileTap={{ scale: 0.82 }}
       transition={{ type: "spring", stiffness: 420, damping: 28 }}
       onClick={onClick}
-      className="absolute bg-[rgba(51,192,84,0.6)] border border-solid border-white overflow-clip rounded-[9999px] size-[52px] active:scale-95 transition-transform"
+      className="absolute bg-[rgba(51,192,84,0.6)] border border-solid border-white overflow-clip rounded-[9999px] size-[52px]"
       style={{ left, top }}
     >
-      <div className="absolute inset-[30%]">
+      {/* a slow breath on the plus itself — an open seat quietly asks */}
+      <motion.div
+        className="absolute inset-[30%]"
+        animate={{ scale: [1, 1.14, 1] }}
+        transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+      >
         <img alt="" className="block max-w-none size-full" src={plusSeat} />
-      </div>
+      </motion.div>
     </motion.button>
   );
 }
@@ -575,6 +592,59 @@ export function AnimatedCoinPill({
 }
 
 /** Divider line above the CTA (Line 16). */
+/**
+ * One-line duration picker: equal flex segments inside a single translucent
+ * track, so all three labels always fit the viewport instead of the third
+ * chip clipping. The selected state keeps the chunky 3D face the chips had
+ * (white top light, solid #d8d0e8 underside) but as a thumb that slides
+ * between segments on a spring.
+ */
+export function DurationTabs({
+  options,
+  value,
+  onChange,
+}: {
+  options: { value: number; label: string; disabled?: boolean }[];
+  value: number;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <div className="w-full flex gap-[2px] p-[4px] rounded-[18px] border border-solid border-[rgba(184,151,196,0.6)] bg-white/20">
+      {options.map((opt) => {
+        const selected = opt.value === value;
+        return (
+          <motion.button
+            key={opt.value}
+            onClick={() => !opt.disabled && onChange(opt.value)}
+            disabled={opt.disabled}
+            whileTap={opt.disabled ? undefined : { scale: 0.94 }}
+            transition={{ type: "spring", stiffness: 500, damping: 30 }}
+            className={`relative flex-1 min-w-0 h-[44px] rounded-[14px] ${opt.disabled ? "opacity-30" : ""}`}
+          >
+            {selected && (
+              <motion.div
+                layoutId="duration-thumb"
+                transition={{ type: "spring", stiffness: 520, damping: 34 }}
+                className="absolute inset-0 rounded-[14px] border border-solid border-[#e8e0f5] shadow-[0px_3px_0px_0px_#d8d0e8,0px_5px_14px_0px_rgba(0,0,0,0.1)]"
+                style={{ background: "linear-gradient(to bottom, #ffffff, #fdf9ff)" }}
+              >
+                <div className="absolute inset-0 pointer-events-none rounded-[inherit] shadow-[inset_0px_1.7px_0px_0px_white]" />
+              </motion.div>
+            )}
+            <motion.span
+              animate={{ scale: selected ? 1 : 0.92, opacity: opt.disabled || selected ? 1 : 0.55 }}
+              transition={{ type: "spring", stiffness: 480, damping: 28 }}
+              className="relative block px-[4px] font-[Nunito] font-black text-[16px] leading-[24px] text-[#334155] text-center tracking-[-0.16px] whitespace-nowrap overflow-hidden text-ellipsis"
+            >
+              {opt.label}
+            </motion.span>
+          </motion.button>
+        );
+      })}
+    </div>
+  );
+}
+
 export function Divider() {
   return (
     <div
@@ -597,10 +667,12 @@ export function StartButton({
 }) {
   return (
     <div className="w-full max-w-[500px] mx-auto shrink-0 px-[24px] pt-[12px] pb-[16px]">
-      <button
+      <motion.button
         onClick={onClick}
         disabled={disabled}
-        className="relative h-[60px] w-full rounded-[20px] active:scale-[0.98] transition-transform disabled:opacity-50 overflow-hidden"
+        whileTap={disabled ? undefined : { scale: 0.97, y: 2 }}
+        transition={{ type: "spring", stiffness: 520, damping: 30 }}
+        className="relative h-[60px] w-full rounded-[20px] disabled:opacity-50 overflow-hidden"
         style={{
           background:
             "linear-gradient(to bottom, #8858d5 0%, #8858d5 50%, rgba(136,88,213,0.9) 100%)",
@@ -630,7 +702,7 @@ export function StartButton({
             {label}
           </p>
         </div>
-      </button>
+      </motion.button>
     </div>
   );
 }
@@ -739,8 +811,10 @@ export function CaptainChip({
 }) {
   const filled = !!name;
   return (
-    <button
+    <motion.button
       onClick={onClick}
+      whileTap={{ scale: 0.95, y: 3 }}
+      transition={{ type: "spring", stiffness: 520, damping: 28 }}
       className="absolute bg-[#faecff] border-[1.153px] border-solid inline-flex gap-[11px] h-[52px] items-center pl-[12px] pr-[18px] max-w-[300px] rounded-[16.85px] shadow-[0px_3.389px_0px_0px_#d8d0e8,0px_5.083px_13.556px_0px_rgba(0,0,0,0.1)]"
       style={{ left, top, borderColor: accent ?? "#e8e0f5" }}
     >
@@ -756,6 +830,6 @@ export function CaptainChip({
       >
         {filled ? name : placeholder}
       </p>
-    </button>
+    </motion.button>
   );
 }

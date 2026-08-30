@@ -20,6 +20,7 @@ import {
   type InviteEntry,
   LILAC_BG,
   LilacHeader,
+  DurationTabs,
   FitBox,
   PlusChooser,
   type ChooserOption,
@@ -436,35 +437,16 @@ function TBLobby() {
         <p className="font-[Nunito] font-medium leading-[24px] text-[#0c172c] text-[15px] tracking-[-0.16px]">
           {t("lobby.pickDuration")}
         </p>
-        <div className="flex gap-[14px] pt-[10px]">
-          {DURATIONS.map((n) => {
-            const selected = rounds === n;
-            const tooSmall = n < minTiles;
-            return (
-              <button
-                key={n}
-                onClick={() => !tooSmall && setRounds(n)}
-                disabled={tooSmall}
-                className={`relative h-[48px] px-[19px] inline-flex items-center justify-center rounded-[16.85px] border border-solid ${
-                  selected
-                    ? "border-[#e8e0f5] shadow-[0px_3.389px_0px_0px_#d8d0e8,0px_5.083px_13.556px_0px_rgba(0,0,0,0.1)]"
-                    : "border-[#b897c4]"
-                } ${tooSmall ? "opacity-30" : ""}`}
-                style={{
-                  background: selected
-                    ? "linear-gradient(to bottom, rgba(255,255,255,0.5), rgba(254,254,254,0.5))"
-                    : "rgba(255,255,255,0.2)",
-                }}
-              >
-                <p
-                  className={`font-[Nunito] font-black leading-[28.974px] text-[#334155] text-[18.629px] text-center tracking-[-0.1686px] whitespace-nowrap ${selected ? "" : "opacity-60"}`}
-                >
-                  {t("lobby.roundsN", { n })}
-                </p>
-                <div className="absolute inset-0 pointer-events-none rounded-[inherit] shadow-[inset_0px_1.695px_0px_0px_white]" />
-              </button>
-            );
-          })}
+        <div className="pt-[10px]">
+          <DurationTabs
+            options={DURATIONS.map((n) => ({
+              value: n,
+              label: t("lobby.roundsN", { n }),
+              disabled: n < minTiles,
+            }))}
+            value={rounds}
+            onChange={setRounds}
+          />
         </div>
       </div>
 
