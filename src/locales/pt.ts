@@ -1493,6 +1493,19 @@ export const pt: KaTranslations = {
     playFriendsInstead: "Jogar com amigos",
     errorTitle: "Algo deu errado — tente mais tarde",
   },
+  // Online Game hub (/lobby/:gameType — Figma 940:6983 / 938:5472)
+  onlineGame: {
+    title: "Jogo online",
+    roomsTab: "Salas",
+    myTriviaTab: "My Trivia",
+    add: "Adicionar",
+    you: "Você",
+    play: "Jogar",
+    join: "Entrar",
+    create: "Criar",
+    empty: "Ainda não há salas — crie a primeira!",
+  },
+
   extra: {
     ...en.extra,
     questionsAnsweredLabel: "Perguntas respondidas",

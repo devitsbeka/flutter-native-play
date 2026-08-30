@@ -83,7 +83,9 @@ export const GAME_TYPES: GameTypeDescriptor[] = [
     badge: "beta",
     sortOrder: 30,
     supportsMatchmaking: true,
-    launch: (navigate) => navigate("/team-battle"),
+    // Lands on the Online Game hub (Figma 938:5472); rooms there hand off
+    // to /team-battle for the match itself.
+    launch: (navigate) => navigate("/lobby/team_battle"),
   },
   {
     key: "king",
@@ -101,6 +103,8 @@ export const GAME_TYPES: GameTypeDescriptor[] = [
     badge: "beta",
     sortOrder: 40,
     supportsMatchmaking: false,
-    launch: (navigate) => navigate("/king"),
+    // Lands on the Online Game hub (Figma 940:6983); a room's Play button
+    // hands off to the /king match.
+    launch: (navigate) => navigate("/lobby/king"),
   },
 ];

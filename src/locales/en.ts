@@ -1763,6 +1763,19 @@ export const en: KaTranslations = {
     playFriendsInstead: "Play with friends",
     errorTitle: "Something went wrong — try again later",
   },
+  // Online Game hub (/lobby/:gameType — Figma 940:6983 / 938:5472)
+  onlineGame: {
+    title: "Online Game",
+    roomsTab: "Rooms",
+    myTriviaTab: "My Trivia",
+    add: "Add",
+    you: "You",
+    play: "Play",
+    join: "Join",
+    create: "Create",
+    empty: "No rooms yet — create the first one!",
+  },
+
   extra: {
     questionsAnsweredLabel: "Questions answered",
     successRateLabel: "Success rate",

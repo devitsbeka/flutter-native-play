@@ -1482,6 +1482,19 @@ export const fr: KaTranslations = {
     playFriendsInstead: "Jouer entre amis",
     errorTitle: "Un problème est survenu — réessaie plus tard",
   },
+  // Online Game hub (/lobby/:gameType — Figma 940:6983 / 938:5472)
+  onlineGame: {
+    title: "Jeu en ligne",
+    roomsTab: "Salons",
+    myTriviaTab: "My Trivia",
+    add: "Ajouter",
+    you: "Toi",
+    play: "Jouer",
+    join: "Rejoindre",
+    create: "Créer",
+    empty: "Pas encore de salons — crée le premier !",
+  },
+
   extra: {
     ...en.extra,
     questionsAnsweredLabel: "Questions répondues",

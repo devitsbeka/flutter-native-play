@@ -1485,6 +1485,19 @@ export const de: KaTranslations = {
     playFriendsInstead: "Mit Freunden spielen",
     errorTitle: "Etwas ist schiefgelaufen — versuch es später",
   },
+  // Online Game hub (/lobby/:gameType — Figma 940:6983 / 938:5472)
+  onlineGame: {
+    title: "Online-Spiel",
+    roomsTab: "Räume",
+    myTriviaTab: "My Trivia",
+    add: "Hinzufügen",
+    you: "Du",
+    play: "Spielen",
+    join: "Beitreten",
+    create: "Erstellen",
+    empty: "Noch keine Räume — erstelle den ersten!",
+  },
+
   extra: {
     ...en.extra,
     questionsAnsweredLabel: "Fragen beantwortet",

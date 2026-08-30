@@ -1768,6 +1768,19 @@ export const ka = {
     errorTitle: "რაღაც შეცდომაა — სცადე მოგვიანებით",
   },
 
+  // Online Game hub (/lobby/:gameType — Figma 940:6983 / 938:5472)
+  onlineGame: {
+    title: "ონლაინ თამაში",
+    roomsTab: "ოთახები",
+    myTriviaTab: "My Trivia",
+    add: "დამატება",
+    you: "შენ",
+    play: "თამაში",
+    join: "შესვლა",
+    create: "შექმნა",
+    empty: "ოთახები ჯერ არ არის — შექმენი პირველი!",
+  },
+
   extra: {
     questionsAnsweredLabel: "გაცემული პასუხი",
     successRateLabel: "წარმატება",
