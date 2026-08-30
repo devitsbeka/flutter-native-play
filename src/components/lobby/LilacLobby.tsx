@@ -1,4 +1,5 @@
 import { type ReactNode, useEffect, useRef, useState } from "react";
+import { animate, motion, useMotionValue } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import iconInvite from "@/assets/vk-lobby/icon-invite.svg";
@@ -381,6 +382,88 @@ export function CoinPill({
       <div className="absolute left-[14px] size-[55px] top-[4px]">
         <img alt="" className="absolute inset-0 max-w-none object-contain size-full" src={coinPng} />
       </div>
+      <div className="absolute inset-0 pointer-events-none rounded-[inherit] shadow-[inset_0px_2.031px_0px_0px_white]" />
+    </div>
+  );
+}
+
+// Sparkle offsets for the pot's celebration burst.
+const SPARKS: [number, number][] = [
+  [-46, -26], [44, -30], [-58, 6], [54, 10], [-24, -46], [28, -44],
+];
+
+/**
+ * The pot, alive: the number slot-rolls from its previous value (0 on first
+ * load) to the current one, the pill pops, the coin wobbles, and a small
+ * sparkle burst fires — on mount, on a duration flip, and whenever a seat
+ * changes the pool.
+ */
+export function AnimatedCoinPill({
+  left,
+  top,
+  width = 190,
+  value,
+}: {
+  left: number;
+  top: number;
+  width?: number;
+  value: number;
+}) {
+  const mv = useMotionValue(0);
+  const [display, setDisplay] = useState(0);
+  const [burst, setBurst] = useState(0);
+
+  useEffect(() => {
+    const controls = animate(mv, value, {
+      duration: 0.9,
+      ease: [0.22, 1, 0.36, 1],
+      onUpdate: (v) => setDisplay(Math.round(v)),
+    });
+    setBurst((b) => b + 1);
+    return () => controls.stop();
+  }, [value, mv]);
+
+  return (
+    <div
+      className="absolute border border-[#a27cdf] border-solid h-[67px] rounded-[20.192px]"
+      style={{ left, top, width }}
+    >
+      <div aria-hidden className="absolute bg-[rgba(255,255,255,0.66)] inset-0 pointer-events-none rounded-[20.192px]" />
+      <motion.div
+        key={`pulse-${burst}`}
+        initial={{ scale: 1 }}
+        animate={{ scale: [1, 1.09, 1] }}
+        transition={{ duration: 0.45, ease: "easeOut" }}
+        className="absolute inset-0"
+      >
+        <p
+          className="absolute left-1/2 top-1/2 font-[Nunito] font-black leading-[34.719px] text-[#334155] text-[28px] text-center tracking-[-0.202px] whitespace-nowrap tabular-nums"
+          style={{ transform: "translate(calc(-50% + 20px), -50%)" }}
+        >
+          {display.toLocaleString()}
+        </p>
+        <motion.div
+          key={`coin-${burst}`}
+          initial={{ rotate: 0, scale: 1 }}
+          animate={{ rotate: [0, -14, 12, 0], scale: [1, 1.22, 1] }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="absolute left-[14px] size-[55px] top-[4px]"
+        >
+          <img alt="" className="absolute inset-0 max-w-none object-contain size-full" src={coinPng} />
+        </motion.div>
+      </motion.div>
+      {SPARKS.map(([dx, dy], i) => (
+        <motion.span
+          key={`spark-${burst}-${i}`}
+          initial={{ opacity: 1, x: 0, y: 0, scale: 0.3 }}
+          animate={{ opacity: 0, x: dx, y: dy, scale: 1.1 }}
+          transition={{ duration: 0.7, delay: i * 0.04, ease: "easeOut" }}
+          className="absolute left-[38px] top-[26px] text-[14px] text-[#f5b301] pointer-events-none select-none"
+          aria-hidden
+        >
+          ✦
+        </motion.span>
+      ))}
       <div className="absolute inset-0 pointer-events-none rounded-[inherit] shadow-[inset_0px_2.031px_0px_0px_white]" />
     </div>
   );

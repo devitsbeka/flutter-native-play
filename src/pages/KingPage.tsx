@@ -14,7 +14,7 @@ import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
 import { FriendsStoriesBar } from "@/components/team/FriendsStoriesBar";
 import {
   CaptainChip,
-  CoinPill,
+  AnimatedCoinPill,
   FriendPeek,
   type InviteEntry,
   LILAC_BG,
@@ -397,7 +397,7 @@ export default function KingPage() {
             <p className="absolute left-[32px] top-[107px] w-[435px] font-[Nunito] font-medium leading-[24px] text-[#0c172c] text-[18px] text-center tracking-[-0.16px]">
               {t("lobby.winnerTakes")}
             </p>
-            <CoinPill left={174} top={139} width={152} value="200" />
+            <AnimatedCoinPill left={174} top={139} width={152} value={200 * Math.max(1, kingParts.length)} />
 
             {/* seats around the couch — participants first, then pending
                 invitees greyed until they accept, the rest open */}

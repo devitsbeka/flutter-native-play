@@ -15,7 +15,7 @@ import {
 import { TeamBattleMatch } from "@/components/team-battle/TeamBattleMatch";
 import { useCategories } from "@/hooks/useCategories";
 import {
-  CoinPill,
+  AnimatedCoinPill,
   FriendPeek,
   type InviteEntry,
   LILAC_BG,
@@ -203,6 +203,11 @@ function TBLobby() {
   const teamsEqual =
     teamA.length > 0 && teamA.length === teamB.length && participants.every((p) => p.team);
   const minTiles = Math.max(6, 2 * teamA.length);
+  // What the winning team will actually take home: 50 coins per round for
+  // each winning HUMAN (bots are never paid — the pot doesn't move for them).
+  const humansA = teamA.filter((p) => !p.is_bot).length;
+  const humansB = teamB.filter((p) => !p.is_bot).length;
+  const potValue = 50 * rounds * Math.max(1, humansA, humansB);
 
   const start = () => {
     const usable = categories.filter((c) => c.tier === "free" || c.tier === "standard");
@@ -452,8 +457,9 @@ function TBLobby() {
           <div className="absolute inset-0" style={{ backgroundImage: ARENA_FADE }} />
         </div>
 
-        {/* the pot (943:21933) — what each winner is actually paid */}
-        <CoinPill left={158} top={242} width={190} value="300" />
+        {/* the pot (943:21933) — the winning team's real take: 50 coins a
+            round to every winning human (tb_settle, 20260921130000) */}
+        <AnimatedCoinPill left={158} top={242} width={190} value={potValue} />
 
         {renderTeamSeats("a", TEAM_A_SLOTS, PODIUM_A)}
         {renderTeamSeats("b", TEAM_B_SLOTS, PODIUM_B)}

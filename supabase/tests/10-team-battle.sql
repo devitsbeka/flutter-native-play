@@ -323,7 +323,8 @@ BEGIN
   PERFORM pg_temp.must_equal(v_state.team_a_score, 200, 'final score for a');
   PERFORM pg_temp.must_equal(v_state.team_b_score, 160, 'final score for b');
 
-  -- Settlement: once, by anyone in the room; winners 350, losers 50.
+  -- Settlement: once, by anyone in the room; winners take 50/round + the
+  -- 50 participation coins, losers participation only (20260921130000).
   SELECT coins INTO v_alice_coins_before FROM public.profiles WHERE user_id = v_alice;
   SELECT coins INTO v_bob_coins_before FROM public.profiles WHERE user_id = v_bob;
 
@@ -338,7 +339,9 @@ BEGIN
 
   PERFORM pg_temp.must_equal(
     (SELECT coins FROM public.profiles WHERE user_id = v_alice),
-    v_alice_coins_before + 350, 'a winner is paid win + participation');
+    v_alice_coins_before + 50
+      + 50 * (SELECT count(*)::int FROM public.team_battle_board WHERE game_id = v_game),
+    'a winner is paid 50/round + participation');
   PERFORM pg_temp.must_equal(
     (SELECT coins FROM public.profiles WHERE user_id = v_bob),
     v_bob_coins_before + 50, 'a loser is paid participation only');
@@ -353,7 +356,9 @@ BEGIN
   PERFORM pg_temp.must_equal((v_settle ->> 'applied')::boolean, false, 'second settle is a no-op');
   PERFORM pg_temp.must_equal(
     (SELECT coins FROM public.profiles WHERE user_id = v_alice),
-    v_alice_coins_before + 350, 'a repeat settle pays nothing more');
+    v_alice_coins_before + 50
+      + 50 * (SELECT count(*)::int FROM public.team_battle_board WHERE game_id = v_game),
+    'a repeat settle pays nothing more');
 
   PERFORM pg_temp.must_equal(
     (SELECT status::text FROM public.game_rooms WHERE id = v_room), 'waiting',
@@ -628,6 +633,16 @@ BEGIN
     (SELECT is_bot FROM public.room_participants
       WHERE room_id = v_room AND user_id = (v_state.super ->> 'champion_a')::uuid),
     false, 'a captained bot never champions over a human');
+
+  -- ── the pot scales with the board (20260921130000) ───────────────────────
+
+  PERFORM pg_temp.must_equal(
+    (SELECT bool_and(cg.coins = LEAST(600, 50 * (
+        SELECT count(*) FROM public.team_battle_board b
+         WHERE b.game_id::text = split_part(cg.reference, ':', 2))))
+       FROM public.currency_grants cg
+      WHERE cg.kind = 'team_battle_win' AND cg.user_id IN (v_alice, v_bob)),
+    true, 'every win payout is 50 coins per round of its board');
 
   -- ── seat management (20260921120000): host-only, lobby-only ────────────
 
