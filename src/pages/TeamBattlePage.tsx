@@ -267,27 +267,27 @@ function TBLobby() {
             <Seat
               key={`${team}${i}`}
               left={left}
-              top={top - 160}
+              top={top - 255}
               avatarUrl={p.avatar_url}
               nickname={p.nickname}
               ring={ring}
               onClick={() => memberAction(p)}
             />
           ) : (
-            <PlusSeat key={`${team}${i}`} left={left} top={top - 160} onClick={() => seatAction(team)} />
+            <PlusSeat key={`${team}${i}`} left={left} top={top - 255} onClick={() => seatAction(team)} />
           );
         })}
         {members[4] ? (
           <Seat
             left={podium[0]}
-            top={podium[1] - 160}
+            top={podium[1] - 255}
             avatarUrl={members[4].avatar_url}
             nickname={members[4].nickname}
             ring={ring}
             onClick={() => memberAction(members[4])}
           />
         ) : (
-          <PlusSeat left={podium[0]} top={podium[1] - 160} onClick={() => seatAction(team)} />
+          <PlusSeat left={podium[0]} top={podium[1] - 255} onClick={() => seatAction(team)} />
         )}
       </>
     );
@@ -334,57 +334,60 @@ function TBLobby() {
         />
       </div>
 
+      {/* Pick duration (940:7647 + chips) — in flow, left-aligned with the
+          friends strip's 16px edge */}
+      <div className="relative z-10 w-full max-w-[500px] mx-auto shrink-0 px-4 pt-1">
+        <p className="font-[Nunito] font-medium leading-[24px] text-[#0c172c] text-[15px] tracking-[-0.16px]">
+          {t("lobby.pickDuration")}
+        </p>
+        <div className="flex gap-[14px] pt-[10px]">
+          {DURATIONS.map((n) => {
+            const selected = rounds === n;
+            const tooSmall = n < minTiles;
+            return (
+              <button
+                key={n}
+                onClick={() => !tooSmall && setRounds(n)}
+                disabled={tooSmall}
+                className={`relative h-[48px] w-[115px] rounded-[16.85px] border border-solid ${
+                  selected
+                    ? "border-[#e8e0f5] shadow-[0px_3.389px_0px_0px_#d8d0e8,0px_5.083px_13.556px_0px_rgba(0,0,0,0.1)]"
+                    : "border-[#b897c4]"
+                } ${tooSmall ? "opacity-30" : ""}`}
+                style={{
+                  background: selected
+                    ? "linear-gradient(to bottom, rgba(255,255,255,0.5), rgba(254,254,254,0.5))"
+                    : "rgba(255,255,255,0.2)",
+                }}
+              >
+                <p
+                  className={`font-[Nunito] font-black leading-[28.974px] text-[#334155] text-[18.629px] text-center tracking-[-0.1686px] whitespace-nowrap ${selected ? "" : "opacity-60"}`}
+                >
+                  {t("lobby.roundsN", { n })}
+                </p>
+                <div className="absolute inset-0 pointer-events-none rounded-[inherit] shadow-[inset_0px_1.695px_0px_0px_white]" />
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       <div className="flex-1 min-h-0">
-      <FitBox width={500} height={670}>
+      <FitBox width={500} height={575}>
         {/* arena scene (938:6267) + edge fade */}
-        <div className="absolute left-[32px] top-[6px] w-[435px] h-[780px] pointer-events-none">
+        <div className="absolute left-[32px] top-[-89px] w-[435px] h-[780px] pointer-events-none">
           <img alt="" className="absolute inset-0 max-w-none object-cover size-full" src={sceneArena} />
           <div className="absolute inset-0" style={{ backgroundImage: ARENA_FADE }} />
         </div>
 
-        {/* Pick duration (940:7647 + chips 940:7648/936:21181/936:21183) */}
-        <p className="absolute left-[39px] top-[56px] font-[Nunito] font-medium leading-[24px] text-[#0c172c] text-[15px] tracking-[-0.16px]">
-          {t("lobby.pickDuration")}
-        </p>
-        {DURATIONS.map((n, i) => {
-          const selected = rounds === n;
-          const tooSmall = n < minTiles;
-          return (
-            <button
-              key={n}
-              onClick={() => !tooSmall && setRounds(n)}
-              disabled={tooSmall}
-              className={`absolute h-[48px] w-[115px] rounded-[16.85px] border border-solid ${
-                selected
-                  ? "border-[#e8e0f5] shadow-[0px_3.389px_0px_0px_#d8d0e8,0px_5.083px_13.556px_0px_rgba(0,0,0,0.1)]"
-                  : "border-[#b897c4]"
-              } ${tooSmall ? "opacity-30" : ""}`}
-              style={{
-                left: 39 + i * 130,
-                top: 91,
-                background: selected
-                  ? "linear-gradient(to bottom, rgba(255,255,255,0.5), rgba(254,254,254,0.5))"
-                  : "rgba(255,255,255,0.2)",
-              }}
-            >
-              <p
-                className={`font-[Nunito] font-black leading-[28.974px] text-[#334155] text-[18.629px] text-center tracking-[-0.1686px] whitespace-nowrap ${selected ? "" : "opacity-60"}`}
-              >
-                {t("lobby.roundsN", { n })}
-              </p>
-              <div className="absolute inset-0 pointer-events-none rounded-[inherit] shadow-[inset_0px_1.695px_0px_0px_white]" />
-            </button>
-          );
-        })}
-
         {/* the pot (943:21933) — what each winner is actually paid */}
-        <CoinPill left={158} top={337} width={190} value="300" />
+        <CoinPill left={158} top={242} width={190} value="300" />
 
         {renderTeamSeats("a", TEAM_A_SLOTS, PODIUM_A)}
         {renderTeamSeats("b", TEAM_B_SLOTS, PODIUM_B)}
 
         {/* team names row (943:21929), with the host's labeled AI-player buttons */}
-        <div className="absolute left-[26px] top-[553px] w-[441px] flex items-center justify-between">
+        <div className="absolute left-[26px] top-[458px] w-[441px] flex items-center justify-between">
           <div className="flex gap-[10px] items-center">
             <img alt="" className="size-[36px] -scale-y-100 rotate-180 object-contain" src={teamPenguins} />
             <p className="font-[Nunito] font-black leading-[24px] text-[#0c172c] text-[18px] tracking-[-0.16px] whitespace-nowrap">
@@ -426,7 +429,7 @@ function TBLobby() {
           onClick={() => cycleCaptain(teamA)}
         />
         <p
-          className="absolute left-[191px] top-[614px] w-[118px] text-[77px] leading-[43px] text-center not-italic text-[#f5d9ff]"
+          className="absolute left-[191px] top-[519px] w-[118px] text-[77px] leading-[43px] text-center not-italic text-[#f5d9ff]"
           style={{ fontFamily: "'Slackey', 'TASolivare', cursive", textShadow: "0px 4px 4px #c7bccc" }}
         >
           VS
@@ -440,7 +443,7 @@ function TBLobby() {
         />
 
         {isHost && !teamsEqual && (
-          <p className="absolute left-[33px] top-[528px] w-[434px] text-center font-[Nunito] font-medium text-[13px] text-[#523b76]/60">
+          <p className="absolute left-[33px] top-[433px] w-[434px] text-center font-[Nunito] font-medium text-[13px] text-[#523b76]/60">
             {t("teamBattle.needEqualTeams")}
           </p>
         )}
@@ -518,7 +521,7 @@ function TBCaptainChip({
       style={{
         left,
         right,
-        top: 598,
+        top: 503,
         borderColor: accent,
         background: "linear-gradient(to bottom, rgba(255,255,255,0.5), rgba(254,254,254,0.5))",
       }}
