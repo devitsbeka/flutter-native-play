@@ -78,7 +78,7 @@ export function PlayOptionsModal({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.25 }}
-          className="fixed inset-0 safe-screen z-[100] overflow-y-auto overflow-x-hidden backdrop-blur-[12px] bg-[rgba(245,217,255,0.7)]"
+          className="fixed inset-0 safe-screen z-[100] overflow-hidden backdrop-blur-[12px] bg-[rgba(245,217,255,0.7)]"
           onClick={onClose}
         >
           <ScaledCanvas>

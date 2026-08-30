@@ -26,17 +26,25 @@ export function ScaledCanvas({ children }: { children: ReactNode }) {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const update = () => setScale(el.clientWidth / 500);
+    // Fit-to-viewport, the game-screen way: scale by whichever dimension is
+    // tighter and center the canvas, so the whole screen — Start button
+    // included — is always on screen with no scrolling and no clipping.
+    // The parent supplies the safe-area-inset box; letterboxing disappears
+    // into the page background.
+    const update = () =>
+      setScale(Math.min(el.clientWidth / 500, el.clientHeight / 946));
     update();
     const ro = new ResizeObserver(update);
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
   return (
-    <div ref={ref} className="w-full max-w-[500px] mx-auto" style={{ height: scale ? 946 * scale : undefined }}>
+    <div ref={ref} className="w-full h-full flex items-center justify-center overflow-hidden">
       {scale > 0 && (
-        <div style={{ width: 500, height: 946, transform: `scale(${scale})`, transformOrigin: "top left" }}>
-          {children}
+        <div style={{ width: 500 * scale, height: 946 * scale }}>
+          <div style={{ width: 500, height: 946, transform: `scale(${scale})`, transformOrigin: "top left" }}>
+            {children}
+          </div>
         </div>
       )}
     </div>

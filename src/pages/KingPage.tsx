@@ -219,7 +219,7 @@ export default function KingPage() {
   if (stage === "intro") {
     return (
       <div
-        className="h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] overflow-y-auto overflow-x-hidden"
+        className="h-[100dvh] w-full overflow-hidden safe-bleed"
         style={{ background: LILAC_BG }}
       >
         <ScaledCanvas>

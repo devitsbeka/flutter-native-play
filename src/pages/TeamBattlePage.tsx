@@ -108,7 +108,7 @@ function TBGate({ joining }: { joining: boolean }) {
 
   return (
     <div
-      className="h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] flex flex-col items-center justify-center gap-6"
+      className="h-[100dvh] w-full overflow-hidden safe-bleed relative flex flex-col items-center justify-center gap-6"
       style={{ background: LILAC_BG }}
     >
       <button
@@ -324,7 +324,7 @@ function TBLobby() {
 
   return (
     <div
-      className="h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] overflow-y-auto overflow-x-hidden"
+      className="h-[100dvh] w-full overflow-hidden safe-bleed"
       style={{ background: LILAC_BG }}
     >
       <ScaledCanvas>
