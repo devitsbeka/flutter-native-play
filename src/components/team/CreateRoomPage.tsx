@@ -42,7 +42,6 @@ import iconButtonCard from "@/assets/play-chooser/icon-button.png";
 import iconKingCard from "@/assets/play-chooser/icon-king.webp";
 import iconCrateCard from "@/assets/play-chooser/icon-crate.png";
 import iconLibraryCard from "@/assets/play-chooser/icon-library.webp";
-import iconMyTriviaCard from "@/assets/play-chooser/icon-mytrivia.webp";
 import { PreRoomQueuePreview } from "@/components/team/PreRoomQueuePreview";
 import { getRandomGradient } from "@/config/roomGradients";
 
@@ -981,11 +980,11 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
 
       {/* Content */}
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full px-4 py-4 space-y-5">
+        <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full px-4 py-3 space-y-3">
         {/* Room Name with Icon - AI generated */}
         <div>
-          <h2 className="text-[13.2px] font-medium text-muted-foreground mb-2">{t("extra.chooseRoomName")}</h2>
-          <div className="flex items-center gap-3 p-3 rounded-2xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
+          <h2 className="text-[13.2px] font-medium text-muted-foreground mb-1.5">{t("extra.chooseRoomName")}</h2>
+          <div className="flex items-center gap-3 p-2.5 rounded-2xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
                   {/* Clickable area for Icon + Name - opens picker modal */}
                   <div
                     role="button"
@@ -1037,7 +1036,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         {/* What will you play? — the horizontal game reel (Figma 926-11729):
             quick / Random / Versus King / Trivia Battle / Library / My Trivia. */}
         <div>
-          <h2 className="text-[13.2px] font-medium text-muted-foreground mb-2">{t("extra.whatToPlay")}</h2>
+          <h2 className="text-[13.2px] font-medium text-muted-foreground mb-1.5">{t("extra.whatToPlay")}</h2>
 
           <div className="-mx-4 px-4 overflow-x-auto scrollbar-hide">
             <div className="flex gap-[17px] pt-1 pb-2 w-max">
@@ -1048,7 +1047,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                   { key: "king", icon: iconKingCard, title: t("lobby.vkTitle"), desc: t("lobby.kingCardDesc") },
                   { key: "battle", icon: iconCrateCard, title: t("teamBattle.title"), desc: t("gameTypes.teamBattleDesc") },
                   { key: "library", icon: iconLibraryCard, title: t("extra.libraryOption"), desc: t("extra.libraryDesc") },
-                  { key: "mytrivias", icon: iconMyTriviaCard, title: t("extra.myTriviaOption"), desc: t("extra.myTriviaDesc") },
+                  { key: "mytrivias", icon: stickerAlbum, title: t("extra.myTriviaOption"), desc: t("extra.myTriviaDesc") },
                 ] as { key: GameChoice; icon: string; title: string; desc: string }[]
               ).map((card) => {
                 const isPicked = gameChoice === card.key;
@@ -1063,7 +1062,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                       if (card.key === "library" && !(selectionMode === "library" && selectedCategory)) setShowCategoriesModal(true);
                       if (card.key === "mytrivias" && !challengeTrivia) void handleOptionClick("my-trivias");
                     }}
-                    className={`relative shrink-0 w-[200px] h-[230px] rounded-[24px] overflow-clip text-left flex flex-col pt-4 px-4 pb-[7px] bg-[rgba(243,244,246,0.5)] border border-solid transition-shadow ${
+                    className={`relative shrink-0 w-[200px] h-[210px] rounded-[24px] overflow-clip text-left flex flex-col pt-4 px-4 pb-[7px] bg-[rgba(243,244,246,0.5)] border border-solid transition-shadow ${
                       isPicked
                         ? "border-[#7126d5] shadow-[0px_4px_4px_0px_rgba(113,38,213,0.42)]"
                         : "border-[rgba(211,211,211,0.5)]"
@@ -1106,7 +1105,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="relative w-full h-0 pb-[calc(56.25%_-_10px)]"
+                    className="relative w-full h-0 pb-[calc(50%_-_10px)]"
                   >
                     {/* The category's icon on its gradient. This played the
                         category's video where one existed; the video belongs
@@ -1238,7 +1237,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="relative w-full h-0 pb-[calc(56.25%_-_10px)]"
+                    className="relative w-full h-0 pb-[calc(50%_-_10px)]"
                   >
                     {/* Video/Gradient Background */}
                     {selectedCategory.category_id === "__mixed__" ? (
