@@ -20,6 +20,9 @@ export interface MyRoom {
   created_at: string;
   is_host: boolean;
   game_type: string;
+  /** Registry key for the new game types — "king" / "team_battle" rooms
+   * carry their own branding and live on their own routes. */
+  game_type_key: string | null;
   has_unread_activity: boolean;
   cover_image: string | null;
   background_gradient: string | null;
@@ -156,11 +159,9 @@ async function fetchRoomsForUser(userId: string, options?: FetchRoomsOptions): P
     .select("*")
     .in("id", roomIds)
     .neq("status", "cancelled")
-    // Team Battle rooms live on /team-battle and King lounges on /king;
-    // opening either through the classic hub would run the classic lobby
-    // against a room whose match state it cannot drive. (is.null keeps
-    // every pre-registry room.)
-    .or("game_type_key.is.null,and(game_type_key.neq.team_battle,game_type_key.neq.king)")
+    // Lounge rooms (King, Team Battle) are IN the list now — branded with
+    // their own icon and name — and their cards route to /king and
+    // /team-battle instead of the classic lobby.
     .order("last_activity_at", { ascending: false, nullsFirst: false });
 
   if (!includeArchived) {
@@ -303,6 +304,7 @@ async function fetchRoomsForUser(userId: string, options?: FetchRoomsOptions): P
       created_at: room.created_at || "",
       is_host: hostMap.get(room.id) || false,
       game_type: room.game_type,
+      game_type_key: room.game_type_key ?? null,
       has_unread_activity: room.has_unread_activity || false,
       cover_image: room.cover_image || null,
       background_gradient: room.background_gradient || null,

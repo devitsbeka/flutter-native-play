@@ -8,6 +8,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { LiveBadge } from "@/components/social/LiveBadge";
 import { QuizCategoryIcon } from "@/components/ui/quiz-category-icon";
 import { useLocalizedCategoryName } from "@/utils/categoryDisplayName";
+import iconKingLounge from "@/assets/play-chooser/icon-king.webp";
+import iconBattleLounge from "@/assets/play-chooser/icon-crate.png";
 
 interface ActiveRoomsWidgetProps {
   onViewAll: () => void;
@@ -76,15 +78,25 @@ export function ActiveRoomsWidget({ onViewAll, onJoinRoom }: ActiveRoomsWidgetPr
               ? room.tv_players
               : room.participants;
               
+            // Lounge rooms carry their game's identity and live on their
+            // own routes — never the classic join flow.
+            const lounge =
+              room.game_type_key === "king"
+                ? { icon: iconKingLounge, label: t("lobby.vkTitle"), path: `/king?code=${room.room_code}` }
+                : room.game_type_key === "team_battle"
+                  ? { icon: iconBattleLounge, label: t("teamBattle.title"), path: `/team-battle?code=${room.room_code}` }
+                  : null;
             return (
               <button
                 key={room.id}
-                onClick={() => onJoinRoom(room.room_code)}
+                onClick={() => (lounge ? navigate(lounge.path) : onJoinRoom(room.room_code))}
                 className="w-full flex items-center gap-3 p-3 hover:bg-muted/80 transition-colors text-left"
               >
                 {/* Room Icon/Avatar */}
                 <div className="relative flex-shrink-0">
-                  {room.room_icon && room.room_icon.startsWith("http") ? (
+                  {lounge ? (
+                    <img src={lounge.icon} alt="" className="w-10 h-10 rounded-xl object-contain" />
+                  ) : room.room_icon && room.room_icon.startsWith("http") ? (
                     <img 
                       src={room.room_icon} 
                       alt="" 
@@ -119,7 +131,7 @@ export function ActiveRoomsWidget({ onViewAll, onJoinRoom }: ActiveRoomsWidgetPr
                 {/* Room Info */}
                 <div className="flex-1 min-w-0">
                   <p className="font-display text-foreground text-sm truncate">
-                    {room.room_name || localizeCategory(room.category_name) || t("extra.gameRoom")}
+                    {room.room_name || lounge?.label || localizeCategory(room.category_name) || t("extra.gameRoom")}
                   </p>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground whitespace-nowrap">
                     <span>{displayPlayerCount} {t("extra.players")}</span>

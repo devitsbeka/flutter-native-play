@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState, type MutableRefObject } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Bot, ChevronLeft, UserPlus } from "lucide-react";
+import { Bot, ChevronLeft, Pencil, UserPlus } from "lucide-react";
+import { containsBlockedText } from "@/utils/contentFilter";
+import { readAppLanguage } from "@/utils/appLanguage";
 import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
 import { FriendsStoriesBar } from "@/components/team/FriendsStoriesBar";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -198,6 +200,9 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
   const [peek, setPeek] = useState<InviteEntry | null>(null);
   const [invitedIds, setInvitedIds] = useState<Set<string>>(new Set());
   const [captainInfo, setCaptainInfo] = useState<TBTeam | null>(null);
+  const [renameOpen, setRenameOpen] = useState(false);
+  const [nameDraft, setNameDraft] = useState("");
+  const nameAttempted = useRef(false);
   const [rollFace, setRollFace] = useState<{ [k in TBTeam]?: TBParticipant }>({});
   const rollTimers = useRef<{ [k in TBTeam]?: number }>({});
   const [params, setParams] = useSearchParams();
@@ -241,6 +246,37 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
   // invited-participant row the invite modal writes, whose DB trigger
   // delivers the notification. The invitee holds the tapped seat greyed
   // until they accept.
+  // A team needs a name — same AI namer the King lounge and the classic
+  // create screen use. The host's device asks once for an unnamed room;
+  // everyone picks it up off the tb-room realtime channel.
+  useEffect(() => {
+    if (!room || room.room_name || nameAttempted.current) return;
+    if (!isHost) return;
+    nameAttempted.current = true;
+    const roomId = room.id;
+    void supabase.functions
+      .invoke("generate-room-name", { body: { language: readAppLanguage() } })
+      .then(async ({ data }) => {
+        const name = ((data?.name as string) || "")
+          .replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1F000}-\u{1F02F}]|[\u{1F0A0}-\u{1F0FF}]|[\u{1F100}-\u{1F64F}]|[\u{1F680}-\u{1F6FF}]|[\u{1FA00}-\u{1FAFF}]/gu, "")
+          .trim();
+        if (!name) return;
+        await supabase.from("game_rooms").update({ room_name: name }).eq("id", roomId);
+      });
+  }, [room, isHost]);
+
+  const saveTeamName = async () => {
+    const name = nameDraft.trim();
+    if (!room || !name) return;
+    if (containsBlockedText(name)) {
+      toast.error(t("extra.textNotAllowed"));
+      return;
+    }
+    setRenameOpen(false);
+    const { error } = await supabase.from("game_rooms").update({ room_name: name }).eq("id", room.id);
+    if (error) toast.error(error.message);
+  };
+
   const inviteToGame = async (entry: InviteEntry) => {
     if (!room) return;
     const { data: existing } = await supabase
@@ -532,6 +568,31 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
           <div className="absolute inset-0" style={{ backgroundImage: ARENA_FADE }} />
         </div>
 
+        {/* the team's name — AI-dealt on first open, host taps to rename */}
+        <div className="absolute left-[32px] top-[6px] w-[435px] flex justify-center z-10">
+          <motion.button
+            whileTap={{ scale: 0.95, y: 2 }}
+            transition={{ type: "spring", stiffness: 520, damping: 28 }}
+            onClick={
+              isHost
+                ? () => {
+                    setNameDraft(room?.room_name ?? "");
+                    setRenameOpen(true);
+                  }
+                : undefined
+            }
+            className="inline-flex items-center gap-2 max-w-[330px] h-[40px] px-4 rounded-[16px] bg-white/70 border border-[#e8e0f5] shadow-[0px_2.5px_0px_0px_#d8d0e8]"
+          >
+            <span
+              className="text-[18px] leading-none text-[#523b76] whitespace-nowrap overflow-hidden text-ellipsis"
+              style={{ fontFamily: "'TASolivare', sans-serif" }}
+            >
+              {room?.room_name || t("lobby.teamName")}
+            </span>
+            {isHost && <Pencil className="w-3.5 h-3.5 shrink-0 text-[#523b76]/50" />}
+          </motion.button>
+        </div>
+
         {/* the pot (943:21933) — the winning team's real take: 50 coins a
             round to every winning human (tb_settle, 20260921130000) */}
         <AnimatedCoinPill left={158} top={192} width={190} value={potValue} />
@@ -629,6 +690,47 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
         onClose={() => setSeatMenu(null)}
         actions={seatMenu ? seatMenuActions(seatMenu.p) : []}
       />
+
+      {/* host renames the team — small white sheet over the lilac wash */}
+      {renameOpen && (
+        <div
+          className="fixed inset-0 z-[130] flex items-center justify-center px-8 backdrop-blur-[10px] bg-[rgba(245,217,255,0.6)]"
+          onClick={() => setRenameOpen(false)}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 14 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 420, damping: 28 }}
+            className="w-full max-w-[320px] rounded-[24px] bg-white/95 border border-[#e8e0f5] p-5 flex flex-col gap-3 shadow-[0px_8px_24px_0px_rgba(102,51,153,0.18)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-[19px] text-[#523b76] text-center" style={{ fontFamily: "'TASolivare', sans-serif" }}>
+              {t("lobby.teamName")}
+            </p>
+            <input
+              value={nameDraft}
+              onChange={(e) => setNameDraft(e.target.value)}
+              maxLength={40}
+              autoFocus
+              className="w-full h-[46px] rounded-[16px] border border-[#e8e0f5] bg-[#f8f5ff] px-4 font-[Nunito] font-semibold text-[15px] text-[#402666] outline-none focus:border-[#b99ce2]"
+            />
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              onClick={() => void saveTeamName()}
+              disabled={!nameDraft.trim()}
+              className="w-full h-[46px] rounded-[16px] bg-[#8858d5] text-white font-[Nunito] font-bold text-[15px] disabled:opacity-50"
+            >
+              {t("common.save")}
+            </motion.button>
+            <button
+              onClick={() => setRenameOpen(false)}
+              className="font-[Nunito] text-sm font-semibold text-[#523b76]/50"
+            >
+              {t("common.cancel")}
+            </button>
+          </motion.div>
+        </div>
+      )}
 
       <CaptainInfoModal
         open={captainInfo !== null}

@@ -4,6 +4,8 @@ import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
 import { AnimatePresence, motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import { Plus, Users, Tv, Airplay, Cast, UserPlus, Trash2, MoreHorizontal, MonitorPlay, Play } from "lucide-react";
 import { useMyRooms, MyRoom, RoomFilter, isActiveTVSession } from "@/hooks/useMyRooms";
+import iconKingLounge from "@/assets/play-chooser/icon-king.webp";
+import iconBattleLounge from "@/assets/play-chooser/icon-crate.png";
 import { roomCardAction } from "@/utils/roomCardAction";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -154,6 +156,16 @@ export function MyRoomsSection({
   };
 
   const openRoom = async (room: MyRoom) => {
+    // Lounge rooms live on their own routes — the classic lobby cannot
+    // drive their match state.
+    if (room.game_type_key === "king") {
+      navigate(`/king?code=${room.room_code}`);
+      return;
+    }
+    if (room.game_type_key === "team_battle") {
+      navigate(`/team-battle?code=${room.room_code}`);
+      return;
+    }
     // Cosmetic, and nothing below depends on it — don't make the player wait
     // on a write that only clears a dot.
     if (room.has_unread_activity) {
@@ -426,7 +438,16 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false, isJoining 
   const isSwiping = useRef(false);
   
   // Display name: only room_name, no fallback to code
-  const displayName = room.room_name || t("extra.gameRoomLabel");
+  // Lounge rooms carry their game's fixed identity: the King mascot or the
+  // battle crate as the icon, and the game's title standing in until the
+  // host names the team.
+  const lounge =
+    room.game_type_key === "king"
+      ? { icon: iconKingLounge, label: t("lobby.vkTitle") }
+      : room.game_type_key === "team_battle"
+        ? { icon: iconBattleLounge, label: t("teamBattle.title") }
+        : null;
+  const displayName = room.room_name || lounge?.label || t("extra.gameRoomLabel");
   // How long ago the room was made — the thing that tells two similar rooms
   // apart in a list of them.
   const createdAgo = useRoomAge(room.created_at);
@@ -667,10 +688,10 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false, isJoining 
               
               {/* Bottom left - Room name with icon and category */}
               <div className="flex items-center gap-2.5 mb-1">
-                {room.room_icon && (
-                  <img 
-                    src={room.room_icon} 
-                    alt="" 
+                {(lounge || room.room_icon) && (
+                  <img
+                    src={lounge?.icon ?? room.room_icon!}
+                    alt=""
                     className="w-10 h-10 object-contain drop-shadow-lg"
                   />
                 )}
@@ -678,9 +699,9 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false, isJoining 
                   <h3 className="font-display text-white text-lg leading-tight truncate drop-shadow-md">
                     {displayName}
                   </h3>
-                  {room.category_name && (
+                  {(room.category_name || (lounge && room.room_name)) && (
                     <p className="text-sm text-white/70 truncate font-medium drop-shadow-sm">
-                      {localizeCategory(room.category_name)}
+                      {room.category_name ? localizeCategory(room.category_name) : lounge!.label}
                     </p>
                   )}
                 </div>
@@ -763,7 +784,16 @@ function RoomCardGrid({ room, index, onJoin, onDelete, isJoining = false }: Room
   const touchStartY = useRef(0);
   const isSwiping = useRef(false);
   
-  const displayName = room.room_name || t("extra.gameRoomLabel");
+  // Lounge rooms carry their game's fixed identity: the King mascot or the
+  // battle crate as the icon, and the game's title standing in until the
+  // host names the team.
+  const lounge =
+    room.game_type_key === "king"
+      ? { icon: iconKingLounge, label: t("lobby.vkTitle") }
+      : room.game_type_key === "team_battle"
+        ? { icon: iconBattleLounge, label: t("teamBattle.title") }
+        : null;
+  const displayName = room.room_name || lounge?.label || t("extra.gameRoomLabel");
   // How long ago the room was made — the thing that tells two similar rooms
   // apart in a list of them.
   const createdAgo = useRoomAge(room.created_at);
@@ -971,10 +1001,10 @@ function RoomCardGrid({ room, index, onJoin, onDelete, isJoining = false }: Room
             {/* Middle: Icon + Title + Category + Time */}
             <div className="relative z-10 flex-1 flex flex-col justify-center py-3">
               <div className="flex items-center gap-3">
-                {room.room_icon && (
-                  <img 
-                    src={room.room_icon} 
-                    alt="" 
+                {(lounge || room.room_icon) && (
+                  <img
+                    src={lounge?.icon ?? room.room_icon!}
+                    alt=""
                     className="w-14 h-14 md:w-16 md:h-16 object-contain drop-shadow-lg flex-shrink-0"
                   />
                 )}
@@ -982,8 +1012,10 @@ function RoomCardGrid({ room, index, onJoin, onDelete, isJoining = false }: Room
                   <h3 className="font-display text-white text-lg leading-tight line-clamp-2 drop-shadow-md">
                     {displayName}
                   </h3>
-                  {room.category_name && (
-                    <p className="text-white/70 text-sm truncate mt-0.5">{localizeCategory(room.category_name)}</p>
+                  {(room.category_name || (lounge && room.room_name)) && (
+                    <p className="text-white/70 text-sm truncate mt-0.5">
+                      {room.category_name ? localizeCategory(room.category_name) : lounge!.label}
+                    </p>
                   )}
                 </div>
               </div>
