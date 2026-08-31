@@ -113,8 +113,10 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
   const { user } = useAuth();
   const queryClient = useQueryClient();
   
-  const [step, setStep] = useState(1);
-  const [creatorMode, setCreatorMode] = useState<CreatorMode>(null);
+  // Publish is gone, so the open/edit mode went with it: everything is
+  // created blind ('play'); the old mode-chooser step 1 is skipped.
+  const [step, setStep] = useState(2);
+  const [creatorMode, setCreatorMode] = useState<CreatorMode>("play");
   const [title, setTitle] = useState("");
   const [coverGradient] = useState(COVER_GRADIENTS[0]);
   const [isPublic, setIsPublic] = useState(false);
@@ -207,7 +209,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
   };
 
   const resetForm = () => {
-    setStep(1);
+    setStep(2);
     setCreatorMode(null);
     setTitle("");
     setIsPublic(false);
@@ -892,7 +894,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
         <div className="fixed top-0 left-0 right-0 z-50 safe-top">
           <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full flex items-center justify-between px-4 py-3">
             <button 
-              onClick={step === 1 ? handleClose : () => setStep(step - 1)} 
+              onClick={step <= 2 ? handleClose : () => setStep(step - 1)} 
               className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors"
               disabled={isGenerating}
             >

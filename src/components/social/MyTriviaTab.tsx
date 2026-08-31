@@ -4,11 +4,12 @@ import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { FeatureOnboardingCarousel, hasSeenFeatureOnboarding } from "@/components/team/FeatureOnboardingCarousel";
 import { useNavigate } from "react-router-dom";
-import { Plus, Play, Loader2, Globe, Lock, ChevronDown, ChevronUp, Layers, Pencil, FileEdit, Trash2, Check, PartyPopper } from "lucide-react";
+import { Plus, Play, Loader2, Globe, Lock, ChevronDown, ChevronUp, Layers, Pencil, FileEdit, Trash2, Check, PartyPopper, Swords } from "lucide-react";
 import triviaBuzzerIcon from "@/assets/trivia-buzzer.png";
 import purpleHeart3d from "@/assets/icons/purple-heart-3d.png";
 import bookmark3d from "@/assets/icons/bookmark-3d-orange.png";
 import pushButton3d from "@/assets/icons/push-button-3d.png";
+import collectionMagnetIcon from "@/assets/fridge-magnet-collection-2.png";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useMyQuizPosts } from "@/hooks/useSocialFeed";
 import { useMyCollections, useCollectionQuizzes } from "@/hooks/useCollections";
@@ -459,14 +460,10 @@ function CollectionCard({
         <div className="p-4">
           {/* Author Info + Collection Badge Row */}
           <div className="flex items-center justify-between">
-            {/* Left: Avatar + Name/Date */}
+            {/* Left: the collection's own face (not the author's avatar) */}
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-full overflow-hidden bg-secondary border-2 border-border flex-shrink-0">
-                <SafeAvatarImage 
-                  avatarUrl={profile?.avatar_url}
-                  fallback={profile?.nickname || 'U'}
-                  containerClassName="w-full h-full"
-                />
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <img src={collectionMagnetIcon} alt="" className="w-8 h-8 object-contain" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-foreground truncate text-sm">
@@ -703,12 +700,9 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
       {/* Author Info & Stats */}
       <div className="p-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full overflow-hidden bg-secondary border-2 border-border flex-shrink-0">
-            <SafeAvatarImage 
-              avatarUrl={profile?.avatar_url}
-              fallback={profile?.nickname || 'U'}
-              containerClassName="w-full h-full"
-            />
+          {/* the party's own face, not the host's avatar */}
+          <div className="w-10 h-10 rounded-lg bg-pink-500/15 flex items-center justify-center flex-shrink-0">
+            <PartyPopper className="w-6 h-6 text-pink-500" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-foreground truncate">
@@ -791,6 +785,11 @@ function StandaloneQuizCard({
   // Tilt animation for new items - random left or right tilt
   const tiltDirection = post.id.charCodeAt(0) % 2 === 0 ? 15 : -15;
 
+  // One play per person: once the owner has played their blind trivia the
+  // button turns into a challenge — friends can still be invited to beat
+  // the score, but a second solo run would be an open-book exam.
+  const alreadyPlayedByMe = !!post.is_blind && (post.plays_count || 0) > 0;
+
   const handlePlayClick = () => {
     // If trivia is "blind" (locked/დახურული), show play mode selection
     if (post.is_blind) {
@@ -847,13 +846,9 @@ function StandaloneQuizCard({
       {/* Author Info & Stats */}
       <div className="p-4">
         <div className="flex items-center gap-3">
-          {/* Avatar with SafeAvatarImage for robust fallback handling */}
-          <div className="w-10 h-10 rounded-full overflow-hidden bg-secondary border-2 border-border flex-shrink-0">
-            <SafeAvatarImage 
-              avatarUrl={profile?.avatar_url}
-              fallback={profile?.nickname || 'U'}
-              containerClassName="w-full h-full"
-            />
+          {/* the trivia's own face — the buzzer — not the author's avatar */}
+          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+            <img src={triviaBuzzerIcon} alt="" className="w-7 h-7 object-contain" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-foreground truncate">
@@ -873,8 +868,17 @@ function StandaloneQuizCard({
                 className="h-10 text-sm"
                 onClick={handlePlayClick}
               >
-                <Play className="w-4 h-4" />
-                <span>{t("extra.playBtn")}</span>
+                {alreadyPlayedByMe ? (
+                  <>
+                    <Swords className="w-4 h-4" />
+                    <span>{t("extra.challengeFriendBtn")}</span>
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-4 h-4" />
+                    <span>{t("extra.playBtn")}</span>
+                  </>
+                )}
               </ChunkyButton>
             </div>
           )}
@@ -1541,6 +1545,7 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
         onPlaySolo={handlePlaySolo}
         onCreateRoom={handleCreateRoom}
         onPlayTV={handlePlayTV}
+        alreadyPlayed={!!playModeTrivia?.is_blind && (playModeTrivia?.plays_count || 0) > 0}
       />
     </motion.div>
   );

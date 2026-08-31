@@ -148,8 +148,10 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
   const { startCoverGeneration, isGenerating: isGeneratingCover } = useBackgroundGeneration();
   const queryClient = useQueryClient();
   
-  const [step, setStep] = useState(1);
-  const [creatorMode, setCreatorMode] = useState<CreatorMode>(null);
+  // Publish is gone, so the open/edit mode went with it: everything is
+  // created blind ('play'); the old mode-chooser step 1 is skipped.
+  const [step, setStep] = useState(2);
+  const [creatorMode, setCreatorMode] = useState<CreatorMode>("play");
   const [subject, setSubject] = useState("");
   const [questionCount, setQuestionCount] = useState(10);
   const [answerFormat, setAnswerFormat] = useState<"4_answers" | "true_false">("4_answers");
@@ -226,7 +228,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
   }, [open, fetchTopicSuggestions]);
 
   const resetForm = () => {
-    setStep(1);
+    setStep(2);
     setCreatorMode(null);
     setSubject("");
     setQuestionCount(10);
@@ -1048,10 +1050,10 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
             <div className="fixed top-0 left-0 right-0 z-[201] safe-top">
               <div className="max-w-[700px] md:max-w-[600px] mx-auto w-full flex items-center justify-between px-4 py-3">
                 <button
-                  onClick={step === 1 ? handleClose : () => setStep(step - 1)}
+                  onClick={step <= 2 ? handleClose : () => setStep(step - 1)}
                   className="p-2 -ml-2 rounded-xl hover:bg-white/10 transition-colors"
                 >
-                  {step === 1 ? <X className="w-6 h-6 text-white" /> : <ChevronLeft className="w-6 h-6 text-white" />}
+                  {step <= 2 ? <X className="w-6 h-6 text-white" /> : <ChevronLeft className="w-6 h-6 text-white" />}
                 </button>
                 
                 <h2 className="text-lg font-bold text-white">{t("extra.createTriviaTitle2")}</h2>

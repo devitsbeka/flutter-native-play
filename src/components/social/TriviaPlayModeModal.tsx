@@ -25,6 +25,9 @@ interface TriviaPlayModeModalProps {
   onPlaySolo: () => void;
   onCreateRoom: () => void;
   onPlayTV: () => void;
+  /** The owner already played this blind trivia — solo is off the table
+      (they know the answers now); what's left is challenging friends. */
+  alreadyPlayed?: boolean;
 }
 
 export function TriviaPlayModeModal({
@@ -34,6 +37,7 @@ export function TriviaPlayModeModal({
   onPlaySolo,
   onCreateRoom,
   onPlayTV,
+  alreadyPlayed,
 }: TriviaPlayModeModalProps) {
   // Hook must run before the early return below
   const { t } = useLanguage();
@@ -123,7 +127,8 @@ export function TriviaPlayModeModal({
                   {t("extra.howToPlayPrompt")}
                 </p>
 
-                {/* Solo Play */}
+                {/* Solo Play — gone once the owner has played it */}
+                {!alreadyPlayed && (
                 <button
                   onClick={handlePlaySolo}
                   className="w-full flex items-center gap-3 p-3 rounded-2xl bg-muted/50 hover:bg-muted transition-colors text-left group"
@@ -140,6 +145,7 @@ export function TriviaPlayModeModal({
                     </p>
                   </div>
                 </button>
+                )}
 
                 {/* Create Room */}
                 <button

@@ -2229,6 +2229,7 @@ export const es: KaTranslations = {
     playTrivia: "Jugar",
     skipTrivia: "Saltar",
     alreadyPlayed: "Ya jugado",
+    challengeFriendBtn: "Reta a tus amigos",
     chooseCategories: "Elegir Categorías",
     selectedRounds: "Rondas seleccionadas: {count}/8",
     categoryType: "Categoría",

@@ -2227,6 +2227,7 @@ export const pt: KaTranslations = {
     playTrivia: "Jogar",
     skipTrivia: "Pular",
     alreadyPlayed: "Já jogado",
+    challengeFriendBtn: "Desafie amigos",
     chooseCategories: "Escolher Categorias",
     selectedRounds: "Rodadas selecionadas: {count}/8",
     categoryType: "Categoria",

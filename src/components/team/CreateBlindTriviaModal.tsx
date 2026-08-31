@@ -87,8 +87,10 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
   const queryClient = useQueryClient();
   const { saveDraft, loadDraft, deleteDraft } = useTriviaDrafts();
   
-  const [step, setStep] = useState(1);
-  const [creatorMode, setCreatorMode] = useState<CreatorMode>(null);
+  // Publish is gone, so the open/edit mode went with it: every trivia is
+  // created blind ('play'), and the old mode-chooser step 1 is skipped.
+  const [step, setStep] = useState(2);
+  const [creatorMode, setCreatorMode] = useState<CreatorMode>("play");
   const [subject, setSubject] = useState("");
   const [questionCount, setQuestionCount] = useState(10);
   const [answerFormat, setAnswerFormat] = useState<"4_answers" | "true_false">("4_answers");
@@ -170,8 +172,8 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
   }, [open, resumeDraftId, fetchTopicSuggestions]);
 
   const resetForm = () => {
-    setStep(1);
-    setCreatorMode(null);
+    setStep(2);
+    setCreatorMode("play");
     setSubject("");
     setQuestionCount(10);
     setDifficulty("mixed");
@@ -579,7 +581,7 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
       return (
         <div className="flex gap-3">
           <button 
-            onClick={() => setStep(1)} 
+            onClick={() => void handleClose()} 
             className="flex-1 h-14 rounded-2xl bg-white/20 text-white font-medium flex items-center justify-center gap-2 hover:bg-white/30 transition-colors"
           >
             <ChevronLeft className="w-4 h-4" />
