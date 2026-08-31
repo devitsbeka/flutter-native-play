@@ -327,8 +327,9 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
     })();
   }, [room, handoff, sendInvitation]);
 
-  // A modal invite lands teamless; when it was launched from a + seat, park
-  // the newest teamless invite on that seat's team.
+  // Modal invites land teamless; when the modal was launched from a + seat,
+  // park every teamless invite on that seat's team — the modal sends them
+  // as a batch now, not one per opening.
   const assignPendingTeam = async () => {
     const team = inviteTeamRef.current;
     if (!team || !room) return;
@@ -337,11 +338,10 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
       .select("user_id")
       .eq("room_id", room.id)
       .eq("status", "invited")
-      .is("team", null)
-      .order("joined_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if (data) void manageSeat(data.user_id, team === "a" ? "move_a" : "move_b");
+      .is("team", null);
+    for (const row of data ?? []) {
+      await manageSeat(row.user_id, team === "a" ? "move_a" : "move_b");
+    }
   };
 
   // A + seat invites a friend onto that team — no AI players here, these
