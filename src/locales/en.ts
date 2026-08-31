@@ -2165,6 +2165,8 @@ export const en: KaTranslations = {
     noCompletedRooms: "No completed rooms",
     createRoomInvite: "Create a room and invite friends to play.",
     roomDeleted: "Room deleted",
+    rlLeaveRoomConfirm: "You'll leave this room and it will disappear from your list.",
+    roomLeft: "You left the room",
     roomDeleteFailed: "Failed to delete room",
     viewAllRooms: "View all",
     moreCount: "More",

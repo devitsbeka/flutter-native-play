@@ -2170,6 +2170,8 @@ export const ka = {
     noCompletedRooms: "დასრულებული ოთახები არ არის",
     createRoomInvite: "შექმენი ოთახი და მოიწვიე მეგობრები სათამაშოდ.",
     roomDeleted: "ოთახი წაიშალა",
+    rlLeaveRoomConfirm: "დატოვებ ამ ოთახს და ის შენი სიიდან გაქრება.",
+    roomLeft: "ოთახი დატოვებული",
     roomDeleteFailed: "ოთახის წაშლა ვერ მოხერხდა",
     viewAllRooms: "ყველას ნახვა",
     moreCount: "მეტი",

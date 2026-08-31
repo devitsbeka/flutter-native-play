@@ -8,6 +8,7 @@ import iconKingLounge from "@/assets/play-chooser/icon-king.webp";
 import iconBattleLounge from "@/assets/play-chooser/icon-crate.png";
 import { roomCardAction } from "@/utils/roomCardAction";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
+import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -128,6 +129,42 @@ export function MyRoomsSection({
       }, EXIT_MS + 60);
     } catch (error) {
       console.error("Error deleting room:", error);
+      toast.error(t("extra.roomDeleteFailed"));
+      setDeletingRoomId(null);
+    }
+  };
+
+  // A guest's way out. Only the host may DELETE a room, so on somebody
+  // else's room the menu offers LEAVING instead: dropping the own
+  // room_participants row (the "Users can leave rooms" policy), which is
+  // what makes the card disappear from this list. The old menu offered
+  // delete to everyone and silently did nothing for guests.
+  const { user } = useAuth();
+  const handleLeaveRoom = async (roomId: string) => {
+    if (!user) return;
+    setDeletingRoomId(roomId);
+    try {
+      const { data: left, error } = await supabase
+        .from("room_participants")
+        .delete()
+        .eq("room_id", roomId)
+        .eq("user_id", user.id)
+        .select("id");
+
+      if (error) throw error;
+      if (!left || left.length === 0) {
+        toast.error(t("extra.roomDeleteFailed"));
+        setDeletingRoomId(null);
+        return;
+      }
+
+      toast.success(t("extra.roomLeft"));
+      setRemovedRoomIds((prev) => new Set(prev).add(roomId));
+      setTimeout(() => {
+        void Promise.resolve(refreshRooms()).finally(() => setDeletingRoomId(null));
+      }, EXIT_MS + 60);
+    } catch (error) {
+      console.error("Error leaving room:", error);
       toast.error(t("extra.roomDeleteFailed"));
       setDeletingRoomId(null);
     }
@@ -351,6 +388,7 @@ export function MyRoomsSection({
                     index={index}
                     onJoin={() => handleJoin(room)}
                     onDelete={handleDeleteRoom}
+                    onLeave={handleLeaveRoom}
                     isJoining={joiningRoomId === room.id}
                   />
                 </motion.div>
@@ -380,6 +418,7 @@ export function MyRoomsSection({
                       index={index}
                       onJoin={() => handleJoin(room)}
                       onDelete={handleDeleteRoom}
+                    onLeave={handleLeaveRoom}
                       isJoining={joiningRoomId === room.id}
                     />
                   </motion.div>
@@ -415,12 +454,13 @@ interface RoomCardProps {
   index: number;
   onJoin: () => void;
   onDelete: (roomId: string) => void;
+  onLeave: (roomId: string) => void;
   fullWidth?: boolean;
   /** Opening this room: the card says so and stops taking taps. */
   isJoining?: boolean;
 }
 
-function RoomCard({ room, index, onJoin, onDelete, fullWidth = false, isJoining = false }: RoomCardProps) {
+function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = false, isJoining = false }: RoomCardProps) {
   const { t, language } = useLanguage();
   const localizeCategory = useLocalizedCategoryName();
   const isMobile = useIsMobile();
@@ -528,7 +568,10 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false, isJoining 
   };
 
   const confirmDelete = () => {
-    onDelete(room.id);
+    // The host deletes the room for everyone; a guest leaves it, which is
+    // all a guest CAN do — and all they mean by "delete" on this list.
+    if (room.is_host) onDelete(room.id);
+    else onLeave(room.id);
     setShowDeleteConfirm(false);
   };
 
@@ -678,7 +721,7 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false, isJoining 
                           className="text-destructive focus:text-destructive focus:bg-destructive/10"
                         >
                           <Trash2 className="w-4 h-4 mr-2" />
-                          {t("extra.rlDelete")}
+                          {room.is_host ? t("extra.rlDelete") : t("extra.rlLeaveRoom")}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -736,9 +779,9 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false, isJoining 
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <AlertDialogContent className="bg-card border-border rounded-3xl max-w-sm">
           <AlertDialogHeader className="text-center">
-            <AlertDialogTitle>{t("extra.rlDeleteRoom")}</AlertDialogTitle>
+            <AlertDialogTitle>{room.is_host ? t("extra.rlDeleteRoom") : t("extra.rlLeaveRoom")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t("extra.rlDeleteRoomConfirm")}
+              {room.is_host ? t("extra.rlDeleteRoomConfirm") : t("extra.rlLeaveRoomConfirm")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-row gap-3">
@@ -747,7 +790,7 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false, isJoining 
               onClick={confirmDelete}
               className="flex-1 bg-destructive hover:bg-destructive/90"
             >
-              {t("extra.rlDelete")}
+              {room.is_host ? t("extra.rlDelete") : t("extra.rlLeaveRoom")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -762,11 +805,12 @@ interface RoomCardGridProps {
   index: number;
   onJoin: () => void;
   onDelete: (roomId: string) => void;
+  onLeave: (roomId: string) => void;
   /** Opening this room: the card says so and stops taking taps. */
   isJoining?: boolean;
 }
 
-function RoomCardGrid({ room, index, onJoin, onDelete, isJoining = false }: RoomCardGridProps) {
+function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, isJoining = false }: RoomCardGridProps) {
   const { openProfile } = usePlayerProfile();
   const { t } = useLanguage();
   const localizeCategory = useLocalizedCategoryName();
@@ -878,7 +922,10 @@ function RoomCardGrid({ room, index, onJoin, onDelete, isJoining = false }: Room
   };
 
   const confirmDelete = () => {
-    onDelete(room.id);
+    // The host deletes the room for everyone; a guest leaves it, which is
+    // all a guest CAN do — and all they mean by "delete" on this list.
+    if (room.is_host) onDelete(room.id);
+    else onLeave(room.id);
     setShowDeleteConfirm(false);
   };
 
@@ -990,7 +1037,7 @@ function RoomCardGrid({ room, index, onJoin, onDelete, isJoining = false }: Room
                       className="text-destructive focus:text-destructive focus:bg-destructive/10"
                     >
                       <Trash2 className="w-4 h-4 mr-2" />
-                      {t("extra.rlDelete")}
+                      {room.is_host ? t("extra.rlDelete") : t("extra.rlLeaveRoom")}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -1170,9 +1217,9 @@ function RoomCardGrid({ room, index, onJoin, onDelete, isJoining = false }: Room
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <AlertDialogContent className="bg-card border-border rounded-3xl max-w-sm">
           <AlertDialogHeader className="text-center">
-            <AlertDialogTitle>{t("extra.rlDeleteRoom")}</AlertDialogTitle>
+            <AlertDialogTitle>{room.is_host ? t("extra.rlDeleteRoom") : t("extra.rlLeaveRoom")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t("extra.rlDeleteRoomConfirm")}
+              {room.is_host ? t("extra.rlDeleteRoomConfirm") : t("extra.rlLeaveRoomConfirm")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-row gap-3">
@@ -1181,7 +1228,7 @@ function RoomCardGrid({ room, index, onJoin, onDelete, isJoining = false }: Room
               onClick={confirmDelete}
               className="flex-1 bg-destructive hover:bg-destructive/90"
             >
-              {t("extra.rlDelete")}
+              {room.is_host ? t("extra.rlDelete") : t("extra.rlLeaveRoom")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

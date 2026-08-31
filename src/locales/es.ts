@@ -1871,6 +1871,8 @@ export const es: KaTranslations = {
     noCompletedRooms: "No hay salas terminadas",
     createRoomInvite: "Crea una sala e invita a amigos.",
     roomDeleted: "Sala eliminada",
+    rlLeaveRoomConfirm: "Saldrás de esta sala y desaparecerá de tu lista.",
+    roomLeft: "Saliste de la sala",
     roomDeleteFailed: "Error al eliminar sala",
     viewAllRooms: "Ver todo",
     moreCount: "Más",
