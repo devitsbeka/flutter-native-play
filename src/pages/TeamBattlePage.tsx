@@ -507,22 +507,21 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
       <div className="w-full max-w-[468px] mx-auto shrink-0 border-t border-[#523b76]/[0.08]" />
 
       {/* Pick duration (940:7647 + chips) — in flow, left-aligned with the
-          friends strip's 16px edge */}
+          friends strip's 16px edge; the label sits under the tabs as a
+          quiet caption */}
       <div className="relative z-10 w-full max-w-[500px] mx-auto shrink-0 px-4 pt-2">
-        <p className="font-[Nunito] font-medium leading-[24px] text-[#0c172c] text-[15px] tracking-[-0.16px]">
+        <DurationTabs
+          options={DURATIONS.map((n) => ({
+            value: n,
+            label: t("lobby.roundsN", { n }),
+            disabled: n < minTiles,
+          }))}
+          value={rounds}
+          onChange={setRounds}
+        />
+        <p className="pt-[6px] font-[Nunito] font-normal leading-[20px] text-[#0c172c]/70 text-[13px] tracking-[-0.16px]">
           {t("lobby.pickDuration")}
         </p>
-        <div className="pt-[10px]">
-          <DurationTabs
-            options={DURATIONS.map((n) => ({
-              value: n,
-              label: t("lobby.roundsN", { n }),
-              disabled: n < minTiles,
-            }))}
-            value={rounds}
-            onChange={setRounds}
-          />
-        </div>
       </div>
 
       <div className="flex-1 min-h-0 overflow-hidden">
@@ -566,7 +565,7 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
           onClick={() => setCaptainInfo("a")}
         />
         <p
-          className="absolute left-[191px] top-[469px] w-[118px] text-[77px] leading-[43px] text-center not-italic text-[#f5d9ff]"
+          className="absolute left-0 top-[469px] w-full text-[77px] leading-[43px] text-center not-italic text-[#f5d9ff]"
           style={{ fontFamily: "'Slackey', 'TASolivare', cursive", textShadow: "0px 4px 4px #c7bccc" }}
         >
           VS
