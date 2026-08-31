@@ -476,3 +476,55 @@ BEGIN
 END $$;
 
 \echo 'ok: the couch fights one King and the captain answers for it'
+
+-- ══ every language of the app can face the King (20260921180000) ═══════════
+
+DO $$
+DECLARE
+  v_lang text;
+  v_count integer;
+BEGIN
+  FOREACH v_lang IN ARRAY ARRAY['en','ka','es','de','fr','it','pt'] LOOP
+    SELECT count(*) INTO v_count FROM public.king_questions
+     WHERE language = v_lang AND is_active AND icon_slug IS NOT NULL;
+    IF v_count < 24 THEN
+      RAISE EXCEPTION 'language % has only % iconed active questions', v_lang, v_count;
+    END IF;
+  END LOOP;
+END $$;
+
+DO $$
+DECLARE
+  v_u uuid := 'aaaa1111-0000-4000-8000-00000000c010'::uuid;
+  v_room uuid;
+  v_state jsonb;
+BEGIN
+  INSERT INTO auth.users (id, email) VALUES (v_u, 'kinglang@tb.test') ON CONFLICT (id) DO NOTHING;
+  INSERT INTO public.profiles (user_id, nickname, coins, gems)
+  VALUES (v_u, 'kinglang', 0, 0) ON CONFLICT (user_id) DO NOTHING;
+  INSERT INTO public.game_rooms (room_code, host_user_id, status, game_type_key)
+  VALUES ('KINGLN', v_u, 'waiting', 'king') RETURNING id INTO v_room;
+  INSERT INTO public.room_participants (room_id, user_id, nickname, is_host, status)
+  VALUES (v_room, v_u, 'kinglang', true, 'joined');
+
+  PERFORM pg_temp.as_user(v_u);
+  v_state := public.king_team_start(v_room, 'it');
+  PERFORM pg_temp.must_equal((v_state -> 'question') IS NOT NULL, true,
+    'the Italian pool deals a question');
+
+  -- A language with no pool at all borrows the English one instead of
+  -- dead-ending into KING_NO_QUESTIONS.
+  PERFORM pg_temp.as_user(NULL);
+  DELETE FROM public.king_team_matches WHERE room_id = v_room;
+  PERFORM pg_temp.as_user(v_u);
+  v_state := public.king_team_start(v_room, 'xx');
+  PERFORM pg_temp.must_equal((v_state -> 'question') IS NOT NULL, true,
+    'an unknown language borrows the English pool');
+
+  PERFORM pg_temp.as_user(NULL);
+  DELETE FROM public.king_team_matches WHERE room_id = v_room;
+  DELETE FROM public.room_participants WHERE room_id = v_room;
+  DELETE FROM public.game_rooms WHERE id = v_room;
+END $$;
+
+\echo 'ok: the King speaks all seven languages'
