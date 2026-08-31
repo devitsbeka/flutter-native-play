@@ -285,6 +285,7 @@ function TurnQuestionCard({
   maxSeconds,
   questionNumber,
   totalQuestions,
+  revealAll,
 }: {
   tile: TBTile;
   question: TBQuestion;
@@ -292,6 +293,7 @@ function TurnQuestionCard({
   maxSeconds: number;
   questionNumber: number;
   totalQuestions: number;
+  revealAll?: boolean;
 }) {
   const { t } = useLanguage();
   const cat = useTileCategory(tile);
@@ -324,6 +326,11 @@ function TurnQuestionCard({
         imageInset={treatment.inset}
         imageFramed={treatment.framed}
         imageBand={treatment.band}
+        // Logos uncover a tile at a time while the clock runs — many brand
+        // marks are the company's name in a typeface, so showing the whole
+        // picture prints the answer on the card (same rule as solo play).
+        imageReveal={treatment.inset}
+        imageRevealAll={revealAll}
         reserveTopSpace={!hasMedia}
         timerSeconds={secondsLeft}
         timerMaxSeconds={maxSeconds}
@@ -461,6 +468,10 @@ function PhaseRapidFire() {
             maxSeconds={turnSeconds}
             questionNumber={index + 1}
             totalQuestions={questions.length}
+            // The full mark shows only once this question is answered — for
+            // the spotlight when their pick locks, for spectators while the
+            // answered question is being replayed.
+            revealAll={isSpotlight ? !!choice : !!revealPick}
           />
         </div>
 
