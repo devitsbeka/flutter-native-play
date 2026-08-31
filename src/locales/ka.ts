@@ -1705,6 +1705,7 @@ export const ka = {
     rpsTitle: "ქვა · ქაღალდი · მაკრატელი",
     rpsSubtitle: "გამარჯვებული გუნდი პირველი ირჩევს",
     rpsWaiting: "ველოდებით დანარჩენებს…",
+    rpsPickOne: "აირჩიე ერთ-ერთი",
     rpsCaptainsHint: "კაპიტნები თამაშობენ — უყურე დუელს",
     rpsTieBanner: "ფრეა — კიდევ ერთხელ!",
     rpsWonBanner: "{team} პირველი ირჩევს",

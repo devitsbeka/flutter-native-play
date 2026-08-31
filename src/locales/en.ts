@@ -1703,6 +1703,7 @@ export const en: KaTranslations = {
     rpsTitle: "Rock · Paper · Scissors",
     rpsSubtitle: "The winning team picks first",
     rpsWaiting: "Waiting for the other throws…",
+    rpsPickOne: "Pick one",
     rpsCaptainsHint: "The captains are throwing — watch the duel",
     rpsTieBanner: "A tie — throw again!",
     rpsWonBanner: "{team} picks first",

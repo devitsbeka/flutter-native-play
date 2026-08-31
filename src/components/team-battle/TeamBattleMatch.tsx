@@ -15,6 +15,9 @@ import { CategoryArtwork } from "@/components/shared/CategoryArtwork";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { imageTreatmentFor } from "@/utils/questionImageTreatment";
 import trophyWin from "@/assets/icons/trophy-win.png";
+import rpsRock from "@/assets/tb-rps/rps-rock.webp";
+import rpsPaper from "@/assets/tb-rps/rps-paper.webp";
+import rpsScissors from "@/assets/tb-rps/rps-scissors.webp";
 import {
   superQuestions,
   tileQuestions,
@@ -35,11 +38,32 @@ const DIFFICULTY_COLORS: Record<string, string> = {
   medium: "bg-amber-500",
   hard: "bg-destructive",
 };
-const GESTURES: { key: TBGesture; emoji: string }[] = [
-  { key: "rock", emoji: "✊" },
-  { key: "paper", emoji: "✋" },
-  { key: "scissors", emoji: "✌️" },
+// The 3D renders from the Figma frame (966:30083) — a rock on its patch of
+// grass, a paper roll, real scissors — used on the throw cards and every
+// reveal badge alike.
+const GESTURES: { key: TBGesture; icon: string }[] = [
+  { key: "rock", icon: rpsRock },
+  { key: "paper", icon: rpsPaper },
+  { key: "scissors", icon: rpsScissors },
 ];
+const GESTURE_ICONS: Record<string, string> = {
+  rock: rpsRock,
+  paper: rpsPaper,
+  scissors: rpsScissors,
+};
+
+function GestureIcon({ g, size = 20 }: { g?: string | null; size?: number }) {
+  const src = g ? GESTURE_ICONS[g] : undefined;
+  if (!src) return <span>❔</span>;
+  return (
+    <img
+      alt={g ?? ""}
+      src={src}
+      style={{ width: size, height: size }}
+      className="inline-block object-contain align-middle"
+    />
+  );
+}
 
 const teamLabel = (t: (k: string) => string, team: TBTeam | null | undefined) =>
   team === "a" ? t("teamBattle.teamA") : t("teamBattle.teamB");
@@ -129,8 +153,6 @@ interface RpsReveal {
   throws: Record<string, string>;
 }
 
-const gestureEmoji = (g: string | undefined) =>
-  GESTURES.find((x) => x.key === g)?.emoji ?? "❔";
 
 function PhaseRps() {
   const { t } = useLanguage();
@@ -184,8 +206,9 @@ function PhaseRps() {
             className="w-full max-w-sm rounded-2xl bg-white/10 border border-white/20 p-4 flex flex-col gap-3"
           >
             {last?.tie && (
-              <p className="text-center font-bold text-white">
-                {gestureEmoji(last.team_a)} {t("teamBattle.rpsTieBanner")} {gestureEmoji(last.team_b)}
+              <p className="text-center font-bold text-white flex items-center justify-center gap-2">
+                <GestureIcon g={last.team_a} size={26} /> {t("teamBattle.rpsTieBanner")}{" "}
+                <GestureIcon g={last.team_b} size={26} />
               </p>
             )}
             {(["a", "b"] as TBTeam[]).map((team) => (
@@ -204,13 +227,17 @@ function PhaseRps() {
                             live ? "" : stale ? "opacity-40" : "animate-pulse-soft"
                           }`}
                         >
-                          {live
-                            ? isMe
-                              ? gestureEmoji(live)
-                              : "✅"
-                            : stale
-                              ? gestureEmoji(stale)
-                              : "💭"}
+                          {live ? (
+                            isMe ? (
+                              <GestureIcon g={live} size={18} />
+                            ) : (
+                              "✅"
+                            )
+                          ) : stale ? (
+                            <GestureIcon g={stale} size={18} />
+                          ) : (
+                            "💭"
+                          )}
                         </span>
                       </span>
                     );
@@ -219,49 +246,55 @@ function PhaseRps() {
               </div>
             ))}
           </motion.div>
-          {amCaptain ? (
-            <>
-              <div className="grid grid-cols-3 gap-3 w-full max-w-sm">
-                {GESTURES.map((g) => {
-                  const picked = mine === g.key;
-                  const face = picked ? "#7DD3FC" : "#E8E8F4";
-                  const depth = picked ? "#38BDF8" : "#D0D0E0";
-                  return (
-                    <motion.button
-                      key={g.key}
-                      whileTap={!mine ? { scale: 0.95 } : undefined}
-                      disabled={!!mine}
-                      onClick={() => {
-                        setThrown(g.key);
-                        void submitRps(g.key);
-                      }}
-                      className="relative w-full h-[100px] rounded-3xl"
-                      style={{ paddingBottom: 6, opacity: mine && !picked ? 0.4 : 1 }}
-                    >
-                      <div
-                        className="absolute inset-0 rounded-3xl"
-                        style={{ background: depth, transform: "translateY(6px)" }}
-                      />
-                      <div
-                        className="relative flex items-center justify-center rounded-3xl h-full text-5xl"
-                        style={{ background: face, boxShadow: "inset 0 2px 0 rgba(255,255,255,0.4)" }}
-                      >
-                        {g.emoji}
-                      </div>
-                    </motion.button>
-                  );
-                })}
-              </div>
-              {mine && (
-                <p className="text-white/60 text-sm animate-pulse-soft">{t("teamBattle.rpsWaiting")}</p>
-              )}
-            </>
-          ) : (
+          {!amCaptain && (
             <p className="text-white/70 text-sm text-center animate-pulse-soft">
               {t("teamBattle.rpsCaptainsHint")}
             </p>
           )}
         </div>
+
+        {/* The captain's hand, on the frame's light bottom sheet
+            (966:30083): three white cards with the 3D renders — the rock on
+            its grass, the paper roll, the scissors — and the "pick one"
+            caption beneath. */}
+        {amCaptain && (
+          <div className="w-full shrink-0 bg-[#f5f2fa] rounded-t-[28px] px-5 pt-5 pb-[calc(1.1rem_+_var(--safe-bottom))] flex flex-col gap-3.5">
+            <div className="grid grid-cols-3 gap-3 w-full max-w-sm mx-auto">
+              {GESTURES.map((g) => {
+                const picked = mine === g.key;
+                return (
+                  <motion.button
+                    key={g.key}
+                    whileTap={!mine ? { scale: 0.94 } : undefined}
+                    disabled={!!mine}
+                    onClick={() => {
+                      setThrown(g.key);
+                      void submitRps(g.key);
+                    }}
+                    className={`relative h-[96px] rounded-[22px] flex items-center justify-center transition-shadow ${
+                      picked
+                        ? "bg-[#eef7ff] ring-2 ring-[#38BDF8]"
+                        : "bg-white"
+                    }`}
+                    style={{
+                      boxShadow: "0px 2px 0px 0px #e6e0f0, 0px 6px 16px rgba(64,38,102,0.10)",
+                      opacity: mine && !picked ? 0.4 : 1,
+                    }}
+                  >
+                    <img alt={g.key} src={g.icon} className="w-[68px] h-[68px] object-contain" />
+                  </motion.button>
+                );
+              })}
+            </div>
+            <p
+              className={`text-center text-sm font-[Nunito] font-semibold ${
+                mine ? "text-[#402666]/50 animate-pulse-soft" : "text-[#402666]/70"
+              }`}
+            >
+              {mine ? t("teamBattle.rpsWaiting") : t("teamBattle.rpsPickOne")}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -299,8 +332,8 @@ function PhaseBoard() {
         {/* how the opener went — shown until the first tile is claimed */}
         {rpsLast && !rpsLast.tie && openingPick && (
           <div className="px-4 pb-2 flex-shrink-0">
-            <div className="rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-center text-sm font-medium text-white">
-              {gestureEmoji(rpsLast.team_a)} vs {gestureEmoji(rpsLast.team_b)} —{" "}
+            <div className="rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-center text-sm font-medium text-white flex items-center justify-center gap-1.5 flex-wrap">
+              <GestureIcon g={rpsLast.team_a} size={22} /> vs <GestureIcon g={rpsLast.team_b} size={22} /> —{" "}
               {t("teamBattle.rpsWonBanner", { team: teamLabel(t, (rpsLast.winner ?? null) as TBTeam) })}
             </div>
           </div>
