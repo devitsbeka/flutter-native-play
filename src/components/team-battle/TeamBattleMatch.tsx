@@ -354,16 +354,12 @@ function TurnQuestionCard({
   question,
   secondsLeft,
   maxSeconds,
-  questionNumber,
-  totalQuestions,
   revealAll,
 }: {
   tile: TBTile;
   question: TBQuestion;
   secondsLeft: number;
   maxSeconds: number;
-  questionNumber: number;
-  totalQuestions: number;
   revealAll?: boolean;
 }) {
   const { t } = useLanguage();
@@ -386,10 +382,11 @@ function TurnQuestionCard({
           />
         </div>
       )}
+      {/* No questionNumber/totalQuestions here: the card would print its own
+          "8/12" dead centre under the overlapping icon — a ghost counter
+          peeking out from behind the art. The top bar's pill already says it. */}
       <QuizQuestionCard
         questionText={question.question_text}
-        questionNumber={questionNumber}
-        totalQuestions={totalQuestions}
         imageUrl={question.image_url}
         videoUrl={question.video_url}
         audioUrl={question.audio_url}
@@ -548,8 +545,6 @@ function PhaseRapidFire() {
             question={question}
             secondsLeft={secondsLeft}
             maxSeconds={turnSeconds}
-            questionNumber={index + 1}
-            totalQuestions={questions.length}
             // The full mark shows only once this question is answered — for
             // the spotlight when their pick locks, for spectators while the
             // answered question is being replayed.
