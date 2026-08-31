@@ -11,6 +11,7 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { TimerBadge } from "@/components/game/TimerBadge";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { CategoryArtwork } from "@/components/shared/CategoryArtwork";
+import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { imageTreatmentFor } from "@/utils/questionImageTreatment";
 import trophyWin from "@/assets/icons/trophy-win.png";
 import {
@@ -272,24 +273,42 @@ function TurnQuestionCard({
   const { t } = useLanguage();
   const cat = useTileCategory(tile);
   const treatment = imageTreatmentFor(cat?.category_id);
+  const hasMedia = !!(question.image_url || question.video_url || question.audio_url);
   return (
-    <QuizQuestionCard
-      questionText={question.question_text}
-      questionNumber={questionNumber}
-      totalQuestions={totalQuestions}
-      imageUrl={question.image_url}
-      videoUrl={question.video_url}
-      audioUrl={question.audio_url}
-      hideQuestionText={!!question.image_url}
-      imageInset={treatment.inset}
-      imageFramed={treatment.framed}
-      imageBand={treatment.band}
-      timerSeconds={secondsLeft}
-      timerMaxSeconds={maxSeconds}
-      progressPercent={(secondsLeft / maxSeconds) * 100}
-      difficultyLabel={t(`teamBattle.diff_${tile.difficulty}`)}
-      difficultyColor={DIFFICULTY_COLORS[tile.difficulty]}
-    />
+    <div className={hasMedia ? "relative" : "relative mt-8"}>
+      {/* The question's icon overlapping the card top — the same treatment
+          the classic room game gives text questions; the pipeline's iconSlug
+          rides the board (asQuestions), seeded fallback otherwise. */}
+      {!hasMedia && (
+        <div className="absolute left-1/2 -translate-x-1/2 -top-[41px] z-20 w-28 h-28">
+          <DynamicIcon
+            slug={question.icon_slug || undefined}
+            seedText={question.question_text}
+            size={112}
+            className="drop-shadow-lg"
+            hideIfEmpty={true}
+          />
+        </div>
+      )}
+      <QuizQuestionCard
+        questionText={question.question_text}
+        questionNumber={questionNumber}
+        totalQuestions={totalQuestions}
+        imageUrl={question.image_url}
+        videoUrl={question.video_url}
+        audioUrl={question.audio_url}
+        hideQuestionText={!!question.image_url}
+        imageInset={treatment.inset}
+        imageFramed={treatment.framed}
+        imageBand={treatment.band}
+        reserveTopSpace={!hasMedia}
+        timerSeconds={secondsLeft}
+        timerMaxSeconds={maxSeconds}
+        progressPercent={(secondsLeft / maxSeconds) * 100}
+        difficultyLabel={t(`teamBattle.diff_${tile.difficulty}`)}
+        difficultyColor={DIFFICULTY_COLORS[tile.difficulty]}
+      />
+    </div>
   );
 }
 
@@ -526,14 +545,28 @@ function PhaseSuperRound() {
         {question && (
           <>
             <div className="px-4 pt-6 flex-shrink-0">
-              <QuizQuestionCard
-                questionText={question.question_text}
-                imageUrl={question.image_url}
-                hideQuestionText={!!question.image_url}
-                timerSeconds={secondsLeft}
-                timerMaxSeconds={15}
-                progressPercent={(secondsLeft / 15) * 100}
-              />
+              <div className={question.image_url ? "relative" : "relative mt-8"}>
+                {!question.image_url && (
+                  <div className="absolute left-1/2 -translate-x-1/2 -top-[41px] z-20 w-28 h-28">
+                    <DynamicIcon
+                      slug={question.icon_slug || undefined}
+                      seedText={question.question_text}
+                      size={112}
+                      className="drop-shadow-lg"
+                      hideIfEmpty={true}
+                    />
+                  </div>
+                )}
+                <QuizQuestionCard
+                  questionText={question.question_text}
+                  imageUrl={question.image_url}
+                  hideQuestionText={!!question.image_url}
+                  reserveTopSpace={!question.image_url}
+                  timerSeconds={secondsLeft}
+                  timerMaxSeconds={15}
+                  progressPercent={(secondsLeft / 15) * 100}
+                />
+              </div>
             </div>
             <div className="flex-1 px-4 mt-3 flex flex-col gap-3 overflow-y-auto min-h-0 pb-[calc(0.5rem_+_var(--safe-bottom))]">
               {question.shuffled_answers.map((option, i) => (

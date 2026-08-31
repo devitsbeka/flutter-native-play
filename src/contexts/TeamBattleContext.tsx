@@ -38,6 +38,7 @@ export interface TBQuestion {
   image_url?: string | null;
   video_url?: string | null;
   audio_url?: string | null;
+  icon_slug?: string | null;
 }
 
 export type TBRoom = Tables<"game_rooms">;
@@ -97,6 +98,7 @@ const asQuestions = (
     imageUrl?: string | null;
     videoUrl?: string | null;
     audioUrl?: string | null;
+    iconSlug?: string | null;
   }[],
 ): TBQuestion[] =>
   qs.map((q) => ({
@@ -106,6 +108,7 @@ const asQuestions = (
     image_url: q.imageUrl ?? null,
     video_url: q.videoUrl ?? null,
     audio_url: q.audioUrl ?? null,
+    icon_slug: q.iconSlug ?? null,
   }));
 
 export function tileQuestions(tile: TBTile | undefined): TBQuestion[] {
