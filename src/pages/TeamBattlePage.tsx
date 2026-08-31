@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useEffect, useRef, useState, type MutableRefObject } from "react";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Bot, ChevronLeft, UserPlus } from "lucide-react";
 import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
@@ -15,6 +15,7 @@ import {
 } from "@/contexts/TeamBattleContext";
 import { TeamBattleMatch } from "@/components/team-battle/TeamBattleMatch";
 import { useCategories } from "@/hooks/useCategories";
+import { useGameInvitations } from "@/hooks/useGameInvitations";
 import {
   AnimatedCoinPill,
   CaptainInfoModal,
@@ -54,10 +55,19 @@ export default function TeamBattlePage() {
   );
 }
 
+/** People picked on the create screen, riding along in router state. */
+export type LoungeInvite = { id: string; nickname: string; avatarUrl: string | null };
+
 function TeamBattleInner() {
   const { user } = useAuth();
   const { room, state, joinRoom } = useTeamBattle();
   const [params] = useSearchParams();
+  const location = useLocation();
+  // Captured once at mount: the ?code= replace that follows room creation
+  // drops router state, so the list has to be held here.
+  const handoffRef = useRef<LoungeInvite[] | null>(
+    (location.state as { invite?: LoungeInvite[] } | null)?.invite ?? null,
+  );
   // Settling flips the room back to "waiting" within a round-trip; the
   // result screen stays up until the player dismisses it, or it would be an
   // unreadable flash on the way back to the lobby.
@@ -81,7 +91,7 @@ function TeamBattleInner() {
       (state.phase === "done" && !resultSeen));
 
   if (inMatch) return <TeamBattleMatch onResultDismiss={() => setResultSeen(true)} />;
-  if (room) return <TBLobby />;
+  if (room) return <TBLobby handoff={handoffRef} />;
   return <TBGate joining={!!params.get("code")} />;
 }
 
@@ -173,7 +183,7 @@ const ARENA_FADE =
 // Server rule: tiles even, ≥ 2×team size, ≤ 12 — these are the valid picks.
 const DURATIONS = [6, 10, 12];
 
-function TBLobby() {
+function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null> }) {
   const { t } = useLanguage();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -260,6 +270,28 @@ function TBLobby() {
     setInvitedIds((prev) => new Set([...prev, entry.id]));
     toast.success(t("extra.inviteSent"));
   };
+
+  // Friends and room members picked on the create screen: seat them as
+  // invited the moment this lobby opens, and notify them.
+  const { sendInvitation } = useGameInvitations();
+  const inviteToGameRef = useRef(inviteToGame);
+  inviteToGameRef.current = inviteToGame;
+  useEffect(() => {
+    const list = handoff?.current;
+    if (!room || !list || list.length === 0) return;
+    handoff.current = null;
+    void (async () => {
+      for (const person of list) {
+        await inviteToGameRef.current({
+          id: person.id,
+          nickname: person.nickname,
+          avatarUrl: person.avatarUrl,
+          online: false,
+        });
+        await sendInvitation(person.id, room.id);
+      }
+    })();
+  }, [room, handoff, sendInvitation]);
 
   // A modal invite lands teamless; when it was launched from a + seat, park
   // the newest teamless invite on that seat's team.

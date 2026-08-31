@@ -1801,6 +1801,8 @@ export const en: KaTranslations = {
     withFriends: "With Friends",
     newBang: "New!",
     playPrefix: "Play",
+    kingCardDesc: "A logic duel — beat the King",
+    classicCardDesc: "Classic room — library and your trivias",
     captainInfoTitle: "Team Captain",
     captainInfoBody: "The captain leads the team: if the match ends in a tie, the captain steps up as the team's champion in the super round and answers for everyone. The host picks the captain before the game starts.",
   },

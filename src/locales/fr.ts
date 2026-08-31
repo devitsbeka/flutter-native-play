@@ -1520,6 +1520,8 @@ export const fr: KaTranslations = {
     withFriends: "Entre amis",
     newBang: "Nouveau !",
     playPrefix: "Joue",
+    kingCardDesc: "Duel de logique — bats le Roi",
+    classicCardDesc: "Salon classique — bibliothèque et tes trivias",
     captainInfoTitle: "Capitaine d'équipe",
     captainInfoBody: "Le capitaine mène l'équipe : en cas d'égalité, c'est lui qui devient le champion de l'équipe lors de la super manche et répond pour tout le monde. L'hôte choisit le capitaine avant le début de la partie.",
   },

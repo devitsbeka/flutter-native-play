@@ -1531,6 +1531,8 @@ export const pt: KaTranslations = {
     withFriends: "Com amigos",
     newBang: "Novo!",
     playPrefix: "Joga",
+    kingCardDesc: "Duelo de lógica — vença o Rei",
+    classicCardDesc: "Sala clássica — biblioteca e suas trivias",
     captainInfoTitle: "Capitão da equipa",
     captainInfoBody: "O capitão lidera a equipa: se o jogo terminar empatado, é ele o campeão da equipa na super ronda e responde por todos. O anfitrião escolhe o capitão antes de começar.",
   },

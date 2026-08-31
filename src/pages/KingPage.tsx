@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import type { Tables } from "@/integrations/supabase/types";
 import { AnimatePresence, motion } from "framer-motion";
@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useServerDeadline } from "@/hooks/useServerDeadline";
+import { useGameInvitations } from "@/hooks/useGameInvitations";
 import { readAppLanguage } from "@/utils/appLanguage";
 import { toast } from "@/lib/toast";
 import { shareOrCopy } from "@/utils/shareLink";
@@ -195,6 +196,7 @@ export default function KingPage() {
   // plays their own duel against the King — the host's Start broadcasts so
   // the whole couch begins together; the co-op captain engine comes next.
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const [kingRoom, setKingRoom] = useState<Tables<"game_rooms"> | null>(null);
   const [kingParts, setKingParts] = useState<Tables<"room_participants">[]>([]);
   const [kingPending, setKingPending] = useState<Tables<"room_participants">[]>([]);
@@ -352,6 +354,31 @@ export default function KingPage() {
     },
     [kingRoom, t],
   );
+
+  // Friends and room members picked on the create screen ride in via router
+  // state, captured at mount (the ?code= replace would drop it) and seated
+  // as invited the moment this lounge's room exists.
+  const { sendInvitation } = useGameInvitations();
+  const handoffRef = useRef<{ id: string; nickname: string; avatarUrl: string | null }[] | null>(
+    (location.state as { invite?: { id: string; nickname: string; avatarUrl: string | null }[] } | null)
+      ?.invite ?? null,
+  );
+  useEffect(() => {
+    const list = handoffRef.current;
+    if (!kingRoom || !list || list.length === 0) return;
+    handoffRef.current = null;
+    void (async () => {
+      for (const person of list) {
+        await inviteToGame({
+          id: person.id,
+          nickname: person.nickname,
+          avatarUrl: person.avatarUrl,
+          online: false,
+        });
+        await sendInvitation(person.id, kingRoom.id);
+      }
+    })();
+  }, [kingRoom, inviteToGame, sendInvitation]);
 
   // Inviting opens the app's invite modal (search, friends, copy link,
   // social share) wired to this lounge's real room — an invited friend gets

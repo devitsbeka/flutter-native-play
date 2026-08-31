@@ -1523,6 +1523,8 @@ export const de: KaTranslations = {
     withFriends: "Mit Freunden",
     newBang: "Neu!",
     playPrefix: "Spiel",
+    kingCardDesc: "Logik-Duell — besiege den König",
+    classicCardDesc: "Klassischer Raum — Bibliothek und deine Trivias",
     captainInfoTitle: "Team-Kapitän",
     captainInfoBody: "Der Kapitän führt das Team an: Endet das Match unentschieden, tritt der Kapitän in der Superrunde als Champion des Teams an und antwortet für alle. Der Host wählt den Kapitän vor Spielbeginn.",
   },
