@@ -948,9 +948,10 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       </div>
 
       {/* Frosted popup panel — a real container now: header, form and the
-          create button all live inside it. Height hugs the content (m-auto
-          centers it), max-h keeps it inside the viewport with scrolling. */}
-      <div className="relative m-auto flex max-h-full w-full max-w-[740px] md:max-w-[560px] flex-col overflow-hidden rounded-[24px] border border-white/70 bg-white/60 backdrop-blur-xl shadow-[0_12px_40px_rgba(104,71,204,0.18)]">
+          create button all live inside it. h-full, not content-hugging: the
+          panel keeps one height whatever card is picked, so the header and
+          the create button never jump — only the middle scrolls. */}
+      <div className="relative m-auto flex h-full w-full max-w-[740px] md:max-w-[560px] flex-col overflow-hidden rounded-[24px] border border-white/70 bg-white/60 backdrop-blur-xl shadow-[0_12px_40px_rgba(104,71,204,0.18)]">
 
       {/* Header - simplified */}
       <div className="border-b border-border/30 shrink-0">
@@ -1059,7 +1060,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                       if (card.key === "library" && !(selectionMode === "library" && selectedCategory)) setShowCategoriesModal(true);
                       if (card.key === "mytrivias" && !challengeTrivia) void handleOptionClick("my-trivias");
                     }}
-                    className={`relative shrink-0 w-[200px] h-[235px] rounded-[24px] overflow-clip text-left flex flex-col pt-4 px-4 pb-[7px] bg-[rgba(243,244,246,0.5)] border border-solid transition-shadow ${
+                    className={`relative shrink-0 w-[200px] h-[230px] rounded-[24px] overflow-clip text-left flex flex-col pt-4 px-4 pb-[7px] bg-[rgba(243,244,246,0.5)] border border-solid transition-shadow ${
                       isPicked
                         ? "border-[#7126d5] shadow-[0px_4px_4px_0px_rgba(113,38,213,0.42)]"
                         : "border-[rgba(211,211,211,0.5)]"
@@ -1102,13 +1103,13 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="relative w-full aspect-video"
+                    className="relative w-full h-0 pb-[calc(56.25%_-_10px)]"
                   >
                     {/* The category's icon on its gradient. This played the
                         category's video where one existed; the video belongs
                         on the category's own page, not behind a preview you
                         look at for two seconds on the way to a room. */}
-                    <div className="w-full h-full bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center">
+                    <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center">
                       <CategoryArtwork
                         categoryId={selectedCategory.category_id}
                         iconSlug={selectedCategory.icon_slug}
@@ -1234,13 +1235,13 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="relative w-full aspect-video"
+                    className="relative w-full h-0 pb-[calc(56.25%_-_10px)]"
                   >
                     {/* Video/Gradient Background */}
                     {selectedCategory.category_id === "__mixed__" ? (
                       // Special handling for mixed category - show mystery-box icon
                       <div 
-                        className="w-full h-full flex items-center justify-center"
+                        className="absolute inset-0 flex items-center justify-center"
                         style={{ background: "linear-gradient(135deg, #8B5CF6, #EC4899)" }}
                       >
                         <div className="opacity-40">
@@ -1255,7 +1256,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                       // own page.
                       <>
                         <div
-                          className="w-full h-full flex items-center justify-center"
+                          className="absolute inset-0 flex items-center justify-center"
                           style={{ background: categoryGradient(selectedCategory.color) }}
                         >
                           <CategoryArtwork
