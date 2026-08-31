@@ -8,6 +8,7 @@ import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { containsBlockedText } from "@/utils/contentFilter";
 import iconKingMascot from "@/assets/play-chooser/icon-king.webp";
 import crownIconAsset from "@/assets/crown-icon.png";
+import { resolveAvatarUrl } from "@/utils/avatarUtils";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -360,8 +361,14 @@ export default function KingPage() {
       .in("status", ["joined", "ready", "playing", "invited"])
       .order("joined_at", { ascending: true });
     if (data) {
-      setKingParts(data.filter((part) => part.status !== "invited"));
-      setKingPending(data.filter((part) => part.status === "invited"));
+      // Participant rows carry avatar snapshots; a stale hashed asset path
+      // breaks the <img> and degrades to an initial — recover it.
+      const resolved = data.map((part) => ({
+        ...part,
+        avatar_url: resolveAvatarUrl(part.avatar_url) ?? null,
+      }));
+      setKingParts(resolved.filter((part) => part.status !== "invited"));
+      setKingPending(resolved.filter((part) => part.status === "invited"));
     }
   }, []);
 
@@ -1257,12 +1264,18 @@ function KingTeamDuel({
                 </>
               )}
             </div>
-            <button
-              onClick={onNext}
-              className="rounded-[20px] p-4 bg-[#7C3AED] text-white font-bold"
-            >
-              {t("king.next")}
-            </button>
+            {isCaptain ? (
+              <button
+                onClick={onNext}
+                className="rounded-[20px] p-4 bg-[#7C3AED] text-white font-bold"
+              >
+                {t("king.next")}
+              </button>
+            ) : (
+              <p className="text-sm text-[#402666]/50 text-center">
+                {t("king.captainNextHint")}
+              </p>
+            )}
           </div>
         )}
 

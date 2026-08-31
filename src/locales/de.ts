@@ -1465,6 +1465,7 @@ export const de: KaTranslations = {
     teamDiscussHint: "Besprecht euch — der Kapitän öffnet die Optionen",
     teamSuggestHint: "Tippe deine Antwort an — der Kapitän entscheidet",
     captainLock: "Antwort festlegen",
+    captainNextHint: "Der Kapitän geht zur nächsten Frage",
     teamWon: "Euer Team hat den König besiegt!",
     teamLost: "Diesmal gewann der König",
     commitHint: "Antwort festlegen",

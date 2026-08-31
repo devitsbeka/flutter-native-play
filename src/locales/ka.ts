@@ -1745,6 +1745,7 @@ export const ka = {
     teamDiscussHint: "განიხილეთ ერთად — კაპიტანი გახსნის ვარიანტებს",
     teamSuggestHint: "შეეხე შენს ვარიანტს — კაპიტანი წყვეტს",
     captainLock: "დაადასტურე პასუხი",
+    captainNextHint: "კაპიტანი გადავა შემდეგ კითხვაზე",
     teamWon: "გუნდმა დაამარცხა მეფე!",
     teamLost: "ამჯერად მეფემ მოიგო",
     commitHint: "აირჩიე პასუხი",
