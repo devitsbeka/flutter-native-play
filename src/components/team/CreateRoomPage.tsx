@@ -1111,7 +1111,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                         category's video where one existed; the video belongs
                         on the category's own page, not behind a preview you
                         look at for two seconds on the way to a room. */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center">
+                    <div className="absolute inset-0 pb-14 bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center">
                       <CategoryArtwork
                         categoryId={selectedCategory.category_id}
                         iconSlug={selectedCategory.icon_slug}
@@ -1243,7 +1243,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                     {selectedCategory.category_id === "__mixed__" ? (
                       // Special handling for mixed category - show mystery-box icon
                       <div 
-                        className="absolute inset-0 flex items-center justify-center"
+                        className="absolute inset-0 pb-14 flex items-center justify-center"
                         style={{ background: "linear-gradient(135deg, #8B5CF6, #EC4899)" }}
                       >
                         <div className="opacity-40">
@@ -1258,7 +1258,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                       // own page.
                       <>
                         <div
-                          className="absolute inset-0 flex items-center justify-center"
+                          className="absolute inset-0 pb-14 flex items-center justify-center"
                           style={{ background: categoryGradient(selectedCategory.color) }}
                         >
                           <CategoryArtwork
