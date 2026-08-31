@@ -248,6 +248,9 @@ export default function KingPage() {
     applyState(data as unknown as KingState);
   }, [applyState, fail]);
 
+  // What THIS device sent, for the reveal's "you picked" row — the server
+  // reveal carries only the truth, and a timeout locked nothing.
+  const [myPick, setMyPick] = useState<string | null>(null);
   const submit = useCallback(
     async (answer: string) => {
       const matchId = matchIdRef.current;
@@ -260,6 +263,7 @@ export default function KingPage() {
       setBusy(false);
       if (error) return fail(error);
       const s = data as unknown as KingState;
+      setMyPick(answer);
       setState(s);
       setReveal(s);
       setStage("reveal");
@@ -283,6 +287,7 @@ export default function KingPage() {
       return;
     }
     const s = data as unknown as KingState;
+    setMyPick(null);
     setState(s);
     setReveal(s);
     setStage("reveal");
@@ -1043,8 +1048,19 @@ export default function KingPage() {
               className="rounded-[24px] p-5"
               style={{ background: "rgba(252,247,255,0.95)", boxShadow: CARD_SHADOW }}
             >
+              {/* On a miss, what was sent (or that time ran out) shows red
+                  above the truth — same read as the co-op reveal. */}
+              {!reveal.correct && (
+                <>
+                  <p className="text-xs text-[#402666]/40 mb-1">{t("king.yourPickLabel")}</p>
+                  <p className="font-bold text-red-500 mb-3">{myPick ?? t("king.nothingLocked")}</p>
+                </>
+              )}
               <p className="text-xs text-[#402666]/40 mb-1">{t("king.answerLabel")}</p>
-              <p className="font-bold text-[#402666] mb-3">{reveal.correct_answer}</p>
+              <p className={`font-bold mb-3 ${reveal.correct ? "text-emerald-600" : "text-[#402666]"}`}>
+                {reveal.correct ? "✓ " : ""}
+                {reveal.correct_answer}
+              </p>
               <p className="text-xs text-[#402666]/40 mb-1">{t("king.logicLabel")}</p>
               <p className="text-sm text-[#402666]/80 leading-relaxed">{reveal.explanation}</p>
             </div>
@@ -1325,8 +1341,22 @@ function KingTeamDuel({
               className="rounded-[24px] p-5"
               style={{ background: "rgba(252,247,255,0.95)", boxShadow: CARD_SHADOW }}
             >
+              {/* What the captain locked, next to the truth — "the King
+                  scored" alone never said WHY. On a miss the team's pick
+                  shows red above the green answer; on a timeout it says so. */}
+              {!view.last_result.correct && (
+                <>
+                  <p className="text-xs text-[#402666]/40 mb-1">{t("king.teamPickedLabel")}</p>
+                  <p className="font-bold text-red-500 mb-3">
+                    {view.last_result.chosen ?? t("king.nothingLocked")}
+                  </p>
+                </>
+              )}
               <p className="text-xs text-[#402666]/40 mb-1">{t("king.answerLabel")}</p>
-              <p className="font-bold text-[#402666] mb-3">{view.last_result.correct_answer}</p>
+              <p className={`font-bold mb-3 ${view.last_result.correct ? "text-emerald-600" : "text-[#402666]"}`}>
+                {view.last_result.correct ? "✓ " : ""}
+                {view.last_result.correct_answer}
+              </p>
               {view.last_result.explanation && (
                 <>
                   <p className="text-xs text-[#402666]/40 mb-1">{t("king.logicLabel")}</p>
