@@ -55,6 +55,24 @@ const qTextSize = (s: string) =>
 const OPTION_LABELS = ["A", "B", "C", "D", "E", "F"];
 
 /**
+ * Phase-flip tap guard. Every duel phase puts its CTA in the same spot, so
+ * the tap that ends one phase lands where the next phase's button appears —
+ * the captain tapped "next", the fresh question's "I know it!" was already
+ * under their finger, and the options opened before anyone had read the
+ * question. The button that arrives on a phase change ignores taps for a
+ * beat; a deliberate press half a second later works exactly as before.
+ */
+function useArmedCta(key: unknown) {
+  const [armed, setArmed] = useState(false);
+  useEffect(() => {
+    setArmed(false);
+    const id = window.setTimeout(() => setArmed(true), 800);
+    return () => window.clearTimeout(id);
+  }, [key]);
+  return armed;
+}
+
+/**
  * The duel scoreboard — two chunky score chips instead of bare numbers on
  * white. The King wears his own blue (the mascot's), the challenger side
  * wears gold; the "first to 6" rule sits between them. Shared by the solo
@@ -621,6 +639,10 @@ export default function KingPage() {
     () => void expire(),
   );
 
+  // Same trap as the co-op duel: "next" and the fresh question's "I know
+  // it!" share a spot, so a fast double-tap skipped the think minute.
+  const soloCtaArmed = useArmedCta(`${stage}:${state?.question_number ?? 0}`);
+
   // A live (or just-finished-here) team duel takes the whole screen.
   const showTeamDuel =
     !!team &&
@@ -945,7 +967,7 @@ export default function KingPage() {
             </div>
             <p className="font-mono text-3xl text-white font-bold text-center">{thinkSeconds}</p>
             <p className="text-sm text-white/70 text-center -mt-2">{t("king.thinkHint")}</p>
-            <button onClick={() => void showOptions()} className={DUEL_CTA}>
+            <button onClick={() => void showOptions()} disabled={!soloCtaArmed} className={DUEL_CTA}>
               {t("king.haveIt")}
             </button>
           </div>
@@ -980,7 +1002,9 @@ export default function KingPage() {
                 <motion.button
                   key={option}
                   whileTap={{ scale: 0.97 }}
-                  disabled={busy}
+                  // The tap that opened the options must not also answer:
+                  // these commit the team's fate, so they arm with the CTA.
+                  disabled={busy || !soloCtaArmed}
                   onClick={() => void submit(option)}
                   className="rounded-xl px-3 py-2.5 text-left text-sm font-medium text-[#402666] disabled:opacity-60 flex items-center gap-2.5"
                   style={{ background: "rgba(252,247,255,0.95)", boxShadow: CARD_SHADOW }}
@@ -1017,8 +1041,8 @@ export default function KingPage() {
             </div>
             <button
               onClick={() => (state?.status === "playing" ? void draw() : setStage("result"))}
-              disabled={busy}
-              className={`${DUEL_CTA} disabled:opacity-50`}
+              disabled={busy || !soloCtaArmed}
+              className={`${DUEL_CTA} ${busy ? "opacity-50" : ""}`}
             >
               {state?.status === "playing" ? t("king.next") : t("common.continue")}
             </button>
@@ -1104,6 +1128,9 @@ function KingTeamDuel({
   const [capPick, setCapPick] = useState<string | null>(null);
   useEffect(() => setCapPick(null), [view.question_number]);
 
+  // The CTA that just materialised under the finger stays cold for a beat.
+  const ctaArmed = useArmedCta(`${phase}:${view.question_number}`);
+
   const thinkLeft = useServerDeadline(
     phase === "think" ? view.question?.think_deadline : undefined,
     onAdvance,
@@ -1178,7 +1205,7 @@ function KingTeamDuel({
             </div>
             <p className="font-mono text-3xl text-white font-bold text-center">{thinkLeft}</p>
             {isCaptain ? (
-              <button onClick={onOptions} className={DUEL_CTA}>
+              <button onClick={onOptions} disabled={!ctaArmed} className={DUEL_CTA}>
                 {t("king.haveIt")}
               </button>
             ) : (
@@ -1265,8 +1292,8 @@ function KingTeamDuel({
             {isCaptain && (
               <button
                 onClick={() => capPick && onCommit(capPick)}
-                disabled={!capPick}
-                className={`${DUEL_CTA} disabled:opacity-40`}
+                disabled={!capPick || !ctaArmed}
+                className={`${DUEL_CTA} ${capPick ? "" : "opacity-40"}`}
               >
                 {t("king.captainLock")}
               </button>
@@ -1301,7 +1328,7 @@ function KingTeamDuel({
               )}
             </div>
             {isCaptain ? (
-              <button onClick={onNext} className={DUEL_CTA}>
+              <button onClick={onNext} disabled={!ctaArmed} className={DUEL_CTA}>
                 {t("king.next")}
               </button>
             ) : (
