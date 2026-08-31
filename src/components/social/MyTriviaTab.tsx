@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { FeatureOnboardingCarousel, hasSeenFeatureOnboarding } from "@/components/team/FeatureOnboardingCarousel";
 import { useNavigate } from "react-router-dom";
-import { Plus, Play, Loader2, Globe, Lock, ChevronDown, ChevronUp, Layers, Pencil, FileEdit, Trash2, Check, PartyPopper, Swords } from "lucide-react";
+import { Plus, Play, Loader2, Globe, Lock, ChevronDown, ChevronUp, Layers, Pencil, FileEdit, Trash2, Check, PartyPopper } from "lucide-react";
 import triviaBuzzerIcon from "@/assets/trivia-buzzer.png";
 import purpleHeart3d from "@/assets/icons/purple-heart-3d.png";
 import bookmark3d from "@/assets/icons/bookmark-3d-orange.png";
@@ -467,7 +467,7 @@ function CollectionCard({
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-foreground truncate text-sm">
-                  {profile?.nickname || t("extra.youLabel")}
+                  {t("extra.collectionLabel")}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {formatLocalTimeAgo(new Date(collection.created_at), t)}
@@ -706,7 +706,7 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-foreground truncate">
-              {profile?.nickname || t("extra.youLabel")}
+              {t("extra.myTriviaPartyLabel")}
             </p>
             <p className="text-xs text-muted-foreground">
               {formatLocalTimeAgo(new Date(post.created_at), t)}
@@ -852,7 +852,7 @@ function StandaloneQuizCard({
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-foreground truncate">
-              {profile?.nickname || t("extra.youLabel")}
+              {t("extra.triviaLabel")}
             </p>
             <p className="text-xs text-muted-foreground">
               {formatLocalTimeAgo(new Date(post.created_at), t)}
@@ -869,10 +869,7 @@ function StandaloneQuizCard({
                 onClick={handlePlayClick}
               >
                 {alreadyPlayedByMe ? (
-                  <>
-                    <Swords className="w-4 h-4" />
-                    <span>{t("extra.challengeFriendBtn")}</span>
-                  </>
+                  <span>{t("extra.challengeFriendBtn")}</span>
                 ) : (
                   <>
                     <Play className="w-4 h-4" />

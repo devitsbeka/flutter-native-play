@@ -2572,7 +2572,7 @@ export const ka = {
     playTrivia: "ითამაშე",
     skipTrivia: "გამოტოვებ",
     alreadyPlayed: "უკვე ითამაშე",
-    challengeFriendBtn: "გამოიწვიე მეგობრები",
+    challengeFriendBtn: "გამოიწვიე მეგობარი",
     chooseCategories: "აირჩიე კატეგორიები",
     selectedRounds: "არჩეული რაუნდები: {count}/8",
     categoryType: "კატეგორია",
