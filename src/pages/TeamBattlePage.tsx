@@ -36,6 +36,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast";
 import sceneArena from "@/assets/tb-lobby/scene-arena.webp";
+import iconBattleCrate from "@/assets/play-chooser/icon-crate.png";
 import crownIcon from "@/assets/crown-icon.png";
 import teamPenguins from "@/assets/tb-lobby/team-penguins.png";
 import teamFormula from "@/assets/tb-lobby/team-formula.png";
@@ -527,6 +528,7 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
     >
       <LilacHeader
         title={t("teamBattle.title")}
+        icon={iconBattleCrate}
         onBack={() => {
           // Navigate away first so the gate never re-creates a room the
           // instant this one clears.

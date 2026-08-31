@@ -690,6 +690,7 @@ export default function KingPage() {
       >
         <LilacHeader
           title={t("lobby.vkTitle")}
+          icon={iconKingMascot}
           onBack={() => navigate(-1)}
           onHelp={() => setHelpOpen((v) => !v)}
         />

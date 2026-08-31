@@ -121,6 +121,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
   // Room-invite mode picks first, sends on "done" — see sendRoomInvites.
   const [pickedForRoom, setPickedForRoom] = useState<Set<string>>(new Set());
   const [sendingInvites, setSendingInvites] = useState(false);
+  const [inviteSendError, setInviteSendError] = useState(false);
   // Who is already on the couch (seated or holding an invite), so their tile
   // can say so — greyed with a badge — instead of pretending they are
   // invitable and quietly dropping them at send time.
@@ -386,6 +387,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
       return;
     }
     setSendingInvites(true);
+    setInviteSendError(false);
     try {
       const ids = [...pickedForRoom];
       const { data: existing } = await supabase
@@ -449,7 +451,11 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
       handleClose();
       onInviteSuccess?.();
     } catch (error) {
+      // App toasts are muted by design (src/lib/toast), so a failure here
+      // has to say so ON the screen — a silent მზადაა reads as a dead
+      // button. The picks stay so the player can simply try again.
       console.error("Invite error:", error);
+      setInviteSendError(true);
       toast.error(t("extra.inviteFailed"));
     } finally {
       setSendingInvites(false);
@@ -462,6 +468,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
     setSentRequests(new Set());
     setSendingRequestTo(null);
     setPickedForRoom(new Set());
+    setInviteSendError(false);
     onClose();
   };
   
@@ -1137,6 +1144,11 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                       ? `${t("common.done")} · ${pickedForRoom.size}`
                       : t("common.done")}
                 </GreenPlayButton>
+              )}
+              {isRoomInviteMode && inviteSendError && (
+                <p className="mt-2 text-center text-sm font-semibold text-red-300">
+                  {t("extra.inviteFailed")}
+                </p>
               )}
             </div>
           </div>

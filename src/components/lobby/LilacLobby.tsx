@@ -133,10 +133,13 @@ export function FitBox({
  */
 export function LilacHeader({
   title,
+  icon,
   onBack,
   onHelp,
 }: {
   title: string;
+  /** The game's face beside its name — the King mascot, the Battle crate. */
+  icon?: string;
   onBack: () => void;
   onHelp?: () => void;
 }) {
@@ -151,6 +154,7 @@ export function LilacHeader({
         >
           <img alt="" className="block size-[20px]" src={iconBack} />
         </motion.button>
+        {icon && <img alt="" className="block size-[34px] object-contain drop-shadow-sm -mr-[2px]" src={icon} />}
         <p
           className="leading-[28px] not-italic text-[26px] tracking-[-0.16px] whitespace-nowrap"
           style={{ fontFamily: "'TASolivare', sans-serif", color: HEADING_COLOR }}
