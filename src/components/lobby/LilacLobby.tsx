@@ -73,10 +73,14 @@ export function ScaledCanvas({ children }: { children: ReactNode }) {
 export function FitBox({
   width,
   height,
+  align = "center",
   children,
 }: {
   width: number;
   height: number;
+  /** "start" pins the box to the top so an upward scene bleed is cropped
+   * by the wrapper instead of floating into view on tall screens. */
+  align?: "center" | "start";
   children: ReactNode;
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -97,7 +101,10 @@ export function FitBox({
   const boxW = Math.round(width * scale);
   const snapped = boxW / width;
   return (
-    <div ref={ref} className="w-full h-full flex items-center justify-center">
+    <div
+      ref={ref}
+      className={`w-full h-full flex justify-center ${align === "start" ? "items-start" : "items-center"}`}
+    >
       {scale > 0 && (
         <div style={{ width: boxW, height: Math.round(height * snapped) }}>
           <div

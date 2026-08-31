@@ -361,11 +361,17 @@ export default function KingPage() {
       .in("status", ["joined", "ready", "playing", "invited"])
       .order("joined_at", { ascending: true });
     if (data) {
-      // Participant rows carry avatar snapshots; a stale hashed asset path
-      // breaks the <img> and degrades to an initial — recover it.
+      // Participant rows carry avatar SNAPSHOTS taken at insert time — stale
+      // after a profile change or a redeploy of a hashed asset path — so
+      // overlay the live profile avatar and recover what remains.
+      const ids = data.map((part) => part.user_id);
+      const { data: profs } = ids.length
+        ? await supabase.from("profiles").select("user_id, avatar_url").in("user_id", ids)
+        : { data: [] as { user_id: string; avatar_url: string | null }[] };
+      const fresh = new Map((profs ?? []).map((pr) => [pr.user_id, pr.avatar_url]));
       const resolved = data.map((part) => ({
         ...part,
-        avatar_url: resolveAvatarUrl(part.avatar_url) ?? null,
+        avatar_url: resolveAvatarUrl(fresh.get(part.user_id) ?? part.avatar_url) ?? null,
       }));
       setKingParts(resolved.filter((part) => part.status !== "invited"));
       setKingPending(resolved.filter((part) => part.status === "invited"));

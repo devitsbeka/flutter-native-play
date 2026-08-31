@@ -519,13 +519,13 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
           value={rounds}
           onChange={setRounds}
         />
-        <p className="pt-[6px] font-[Nunito] font-normal leading-[20px] text-[#0c172c]/70 text-[13px] tracking-[-0.16px]">
+        <p className="pt-[6px] font-[Nunito] font-normal leading-[20px] text-[#0c172c]/70 text-[13px] text-center tracking-[-0.16px]">
           {t("lobby.pickDuration")}
         </p>
       </div>
 
       <div className="flex-1 min-h-0 overflow-hidden">
-      <FitBox width={500} height={525}>
+      <FitBox width={500} height={525} align="start">
         {/* arena scene (938:6267) + edge fade */}
         <div className="absolute left-[32px] top-[-139px] w-[435px] h-[780px] pointer-events-none">
           <img alt="" className="absolute inset-0 max-w-none object-cover size-full" src={sceneArena} />

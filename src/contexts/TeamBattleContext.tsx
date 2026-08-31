@@ -173,13 +173,22 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
     if (data) {
       // AI players wear one of the preset bot faces, keyed by their id, so
       // every surface shows the same face instead of an initial circle.
-      // Human rows go through resolveAvatarUrl: participant rows carry
-      // snapshots, and a stale hashed asset path renders as a broken image
-      // (then an initial) everywhere it isn't recovered.
+      // Human rows carry avatar SNAPSHOTS taken at insert time — stale after
+      // a profile change or a redeploy of a hashed asset path — so overlay
+      // the live profile avatar (the same fix useMyRooms carries) and run
+      // the result through resolveAvatarUrl.
+      const humanIds = data.filter((p) => !p.is_bot).map((p) => p.user_id);
+      const { data: profs } = humanIds.length
+        ? await supabase.from("profiles").select("user_id, avatar_url").in("user_id", humanIds)
+        : { data: [] as { user_id: string; avatar_url: string | null }[] };
+      const fresh = new Map((profs ?? []).map((pr) => [pr.user_id, pr.avatar_url]));
       const dressed = data.map((p) =>
         p.is_bot && !p.avatar_url
           ? { ...p, avatar_url: botAvatarFor(p.user_id) }
-          : { ...p, avatar_url: resolveAvatarUrl(p.avatar_url) ?? null },
+          : {
+              ...p,
+              avatar_url: resolveAvatarUrl(fresh.get(p.user_id) ?? p.avatar_url) ?? null,
+            },
       );
       setParticipants(dressed.filter((p) => p.status !== "invited"));
       setPendingInvites(dressed.filter((p) => p.status === "invited"));
