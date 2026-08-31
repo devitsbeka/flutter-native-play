@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { anyBlockedText, containsBlockedText } from "@/utils/contentFilter";
-import { Loader2, ArrowLeft, HelpCircle, UserPlus, X, Share2, RefreshCw, Play, Pencil, Gamepad2, Plus, Check } from "lucide-react";
+import { Loader2, ArrowLeft, HelpCircle, X, RefreshCw, Play, Pencil, Gamepad2, Plus, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { localizeCategoryNames } from "@/utils/localizeCategories";
 import { filterCategoriesForLanguage } from "@/utils/languageCategoryFilter";
@@ -18,7 +18,6 @@ import { useResponsiveVideo } from "@/hooks/useResponsiveVideo";
 import { createNotification } from "@/hooks/useNotifications";
 // Room names are AI-generated via edge function during room creation
 import { TVPlayModal } from "@/components/team/TVPlayModal";
-import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
 import { HowItWorksModal } from "@/components/team/HowItWorksModal";
 import { CategorySelectorModal } from "@/components/team/CategorySelectorModal";
 import { CategoryPickerModal } from "@/components/team/CategoryPickerModal";
@@ -42,11 +41,10 @@ import iconDiceCard from "@/assets/play-chooser/icon-dice.webp";
 import iconButtonCard from "@/assets/play-chooser/icon-button.png";
 import iconKingCard from "@/assets/play-chooser/icon-king.webp";
 import iconCrateCard from "@/assets/play-chooser/icon-crate.png";
-import iconFriendsCard from "@/assets/play-chooser/icon-friends.webp";
+import iconLibraryCard from "@/assets/play-chooser/icon-library.webp";
+import iconMyTriviaCard from "@/assets/play-chooser/icon-mytrivia.webp";
 import { PreRoomQueuePreview } from "@/components/team/PreRoomQueuePreview";
 import { getRandomGradient } from "@/config/roomGradients";
-import { siteUrl } from "@/config/site";
-import { inviteLinkPath } from "@/utils/inviteLink";
 
 /**
  * A room code, six characters of an alphabet with no O/0/I/1 in it.
@@ -65,7 +63,6 @@ function generateRoomCode() {
 import { useQueryClient } from "@tanstack/react-query";
 import type { Json } from "@/integrations/supabase/types";
 import { resolveAvatarUrl, fallbackAvatarFor } from "@/utils/avatarUtils";
-import { shareOrCopy } from "@/utils/shareLink";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 
 // Inspirational topics for trivia creation
@@ -108,12 +105,12 @@ interface Category {
 type SelectionMode = "random" | "library" | "create" | "my-trivias" | null;
 
 /**
- * The four game cards of the redesigned screen (Figma 926-10187): Random
- * first, then the two new lounges, then the classic friends room last —
- * "classic" reveals the sources the room game has always had (random /
- * library / my trivia) below the card reel.
+ * The six game cards of the redesigned screen (Figma 926-11729): quick game
+ * first, then Random, the two lounges, and the two room sources — Library and
+ * My Trivia — as cards of their own (the old "classic friends room" card that
+ * hid all three sources behind one more tap is gone).
  */
-type GameChoice = "quick" | "random" | "king" | "battle" | "classic";
+type GameChoice = "quick" | "random" | "king" | "battle" | "library" | "mytrivias";
 
 /** A person to seat as "invited" — a friend, or a member of a picked room. */
 type InvitePerson = {
@@ -186,15 +183,15 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   const [selectedFriends, setSelectedFriends] = useState<Set<string>>(new Set());
   const [isCreating, setIsCreating] = useState(false);
 
-  // Which game the room is for. A pre-selected category or a classic
-  // challenge lands on the classic card; otherwise NOTHING is picked —
-  // starting on Random quietly rolled a category the player never chose,
-  // and the create button read as ready for a game nobody asked for.
-  const [gameChoice, setGameChoice] = useState<GameChoice | null>(() =>
-    preSelectedCategory || (defaultChallengeType && defaultChallengeType !== "random")
-      ? "classic"
-      : null,
-  );
+  // Which game the room is for. A pre-selected category or a challenge lands
+  // on the matching source card; otherwise NOTHING is picked — starting on
+  // Random quietly rolled a category the player never chose, and the create
+  // button read as ready for a game nobody asked for.
+  const [gameChoice, setGameChoice] = useState<GameChoice | null>(() => {
+    if (preSelectedCategory || defaultChallengeType === "library") return "library";
+    if (defaultChallengeType === "my-trivias" || defaultChallengeType === "create") return "mytrivias";
+    return null;
+  });
   
   // Room name & icon state - AI-generated via edge function
   const [roomName, setRoomName] = useState<string>(t("extra.loadingState"));
@@ -204,7 +201,6 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   const [editedName, setEditedName] = useState("");
   
   const [showTVModal, setShowTVModal] = useState(false);
-  const [showInviteModal, setShowInviteModal] = useState(false);
   const [showHowItWorksModal, setShowHowItWorksModal] = useState(false);
   const [showCategoriesModal, setShowCategoriesModal] = useState(false);
   const [showCreateTriviaModal, setShowCreateTriviaModal] = useState(false);
@@ -230,17 +226,10 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   const [isSearchingRandom, setIsSearchingRandom] = useState(false);
   const [hasAutoTriggered, setHasAutoTriggered] = useState(false);
   
-  // Friends invited from the "see all" modal (or via a challenge) float to the
-  // front of the reel so they're visible as selected without scrolling. Kept
-  // separate from selectedFriends so tapping inside the reel doesn't reshuffle
-  // the avatars under the user's finger.
-  const [pinnedFriendIds, setPinnedFriendIds] = useState<string[]>([]);
-
   // If challenge user provided, auto-add to selected friends
   useEffect(() => {
     if (challengeUserId) {
       setSelectedFriends(new Set([challengeUserId]));
-      setPinnedFriendIds([challengeUserId]);
     }
   }, [challengeUserId]);
 
@@ -250,20 +239,9 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     [friends]
   );
 
-  // Reel order: invited friends first (in the order they were picked), the rest
-  // keep their original order — Array.prototype.sort is stable.
-  const reelFriends = useMemo(() => {
-    if (pinnedFriendIds.length === 0) return acceptedFriends;
-    const rank = new Map(pinnedFriendIds.map((id, index) => [id, index]));
-    return [...acceptedFriends].sort(
-      (a, b) =>
-        (rank.get(a.friendId) ?? Number.MAX_SAFE_INTEGER) -
-        (rank.get(b.friendId) ?? Number.MAX_SAFE_INTEGER)
-    );
-  }, [acceptedFriends, pinnedFriendIds]);
-
-  // Everyone the Create press will seat as invited: picked friends plus
-  // every player of every picked room, minus self, deduplicated.
+  // Everyone the Create press will seat as invited. Inviting now happens in
+  // the lobby (the + seat); the only pre-room pick left is the friend this
+  // screen was opened to challenge.
   const collectInvitees = (): InvitePerson[] => {
     const seen = new Set<string>();
     const out: InvitePerson[] = [];
@@ -571,30 +549,6 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     }
   };
 
-  // Share a link to the team page. The room doesn't exist yet at this
-  // point, so there is no room code to embed — the previous version shared
-  // a random made-up code that nothing could ever redeem. siteUrl keeps the
-  // link on the production domain even from the native app.
-  const handleShareInviteLink = async () => {
-    const categoryName = selectedCategory?.name || "Trivia";
-    // Was a bare /team, which told whoever opened it nothing: not who sent
-    // it, not what they were playing. The sender's own invite link says both,
-    // and makes them friends when it is accepted.
-    // Names the room this screen is about to create — see plannedRoomCode.
-    const { data: inviteCode } = await supabase.rpc("get_or_create_invite_code");
-    const inviteLink = inviteCode
-      ? siteUrl(inviteLinkPath(inviteCode, { kind: "room", roomCode: plannedRoomCode }))
-      : siteUrl("/team");
-
-    const outcome = await shareOrCopy({
-      title: t("extra.joinTriviaShare"),
-      text: t("extra.joinTriviaShareText", { category: categoryName }),
-      url: inviteLink,
-    });
-    if (outcome === "copied") toast({ description: t("team.linkCopied") });
-    if (outcome === "failed") toast({ description: t("team.shareFailed"), variant: "destructive" });
-  };
-
   // State for custom trivia questions
   const [customTriviaQuestions, setCustomTriviaQuestions] = useState<GeneratedQuestion[] | null>(null);
   const [customTriviaTitle, setCustomTriviaTitle] = useState("");
@@ -620,7 +574,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
 
   // Nothing picked, nothing to create — the player decides what to play.
   // The lounges are always ready to enter; Random needs a settled roll;
-  // classic keeps its per-source validity.
+  // Library and My Trivia keep their per-source validity.
   const createEnabled =
     gameChoice === null
       ? false
@@ -1076,131 +1030,8 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
           </div>
         </div>
 
-        {/* Invite Friends - Horizontal Scroll */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="text-[13.2px] font-medium text-muted-foreground">{t("extra.inviteFriendsToPlay")}</h2>
-            {acceptedFriends.length > 5 && (
-              <button 
-                onClick={() => setShowInviteModal(true)}
-                className="text-xs text-primary font-medium hover:underline"
-              >
-                {t("extra.seeAll")}
-              </button>
-            )}
-          </div>
-          
-          {acceptedFriends.length > 0 ? (
-            <div className="flex items-center gap-2">
-              {/* Horizontal scrolling friends */}
-              <div className="flex-1 overflow-x-auto scrollbar-hide">
-                <div className="flex gap-3 pb-1 pt-1 pl-1">
-                  {/* Invite friends button - Opens friend selection modal */}
-                  <motion.button
-                    onClick={() => setShowInviteModal(true)}
-                    className="shrink-0 flex flex-col items-center justify-center gap-1.5 p-2 min-w-[68px]"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <div className="w-[52px] h-[52px] rounded-full border-2 border-dashed border-primary/40 flex items-center justify-center">
-                      <UserPlus className="w-6 h-6 text-primary" />
-                    </div>
-                    <span className="text-xs text-primary font-medium">{t("extra.inviteBtn")}</span>
-                  </motion.button>
-
-                  {/* People, not rooms: the reel offers FRIENDS to invite.
-                      It used to lead with whole past rooms whose tap invited
-                      everyone in them — read as noise and surprised hosts. */}
-                  {reelFriends.slice(0, 10).map((friend) => {
-                    const isSelected = selectedFriends.has(friend.friendId);
-                    return (
-                      <motion.button
-                        key={friend.friendId}
-                        onClick={() => {
-                          const newSelected = new Set(selectedFriends);
-                          if (isSelected) {
-                            newSelected.delete(friend.friendId);
-                          } else {
-                            newSelected.add(friend.friendId);
-                          }
-                          setSelectedFriends(newSelected);
-                        }}
-                        className={`relative shrink-0 flex flex-col items-center gap-1.5 p-2 rounded-xl transition-all ${
-                          isSelected 
-                            ? "bg-primary/10 ring-2 ring-primary" 
-                            : "bg-muted/50 hover:bg-muted"
-                        }`}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        <div className="relative">
-                          <img 
-                            src={resolveAvatarUrl(friend.avatarUrl) || fallbackAvatarFor(friend.friendId)} 
-                            alt={friend.nickname}
-                            className="w-[52px] h-[52px] rounded-full object-cover"
-                          />
-                          {isSelected && (
-                            <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-primary rounded-full flex items-center justify-center">
-                              <span className="text-xs text-primary-foreground">✓</span>
-                            </div>
-                          )}
-                        </div>
-                        <span className="text-xs text-foreground font-medium max-w-[70px] truncate">
-                          {friend.nickname}
-                        </span>
-                      </motion.button>
-                    );
-                  })}
-                  
-                  {/* Show more button */}
-                  {acceptedFriends.length > 10 && (
-                    <motion.button
-                      onClick={() => setShowInviteModal(true)}
-                      className="shrink-0 flex flex-col items-center justify-center gap-1.5 p-2 rounded-xl bg-muted/50 hover:bg-muted transition-colors min-w-[68px]"
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <div className="w-[52px] h-[52px] rounded-full bg-primary/10 flex items-center justify-center">
-                        <span className="text-base text-primary font-bold">+{acceptedFriends.length - 10}</span>
-                      </div>
-                      <span className="text-xs text-muted-foreground">{t("extra.moreCount")}</span>
-                    </motion.button>
-                  )}
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="flex gap-2">
-              <motion.button
-                onClick={() => setShowInviteModal(true)}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-muted/50 border border-border/40 hover:bg-muted transition-colors"
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
-              >
-                <UserPlus className="w-5 h-5 text-muted-foreground" />
-                <span className="text-sm text-foreground">{t("extra.appFriends")}</span>
-              </motion.button>
-              <motion.button
-                onClick={handleShareInviteLink}
-                className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/30 hover:from-primary/20 hover:to-accent/20 transition-colors"
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
-              >
-                <Share2 className="w-5 h-5 text-primary" />
-                <span className="text-sm text-primary font-medium">{t("extra.shareBtn")}</span>
-              </motion.button>
-            </div>
-          )}
-          
-          {selectedFriends.size > 0 && (
-            <p className="text-xs text-primary mt-1.5">
-              {t("extra.friendsInvited", { count: collectInvitees().length })}
-            </p>
-          )}
-        </div>
-
-        {/* What will you play? — the horizontal game reel (Figma 926-10187):
-            Random / Versus King / Trivia Battle / classic friends room. */}
+        {/* What will you play? — the horizontal game reel (Figma 926-11729):
+            quick / Random / Versus King / Trivia Battle / Library / My Trivia. */}
         <div>
           <h2 className="text-[13.2px] font-medium text-muted-foreground mb-2">{t("extra.whatToPlay")}</h2>
 
@@ -1212,7 +1043,8 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                   { key: "random", icon: iconDiceCard, title: t("extra.randomOption"), desc: t("extra.randomDesc") },
                   { key: "king", icon: iconKingCard, title: t("lobby.vkTitle"), desc: t("lobby.kingCardDesc") },
                   { key: "battle", icon: iconCrateCard, title: t("teamBattle.title"), desc: t("gameTypes.teamBattleDesc") },
-                  { key: "classic", icon: iconFriendsCard, title: t("team.newRoom"), desc: t("lobby.classicCardDesc") },
+                  { key: "library", icon: iconLibraryCard, title: t("extra.libraryOption"), desc: t("extra.libraryDesc") },
+                  { key: "mytrivias", icon: iconMyTriviaCard, title: t("extra.myTriviaOption"), desc: t("extra.myTriviaDesc") },
                 ] as { key: GameChoice; icon: string; title: string; desc: string }[]
               ).map((card) => {
                 const isPicked = gameChoice === card.key;
@@ -1224,6 +1056,8 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                     onClick={() => {
                       setGameChoice(card.key);
                       if (card.key === "random" && !isSearchingRandom) void selectRandomCategory();
+                      if (card.key === "library" && !(selectionMode === "library" && selectedCategory)) setShowCategoriesModal(true);
+                      if (card.key === "mytrivias" && !challengeTrivia) void handleOptionClick("my-trivias");
                     }}
                     className={`relative shrink-0 w-[200px] h-[235px] rounded-[24px] overflow-clip text-left flex flex-col pt-4 px-4 pb-[7px] bg-[rgba(243,244,246,0.5)] border border-solid transition-shadow ${
                       isPicked
@@ -1257,10 +1091,8 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
           </div>
 
           <div className="space-y-3 mt-1">
-            {/* Random Option - Container that expands to show preview.
-                Shown for the Random card (as the roll status/preview) and
-                inside the classic room's source list. */}
-            {(gameChoice === "random" || gameChoice === "classic") && (
+            {/* Random Option - the roll status/preview under the Random card */}
+            {gameChoice === "random" && (
             <div className="rounded-2xl overflow-hidden">
               <AnimatePresence mode="wait">
                 {selectionMode === "random" && selectedCategory && !isSearchingRandom ? (
@@ -1392,7 +1224,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
             )}
 
             {/* Library Option - Container that expands to show preview */}
-            {gameChoice === "classic" && (
+            {gameChoice === "library" && (
             <div className="rounded-2xl overflow-hidden">
               <AnimatePresence mode="wait">
                 {selectionMode === "library" && selectedCategory ? (
@@ -1529,7 +1361,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
             )}
 
             {/* My Trivias Option - User's created content */}
-            {gameChoice === "classic" && (
+            {gameChoice === "mytrivias" && (
             <div className="rounded-2xl overflow-hidden">
               <AnimatePresence mode="wait">
                 {selectionMode === "my-trivias" && challengeTrivia ? (
@@ -1712,7 +1544,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
           ) : (
             <Play className="w-5 h-5 mr-2" />
           )}
-          {t("extra.createBtn")}
+          {gameChoice === "quick" ? t("lobby.startGame") : t("extra.createBtn")}
         </ChunkyButton>
         </div>
       </div>
@@ -1728,30 +1560,6 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         categoryName={selectedCategory?.name}
       />
       
-      {/* Invite Friends Modal - Pre-room selection mode */}
-      <InviteFriendsModal
-        isOpen={showInviteModal}
-        onClose={() => {
-          setShowInviteModal(false);
-          // Whoever is invited now leads the reel, newest picks last
-          setPinnedFriendIds(prev => [
-            ...prev.filter(id => selectedFriends.has(id)),
-            ...Array.from(selectedFriends).filter(id => !prev.includes(id)),
-          ]);
-        }}
-        roomCode={plannedRoomCode}
-        onFriendSelect={(friendId: string) => {
-          const newSelected = new Set(selectedFriends);
-          if (newSelected.has(friendId)) {
-            newSelected.delete(friendId);
-          } else {
-            newSelected.add(friendId);
-          }
-          setSelectedFriends(newSelected);
-        }}
-        selectedFriends={selectedFriends}
-      />
-
       {/* Category Selector Modal */}
       <CategorySelectorModal
         open={showCategoriesModal}

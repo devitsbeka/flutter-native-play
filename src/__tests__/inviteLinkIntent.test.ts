@@ -116,18 +116,18 @@ describe("every screen that shares a link declares its intent", () => {
   });
 
   /**
-   * Create Room reserves the code its room will be created with, so it can
-   * name the room in a link before the room exists. Sending a friend request
-   * from here was the previous answer and it was useless to anyone who was
-   * already your friend.
+   * Create Room no longer shares a link itself — inviting moved into the
+   * lobby's + seat (InviteFriendsModal), which the modal assertions above
+   * cover. What must survive is the code reservation: the screen still
+   * reserves the code its room will be created with, and the reserved code
+   * has to be the one the room is actually created with, or invites sent
+   * from the lobby name a room that never appears.
    */
-  it("Create Room names the room it is about to create", () => {
+  it("Create Room creates the room under its reserved code", () => {
     const create = src("src/components/team/CreateRoomPage.tsx");
-    expect(create).toContain('from "@/utils/inviteLink"');
-    expect(create).toContain('kind: "room", roomCode: plannedRoomCode');
+    // If a share link ever returns to this screen, it goes through
+    // inviteLinkPath — never a hand-rolled /i/ URL.
     expect(create).not.toMatch(/siteUrl\(`\/i\/\$\{/);
-    // The reserved code has to be the one the room is actually created with,
-    // or the link names a room that never appears.
     expect(create).toContain("const [plannedRoomCode] = useState(generateRoomCode)");
     expect(create).not.toMatch(/const roomCode = generateRoomCode\(\)/);
     expect(create).toContain("roomIcon, plannedRoomCode)");
