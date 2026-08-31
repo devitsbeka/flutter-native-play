@@ -152,9 +152,13 @@ function PhaseRps() {
             <p className="text-white/70 text-sm mt-2">{t("teamBattle.rpsSubtitle")}</p>
           </div>
 
-          {/* the live hands: every player's throw the moment it lands (rps.throws
-              rides the realtime state row). After a tie the last hand's gestures
-              linger dimmed until that player rethrows. */}
+          {/* The hands, without spoilers. While a round is open, another
+              player's tile only says THAT they locked in (✅) — never which
+              gesture, or whoever throws second reads the winning counter off
+              the screen. You see your own pick; everyone's actual hands
+              reveal together when the round resolves — the tie banner here,
+              the winner banner on the board. After a tie the resolved hand's
+              gestures linger dimmed until that player rethrows. */}
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -172,6 +176,7 @@ function PhaseRps() {
                 <div className="flex flex-wrap gap-2">
                   {humansOf(team).map((p) => {
                     const live = throws[p.user_id];
+                    const isMe = p.user_id === user?.id;
                     const stale = !live && last?.tie ? last.throws[p.user_id] : undefined;
                     return (
                       <span key={p.user_id} className="relative inline-block">
@@ -181,7 +186,13 @@ function PhaseRps() {
                             live ? "" : stale ? "opacity-40" : "animate-pulse-soft"
                           }`}
                         >
-                          {live || stale ? gestureEmoji(live ?? stale) : "💭"}
+                          {live
+                            ? isMe
+                              ? gestureEmoji(live)
+                              : "✅"
+                            : stale
+                              ? gestureEmoji(stale)
+                              : "💭"}
                         </span>
                       </span>
                     );
