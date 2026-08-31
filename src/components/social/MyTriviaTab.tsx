@@ -1226,14 +1226,6 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
     (item.likes_count || 0) + (item.saves_count || 0) + (item.plays_count || 0);
 
   switch (sortFilter) {
-    case "most_liked":
-      standalonePosts = standalonePosts.sort((a, b) => (b.likes_count || 0) - (a.likes_count || 0));
-      filteredCollections = filteredCollections.sort((a, b) => (b.likes_count || 0) - (a.likes_count || 0));
-      break;
-    case "most_saved":
-      standalonePosts = standalonePosts.sort((a, b) => (b.saves_count || 0) - (a.saves_count || 0));
-      filteredCollections = filteredCollections.sort((a, b) => (b.saves_count || 0) - (a.saves_count || 0));
-      break;
     case "most_played":
       standalonePosts = standalonePosts.sort((a, b) => (b.plays_count || 0) - (a.plays_count || 0));
       filteredCollections = filteredCollections.sort((a, b) => (b.plays_count || 0) - (a.plays_count || 0));
@@ -1261,11 +1253,7 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
   // exclusion rather than a list of filters so a new filter is date-sorted by
   // default instead of coming out in whatever order the arrays were built —
   // which is what "personal", "private" and "published" used to do.
-  if (sortFilter === "most_liked") {
-    unifiedFeed = unifiedFeed.sort((a, b) => (b.data.likes_count || 0) - (a.data.likes_count || 0));
-  } else if (sortFilter === "most_saved") {
-    unifiedFeed = unifiedFeed.sort((a, b) => (b.data.saves_count || 0) - (a.data.saves_count || 0));
-  } else if (sortFilter === "most_played") {
+  if (sortFilter === "most_played") {
     unifiedFeed = unifiedFeed.sort((a, b) => (b.data.plays_count || 0) - (a.data.plays_count || 0));
   } else {
     unifiedFeed = unifiedFeed.sort(

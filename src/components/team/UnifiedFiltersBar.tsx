@@ -213,8 +213,6 @@ export const myTriviaFilterOptions: FilterOption<MyTriviaFilter>[] = [
   { value: "trivias", labelKey: "extra.filterTrivias" },
   { value: "collections", labelKey: "extra.filterCollections" },
   { value: "personal", labelKey: "extra.myTriviaPartyLabel" },
-  { value: "most_liked", labelKey: "extra.filterMostLiked" },
-  { value: "most_saved", labelKey: "extra.filterMostSaved" },
   { value: "most_played", labelKey: "extra.filterMostPlayed" },
 ];
 
@@ -240,8 +238,6 @@ export type MyTriviaFilter =
   | "published"
   | "trivias"
   | "collections"
-  | "most_liked"
-  | "most_saved"
   | "most_played"
   | "personal";
 export type ExploreFilter = "all" | "friends" | "trivias" | "collections";
