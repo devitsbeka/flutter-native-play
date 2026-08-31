@@ -35,6 +35,25 @@ import sceneKing from "@/assets/vk-lobby/scene-king.webp";
 
 const CARD_SHADOW = "0px 2px 8px 0px rgba(102,51,153,0.06), 0px 8px 24px 0px rgba(102,51,153,0.12)";
 
+// The duel plays on the game screens' periwinkle (same as Team Battle), so
+// the light cards carry the contrast and the purple CTA no longer sinks
+// into a near-identical background — CTAs are white with purple type.
+const DUEL_SHELL =
+  "h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] overflow-y-auto bg-[#7E7BDC]";
+const DUEL_CTA =
+  "rounded-[20px] p-4 bg-white text-[#6D28D9] font-bold shadow-[0px_4px_0px_0px_rgba(64,38,102,0.25)] active:translate-y-[2px] transition-transform";
+
+// Logic puzzles run long: the type steps down with length so the whole
+// question fits a small viewport without the page needing to scroll.
+const qTextSize = (s: string) =>
+  s.length > 260
+    ? "text-[13px] leading-snug"
+    : s.length > 150
+      ? "text-[15px] leading-snug"
+      : "text-[17px] leading-relaxed";
+
+const OPTION_LABELS = ["A", "B", "C", "D", "E", "F"];
+
 /**
  * The duel scoreboard — two chunky score chips instead of bare numbers on
  * white. The King wears his own blue (the mascot's), the challenger side
@@ -66,9 +85,9 @@ function DuelScoreRow({
     </div>
   );
   return (
-    <div className="flex items-center justify-center gap-3 py-3">
+    <div className="flex items-center justify-center gap-3 py-2">
       {chip(youLabel, youScore, "#F2C14E", "#E3AC30", "#A16207")}
-      <span className="text-[#402666]/40 text-xs">{ruleLabel}</span>
+      <span className="text-white/70 text-xs">{ruleLabel}</span>
       {chip(kingLabel, kingScore, "#7BA3F0", "#5F8BE0", "#3565C9")}
     </div>
   );
@@ -874,17 +893,17 @@ export default function KingPage() {
   }
 
   return (
-    <div className="h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] overflow-y-auto bg-background">
-      <div className="max-w-md mx-auto px-5 pb-10">
-        <div className="flex items-center gap-2 pt-4 pb-2">
+    <div className={DUEL_SHELL}>
+      <div className="max-w-md mx-auto px-5 pb-6">
+        <div className="flex items-center gap-2 pt-3 pb-1">
           <button
             onClick={() => void abandon()}
             aria-label={t("common.back")}
-            className="w-10 h-10 -ml-2 rounded-full flex items-center justify-center text-[#402666] active:scale-95 transition-transform"
+            className="w-10 h-10 -ml-2 rounded-full flex items-center justify-center text-white active:scale-95 transition-transform"
           >
             <ChevronLeft className="w-6 h-6" />
           </button>
-          <h1 className="font-display text-xl font-bold text-[#402666] flex items-center gap-2">
+          <h1 className="font-display text-xl font-bold text-white flex items-center gap-2">
             <img alt="" src={iconKingMascot} className="w-8 h-8 object-contain" /> {t("king.title")}
           </h1>
         </div>
@@ -900,70 +919,76 @@ export default function KingPage() {
         )}
 
         {stage === "thinking" && state?.question && (
-          <div className="flex flex-col gap-4 mt-2">
-            <p className="text-xs text-[#402666]/40 text-center">
+          <div className="flex flex-col gap-3 mt-1">
+            <p className="text-xs text-white/60 text-center">
               {t("king.questionNo", { n: state.question_number })}
             </p>
             <div
-              className="rounded-[24px] p-6"
-              style={{ background: "rgba(252,247,255,0.92)", boxShadow: CARD_SHADOW }}
+              className="rounded-[24px] p-5"
+              style={{ background: "rgba(252,247,255,0.95)", boxShadow: CARD_SHADOW }}
             >
               {/* Every puzzle wears its icon (20260921160000); rows without
                   a slug fall back to a per-question seeded pick. */}
-              <div className="flex justify-center mb-4">
+              <div className="flex justify-center mb-3">
                 <DynamicIcon
                   slug={state.question.icon_slug ?? undefined}
                   seedText={state.question.question_text}
-                  size={64}
+                  size={52}
                 />
               </div>
-              <p className="font-bold text-[17px] text-[#402666] leading-relaxed">
+              <p className={`font-bold text-[#402666] ${qTextSize(state.question.question_text)}`}>
                 {state.question.question_text}
               </p>
               {state.question.image_url && (
                 <img src={state.question.image_url} alt="" className="mt-4 rounded-xl max-w-full" />
               )}
             </div>
-            <p className="font-mono text-4xl text-[#7C3AED] font-bold text-center">{thinkSeconds}</p>
-            <p className="text-sm text-[#402666]/50 text-center -mt-2">{t("king.thinkHint")}</p>
-            <button
-              onClick={() => void showOptions()}
-              className="rounded-[20px] p-4 bg-[#7C3AED] text-white font-bold"
-            >
+            <p className="font-mono text-3xl text-white font-bold text-center">{thinkSeconds}</p>
+            <p className="text-sm text-white/70 text-center -mt-2">{t("king.thinkHint")}</p>
+            <button onClick={() => void showOptions()} className={DUEL_CTA}>
               {t("king.haveIt")}
             </button>
           </div>
         )}
 
         {stage === "commit" && state?.question && (
-          <div className="flex flex-col gap-3 mt-2">
+          <div className="flex flex-col gap-2.5 mt-1">
             <div
-              className="rounded-[24px] p-5"
-              style={{ background: "rgba(252,247,255,0.92)", boxShadow: CARD_SHADOW }}
+              className="rounded-[24px] p-4"
+              style={{ background: "rgba(252,247,255,0.95)", boxShadow: CARD_SHADOW }}
             >
               <div className="flex items-center gap-3">
                 <DynamicIcon
                   slug={state.question.icon_slug ?? undefined}
                   seedText={state.question.question_text}
-                  size={40}
+                  size={36}
                   className="shrink-0"
                 />
-                <p className="font-bold text-[#402666]">{state.question.question_text}</p>
+                <p
+                  className={`font-bold text-[#402666] ${
+                    state.question.question_text.length > 150 ? "text-[13px] leading-snug" : "text-sm"
+                  }`}
+                >
+                  {state.question.question_text}
+                </p>
               </div>
             </div>
-            <p className="font-mono text-3xl text-red-400 font-bold text-center">{commitSeconds}</p>
-            <p className="text-sm text-[#402666]/50 text-center -mt-2">{t("king.commitHint")}</p>
+            <p className="font-mono text-2xl text-red-300 font-bold text-center">{commitSeconds}</p>
+            <p className="text-sm text-white/70 text-center -mt-1.5">{t("king.commitHint")}</p>
             <div className="flex flex-col gap-2">
-              {(state.options ?? []).map((option) => (
+              {(state.options ?? []).map((option, i) => (
                 <motion.button
                   key={option}
                   whileTap={{ scale: 0.97 }}
                   disabled={busy}
                   onClick={() => void submit(option)}
-                  className="rounded-xl px-4 py-3 text-left text-sm font-medium text-[#402666] disabled:opacity-60"
-                  style={{ background: "rgba(252,247,255,0.92)", boxShadow: CARD_SHADOW }}
+                  className="rounded-xl px-3 py-2.5 text-left text-sm font-medium text-[#402666] disabled:opacity-60 flex items-center gap-2.5"
+                  style={{ background: "rgba(252,247,255,0.95)", boxShadow: CARD_SHADOW }}
                 >
-                  {option}
+                  <span className="w-7 h-7 shrink-0 rounded-full bg-[#7C3AED]/10 text-[#7C3AED] text-xs font-bold flex items-center justify-center">
+                    {OPTION_LABELS[i]}
+                  </span>
+                  <span className="flex-1 min-w-0">{option}</span>
                 </motion.button>
               ))}
             </div>
@@ -976,14 +1001,14 @@ export default function KingPage() {
               initial={{ scale: 0.7, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               className={`font-display text-2xl font-bold text-center ${
-                reveal.correct ? "text-emerald-500" : "text-red-400"
+                reveal.correct ? "text-emerald-300" : "text-red-300"
               }`}
             >
               {reveal.correct ? t("king.cracked") : t("king.kingScores")}
             </motion.p>
             <div
               className="rounded-[24px] p-5"
-              style={{ background: "rgba(252,247,255,0.92)", boxShadow: CARD_SHADOW }}
+              style={{ background: "rgba(252,247,255,0.95)", boxShadow: CARD_SHADOW }}
             >
               <p className="text-xs text-[#402666]/40 mb-1">{t("king.answerLabel")}</p>
               <p className="font-bold text-[#402666] mb-3">{reveal.correct_answer}</p>
@@ -993,7 +1018,7 @@ export default function KingPage() {
             <button
               onClick={() => (state?.status === "playing" ? void draw() : setStage("result"))}
               disabled={busy}
-              className="rounded-[20px] p-4 bg-[#7C3AED] text-white font-bold disabled:opacity-50"
+              className={`${DUEL_CTA} disabled:opacity-50`}
             >
               {state?.status === "playing" ? t("king.next") : t("common.continue")}
             </button>
@@ -1003,12 +1028,12 @@ export default function KingPage() {
         {stage === "result" && state && (
           <div className="flex flex-col items-center gap-4 pt-16">
             <Crown
-              className={`w-16 h-16 ${state.status === "won" ? "text-amber-500" : "text-[#402666]/20"}`}
+              className={`w-16 h-16 ${state.status === "won" ? "text-amber-300" : "text-white/30"}`}
             />
-            <p className="font-display text-2xl font-bold text-[#402666] text-center">
+            <p className="font-display text-2xl font-bold text-white text-center">
               {state.status === "won" ? t("king.youWon") : t("king.kingWon")}
             </p>
-            <p className="text-[#402666]/60">
+            <p className="text-white/70">
               {state.player_score} : {state.king_score}
             </p>
             <button
@@ -1018,11 +1043,11 @@ export default function KingPage() {
                 setStage("intro");
                 void start();
               }}
-              className="rounded-[20px] px-8 py-4 bg-[#7C3AED] text-white font-bold"
+              className={`${DUEL_CTA} px-8`}
             >
               {t("king.playAgain")}
             </button>
-            <button onClick={() => navigate(-1)} className="text-sm text-[#402666]/40">
+            <button onClick={() => navigate(-1)} className="text-sm text-white/60">
               {t("common.back")}
             </button>
           </div>
@@ -1093,21 +1118,21 @@ function KingTeamDuel({
     parts.filter((p) => view.suggestions[p.user_id] === option);
 
   return (
-    <div className="h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] overflow-y-auto bg-background">
-      <div className="max-w-md mx-auto px-5 pb-10">
-        <div className="flex items-center gap-2 pt-4 pb-2">
+    <div className={DUEL_SHELL}>
+      <div className="max-w-md mx-auto px-5 pb-6">
+        <div className="flex items-center gap-2 pt-3 pb-1">
           <button
             onClick={onExit}
             aria-label={t("common.back")}
-            className="w-10 h-10 -ml-2 rounded-full flex items-center justify-center text-[#402666] active:scale-95 transition-transform"
+            className="w-10 h-10 -ml-2 rounded-full flex items-center justify-center text-white active:scale-95 transition-transform"
           >
             <ChevronLeft className="w-6 h-6" />
           </button>
-          <h1 className="font-display text-xl font-bold text-[#402666] flex items-center gap-2 min-w-0">
+          <h1 className="font-display text-xl font-bold text-white flex items-center gap-2 min-w-0">
             <img alt="" src={iconKingMascot} className="w-8 h-8 object-contain shrink-0" /> {t("king.title")}
           </h1>
           {captain && (
-            <span className="ml-auto flex items-center gap-1.5 bg-[#f3ebfd] rounded-full pl-2 pr-3 py-1 shrink-0">
+            <span className="ml-auto flex items-center gap-1.5 bg-white/90 rounded-full pl-2 pr-3 py-1 shrink-0">
               <span className="relative w-6 h-6">
                 {captain.avatar_url ? (
                   <img alt="" src={captain.avatar_url} className="w-6 h-6 rounded-full object-cover" />
@@ -1132,61 +1157,64 @@ function KingTeamDuel({
         />
 
         {phase === "think" && view.question && (
-          <div className="flex flex-col gap-4 mt-2">
-            <p className="text-xs text-[#402666]/40 text-center">
+          <div className="flex flex-col gap-3 mt-1">
+            <p className="text-xs text-white/60 text-center">
               {t("king.questionNo", { n: view.question_number })}
             </p>
             <div
-              className="rounded-[24px] p-6"
-              style={{ background: "rgba(252,247,255,0.92)", boxShadow: CARD_SHADOW }}
+              className="rounded-[24px] p-5"
+              style={{ background: "rgba(252,247,255,0.95)", boxShadow: CARD_SHADOW }}
             >
-              <div className="flex justify-center mb-4">
+              <div className="flex justify-center mb-3">
                 <DynamicIcon
                   slug={view.question.icon_slug ?? undefined}
                   seedText={view.question.question_text}
-                  size={64}
+                  size={52}
                 />
               </div>
-              <p className="font-bold text-[17px] text-[#402666] leading-relaxed">
+              <p className={`font-bold text-[#402666] ${qTextSize(view.question.question_text)}`}>
                 {view.question.question_text}
               </p>
             </div>
-            <p className="font-mono text-4xl text-[#7C3AED] font-bold text-center">{thinkLeft}</p>
+            <p className="font-mono text-3xl text-white font-bold text-center">{thinkLeft}</p>
             {isCaptain ? (
-              <button
-                onClick={onOptions}
-                className="rounded-[20px] p-4 bg-[#7C3AED] text-white font-bold"
-              >
+              <button onClick={onOptions} className={DUEL_CTA}>
                 {t("king.haveIt")}
               </button>
             ) : (
-              <p className="text-sm text-[#402666]/50 text-center">{t("king.teamDiscussHint")}</p>
+              <p className="text-sm text-white/70 text-center">{t("king.teamDiscussHint")}</p>
             )}
           </div>
         )}
 
         {phase === "commit" && view.question && (
-          <div className="flex flex-col gap-3 mt-2">
+          <div className="flex flex-col gap-2.5 mt-1">
             <div
-              className="rounded-[24px] p-5"
-              style={{ background: "rgba(252,247,255,0.92)", boxShadow: CARD_SHADOW }}
+              className="rounded-[24px] p-4"
+              style={{ background: "rgba(252,247,255,0.95)", boxShadow: CARD_SHADOW }}
             >
               <div className="flex items-center gap-3">
                 <DynamicIcon
                   slug={view.question.icon_slug ?? undefined}
                   seedText={view.question.question_text}
-                  size={40}
+                  size={36}
                   className="shrink-0"
                 />
-                <p className="font-bold text-[#402666]">{view.question.question_text}</p>
+                <p
+                  className={`font-bold text-[#402666] ${
+                    view.question.question_text.length > 150 ? "text-[13px] leading-snug" : "text-sm"
+                  }`}
+                >
+                  {view.question.question_text}
+                </p>
               </div>
             </div>
-            <p className="font-mono text-3xl text-red-400 font-bold text-center">{commitLeft}</p>
-            <p className="text-sm text-[#402666]/50 text-center -mt-2">
+            <p className="font-mono text-2xl text-red-300 font-bold text-center">{commitLeft}</p>
+            <p className="text-sm text-white/70 text-center -mt-1.5">
               {t("king.teamSuggestHint")}
             </p>
             <div className="flex flex-col gap-2">
-              {(view.options ?? []).map((option) => {
+              {(view.options ?? []).map((option, i) => {
                 const mine = mySuggestion === option;
                 const picked = isCaptain && capPick === option;
                 return (
@@ -1197,15 +1225,18 @@ function KingTeamDuel({
                       if (isCaptain) setCapPick(option);
                       onSuggest(option);
                     }}
-                    className={`rounded-xl px-4 py-3 text-left text-sm font-medium text-[#402666] flex items-center gap-2 ${
+                    className={`rounded-xl px-3 py-2.5 text-left text-sm font-medium text-[#402666] flex items-center gap-2.5 ${
                       picked
                         ? "ring-2 ring-[#7C3AED]"
                         : mine
                           ? "ring-2 ring-[#7C3AED]/40"
                           : ""
                     }`}
-                    style={{ background: "rgba(252,247,255,0.92)", boxShadow: CARD_SHADOW }}
+                    style={{ background: "rgba(252,247,255,0.95)", boxShadow: CARD_SHADOW }}
                   >
+                    <span className="w-7 h-7 shrink-0 rounded-full bg-[#7C3AED]/10 text-[#7C3AED] text-xs font-bold flex items-center justify-center">
+                      {OPTION_LABELS[i]}
+                    </span>
                     <span className="flex-1 min-w-0">{option}</span>
                     {/* the teammates backing this answer, live */}
                     <span className="flex -space-x-1.5 shrink-0">
@@ -1235,7 +1266,7 @@ function KingTeamDuel({
               <button
                 onClick={() => capPick && onCommit(capPick)}
                 disabled={!capPick}
-                className="rounded-[20px] p-4 bg-[#7C3AED] text-white font-bold disabled:opacity-40"
+                className={`${DUEL_CTA} disabled:opacity-40`}
               >
                 {t("king.captainLock")}
               </button>
@@ -1249,14 +1280,14 @@ function KingTeamDuel({
               initial={{ scale: 0.7, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               className={`font-display text-2xl font-bold text-center ${
-                view.last_result.correct ? "text-emerald-500" : "text-red-400"
+                view.last_result.correct ? "text-emerald-300" : "text-red-300"
               }`}
             >
               {view.last_result.correct ? t("king.cracked") : t("king.kingScores")}
             </motion.p>
             <div
               className="rounded-[24px] p-5"
-              style={{ background: "rgba(252,247,255,0.92)", boxShadow: CARD_SHADOW }}
+              style={{ background: "rgba(252,247,255,0.95)", boxShadow: CARD_SHADOW }}
             >
               <p className="text-xs text-[#402666]/40 mb-1">{t("king.answerLabel")}</p>
               <p className="font-bold text-[#402666] mb-3">{view.last_result.correct_answer}</p>
@@ -1270,14 +1301,11 @@ function KingTeamDuel({
               )}
             </div>
             {isCaptain ? (
-              <button
-                onClick={onNext}
-                className="rounded-[20px] p-4 bg-[#7C3AED] text-white font-bold"
-              >
+              <button onClick={onNext} className={DUEL_CTA}>
                 {t("king.next")}
               </button>
             ) : (
-              <p className="text-sm text-[#402666]/50 text-center">
+              <p className="text-sm text-white/70 text-center">
                 {t("king.captainNextHint")}
               </p>
             )}
@@ -1287,23 +1315,20 @@ function KingTeamDuel({
         {phase === "result" && (
           <div className="flex flex-col items-center gap-4 pt-16">
             <Crown
-              className={`w-16 h-16 ${view.status === "won" ? "text-amber-500" : "text-[#402666]/20"}`}
+              className={`w-16 h-16 ${view.status === "won" ? "text-amber-300" : "text-white/30"}`}
             />
-            <p className="font-display text-2xl font-bold text-[#402666] text-center">
+            <p className="font-display text-2xl font-bold text-white text-center">
               {view.status === "won" ? t("king.teamWon") : t("king.teamLost")}
             </p>
-            <p className="text-[#402666]/60">
+            <p className="text-white/70">
               {view.team_score} : {view.king_score}
             </p>
             {isHost && (
-              <button
-                onClick={onRestart}
-                className="rounded-[20px] px-8 py-4 bg-[#7C3AED] text-white font-bold"
-              >
+              <button onClick={onRestart} className={`${DUEL_CTA} px-8`}>
                 {t("king.playAgain")}
               </button>
             )}
-            <button onClick={onExit} className="text-sm text-[#402666]/40">
+            <button onClick={onExit} className="text-sm text-white/60">
               {t("common.back")}
             </button>
           </div>
