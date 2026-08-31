@@ -534,18 +534,18 @@ export default function Discover() {
                 competing with the title. */}
             <div aria-hidden className="absolute left-1/2 -translate-x-1/2 top-[78px] h-px w-[min(441px,88.2vw)] bg-[#b8a6f5]/70" />
 
-            <h2 className="absolute left-1/2 -translate-x-1/2 top-[calc(78px_+_min(55px,11vw))] w-[min(393px,86vw)] font-display uppercase text-[min(40px,8vw)] leading-[min(43px,8.6vw)] tracking-[0.5px]">
+            <h2 className="absolute left-1/2 -translate-x-1/2 top-[calc(78px_+_min(50px,10vw,6.4dvh))] w-[min(393px,86vw)] font-display uppercase text-[min(40px,8vw)] leading-[min(43px,8.6vw)] tracking-[0.5px]">
               {t("discover.promoTitle")}
             </h2>
 
-            <p className="absolute left-1/2 -translate-x-1/2 top-[calc(78px_+_min(157px,31.4vw))] w-full px-6 text-[min(18px,3.6vw)] leading-[min(20.7px,4.14vw)] tracking-[-0.16px]">
+            <p className="absolute left-1/2 -translate-x-1/2 top-[calc(78px_+_min(148px,29.6vw,19dvh))] w-full px-6 text-[min(18px,3.6vw)] leading-[min(20.7px,4.14vw)] tracking-[-0.16px]">
               {t("discover.promoSubtitle")}
             </p>
 
             <button
               type="button"
               onClick={() => setPaywallOpen(true)}
-              className="pointer-events-auto absolute left-1/2 -translate-x-1/2 top-[calc(78px_+_min(215px,43vw))] h-[min(53px,10.6vw)] w-[min(192px,38.4vw)] rounded-[min(18.386px,3.68vw)] border-[1.532px] border-solid border-[#e8e0f5] bg-white/80 text-[#5d247f] text-[min(16px,3.2vw)] font-bold uppercase tracking-[-0.16px] [text-shadow:none] shadow-[0px_3.698px_0px_0px_#d8d0e8,0px_5.546px_14.79px_0px_rgba(0,0,0,0.1)] active:translate-y-[2px] active:shadow-[0px_1.5px_0px_0px_#d8d0e8,0px_2px_8px_0px_rgba(0,0,0,0.1)] transition-all"
+              className="pointer-events-auto absolute left-1/2 -translate-x-1/2 top-[calc(78px_+_min(192px,38.4vw,24dvh))] h-[min(53px,10.6vw,6.8dvh)] w-[min(192px,38.4vw)] rounded-[min(18.386px,3.68vw)] border-[1.532px] border-solid border-[#e8e0f5] bg-white/80 text-[#5d247f] text-[min(16px,3.2vw)] font-bold uppercase tracking-[-0.16px] [text-shadow:none] shadow-[0px_3.698px_0px_0px_#d8d0e8,0px_5.546px_14.79px_0px_rgba(0,0,0,0.1)] active:translate-y-[2px] active:shadow-[0px_1.5px_0px_0px_#d8d0e8,0px_2px_8px_0px_rgba(0,0,0,0.1)] transition-all"
             >
               {t("discover.promoCta")}
             </button>
@@ -553,12 +553,15 @@ export default function Discover() {
             {/* Hangs off the BUTTON, not off either edge of the cover. The
                 frame's flat 363px sank it under the sheet on short phones;
                 pinning it to the cover's bottom then ran it INTO the button
-                on wide ones, where the button's vw offsets cap out while the
-                47% cover keeps growing shorter relative to width. Right
-                under the button both problems disappear: the offsets above
-                scale with vw, so button-bottom plus a small gap fits inside
-                the cover on every size that exists. */}
-            <p className="absolute top-[calc(78px_+_min(215px,43vw)_+_min(53px,10.6vw)_+_min(10px,2vw))] left-1/2 -translate-x-1/2 w-full px-6 text-[min(14px,2.8vw)] leading-[min(20.7px,4.14vw)] tracking-[-0.16px]">
+                on wide ones.
+
+                Every offset above carries a dvh cap for the same reason it
+                carries a vw one: the cover is 47dvh, so on a wide-SHORT
+                window (492x772, where this last line went under the sheet
+                again) the vw terms outgrow it. Capped in both, the whole
+                offer shrinks with whichever axis is tighter and this line
+                stays inside the cover. */}
+            <p className="absolute top-[calc(78px_+_min(192px,38.4vw,24dvh)_+_min(53px,10.6vw,6.8dvh)_+_min(8px,1.6vw,1dvh))] left-1/2 -translate-x-1/2 w-full px-6 text-[min(14px,2.8vw)] leading-[min(20.7px,4.14vw)] tracking-[-0.16px]">
               {offerNote}
             </p>
           </div>
