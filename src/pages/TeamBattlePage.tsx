@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type MutableRefObject } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Bot, ChevronLeft, Pencil, UserPlus } from "lucide-react";
+import { ChevronLeft, Pencil } from "lucide-react";
 import { containsBlockedText } from "@/utils/contentFilter";
 import { readAppLanguage } from "@/utils/appLanguage";
 import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
@@ -27,8 +27,6 @@ import {
   LilacHeader,
   DurationTabs,
   FitBox,
-  PlusChooser,
-  type ChooserOption,
   PlusSeat,
   Seat,
   SeatMenu,
@@ -190,7 +188,7 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
   const { user } = useAuth();
   const navigate = useNavigate();
   const {
-    room, participants, pendingInvites, isHost, myTeam, setTeam, addBot,
+    room, participants, pendingInvites, isHost, myTeam, setTeam,
     setCaptain, voteCaptain, manageSeat, startMatch, leaveRoom, loading, state, settle,
   } = useTeamBattle();
   const { categories } = useCategories();
@@ -346,31 +344,12 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
     if (data) void manageSeat(data.user_id, team === "a" ? "move_a" : "move_b");
   };
 
-  // A + seat asks who takes it — invite a friend, seat an AI player (host),
-  // or sit there yourself — and does exactly what was picked.
-  const [chooserTeam, setChooserTeam] = useState<TBTeam | null>(null);
-  const seatAction = (team: TBTeam) => setChooserTeam(team);
-  const chooserOptions = (team: TBTeam): ChooserOption[] => {
-    const options: ChooserOption[] = [
-      {
-        icon: <UserPlus className="w-5 h-5" />,
-        label: t("lobby.inviteFriend"),
-        sub: t("lobby.inviteToGame"),
-        onPress: () => {
-          inviteTeamRef.current = team;
-          setInviteOpen(true);
-        },
-      },
-    ];
-    if (isHost) {
-      options.push({
-        icon: <Bot className="w-5 h-5" />,
-        label: t("lobby.aiPlayer"),
-        sub: t("teamBattle.addBot"),
-        onPress: () => void addBot(team),
-      });
-    }
-    return options;
+  // A + seat invites a friend onto that team — no AI players here, these
+  // lounges are for people. The invite modal opens with the team remembered
+  // so an accepted friend lands on the right side.
+  const seatAction = (team: TBTeam) => {
+    inviteTeamRef.current = team;
+    setInviteOpen(true);
   };
 
   // Hold a seat to manage it: the host moves anyone between teams or
@@ -677,13 +656,6 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
           onInviteSuccess={() => void assignPendingTeam()}
         />
       )}
-
-      <PlusChooser
-        open={chooserTeam !== null}
-        title={t("lobby.seatChooserTitle")}
-        options={chooserTeam ? chooserOptions(chooserTeam) : []}
-        onClose={() => setChooserTeam(null)}
-      />
 
       <SeatMenu
         target={seatMenu ? { nickname: seatMenu.p.nickname, avatarUrl: seatMenu.p.avatar_url } : null}

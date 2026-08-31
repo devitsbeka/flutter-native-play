@@ -135,8 +135,7 @@ function PhaseRps() {
   // signal to rearm this device's buttons.
   useEffect(() => setThrown(null), [round]);
 
-  const handsOf = (team: TBTeam) =>
-    participants.filter((p) => p.team === team && last?.throws[p.user_id]);
+  const humansOf = (team: TBTeam) => participants.filter((p) => p.team === team && !p.is_bot);
 
   return (
     <div className={SHELL}>
@@ -153,34 +152,44 @@ function PhaseRps() {
             <p className="text-white/70 text-sm mt-2">{t("teamBattle.rpsSubtitle")}</p>
           </div>
 
-          {/* the tied hand, shown before the rethrow: everyone's throw */}
-          {last?.tie && (
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: "spring", stiffness: 380, damping: 22 }}
-              className="w-full max-w-sm rounded-2xl bg-white/10 border border-white/20 p-4 flex flex-col gap-3"
-            >
+          {/* the live hands: every player's throw the moment it lands (rps.throws
+              rides the realtime state row). After a tie the last hand's gestures
+              linger dimmed until that player rethrows. */}
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 380, damping: 22 }}
+            className="w-full max-w-sm rounded-2xl bg-white/10 border border-white/20 p-4 flex flex-col gap-3"
+          >
+            {last?.tie && (
               <p className="text-center font-bold text-white">
                 {gestureEmoji(last.team_a)} {t("teamBattle.rpsTieBanner")} {gestureEmoji(last.team_b)}
               </p>
-              {(["a", "b"] as TBTeam[]).map((team) => (
-                <div key={team} className="flex items-center gap-2">
-                  <span className="text-[11px] text-white/60 w-16 shrink-0">{teamLabel(t, team)}</span>
-                  <div className="flex flex-wrap gap-2">
-                    {handsOf(team).map((p) => (
+            )}
+            {(["a", "b"] as TBTeam[]).map((team) => (
+              <div key={team} className="flex items-center gap-2">
+                <span className="text-[11px] text-white/60 w-16 shrink-0">{teamLabel(t, team)}</span>
+                <div className="flex flex-wrap gap-2">
+                  {humansOf(team).map((p) => {
+                    const live = throws[p.user_id];
+                    const stale = !live && last?.tie ? last.throws[p.user_id] : undefined;
+                    return (
                       <span key={p.user_id} className="relative inline-block">
                         <SmartAvatar avatarUrl={p.avatar_url} fallback={p.nickname} size="xs" />
-                        <span className="absolute -bottom-1 -right-1 text-[13px] drop-shadow">
-                          {gestureEmoji(last.throws[p.user_id])}
+                        <span
+                          className={`absolute -bottom-1 -right-1 text-[13px] drop-shadow ${
+                            live ? "" : stale ? "opacity-40" : "animate-pulse-soft"
+                          }`}
+                        >
+                          {live || stale ? gestureEmoji(live ?? stale) : "💭"}
                         </span>
                       </span>
-                    ))}
-                  </div>
+                    );
+                  })}
                 </div>
-              ))}
-            </motion.div>
-          )}
+              </div>
+            ))}
+          </motion.div>
           <div className="grid grid-cols-3 gap-3 w-full max-w-sm">
             {GESTURES.map((g) => {
               const picked = mine === g.key;

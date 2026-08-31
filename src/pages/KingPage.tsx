@@ -3,7 +3,7 @@ import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import type { Tables } from "@/integrations/supabase/types";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronLeft, Crown, Pencil, Share2, UserPlus } from "lucide-react";
+import { ChevronLeft, Crown, Pencil } from "lucide-react";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { containsBlockedText } from "@/utils/contentFilter";
 import iconKingMascot from "@/assets/play-chooser/icon-king.webp";
@@ -16,7 +16,6 @@ import { useServerDeadline } from "@/hooks/useServerDeadline";
 import { useGameInvitations } from "@/hooks/useGameInvitations";
 import { readAppLanguage } from "@/utils/appLanguage";
 import { toast } from "@/lib/toast";
-import { shareOrCopy } from "@/utils/shareLink";
 import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
 import { FriendsStoriesBar } from "@/components/team/FriendsStoriesBar";
 import {
@@ -27,7 +26,6 @@ import {
   LILAC_BG,
   LilacHeader,
   FitBox,
-  PlusChooser,
   PlusSeat,
   Seat,
   SeatMenu,
@@ -554,8 +552,7 @@ export default function KingPage() {
   // the notification and lands on this couch.
   const [inviteOpen, setInviteOpen] = useState(false);
   const [peek, setPeek] = useState<InviteEntry | null>(null);
-  const [chooserOpen, setChooserOpen] = useState(false);
-  const inviteFriends = useCallback(() => setChooserOpen(true), []);
+  const inviteFriends = useCallback(() => setInviteOpen(true), []);
 
   const thinkSeconds = useServerDeadline(
     stage === "thinking" ? state?.question?.think_deadline : undefined,
@@ -745,35 +742,6 @@ export default function KingPage() {
           inviteLink={kingRoom ? `https://mytrivia.io/king?code=${kingRoom.room_code}` : "https://mytrivia.io/king"}
           roomId={kingRoom?.id}
           roomCode={kingRoom?.room_code}
-        />
-
-        <PlusChooser
-          open={chooserOpen}
-          title={t("lobby.seatChooserTitle")}
-          options={[
-            {
-              icon: <UserPlus className="w-5 h-5" />,
-              label: t("lobby.inviteFriend"),
-              sub: t("lobby.inviteToGame"),
-              onPress: () => setInviteOpen(true),
-            },
-            {
-              icon: <Share2 className="w-5 h-5" />,
-              label: t("lobby.sendLink"),
-              sub: kingRoom ? `mytrivia.io/king?code=${kingRoom.room_code}` : "mytrivia.io/king",
-              onPress: () => {
-                void shareOrCopy({
-                  url: kingRoom
-                    ? `https://mytrivia.io/king?code=${kingRoom.room_code}`
-                    : "https://mytrivia.io/king",
-                }).then((outcome) => {
-                  if (outcome === "copied") toast.success(t("lobby.linkCopied"));
-                  else if (outcome === "failed") toast.error(t("common.error"));
-                });
-              },
-            },
-          ]}
-          onClose={() => setChooserOpen(false)}
         />
 
         <SeatMenu
