@@ -39,6 +39,7 @@ import triviaBuzzer from "@/assets/trivia-buzzer-3.png";
 import iconGroupOfPeople from "@/assets/group-of-people.png";
 import stickerAlbum from "@/assets/sticker-album.png";
 import iconDiceCard from "@/assets/play-chooser/icon-dice.webp";
+import iconButtonCard from "@/assets/play-chooser/icon-button.png";
 import iconKingCard from "@/assets/play-chooser/icon-king.webp";
 import iconCrateCard from "@/assets/play-chooser/icon-crate.png";
 import iconFriendsCard from "@/assets/play-chooser/icon-friends.webp";
@@ -112,7 +113,7 @@ type SelectionMode = "random" | "library" | "create" | "my-trivias" | null;
  * "classic" reveals the sources the room game has always had (random /
  * library / my trivia) below the card reel.
  */
-type GameChoice = "random" | "king" | "battle" | "classic";
+type GameChoice = "quick" | "random" | "king" | "battle" | "classic";
 
 /** A person to seat as "invited" — a friend, or a member of a picked room. */
 type InvitePerson = {
@@ -623,7 +624,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   const createEnabled =
     gameChoice === null
       ? false
-      : gameChoice === "king" || gameChoice === "battle"
+      : gameChoice === "quick" || gameChoice === "king" || gameChoice === "battle"
         ? true
         : gameChoice === "random"
           ? selectionMode === "random" && !!selectedCategory && !isSearchingRandom
@@ -707,6 +708,14 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   const handleCreate = async () => {
     if (!user) return;
     if (isCreating) return;
+
+    // Quick game is the /game matchmaking flow — no room to create; its
+    // own guards (limits, stake) live centrally in the game flow.
+    if (gameChoice === "quick") {
+      onClose();
+      navigate("/game");
+      return;
+    }
 
     // The lounges create their own room the moment they open; the people
     // picked here ride along in router state and get seated as invited
@@ -999,7 +1008,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
             >
               <ArrowLeft className="w-5 h-5 text-foreground" />
             </button>
-            <h1 className="text-xl font-display text-foreground">{t("team.newRoom")}</h1>
+            <h1 className="text-xl font-display text-foreground">{t("team.onlineGame")}</h1>
           </div>
           
           {/* Help Button */}
@@ -1199,6 +1208,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
             <div className="flex gap-[17px] pt-1 pb-2 w-max">
               {(
                 [
+                  { key: "quick", icon: iconButtonCard, title: t("extra.playQuickGame"), desc: t("extra.playQuickGameDesc") },
                   { key: "random", icon: iconDiceCard, title: t("extra.randomOption"), desc: t("extra.randomDesc") },
                   { key: "king", icon: iconKingCard, title: t("lobby.vkTitle"), desc: t("lobby.kingCardDesc") },
                   { key: "battle", icon: iconCrateCard, title: t("teamBattle.title"), desc: t("gameTypes.teamBattleDesc") },

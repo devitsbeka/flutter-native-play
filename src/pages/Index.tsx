@@ -155,7 +155,6 @@ import { useVipStatus } from "@/hooks/useVipStatus";
 import { WatchAdModal } from "@/components/home/WatchAdModal";
 import { FriendJoinedModal } from "@/components/home/FriendJoinedModal";
 import { FriendsStoriesBar } from "@/components/team/FriendsStoriesBar";
-import { PlayOptionsModal } from "@/components/home/PlayOptionsModal";
 import { InviteFriendsModal as AddFriendsModal } from "@/components/team/InviteFriendsModal";
 import { ChangeNameModal } from "@/components/home/ChangeNameModal";
 
@@ -323,16 +322,15 @@ export default function Index() {
   const [showWelcomeOnboarding, setShowWelcomeOnboarding] = useState(false);
   const [showChangeNameModal, setShowChangeNameModal] = useState(false);
   const [showAddFriendModal, setShowAddFriendModal] = useState(false);
-  const [showPlayOptions, setShowPlayOptions] = useState(false);
 
-  // Mission CTA landing: the missions modal routes play-type missions here
-  // with openPlayOptions so the "how do you want to play" chooser opens
+  // Mission CTA landing: play-type missions used to open the chooser modal;
+  // the chooser is gone, so they land on the online-game screen directly.
   useEffect(() => {
     if (!location.state?.openPlayOptions) return;
     navigate(location.pathname, { replace: true, state: {} });
     if (user) {
       setShowMissionsModal(false);
-      setShowPlayOptions(true);
+      navigate("/team", { state: { openCreateRoom: true } });
     }
   }, [location.state, location.pathname, navigate, user]);
 
@@ -480,7 +478,6 @@ export default function Index() {
   // Start a quick match: the /game flow matches against a random opponent
   // and the VS screen rolls a random category automatically.
   const startQuickGame = useCallback(async () => {
-    setShowPlayOptions(false);
     if (!user) {
       // Guest user - check if they have plays remaining
       if (hasReachedGuestPlayLimit()) {
@@ -516,23 +513,17 @@ export default function Index() {
     }
   }, [user, profile, navigate, openAvatarModal, isVip, canPlay, hasEnoughCoins, regenPlayAvailable, playsRemaining, useRegenPlay]);
 
-  // The main play button first offers a choice: quick match or play with
-  // friends. Guests skip the chooser — rooms need an account anyway.
+  // The main play button goes straight to the online-game screen — the
+  // chooser modal is gone; that screen's own card row now offers every game
+  // type, quick game first. Guests still jump into a quick game directly,
+  // since rooms need an account anyway.
   const handlePlayClick = useCallback(() => {
     if (user) {
-      setShowPlayOptions(true);
+      navigate("/team", { state: { openCreateRoom: true } });
     } else {
       void startQuickGame();
     }
-  }, [user, startQuickGame]);
-
-  const handlePlayWithFriends = useCallback(() => {
-    setShowPlayOptions(false);
-    // Straight into the create-room flow. The interim /play chooser page is
-    // gone — the play-options modal itself now offers every game type
-    // (Trivia King and Trivia Battle ride the same game_types registry).
-    navigate("/team", { state: { openCreateRoom: true } });
-  }, [navigate]);
+  }, [user, navigate, startQuickGame]);
 
   // Guest welcome panel handlers
   const handleGuestCreateAccount = useCallback(async (username: string, password: string) => {
@@ -1200,14 +1191,6 @@ export default function Index() {
         <AddFriendsModal
           isOpen={showAddFriendModal}
           onClose={() => setShowAddFriendModal(false)}
-        />
-
-        {/* Play options: quick match vs play with friends */}
-        <PlayOptionsModal
-          isOpen={showPlayOptions}
-          onClose={() => setShowPlayOptions(false)}
-          onQuickGame={() => void startQuickGame()}
-          onPlayWithFriends={handlePlayWithFriends}
         />
 
         {/* Friend Joined Modal */}
