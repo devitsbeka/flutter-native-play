@@ -550,15 +550,15 @@ export default function Discover() {
               {t("discover.promoCta")}
             </button>
 
-            {/* Pinned to the BOTTOM of the cover, not measured down from the
-                top of it. At a fixed 78px + min(285px, 57vw) the note sat at
-                300px on a 390-wide phone while the cover is 47% of the
-                viewport — 310px on a 660px-tall screen — so on a short phone
-                the sheet covered it and the price disappeared. Everything
-                above it still hangs off the header, which is what keeps the
-                offer's own spacing; only this last line answers to where the
-                cover ends. */}
-            <p className="absolute bottom-2 left-1/2 -translate-x-1/2 w-full px-6 text-[min(14px,2.8vw)] leading-[min(20.7px,4.14vw)] tracking-[-0.16px]">
+            {/* Hangs off the BUTTON, not off either edge of the cover. The
+                frame's flat 363px sank it under the sheet on short phones;
+                pinning it to the cover's bottom then ran it INTO the button
+                on wide ones, where the button's vw offsets cap out while the
+                47% cover keeps growing shorter relative to width. Right
+                under the button both problems disappear: the offsets above
+                scale with vw, so button-bottom plus a small gap fits inside
+                the cover on every size that exists. */}
+            <p className="absolute top-[calc(78px_+_min(215px,43vw)_+_min(53px,10.6vw)_+_min(10px,2vw))] left-1/2 -translate-x-1/2 w-full px-6 text-[min(14px,2.8vw)] leading-[min(20.7px,4.14vw)] tracking-[-0.16px]">
               {offerNote}
             </p>
           </div>
