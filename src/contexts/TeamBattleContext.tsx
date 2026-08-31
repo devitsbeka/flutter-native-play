@@ -46,6 +46,13 @@ export type TBParticipant = Tables<"room_participants">;
 export type TBTile = Tables<"team_battle_board">;
 export type TBState = Tables<"team_battle_state">;
 
+/** One answered rapid-fire question, broadcast live so the room spectates. */
+export interface TBPick {
+  index: number;
+  option: string;
+  correct: boolean;
+}
+
 interface TeamBattleContextValue {
   room: TBRoom | null;
   participants: TBParticipant[];
@@ -73,6 +80,9 @@ interface TeamBattleContextValue {
   submitRps: (gesture: TBGesture) => Promise<void>;
   pickTile: (tileId: string) => Promise<void>;
   submitAnswer: (questionIndex: number, answer: string) => Promise<{ correct: boolean } | null>;
+  turnPicks: TBPick[];
+  sendPick: (pick: TBPick) => void;
+  playedBy: Record<string, string>;
   voteSuper: (candidate: string) => Promise<void>;
   submitSuper: (questionIndex: number, answer: string) => Promise<{ correct: boolean } | null>;
   advance: () => Promise<void>;
@@ -130,8 +140,14 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
   const [state, setState] = useState<TBState | null>(null);
   const [loading, setLoading] = useState(false);
   const channelsRef = useRef<ReturnType<typeof supabase.channel>[]>([]);
+  const liveChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const roomIdRef = useRef<string | null>(null);
   const seatOpsRef = useRef(0);
+  // Spectation state: the active player's answers this turn (broadcast, not
+  // stored), and which player played each claimed tile (learned from state
+  // updates as the match runs).
+  const [turnPicks, setTurnPicks] = useState<TBPick[]>([]);
+  const [playedBy, setPlayedBy] = useState<Record<string, string>>({});
 
   const me = participants.find((p) => p.user_id === user?.id) ?? null;
   const isHost = !!room && room.host_user_id === user?.id;
@@ -235,10 +251,46 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
         (payload) => setRoom(payload.new as TBRoom),
       )
       .subscribe();
-    channelsRef.current = [stateCh, boardCh, partCh, roomCh];
+    // The spectation feed: every answered question is broadcast here so the
+    // rest of the room watches picks land in real time. self:true means the
+    // spotlight player's own device shares the same history.
+    const liveCh = supabase
+      .channel(`tb-live-${roomId}`, { config: { broadcast: { self: true } } })
+      .on("broadcast", { event: "pick" }, ({ payload }) => {
+        const pick = payload as TBPick;
+        setTurnPicks((prev) =>
+          prev.some((p) => p.index === pick.index) ? prev : [...prev, pick],
+        );
+      })
+      .subscribe();
+    liveChannelRef.current = liveCh;
+    channelsRef.current = [stateCh, boardCh, partCh, roomCh, liveCh];
 
-    return cleanupChannels;
+    return () => {
+      liveChannelRef.current = null;
+      cleanupChannels();
+    };
   }, [room?.id, cleanupChannels, fetchMatch, fetchParticipants]);
+
+  // Each new tile starts a fresh pick history; a fresh game forgets who
+  // played what.
+  useEffect(() => {
+    setTurnPicks([]);
+  }, [state?.active_tile]);
+  useEffect(() => {
+    setTurnPicks([]);
+    setPlayedBy({});
+  }, [state?.game_id]);
+  useEffect(() => {
+    const tileId = state?.active_tile;
+    const playerId = state?.active_player;
+    if (!tileId || !playerId) return;
+    setPlayedBy((prev) => (prev[tileId] === playerId ? prev : { ...prev, [tileId]: playerId }));
+  }, [state?.active_tile, state?.active_player]);
+
+  const sendPick = useCallback((pick: TBPick) => {
+    void liveChannelRef.current?.send({ type: "broadcast", event: "pick", payload: pick });
+  }, []);
 
   const createRoom = useCallback(async (): Promise<TBRoom | null> => {
     if (!user || !profile) {
@@ -715,6 +767,9 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
       submitRps,
       pickTile,
       submitAnswer,
+      turnPicks,
+      sendPick,
+      playedBy,
       voteSuper,
       submitSuper,
       advance,
@@ -723,7 +778,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
     [room, participants, pendingInvites, tiles, state, loading, isHost, myTeam, isSpotlight,
      createRoom, joinRoom, enterRoom, leaveRoom, setTeam, addBot, removeBot,
      setCaptain, voteCaptain, manageSeat, startMatch, submitRps, pickTile, submitAnswer,
-     voteSuper, submitSuper, advance, settle],
+     turnPicks, sendPick, playedBy, voteSuper, submitSuper, advance, settle],
   );
 
   return <TeamBattleContext.Provider value={value}>{children}</TeamBattleContext.Provider>;

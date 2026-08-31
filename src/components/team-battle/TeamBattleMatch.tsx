@@ -172,7 +172,7 @@ function PhaseRps() {
 
 function PhaseBoard() {
   const { t } = useLanguage();
-  const { state, tiles, participants, isSpotlight, pickTile, advance } = useTeamBattle();
+  const { state, tiles, participants, isSpotlight, pickTile, playedBy, advance } = useTeamBattle();
   const { categories } = useCategories();
   const secondsLeft = useServerDeadline(state?.deadline, advance);
   const picker = participants.find((p) => p.user_id === state?.active_player);
@@ -202,6 +202,11 @@ function PhaseBoard() {
             {tiles.map((tile) => {
               const played = !!tile.claimed_by_team;
               const cat = categories.find((c) => c.uuid === tile.category_id);
+              // Who actually played this tile — learned live from state
+              // updates; a mid-match joiner falls back to the team label.
+              const playedPlayer = played
+                ? participants.find((p) => p.user_id === playedBy[tile.id])
+                : undefined;
               return (
                 <motion.button
                   key={tile.id}
@@ -228,8 +233,26 @@ function PhaseBoard() {
                       {tile.category_name}
                     </p>
                     {played ? (
-                      <span className="px-2 py-0.5 rounded-full bg-[#2A2550]/10 text-[#2A2550]/70 text-[10px] font-bold">
-                        {teamLabel(t, tile.claimed_by_team as TBTeam)} · +{tile.points_earned}
+                      <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#2A2550]/10 text-[#2A2550]/70 text-[10px] font-bold max-w-full">
+                        {playedPlayer ? (
+                          <>
+                            {playedPlayer.avatar_url ? (
+                              <img
+                                alt=""
+                                src={playedPlayer.avatar_url}
+                                className="w-4 h-4 rounded-full object-cover shrink-0"
+                              />
+                            ) : (
+                              <span className="w-4 h-4 rounded-full bg-[#2A2550]/20 text-[8px] flex items-center justify-center shrink-0">
+                                {playedPlayer.nickname.charAt(0).toUpperCase()}
+                              </span>
+                            )}
+                            <span className="truncate max-w-[64px]">{playedPlayer.nickname}</span>
+                          </>
+                        ) : (
+                          teamLabel(t, tile.claimed_by_team as TBTeam)
+                        )}
+                        <span className="shrink-0">· +{tile.points_earned}</span>
                       </span>
                     ) : (
                       <div className="flex items-center gap-1.5">
@@ -314,7 +337,8 @@ function TurnQuestionCard({
 
 function PhaseRapidFire() {
   const { t } = useLanguage();
-  const { state, tiles, participants, isSpotlight, submitAnswer, advance } = useTeamBattle();
+  const { state, tiles, participants, isSpotlight, submitAnswer, turnPicks, sendPick, advance } =
+    useTeamBattle();
   const secondsLeft = useServerDeadline(state?.deadline, advance);
   const [choice, setChoice] = useState<{ option: string; correct: boolean } | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -331,7 +355,25 @@ function PhaseRapidFire() {
   const shownAnswers = isBotTurn
     ? Math.min(targetAnswers, Math.floor(((turnSeconds - secondsLeft) / turnSeconds) * (targetAnswers + 1)))
     : targetAnswers;
-  const index = Math.min(shownAnswers, Math.max(questions.length - 1, 0));
+  const serverIndex = Math.min(shownAnswers, Math.max(questions.length - 1, 0));
+
+  // Spectators hold each just-answered question ~0.9s so the pick's colour
+  // actually reads before the next question flips in. The picks arrive on
+  // the live broadcast; if one goes missing the server counter takes over,
+  // so watching never stalls.
+  const [held, setHeld] = useState(0);
+  useEffect(() => setHeld(0), [state?.active_tile]);
+  useEffect(() => {
+    if (held >= turnPicks.length) return;
+    const id = window.setTimeout(() => setHeld((h) => h + 1), 900);
+    return () => window.clearTimeout(id);
+  }, [turnPicks.length, held]);
+
+  const revealPick =
+    !isSpotlight && !isBotTurn && held < turnPicks.length ? turnPicks[held] : null;
+  const index = revealPick
+    ? Math.min(revealPick.index, Math.max(questions.length - 1, 0))
+    : serverIndex;
   const question = questions[index];
 
   // Material exhausted before the clock: close the human turn.
@@ -345,12 +387,24 @@ function PhaseRapidFire() {
     if (submitting || choice || !question) return;
     setSubmitting(true);
     const res = await submitAnswer(targetAnswers, option);
-    if (res) setChoice({ option, correct: res.correct });
+    if (res) {
+      setChoice({ option, correct: res.correct });
+      // Everyone else watches this land live.
+      sendPick({ index: targetAnswers, option, correct: res.correct });
+    }
     setSubmitting(false);
   };
 
   const answerState = (option: string): QuizAnswerState => {
-    if (!isSpotlight) return "disabled";
+    if (!isSpotlight) {
+      // The spectator's buttons replay the spotlight player's pick: their
+      // choice in green/red, and the right answer surfaced on a miss.
+      if (revealPick) {
+        if (option === revealPick.option) return revealPick.correct ? "correct" : "wrong";
+        if (!revealPick.correct && option === question.correct_answer) return "correct";
+      }
+      return "disabled";
+    }
     if (!choice) return submitting ? "loading" : "default";
     if (option === choice.option) return choice.correct ? "correct" : "wrong";
     return "disabled";
@@ -378,10 +432,26 @@ function PhaseRapidFire() {
             </p>
           </div>
           <div className="flex items-center gap-1 bg-white/10 px-3 py-1.5 rounded-full shrink-0">
-            <span className="text-white font-bold text-sm">{Math.min(shownAnswers + 1, questions.length)}</span>
+            <span className="text-white font-bold text-sm">{index + 1}</span>
             <span className="text-white/60 text-sm">/ {questions.length}</span>
           </div>
         </div>
+
+        {/* the turn's running tally — a green/red dot per answered question,
+            so everyone reads the turn at a glance */}
+        {!isBotTurn && turnPicks.length > 0 && (
+          <div className="flex justify-center gap-1.5 px-4 pb-1 flex-shrink-0">
+            {turnPicks.map((p) => (
+              <motion.span
+                key={p.index}
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 480, damping: 20 }}
+                className={`w-2.5 h-2.5 rounded-full ${p.correct ? "bg-emerald-400" : "bg-red-400"}`}
+              />
+            ))}
+          </div>
+        )}
 
         <div className="px-4 pt-8 flex-shrink-0">
           <TurnQuestionCard
