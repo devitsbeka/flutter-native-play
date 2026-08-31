@@ -2227,8 +2227,6 @@ export const ka = {
     // Create quiz modal
     createTitle: "შექმენი",
     whatKindOfTrivia: "როგორი ტრივია / კოლექცია გინდა?",
-    openMode: "ღია",
-    openModeDesc: "ნახე კითხვები/პასუხები, შეასწორე, გამოაქვეყნე",
     closedMode: "დახურული",
     closedModeDesc: "არ ნახო კითხვები/პასუხები და ითამაშე მეგობრებთან ერთად",
     createYourTrivia: "შექმენი შენი ტრივია",
@@ -3056,10 +3054,6 @@ export const ka = {
     collectionDesc2: "შექმენი რამდენიმე თემატური რაუნდი",
     myTriviaPartyDesc2: "შენი კითხვები, შენი პასუხები - მეგობრებთან ერთად სათამაშოდ",
     createSubtitle: "როგორი ტრივია / კოლექცია გინდა?",
-    openType: "ღია",
-    openTypeDesc: "ნახე კითხვები/პასუხები, შეასწორე, გამოაქვეყნე",
-    lockedType: "დახურული",
-    lockedTypeDesc: "არ ნახო კითხვები/პასუხები და ითამაშე მეგობრებთან ერთად",
     createTriviaTitle2: "შექმენი Trivia",
     triviaQuickCreate: "1 რაუნდი, სწრაფი შექმნა",
     topicPlaceholder2: "მაგ: Friends TV Show, NBA, K-Pop...",
@@ -4165,8 +4159,6 @@ export const ka = {
     // CreateBlindTriviaModal
     cbtCreateTitle: "შექმენი",
     cbtCreateSubtitle: "როგორი ტრივია / კოლექცია გინდა?",
-    cbtOpenMode: "ღია",
-    cbtOpenModeDesc: "ნახე კითხვები/პასუხები, შეასწორე, გამოაქვეყნე",
     cbtClosedMode: "დახურული",
     cbtClosedModeDesc: "არ ნახო კითხვები/პასუხები და ითამაშე მეგობრებთან ერთად",
     cbtBackBtn: "უკან",

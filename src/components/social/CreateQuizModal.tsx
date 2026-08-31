@@ -4,8 +4,6 @@ import { containsBlockedText } from "@/utils/contentFilter";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, ChevronRight, ChevronLeft, Check, Loader2, X, RefreshCw, Globe, Lock, Play, Users } from "lucide-react";
 import triviaBuzzer from "@/assets/trivia-buzzer.png";
-import pencilIcon from "@/assets/classic-yellow-pencil.png";
-import lockIcon from "@/assets/lock-icon.png";
 import bullseyeIcon from "@/assets/bullseye.png";
 import checkmarkIcon from "@/assets/checkmark.png";
 import { Button } from "@/components/ui/button";
@@ -525,68 +523,8 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
     }
   };
 
-  const handleModeSelect = (mode: CreatorMode) => {
-    setCreatorMode(mode);
-    setStep(2);
-  };
-
   const renderStep = () => {
     switch (step) {
-      // Step 1: Mode Selection (NEW)
-      case 1:
-        return (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="flex flex-col min-h-[calc(100vh-120px)]"
-          >
-            <div className="flex-1 space-y-6">
-              <div className="text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 mb-4">
-                  <img src={triviaBuzzer} alt="Create Trivia" className="w-16 h-16 object-contain" />
-                </div>
-                <h3 className="text-2xl font-bold text-white mb-2">{t("extra.createTitle")}</h3>
-                <p className="text-white/70">{t("extra.createSubtitle")}</p>
-              </div>
-
-              <div className="flex flex-col gap-3">
-                {/* Edit Mode Card */}
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => handleModeSelect("edit")}
-                  className="relative p-4 rounded-2xl text-left transition-all bg-white/15 border border-white/20 hover:bg-white/25 hover:border-white/30 flex items-center gap-4"
-                >
-                  <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                    <img src={pencilIcon} alt="" className="w-10 h-10 object-contain" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-white text-base">{t("extra.openType")}</h4>
-                    <p className="text-white/60 text-xs mt-1">{t("extra.openTypeDesc")}</p>
-                  </div>
-                </motion.button>
-
-                {/* Play Mode Card */}
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => handleModeSelect("play")}
-                  className="relative p-4 rounded-2xl text-left transition-all bg-white/15 border border-white/20 hover:bg-white/25 hover:border-white/30 flex items-center gap-4"
-                >
-                  <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                    <img src={lockIcon} alt="" className="w-10 h-10 object-contain" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-white text-base">{t("extra.lockedType")}</h4>
-                    <p className="text-white/60 text-xs mt-1">{t("extra.lockedTypeDesc")}</p>
-                  </div>
-                </motion.button>
-              </div>
-            </div>
-          </motion.div>
-        );
-
       // Step 2: Topic Input (was step 1)
       case 2:
         return (

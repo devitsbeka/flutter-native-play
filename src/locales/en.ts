@@ -2222,8 +2222,6 @@ export const en: KaTranslations = {
     // Create quiz modal
     createTitle: "Create",
     whatKindOfTrivia: "What kind of trivia / collection do you want?",
-    openMode: "Open",
-    openModeDesc: "See questions/answers, edit, publish",
     closedMode: "Closed",
     closedModeDesc: "Don't see questions/answers and play with friends together",
     createYourTrivia: "Create Your Trivia",
@@ -3051,10 +3049,6 @@ export const en: KaTranslations = {
     collectionDesc2: "Create several themed rounds",
     myTriviaPartyDesc2: "Your questions, your answers - play with friends",
     createSubtitle: "What kind of trivia / collection do you want?",
-    openType: "Open",
-    openTypeDesc: "See questions/answers, edit, publish",
-    lockedType: "Locked",
-    lockedTypeDesc: "Don't see questions/answers and play with friends together",
     createTriviaTitle2: "Create Trivia",
     triviaQuickCreate: "1 round, quick creation",
     topicPlaceholder2: "e.g.: Friends TV Show, NBA, K-Pop...",
@@ -4130,8 +4124,6 @@ export const en: KaTranslations = {
     // CreateBlindTriviaModal
     cbtCreateTitle: "Create",
     cbtCreateSubtitle: "What kind of trivia/collection do you want?",
-    cbtOpenMode: "Open",
-    cbtOpenModeDesc: "See questions/answers, edit, publish",
     cbtClosedMode: "Blind",
     cbtClosedModeDesc: "Don't see questions/answers and play with friends",
     cbtBackBtn: "Back",
