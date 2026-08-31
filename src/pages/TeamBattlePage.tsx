@@ -189,7 +189,7 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
   const navigate = useNavigate();
   const {
     room, participants, pendingInvites, isHost, myTeam, setTeam, addBot,
-    setCaptain, manageSeat, startMatch, leaveRoom, loading, state, settle,
+    setCaptain, voteCaptain, manageSeat, startMatch, leaveRoom, loading, state, settle,
   } = useTeamBattle();
   const { categories } = useCategories();
   const [rounds, setRounds] = useState(6);
@@ -636,7 +636,7 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
         onClose={() => setCaptainInfo(null)}
         title={t("lobby.captainInfoTitle")}
         body={t("lobby.captainInfoBody")}
-        chooseLabel={isHost ? t("lobby.chooseCaptain") : undefined}
+        chooseLabel={myTeam === captainInfo ? t("lobby.chooseCaptain") : undefined}
         members={
           captainInfo
             ? teamOf(captainInfo).map((p) => ({
@@ -645,10 +645,16 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
                 avatarUrl: p.avatar_url,
                 isCaptain:
                   p.user_id === (captainInfo === "a" ? captainA : captainB)?.user_id,
+                // Live tally: how many human teammates back this member
+                votes: teamOf(captainInfo).filter(
+                  (voter) => !voter.is_bot && voter.captain_vote === p.user_id,
+                ).length,
+                // Only humans can wear the armband; only teammates vote
+                selectable: !p.is_bot,
               }))
             : []
         }
-        onChoose={isHost ? (userId) => void setCaptain(userId) : undefined}
+        onChoose={myTeam === captainInfo ? (userId) => void voteCaptain(userId) : undefined}
       />
 
       <FriendPeek

@@ -488,7 +488,14 @@ export function CaptainInfoModal({
   title: string;
   body: string;
   chooseLabel?: string;
-  members?: { userId: string; nickname: string; avatarUrl: string | null; isCaptain: boolean }[];
+  members?: {
+    userId: string;
+    nickname: string;
+    avatarUrl: string | null;
+    isCaptain: boolean;
+    votes?: number;
+    selectable?: boolean;
+  }[];
   onChoose?: (userId: string) => void;
 }) {
   const { t } = useLanguage();
@@ -525,36 +532,46 @@ export function CaptainInfoModal({
               <p className="font-[Nunito] font-bold text-[13px] text-[#523b76]/60 pt-1">{chooseLabel}</p>
             )}
             <div className="flex flex-wrap justify-center gap-3">
-              {members.map((m) => (
-                <motion.button
-                  key={m.userId}
-                  whileTap={{ scale: 0.88 }}
-                  transition={{ type: "spring", stiffness: 500, damping: 26 }}
-                  onClick={() => {
-                    onChoose(m.userId);
-                    onClose();
-                  }}
-                  className="relative flex flex-col items-center gap-1 w-[64px]"
-                >
-                  <span
-                    className={`relative block size-[48px] rounded-full overflow-clip ${
-                      m.isCaptain ? "ring-2 ring-[#e7ba87]" : ""
-                    }`}
+              {members.map((m) => {
+                const canPick = m.selectable !== false;
+                return (
+                  <motion.button
+                    key={m.userId}
+                    whileTap={canPick ? { scale: 0.88 } : undefined}
+                    transition={{ type: "spring", stiffness: 500, damping: 26 }}
+                    disabled={!canPick}
+                    onClick={() => {
+                      if (!canPick) return;
+                      onChoose(m.userId);
+                      onClose();
+                    }}
+                    className={`relative flex flex-col items-center gap-1 w-[64px] ${canPick ? "" : "opacity-40"}`}
                   >
-                    <InviteAvatar url={m.avatarUrl} nickname={m.nickname} />
-                  </span>
-                  {m.isCaptain && (
-                    <img
-                      alt=""
-                      src={crownIcon}
-                      className="pointer-events-none absolute -top-[10px] left-[22px] w-[20px] object-contain drop-shadow -rotate-12"
-                    />
-                  )}
-                  <span className="font-[Nunito] text-[11px] font-semibold text-[#402666] max-w-full truncate">
-                    {m.nickname}
-                  </span>
-                </motion.button>
-              ))}
+                    <span
+                      className={`relative block size-[48px] rounded-full overflow-clip ${
+                        m.isCaptain ? "ring-2 ring-[#e7ba87]" : ""
+                      }`}
+                    >
+                      <InviteAvatar url={m.avatarUrl} nickname={m.nickname} />
+                    </span>
+                    {m.isCaptain && (
+                      <img
+                        alt=""
+                        src={crownIcon}
+                        className="pointer-events-none absolute -top-[10px] left-[22px] w-[20px] object-contain drop-shadow -rotate-12"
+                      />
+                    )}
+                    {(m.votes ?? 0) > 0 && (
+                      <span className="absolute top-[34px] right-[2px] min-w-[18px] h-[18px] px-1 rounded-full bg-[#7126d5] text-white text-[10px] font-[Nunito] font-bold flex items-center justify-center shadow">
+                        {m.votes}
+                      </span>
+                    )}
+                    <span className="font-[Nunito] text-[11px] font-semibold text-[#402666] max-w-full truncate">
+                      {m.nickname}
+                    </span>
+                  </motion.button>
+                );
+              })}
             </div>
           </>
         )}

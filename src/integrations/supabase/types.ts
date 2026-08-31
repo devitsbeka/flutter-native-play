@@ -2351,6 +2351,7 @@ export type Database = {
           country_code: string | null
           current_question: number | null
           has_seen_results: boolean | null
+          captain_vote: string | null
           id: string
           is_bot: boolean
           is_captain: boolean
@@ -2374,6 +2375,7 @@ export type Database = {
           country_code?: string | null
           current_question?: number | null
           has_seen_results?: boolean | null
+          captain_vote?: string | null
           id?: string
           is_bot?: boolean
           is_captain?: boolean
@@ -2397,6 +2399,7 @@ export type Database = {
           country_code?: string | null
           current_question?: number | null
           has_seen_results?: boolean | null
+          captain_vote?: string | null
           id?: string
           is_bot?: boolean
           is_captain?: boolean
@@ -4825,6 +4828,10 @@ export type Database = {
       }
       tb_set_captain: {
         Args: { p_room_id: string; p_user_id: string }
+        Returns: undefined
+      }
+      tb_vote_captain: {
+        Args: { p_candidate: string; p_room_id: string }
         Returns: undefined
       }
       tb_settle: { Args: { p_room_id: string }; Returns: Json }

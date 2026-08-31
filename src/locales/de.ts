@@ -1526,7 +1526,7 @@ export const de: KaTranslations = {
     kingCardDesc: "Logik-Duell — besiege den König",
     classicCardDesc: "Klassischer Raum — Bibliothek und deine Trivias",
     captainInfoTitle: "Team-Kapitän",
-    captainInfoBody: "Der Kapitän führt das Team an: Endet das Match unentschieden, tritt der Kapitän in der Superrunde als Champion des Teams an und antwortet für alle. Der Host wählt den Kapitän vor Spielbeginn.",
+    captainInfoBody: "Der Kapitän führt das Team an: Endet das Match unentschieden, tritt der Kapitän in der Superrunde als Champion des Teams an und antwortet für alle. Das Team wählt seinen Kapitän per Abstimmung — tippe auf einen Mitspieler, um deine Stimme abzugeben. Spielst du allein, bist du der Kapitän.",
   },
 
   extra: {

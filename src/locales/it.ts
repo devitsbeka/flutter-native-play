@@ -1529,7 +1529,7 @@ export const it: KaTranslations = {
     kingCardDesc: "Duello di logica — batti il Re",
     classicCardDesc: "Stanza classica — libreria e i tuoi trivia",
     captainInfoTitle: "Capitano della squadra",
-    captainInfoBody: "Il capitano guida la squadra: se la partita finisce in parità, è lui il campione della squadra nel super round e risponde per tutti. L'host sceglie il capitano prima dell'inizio.",
+    captainInfoBody: "Il capitano guida la squadra: se la partita finisce in parità, è lui il campione della squadra nel super round e risponde per tutti. La squadra elegge il capitano votando — tocca un compagno per dare il tuo voto. Se giochi da solo, il capitano sei tu.",
   },
 
   extra: {

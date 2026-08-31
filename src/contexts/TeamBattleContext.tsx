@@ -62,6 +62,7 @@ interface TeamBattleContextValue {
   setTeam: (team: TBTeam) => Promise<void>;
   addBot: (team: TBTeam) => Promise<void>;
   setCaptain: (userId: string) => Promise<void>;
+  voteCaptain: (candidateId: string) => Promise<void>;
   manageSeat: (userId: string, action: "remove" | "move_a" | "move_b") => Promise<void>;
   removeBot: (botId: string) => Promise<void>;
   startMatch: (
@@ -292,12 +293,27 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
     }
   }, [user, profile]);
 
+  // The lobby renders seats strictly by team, so a joined-but-teamless row
+  // is invisible — which is exactly what happened to accepted invitees:
+  // their greyed seat vanished the moment they joined. Every join therefore
+  // lands on the emptier team unless a seat was already reserved for one.
+  const pickEmptierTeam = async (roomId: string): Promise<TBTeam> => {
+    const { data } = await supabase
+      .from("room_participants")
+      .select("team")
+      .eq("room_id", roomId)
+      .in("status", ["joined", "ready", "playing", "invited"]);
+    const a = data?.filter((r) => r.team === "a").length ?? 0;
+    const b = data?.filter((r) => r.team === "b").length ?? 0;
+    return a <= b ? "a" : "b";
+  };
+
   const enterRoomRow = useCallback(
     async (row: TBRoom): Promise<boolean> => {
       if (!user || !profile) return false;
       const { data: existing } = await supabase
         .from("room_participants")
-        .select("id, status")
+        .select("id, status, team")
         .eq("room_id", row.id)
         .eq("user_id", user.id)
         .maybeSingle();
@@ -306,7 +322,10 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
       if (existing && existing.status === "invited") {
         await supabase
           .from("room_participants")
-          .update({ status: "joined" })
+          .update({
+            status: "joined",
+            ...(existing.team ? {} : { team: await pickEmptierTeam(row.id) }),
+          })
           .eq("id", existing.id);
       }
       if (!existing) {
@@ -333,6 +352,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
           country_code: profile.country_code,
           is_host: false,
           status: "joined",
+          team: await pickEmptierTeam(row.id),
         });
         if (error) {
           console.error("[TB] join failed", error);
@@ -436,6 +456,27 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
       toast.error(error.message);
     }
   }, []);
+
+  // Any teammate: cast (or change) a captain vote — the server re-tallies
+  // the team and the plurality leader wears is_captain
+  // (20260921150000_tb_captain_vote.sql).
+  const voteCaptain = useCallback(
+    async (candidateId: string) => {
+      const roomId = roomIdRef.current;
+      if (!roomId) return;
+      const { error } = await supabase.rpc("tb_vote_captain", {
+        p_room_id: roomId,
+        p_candidate: candidateId,
+      });
+      if (error) {
+        console.error("[TB] captain vote failed", error);
+        toast.error(error.message);
+      } else {
+        void fetchParticipants(roomId);
+      }
+    },
+    [fetchParticipants],
+  );
 
   // Host-only seat management (lobby_manage_seat): remove a pending invite,
   // a bot, or a player, or move someone to a team. Optimistic — the seat
@@ -665,6 +706,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
       addBot,
       removeBot,
       setCaptain,
+      voteCaptain,
       manageSeat,
       startMatch,
       submitRps,
@@ -677,7 +719,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
     }),
     [room, participants, pendingInvites, tiles, state, loading, isHost, myTeam, isSpotlight,
      createRoom, joinRoom, enterRoom, leaveRoom, setTeam, addBot, removeBot,
-     setCaptain, manageSeat, startMatch, submitRps, pickTile, submitAnswer,
+     setCaptain, voteCaptain, manageSeat, startMatch, submitRps, pickTile, submitAnswer,
      voteSuper, submitSuper, advance, settle],
   );
 

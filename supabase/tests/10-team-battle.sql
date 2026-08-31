@@ -639,6 +639,44 @@ BEGIN
       WHERE room_id = v_room AND user_id = (v_state.super ->> 'champion_a')::uuid),
     false, 'a captained bot never champions over a human');
 
+  -- ── captain voting (20260921150000): the team elects, plurality leads ────
+
+  PERFORM pg_temp.as_user(v_bob);
+  PERFORM pg_temp.must_fail(
+    format('SELECT public.tb_vote_captain(%L, %L)', v_room, v_alice),
+    'votes stay inside the voter''s own team');
+  PERFORM pg_temp.must_fail(
+    format('SELECT public.tb_vote_captain(%L, %L)', v_room,
+      (SELECT user_id FROM public.room_participants
+        WHERE room_id = v_room AND team = 'b' AND is_bot LIMIT 1)),
+    'a bot cannot wear the armband by vote');
+
+  -- Alice backs Trace: one vote to none takes the armband (and strips the
+  -- bot the host had just named).
+  PERFORM pg_temp.as_user(v_alice);
+  PERFORM public.tb_vote_captain(v_room, v_out);
+  PERFORM pg_temp.must_equal(
+    (SELECT is_captain FROM public.room_participants WHERE room_id = v_room AND user_id = v_out),
+    true, 'the plurality leader wears the armband');
+  PERFORM pg_temp.must_equal(
+    (SELECT count(*)::int FROM public.room_participants
+      WHERE room_id = v_room AND team = 'a' AND is_captain), 1,
+    'voting keeps exactly one captain on the team');
+
+  -- Trace votes Alice back: a 1-1 tie goes to the earliest joiner.
+  PERFORM pg_temp.as_user(v_out);
+  PERFORM public.tb_vote_captain(v_room, v_alice);
+  PERFORM pg_temp.must_equal(
+    (SELECT is_captain FROM public.room_participants WHERE room_id = v_room AND user_id = v_alice),
+    true, 'a tie hands the armband to the earliest joiner');
+
+  -- Alice switches to herself: 2-0 and she keeps it outright.
+  PERFORM pg_temp.as_user(v_alice);
+  PERFORM public.tb_vote_captain(v_room, v_alice);
+  PERFORM pg_temp.must_equal(
+    (SELECT is_captain FROM public.room_participants WHERE room_id = v_room AND user_id = v_alice),
+    true, 'a changed vote re-tallies the team');
+
   -- ── the pot scales with the board (20260921130000) ───────────────────────
 
   PERFORM pg_temp.must_equal(
