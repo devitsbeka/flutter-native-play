@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Bot, Star } from "lucide-react";
+import { Bot, ChevronLeft, Star } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCategories } from "@/hooks/useCategories";
@@ -54,6 +55,7 @@ function useTileCategory(tile: TBTile | undefined) {
 
 function ScoreHeader({ seconds, maxSeconds }: { seconds?: number; maxSeconds?: number }) {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const { state, myTeam } = useTeamBattle();
   if (!state) return null;
   const side = (team: TBTeam) => (
@@ -74,7 +76,19 @@ function ScoreHeader({ seconds, maxSeconds }: { seconds?: number; maxSeconds?: n
   );
   return (
     <div className="flex items-center justify-between px-4 pt-3 pb-1 flex-shrink-0">
-      {side("a")}
+      <div className="flex items-center gap-2.5">
+        {/* The way out. Leaving only closes THIS screen — the match runs on
+            the server and the lounge card in the rooms list walks back in. */}
+        <button
+          type="button"
+          onClick={() => navigate("/")}
+          aria-label={t("common.back")}
+          className="w-9 h-9 -ml-1 shrink-0 rounded-full bg-white/15 flex items-center justify-center active:scale-95 transition-transform"
+        >
+          <ChevronLeft className="w-5 h-5 text-white" />
+        </button>
+        {side("a")}
+      </div>
       {typeof seconds === "number" ? (
         <TimerBadge seconds={seconds} maxSeconds={maxSeconds ?? 30} compact />
       ) : (
