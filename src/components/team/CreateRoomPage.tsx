@@ -42,7 +42,6 @@ import iconButtonCard from "@/assets/play-chooser/icon-button.png";
 import iconKingCard from "@/assets/play-chooser/icon-king.webp";
 import iconCrateCard from "@/assets/play-chooser/icon-crate.png";
 import iconLibraryCard from "@/assets/play-chooser/icon-library.webp";
-import { PreRoomQueuePreview } from "@/components/team/PreRoomQueuePreview";
 import { getRandomGradient } from "@/config/roomGradients";
 
 /**
@@ -509,19 +508,17 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     setQueuedRounds([]);
   };
 
+  // Set when the + picker adds rounds; the effect below then creates the
+  // room as if Create had been pressed — the queue is shown and managed in
+  // the lobby, not on this screen.
+  const queuedViaPicker = useRef(false);
+
   const handleAddPreRoomQueueItem = (item: PreRoomQueueItemInput) => {
     const tmpId = globalThis.crypto?.randomUUID
       ? globalThis.crypto.randomUUID()
       : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    queuedViaPicker.current = true;
     setQueuedRounds((prev) => [...prev, { ...item, tmpId }]);
-    toast({
-      title: t("extra.addedToQueue"),
-      description: `${item.category_name || t("extra.randomOption")}`,
-    });
-  };
-
-  const removeQueuedRound = (tmpId: string) => {
-    setQueuedRounds((prev) => prev.filter((x) => x.tmpId !== tmpId));
   };
 
   const persistQueuedRounds = async (roomId: string) => {
@@ -919,7 +916,17 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     }
   };
 
-
+  // More than one round picked → straight to the lobby. The + picker just
+  // closed having added rounds; pressing Create for the user here means the
+  // queue is seen and managed in the lobby rather than previewed on this
+  // screen.
+  useEffect(() => {
+    if (!queuedViaPicker.current || showQueuePicker) return;
+    if (queuedRounds.length === 0 || isCreating) return;
+    queuedViaPicker.current = false;
+    void handleCreate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queuedRounds, showQueuePicker, isCreating]);
 
   return (
     <motion.div
@@ -979,7 +986,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       </div>
 
       {/* Content */}
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
         <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full px-4 py-3 space-y-3">
         {/* Room Name with Icon - AI generated */}
         <div>
@@ -1132,23 +1139,6 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                           <p className="text-xs text-white/80">
                             {t("extra.randomDesc")}
                           </p>
-                          {/* Inline queue preview */}
-                          {queuedRounds.length > 0 && (
-                             <div className="mt-2 space-y-0.5">
-                <p className="text-xs text-white/60 font-medium">{t("extra.nextRounds")}</p>
-                               <div className="flex flex-wrap gap-1.5">
-                                 {queuedRounds.map((r, i) => (
-                                   <span 
-                                     key={r.tmpId}
-                                     className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 text-xs text-white/90"
-                                   >
-                                     <span className="text-white/50">{i + 1}.</span>
-                                      {r.category_name || t("extra.randomOption")}
-                                   </span>
-                                 ))}
-                               </div>
-                             </div>
-                          )}
                         </div>
                         {/* Re-roll button */}
                         <button 
@@ -1226,8 +1216,9 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
 
             )}
 
-            {/* Library Option - Container that expands to show preview */}
-            {gameChoice === "library" && (
+            {/* Library preview — only once a category is picked; the card
+                above already says "Library", so no collapsed twin row. */}
+            {gameChoice === "library" && selectionMode === "library" && !!selectedCategory && (
             <div className="rounded-2xl overflow-hidden">
               <AnimatePresence mode="wait">
                 {selectionMode === "library" && selectedCategory ? (
@@ -1295,23 +1286,6 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                           <p className="text-xs text-white/80">
                             {t("extra.selectedCategoryLabel")}
                           </p>
-                          {/* Inline queue preview */}
-                          {queuedRounds.length > 0 && (
-                             <div className="mt-2 space-y-0.5">
-                <p className="text-xs text-white/60 font-medium">{t("extra.nextRounds")}</p>
-                               <div className="flex flex-wrap gap-1.5">
-                                 {queuedRounds.map((r, i) => (
-                                   <span 
-                                     key={r.tmpId}
-                                     className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 text-xs text-white/90"
-                                   >
-                                     <span className="text-white/50">{i + 1}.</span>
-                                      {r.category_name || t("extra.randomOption")}
-                                   </span>
-                                 ))}
-                               </div>
-                             </div>
-                          )}
                         </div>
                         {/* Add to queue */}
                         <button
@@ -1363,8 +1337,8 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
 
             )}
 
-            {/* My Trivias Option - User's created content */}
-            {gameChoice === "mytrivias" && (
+            {/* My Trivia preview — only once a trivia is picked (see above) */}
+            {gameChoice === "mytrivias" && selectionMode === "my-trivias" && !!challengeTrivia && (
             <div className="rounded-2xl overflow-hidden">
               <AnimatePresence mode="wait">
                 {selectionMode === "my-trivias" && challengeTrivia ? (
@@ -1387,23 +1361,6 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                           <p className="text-xs text-white/80">
                             {challengeTrivia.type === "collection" ? t("extra.collectionLabel") : t("extra.triviaLabel")}
                           </p>
-                          {/* Inline queue preview */}
-                          {queuedRounds.length > 0 && (
-                             <div className="mt-2 space-y-0.5">
-                               <p className="text-xs text-white/60 font-medium">{t("extra.nextRounds")}</p>
-                               <div className="flex flex-wrap gap-1.5">
-                                 {queuedRounds.map((r, i) => (
-                                   <span 
-                                     key={r.tmpId}
-                                     className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 text-xs text-white/90"
-                                   >
-                                     <span className="text-white/50">{i + 1}.</span>
-                                     {r.category_name || t("extra.randomOption")}
-                                   </span>
-                                 ))}
-                               </div>
-                             </div>
-                          )}
                         </div>
                         <button 
                           onClick={() => setShowMyTriviasModal(true)}
@@ -1464,15 +1421,6 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
 
           </div>
         </div>
-
-        {/* Pre-room queued rounds preview - only show when no category selected */}
-        {!selectedCategory && !challengeTrivia && (
-          <PreRoomQueuePreview
-            items={queuedRounds}
-            onRemove={removeQueuedRound}
-            onClear={() => setQueuedRounds([])}
-          />
-        )}
 
         {/* Custom Trivia Preview */}
         <AnimatePresence>
