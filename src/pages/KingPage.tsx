@@ -7,6 +7,7 @@ import { ChevronLeft, Crown, Pencil, Share2, UserPlus } from "lucide-react";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { containsBlockedText } from "@/utils/contentFilter";
 import iconKingMascot from "@/assets/play-chooser/icon-king.webp";
+import crownIconAsset from "@/assets/crown-icon.png";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -56,6 +57,33 @@ interface KingState {
 }
 
 type Stage = "intro" | "thinking" | "commit" | "reveal" | "result";
+
+/** The shared co-op duel state (king_team_state, 20260921170000). */
+interface TeamView {
+  match_id: string;
+  room_id: string;
+  status: "playing" | "won" | "lost";
+  captain: string;
+  team_score: number;
+  king_score: number;
+  question_number: number;
+  suggestions: Record<string, string>;
+  last_result?: {
+    question_text: string;
+    chosen: string | null;
+    correct: boolean;
+    correct_answer: string;
+    explanation?: string | null;
+  } | null;
+  question?: {
+    question_text: string;
+    image_url?: string | null;
+    icon_slug?: string | null;
+    think_deadline: string;
+  };
+  options?: string[];
+  commit_deadline?: string;
+}
 
 /**
  * /king — MyTrivia King (docs/GAME_TYPES_DESIGN.md §3). Solo and entirely
@@ -429,6 +457,85 @@ export default function KingPage() {
     })();
   }, [kingRoom, inviteToGame, sendInvitation]);
 
+  // ── the co-op duel (20260921170000): one match, the captain decides ──────
+  // With two or more humans on the couch, Start begins ONE shared match:
+  // everyone sees the same question, teammates tap the answer they believe
+  // in, and the captain locks the team's answer. Solo play keeps the old
+  // personal duel.
+  const [team, setTeamView] = useState<TeamView | null>(null);
+  const [teamDismissed, setTeamDismissed] = useState<string | null>(null);
+  const teamSeenRef = useRef<string | null>(null);
+
+  const refetchTeam = useCallback(async () => {
+    const roomId = kingRoomRef.current?.id;
+    if (!roomId) return;
+    const { data, error } = await supabase.rpc("king_team_view", { p_room_id: roomId });
+    if (!error) setTeamView((data as unknown as TeamView) ?? null);
+  }, []);
+
+  const runTeam = useCallback(async (call: PromiseLike<{ data: unknown; error: { message: string } | null }>) => {
+    const { data, error } = await call;
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    if (data) setTeamView(data as TeamView);
+  }, []);
+
+  const teamStart = useCallback(() => {
+    const roomId = kingRoomRef.current?.id;
+    if (!roomId) return;
+    void runTeam(supabase.rpc("king_team_start", { p_room_id: roomId, p_language: readAppLanguage("en") }));
+  }, [runTeam]);
+  const teamOptions = useCallback(() => {
+    const roomId = kingRoomRef.current?.id;
+    if (roomId) void runTeam(supabase.rpc("king_team_options", { p_room_id: roomId }));
+  }, [runTeam]);
+  const teamSuggest = useCallback((answer: string) => {
+    const roomId = kingRoomRef.current?.id;
+    if (roomId) void runTeam(supabase.rpc("king_team_suggest", { p_room_id: roomId, p_answer: answer }));
+  }, [runTeam]);
+  const teamCommit = useCallback((answer: string) => {
+    const roomId = kingRoomRef.current?.id;
+    if (roomId) void runTeam(supabase.rpc("king_team_commit", { p_room_id: roomId, p_answer: answer }));
+  }, [runTeam]);
+  const teamNext = useCallback(() => {
+    const roomId = kingRoomRef.current?.id;
+    if (roomId) void runTeam(supabase.rpc("king_team_next", { p_room_id: roomId }));
+  }, [runTeam]);
+  // The deadline pump: every device fires it; races and already-moved
+  // states come back as errors that mean "someone else got there" — silent.
+  const teamAdvance = useCallback(async () => {
+    const roomId = kingRoomRef.current?.id;
+    if (!roomId) return;
+    const { data, error } = await supabase.rpc("king_team_advance", { p_room_id: roomId });
+    if (!error && data) setTeamView(data as unknown as TeamView);
+  }, []);
+
+  // Resume into a live duel on entry, and remember which match this device
+  // actually watched so a finished one only shows its result to the couch
+  // that fought it.
+  useEffect(() => {
+    if (kingRoom) void refetchTeam();
+  }, [kingRoom, refetchTeam]);
+  useEffect(() => {
+    if (!kingRoom) return;
+    const ch = supabase
+      .channel(`king-team-${kingRoom.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "king_team_matches", filter: `room_id=eq.${kingRoom.id}` },
+        () => void refetchTeam(),
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(ch);
+    };
+  }, [kingRoom, refetchTeam]);
+  useEffect(() => {
+    if (team?.status === "playing") teamSeenRef.current = team.match_id;
+  }, [team?.status, team?.match_id]);
+
   // Inviting opens the app's invite modal (search, friends, copy link,
   // social share) wired to this lounge's real room — an invited friend gets
   // the notification and lands on this couch.
@@ -445,6 +552,32 @@ export default function KingPage() {
     stage === "commit" ? state?.commit_deadline : undefined,
     () => void expire(),
   );
+
+  // A live (or just-finished-here) team duel takes the whole screen.
+  const showTeamDuel =
+    !!team &&
+    (team.status === "playing" ||
+      (teamSeenRef.current === team.match_id && team.match_id !== teamDismissed));
+  if (team && showTeamDuel) {
+    return (
+      <KingTeamDuel
+        view={team}
+        parts={kingParts}
+        meId={user?.id ?? ""}
+        isHost={kingRoom?.host_user_id === user?.id}
+        onOptions={teamOptions}
+        onSuggest={teamSuggest}
+        onCommit={teamCommit}
+        onNext={teamNext}
+        onAdvance={teamAdvance}
+        onRestart={teamStart}
+        onExit={() => {
+          if (team.status === "playing") navigate("/");
+          else setTeamDismissed(team.match_id);
+        }}
+      />
+    );
+  }
 
   // The lobby is the Versus King frame (Figma 940:7474) rendered at design
   // coordinates: the King's lounge scene, your friends in the invite row,
@@ -579,8 +712,18 @@ export default function KingPage() {
 
         <StartButton
           label={t("lobby.startGame")}
-          onClick={startForEveryone}
-          disabled={busy || !state}
+          onClick={() => {
+            // Two or more humans on the couch fight ONE King together; a
+            // lone player keeps the personal duel.
+            if (kingParts.filter((p) => !p.is_bot).length > 1) teamStart();
+            else startForEveryone();
+          }}
+          disabled={
+            busy ||
+            (kingParts.filter((p) => !p.is_bot).length > 1
+              ? kingRoom?.host_user_id !== user?.id
+              : !state)
+          }
         />
 
         <InviteFriendsModal
@@ -864,6 +1007,285 @@ export default function KingPage() {
               {t("king.playAgain")}
             </button>
             <button onClick={() => navigate(-1)} className="text-sm text-[#402666]/40">
+              {t("common.back")}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The co-op duel (20260921170000): the whole couch fights ONE King. Everyone
+ * sees the same question; during the commit window teammates tap the answer
+ * they believe in (their faces gather on it live) and the captain locks the
+ * team's answer — or the majority locks itself at the deadline. First to 6.
+ */
+function KingTeamDuel({
+  view,
+  parts,
+  meId,
+  isHost,
+  onOptions,
+  onSuggest,
+  onCommit,
+  onNext,
+  onAdvance,
+  onRestart,
+  onExit,
+}: {
+  view: TeamView;
+  parts: Tables<"room_participants">[];
+  meId: string;
+  isHost: boolean;
+  onOptions: () => void;
+  onSuggest: (answer: string) => void;
+  onCommit: (answer: string) => void;
+  onNext: () => void;
+  onAdvance: () => Promise<void>;
+  onRestart: () => void;
+  onExit: () => void;
+}) {
+  const { t } = useLanguage();
+  const isCaptain = meId === view.captain;
+  const captain = parts.find((p) => p.user_id === view.captain);
+  const phase: "think" | "commit" | "reveal" | "result" =
+    view.status !== "playing"
+      ? "result"
+      : view.question
+        ? view.options
+          ? "commit"
+          : "think"
+        : "reveal";
+
+  // The captain's provisional pick, cleared on every new question.
+  const [capPick, setCapPick] = useState<string | null>(null);
+  useEffect(() => setCapPick(null), [view.question_number]);
+
+  const thinkLeft = useServerDeadline(
+    phase === "think" ? view.question?.think_deadline : undefined,
+    onAdvance,
+  );
+  const commitLeft = useServerDeadline(
+    phase === "commit" ? view.commit_deadline : undefined,
+    onAdvance,
+  );
+
+  const mySuggestion = view.suggestions[meId];
+  const backers = (option: string) =>
+    parts.filter((p) => view.suggestions[p.user_id] === option);
+
+  return (
+    <div className="h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] overflow-y-auto bg-background">
+      <div className="max-w-md mx-auto px-5 pb-10">
+        <div className="flex items-center gap-2 pt-4 pb-2">
+          <button
+            onClick={onExit}
+            aria-label={t("common.back")}
+            className="w-10 h-10 -ml-2 rounded-full flex items-center justify-center text-[#402666] active:scale-95 transition-transform"
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </button>
+          <h1 className="font-display text-xl font-bold text-[#402666] flex items-center gap-2 min-w-0">
+            <img alt="" src={iconKingMascot} className="w-8 h-8 object-contain shrink-0" /> {t("king.title")}
+          </h1>
+          {captain && (
+            <span className="ml-auto flex items-center gap-1.5 bg-[#f3ebfd] rounded-full pl-2 pr-3 py-1 shrink-0">
+              <span className="relative w-6 h-6">
+                {captain.avatar_url ? (
+                  <img alt="" src={captain.avatar_url} className="w-6 h-6 rounded-full object-cover" />
+                ) : (
+                  <span className="w-6 h-6 rounded-full bg-[#8858d5]/30 flex items-center justify-center text-[10px] font-bold text-[#523b76]">
+                    {captain.nickname.charAt(0).toUpperCase()}
+                  </span>
+                )}
+                <img alt="" src={crownIconAsset} className="pointer-events-none absolute -top-[7px] left-[4px] w-[14px] object-contain -rotate-12" />
+              </span>
+              <span className="text-xs font-bold text-[#523b76] max-w-[90px] truncate">{captain.nickname}</span>
+            </span>
+          )}
+        </div>
+
+        <div className="flex items-center justify-center gap-6 py-3">
+          <div className="text-center">
+            <p className="text-[11px] text-[#402666]/50">{t("king.teamLabel")}</p>
+            <p className="font-display text-2xl font-bold text-[#402666]">{view.team_score}</p>
+          </div>
+          <span className="text-[#402666]/30 text-xs">{t("king.firstTo6")}</span>
+          <div className="text-center">
+            <p className="text-[11px] text-[#402666]/50">{t("king.king")}</p>
+            <p className="font-display text-2xl font-bold text-[#402666]">{view.king_score}</p>
+          </div>
+        </div>
+
+        {phase === "think" && view.question && (
+          <div className="flex flex-col gap-4 mt-2">
+            <p className="text-xs text-[#402666]/40 text-center">
+              {t("king.questionNo", { n: view.question_number })}
+            </p>
+            <div
+              className="rounded-[24px] p-6"
+              style={{ background: "rgba(252,247,255,0.92)", boxShadow: CARD_SHADOW }}
+            >
+              <div className="flex justify-center mb-4">
+                <DynamicIcon
+                  slug={view.question.icon_slug ?? undefined}
+                  seedText={view.question.question_text}
+                  size={64}
+                />
+              </div>
+              <p className="font-bold text-[17px] text-[#402666] leading-relaxed">
+                {view.question.question_text}
+              </p>
+            </div>
+            <p className="font-mono text-4xl text-[#7C3AED] font-bold text-center">{thinkLeft}</p>
+            {isCaptain ? (
+              <button
+                onClick={onOptions}
+                className="rounded-[20px] p-4 bg-[#7C3AED] text-white font-bold"
+              >
+                {t("king.haveIt")}
+              </button>
+            ) : (
+              <p className="text-sm text-[#402666]/50 text-center">{t("king.teamDiscussHint")}</p>
+            )}
+          </div>
+        )}
+
+        {phase === "commit" && view.question && (
+          <div className="flex flex-col gap-3 mt-2">
+            <div
+              className="rounded-[24px] p-5"
+              style={{ background: "rgba(252,247,255,0.92)", boxShadow: CARD_SHADOW }}
+            >
+              <div className="flex items-center gap-3">
+                <DynamicIcon
+                  slug={view.question.icon_slug ?? undefined}
+                  seedText={view.question.question_text}
+                  size={40}
+                  className="shrink-0"
+                />
+                <p className="font-bold text-[#402666]">{view.question.question_text}</p>
+              </div>
+            </div>
+            <p className="font-mono text-3xl text-red-400 font-bold text-center">{commitLeft}</p>
+            <p className="text-sm text-[#402666]/50 text-center -mt-2">
+              {t("king.teamSuggestHint")}
+            </p>
+            <div className="flex flex-col gap-2">
+              {(view.options ?? []).map((option) => {
+                const mine = mySuggestion === option;
+                const picked = isCaptain && capPick === option;
+                return (
+                  <motion.button
+                    key={option}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => {
+                      if (isCaptain) setCapPick(option);
+                      onSuggest(option);
+                    }}
+                    className={`rounded-xl px-4 py-3 text-left text-sm font-medium text-[#402666] flex items-center gap-2 ${
+                      picked
+                        ? "ring-2 ring-[#7C3AED]"
+                        : mine
+                          ? "ring-2 ring-[#7C3AED]/40"
+                          : ""
+                    }`}
+                    style={{ background: "rgba(252,247,255,0.92)", boxShadow: CARD_SHADOW }}
+                  >
+                    <span className="flex-1 min-w-0">{option}</span>
+                    {/* the teammates backing this answer, live */}
+                    <span className="flex -space-x-1.5 shrink-0">
+                      {backers(option).map((p) => (
+                        <motion.span
+                          key={p.user_id}
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ type: "spring", stiffness: 480, damping: 20 }}
+                          className="w-5 h-5 rounded-full ring-2 ring-white overflow-hidden bg-[#8858d5]/30 flex items-center justify-center"
+                        >
+                          {p.avatar_url ? (
+                            <img alt="" src={p.avatar_url} className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-[9px] font-bold text-[#523b76]">
+                              {p.nickname.charAt(0).toUpperCase()}
+                            </span>
+                          )}
+                        </motion.span>
+                      ))}
+                    </span>
+                  </motion.button>
+                );
+              })}
+            </div>
+            {isCaptain && (
+              <button
+                onClick={() => capPick && onCommit(capPick)}
+                disabled={!capPick}
+                className="rounded-[20px] p-4 bg-[#7C3AED] text-white font-bold disabled:opacity-40"
+              >
+                {t("king.captainLock")}
+              </button>
+            )}
+          </div>
+        )}
+
+        {phase === "reveal" && view.last_result && (
+          <div className="flex flex-col gap-4 mt-4">
+            <motion.p
+              initial={{ scale: 0.7, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className={`font-display text-2xl font-bold text-center ${
+                view.last_result.correct ? "text-emerald-500" : "text-red-400"
+              }`}
+            >
+              {view.last_result.correct ? t("king.cracked") : t("king.kingScores")}
+            </motion.p>
+            <div
+              className="rounded-[24px] p-5"
+              style={{ background: "rgba(252,247,255,0.92)", boxShadow: CARD_SHADOW }}
+            >
+              <p className="text-xs text-[#402666]/40 mb-1">{t("king.answerLabel")}</p>
+              <p className="font-bold text-[#402666] mb-3">{view.last_result.correct_answer}</p>
+              {view.last_result.explanation && (
+                <>
+                  <p className="text-xs text-[#402666]/40 mb-1">{t("king.logicLabel")}</p>
+                  <p className="text-sm text-[#402666]/80 leading-relaxed">
+                    {view.last_result.explanation}
+                  </p>
+                </>
+              )}
+            </div>
+            <button
+              onClick={onNext}
+              className="rounded-[20px] p-4 bg-[#7C3AED] text-white font-bold"
+            >
+              {t("king.next")}
+            </button>
+          </div>
+        )}
+
+        {phase === "result" && (
+          <div className="flex flex-col items-center gap-4 pt-16">
+            <Crown
+              className={`w-16 h-16 ${view.status === "won" ? "text-amber-500" : "text-[#402666]/20"}`}
+            />
+            <p className="font-display text-2xl font-bold text-[#402666] text-center">
+              {view.status === "won" ? t("king.teamWon") : t("king.teamLost")}
+            </p>
+            <p className="text-[#402666]/60">
+              {view.team_score} : {view.king_score}
+            </p>
+            {isHost && (
+              <button
+                onClick={onRestart}
+                className="rounded-[20px] px-8 py-4 bg-[#7C3AED] text-white font-bold"
+              >
+                {t("king.playAgain")}
+              </button>
+            )}
+            <button onClick={onExit} className="text-sm text-[#402666]/40">
               {t("common.back")}
             </button>
           </div>

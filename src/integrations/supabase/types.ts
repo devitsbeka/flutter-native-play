@@ -4670,6 +4670,22 @@ export type Database = {
       king_expire_question: { Args: { p_match_id: string }; Returns: Json }
       king_show_options: { Args: { p_match_id: string }; Returns: Json }
       king_start_match: { Args: { p_language?: string }; Returns: Json }
+      king_team_advance: { Args: { p_room_id: string }; Returns: Json }
+      king_team_commit: {
+        Args: { p_answer: string; p_room_id: string }
+        Returns: Json
+      }
+      king_team_next: { Args: { p_room_id: string }; Returns: Json }
+      king_team_options: { Args: { p_room_id: string }; Returns: Json }
+      king_team_start: {
+        Args: { p_language?: string; p_room_id: string }
+        Returns: Json
+      }
+      king_team_suggest: {
+        Args: { p_answer: string; p_room_id: string }
+        Returns: Json
+      }
+      king_team_view: { Args: { p_room_id: string }; Returns: Json }
       king_submit_answer: {
         Args: { p_answer: string; p_match_id: string }
         Returns: Json

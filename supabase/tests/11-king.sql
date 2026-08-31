@@ -294,3 +294,185 @@ BEGIN
 END $$;
 
 \echo 'ok: the King deals, judges, and pays by the rules'
+
+-- ══ the co-op couch (20260921170000): one duel, the captain decides ════════
+
+DO $$
+DECLARE
+  v_host uuid := 'aaaa1111-0000-4000-8000-00000000c001'::uuid;
+  v_mate uuid := 'aaaa1111-0000-4000-8000-00000000c002'::uuid;
+  v_out  uuid := 'aaaa1111-0000-4000-8000-00000000c003'::uuid;
+  v_room uuid;
+  v_state jsonb;
+  v_match uuid;
+  v_correct text;
+  v_wrong text;
+  v_host_coins integer;
+  v_mate_coins integer;
+  i integer := 0;
+BEGIN
+  INSERT INTO auth.users (id, email) VALUES
+    (v_host, 'coophost@tb.test'), (v_mate, 'coopmate@tb.test'), (v_out, 'coopout@tb.test')
+  ON CONFLICT (id) DO NOTHING;
+  INSERT INTO public.profiles (user_id, nickname, coins, gems) VALUES
+    (v_host, 'coophost', 1000, 0), (v_mate, 'coopmate', 1000, 0), (v_out, 'coopout', 1000, 0)
+  ON CONFLICT (user_id) DO UPDATE SET coins = 1000, gems = 0;
+  DELETE FROM public.currency_grants WHERE user_id IN (v_host, v_mate, v_out);
+  DELETE FROM public.king_matches WHERE user_id IN (v_host, v_mate, v_out);
+
+  INSERT INTO public.game_rooms (room_code, host_user_id, status, game_type_key)
+  VALUES ('KINGCO', v_host, 'waiting', 'king') RETURNING id INTO v_room;
+  INSERT INTO public.room_participants (room_id, user_id, nickname, is_host, status)
+  VALUES (v_room, v_host, 'coophost', true, 'joined'),
+         (v_room, v_mate, 'coopmate', false, 'joined');
+
+  -- Start: members only, host only; a second start resumes.
+  PERFORM pg_temp.as_user(v_mate);
+  PERFORM pg_temp.must_fail(
+    format('SELECT public.king_team_start(%L, %L)', v_room, 'en'),
+    'only the host starts the team duel');
+  PERFORM pg_temp.as_user(v_host);
+  v_state := public.king_team_start(v_room, 'en');
+  v_match := (v_state ->> 'match_id')::uuid;
+  PERFORM pg_temp.must_equal(v_state ->> 'status', 'playing', 'the team duel starts playing');
+  PERFORM pg_temp.must_equal((v_state ->> 'captain')::uuid, v_host, 'the host wears the armband');
+  PERFORM pg_temp.must_equal((v_state -> 'question') IS NOT NULL, true, 'the first question is drawn');
+  PERFORM pg_temp.must_equal((v_state -> 'options') IS NULL, true, 'options stay hidden through the think minute');
+  v_state := public.king_team_start(v_room, 'en');
+  PERFORM pg_temp.must_equal((v_state ->> 'match_id')::uuid, v_match, 'a running duel resumes, not restarts');
+
+  -- The whole couch reads the match; outsiders read nothing.
+  PERFORM pg_temp.as_user(v_mate);
+  v_state := public.king_team_view(v_room);
+  PERFORM pg_temp.must_equal((v_state ->> 'match_id')::uuid, v_match, 'a teammate sees the shared duel');
+  PERFORM pg_temp.as_user(v_out);
+  PERFORM pg_temp.must_fail(
+    format('SELECT public.king_team_view(%L)', v_room),
+    'an outsider sees nothing');
+
+  -- Options: not before the captain opens them; captain-only.
+  PERFORM pg_temp.as_user(v_mate);
+  PERFORM pg_temp.must_fail(
+    format('SELECT public.king_team_suggest(%L, %L)', v_room, 'x'),
+    'no suggestions before the options open');
+  PERFORM pg_temp.must_fail(
+    format('SELECT public.king_team_options(%L)', v_room),
+    'only the captain opens the options');
+  PERFORM pg_temp.as_user(v_host);
+  v_state := public.king_team_options(v_room);
+  PERFORM pg_temp.must_equal((v_state -> 'options') IS NOT NULL, true, 'the captain opens the options');
+
+  PERFORM pg_temp.as_user(NULL);
+  SELECT q.correct_answer INTO v_correct
+    FROM public.king_team_matches m JOIN public.king_questions q ON q.id = m.current_question_id
+   WHERE m.id = v_match;
+  SELECT value #>> '{}' INTO v_wrong
+    FROM jsonb_array_elements((SELECT options FROM public.king_team_matches WHERE id = v_match))
+   WHERE value #>> '{}' <> v_correct LIMIT 1;
+
+  -- Suggestions: members only, real options only, re-tapping changes it.
+  PERFORM pg_temp.as_user(v_out);
+  PERFORM pg_temp.must_fail(
+    format('SELECT public.king_team_suggest(%L, %L)', v_room, v_correct),
+    'an outsider cannot suggest');
+  PERFORM pg_temp.as_user(v_mate);
+  PERFORM pg_temp.must_fail(
+    format('SELECT public.king_team_suggest(%L, %L)', v_room, 'NOT AN OPTION'),
+    'a suggestion must be one of the options');
+  PERFORM public.king_team_suggest(v_room, v_wrong);
+  v_state := public.king_team_suggest(v_room, v_correct);
+  PERFORM pg_temp.must_equal(v_state -> 'suggestions' ->> v_mate::text, v_correct,
+    're-tapping changes the suggestion');
+
+  -- Commit: captain-only; a crack pays the whole couch, once.
+  PERFORM pg_temp.must_fail(
+    format('SELECT public.king_team_commit(%L, %L)', v_room, v_correct),
+    'only the captain locks the answer');
+  SELECT coins INTO v_host_coins FROM public.profiles WHERE user_id = v_host;
+  SELECT coins INTO v_mate_coins FROM public.profiles WHERE user_id = v_mate;
+  PERFORM pg_temp.as_user(v_host);
+  v_state := public.king_team_commit(v_room, v_correct);
+  PERFORM pg_temp.must_equal((v_state ->> 'team_score')::int, 1, 'a correct lock scores the team');
+  PERFORM pg_temp.must_equal((v_state -> 'last_result' ->> 'correct')::boolean, true,
+    'the reveal carries the outcome');
+  PERFORM pg_temp.must_equal(
+    (SELECT coins FROM public.profiles WHERE user_id = v_host), v_host_coins + 10,
+    'a crack pays the captain');
+  PERFORM pg_temp.must_equal(
+    (SELECT coins FROM public.profiles WHERE user_id = v_mate), v_mate_coins + 10,
+    'a crack pays the whole couch');
+  PERFORM pg_temp.must_fail(
+    format('SELECT public.king_team_commit(%L, %L)', v_room, v_correct),
+    'a resolved question cannot be locked again');
+
+  -- Anyone pulls the next question.
+  PERFORM pg_temp.as_user(v_mate);
+  v_state := public.king_team_next(v_room);
+  PERFORM pg_temp.must_equal((v_state -> 'question') IS NOT NULL, true,
+    'any teammate pulls the next question');
+
+  -- The pump opens options at the think deadline…
+  PERFORM pg_temp.as_user(NULL);
+  UPDATE public.king_team_matches SET drawn_at = now() - interval '61 seconds' WHERE id = v_match;
+  PERFORM pg_temp.as_user(v_mate);
+  v_state := public.king_team_advance(v_room);
+  PERFORM pg_temp.must_equal((v_state -> 'options') IS NOT NULL, true,
+    'the pump opens options at the think deadline');
+
+  -- …and at the commit deadline the majority locks itself, the captain's
+  -- pick breaking ties — here 1-1, and the captain chose wrong.
+  PERFORM pg_temp.as_user(NULL);
+  SELECT q.correct_answer INTO v_correct
+    FROM public.king_team_matches m JOIN public.king_questions q ON q.id = m.current_question_id
+   WHERE m.id = v_match;
+  SELECT value #>> '{}' INTO v_wrong
+    FROM jsonb_array_elements((SELECT options FROM public.king_team_matches WHERE id = v_match))
+   WHERE value #>> '{}' <> v_correct LIMIT 1;
+  PERFORM pg_temp.as_user(v_mate);
+  PERFORM public.king_team_suggest(v_room, v_correct);
+  PERFORM pg_temp.as_user(v_host);
+  PERFORM public.king_team_suggest(v_room, v_wrong);
+  PERFORM pg_temp.as_user(NULL);
+  UPDATE public.king_team_matches SET options_at = now() - interval '21 seconds' WHERE id = v_match;
+  PERFORM pg_temp.as_user(v_mate);
+  v_state := public.king_team_advance(v_room);
+  PERFORM pg_temp.must_equal((v_state -> 'last_result' ->> 'correct')::boolean, false,
+    'a tied deadline locks the captain''s pick');
+  PERFORM pg_temp.must_equal((v_state ->> 'king_score')::int, 1, 'the miss is the King''s point');
+
+  -- Play to the crown.
+  LOOP
+    i := i + 1;
+    IF i > 12 THEN RAISE EXCEPTION 'the team duel did not converge'; END IF;
+    PERFORM pg_temp.as_user(v_mate);
+    PERFORM public.king_team_next(v_room);
+    PERFORM pg_temp.as_user(v_host);
+    PERFORM public.king_team_options(v_room);
+    PERFORM pg_temp.as_user(NULL);
+    SELECT q.correct_answer INTO v_correct
+      FROM public.king_team_matches m JOIN public.king_questions q ON q.id = m.current_question_id
+     WHERE m.id = v_match;
+    PERFORM pg_temp.as_user(v_host);
+    v_state := public.king_team_commit(v_room, v_correct);
+    EXIT WHEN v_state ->> 'status' = 'won';
+  END LOOP;
+  PERFORM pg_temp.must_equal((v_state ->> 'team_score')::int, 6, 'first to six takes the crown');
+  PERFORM pg_temp.must_equal(
+    (SELECT count(*)::int FROM public.currency_grants
+      WHERE kind = 'king_win' AND reference = 'team:' || v_match::text
+        AND user_id IN (v_host, v_mate)), 2,
+    'the crown pays every human on the couch');
+  PERFORM pg_temp.as_user(v_mate);
+  PERFORM pg_temp.must_fail(
+    format('SELECT public.king_team_next(%L)', v_room),
+    'a finished duel takes no more questions');
+
+  -- Cleanup so reruns start clean.
+  PERFORM pg_temp.as_user(NULL);
+  DELETE FROM public.king_team_matches WHERE room_id = v_room;
+  DELETE FROM public.room_participants WHERE room_id = v_room;
+  DELETE FROM public.game_rooms WHERE id = v_room;
+  DELETE FROM public.currency_grants WHERE user_id IN (v_host, v_mate, v_out);
+END $$;
+
+\echo 'ok: the couch fights one King and the captain answers for it'
