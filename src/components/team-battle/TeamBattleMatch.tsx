@@ -383,12 +383,23 @@ function PhaseRapidFire() {
     : serverIndex;
   const question = questions[index];
 
-  // Material exhausted before the clock: close the human turn.
+  // Material exhausted before the clock: close the human turn — after a
+  // beat, so the final answer's green/red actually lands (and spectators'
+  // replay of it finishes) instead of the board yanking everyone away the
+  // instant the last pick registers. First advance() wins server-side; the
+  // rest no-op.
   useEffect(() => {
-    if (state && tile && !isBotTurn && targetAnswers >= questions.length) void advance();
+    if (!(state && tile && !isBotTurn && targetAnswers >= questions.length)) return;
+    const id = window.setTimeout(() => void advance(), 1400);
+    return () => window.clearTimeout(id);
   }, [state, tile, isBotTurn, targetAnswers, questions.length, advance]);
 
-  useEffect(() => setChoice(null), [state?.turn_answers, state?.active_tile]);
+  useEffect(() => setChoice(null), [state?.active_tile]);
+  useEffect(() => {
+    // A fresh question clears the reveal — but the LAST answer's reveal
+    // holds until the delayed close, or the buttons would briefly rearm.
+    if ((state?.turn_answers ?? 0) < questions.length) setChoice(null);
+  }, [state?.turn_answers, questions.length]);
 
   const answer = async (option: string) => {
     if (submitting || choice || !question) return;
