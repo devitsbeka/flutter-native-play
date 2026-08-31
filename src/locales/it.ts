@@ -1519,6 +1519,7 @@ export const it: KaTranslations = {
     chooseCaptain: "Scegli il capitano",
     startGame: "Avvia la partita",
     pickDuration: "Scegli la durata",
+    hostPicksRounds: "L'host sceglie i round",
     roundsN: "{n} round",
     linkCopied: "Link copiato — condividilo con gli amici!",
     tbRules: "Due squadre davanti a un tabellone di categorie con punteggio. A ogni turno un giocatore risponde a raffica contro il tempo — il valore della casella va alla sua squadra. Le squadre devono essere pari. In caso di parità, i capitani si sfidano in un super round al meglio di 3.",

@@ -1526,6 +1526,7 @@ export const es: KaTranslations = {
     chooseCaptain: "Elige capitán",
     startGame: "Empezar partida",
     pickDuration: "Elige duración",
+    hostPicksRounds: "El anfitrión elige las rondas",
     roundsN: "{n} rondas",
     linkCopied: "Enlace copiado: ¡compártelo con tus amigos!",
     tbRules: "Dos equipos frente a un tablero de categorías con precio. En cada turno un jugador responde a contrarreloj — el valor de la casilla va a su equipo. Los equipos deben ser iguales. En caso de empate, los capitanes se enfrentan en una super ronda al mejor de 3.",

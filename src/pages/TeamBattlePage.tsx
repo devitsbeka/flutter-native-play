@@ -193,6 +193,24 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
   } = useTeamBattle();
   const { categories } = useCategories();
   const [rounds, setRounds] = useState(6);
+
+  // The host's rounds choice rides game_rooms.total_questions so guests see
+  // it live — their tabs are read-only. A host re-entering the lobby gets
+  // their earlier pick back from the same column.
+  const hostRounds =
+    room?.total_questions && DURATIONS.includes(room.total_questions) ? room.total_questions : 6;
+  useEffect(() => {
+    if (isHost && room?.total_questions && DURATIONS.includes(room.total_questions)) {
+      setRounds(room.total_questions);
+    }
+    // Restore once per room, not on every echo of our own update.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isHost, room?.id]);
+  const changeRounds = (n: number) => {
+    if (!isHost) return;
+    setRounds(n);
+    if (room) void supabase.from("game_rooms").update({ total_questions: n }).eq("id", room.id);
+  };
   const [inviteOpen, setInviteOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [peek, setPeek] = useState<InviteEntry | null>(null);
@@ -523,19 +541,22 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
 
       {/* Pick duration (940:7647 + chips) — in flow, left-aligned with the
           friends strip's 16px edge; the label sits under the tabs as a
-          quiet caption */}
+          quiet caption. Only the host picks: for everyone else the tabs
+          just SHOW the host's choice (synced through the room row, which
+          the context already streams), because a guest's tap changed
+          nothing server-side and only lied about the match length. */}
       <div className="relative z-10 w-full max-w-[500px] mx-auto shrink-0 px-4 pt-2">
         <DurationTabs
           options={DURATIONS.map((n) => ({
             value: n,
             label: t("lobby.roundsN", { n }),
-            disabled: n < minTiles,
+            disabled: !isHost || n < minTiles,
           }))}
-          value={rounds}
-          onChange={setRounds}
+          value={isHost ? rounds : hostRounds}
+          onChange={changeRounds}
         />
         <p className="pt-[6px] font-[Nunito] font-normal leading-[20px] text-[#0c172c]/70 text-[13px] text-center tracking-[-0.16px]">
-          {t("lobby.pickDuration")}
+          {t(isHost ? "lobby.pickDuration" : "lobby.hostPicksRounds")}
         </p>
       </div>
 

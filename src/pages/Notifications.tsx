@@ -245,19 +245,22 @@ export default function Notifications() {
             const roomCode = (data?.room_code as string | undefined) ?? undefined;
 
             if (roomId || roomCode) {
-              const q = supabase.from('game_rooms').select('tv_session_id, room_code');
+              const q = supabase.from('game_rooms').select('tv_session_id, room_code, game_type_key');
               const { data: room } = roomId
                 ? await q.eq('id', roomId).maybeSingle()
                 : await q.eq('room_code', String(roomCode).toUpperCase()).maybeSingle();
 
-              const tvSessionId = (room as any)?.tv_session_id as string | null | undefined;
-              if (tvSessionId) {
-                navigate(`/join/session/${tvSessionId}`);
+              if (room?.tv_session_id) {
+                navigate(`/join/session/${room.tv_session_id}`);
                 return;
               }
 
-              if ((room as any)?.room_code) {
-                navigate(`/team?join=${(room as any).room_code}`);
+              if (room?.room_code) {
+                // A lounge invite lands in its lounge — /team?join= would
+                // seat the player in a room its page never shows.
+                if (room.game_type_key === 'king') navigate(`/king?code=${room.room_code}`);
+                else if (room.game_type_key === 'team_battle') navigate(`/team-battle?code=${room.room_code}`);
+                else navigate(`/team?join=${room.room_code}`);
                 return;
               }
             }

@@ -1794,6 +1794,7 @@ export const en: KaTranslations = {
     chooseCaptain: "Choose Captain",
     startGame: "Start the Game",
     pickDuration: "Pick duration",
+    hostPicksRounds: "The host picks the rounds",
     roundsN: "{n} Rounds",
     linkCopied: "Link copied — share it with friends!",
     tbRules: "Two teams face a board of priced categories. Each turn one player is in the spotlight, answering rapid-fire before the clock runs out — the tile's price goes to their team. Teams must be equal. On a tie, the captains face off in a first-to-3 super round.",

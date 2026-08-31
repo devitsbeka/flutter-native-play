@@ -757,7 +757,11 @@ export function DurationTabs({
             disabled={opt.disabled}
             whileTap={opt.disabled ? undefined : { scale: 0.94 }}
             transition={{ type: "spring", stiffness: 500, damping: 30 }}
-            className={`relative flex-1 min-w-0 h-[44px] rounded-[14px] ${opt.disabled ? "opacity-30" : ""}`}
+            className={`relative flex-1 min-w-0 h-[44px] rounded-[14px] ${
+              // A read-only chosen tab (guests see the host's pick) keeps its
+              // full-strength thumb; only the tabs that can't be picked dim.
+              opt.disabled && !selected ? "opacity-30" : ""
+            }`}
           >
             {selected && (
               <motion.div

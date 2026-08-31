@@ -405,6 +405,28 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
 
       // "მოიწვიე მეგობარი თამაშში" — every one of these is that.
       void trackMissionEvent("invited_to_room", toInvite.length);
+
+      // The participants insert above rings the in-app bell (the
+      // notify_room_invite trigger) — which only reaches a player with the
+      // app open. The push is what reaches everyone else, and it rides a
+      // game_invitations row per friend: send-game-invite-push re-reads the
+      // invitation server-side and composes its own text, so this cannot put
+      // arbitrary words on a lock screen. Fire-and-forget, never fatal — the
+      // invitations are already in the database either way.
+      if (user) {
+        void (async () => {
+          const { data: invRows } = await supabase
+            .from("game_invitations")
+            .insert(toInvite.map(id => ({ sender_id: user.id, receiver_id: id, room_id: roomId })))
+            .select("id");
+          for (const row of invRows ?? []) {
+            void supabase.functions
+              .invoke("send-game-invite-push", { body: { invitationId: row.id } })
+              .catch(e => console.warn("[invite] push failed:", e));
+          }
+        })().catch(e => console.warn("[invite] push failed:", e));
+      }
+
       toast.success(t("extra.inviteSent"));
       handleClose();
       onInviteSuccess?.();

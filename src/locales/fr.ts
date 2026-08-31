@@ -1513,6 +1513,7 @@ export const fr: KaTranslations = {
     chooseCaptain: "Choisir le capitaine",
     startGame: "Lancer la partie",
     pickDuration: "Choisir la durée",
+    hostPicksRounds: "L'hôte choisit les manches",
     roundsN: "{n} manches",
     linkCopied: "Lien copié — partage-le avec tes amis !",
     tbRules: "Deux équipes face à un plateau de catégories à prix. À chaque tour, un joueur répond en rafale contre la montre — la valeur de la case revient à son équipe. Les équipes doivent être égales. En cas d'égalité, les capitaines s'affrontent dans une super manche en 3 points.",

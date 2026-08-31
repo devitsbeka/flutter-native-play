@@ -1516,6 +1516,7 @@ export const de: KaTranslations = {
     chooseCaptain: "Kapitän wählen",
     startGame: "Spiel starten",
     pickDuration: "Dauer wählen",
+    hostPicksRounds: "Der Host wählt die Runden",
     roundsN: "{n} Runden",
     linkCopied: "Link kopiert — teile ihn mit Freunden!",
     tbRules: "Zwei Teams vor einem Brett mit bepreisten Kategorien. Pro Zug beantwortet ein Spieler Fragen gegen die Uhr — der Feldwert geht an sein Team. Die Teams müssen gleich groß sein. Bei Gleichstand duellieren sich die Kapitäne in einer Superrunde bis 3.",
