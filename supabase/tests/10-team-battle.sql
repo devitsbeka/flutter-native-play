@@ -379,11 +379,26 @@ BEGIN
   PERFORM pg_temp.as_user(v_alice);
   v_game := public.tb_start_match(v_room, v_board);
 
+  -- A tie replays the opener (20260921190000): the hand is revealed, the
+  -- throws reset, and the second hand decides.
   PERFORM public.tb_submit_rps(v_room, 'paper');
   PERFORM pg_temp.as_user(v_bob);
   PERFORM public.tb_submit_rps(v_room, 'paper');
   SELECT * INTO v_state FROM public.team_battle_state WHERE room_id = v_room;
-  PERFORM pg_temp.must_equal(v_state.phase, 'board', 'a gesture tie still resolves the opener');
+  PERFORM pg_temp.must_equal(v_state.phase, 'rps', 'a gesture tie replays the opener');
+  PERFORM pg_temp.must_equal((v_state.rps -> 'last' ->> 'tie')::boolean, true,
+    'the tied hand is recorded for the reveal');
+  PERFORM pg_temp.must_equal(v_state.rps -> 'throws', '{}'::jsonb, 'the rethrow starts clean');
+  PERFORM pg_temp.must_equal((v_state.rps ->> 'round')::int, 1, 'the round counter moves');
+
+  PERFORM pg_temp.as_user(v_alice);
+  PERFORM public.tb_submit_rps(v_room, 'rock');
+  PERFORM pg_temp.as_user(v_bob);
+  PERFORM public.tb_submit_rps(v_room, 'scissors');
+  SELECT * INTO v_state FROM public.team_battle_state WHERE room_id = v_room;
+  PERFORM pg_temp.must_equal(v_state.phase, 'board', 'the second hand resolves the opener');
+  PERFORM pg_temp.must_equal(v_state.rps -> 'last' ->> 'winner', 'a',
+    'the reveal names the winner');
 
   -- First turn: nobody picks. The board deadline expires (moved into the
   -- past by the fixture) and tb_advance auto-picks a tile instead of stalling.
@@ -502,10 +517,19 @@ BEGIN
     'super_questions', pg_temp.mk_super(5));
   v_game := public.tb_start_match(v_room, v_board);
 
-  PERFORM public.tb_submit_rps(v_room, 'rock');
-  PERFORM pg_temp.as_user(v_bob);
-  PERFORM public.tb_submit_rps(v_room, 'scissors');
-  SELECT * INTO v_state FROM public.team_battle_state WHERE room_id = v_room;
+  -- The bots' random fills can tie a hand, and ties replay now — keep
+  -- throwing the same human hands until one resolves.
+  v_iter := 0;
+  LOOP
+    PERFORM pg_temp.as_user(v_alice);
+    PERFORM public.tb_submit_rps(v_room, 'rock');
+    PERFORM pg_temp.as_user(v_bob);
+    PERFORM public.tb_submit_rps(v_room, 'scissors');
+    SELECT * INTO v_state FROM public.team_battle_state WHERE room_id = v_room;
+    EXIT WHEN v_state.phase <> 'rps';
+    v_iter := v_iter + 1;
+    IF v_iter > 15 THEN RAISE EXCEPTION 'the opener never resolved'; END IF;
+  END LOOP;
   PERFORM pg_temp.must_equal(v_state.phase, 'board',
     'the opener resolves on the human throws alone');
 

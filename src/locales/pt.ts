@@ -1435,6 +1435,8 @@ export const pt: KaTranslations = {
     rpsTitle: "Pedra · Papel · Tesoura",
     rpsSubtitle: "A equipe vencedora escolhe primeiro",
     rpsWaiting: "Esperando os outros gestos…",
+    rpsTieBanner: "Empate — outra vez!",
+    rpsWonBanner: "{team} escolhe primeiro",
     yourPick: "Escolha uma categoria!",
     someonePicking: "{name} está escolhendo…",
     diff_easy: "Fácil",

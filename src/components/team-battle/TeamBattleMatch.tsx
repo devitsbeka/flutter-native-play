@@ -106,21 +106,43 @@ export function TeamBattleMatch({ onResultDismiss }: { onResultDismiss?: () => v
   }
 }
 
+/** The recorded hand of an opener round (rps.last, 20260921190000). */
+interface RpsReveal {
+  team_a: string;
+  team_b: string;
+  tie: boolean;
+  winner?: string;
+  throws: Record<string, string>;
+}
+
+const gestureEmoji = (g: string | undefined) =>
+  GESTURES.find((x) => x.key === g)?.emoji ?? "❔";
+
 function PhaseRps() {
   const { t } = useLanguage();
   const { user } = useAuth();
-  const { state, submitRps, advance } = useTeamBattle();
+  const { state, participants, submitRps, advance } = useTeamBattle();
   const [thrown, setThrown] = useState<TBGesture | null>(null);
   const secondsLeft = useServerDeadline(state?.deadline, advance);
 
-  const throws = ((state?.rps as Record<string, unknown>)?.throws ?? {}) as Record<string, string>;
+  const rps = (state?.rps ?? {}) as Record<string, unknown>;
+  const throws = (rps.throws ?? {}) as Record<string, string>;
+  const round = (rps.round as number) ?? 0;
+  const last = (rps.last as RpsReveal | undefined) ?? null;
   const mine = (user && (throws[user.id] as TBGesture)) || thrown;
+
+  // A tie starts a fresh hand server-side: the round counter moving is the
+  // signal to rearm this device's buttons.
+  useEffect(() => setThrown(null), [round]);
+
+  const handsOf = (team: TBTeam) =>
+    participants.filter((p) => p.team === team && last?.throws[p.user_id]);
 
   return (
     <div className={SHELL}>
       <div className={COLUMN}>
-        <ScoreHeader seconds={secondsLeft} maxSeconds={15} />
-        <div className="flex-1 flex flex-col items-center justify-center gap-8 px-6">
+        <ScoreHeader seconds={secondsLeft} maxSeconds={last?.tie ? 20 : 15} />
+        <div className="flex-1 flex flex-col items-center justify-center gap-6 px-6">
           <div className="text-center">
             <h1
               className="text-3xl font-black text-white"
@@ -130,6 +152,35 @@ function PhaseRps() {
             </h1>
             <p className="text-white/70 text-sm mt-2">{t("teamBattle.rpsSubtitle")}</p>
           </div>
+
+          {/* the tied hand, shown before the rethrow: everyone's throw */}
+          {last?.tie && (
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 380, damping: 22 }}
+              className="w-full max-w-sm rounded-2xl bg-white/10 border border-white/20 p-4 flex flex-col gap-3"
+            >
+              <p className="text-center font-bold text-white">
+                {gestureEmoji(last.team_a)} {t("teamBattle.rpsTieBanner")} {gestureEmoji(last.team_b)}
+              </p>
+              {(["a", "b"] as TBTeam[]).map((team) => (
+                <div key={team} className="flex items-center gap-2">
+                  <span className="text-[11px] text-white/60 w-16 shrink-0">{teamLabel(t, team)}</span>
+                  <div className="flex flex-wrap gap-2">
+                    {handsOf(team).map((p) => (
+                      <span key={p.user_id} className="relative inline-block">
+                        <SmartAvatar avatarUrl={p.avatar_url} fallback={p.nickname} size="xs" />
+                        <span className="absolute -bottom-1 -right-1 text-[13px] drop-shadow">
+                          {gestureEmoji(last.throws[p.user_id])}
+                        </span>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </motion.div>
+          )}
           <div className="grid grid-cols-3 gap-3 w-full max-w-sm">
             {GESTURES.map((g) => {
               const picked = mine === g.key;
@@ -176,6 +227,8 @@ function PhaseBoard() {
   const { categories } = useCategories();
   const secondsLeft = useServerDeadline(state?.deadline, advance);
   const picker = participants.find((p) => p.user_id === state?.active_player);
+  const rpsLast = (((state?.rps as Record<string, unknown>)?.last ?? null) as RpsReveal | null);
+  const openingPick = tiles.length > 0 && tiles.every((tl) => !tl.claimed_by_team);
 
   // A bot never taps: any device pumping tb_advance makes the server play
   // the bot's whole turn. First caller wins; the rest no-op.
@@ -197,6 +250,15 @@ function PhaseBoard() {
               : t("teamBattle.someonePicking", { name: picker?.nickname ?? "…" })}
           </p>
         </div>
+        {/* how the opener went — shown until the first tile is claimed */}
+        {rpsLast && !rpsLast.tie && openingPick && (
+          <div className="px-4 pb-2 flex-shrink-0">
+            <div className="rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-center text-sm font-medium text-white">
+              {gestureEmoji(rpsLast.team_a)} vs {gestureEmoji(rpsLast.team_b)} —{" "}
+              {t("teamBattle.rpsWonBanner", { team: teamLabel(t, (rpsLast.winner ?? null) as TBTeam) })}
+            </div>
+          </div>
+        )}
         <div className="flex-1 overflow-y-auto px-4 pb-[calc(1rem_+_var(--safe-bottom))]">
           <div className="grid grid-cols-2 gap-3">
             {tiles.map((tile) => {

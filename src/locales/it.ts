@@ -1430,6 +1430,8 @@ export const it: KaTranslations = {
     rpsTitle: "Sasso · Carta · Forbici",
     rpsSubtitle: "La squadra vincente sceglie per prima",
     rpsWaiting: "In attesa degli altri gesti…",
+    rpsTieBanner: "Pareggio — di nuovo!",
+    rpsWonBanner: "{team} sceglie per prima",
     yourPick: "Scegli una categoria!",
     someonePicking: "{name} sta scegliendo…",
     diff_easy: "Facile",
