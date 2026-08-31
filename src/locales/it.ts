@@ -1860,6 +1860,7 @@ export const it: KaTranslations = {
     friendsNoRooms: "I tuoi amici non hanno stanze",
     noActiveRoomsMsg: "Nessuna stanza attiva",
     noCompletedRooms: "Nessuna stanza completata",
+    noTypeRoomsMsg: "Ancora nessuna stanza di questo tipo",
     createRoomInvite: "Crea una stanza e invita amici.",
     roomDeleted: "Stanza eliminata",
     rlLeaveRoomConfirm: "Uscirai da questa stanza e sparirà dalla tua lista.",

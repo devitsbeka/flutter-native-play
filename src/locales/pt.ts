@@ -1867,6 +1867,7 @@ export const pt: KaTranslations = {
     friendsNoRooms: "Seus amigos não têm salas",
     noActiveRoomsMsg: "Sem salas ativas",
     noCompletedRooms: "Sem salas completas",
+    noTypeRoomsMsg: "Ainda não há salas deste tipo",
     createRoomInvite: "Crie uma sala e convide amigos.",
     roomDeleted: "Sala excluída",
     rlLeaveRoomConfirm: "Você sairá desta sala e ela sumirá da sua lista.",

@@ -2168,6 +2168,7 @@ export const ka = {
     friendsNoRooms: "მეგობრებს ოთახები არ აქვთ",
     noActiveRoomsMsg: "აქტიური ოთახები არ არის",
     noCompletedRooms: "დასრულებული ოთახები არ არის",
+    noTypeRoomsMsg: "ასეთი ოთახები ჯერ არ არის",
     createRoomInvite: "შექმენი ოთახი და მოიწვიე მეგობრები სათამაშოდ.",
     roomDeleted: "ოთახი წაიშალა",
     rlLeaveRoomConfirm: "დატოვებ ამ ოთახს და ის შენი სიიდან გაქრება.",

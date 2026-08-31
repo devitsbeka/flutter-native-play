@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { matchesQuery } from "@/utils/searchMatch";
 import { useNotifications } from "@/hooks/useNotifications";
 
-export type RoomFilter = "all" | "my_rooms" | "friends_rooms" | "active" | "completed";
+export type RoomFilter = "all" | "my_rooms" | "friends_rooms" | "king" | "team_battle";
 
 export interface MyRoom {
   id: string;
@@ -489,11 +489,11 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
           (room) => !room.is_host && friendIds.includes(room.host_user_id)
         );
         break;
-      case "active":
-        result = result.filter((room) => room.has_recent_activity);
+      case "king":
+        result = result.filter((room) => room.game_type_key === "king");
         break;
-      case "completed":
-        result = result.filter((room) => room.status === "completed");
+      case "team_battle":
+        result = result.filter((room) => room.game_type_key === "team_battle");
         break;
     }
 

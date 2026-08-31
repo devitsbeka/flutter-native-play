@@ -2163,6 +2163,7 @@ export const en: KaTranslations = {
     friendsNoRooms: "Friends don't have any rooms",
     noActiveRoomsMsg: "No active rooms",
     noCompletedRooms: "No completed rooms",
+    noTypeRoomsMsg: "No rooms of this type yet",
     createRoomInvite: "Create a room and invite friends to play.",
     roomDeleted: "Room deleted",
     rlLeaveRoomConfirm: "You'll leave this room and it will disappear from your list.",

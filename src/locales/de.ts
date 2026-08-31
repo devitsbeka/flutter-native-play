@@ -1852,6 +1852,7 @@ export const de: KaTranslations = {
     friendsNoRooms: "Deine Freunde haben keine Räume",
     noActiveRoomsMsg: "Keine aktiven Räume",
     noCompletedRooms: "Keine abgeschlossenen Räume",
+    noTypeRoomsMsg: "Noch keine Räume dieser Art",
     createRoomInvite: "Erstelle einen Raum und lade Freunde ein.",
     roomDeleted: "Raum gelöscht",
     rlLeaveRoomConfirm: "Du verlässt diesen Raum und er verschwindet aus deiner Liste.",

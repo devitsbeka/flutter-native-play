@@ -333,8 +333,7 @@ export function MyRoomsSection({
                activeFilter === "all" ? t("extra.noRoomsYet") :
                activeFilter === "my_rooms" ? t("extra.noRoomsCreated") :
                activeFilter === "friends_rooms" ? t("extra.friendsNoRooms") :
-               activeFilter === "active" ? t("extra.noActiveRoomsMsg") :
-               t("extra.noCompletedRooms")}
+               t("extra.noTypeRoomsMsg")}
             </h3>
             {searching ? (
               <p className="text-muted-foreground text-xs text-center">
