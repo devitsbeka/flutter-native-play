@@ -164,7 +164,10 @@ export function PlayOptionsModal({
                 }}
               >
                 {tile(
-                  "linear-gradient(155.57deg, rgb(225,225,229) 28.9%, rgb(211,52,198) 29.1%, rgb(225,177,139) 100%)",
+                  // The Figma export carried a hard stop (grey 28.9% → magenta
+                  // 29.1%) that painted a pale wedge across the badge's corner.
+                  // Smooth magenta-to-peach, like every other tile's gradient.
+                  "linear-gradient(135deg, rgb(217,60,203) 0%, rgb(228,116,172) 55%, rgb(235,178,140) 100%)",
                   "rgba(211,52,198,0.35)",
                   -5.89,
                 )}
