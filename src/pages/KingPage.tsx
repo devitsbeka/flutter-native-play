@@ -35,6 +35,45 @@ import sceneKing from "@/assets/vk-lobby/scene-king.webp";
 
 const CARD_SHADOW = "0px 2px 8px 0px rgba(102,51,153,0.06), 0px 8px 24px 0px rgba(102,51,153,0.12)";
 
+/**
+ * The duel scoreboard — two chunky score chips instead of bare numbers on
+ * white. The King wears his own blue (the mascot's), the challenger side
+ * wears gold; the "first to 6" rule sits between them. Shared by the solo
+ * and the co-op duel, which kept two identical bare rows before.
+ */
+function DuelScoreRow({
+  youLabel,
+  youScore,
+  kingScore,
+  ruleLabel,
+  kingLabel,
+}: {
+  youLabel: string;
+  youScore: number;
+  kingScore: number;
+  ruleLabel: string;
+  kingLabel: string;
+}) {
+  const chip = (label: string, score: number, stroke: string, depth: string, labelColor: string) => (
+    <div
+      className="min-w-[104px] px-4 py-1.5 text-center rounded-2xl bg-white/90"
+      style={{ border: `2px solid ${stroke}`, boxShadow: `0px 3px 0px 0px ${depth}` }}
+    >
+      <p className="text-[11px] font-bold" style={{ color: labelColor }}>
+        {label}
+      </p>
+      <p className="font-display text-2xl font-bold leading-7 text-[#402666]">{score}</p>
+    </div>
+  );
+  return (
+    <div className="flex items-center justify-center gap-3 py-3">
+      {chip(youLabel, youScore, "#F2C14E", "#E3AC30", "#A16207")}
+      <span className="text-[#402666]/40 text-xs">{ruleLabel}</span>
+      {chip(kingLabel, kingScore, "#7BA3F0", "#5F8BE0", "#3565C9")}
+    </div>
+  );
+}
+
 // What king_state() sends back; the reveal fields ride only on submit/expire.
 interface KingState {
   match_id: string;
@@ -851,17 +890,13 @@ export default function KingPage() {
         </div>
 
         {state && (
-          <div className="flex items-center justify-center gap-6 py-3">
-            <div className="text-center">
-              <p className="text-[11px] text-[#402666]/50">{t("king.you")}</p>
-              <p className="font-display text-2xl font-bold text-[#402666]">{state.player_score}</p>
-            </div>
-            <span className="text-[#402666]/30 text-xs">{t("king.firstTo6")}</span>
-            <div className="text-center">
-              <p className="text-[11px] text-[#402666]/50">{t("king.king")}</p>
-              <p className="font-display text-2xl font-bold text-[#402666]">{state.king_score}</p>
-            </div>
-          </div>
+          <DuelScoreRow
+            youLabel={t("king.you")}
+            youScore={state.player_score}
+            kingScore={state.king_score}
+            ruleLabel={t("king.firstTo6")}
+            kingLabel={t("king.king")}
+          />
         )}
 
         {stage === "thinking" && state?.question && (
@@ -1088,17 +1123,13 @@ function KingTeamDuel({
           )}
         </div>
 
-        <div className="flex items-center justify-center gap-6 py-3">
-          <div className="text-center">
-            <p className="text-[11px] text-[#402666]/50">{t("king.teamLabel")}</p>
-            <p className="font-display text-2xl font-bold text-[#402666]">{view.team_score}</p>
-          </div>
-          <span className="text-[#402666]/30 text-xs">{t("king.firstTo6")}</span>
-          <div className="text-center">
-            <p className="text-[11px] text-[#402666]/50">{t("king.king")}</p>
-            <p className="font-display text-2xl font-bold text-[#402666]">{view.king_score}</p>
-          </div>
-        </div>
+        <DuelScoreRow
+          youLabel={t("king.teamLabel")}
+          youScore={view.team_score}
+          kingScore={view.king_score}
+          ruleLabel={t("king.firstTo6")}
+          kingLabel={t("king.king")}
+        />
 
         {phase === "think" && view.question && (
           <div className="flex flex-col gap-4 mt-2">
