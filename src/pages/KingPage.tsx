@@ -14,6 +14,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useServerDeadline } from "@/hooks/useServerDeadline";
 import { useGameInvitations } from "@/hooks/useGameInvitations";
+import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import { readAppLanguage } from "@/utils/appLanguage";
 import { toast } from "@/lib/toast";
 import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
@@ -523,6 +524,7 @@ export default function KingPage() {
   // state, captured at mount (the ?code= replace would drop it) and seated
   // as invited the moment this lounge's room exists.
   const { sendInvitation } = useGameInvitations();
+  const { openProfile } = usePlayerProfile();
   const handoffRef = useRef<{ id: string; nickname: string; avatarUrl: string | null }[] | null>(
     (location.state as { invite?: { id: string; nickname: string; avatarUrl: string | null }[] } | null)
       ?.invite ?? null,
@@ -761,9 +763,16 @@ export default function KingPage() {
                       : undefined
                   }
                   onClick={
-                    !active && kingRoom?.host_user_id === user?.id
-                      ? () => setSeatMenu(part)
-                      : undefined
+                    // Pending seat: the host manages it, everyone else sees
+                    // who was invited. A seated human opens their profile in
+                    // place — the lounge stays right underneath.
+                    !active
+                      ? kingRoom?.host_user_id === user?.id
+                        ? () => setSeatMenu(part)
+                        : () => openProfile(part.user_id)
+                      : part.is_bot
+                        ? undefined
+                        : () => openProfile(part.user_id)
                   }
                 />
               ) : (

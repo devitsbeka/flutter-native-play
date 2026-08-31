@@ -517,18 +517,22 @@ BEGIN
     'super_questions', pg_temp.mk_super(5));
   v_game := public.tb_start_match(v_room, v_board);
 
-  -- 20260921200000: a team with humans on it throws what the humans threw —
-  -- the bots' dice stay out of the vote. Rock vs scissors must therefore
-  -- resolve on the very first hand, no tie possible.
+  -- 20260921210000: the opener is the captains' duel — the two captains'
+  -- gestures ARE the team gestures, bots and teammates alike stay out of
+  -- it. Rock vs scissors must therefore resolve on the very first hand.
   PERFORM pg_temp.as_user(v_alice);
   PERFORM public.tb_submit_rps(v_room, 'rock');
   PERFORM pg_temp.as_user(v_bob);
   PERFORM public.tb_submit_rps(v_room, 'scissors');
   SELECT * INTO v_state FROM public.team_battle_state WHERE room_id = v_room;
   PERFORM pg_temp.must_equal(v_state.phase, 'board',
-    'the opener resolves on the human throws alone — bots do not dilute the hand');
+    'the opener resolves on the captains'' throws alone');
   PERFORM pg_temp.must_equal(v_state.rps ->> 'winner', 'a',
     'rock beats scissors even with a bot on each team');
+  PERFORM pg_temp.must_equal(
+    (SELECT count(*)::int FROM public.room_participants
+      WHERE room_id = v_room AND status = 'playing' AND is_captain), 2,
+    'the start crowned a captain per team');
 
   v_iter := 0;
   LOOP

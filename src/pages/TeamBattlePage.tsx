@@ -8,6 +8,7 @@ import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
 import { FriendsStoriesBar } from "@/components/team/FriendsStoriesBar";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import {
   TeamBattleProvider,
@@ -25,7 +26,6 @@ import {
   type InviteEntry,
   LILAC_BG,
   LilacHeader,
-  DurationTabs,
   FitBox,
   PlusSeat,
   Seat,
@@ -181,7 +181,6 @@ const ARENA_FADE =
   "url(\"data:image/svg+xml;utf8,<svg viewBox='0 0 435 780' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)' opacity='1'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(1.3318e-15 39 -21.75 2.3881e-15 217.5 390)'><stop stop-color='rgba(255,255,255,0)' offset='0'/><stop stop-color='rgba(245,217,255,1)' offset='1'/></radialGradient></defs></svg>\")";
 
 // Server rule: tiles even, ≥ 2×team size, ≤ 12 — these are the valid picks.
-const DURATIONS = [6, 10, 12];
 
 function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null> }) {
   const { t } = useLanguage();
@@ -192,25 +191,7 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
     setCaptain, voteCaptain, manageSeat, startMatch, leaveRoom, loading, state, settle,
   } = useTeamBattle();
   const { categories } = useCategories();
-  const [rounds, setRounds] = useState(6);
-
-  // The host's rounds choice rides game_rooms.total_questions so guests see
-  // it live — their tabs are read-only. A host re-entering the lobby gets
-  // their earlier pick back from the same column.
-  const hostRounds =
-    room?.total_questions && DURATIONS.includes(room.total_questions) ? room.total_questions : 6;
-  useEffect(() => {
-    if (isHost && room?.total_questions && DURATIONS.includes(room.total_questions)) {
-      setRounds(room.total_questions);
-    }
-    // Restore once per room, not on every echo of our own update.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isHost, room?.id]);
-  const changeRounds = (n: number) => {
-    if (!isHost) return;
-    setRounds(n);
-    if (room) void supabase.from("game_rooms").update({ total_questions: n }).eq("id", room.id);
-  };
+  const { openProfile } = usePlayerProfile();
   const [inviteOpen, setInviteOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [peek, setPeek] = useState<InviteEntry | null>(null);
@@ -242,7 +223,10 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
   const teamB = teamOf("b");
   const teamsEqual =
     teamA.length > 0 && teamA.length === teamB.length && participants.every((p) => p.team);
-  const minTiles = Math.max(6, 2 * teamA.length);
+  // Nobody picks a duration any more: a battle is two rounds per seated
+  // player, so everyone gets at least two spotlight turns. Server cap 20
+  // (20260921210000) fits the lounge's ten seats.
+  const rounds = Math.min(20, Math.max(4, 2 * (teamA.length + teamB.length)));
   // The match pool: every seat stakes 50 coins a round, AI players
   // included. Each winning human collects their 50/round share at settle;
   // a bot's share simply goes uncollected.
@@ -404,12 +388,22 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
     return actions;
   };
 
+  // A seat tap opens the player IN PLACE — the profile modal over the
+  // lobby, not a route change. Navigating to /profile/:id from here left
+  // the couch behind, and its close-reopen bug stranded players on the
+  // profile screen. Pending invites are tappable too: the host gets the
+  // seat menu (move or withdraw the invite), everyone else sees who was
+  // invited.
   const seatTap = (p: TBParticipant, pending: boolean) => {
-    if (pending || p.is_bot) {
+    if (p.is_bot) {
       if (isHost) setSeatMenu({ p, pending });
-    } else {
-      navigate(`/profile/${p.user_id}`);
+      return;
     }
+    if (pending && isHost) {
+      setSeatMenu({ p, pending });
+      return;
+    }
+    openProfile(p.user_id);
   };
   const seatHold = (p: TBParticipant, pending: boolean) => {
     if (seatMenuActions(p).length > 0) setSeatMenu({ p, pending });
@@ -454,6 +448,21 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
               }
               onClick={() => seatTap(entry.p, entry.pending)}
               onLongPress={() => seatHold(entry.p, entry.pending)}
+              // Hold-and-drag reseats: the host drags anyone (pending
+              // invites and bots too), a player drags themselves. A pull
+              // far enough toward the other side of the arena moves them —
+              // the seat snaps back and the roster update reseats for real.
+              draggable={isHost || (!entry.pending && entry.p.user_id === user?.id)}
+              onDragMoved={(dx) => {
+                const toOther = team === "a" ? dx > 70 : dx < -70;
+                if (!toOther) return;
+                const target: TBTeam = team === "a" ? "b" : "a";
+                if (!entry.pending && entry.p.user_id === user?.id) {
+                  void setTeam(target);
+                } else if (isHost) {
+                  void manageSeat(entry.p.user_id, target === "a" ? "move_a" : "move_b");
+                }
+              }}
             />
           ) : (
             <PlusSeat key={`plus-${team}-${i}`} left={left} top={top - 305} onClick={() => seatAction(team)} />
@@ -539,24 +548,14 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
 
       <div className="w-full max-w-[468px] mx-auto shrink-0 border-t border-[#523b76]/[0.08]" />
 
-      {/* Pick duration (940:7647 + chips) — in flow, left-aligned with the
-          friends strip's 16px edge; the label sits under the tabs as a
-          quiet caption. Only the host picks: for everyone else the tabs
-          just SHOW the host's choice (synced through the room row, which
-          the context already streams), because a guest's tap changed
-          nothing server-side and only lied about the match length. */}
+      {/* The match length, stated rather than picked: rounds follow the
+          couch (two per player) so it updates live as seats fill. */}
       <div className="relative z-10 w-full max-w-[500px] mx-auto shrink-0 px-4 pt-2">
-        <DurationTabs
-          options={DURATIONS.map((n) => ({
-            value: n,
-            label: t("lobby.roundsN", { n }),
-            disabled: !isHost || n < minTiles,
-          }))}
-          value={isHost ? rounds : hostRounds}
-          onChange={changeRounds}
-        />
-        <p className="pt-[6px] font-[Nunito] font-normal leading-[20px] text-[#0c172c]/70 text-[13px] text-center tracking-[-0.16px]">
-          {t(isHost ? "lobby.pickDuration" : "lobby.hostPicksRounds")}
+        <p className="text-center font-[Nunito] font-black text-[16px] leading-[24px] text-[#334155] tracking-[-0.16px]">
+          {t("lobby.roundsN", { n: rounds })}
+        </p>
+        <p className="pt-[2px] font-[Nunito] font-normal leading-[20px] text-[#0c172c]/70 text-[13px] text-center tracking-[-0.16px]">
+          {t("lobby.autoRounds")}
         </p>
       </div>
 
@@ -812,9 +811,12 @@ function TBCaptainChip({
         }
         className="flex items-center gap-[8px] pl-[14px] pr-[8px] min-w-0"
       >
+        {/* An unclaimed armband invites the tap outright; a worn one still
+            shows the little pencil so changing captain is discoverable. */}
         <p className="font-[Nunito] font-black leading-[28.974px] text-[#334155] text-[16px] tracking-[-0.1686px] whitespace-nowrap overflow-hidden text-ellipsis">
           {name ?? "—"}
         </p>
+        <Pencil className="w-3 h-3 shrink-0 text-[#523b76]/45" />
         <div className="relative shrink-0 size-[33px]">
           <div className="absolute inset-0 rounded-[9999px] overflow-clip bg-[rgba(192,192,192,0.24)]">
             {avatarUrl && (

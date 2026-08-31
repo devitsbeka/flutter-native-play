@@ -268,6 +268,8 @@ export function Seat({
   crown,
   onClick,
   onLongPress,
+  draggable,
+  onDragMoved,
 }: {
   left: number;
   top: number;
@@ -278,9 +280,15 @@ export function Seat({
   crown?: boolean;
   onClick?: () => void;
   onLongPress?: () => void;
+  /** Hold-and-drag to reseat: the avatar rides the finger and snaps back;
+      onDragMoved gets the release offset (screen px) to decide the drop. */
+  draggable?: boolean;
+  onDragMoved?: (dx: number, dy: number) => void;
 }) {
   const timer = useRef<number | null>(null);
   const fired = useRef(false);
+  const dragged = useRef(false);
+  const [dragging, setDragging] = useState(false);
   const startHold = () => {
     if (!onLongPress) return;
     fired.current = false;
@@ -308,13 +316,30 @@ export function Seat({
       exit={{ scale: 0.3, opacity: 0 }}
       whileTap={{ scale: 0.86 }}
       transition={{ type: "spring", stiffness: 480, damping: 26 }}
+      drag={draggable}
+      dragSnapToOrigin
+      dragElastic={0.25}
+      dragMomentum={false}
+      onDragStart={() => {
+        clearHold();
+        dragged.current = true;
+        setDragging(true);
+      }}
+      onDragEnd={(_, info) => {
+        setDragging(false);
+        onDragMoved?.(info.offset.x, info.offset.y);
+        // The click that follows the release must not open anything.
+        window.setTimeout(() => {
+          dragged.current = false;
+        }, 0);
+      }}
       onPointerDown={startHold}
       onPointerUp={clearHold}
       onPointerLeave={clearHold}
       onPointerCancel={clearHold}
       onContextMenu={(e) => e.preventDefault()}
       onClick={() => {
-        if (fired.current) {
+        if (fired.current || dragged.current) {
           fired.current = false;
           return;
         }
@@ -326,6 +351,8 @@ export function Seat({
         top,
         filter: pending ? "grayscale(0.4)" : undefined,
         WebkitTouchCallout: "none",
+        zIndex: dragging ? 40 : undefined,
+        touchAction: draggable ? "none" : undefined,
       }}
     >
       <div
@@ -530,13 +557,13 @@ export function CaptainInfoModal({
         <p className="text-[20px] text-[#523b76] text-center" style={{ fontFamily: "'TASolivare', sans-serif" }}>
           {title}
         </p>
-        <p className="font-[Nunito] text-[14px] leading-relaxed text-[#402666]/70 text-center">
-          {body}
-        </p>
+        {/* The vote leads, the lore follows: opened to PICK a captain, the
+            faces come first — one tap on a teammate casts the vote, the
+            crown hops over live. The explainer drops below in small print. */}
         {onChoose && members && members.length > 0 && (
           <>
             {chooseLabel && (
-              <p className="font-[Nunito] font-bold text-[13px] text-[#523b76]/60 pt-1">{chooseLabel}</p>
+              <p className="font-[Nunito] font-bold text-[14px] text-[#523b76]">{chooseLabel}</p>
             )}
             <div className="flex flex-wrap justify-center gap-3">
               {members.map((m) => {
@@ -544,7 +571,7 @@ export function CaptainInfoModal({
                 return (
                   <motion.button
                     key={m.userId}
-                    whileTap={canPick ? { scale: 0.88 } : undefined}
+                    whileTap={canPick ? { scale: 0.85 } : undefined}
                     transition={{ type: "spring", stiffness: 500, damping: 26 }}
                     disabled={!canPick}
                     onClick={() => {
@@ -552,11 +579,11 @@ export function CaptainInfoModal({
                       onChoose(m.userId);
                       onClose();
                     }}
-                    className={`relative flex flex-col items-center gap-1 w-[64px] ${canPick ? "" : "opacity-40"}`}
+                    className={`relative flex flex-col items-center gap-1 w-[76px] ${canPick ? "" : "opacity-40"}`}
                   >
                     <span
-                      className={`relative block size-[48px] rounded-full overflow-clip ${
-                        m.isCaptain ? "ring-2 ring-[#e7ba87]" : ""
+                      className={`relative block size-[60px] rounded-full overflow-clip ${
+                        m.isCaptain ? "ring-2 ring-[#e7ba87]" : "ring-1 ring-[#e8e0f5]"
                       }`}
                     >
                       <InviteAvatar url={m.avatarUrl} nickname={m.nickname} />
@@ -565,11 +592,11 @@ export function CaptainInfoModal({
                       <img
                         alt=""
                         src={crownIcon}
-                        className="pointer-events-none absolute -top-[10px] left-[22px] w-[20px] object-contain drop-shadow -rotate-12"
+                        className="pointer-events-none absolute -top-[12px] left-[27px] w-[26px] object-contain drop-shadow -rotate-12"
                       />
                     )}
                     {(m.votes ?? 0) > 0 && (
-                      <span className="absolute top-[34px] right-[2px] min-w-[18px] h-[18px] px-1 rounded-full bg-[#7126d5] text-white text-[10px] font-[Nunito] font-bold flex items-center justify-center shadow">
+                      <span className="absolute top-[42px] right-[4px] min-w-[20px] h-[20px] px-1 rounded-full bg-[#7126d5] text-white text-[11px] font-[Nunito] font-bold flex items-center justify-center shadow">
                         {m.votes}
                       </span>
                     )}
@@ -582,6 +609,13 @@ export function CaptainInfoModal({
             </div>
           </>
         )}
+        <p
+          className={`font-[Nunito] leading-relaxed text-[#402666]/70 text-center ${
+            onChoose && members && members.length > 0 ? "text-[12px] text-[#402666]/55" : "text-[14px]"
+          }`}
+        >
+          {body}
+        </p>
         <button onClick={onClose} className="font-[Nunito] text-sm font-semibold text-[#523b76]/50 pt-1">
           {t("common.close")}
         </button>
@@ -684,11 +718,34 @@ export function AnimatedCoinPill({
   }, [value, mv]);
 
   return (
+    // A slot machine's credit window, not a flat pill: a chunky purple
+    // body with real depth under it, a top shine, and an inset glass
+    // screen where the count rolls — the coin leans on the frame.
     <div
-      className="absolute border border-[#a27cdf] border-solid h-[67px] rounded-[20.192px]"
-      style={{ left, top, width }}
+      className="absolute h-[67px] rounded-[20px]"
+      style={{
+        left,
+        top,
+        width,
+        background: "linear-gradient(180deg, #bb95ef 0%, #9a6fdc 58%, #8a5ed1 100%)",
+        border: "1.5px solid #cbb0f4",
+        boxShadow:
+          "0px 5px 0px 0px #7a51b8, 0px 10px 20px rgba(102,51,153,0.3), inset 0px 2px 0px rgba(255,255,255,0.45)",
+      }}
     >
-      <div aria-hidden className="absolute bg-[rgba(255,255,255,0.66)] inset-0 pointer-events-none rounded-[20.192px]" />
+      {/* the inset screen */}
+      <div
+        aria-hidden
+        className="absolute rounded-[13px] pointer-events-none"
+        style={{
+          left: 56,
+          right: 9,
+          top: 8,
+          bottom: 8,
+          background: "linear-gradient(180deg, #f1e8fd 0%, #ffffff 70%)",
+          boxShadow: "inset 0px 2.5px 4px rgba(64,38,102,0.28), inset 0px -1px 0px rgba(255,255,255,0.9)",
+        }}
+      />
       <motion.div
         key={`pulse-${burst}`}
         initial={{ scale: 1 }}
@@ -697,8 +754,8 @@ export function AnimatedCoinPill({
         className="absolute inset-0"
       >
         <p
-          className="absolute left-1/2 top-1/2 font-[Nunito] font-black leading-[34.719px] text-[#334155] text-[28px] text-center tracking-[-0.202px] whitespace-nowrap tabular-nums"
-          style={{ transform: "translate(calc(-50% + 20px), -50%)" }}
+          className="absolute top-1/2 font-[Nunito] font-black leading-[34.719px] text-[#402666] text-[28px] text-center tracking-[-0.202px] whitespace-nowrap tabular-nums"
+          style={{ left: 56, right: 9, transform: "translateY(-50%)" }}
         >
           {display.toLocaleString()}
         </p>
@@ -707,7 +764,7 @@ export function AnimatedCoinPill({
           initial={{ rotate: 0, scale: 1 }}
           animate={{ rotate: [0, -14, 12, 0], scale: [1, 1.22, 1] }}
           transition={{ duration: 0.6, ease: "easeOut" }}
-          className="absolute left-[14px] size-[55px] top-[4px]"
+          className="absolute left-[4px] size-[58px] top-[3px] drop-shadow-[0px_3px_3px_rgba(64,38,102,0.35)]"
         >
           <img alt="" className="absolute inset-0 max-w-none object-contain size-full" src={coinPng} />
         </motion.div>

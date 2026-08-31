@@ -149,7 +149,11 @@ function PhaseRps() {
   // signal to rearm this device's buttons.
   useEffect(() => setThrown(null), [round]);
 
-  const humansOf = (team: TBTeam) => participants.filter((p) => p.team === team && !p.is_bot);
+  // The opener is the captains' duel (20260921210000): one throw per team,
+  // by the armband. Everyone else watches the two captains face off.
+  const amCaptain = !!participants.find((p) => p.user_id === user?.id)?.is_captain;
+  const captainsOf = (team: TBTeam) =>
+    participants.filter((p) => p.team === team && p.is_captain);
 
   return (
     <div className={SHELL}>
@@ -188,7 +192,7 @@ function PhaseRps() {
               <div key={team} className="flex items-center gap-2">
                 <span className="text-[11px] text-white/60 w-16 shrink-0">{teamLabel(t, team)}</span>
                 <div className="flex flex-wrap gap-2">
-                  {humansOf(team).map((p) => {
+                  {captainsOf(team).map((p) => {
                     const live = throws[p.user_id];
                     const isMe = p.user_id === user?.id;
                     const stale = !live && last?.tie ? last.throws[p.user_id] : undefined;
@@ -215,39 +219,47 @@ function PhaseRps() {
               </div>
             ))}
           </motion.div>
-          <div className="grid grid-cols-3 gap-3 w-full max-w-sm">
-            {GESTURES.map((g) => {
-              const picked = mine === g.key;
-              const face = picked ? "#7DD3FC" : "#E8E8F4";
-              const depth = picked ? "#38BDF8" : "#D0D0E0";
-              return (
-                <motion.button
-                  key={g.key}
-                  whileTap={!mine ? { scale: 0.95 } : undefined}
-                  disabled={!!mine}
-                  onClick={() => {
-                    setThrown(g.key);
-                    void submitRps(g.key);
-                  }}
-                  className="relative w-full h-[100px] rounded-3xl"
-                  style={{ paddingBottom: 6, opacity: mine && !picked ? 0.4 : 1 }}
-                >
-                  <div
-                    className="absolute inset-0 rounded-3xl"
-                    style={{ background: depth, transform: "translateY(6px)" }}
-                  />
-                  <div
-                    className="relative flex items-center justify-center rounded-3xl h-full text-5xl"
-                    style={{ background: face, boxShadow: "inset 0 2px 0 rgba(255,255,255,0.4)" }}
-                  >
-                    {g.emoji}
-                  </div>
-                </motion.button>
-              );
-            })}
-          </div>
-          {mine && (
-            <p className="text-white/60 text-sm animate-pulse-soft">{t("teamBattle.rpsWaiting")}</p>
+          {amCaptain ? (
+            <>
+              <div className="grid grid-cols-3 gap-3 w-full max-w-sm">
+                {GESTURES.map((g) => {
+                  const picked = mine === g.key;
+                  const face = picked ? "#7DD3FC" : "#E8E8F4";
+                  const depth = picked ? "#38BDF8" : "#D0D0E0";
+                  return (
+                    <motion.button
+                      key={g.key}
+                      whileTap={!mine ? { scale: 0.95 } : undefined}
+                      disabled={!!mine}
+                      onClick={() => {
+                        setThrown(g.key);
+                        void submitRps(g.key);
+                      }}
+                      className="relative w-full h-[100px] rounded-3xl"
+                      style={{ paddingBottom: 6, opacity: mine && !picked ? 0.4 : 1 }}
+                    >
+                      <div
+                        className="absolute inset-0 rounded-3xl"
+                        style={{ background: depth, transform: "translateY(6px)" }}
+                      />
+                      <div
+                        className="relative flex items-center justify-center rounded-3xl h-full text-5xl"
+                        style={{ background: face, boxShadow: "inset 0 2px 0 rgba(255,255,255,0.4)" }}
+                      >
+                        {g.emoji}
+                      </div>
+                    </motion.button>
+                  );
+                })}
+              </div>
+              {mine && (
+                <p className="text-white/60 text-sm animate-pulse-soft">{t("teamBattle.rpsWaiting")}</p>
+              )}
+            </>
+          ) : (
+            <p className="text-white/70 text-sm text-center animate-pulse-soft">
+              {t("teamBattle.rpsCaptainsHint")}
+            </p>
           )}
         </div>
       </div>

@@ -599,12 +599,12 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
       setLoading(true);
       try {
         const teamSize = participants.filter((p) => p.team === "a").length;
-        // Even by construction (both operands of max are even), within the
-        // server's 12-tile cap, and large enough that everyone gets a turn.
-        // A host-picked duration is clamped into the same rules.
-        const minTiles = Math.max(6, 2 * teamSize);
+        // Two rounds per seated player (teams are equal by the server's own
+        // rule, so 4 per team-size). Even by construction, within the
+        // server's 20-tile cap (20260921210000), floored at 4 for a 1v1.
+        const minTiles = Math.max(4, 4 * teamSize);
         const wanted = preferredTiles ?? minTiles;
-        const tileCount = Math.min(12, Math.max(minTiles, wanted - (wanted % 2)));
+        const tileCount = Math.min(20, Math.max(minTiles, wanted - (wanted % 2)));
         const difficulties: string[] = [];
         for (let i = 0; i < tileCount; i++) {
           difficulties.push(i < tileCount / 3 ? "easy" : i < (2 * tileCount) / 3 ? "medium" : "hard");
