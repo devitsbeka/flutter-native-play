@@ -2622,6 +2622,7 @@ export const ka = {
     otherPlayers: "სხვა მოთამაშეები",
     searchAndAddAbove: "მოძებნე და დაამატე მეგობრები ზემოთ",
     userAlreadyInRoom: "მომხმარებელი უკვე ოთახშია",
+    alreadyInvitedBadge: "მიწვეულია",
     inviteSent: "მოწვევა გაიგზავნა!",
     inviteFailed: "მოწვევა ვერ მოხერხდა",
     requestAlreadySentWait: "მოთხოვნა უკვე გაგზავნილია, დაელოდე პასუხს",

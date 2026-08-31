@@ -2263,6 +2263,7 @@ export const it: KaTranslations = {
     otherPlayers: "Altri Giocatori",
     searchAndAddAbove: "Cerca e aggiungi amici sopra",
     userAlreadyInRoom: "L'utente è già nella stanza",
+    alreadyInvitedBadge: "Invitato",
     inviteSent: "Invito inviato!",
     inviteFailed: "Invito fallito",
     requestAlreadySentWait: "Richiesta già inviata, attendi risposta",

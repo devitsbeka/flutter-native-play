@@ -121,6 +121,24 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
   // Room-invite mode picks first, sends on "done" — see sendRoomInvites.
   const [pickedForRoom, setPickedForRoom] = useState<Set<string>>(new Set());
   const [sendingInvites, setSendingInvites] = useState(false);
+  // Who is already on the couch (seated or holding an invite), so their tile
+  // can say so — greyed with a badge — instead of pretending they are
+  // invitable and quietly dropping them at send time.
+  const [alreadyInRoom, setAlreadyInRoom] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    if (!isOpen || !roomId) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("room_participants")
+        .select("user_id")
+        .eq("room_id", roomId);
+      if (!cancelled && data) setAlreadyInRoom(new Set(data.map(r => r.user_id)));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, roomId]);
   const [sendingRequestTo, setSendingRequestTo] = useState<string | null>(null);
   const [pendingOutgoingIds, setPendingOutgoingIds] = useState<Set<string>>(new Set());
   const [copied, setCopied] = useState(false);
@@ -394,7 +412,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
         toInvite.map(id => ({
           room_id: roomId,
           user_id: id,
-          status: "invited",
+          status: "invited" as const,
           nickname: prof.get(id)?.nickname || "Player",
           avatar_url: prof.get(id)?.avatar_url,
           country_code: prof.get(id)?.country_code || "GE",
@@ -670,6 +688,9 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                             const isPendingOutgoing = pendingOutgoingIds.has(result.user_id);
                             const isLoading = sendingRequestTo === result.user_id;
                             const isSent = sentRequests.has(result.user_id);
+                            // Already seated or invited in this room — the
+                            // row says so instead of offering the invite.
+                            const isSeated = isRoomInviteMode && alreadyInRoom.has(result.user_id);
                             
                             const handleButtonAction = () => {
                               if (isFriend) {
@@ -688,6 +709,10 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                                 if (isPreRoomMode) {
                                   onFriendSelect?.(result.user_id);
                                 } else if (isRoomInviteMode) {
+                                  if (isSeated) {
+                                    toast.info(t("extra.userAlreadyInRoom"));
+                                    return;
+                                  }
                                   // Same contract as the grid: picking, not
                                   // sending — the "done" button sends.
                                   togglePickForRoom(result.user_id);
@@ -727,7 +752,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                               handleButtonAction();
                             };
                             
-                            const isDisabled = isSent || isLoading || (!isFriend && isPendingOutgoing);
+                            const isDisabled = isSent || isLoading || isSeated || (!isFriend && isPendingOutgoing);
                             // Picked for a room that does not exist yet. The
                             // grid below marks this with a tick; a search row
                             // that stayed on "Invite" after being pressed read
@@ -764,7 +789,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                                   onTouchEnd={handleTouch}
                                   disabled={isDisabled}
                                   className={`relative z-10 flex items-center gap-2 px-5 py-3 min-h-[48px] rounded-2xl text-sm font-semibold transition-colors border active:scale-95 ${
-                                    isSent || (!isFriend && isPendingOutgoing)
+                                    isSeated || isSent || (!isFriend && isPendingOutgoing)
                                       ? "bg-white/15 border-white/20 text-white/70"
                                       : isPicked
                                       ? "bg-white/25 border-white text-white"
@@ -778,6 +803,11 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                                     <>
                                       <Loader2 className="w-4 h-4 animate-spin" />
                                       {t("extra.sending")}
+                                    </>
+                                  ) : isSeated ? (
+                                    <>
+                                      <Check className="w-4 h-4" />
+                                      {t("extra.alreadyInvitedBadge")}
                                     </>
                                   ) : !isFriend && isPendingOutgoing ? (
                                     <>
@@ -920,6 +950,10 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                         the rest scroll inside the grid. */}
                     <div className="grid grid-cols-4 gap-2 max-h-[min(30vh,264px)] overflow-y-auto">
                       {orderedFriends.map((friend) => {
+                        // Already on the couch — seated or holding an invite.
+                        // The tile goes black-and-white and says so, instead
+                        // of taking a pick that could never send.
+                        const seated = isRoomInviteMode && alreadyInRoom.has(friend.friendId);
                         const marked = isPreRoomMode
                           ? selectedFriends?.has(friend.friendId) || false
                           : isRoomInviteMode
@@ -931,41 +965,55 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                             onClick={() => {
                               if (isPreRoomMode) return onFriendSelect?.(friend.friendId);
                               // A tap picks; the green button below sends.
-                              if (isRoomInviteMode) return togglePickForRoom(friend.friendId);
+                              if (isRoomInviteMode) {
+                                if (!seated) togglePickForRoom(friend.friendId);
+                                return;
+                              }
                               // Nothing to invite them to from here, so the
                               // tile opens who they are rather than being a
                               // button that does nothing.
                               setProfileUserId(friend.friendId);
                             }}
-                            disabled={sendingInvites}
+                            disabled={sendingInvites || seated}
                             // The picked ring is drawn inside the tile. Outside
                             // it — which is where a plain `ring` goes — the
                             // grid scrolls, and the top and side edges of it
                             // were being cut off against the scroll box.
-                            className={`flex flex-col items-center p-2.5 rounded-xl transition-all disabled:opacity-70 ${
-                              marked
-                                ? "bg-white/25 ring-2 ring-inset ring-white"
-                                : "bg-white/10 hover:bg-white/15"
-                            }`}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
+                            className={`flex flex-col items-center p-2.5 rounded-xl transition-all ${
+                              seated
+                                ? "bg-white/5 opacity-60"
+                                : marked
+                                  ? "bg-white/25 ring-2 ring-inset ring-white"
+                                  : "bg-white/10 hover:bg-white/15"
+                            } ${sendingInvites ? "opacity-70" : ""}`}
+                            whileHover={seated ? undefined : { scale: 1.02 }}
+                            whileTap={seated ? undefined : { scale: 0.98 }}
                           >
-                            <div className="relative">
+                            <div className={`relative ${seated ? "grayscale" : ""}`}>
                               <SafeAvatar
                                 avatarUrl={friend.avatarUrl}
                                 fallback={friend.nickname}
                                 className="w-12 h-12 border border-white/20"
                                 fallbackClassName="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-xs font-bold"
                               />
-                              {marked && (
-                                <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-white rounded-full flex items-center justify-center">
-                                  <Check className="w-3 h-3 text-primary" />
+                              {(marked || seated) && (
+                                <div
+                                  className={`absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full flex items-center justify-center ${
+                                    seated ? "bg-white/60" : "bg-white"
+                                  }`}
+                                >
+                                  <Check className={`w-3 h-3 ${seated ? "text-gray-600" : "text-primary"}`} />
                                 </div>
                               )}
                             </div>
                             <span className="text-xs text-white font-medium mt-1.5 max-w-[60px] truncate">
                               {friend.nickname}
                             </span>
+                            {seated && (
+                              <span className="text-[10px] text-white/60 max-w-[64px] truncate">
+                                {t("extra.alreadyInvitedBadge")}
+                              </span>
+                            )}
                           </motion.button>
                         );
                       })}

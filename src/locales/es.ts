@@ -2271,6 +2271,7 @@ export const es: KaTranslations = {
     otherPlayers: "Otros Jugadores",
     searchAndAddAbove: "Busca y agrega amigos arriba",
     userAlreadyInRoom: "El usuario ya está en la sala",
+    alreadyInvitedBadge: "Invitado",
     inviteSent: "¡Invitación enviada!",
     inviteFailed: "Error al invitar",
     requestAlreadySentWait: "Solicitud ya enviada, espera respuesta",
