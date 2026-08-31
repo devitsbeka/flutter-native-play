@@ -3,7 +3,10 @@ import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import type { Tables } from "@/integrations/supabase/types";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronLeft, Crown, Share2, UserPlus } from "lucide-react";
+import { ChevronLeft, Crown, Pencil, Share2, UserPlus } from "lucide-react";
+import { DynamicIcon } from "@/components/shared/DynamicIcon";
+import { containsBlockedText } from "@/utils/contentFilter";
+import iconKingMascot from "@/assets/play-chooser/icon-king.webp";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -39,7 +42,12 @@ interface KingState {
   player_score: number;
   king_score: number;
   question_number: number;
-  question?: { question_text: string; image_url?: string | null; think_deadline: string };
+  question?: {
+    question_text: string;
+    image_url?: string | null;
+    icon_slug?: string | null;
+    think_deadline: string;
+  };
   options?: string[];
   commit_deadline?: string;
   correct?: boolean;
@@ -198,6 +206,9 @@ export default function KingPage() {
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const [kingRoom, setKingRoom] = useState<Tables<"game_rooms"> | null>(null);
+  const [renameOpen, setRenameOpen] = useState(false);
+  const [nameDraft, setNameDraft] = useState("");
+  const nameAttempted = useRef(false);
   const [kingParts, setKingParts] = useState<Tables<"room_participants">[]>([]);
   const [kingPending, setKingPending] = useState<Tables<"room_participants">[]>([]);
   const [seatMenu, setSeatMenu] = useState<Tables<"room_participants"> | null>(null);
@@ -274,6 +285,39 @@ export default function KingPage() {
     })();
   }, [user, profile, searchParams, navigate]);
 
+  // A team needs a name. The host's device asks the same AI namer the
+  // classic create screen uses the first time an unnamed lounge opens;
+  // everyone else picks the name up off the room row (realtime below).
+  useEffect(() => {
+    if (!kingRoom || kingRoom.room_name || nameAttempted.current) return;
+    if (kingRoom.host_user_id !== user?.id) return;
+    nameAttempted.current = true;
+    const roomId = kingRoom.id;
+    void supabase.functions
+      .invoke("generate-room-name", { body: { language: readAppLanguage() } })
+      .then(async ({ data }) => {
+        const name = ((data?.name as string) || "")
+          .replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1F000}-\u{1F02F}]|[\u{1F0A0}-\u{1F0FF}]|[\u{1F100}-\u{1F64F}]|[\u{1F680}-\u{1F6FF}]|[\u{1FA00}-\u{1FAFF}]/gu, "")
+          .trim();
+        if (!name) return;
+        await supabase.from("game_rooms").update({ room_name: name }).eq("id", roomId);
+        setKingRoom((prev) => (prev && prev.id === roomId ? { ...prev, room_name: name } : prev));
+      });
+  }, [kingRoom, user?.id]);
+
+  const saveTeamName = async () => {
+    const name = nameDraft.trim();
+    if (!kingRoom || !name) return;
+    if (containsBlockedText(name)) {
+      toast.error(t("extra.textNotAllowed"));
+      return;
+    }
+    setRenameOpen(false);
+    const { error } = await supabase.from("game_rooms").update({ room_name: name }).eq("id", kingRoom.id);
+    if (error) toast.error(error.message);
+    else setKingRoom((prev) => (prev ? { ...prev, room_name: name } : prev));
+  };
+
   const refreshKingParts = useCallback(async () => {
     const roomId = kingRoomRef.current?.id;
     if (!roomId) return;
@@ -303,6 +347,11 @@ export default function KingPage() {
         "postgres_changes",
         { event: "*", schema: "public", table: "room_participants", filter: `room_id=eq.${kingRoom.id}` },
         () => void fetchParts(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "game_rooms", filter: `id=eq.${kingRoom.id}` },
+        (payload) => setKingRoom(payload.new as Tables<"game_rooms">),
       )
       .on("broadcast", { event: "start" }, () => {
         if (stageRef.current === "intro") void draw();
@@ -432,6 +481,33 @@ export default function KingPage() {
               <img alt="" className="absolute inset-0 max-w-none object-cover size-full" src={sceneKing} />
               <div className="absolute inset-0" style={{ backgroundImage: KING_SCENE_FADE }} />
               <div className="absolute inset-0" style={{ backgroundImage: KING_SCENE_FADE }} />
+            </div>
+
+            {/* the team's name — AI-dealt on first open, host taps to rename */}
+            <div className="absolute left-[32px] top-[44px] w-[435px] flex justify-center">
+              <motion.button
+                whileTap={{ scale: 0.95, y: 2 }}
+                transition={{ type: "spring", stiffness: 520, damping: 28 }}
+                onClick={
+                  kingRoom?.host_user_id === user?.id
+                    ? () => {
+                        setNameDraft(kingRoom?.room_name ?? "");
+                        setRenameOpen(true);
+                      }
+                    : undefined
+                }
+                className="inline-flex items-center gap-2 max-w-[330px] h-[42px] px-4 rounded-[16px] bg-white/70 border border-[#e8e0f5] shadow-[0px_2.5px_0px_0px_#d8d0e8]"
+              >
+                <span
+                  className="text-[19px] leading-none text-[#523b76] whitespace-nowrap overflow-hidden text-ellipsis"
+                  style={{ fontFamily: "'TASolivare', sans-serif" }}
+                >
+                  {kingRoom?.room_name || t("lobby.teamName")}
+                </span>
+                {kingRoom?.host_user_id === user?.id && (
+                  <Pencil className="w-3.5 h-3.5 shrink-0 text-[#523b76]/50" />
+                )}
+              </motion.button>
             </div>
 
             {/* Winner takes: (940:7510) + the coins pill (940:7560) */}
@@ -578,6 +654,47 @@ export default function KingPage() {
           }
         />
 
+        {/* host renames the team — small white sheet over the lilac wash */}
+        {renameOpen && (
+          <div
+            className="fixed inset-0 z-[130] flex items-center justify-center px-8 backdrop-blur-[10px] bg-[rgba(245,217,255,0.6)]"
+            onClick={() => setRenameOpen(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 14 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ type: "spring", stiffness: 420, damping: 28 }}
+              className="w-full max-w-[320px] rounded-[24px] bg-white/95 border border-[#e8e0f5] p-5 flex flex-col gap-3 shadow-[0px_8px_24px_0px_rgba(102,51,153,0.18)]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <p className="text-[19px] text-[#523b76] text-center" style={{ fontFamily: "'TASolivare', sans-serif" }}>
+                {t("lobby.teamName")}
+              </p>
+              <input
+                value={nameDraft}
+                onChange={(e) => setNameDraft(e.target.value)}
+                maxLength={40}
+                autoFocus
+                className="w-full h-[46px] rounded-[16px] border border-[#e8e0f5] bg-[#f8f5ff] px-4 font-[Nunito] font-semibold text-[15px] text-[#402666] outline-none focus:border-[#b99ce2]"
+              />
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={() => void saveTeamName()}
+                disabled={!nameDraft.trim()}
+                className="w-full h-[46px] rounded-[16px] bg-[#8858d5] text-white font-[Nunito] font-bold text-[15px] disabled:opacity-50"
+              >
+                {t("common.save")}
+              </motion.button>
+              <button
+                onClick={() => setRenameOpen(false)}
+                className="font-[Nunito] text-sm font-semibold text-[#523b76]/50"
+              >
+                {t("common.cancel")}
+              </button>
+            </motion.div>
+          </div>
+        )}
+
         <FriendPeek
           friend={peek}
           onClose={() => setPeek(null)}
@@ -605,7 +722,7 @@ export default function KingPage() {
             <ChevronLeft className="w-6 h-6" />
           </button>
           <h1 className="font-display text-xl font-bold text-[#402666] flex items-center gap-2">
-            <Crown className="w-5 h-5 text-amber-500" /> {t("king.title")}
+            <img alt="" src={iconKingMascot} className="w-8 h-8 object-contain" /> {t("king.title")}
           </h1>
         </div>
 
@@ -632,6 +749,15 @@ export default function KingPage() {
               className="rounded-[24px] p-6"
               style={{ background: "rgba(252,247,255,0.92)", boxShadow: CARD_SHADOW }}
             >
+              {/* Every puzzle wears its icon (20260921160000); rows without
+                  a slug fall back to a per-question seeded pick. */}
+              <div className="flex justify-center mb-4">
+                <DynamicIcon
+                  slug={state.question.icon_slug ?? undefined}
+                  seedText={state.question.question_text}
+                  size={64}
+                />
+              </div>
               <p className="font-bold text-[17px] text-[#402666] leading-relaxed">
                 {state.question.question_text}
               </p>
@@ -656,7 +782,15 @@ export default function KingPage() {
               className="rounded-[24px] p-5"
               style={{ background: "rgba(252,247,255,0.92)", boxShadow: CARD_SHADOW }}
             >
-              <p className="font-bold text-[#402666]">{state.question.question_text}</p>
+              <div className="flex items-center gap-3">
+                <DynamicIcon
+                  slug={state.question.icon_slug ?? undefined}
+                  seedText={state.question.question_text}
+                  size={40}
+                  className="shrink-0"
+                />
+                <p className="font-bold text-[#402666]">{state.question.question_text}</p>
+              </div>
             </div>
             <p className="font-mono text-3xl text-red-400 font-bold text-center">{commitSeconds}</p>
             <p className="text-sm text-[#402666]/50 text-center -mt-2">{t("king.commitHint")}</p>

@@ -1522,6 +1522,7 @@ export const fr: KaTranslations = {
     playPrefix: "Joue",
     kingCardDesc: "Duel de logique — bats le Roi",
     classicCardDesc: "Salon classique — bibliothèque et tes trivias",
+    teamName: "Nom d'équipe",
     captainInfoTitle: "Capitaine d'équipe",
     captainInfoBody: "Le capitaine mène l'équipe : en cas d'égalité, c'est lui qui devient le champion de l'équipe lors de la super manche et répond pour tout le monde. L'équipe élit son capitaine par vote — touche un coéquipier pour donner ta voix. En solo, le capitaine, c'est toi.",
   },
