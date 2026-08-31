@@ -42,7 +42,6 @@ import iconDiceCard from "@/assets/play-chooser/icon-dice.webp";
 import iconKingCard from "@/assets/play-chooser/icon-king.webp";
 import iconCrateCard from "@/assets/play-chooser/icon-crate.png";
 import iconFriendsCard from "@/assets/play-chooser/icon-friends.webp";
-import { useMyRooms } from "@/hooks/useMyRooms";
 import { PreRoomQueuePreview } from "@/components/team/PreRoomQueuePreview";
 import { getRandomGradient } from "@/config/roomGradients";
 import { siteUrl } from "@/config/site";
@@ -123,19 +122,6 @@ type InvitePerson = {
   countryCode?: string | null;
 };
 
-// The team-circle gradients from the design, dealt to rooms by id hash so a
-// room keeps its color between opens.
-const ROOM_GRADS = [
-  "linear-gradient(to bottom, rgba(9,85,219,0.56), rgba(103,180,253,0.56))",
-  "linear-gradient(to bottom, rgba(253,183,5,0.56), rgba(103,180,253,0.56))",
-  "linear-gradient(to bottom, rgba(113,37,213,0.56), rgba(103,180,253,0.56))",
-];
-function roomGradIndex(id: string) {
-  let hash = 0;
-  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) | 0;
-  return Math.abs(hash) % ROOM_GRADS.length;
-}
-
 type PreRoomQueueItem = {
   tmpId: string;
   source_type: "category" | "random" | "user_trivia";
@@ -200,21 +186,13 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   const [isCreating, setIsCreating] = useState(false);
 
   // Which game the room is for. A pre-selected category or a classic
-  // challenge lands on the classic card; everything else starts on Random.
-  const [gameChoice, setGameChoice] = useState<GameChoice>(() =>
+  // challenge lands on the classic card; otherwise NOTHING is picked —
+  // starting on Random quietly rolled a category the player never chose,
+  // and the create button read as ready for a game nobody asked for.
+  const [gameChoice, setGameChoice] = useState<GameChoice | null>(() =>
     preSelectedCategory || (defaultChallengeType && defaultChallengeType !== "random")
       ? "classic"
-      : "random",
-  );
-  // Whole rooms picked in the invite reel — creating invites all their players.
-  const [selectedRooms, setSelectedRooms] = useState<Set<string>>(new Set());
-  const { rooms: myRooms } = useMyRooms({ limit: 12 });
-  const inviteRooms = useMemo(
-    () =>
-      myRooms
-        .filter((r) => r.participants.some((p) => p.user_id !== user?.id))
-        .slice(0, 6),
-    [myRooms, user?.id],
+      : null,
   );
   
   // Room name & icon state - AI-generated via edge function
@@ -299,15 +277,6 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
           countryCode: friend.countryCode,
         });
       }
-    });
-    selectedRooms.forEach((roomId) => {
-      const picked = inviteRooms.find((r) => r.id === roomId);
-      picked?.participants.forEach((p) => {
-        if (p.user_id !== user?.id && !seen.has(p.user_id)) {
-          seen.add(p.user_id);
-          out.push({ id: p.user_id, nickname: p.nickname, avatarUrl: p.avatar_url });
-        }
-      });
     });
     return out;
   };
@@ -648,14 +617,17 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     }
   }, [selectionMode, selectedCategory, customTriviaQuestions, challengeTrivia]);
 
+  // Nothing picked, nothing to create — the player decides what to play.
   // The lounges are always ready to enter; Random needs a settled roll;
   // classic keeps its per-source validity.
   const createEnabled =
-    gameChoice === "king" || gameChoice === "battle"
-      ? true
-      : gameChoice === "random"
-        ? selectionMode === "random" && !!selectedCategory && !isSearchingRandom
-        : hasValidSelection;
+    gameChoice === null
+      ? false
+      : gameChoice === "king" || gameChoice === "battle"
+        ? true
+        : gameChoice === "random"
+          ? selectionMode === "random" && !!selectedCategory && !isSearchingRandom
+          : hasValidSelection;
 
   // Handle blind trivia creation - questions are hidden from creator
   // IMPORTANT: This now persists the trivia to user_quiz_posts so it appears in "My Trivia"
@@ -1109,7 +1081,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
             )}
           </div>
           
-          {acceptedFriends.length > 0 || inviteRooms.length > 0 ? (
+          {acceptedFriends.length > 0 ? (
             <div className="flex items-center gap-2">
               {/* Horizontal scrolling friends */}
               <div className="flex-1 overflow-x-auto scrollbar-hide">
@@ -1127,60 +1099,9 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                     <span className="text-xs text-primary font-medium">{t("extra.inviteBtn")}</span>
                   </motion.button>
 
-                  {/* Whole rooms first (Figma 926-10187 team circles): picking
-                      one invites every player already in it. */}
-                  {inviteRooms.map((inviteRoom) => {
-                    const isSelected = selectedRooms.has(inviteRoom.id);
-                    return (
-                      <motion.button
-                        key={inviteRoom.id}
-                        onClick={() =>
-                          setSelectedRooms((prev) => {
-                            const next = new Set(prev);
-                            if (next.has(inviteRoom.id)) next.delete(inviteRoom.id);
-                            else next.add(inviteRoom.id);
-                            return next;
-                          })
-                        }
-                        className={`relative shrink-0 flex flex-col items-center gap-1.5 p-2 rounded-xl transition-all border ${
-                          isSelected
-                            ? "bg-primary/10 border-[#7126d5]"
-                            : "bg-muted/50 border-transparent hover:bg-muted"
-                        }`}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        <div className="relative">
-                          <div
-                            className="w-[52px] h-[52px] rounded-full flex items-center justify-center overflow-hidden"
-                            style={{ background: ROOM_GRADS[roomGradIndex(inviteRoom.id)] }}
-                          >
-                            {inviteRoom.room_icon ? (
-                              <img src={inviteRoom.room_icon} alt="" className="w-8 h-8 object-contain" />
-                            ) : (
-                              <span className="text-base font-bold text-white">
-                                {(inviteRoom.room_name || inviteRoom.room_code).charAt(0).toUpperCase()}
-                              </span>
-                            )}
-                          </div>
-                          {isSelected && (
-                            <motion.div
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              transition={{ type: "spring", stiffness: 480, damping: 22 }}
-                              className="absolute inset-0 m-auto w-[30px] h-[30px] rounded-full bg-white/75 backdrop-blur-[2px] flex items-center justify-center"
-                            >
-                              <Check className="w-4 h-4 text-[#7126d5]" strokeWidth={3.5} />
-                            </motion.div>
-                          )}
-                        </div>
-                        <span className="text-xs text-foreground font-medium max-w-[70px] truncate">
-                          {inviteRoom.room_name || inviteRoom.room_code}
-                        </span>
-                      </motion.button>
-                    );
-                  })}
-
+                  {/* People, not rooms: the reel offers FRIENDS to invite.
+                      It used to lead with whole past rooms whose tap invited
+                      everyone in them — read as noise and surprised hosts. */}
                   {reelFriends.slice(0, 10).map((friend) => {
                     const isSelected = selectedFriends.has(friend.friendId);
                     return (
@@ -1262,7 +1183,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
             </div>
           )}
           
-          {(selectedFriends.size > 0 || selectedRooms.size > 0) && (
+          {selectedFriends.size > 0 && (
             <p className="text-xs text-primary mt-1.5">
               {t("extra.friendsInvited", { count: collectInvitees().length })}
             </p>
