@@ -1671,7 +1671,7 @@ export const ka = {
     classicDesc: "შექმენი ოთახი და შეეჯიბრე მეგობრებს",
     tvTitle: "TV წვეულება",
     tvDesc: "ერთი დიდი ეკრანი, ტელეფონები — პულტები",
-    teamBattleTitle: "გუნდური ბრძოლა",
+    teamBattleTitle: "ტრივია Battle",
     teamBattleDesc: "ორი გუნდი ერკინება კატეგორიების დაფაზე",
     kingTitle: "MyTrivia King",
     kingDesc: "რთული ლოგიკური კითხვები. ერთი წუთი ფიქრისთვის. იგებს, ვინც პირველი მიაღწევს 6 ქულას.",
@@ -1679,7 +1679,7 @@ export const ka = {
 
   // Team Battle (docs/GAME_TYPES_DESIGN.md §2)
   teamBattle: {
-    title: "გუნდური ბრძოლა",
+    title: "ტრივია Battle",
     entryHint: "ორი გუნდი, კატეგორიების დაფა ფასებით — თითო სვლაზე ერთი მოთამაშეა ყურადღების ცენტრში.",
     createRoom: "შექმენი ოთახი",
     codePlaceholder: "კოდი",
@@ -1783,7 +1783,7 @@ export const ka = {
 
   // Lilac lobby screens (Figma 940:7474 Versus King / 938:6019 Team Battle)
   lobby: {
-    vkTitle: "Versus King",
+    vkTitle: "ვერსუს King",
     invite: "მოწვევა",
     winnerTakes: "გამარჯვებული იღებს:",
     captainLabel: "კაპიტანი:",
@@ -1805,6 +1805,7 @@ export const ka = {
     sitHere: "თვითონ დაჯექი",
     withFriends: "მეგობრებთან",
     newBang: "ახალი!",
+    playPrefix: "ითამაშე",
     captainInfoTitle: "გუნდის კაპიტანი",
     captainInfoBody: "კაპიტანი გუნდის ლიდერია: თუ ანგარიში გათანაბრდა, სუპერ რაუნდში სწორედ ის გამოდის გუნდის ჩემპიონად და პასუხობს ყველას მაგივრად. კაპიტანს მასპინძელი ირჩევს თამაშის დაწყებამდე.",
   },
