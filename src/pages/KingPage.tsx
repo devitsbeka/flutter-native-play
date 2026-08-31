@@ -1076,9 +1076,20 @@ export default function KingPage() {
 
         {stage === "result" && state && (
           <div className="flex flex-col items-center gap-4 pt-16">
-            <Crown
-              className={`w-16 h-16 ${state.status === "won" ? "text-amber-300" : "text-white/30"}`}
-            />
+            {/* Won: the golden crown is yours. Lost: the King himself hops
+                in to gloat — a grey crown outline said nothing. */}
+            {state.status === "won" ? (
+              <Crown className="w-16 h-16 text-amber-300" />
+            ) : (
+              <motion.img
+                alt=""
+                src={iconKingMascot}
+                initial={{ scale: 0.3, y: 24, rotate: -12 }}
+                animate={{ scale: 1, y: 0, rotate: 0 }}
+                transition={{ type: "spring", stiffness: 300, damping: 14 }}
+                className="w-24 h-24 object-contain drop-shadow-lg"
+              />
+            )}
             <p className="font-display text-2xl font-bold text-white text-center">
               {state.status === "won" ? t("king.youWon") : t("king.kingWon")}
             </p>
@@ -1096,8 +1107,8 @@ export default function KingPage() {
             >
               {t("king.playAgain")}
             </button>
-            <button onClick={() => navigate(-1)} className="text-sm text-white/60">
-              {t("common.back")}
+            <button onClick={() => navigate(-1)} className="text-sm font-semibold text-white/80">
+              ← {t("common.back")}
             </button>
           </div>
         )}
@@ -1380,9 +1391,18 @@ function KingTeamDuel({
 
         {phase === "result" && (
           <div className="flex flex-col items-center gap-4 pt-16">
-            <Crown
-              className={`w-16 h-16 ${view.status === "won" ? "text-amber-300" : "text-white/30"}`}
-            />
+            {view.status === "won" ? (
+              <Crown className="w-16 h-16 text-amber-300" />
+            ) : (
+              <motion.img
+                alt=""
+                src={iconKingMascot}
+                initial={{ scale: 0.3, y: 24, rotate: -12 }}
+                animate={{ scale: 1, y: 0, rotate: 0 }}
+                transition={{ type: "spring", stiffness: 300, damping: 14 }}
+                className="w-24 h-24 object-contain drop-shadow-lg"
+              />
+            )}
             <p className="font-display text-2xl font-bold text-white text-center">
               {view.status === "won" ? t("king.teamWon") : t("king.teamLost")}
             </p>
@@ -1394,8 +1414,8 @@ function KingTeamDuel({
                 {t("king.playAgain")}
               </button>
             )}
-            <button onClick={onExit} className="text-sm text-white/60">
-              {t("common.back")}
+            <button onClick={onExit} className="text-sm font-semibold text-white/80">
+              ← {t("common.back")}
             </button>
           </div>
         )}
