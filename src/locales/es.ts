@@ -4058,6 +4058,7 @@ export const es: KaTranslations = {
     mltWaitingVotes: "Esperando los votos de todos…",
     mltMostVoted: "Más votado: {names}",
     mltNoVotes: "Sin votos en esta pregunta",
+    mltSplitVote: "Votos empatados: nadie puntúa",
     mpSomeonePlayedTrivia: "{name} jugó tu trivia",
     mpSomeonePlayedTriviaFallback: "Alguien jugó tu trivia",
     chatStartConversation: "¡Inicia una conversación!",

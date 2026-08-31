@@ -4659,6 +4659,7 @@ export const ka = {
     mltWaitingVotes: "ველოდებით ყველას ხმას…",
     mltMostVoted: "ყველაზე მეტი ხმა: {names}",
     mltNoVotes: "ამ კითხვაზე ხმები არ არის",
+    mltSplitVote: "ხმები გაიყო — ქულა არავინ მიიღო",
     mpSomeonePlayedTrivia: "{name} ითამაშა შენი ტრივია",
     mpSomeonePlayedTriviaFallback: "ვიღაცამ ითამაშა შენი ტრივია",
     // FriendChatSheet

@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
+  MOST_LIKELY_BALLOT_SIZE,
   MOST_LIKELY_CATEGORY_ID,
   MOST_LIKELY_POINTS,
   MOST_LIKELY_QUESTIONS_PER_ROUND,
@@ -9,6 +10,7 @@ import {
   excludePartyCategories,
   isPartyCategory,
   mostLikelyAnswerOptions,
+  mostLikelyBallot,
   pinPartyCategoriesFirst,
 } from "@/config/partyCategories";
 import { MAX_QUESTION_POINTS } from "@/utils/scoring";
@@ -17,6 +19,59 @@ const migration = readFileSync(
   join(process.cwd(), "supabase/migrations/20260916100000_most_likely_to.sql"),
   "utf8",
 );
+
+const majorityMigration = readFileSync(
+  join(process.cwd(), "supabase/migrations/20260921230000_most_likely_majority_and_icons.sql"),
+  "utf8",
+);
+
+describe("the per-question ballot", () => {
+  const six = ["Ana", "Ben", "Cat", "Dan", "Eve", "Fin"];
+
+  it("small rooms vote on everyone, in place", () => {
+    expect(mostLikelyBallot(["Ana", "Ben", "Cat"])).toEqual(["Ana", "Ben", "Cat"]);
+    expect(mostLikelyBallot(six.slice(0, 4))).toEqual(["Ana", "Ben", "Cat", "Dan"]);
+  });
+
+  it("big rooms ballot exactly four distinct real names", () => {
+    for (let i = 0; i < 25; i++) {
+      const ballot = mostLikelyBallot(six);
+      expect(ballot).toHaveLength(MOST_LIKELY_BALLOT_SIZE);
+      expect(new Set(ballot).size).toBe(MOST_LIKELY_BALLOT_SIZE);
+      for (const name of ballot) expect(six).toContain(name);
+    }
+  });
+
+  it("rotates: over many draws every name gets on a ballot", () => {
+    const seen = new Set<string>();
+    for (let i = 0; i < 200; i++) mostLikelyBallot(six).forEach((n) => seen.add(n));
+    expect([...seen].sort()).toEqual([...six].sort());
+  });
+
+  it("never mutates the caller's list", () => {
+    const names = [...six];
+    mostLikelyBallot(names);
+    expect(names).toEqual(six);
+  });
+});
+
+describe("majority-only settlement (the follow-up migration)", () => {
+  it("pays only a single top name — a split vote pays nobody", () => {
+    expect(majorityMigration).toContain(
+      "IF array_length(v_winners, 1) IS DISTINCT FROM 1 THEN",
+    );
+  });
+
+  it("still pays the pinned flat amount", () => {
+    expect(majorityMigration).toContain(`points_earned = ${MOST_LIKELY_POINTS}`);
+    expect(majorityMigration).toContain(`+ ${MOST_LIKELY_POINTS}`);
+  });
+
+  it("gives every one of the 36 prompt families an icon", () => {
+    const updates = majorityMigration.match(/SET icon_slug = '/g) || [];
+    expect(updates).toHaveLength(36);
+  });
+});
 
 describe("the vote answer options", () => {
   const p = (user_id: string, nickname: string) => ({ user_id, nickname });

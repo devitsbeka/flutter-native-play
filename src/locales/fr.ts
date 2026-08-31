@@ -3983,6 +3983,7 @@ export const fr: KaTranslations = {
     mltWaitingVotes: "En attente des votes de tous…",
     mltMostVoted: "Le plus voté : {names}",
     mltNoVotes: "Aucun vote pour cette question",
+    mltSplitVote: "Égalité des votes — personne ne marque",
     mpSomeonePlayedTrivia: "{name} a joué ton trivia",
     mpSomeonePlayedTriviaFallback: "Quelqu'un a joué ton trivia",
     chatStartConversation: "Démarrez une conversation !",

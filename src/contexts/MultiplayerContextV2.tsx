@@ -22,6 +22,7 @@ import {
   MOST_LIKELY_QUESTIONS_PER_ROUND,
   MOST_LIKELY_VOTE_SENTINEL,
   mostLikelyAnswerOptions,
+  mostLikelyBallot,
 } from "@/config/partyCategories";
 
 // Helper to notify trivia creator when their trivia is played in multiplayer
@@ -179,7 +180,9 @@ const buildMostLikelyQuestions = async (
     question: p.question,
     correctAnswer: MOST_LIKELY_VOTE_SENTINEL,
     incorrectAnswers: [],
-    allAnswers: options,
+    // Big rooms don't scroll a wall of names: each question ballots a random
+    // 4-name subset, rotating who is on the ballot question to question.
+    allAnswers: mostLikelyBallot(options),
     difficulty: "easy" as const,
     category: categoryName || "Party",
     iconSlug: p.iconSlug || undefined,

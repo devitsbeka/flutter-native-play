@@ -6,9 +6,11 @@
 -- submitAnswer path — settle_most_likely_votes tallies server-side, exactly
 -- once per (game, question), and pays every majority voter a flat 100 into
 -- room_participants.score. These assertions pin down that contract: any
--- participant may settle, outsiders and anon are refused, ties all win,
--- timeouts (empty answers) never count, repeat calls are no-ops, and a
--- normal trivia question can never be "settled" into free points.
+-- participant may settle, outsiders and anon are refused, a split top vote
+-- (a tie) records the tied names but pays NOBODY — majority decides, no
+-- majority means no correct answer — timeouts (empty answers) never count,
+-- repeat calls are no-ops, and a normal trivia question can never be
+-- "settled" into free points.
 
 \set ON_ERROR_STOP on
 
@@ -150,21 +152,26 @@ BEGIN
     100, 'no double pay on repeat settle');
 
   -- The results-screen sweep (NULL index) settles everything still open:
-  -- the Q1 tie pays both sides, empty answers never count, the Q3 no-votes
-  -- prompt settles with no winners, and the NORMAL question Q2 is untouched.
+  -- the Q1 tie records both names but pays NEITHER side, empty answers never
+  -- count, the Q3 no-votes prompt settles with no winners, and the NORMAL
+  -- question Q2 is untouched.
   PERFORM pg_temp.must_equal(
     public.settle_most_likely_votes(v_room, v_game, NULL), 2,
     'sweep settles the two open vote questions');
 
   SELECT winners INTO r
   FROM public.room_vote_results WHERE game_id = v_game AND question_index = 1;
-  PERFORM pg_temp.must_equal(r.winners, ARRAY['Ana','Ben'], 'a tie makes both names winners');
+  PERFORM pg_temp.must_equal(r.winners, ARRAY['Ana','Ben'], 'a split top vote records the tied names');
   PERFORM pg_temp.must_equal(
     (SELECT score FROM public.room_participants WHERE room_id = v_room AND user_id = v_ana),
-    200, 'tie voter paid');
+    100, 'a split vote pays nobody (Ana keeps only her Q0 payout)');
   PERFORM pg_temp.must_equal(
     (SELECT score FROM public.room_participants WHERE room_id = v_room AND user_id = v_ben),
-    200, 'other tie voter paid');
+    100, 'a split vote pays nobody (Ben keeps only his Q0 payout)');
+  PERFORM pg_temp.must_equal(
+    (SELECT is_correct FROM public.player_answers
+     WHERE room_id = v_room AND user_id = v_ana AND question_index = 1),
+    false, 'no answer of a split vote is marked correct');
   PERFORM pg_temp.must_equal(
     (SELECT score FROM public.room_participants WHERE room_id = v_room AND user_id = v_cat),
     100, 'timeout (empty answer) adds nothing to the Q0 payout');

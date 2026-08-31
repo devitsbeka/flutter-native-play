@@ -4624,6 +4624,7 @@ export const en: KaTranslations = {
     mltWaitingVotes: "Waiting for everyone’s votes…",
     mltMostVoted: "Most voted: {names}",
     mltNoVotes: "No votes this round",
+    mltSplitVote: "Votes split — nobody scores",
     mpSomeonePlayedTrivia: "{name} played your trivia",
     mpSomeonePlayedTriviaFallback: "Someone played your trivia",
     // FriendChatSheet

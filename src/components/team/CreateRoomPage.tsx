@@ -406,13 +406,16 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     void selectRandomCategory();
   }, [gameChoice, loadingCategories, categories, selectedCategory, isSearchingRandom]);
 
-  const handleLibraryCategorySelect = (category: { id: string; category_id: string; name: string; icon?: string; color: string; image_url?: string | null; total_levels: number }) => {
+  const handleLibraryCategorySelect = (category: { id: string; category_id: string; name: string; icon?: string; icon_slug?: string | null; color: string; image_url?: string | null; total_levels: number }) => {
     // Use the category directly from the modal - it already has category_id
     setSelectedCategory({
       id: category.id,
       category_id: category.category_id,
       name: category.name,
-      icon_slug: category.icon || null,
+      // categories.icon is the EMOJI; the icon library wants icon_slug. The
+      // emoji used to be passed as the slug here, which resolved to nothing
+      // and left the picked-category preview wearing the "?" fallback.
+      icon_slug: category.icon_slug || null,
       color: category.color,
       image_url: category.image_url,
       total_levels: category.total_levels,
