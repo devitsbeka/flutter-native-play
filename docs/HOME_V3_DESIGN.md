@@ -71,7 +71,7 @@ Detail page: white, `#1f1f1f`, chip `#838383`, cards `#f5f5f5`, ring `#dbdbdb`.
 
 Home, top to bottom (x, y from the screen's top-left, under the status bar):
 
-- Title 34/40 bold, cap-top 23 below the safe area, x 29. Marks on the right
+- The MyTrivia logo (38px tall) where the reference has its title, x 28. Marks on the right
   end at x 410: flame 18 × 24, heart 24 × 20, magnifier 21, counters 16 medium.
 - "Paths" 21 bold at x 25, "NEW" 12 bold superscript; subtitle 14/16 semibold.
 - Path card 324 × 486, radius 20, gap 32, 24 in from the left. Hero icon in a
@@ -95,9 +95,12 @@ Home, top to bottom (x, y from the screen's top-left, under the status bar):
   from the right.
 - Offer strip 45 tall: mark at 12, label 15, clock 15 tabular, white 75 × 24
   button (radius 6, 15 bold) 16 from the right.
-- Tab bar 51 of content: 20 icons 15 down, 13 medium labels; tab centres
-  98 apart. The reference lets the labels run 6 into the home-indicator
-  inset, so the bar's bottom padding is `max(6px, inset − 6px)`.
+- Tab bar: not the reference's. It is drawn the way iOS 26 draws its own —
+  a 62px Liquid Glass capsule floating 6px above the home-indicator inset,
+  16px in from the sides, SF Symbols-style glyphs (house, safari, globe,
+  person, outline and .fill), 10pt system-font labels, system blue for the
+  selected tab on its own glass highlight. The offer strip stacks 8px above
+  it with the same inset and a 16px radius.
 
 Detail page: back chevron at (31, 15); hero 211 tall centred; title 25 bold;
 grey chip 32 tall radius 10, 15 bold uppercase; range line 18 bold

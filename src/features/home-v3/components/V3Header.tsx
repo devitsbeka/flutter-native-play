@@ -1,9 +1,9 @@
 import SpotlightSearch from "@/components/search/SpotlightSearch";
+import logo from "@/assets/mytrivia-logo.svg";
 import { V3 } from "../theme";
 import { FlameIcon, HeartIcon, SearchIcon } from "./Icons";
 
 interface V3HeaderProps {
-  title: string;
   /** Mission streak — the flame's counter. */
   streak: number;
   /** Favourite categories — the heart's counter. */
@@ -15,29 +15,24 @@ interface V3HeaderProps {
 }
 
 /**
- * Title on the left, the three marks on the right: flame with streak, heart
- * with favourites, search. The title's cap-top sits 23px under the safe area
- * and the marks are centred on it.
+ * The MyTrivia logo on the left, where the reference has its title, and the
+ * three marks on the right: flame with streak, heart with favourites,
+ * search. The logo sits where the title's cap-top would (23px under the
+ * safe area) and the marks are centred on it.
  */
-export function V3Header({ title, streak, favorites, onStreak, onFavorites }: V3HeaderProps) {
+export function V3Header({ streak, favorites, onStreak, onFavorites }: V3HeaderProps) {
   return (
     <header
       className="flex items-center justify-between"
       style={{ paddingLeft: 28, paddingRight: 30, paddingTop: 9, height: 66 }}
     >
-      <h1
-        style={{
-          fontFamily: V3.font,
-          fontWeight: 700,
-          fontSize: 34,
-          lineHeight: "40px",
-          letterSpacing: "-0.01em",
-          color: V3.ink,
-          margin: 0,
-        }}
-      >
-        {title}
-      </h1>
+      <img
+        src={logo}
+        alt="MyTrivia"
+        draggable={false}
+        className="select-none"
+        style={{ height: 38, width: "auto", marginTop: 1 }}
+      />
 
       <div className="flex items-center" style={{ gap: 18, paddingTop: 1 }}>
         <Counter value={streak} onClick={onStreak}>
