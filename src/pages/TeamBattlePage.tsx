@@ -6,6 +6,7 @@ import { containsBlockedText } from "@/utils/contentFilter";
 import { readAppLanguage } from "@/utils/appLanguage";
 import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
 import { FriendsStoriesBar } from "@/components/team/FriendsStoriesBar";
+import { JoinRequestGate } from "@/components/team/JoinRequestGate";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
@@ -104,22 +105,28 @@ function TeamBattleInner() {
  */
 function TBGate({ joining }: { joining: boolean }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useLanguage();
   const { user } = useAuth();
   const { createRoom } = useTeamBattle();
   const [failed, setFailed] = useState(false);
   const attempted = useRef(false);
+  // The create screen's public/private switch, carried across the
+  // navigation that makes this room. An arena reached any other way — a
+  // shared link, the play chooser — is private, like every other room
+  // created without an opinion.
+  const publish = (location.state as { isPublic?: boolean } | null)?.isPublic ?? false;
 
   useEffect(() => {
     if (joining || !user || attempted.current) return;
     attempted.current = true;
-    void createRoom().then((created) => {
+    void createRoom(publish).then((created) => {
       if (!created) setFailed(true);
       // The room's code goes into the URL so a refresh rejoins this room
       // instead of minting a new one.
       else navigate(`/team-battle?code=${created.room_code}`, { replace: true });
     });
-  }, [joining, user, createRoom, navigate]);
+  }, [joining, user, createRoom, navigate, publish]);
 
   return (
     <div
@@ -158,7 +165,7 @@ function TBGate({ joining }: { joining: boolean }) {
           onClick={() => {
             setFailed(false);
             attempted.current = false;
-            void createRoom().then((created) => {
+            void createRoom(publish).then((created) => {
               if (!created) setFailed(true);
               else navigate(`/team-battle?code=${created.room_code}`, { replace: true });
             });
@@ -549,6 +556,9 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
       className="h-[100dvh] w-full overflow-hidden safe-bleed flex flex-col"
       style={{ background: LILAC_BG }}
     >
+      {/* Somebody asking into this arena, when it was published */}
+      <JoinRequestGate roomId={room?.id} isHost={isHost} />
+
       <LilacHeader
         title={t("teamBattle.title")}
         icon={iconBattleCrate}

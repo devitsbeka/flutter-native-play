@@ -32,6 +32,7 @@ import { getCategoryIconSlug } from "@/data/categoryIconMap";
 import { Switch } from "@/components/ui/switch";
 import { CategoryPickerSection } from "./CategoryPickerSection";
 import { CategoryPickerModal } from "./CategoryPickerModal";
+import { JoinRequestGate } from "./JoinRequestGate";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -712,6 +713,11 @@ export function RoomLobbyV2() {
         paddingBottom: "var(--safe-bottom)",
       }}
     >
+      {/* Somebody asking to come into a published room. Mounted here rather
+          than beside the header so it is above everything the lobby draws —
+          the person asking is waiting on the answer. */}
+      <JoinRequestGate roomId={currentRoom.id} isHost={isHost} />
+
       {/* Header. A plain flex row at the top — the content area below is
           the scroller, so nothing sticky is needed and no negative margins
           are in play (iOS WebKit clamps sticky boxes with negative margins,

@@ -19,6 +19,7 @@ import { MultiplayerGameScreenV2 } from "@/components/team/MultiplayerGameScreen
 import { GameResultsScreenV2 } from "@/components/team/GameResultsScreenV2";
 import { FriendsStoriesBar } from "@/components/team/FriendsStoriesBar";
 import { MyRoomsSection } from "@/components/team/MyRoomsSection";
+import { PublicRoomsSection } from "@/components/team/PublicRoomsSection";
 import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
 import { HelpModal } from "@/components/team/HelpModal";
 import { AllRecentRoomsModal } from "@/components/team/AllRecentRoomsModal";
@@ -57,10 +58,14 @@ import { ProRequiredModal } from "@/components/shared/ProRequiredModal";
 import {
   UnifiedFiltersBar,
   roomFilterOptions,
+  privateFilterOptions,
+  publicRoomFilterOptions,
   myTriviaFilterOptions,
   exploreFilterOptions,
   exploreSortOptions,
   RoomFilter,
+  PrivateFilter,
+  PublicRoomsFilter,
   MyTriviaFilter,
   ExploreFilter,
   ExploreSort,
@@ -251,14 +256,27 @@ function TeamContentV2() {
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
-  // "explore" is only a real tab while public sharing is on; a stale
-  // ?tab=explore link falls back to rooms instead of opening a hidden tab.
+  /**
+   * Two tabs: what everyone can find, and what is mine.
+   *
+   * They replace three — rooms, my trivia, and the never-enabled explore —
+   * which between them split "my stuff" across two tabs and had nowhere at
+   * all to put somebody else's room. Old links still work: ?tab=rooms and
+   * ?tab=my-content both open Private, ?tab=explore opens Public, because
+   * those URLs are in people's history and in notifications already sent.
+   */
+  const LEGACY_TABS: Record<string, string> = {
+    rooms: "private",
+    "my-content": "private",
+    explore: "public",
+  };
   const isKnownTab = (tab: string | null): tab is string =>
-    tab === "my-content" || tab === "rooms" || (PUBLIC_SHARING_ENABLED && tab === "explore");
-  const [activeTab, setActiveTab] = useState(() => {
-    const tabFromUrl = searchParams.get("tab");
-    return isKnownTab(tabFromUrl) ? tabFromUrl : "rooms";
-  });
+    tab === "public" || tab === "private";
+  const normalizeTab = (tab: string | null): string | null =>
+    (tab && (isKnownTab(tab) ? tab : LEGACY_TABS[tab])) || null;
+  const [activeTab, setActiveTab] = useState(
+    () => normalizeTab(searchParams.get("tab")) ?? "public",
+  );
   
   // Scroll to top when changing tabs to prevent layout jump
   const handleTabChange = (tab: string) => {
@@ -276,11 +294,9 @@ function TeamContentV2() {
 
   // Keep state in sync with browser navigation (back/forward) when ?tab changes
   useEffect(() => {
-    const tabFromUrl = searchParams.get("tab");
+    const tabFromUrl = normalizeTab(searchParams.get("tab"));
     if (tabFromUrl && tabFromUrl !== activeTab) {
-      if (isKnownTab(tabFromUrl)) {
-        setActiveTab(tabFromUrl);
-      }
+      setActiveTab(tabFromUrl);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
@@ -316,6 +332,11 @@ function TeamContentV2() {
   const [selectedHashtag, setSelectedHashtag] = useState<string | null>(null);
   const [roomsFilter, setRoomsFilter] = useState<RoomFilter>("all");
   const [roomsSearchQuery, setRoomsSearchQuery] = useState("");
+  // Private spans rooms and trivias under one filter; Public is rooms only.
+  const [privateFilter, setPrivateFilter] = useState<PrivateFilter>("all");
+  const [privateSearchQuery, setPrivateSearchQuery] = useState("");
+  const [publicFilter, setPublicFilter] = useState<PublicRoomsFilter>("all");
+  const [publicSearchQuery, setPublicSearchQuery] = useState("");
   const [exploreFilter, setExploreFilter] = useState<ExploreFilter>("all");
   const [exploreSort, setExploreSort] = useState<ExploreSort>("recent");
   const [exploreSearchQuery, setExploreSearchQuery] = useState("");
@@ -352,6 +373,20 @@ function TeamContentV2() {
   const { data: myPosts } = useMyQuizPosts();
   const { data: myCollections } = useMyCollections();
   const hasRooms = checkRooms.length > 0;
+  // Which half of the Private tab a filter is asking for. "all" is both;
+  // every other chip belongs to exactly one of them, and showing the other
+  // list underneath it would make the filter look like it had done nothing.
+  const ROOM_ONLY_FILTERS: PrivateFilter[] = ["my_rooms", "friends_rooms", "king", "team_battle"];
+  const TRIVIA_ONLY_FILTERS: PrivateFilter[] = ["trivias", "collections", "personal"];
+  const showsPrivateRooms = privateFilter === "all" || ROOM_ONLY_FILTERS.includes(privateFilter);
+  const showsPrivateTrivias = privateFilter === "all" || TRIVIA_ONLY_FILTERS.includes(privateFilter);
+  // The two sections underneath each speak their own dialect of the filter.
+  const privateRoomFilter: RoomFilter = ROOM_ONLY_FILTERS.includes(privateFilter)
+    ? (privateFilter as RoomFilter)
+    : "all";
+  const privateTriviaFilter: MyTriviaFilter = TRIVIA_ONLY_FILTERS.includes(privateFilter)
+    ? (privateFilter as MyTriviaFilter)
+    : "all";
   const hasTrivias = (myPosts?.length || 0) > 0 || (myCollections?.length || 0) > 0;
   // Guest auth modal
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -948,9 +983,8 @@ function TeamContentV2() {
                     }}
                   >
                     {[
-                      ...(PUBLIC_SHARING_ENABLED ? [{ id: "explore", label: t("extra.tabExplore") }] : []),
-                      { id: "rooms", label: t("extra.tabRooms") },
-                      { id: "my-content", label: t("extra.tabMyTrivia") },
+                      { id: "public", label: t("extra.tabPublic") },
+                      { id: "private", label: t("extra.tabPrivate") },
                     ].map((tab) => (
                         <button
                           key={tab.id}
@@ -985,37 +1019,24 @@ function TeamContentV2() {
                   {/* md+: search + filter ride the tab row, just before the
                       create button (mobile keeps its own filter bar below) */}
                   <div className="hidden md:flex items-center gap-1.5 ml-auto shrink-0">
-                    {activeTab === "rooms" && hasRooms && (
-                      <UnifiedFiltersBar<RoomFilter, string>
+                    {activeTab === "public" && (
+                      <UnifiedFiltersBar<PublicRoomsFilter, string>
                         compact
-                        filter={roomsFilter}
-                        onFilterChange={(f) => setRoomsFilter(f)}
-                        filterOptions={roomFilterOptions}
-                        searchQuery={roomsSearchQuery}
-                        onSearchQueryChange={setRoomsSearchQuery}
+                        filter={publicFilter}
+                        onFilterChange={(f) => setPublicFilter(f)}
+                        filterOptions={publicRoomFilterOptions}
+                        searchQuery={publicSearchQuery}
+                        onSearchQueryChange={setPublicSearchQuery}
                       />
                     )}
-                    {activeTab === "explore" && (
-                      <UnifiedFiltersBar<ExploreFilter, ExploreSort>
+                    {activeTab === "private" && (hasRooms || hasTrivias) && (
+                      <UnifiedFiltersBar<PrivateFilter, string>
                         compact
-                        filter={exploreFilter}
-                        onFilterChange={(f) => setExploreFilter(f)}
-                        filterOptions={exploreFilterOptions}
-                        sort={exploreSort}
-                        onSortChange={(s) => setExploreSort(s)}
-                        sortOptions={exploreSortOptions}
-                        searchQuery={exploreSearchQuery}
-                        onSearchQueryChange={setExploreSearchQuery}
-                      />
-                    )}
-                    {activeTab === "my-content" && hasTrivias && (
-                      <UnifiedFiltersBar<MyTriviaFilter, string>
-                        compact
-                        filter={sortFilter}
-                        onFilterChange={(f) => setSortFilter(f)}
-                        filterOptions={myTriviaFilterOptions}
-                        searchQuery={searchQuery}
-                        onSearchQueryChange={setSearchQuery}
+                        filter={privateFilter}
+                        onFilterChange={(f) => setPrivateFilter(f)}
+                        filterOptions={privateFilterOptions}
+                        searchQuery={privateSearchQuery}
+                        onSearchQueryChange={setPrivateSearchQuery}
                       />
                     )}
                   </div>
@@ -1025,114 +1046,94 @@ function TeamContentV2() {
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.97 }}
                     {...instantTouchProps(() =>
-                      activeTab === "rooms"
+                      activeTab === "public"
                         ? setShowCreateModal(true)
                         : setShowCreateTypeModal(true),
                     )}
                     className="hidden md:flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-primary text-primary-foreground shadow-sm shrink-0 text-sm font-bold"
                   >
-                    {activeTab === "rooms"
-                      ? t("extra.addRoom")
-                      : activeTab === "my-content"
-                        ? t("extra.feedCreateTriviaBtn")
-                        : t("extra.createTriviaBtn")}
+                    {/* Public makes a room, because that is the only thing
+                        that can go on a public list. Private opens the
+                        chooser, which leads with a room and offers the three
+                        trivia types under it. */}
+                    {activeTab === "public" ? t("extra.addRoom") : t("extra.createBtn")}
                   </motion.button>
                 </div>
               </div>
 
-              {/* Filter Bar - inside sticky header */}
-              {((activeTab === "rooms" && hasRooms) || 
-                (activeTab === "explore") || 
-                (activeTab === "my-content" && hasTrivias)) && (
-                <div key={activeTab} id="sticky-filter-bar" className="md:hidden border-b border-border/50">
-                  {activeTab === "rooms" && hasRooms && (
-                    <UnifiedFiltersBar<RoomFilter, string>
-                      filter={roomsFilter}
-                      onFilterChange={(f) => setRoomsFilter(f)}
-                      filterOptions={roomFilterOptions}
-                      searchQuery={roomsSearchQuery}
-                      onSearchQueryChange={setRoomsSearchQuery}
-                      onAddClick={() => setShowCreateModal(true)}
-                      addButtonText={t("extra.addRoom")}
-                    />
-                  )}
-
-                  {activeTab === "explore" && (
-                    <UnifiedFiltersBar<ExploreFilter, ExploreSort>
-                      filter={exploreFilter}
-                      onFilterChange={(f) => setExploreFilter(f)}
-                      filterOptions={exploreFilterOptions}
-                      sort={exploreSort}
-                      onSortChange={(s) => setExploreSort(s)}
-                      sortOptions={exploreSortOptions}
-                      searchQuery={exploreSearchQuery}
-                      onSearchQueryChange={setExploreSearchQuery}
-                      onAddClick={() => setShowCreateTypeModal(true)}
-                      addButtonText={t("extra.createTriviaBtn")}
-                    />
-                  )}
-
-                  {activeTab === "my-content" && hasTrivias && (
-                    <UnifiedFiltersBar<MyTriviaFilter, string>
-                      filter={sortFilter}
-                      onFilterChange={(f) => setSortFilter(f)}
-                      filterOptions={myTriviaFilterOptions}
-                      searchQuery={searchQuery}
-                      onSearchQueryChange={setSearchQuery}
-                      onAddClick={() => setShowCreateTypeModal(true)}
-                      addButtonText={t("extra.feedCreateTriviaBtn")}
-                    />
-                  )}
-                  
-                  {/* Fade gradient below sticky filter bar */}
-                  <div 
-                    className="h-4 -mb-4 pointer-events-none"
-                    style={{
-                      background: 'linear-gradient(to bottom, hsl(var(--background) / 0.95), transparent)'
-                    }}
+              {/* Filter Bar - inside sticky header (mobile) */}
+              <div key={activeTab} id="sticky-filter-bar" className="md:hidden border-b border-border/50">
+                {activeTab === "public" && (
+                  <UnifiedFiltersBar<PublicRoomsFilter, string>
+                    filter={publicFilter}
+                    onFilterChange={(f) => setPublicFilter(f)}
+                    filterOptions={publicRoomFilterOptions}
+                    searchQuery={publicSearchQuery}
+                    onSearchQueryChange={setPublicSearchQuery}
+                    onAddClick={() => setShowCreateModal(true)}
+                    addButtonText={t("extra.addRoom")}
                   />
-                </div>
-              )}
+                )}
+
+                {activeTab === "private" && (
+                  <UnifiedFiltersBar<PrivateFilter, string>
+                    filter={privateFilter}
+                    onFilterChange={(f) => setPrivateFilter(f)}
+                    filterOptions={privateFilterOptions}
+                    searchQuery={privateSearchQuery}
+                    onSearchQueryChange={setPrivateSearchQuery}
+                    onAddClick={() => setShowCreateTypeModal(true)}
+                    addButtonText={t("extra.createBtn")}
+                  />
+                )}
+              </div>
             </div>
 
             {/* Content Area - Full width like Shop/PowerUps */}
-            <div className="flex-1 px-4 pt-4 pb-4 overflow-x-hidden max-w-full">
-              {/* Rooms Tab */}
-              {activeTab === "rooms" && (
-                <MyRoomsSection
-                  hideTV 
-                  onCreateRoom={() => setShowCreateModal(true)}
-                  onShowAllRooms={() => setShowAllGamesModal(true)}
-                  vertical
-                  filter={roomsFilter}
-                  searchQuery={roomsSearchQuery}
-                  onNavigateToTab={handleTabChange}
-                />
+            <div className="flex-1 pb-4 overflow-x-hidden max-w-full">
+              {/* Public: rooms anybody can find, other people's included.
+                  It brings its own padding, because its cards run edge to
+                  edge the way the games list's do. */}
+              {activeTab === "public" && (
+                <PublicRoomsSection filter={publicFilter} searchQuery={publicSearchQuery} />
               )}
 
-              {/* Explore Tab */}
-              {activeTab === "explore" && (
-                <ExplorePortfolioFeed
-                  searchQuery={exploreSearchQuery}
-                  filter={exploreFilter}
-                  sort={exploreSort}
-                  onPlayQuiz={(post, collectionPosts) => {
-                    setPlayingQuiz({ post, collectionPosts });
-                  }}
-                />
-              )}
+              {/* Private: my rooms and my trivias, under one filter. Both
+                  lists at once under "all" — they are two halves of "mine",
+                  and the tab that held only the second one was the one
+                  nobody found. */}
+              {activeTab === "private" && (
+                <div className="px-4 pt-4 space-y-2">
+                  {showsPrivateRooms && (privateFilter !== "all" || hasRooms || !hasTrivias) && (
+                    <MyRoomsSection
+                      hideTV
+                      onCreateRoom={() => setShowCreateModal(true)}
+                      onShowAllRooms={() => setShowAllGamesModal(true)}
+                      vertical
+                      visibility="private"
+                      filter={privateRoomFilter}
+                      searchQuery={privateSearchQuery}
+                      onNavigateToTab={handleTabChange}
+                    />
+                  )}
 
-              {/* My Trivia Tab */}
-              {activeTab === "my-content" && (
-                <MyTriviaTab
-                  onCreateQuiz={() => setShowCreateTypeModal(true)}
-                  onPlay={(post, collectionPosts) => {
-                    setPlayingQuiz({ post, collectionPosts });
-                  }}
-                  searchQuery={searchQuery}
-                  sortFilter={sortFilter}
-                  onNavigateToTab={handleTabChange}
-                />
+                  {/* Under "all" each half appears only if it has anything
+                      in it: two empty states stacked, each with its own
+                      "create something" pitch, reads as a broken page. A
+                      person with neither still gets one — the rooms one,
+                      which is the thing this page is for. */}
+                  {showsPrivateTrivias && (privateFilter !== "all" || hasTrivias) && (
+                    <MyTriviaTab
+                      onCreateQuiz={() => setShowCreateTypeModal(true)}
+                      onPlay={(post, collectionPosts) => {
+                        setPlayingQuiz({ post, collectionPosts });
+                      }}
+                      searchQuery={privateSearchQuery}
+                      sortFilter={privateTriviaFilter}
+                      onNavigateToTab={handleTabChange}
+                    />
+                  )}
+                </div>
               )}
             </div>
           </div>
@@ -1170,8 +1171,8 @@ function TeamContentV2() {
             }}
             isConnectingTV={isConnectingTV}
             activeTab={activeTab}
-            onViewAllRooms={() => handleTabChange("rooms")}
-            onViewAllTrivias={() => handleTabChange("my-content")}
+            onViewAllRooms={() => handleTabChange("private")}
+            onViewAllTrivias={() => handleTabChange("private")}
           />
       </div>
 
@@ -1291,10 +1292,11 @@ function TeamContentV2() {
           }
           setShowCreateCollectionModal(true);
         }}
-        onSelectPersonal={activeTab !== "explore" ? (draftId) => {
+        onSelectPersonal={(draftId) => {
           if (draftId) setPersonalTriviaDraftId(draftId);
           setShowPersonalTriviaModal(true);
-        } : undefined}
+        }}
+        onSelectGameRoom={() => setShowCreateModal(true)}
       />
       <GameStylePersonalTrivia
         isOpen={showPersonalTriviaModal}
@@ -1327,7 +1329,7 @@ function TeamContentV2() {
           setShowPersonalTriviaModal(false);
           // Land on the list the trivia was just added to, at the top of it.
           setSortFilter("all");
-          setActiveTab("my-content");
+          setActiveTab("private");
           toast.success(t("extra.myTriviaPartySaved"));
           // Tells the editor the draft behind this is spent.
           return true;
@@ -1403,7 +1405,7 @@ function TeamContentV2() {
           // Close modal and show success
           setShowBlindTriviaModal(false);
           setEditingDraftId(null);
-          setActiveTab("my-content");
+          setActiveTab("private");
           toast.success(t("extra.triviaCreatedToast", { title }));
         }}
         resumeDraftId={editingDraftId}
@@ -1416,7 +1418,7 @@ function TeamContentV2() {
       <CreateQuizModal
         open={showCreateQuizModal}
         onOpenChange={setShowCreateQuizModal}
-        onQuizCreated={() => setActiveTab("my-content")}
+        onQuizCreated={() => setActiveTab("private")}
         onSwitchToCollection={() => setShowCreateCollectionModal(true)}
       />
       <CreateCollectionModal
@@ -1428,7 +1430,7 @@ function TeamContentV2() {
             setCollectionInitialSubject("");
           }
         }}
-        onCollectionCreated={() => setActiveTab("my-content")}
+        onCollectionCreated={() => setActiveTab("private")}
         draftId={editingDraftId}
         initialRoundSubject={collectionInitialSubject}
       />

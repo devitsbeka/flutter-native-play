@@ -130,7 +130,9 @@ describe("every screen that shares a link declares its intent", () => {
     expect(create).not.toMatch(/siteUrl\(`\/i\/\$\{/);
     expect(create).toContain("const [plannedRoomCode] = useState(generateRoomCode)");
     expect(create).not.toMatch(/const roomCode = generateRoomCode\(\)/);
-    expect(create).toContain("roomIcon, plannedRoomCode)");
+    // The reserved code is still the one the room is created under; the
+    // argument after it is the public/private switch.
+    expect(create).toContain("roomIcon, plannedRoomCode, isPublic)");
   });
 
   it("createRoom uses the reserved code when it is given one", () => {

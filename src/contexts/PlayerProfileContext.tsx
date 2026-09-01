@@ -2,8 +2,14 @@ import React, { createContext, useContext, useState, useCallback } from "react";
 import { PlayerProfileModal } from "@/components/profile/PlayerProfileModal";
 import { useVipBenefitsAutoGrant } from "@/hooks/useVipBenefitsAutoGrant";
 
+/** How a profile was opened, which changes what it is allowed to show. */
+export interface OpenProfileOptions {
+  /** Drop the trivias tab — see PlayerProfileModal's prop for why. */
+  hideTrivias?: boolean;
+}
+
 interface PlayerProfileContextType {
-  openProfile: (userId: string) => void;
+  openProfile: (userId: string, options?: OpenProfileOptions) => void;
   closeProfile: () => void;
   currentProfileUserId: string | null;
 }
@@ -24,11 +30,13 @@ export function usePlayerProfile() {
 
 export function PlayerProfileProvider({ children }: { children: React.ReactNode }) {
   const [currentProfileUserId, setCurrentProfileUserId] = useState<string | null>(null);
+  const [options, setOptions] = useState<OpenProfileOptions>({});
 
   // Auto-grant VIP daily power-ups on login
   useVipBenefitsAutoGrant();
 
-  const openProfile = useCallback((userId: string) => {
+  const openProfile = useCallback((userId: string, opts?: OpenProfileOptions) => {
+    setOptions(opts ?? {});
     setCurrentProfileUserId(userId);
   }, []);
 
@@ -43,6 +51,7 @@ export function PlayerProfileProvider({ children }: { children: React.ReactNode 
         isOpen={!!currentProfileUserId}
         onClose={closeProfile}
         userId={currentProfileUserId}
+        hideTrivias={options.hideTrivias}
       />
     </PlayerProfileContext.Provider>
   );

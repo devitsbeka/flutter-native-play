@@ -52,6 +52,8 @@ interface MyRoomsSectionProps {
   filter?: RoomFilter;
   searchQuery?: string;
   onNavigateToTab?: (tab: string) => void;
+  /** "private" drops published rooms — they belong to the Public tab. */
+  visibility?: "all" | "private";
 }
 
 // How long a card takes to fade out. The reload is held until after it, so
@@ -76,11 +78,12 @@ export function MyRoomsSection({
   vertical = false,
   filter = "all",
   searchQuery = "",
-  onNavigateToTab
+  onNavigateToTab,
+  visibility = "all",
 }: MyRoomsSectionProps) {
   const isMobile = useIsMobile();
   const roomLimit = isMobile ? 10 : 15;
-  const { rooms, loading, filter: activeFilter, refreshRooms } = useMyRooms({ filter, searchQuery, limit: roomLimit });
+  const { rooms, loading, filter: activeFilter, refreshRooms } = useMyRooms({ filter, searchQuery, limit: roomLimit, visibility });
   const { enterRoom } = useMultiplayerV2();
   const navigate = useNavigate();
   const { t } = useLanguage();

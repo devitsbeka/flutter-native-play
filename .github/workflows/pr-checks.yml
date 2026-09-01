@@ -253,3 +253,15 @@ jobs:
         run: |
           psql -h localhost -p 5432 -U postgres \
             -v ON_ERROR_STOP=1 -f supabase/tests/12-matchmaking.sql
+
+      # Publishing a room shows it to everyone without opening it to
+      # everyone, and that is only true while a stranger cannot write
+      # themselves a seat. room_participants carried two OR-ed insert
+      # policies, so narrowing one of them would have changed nothing —
+      # which is the kind of gate that passes review and holds nothing.
+      - name: Assert public room and join-approval rules
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -p 5432 -U postgres \
+            -v ON_ERROR_STOP=1 -f supabase/tests/13-public-rooms.sql

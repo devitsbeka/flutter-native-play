@@ -29,7 +29,11 @@ export type NotificationType =
   | 'system'
   | 'welcome'
   | 'ai_generation'
-  | 'room_ping';
+  | 'room_ping'
+  // Public rooms: somebody asked to come in, and the host's answer.
+  | 'room_join_request'
+  | 'room_join_approved'
+  | 'room_join_declined';
 
 export interface Notification {
   id: string;

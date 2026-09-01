@@ -250,7 +250,13 @@ export function NotificationsPanel({ isOpen, onClose, defaultTab }: Notification
     }
     
     switch (notification.type) {
+      // Four notifications that all mean "go to this room": it started,
+      // you were invited, the host said yes to your ask, or somebody is
+      // asking you — and for that last one the host's own lobby is where
+      // the accept/decline lives.
       case 'game_started':
+      case 'room_join_approved':
+      case 'room_join_request':
       case 'room_invite': {
         try {
           const roomId = (data?.room_id as string | undefined) ?? undefined;
