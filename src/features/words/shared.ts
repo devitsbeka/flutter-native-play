@@ -12,7 +12,11 @@
  * catches up on the next exchange.
  */
 
+import { isWordsLanguage, type WordsLanguage } from "./levels";
+
 export interface SharedState {
+  /** The bank the board comes from — the host's language, for both. */
+  lang: WordsLanguage;
   /** 1-based level number, the same for both players. */
   level: number;
   /** Board word → id of the player who found it. */
@@ -25,7 +29,8 @@ export interface SharedState {
   rev: number;
 }
 
-export const emptyShared = (level = 1): SharedState => ({
+export const emptyShared = (level = 1, lang: WordsLanguage = "en"): SharedState => ({
+  lang,
   level,
   found: {},
   bonus: {},
@@ -35,6 +40,8 @@ export const emptyShared = (level = 1): SharedState => ({
 
 /** True when `incoming` carries something `local` does not. */
 export function hasNews(local: SharedState, incoming: SharedState): boolean {
+  // A different bank is a different board; the host's wins (see merge).
+  if (incoming.lang !== local.lang) return true;
   if (incoming.level > local.level) return true;
   if (incoming.level < local.level) return false;
   if (Object.keys(incoming.found).some((w) => !(w in local.found))) return true;
@@ -45,9 +52,13 @@ export function hasNews(local: SharedState, incoming: SharedState): boolean {
 
 /** The union of two copies of the same level, or the newer level outright. */
 export function mergeShared(local: SharedState, incoming: SharedState): SharedState {
+  // Two banks cannot be added up. The incoming copy is the room's (the
+  // joiner asks, the room answers), so it decides the language.
+  if (incoming.lang !== local.lang) return { ...incoming, rev: Math.max(local.rev, incoming.rev) + 1 };
   if (incoming.level > local.level) return { ...incoming, rev: Math.max(local.rev, incoming.rev) + 1 };
   if (incoming.level < local.level) return local;
   return {
+    lang: local.lang,
     level: local.level,
     // First finder wins a word that both found at once.
     found: { ...incoming.found, ...local.found },
@@ -61,6 +72,7 @@ export const isSharedState = (v: unknown): v is SharedState => {
   if (!v || typeof v !== "object") return false;
   const s = v as Partial<SharedState>;
   return (
+    isWordsLanguage(s.lang) &&
     typeof s.level === "number" &&
     typeof s.found === "object" &&
     s.found !== null &&

@@ -11,12 +11,10 @@ import { GameModal, GameModalStat } from "@/components/ui/game-modal";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { QuizPlayerAvatar } from "@/components/ui/quiz-player-avatar";
 import { AuthRequiredModal } from "@/components/shared/AuthRequiredModal";
-import { FriendsStoriesBar } from "@/components/team/FriendsStoriesBar";
 import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
-import { FriendPeek, type InviteEntry } from "@/components/lobby/LilacLobby";
 import { portal } from "@/lib/overlayPortal";
 import coinIcon from "@/assets/icons/icon-coin.png";
-import { LEVELS, LEVELS_PER_SCENE, sceneOf, solvedByPercent, type Level } from "./levels";
+import { LEVELS_PER_SCENE, bankLanguage, loadLevels, sceneOf, solvedByPercent, type Level, type WordsLanguage } from "./levels";
 import { buildLayout, cellKey, cellsOf } from "./layout";
 import {
   BONUS_EVERY,
@@ -24,6 +22,7 @@ import {
   HINT_COST,
   LEVEL_REWARD,
   clearSave,
+  freshProgress,
   freshSave,
   loadSave,
   persistSave,
@@ -81,7 +80,10 @@ const shuffle = <T,>(arr: T[]): T[] => {
   return out;
 };
 
-const levelAt = (n: number): Level => LEVELS[(n - 1) % LEVELS.length];
+const levelAt = (bank: Level[], n: number): Level => bank[(n - 1) % bank.length];
+
+/** A placeholder board while a language's bank is on its way. */
+const LOADING_LEVEL: Level = { number: 1, sceneId: "mountain", letters: "", words: [], bonus: [] };
 
 /** Luck wheel after every second level; a scrapbook page after every pack. */
 const luckAfter = (level: Level) => level.number % 2 === 0;
@@ -91,10 +93,11 @@ const SOLO = "me";
 
 /** The in-game round control — the same glass circle the quiz screens use. */
 const roundButton =
-  "flex items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-sm active:scale-95 transition-transform";
+  "flex items-center justify-center rounded-full bg-[#402666]/70 text-white backdrop-blur-sm shadow-[0_3px_0_rgba(64,38,102,0.45)] active:scale-95 transition-transform";
 
 export default function WordsGame() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const appLang = bankLanguage(language);
   const navigate = useNavigate();
   const location = useLocation();
   const { code: codeParam } = useParams<{ code?: string }>();
@@ -108,19 +111,55 @@ export default function WordsGame() {
   useEffect(() => persistSave(save), [save]);
 
   // ---- the board's state, shared or not ----
+  // Solo play is in the app's language; a shared board is in the room's,
+  // which the join exchange delivers (a join link opened in another
+  // language still shows the host's board).
   const [shared, setShared] = useState<SharedState>(() => {
-    if (codeParam) return loadSharedState(codeParam) ?? emptyShared(1);
-    const s = loadSave();
+    if (codeParam) return loadSharedState(codeParam) ?? emptyShared(1, appLang);
+    const p = loadSave().progress[appLang] ?? freshProgress();
     return {
-      level: s.level,
-      found: Object.fromEntries(s.found.map((w) => [w, SOLO])),
-      bonus: Object.fromEntries(s.bonusFound.map((w) => [w, SOLO])),
-      hinted: s.hinted,
+      lang: appLang,
+      level: p.level,
+      found: Object.fromEntries(p.found.map((w) => [w, SOLO])),
+      bonus: Object.fromEntries(p.bonusFound.map((w) => [w, SOLO])),
+      hinted: p.hinted,
       rev: 0,
     };
   });
   const sharedRef = useRef(shared);
   sharedRef.current = shared;
+
+  // A solo player who switches the app's language moves to that bank, at
+  // wherever they were in it.
+  useEffect(() => {
+    if (codeParam || roomRef.current || sharedRef.current.lang === appLang) return;
+    const p = loadSave().progress[appLang] ?? freshProgress();
+    const next: SharedState = {
+      lang: appLang,
+      level: p.level,
+      found: Object.fromEntries(p.found.map((w) => [w, SOLO])),
+      bonus: Object.fromEntries(p.bonusFound.map((w) => [w, SOLO])),
+      hinted: p.hinted,
+      rev: sharedRef.current.rev + 1,
+    };
+    sharedRef.current = next;
+    setShared(next);
+    setPhase("play");
+    setWave([]);
+  }, [appLang, codeParam]);
+
+  // ---- the level bank for the board's language ----
+  const [bank, setBank] = useState<{ lang: WordsLanguage; levels: Level[] } | null>(null);
+  useEffect(() => {
+    let alive = true;
+    void loadLevels(shared.lang).then((levels) => {
+      if (alive) setBank({ lang: shared.lang, levels });
+    });
+    return () => {
+      alive = false;
+    };
+  }, [shared.lang]);
+  const bankReady = bank?.lang === shared.lang;
 
   const [phase, setPhase] = useState<Phase>("play");
   const [wave, setWave] = useState<string[]>([]);
@@ -131,10 +170,8 @@ export default function WordsGame() {
   const [coinsInfo, setCoinsInfo] = useState(false);
   const [resetAsk, setResetAsk] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
-  const [reelOpen, setReelOpen] = useState(false);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
-  const [peek, setPeek] = useState<InviteEntry | null>(null);
-  const [invitedIds, setInvitedIds] = useState<Set<string>>(new Set());
+  const [inviteOpening, setInviteOpening] = useState(false);
   const [lastPrize, setLastPrize] = useState<Prize | null>(null);
   const [roomGone, setRoomGone] = useState(false);
   const feedbackTimer = useRef<number | null>(null);
@@ -165,8 +202,9 @@ export default function WordsGame() {
       const next = mergeShared(before, incoming);
       setShared(next);
       if (roomRef.current) persistSharedState(roomRef.current.code, next);
-      if (next.level > before.level) {
-        // The friend moved on; follow them.
+      if (next.level > before.level || next.lang !== before.lang) {
+        // The friend moved on (or the room's board is in another language
+        // than ours); follow them.
         setPhase("play");
         setWave([]);
         setLastPrize(null);
@@ -205,9 +243,7 @@ export default function WordsGame() {
     if (!user || !profile || !list || list.length === 0) return;
     handoffRef.current = null;
     void (async () => {
-      const person = list[0];
-      const ok = await room.invite(person);
-      if (ok) setInvitedIds((prev) => new Set([...prev, person.id]));
+      await room.invite(list[0]);
     })();
   }, [user, profile]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -217,7 +253,7 @@ export default function WordsGame() {
   }, [codeParam, authLoading, user]);
 
   // ---- the level ----
-  const level = levelAt(shared.level);
+  const level = bankReady && bank ? levelAt(bank.levels, shared.level) : LOADING_LEVEL;
   const scene = sceneOf(level);
   const layout = useMemo(() => buildLayout(level.words), [level]);
   const layoutRef = useRef(layout);
@@ -243,10 +279,15 @@ export default function WordsGame() {
       } else {
         setSave((s) => ({
           ...s,
-          level: next.level,
-          found: Object.keys(next.found),
-          bonusFound: Object.keys(next.bonus),
-          hinted: next.hinted,
+          progress: {
+            ...s.progress,
+            [next.lang]: {
+              level: next.level,
+              found: Object.keys(next.found),
+              bonusFound: Object.keys(next.bonus),
+              hinted: next.hinted,
+            },
+          },
         }));
       }
     },
@@ -267,7 +308,7 @@ export default function WordsGame() {
     return map;
   }, [layout, shared.found, shared.hinted]);
 
-  const allFound = layout.words.every((p) => p.word in shared.found);
+  const allFound = bankReady && layout.words.length > 0 && layout.words.every((p) => p.word in shared.found);
 
   // ---- scores ----
   const countFor = (id: string) =>
@@ -418,7 +459,7 @@ export default function WordsGame() {
     setWave([]);
     setLastPrize(null);
     setPhase("play");
-    commit((s) => ({ ...emptyShared(s.level + 1), rev: s.rev }));
+    commit((s) => ({ ...emptyShared(s.level + 1, s.lang), rev: s.rev }));
   };
 
   /** From the level-complete card: pay out, then whatever comes next. */
@@ -448,7 +489,7 @@ export default function WordsGame() {
     setPhase("play");
     setMenuOpen(false);
     playSound("button-click");
-    commit((s) => ({ ...emptyShared(s.level), rev: s.rev }));
+    commit((s) => ({ ...emptyShared(s.level, s.lang), rev: s.rev }));
   };
 
   const resetAll = () => {
@@ -458,9 +499,9 @@ export default function WordsGame() {
     setPhase("play");
     setResetAsk(false);
     setMenuOpen(false);
-    if (roomRef.current) commit((s) => ({ ...emptyShared(1), rev: s.rev }));
+    if (roomRef.current) commit((s) => ({ ...emptyShared(1, s.lang), rev: s.rev }));
     else {
-      const fresh = emptyShared(1);
+      const fresh = emptyShared(1, appLang);
       sharedRef.current = fresh;
       setShared(fresh);
     }
@@ -472,22 +513,24 @@ export default function WordsGame() {
     else navigate("/");
   };
 
-  // ---- inviting ----
-  const openInvite = () => {
+  // ---- inviting: one tap, the app's own invite modal ----
+  // The modal needs a room to seat people in, so the first tap makes it.
+  // From there the modal does everything the lounges do: search, the
+  // friends list, the share link, and on send the seat row (bell) plus the
+  // invitation row (push) — instantly, per friend.
+  const openInvite = async () => {
     playSound("button-click");
     if (!user) {
       setAuthOpen(true);
       return;
     }
-    setReelOpen((v) => !v);
-  };
-  const inviteFriend = async (entry: InviteEntry) => {
-    const ok = await room.invite(entry);
-    if (ok) {
-      setInvitedIds((prev) => new Set([...prev, entry.id]));
-      playSound("game-invitation");
-      vibrate(30);
-      setReelOpen(false);
+    if (inviteOpening) return;
+    setInviteOpening(true);
+    try {
+      const target = room.room ?? (await room.createRoom());
+      if (target) setInviteModalOpen(true);
+    } finally {
+      setInviteOpening(false);
     }
   };
 
@@ -520,15 +563,26 @@ export default function WordsGame() {
   return (
     <div
       ref={shellRef}
-      className="relative h-[100dvh] w-full overflow-hidden safe-bleed select-none text-white"
-      style={{ backgroundImage: `url(${scene.image})`, backgroundSize: "cover", backgroundPosition: "center" }}
+      className="relative h-[100dvh] w-full overflow-hidden select-none text-white"
+      style={{
+        backgroundImage: `url(${scene.image})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center top",
+        // Full-bleed (the photo reaches the status bar) with the contents
+        // pushed below it — the same trick Game.tsx uses — plus a little
+        // extra so the round buttons sit clear of the notch and the clock.
+        marginTop: "calc(-1 * var(--safe-top))",
+        paddingTop: "calc(var(--safe-top) + 10px)",
+      }}
     >
       {/* A whisper of dark so white type reads on a bright sky. */}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/35 via-transparent to-black/35" />
+      {/* The scenes are pale lilac; a faint wash keeps white type legible on
+          the brightest of them without dimming the picture. */}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#402666]/25 via-transparent to-[#402666]/30" />
 
       <div className="relative mx-auto flex h-full w-full max-w-[480px] flex-col px-4">
         {/* Top bar: back, me, coins, friend (or an open seat), menu */}
-        <div className="flex h-[76px] shrink-0 items-center gap-2">
+        <div className="mt-1 flex h-[76px] shrink-0 items-center gap-2">
           <motion.button whileTap={{ scale: 0.82 }} onClick={goBack} aria-label={t("common.back")} className={`${roundButton} h-10 w-10 shrink-0`}>
             <ArrowLeft className="h-5 w-5" />
           </motion.button>
@@ -550,7 +604,12 @@ export default function WordsGame() {
                 setCoinsInfo(true);
               }}
               aria-label={`${coins} ${t("words.coinsTitle")}`}
-              className="flex h-10 items-center gap-1.5 rounded-full border border-white/20 bg-black/35 pl-1.5 pr-2 backdrop-blur-sm active:scale-95 transition-transform"
+              className="flex h-10 items-center gap-1.5 rounded-full pl-1.5 pr-2 active:scale-95 transition-transform"
+              style={{
+                background: "linear-gradient(180deg,#bb95ef 0%,#9a6fdc 58%,#8a5ed1 100%)",
+                border: "1.5px solid #cbb0f4",
+                boxShadow: "0px 4px 0px 0px #7a51b8, 0px 8px 16px rgba(102,51,153,0.3), inset 0px 2px 0px rgba(255,255,255,0.45)",
+              }}
             >
               <img src={coinIcon} alt="" className="h-7 w-7" draggable={false} />
               <span className="font-['Nunito'] text-[17px] font-black tabular-nums">{coins.toLocaleString()}</span>
@@ -558,7 +617,7 @@ export default function WordsGame() {
                 <Plus className="h-3.5 w-3.5" strokeWidth={3.5} />
               </span>
             </button>
-            <div className="mt-1 truncate font-display text-[12px] font-bold uppercase tracking-wider text-white/85 [text-shadow:0_2px_8px_rgba(23,10,54,0.45)]">
+            <div className="mt-1 truncate rounded-full bg-white/85 px-2.5 py-0.5 text-[11px] font-black uppercase tracking-wider text-[#523b76] shadow-sm" style={{ fontFamily: "'TASolivare', 'Nunito', sans-serif" }}>
               {t("words.levelLabel", { n: level.number })} · {t("words.sceneProgress", { scene: t(scene.nameKey), i: sceneIndex + 1, total: LEVELS_PER_SCENE })}
             </div>
           </div>
@@ -580,9 +639,10 @@ export default function WordsGame() {
                 animate={{ scale: 1, opacity: 1 }}
                 whileTap={{ scale: 0.82 }}
                 transition={{ type: "spring", stiffness: 420, damping: 28 }}
-                onClick={openInvite}
+                onClick={() => void openInvite()}
+                disabled={inviteOpening}
                 aria-label={t("words.inviteFriend")}
-                className="relative flex h-[50px] w-[50px] items-center justify-center rounded-full border border-white bg-[rgba(51,192,84,0.65)] shadow-[0_4px_0_#1E9A7F]"
+                className="relative flex h-[50px] w-[50px] items-center justify-center rounded-full border border-white bg-[rgba(51,192,84,0.75)] shadow-[0_4px_0_#1E9A7F] disabled:opacity-70"
               >
                 <motion.div animate={{ scale: [1, 1.14, 1] }} transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}>
                   <Plus className="h-7 w-7 text-white" strokeWidth={3} />
@@ -596,31 +656,9 @@ export default function WordsGame() {
           </motion.button>
         </div>
 
-        {/* Friends reel — the same one the lounges open from a + seat */}
-        <AnimatePresence initial={false}>
-          {reelOpen && user && (
-            <motion.div
-              key="reel"
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 340, damping: 34 }}
-              className="relative z-10 -mx-4 shrink-0 overflow-hidden rounded-b-3xl bg-white/90 px-4 pb-2 text-foreground backdrop-blur-md"
-            >
-              <p className="pt-2 text-[13px] font-semibold text-muted-foreground">{t("words.playTogetherDesc")}</p>
-              <FriendsStoriesBar
-                onAddFriendClick={() => setInviteModalOpen(true)}
-                onFriendClick={(f) =>
-                  setPeek({ id: f.friendId, nickname: f.nickname, avatarUrl: f.avatarUrl, online: !!f.isOnline })
-                }
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         {/* Board */}
         <div ref={boardRef} className="flex min-h-0 flex-1 items-center justify-center py-2">
-          {boardArea.width > 0 && (
+          {boardArea.width > 0 && bankReady && (
             <Board layout={layout} revealed={revealed} wave={wave} cellSize={cellSize} gap={gap} accent={scene.accent} tile={scene.tile} />
           )}
         </div>
@@ -670,7 +708,7 @@ export default function WordsGame() {
           className="relative flex shrink-0 justify-center pb-[calc(0.75rem_+_var(--safe-bottom))] pt-1 transition-opacity duration-300"
           style={{ opacity: phase === "play" ? 1 : 0 }}
         >
-          {shell.width > 0 && (
+          {shell.width > 0 && bankReady && (
             <LetterWheel
               letters={wheel}
               size={wheelSize}
@@ -712,17 +750,7 @@ export default function WordsGame() {
         </div>
       </div>
 
-      {/* One friend to invite */}
-      <FriendPeek
-        friend={peek}
-        onClose={() => setPeek(null)}
-        actionLabel={t("words.invite")}
-        invitedLabel={t("words.invited")}
-        invited={!!peek && invitedIds.has(peek.id)}
-        onAction={() => {
-          if (peek) void inviteFriend(peek).then(() => setPeek(null));
-        }}
-      />
+      {/* Inviting: the app's own modal, sending seat + push as friends are picked */}
       {room.room && (
         <InviteFriendsModal
           isOpen={inviteModalOpen}
@@ -732,10 +760,6 @@ export default function WordsGame() {
           roomCode={room.room.room_code}
           onInviteSuccess={() => setInviteModalOpen(false)}
         />
-      )}
-      {!room.room && inviteModalOpen && user && (
-        // The share modal needs the room; make it first, then open.
-        <RoomThenModal create={room.createRoom} onDone={() => undefined} />
       )}
 
       <AuthRequiredModal
@@ -894,14 +918,6 @@ export default function WordsGame() {
       />
     </div>
   );
-}
-
-/** Makes the room, then hands back — the share modal needs a code to share. */
-function RoomThenModal({ create, onDone }: { create: () => Promise<unknown>; onDone: () => void }) {
-  useEffect(() => {
-    void create().then(onDone);
-  }, [create, onDone]);
-  return null;
 }
 
 function MenuRow({
