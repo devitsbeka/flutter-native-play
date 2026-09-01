@@ -75,6 +75,9 @@ const TVHostController = lazy(() => import("./pages/TVHostController"));
 const TVLobby = lazy(() => import("./pages/TVLobby"));
 const TVJoin = lazy(() => import("./pages/TVJoin"));
 const Notifications = lazy(() => import("./pages/Notifications"));
+// Experimental word-wheel mode. Its own chunk: the scene photos alone are
+// larger than most pages, and nothing else in the app needs them.
+const Expo = lazy(() => import("./pages/Expo"));
 
 
 // Settings pages
@@ -304,6 +307,10 @@ const App = () => (
                 {/* The VIP page is gone — PRO is sold from the profile. */}
                 <Route path="/vip" element={<Navigate to="/profile?tab=PRO" replace />} />
                 <Route path="/discover" element={<Discover />} />
+                {/* Experimental word-wheel game mode — see src/features/expo.
+                    Public like /dev/v2: it costs nothing to ship (its chunk
+                    loads only when visited) and exposes nothing. */}
+                <Route path="/expo" element={<Expo />} />
                 <Route path="/notifications" element={<Notifications />} />
                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                 <Route path="/privacy-policy-en" element={<PrivacyPolicyEN />} />
