@@ -43,6 +43,7 @@ import iconButtonCard from "@/assets/play-chooser/icon-button.png";
 import iconKingCard from "@/assets/play-chooser/icon-king.webp";
 import iconCrateCard from "@/assets/play-chooser/icon-crate.png";
 import iconLibraryCard from "@/assets/play-chooser/icon-library.webp";
+import iconWordsCard from "@/assets/play-chooser/icon-words.webp";
 import { getRandomGradient } from "@/config/roomGradients";
 
 /**
@@ -109,7 +110,7 @@ type SelectionMode = "random" | "library" | "create" | "my-trivias" | null;
  * My Trivia — as cards of their own (the old "classic friends room" card that
  * hid all three sources behind one more tap is gone).
  */
-type GameChoice = "quick" | "random" | "king" | "battle" | "library" | "mytrivias";
+type GameChoice = "quick" | "random" | "king" | "battle" | "words" | "library" | "mytrivias";
 
 /** A person to seat as "invited" — a friend, or a member of a picked room. */
 type InvitePerson = {
@@ -608,7 +609,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   const createEnabled =
     gameChoice === null
       ? false
-      : gameChoice === "quick" || gameChoice === "king" || gameChoice === "battle"
+      : gameChoice === "quick" || gameChoice === "king" || gameChoice === "battle" || gameChoice === "words"
         ? true
         : gameChoice === "random"
           ? selectionMode === "random" && !!selectedCategory && !isSearchingRandom
@@ -710,6 +711,16 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       navigate(gameChoice === "king" ? "/king" : "/team-battle", {
         state: { invite, isPublic },
       });
+      return;
+    }
+
+    // Words seats one friend. The first person picked here rides along and
+    // is invited the moment the board's room exists; the board itself opens
+    // at once, solo until they arrive.
+    if (gameChoice === "words") {
+      const invite = collectInvitees().slice(0, 1);
+      onClose();
+      navigate("/words", { state: { invite } });
       return;
     }
 
@@ -1125,6 +1136,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                   { key: "random", icon: iconDiceCard, title: t("extra.randomOption"), desc: t("extra.randomDesc") },
                   { key: "king", icon: iconKingCard, title: t("lobby.vkTitle"), desc: t("lobby.kingCardDesc") },
                   { key: "battle", icon: iconCrateCard, title: t("teamBattle.title"), desc: t("gameTypes.teamBattleDesc") },
+                  { key: "words", icon: iconWordsCard, title: t("gameTypes.wordsTitle"), desc: t("gameTypes.wordsDesc") },
                   { key: "library", icon: iconLibraryCard, title: t("extra.libraryOption"), desc: t("extra.libraryDesc") },
                   { key: "mytrivias", icon: stickerAlbum, title: t("extra.myTriviaOption"), desc: t("extra.myTriviaDesc") },
                 ] as { key: GameChoice; icon: string; title: string; desc: string }[]

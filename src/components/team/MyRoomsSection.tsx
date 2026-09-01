@@ -6,6 +6,8 @@ import { Plus, Users, Tv, Airplay, Cast, UserPlus, Trash2, MoreHorizontal, Monit
 import { useMyRooms, MyRoom, RoomFilter, isActiveTVSession } from "@/hooks/useMyRooms";
 import iconKingLounge from "@/assets/play-chooser/icon-king.webp";
 import iconBattleLounge from "@/assets/play-chooser/icon-crate.png";
+import iconWordsLounge from "@/assets/play-chooser/icon-words.webp";
+import { roomKind, routeForRoom } from "@/utils/roomRoutes";
 import { roomCardAction } from "@/utils/roomCardAction";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useAuth } from "@/contexts/AuthContext";
@@ -198,12 +200,8 @@ export function MyRoomsSection({
   const openRoom = async (room: MyRoom) => {
     // Lounge rooms live on their own routes — the classic lobby cannot
     // drive their match state.
-    if (room.game_type_key === "king") {
-      navigate(`/king?code=${room.room_code}`);
-      return;
-    }
-    if (room.game_type_key === "team_battle") {
-      navigate(`/team-battle?code=${room.room_code}`);
+    if (roomKind(room) !== "classic") {
+      navigate(routeForRoom(room));
       return;
     }
     // Cosmetic, and nothing below depends on it — don't make the player wait
@@ -483,12 +481,15 @@ function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = false, i
   // Lounge rooms carry their game's fixed identity: the King mascot or the
   // battle crate as the icon, and the game's title standing in until the
   // host names the team.
+  const kind = roomKind(room);
   const lounge =
-    room.game_type_key === "king"
+    kind === "king"
       ? { icon: iconKingLounge, label: t("lobby.vkTitle") }
-      : room.game_type_key === "team_battle"
+      : kind === "team_battle"
         ? { icon: iconBattleLounge, label: t("teamBattle.title") }
-        : null;
+        : kind === "words"
+          ? { icon: iconWordsLounge, label: t("words.title") }
+          : null;
   const displayName = room.room_name || lounge?.label || t("extra.gameRoomLabel");
   // How long ago the room was made — the thing that tells two similar rooms
   // apart in a list of them.
@@ -833,12 +834,15 @@ function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, isJoining = fals
   // Lounge rooms carry their game's fixed identity: the King mascot or the
   // battle crate as the icon, and the game's title standing in until the
   // host names the team.
+  const kind = roomKind(room);
   const lounge =
-    room.game_type_key === "king"
+    kind === "king"
       ? { icon: iconKingLounge, label: t("lobby.vkTitle") }
-      : room.game_type_key === "team_battle"
+      : kind === "team_battle"
         ? { icon: iconBattleLounge, label: t("teamBattle.title") }
-        : null;
+        : kind === "words"
+          ? { icon: iconWordsLounge, label: t("words.title") }
+          : null;
   const displayName = room.room_name || lounge?.label || t("extra.gameRoomLabel");
   // How long ago the room was made — the thing that tells two similar rooms
   // apart in a list of them.

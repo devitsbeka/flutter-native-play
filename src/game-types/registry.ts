@@ -10,7 +10,7 @@ import type { NavigateFunction } from "react-router-dom";
 // can't launch a mode it doesn't know), and while the migration is not yet
 // deployed the static statuses below are the fallback — see useGameTypes.
 
-export type GameTypeKey = "classic" | "tv_show" | "team_battle" | "king";
+export type GameTypeKey = "classic" | "tv_show" | "team_battle" | "king" | "words";
 
 export type GameTypeStatus = "live" | "coming_soon" | "hidden";
 
@@ -19,7 +19,7 @@ export interface GameTypeDescriptor {
   titleKey: string;
   descKey: string;
   /** lucide-react icon name resolved by the /play page */
-  icon: "users" | "tv" | "swords" | "crown";
+  icon: "users" | "tv" | "swords" | "crown" | "spell-check";
   tileBg: string;
   tileShadow: string;
   minPlayers: number;
@@ -105,5 +105,24 @@ export const GAME_TYPES: GameTypeDescriptor[] = [
     supportsMatchmaking: false,
     // Straight into the Versus King lounge lobby (Figma 940:7474).
     launch: (navigate) => navigate("/king"),
+  },
+  {
+    key: "words",
+    titleKey: "gameTypes.wordsTitle",
+    descKey: "gameTypes.wordsDesc",
+    icon: "spell-check",
+    tileBg: "linear-gradient(135deg, #34D399 0%, #10B981 45%, #0EA5E9 100%)",
+    tileShadow: "0 6px 14px rgba(16,185,129,0.35), inset 0 1px 0 rgba(255,255,255,0.4)",
+    minPlayers: 1,
+    maxPlayers: 2,
+    approxMinutes: 5,
+    // Live from the client side: the mode has no server half to dark-launch
+    // (the board and the words ship in the bundle; a friend game rides on a
+    // realtime channel), so there is nothing a DB flag would protect.
+    status: "live",
+    badge: "new",
+    sortOrder: 50,
+    supportsMatchmaking: false,
+    launch: (navigate) => navigate("/words"),
   },
 ];

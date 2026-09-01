@@ -18,6 +18,8 @@ import { translateNotificationTitle, translateNotificationMessage } from '@/util
 import { useLocalizedCategoryName } from "@/utils/categoryDisplayName";
 import iconKingLounge from "@/assets/play-chooser/icon-king.webp";
 import iconBattleLounge from "@/assets/play-chooser/icon-crate.png";
+import iconWordsLounge from "@/assets/play-chooser/icon-words.webp";
+import { roomKind } from "@/utils/roomRoutes";
 
 // The two lounges wear their own face on an invite — the King mascot, the
 // Battle crate — and name their game where an ordinary room names its
@@ -25,6 +27,7 @@ import iconBattleLounge from "@/assets/play-chooser/icon-crate.png";
 const LOUNGE_META: Record<string, { icon: string; labelKey: string }> = {
   king: { icon: iconKingLounge, labelKey: "lobby.vkTitle" },
   team_battle: { icon: iconBattleLounge, labelKey: "teamBattle.title" },
+  words: { icon: iconWordsLounge, labelKey: "words.title" },
 };
 
 interface CompactNotificationCardProps {
@@ -120,7 +123,7 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
     queryFn: async () => {
       const { data } = await supabase
         .from('game_rooms')
-        .select('room_icon, room_name, category_name, game_type_key')
+        .select('room_icon, room_name, category_name, game_type_key, game_mode')
         .eq('id', roomId!)
         .maybeSingle();
       return data ?? null;
@@ -129,7 +132,7 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
     staleTime: 30_000,
     gcTime: 60 * 60 * 1000,
   });
-  const lounge = liveRoom?.game_type_key ? LOUNGE_META[liveRoom.game_type_key] : undefined;
+  const lounge = liveRoom ? LOUNGE_META[roomKind(liveRoom)] : undefined;
   const roomIcon = (lounge ? lounge.icon : undefined) || liveRoom?.room_icon || storedRoomIcon || undefined;
   const roomName = liveRoom?.room_name || storedRoomName || undefined;
   const categoryName = localizeCategory(liveRoom ? liveRoom.category_name ?? undefined : storedCategoryName);

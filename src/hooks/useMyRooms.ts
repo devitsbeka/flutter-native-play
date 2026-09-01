@@ -23,6 +23,8 @@ export interface MyRoom {
   /** Registry key for the new game types — "king" / "team_battle" rooms
    * carry their own branding and live on their own routes. */
   game_type_key: string | null;
+  /** Words rooms may carry a null key with game_mode 'words' — see roomRoutes. */
+  game_mode: string | null;
   has_unread_activity: boolean;
   /** Published to the Public tab. Private rooms are the default. */
   is_public: boolean;
@@ -307,6 +309,7 @@ async function fetchRoomsForUser(userId: string, options?: FetchRoomsOptions): P
       is_host: hostMap.get(room.id) || false,
       game_type: room.game_type,
       game_type_key: room.game_type_key ?? null,
+      game_mode: room.game_mode ?? null,
       has_unread_activity: room.has_unread_activity || false,
       is_public: room.is_public === true,
       cover_image: room.cover_image || null,
