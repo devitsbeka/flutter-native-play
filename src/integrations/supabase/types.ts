@@ -5302,7 +5302,7 @@ export type Database = {
         Returns: string
       }
       respond_room_join: {
-        Args: { p_approve: boolean; p_request_id: string }
+        Args: { p_approve: boolean; p_request_id: string; p_team?: string }
         Returns: string
       }
       room_preview: {

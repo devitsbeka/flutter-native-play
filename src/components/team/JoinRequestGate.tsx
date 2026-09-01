@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Ban, Check, X, UserRound } from "lucide-react";
 import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
@@ -26,15 +27,33 @@ import { useRoomJoinRequests } from "@/hooks/useRoomJoinRequests";
 export function JoinRequestGate({
   roomId,
   isHost,
+  hostTeam,
 }: {
   roomId: string | null | undefined;
   isHost: boolean;
+  /**
+   * The arena only: which side the host is on. Given, the modal asks
+   * "with me or against me" and the approval carries the answer; left out
+   * (the classic lobby, the King's couch) there are no sides to ask about.
+   */
+  hostTeam?: "a" | "b";
 }) {
   const { t } = useLanguage();
   const { openProfile } = usePlayerProfile();
   const { pending, respond, block } = useRoomJoinRequests(roomId, isHost);
 
   const next = pending[0];
+  const otherTeam: "a" | "b" | undefined = hostTeam ? (hostTeam === "a" ? "b" : "a") : undefined;
+
+  // Opponent by default: a stranger asking into an arena is most often the
+  // other side's missing player, and the host is one tap from the other
+  // answer. Reset per request so a choice made for one asker does not
+  // silently carry over to the next.
+  const [team, setTeam] = useState<"a" | "b" | undefined>(otherTeam);
+  useEffect(() => {
+    setTeam(otherTeam);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [next?.id, hostTeam]);
 
   return (
     <AnimatePresence>
@@ -57,14 +76,10 @@ export function JoinRequestGate({
             transition={{ type: "spring", stiffness: 420, damping: 32 }}
             className="w-full max-w-[380px] rounded-3xl bg-card border border-border shadow-2xl p-5"
           >
-            <p className="text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              {t("extra.joinRequestTitle")}
-            </p>
-
             <button
               type="button"
               onClick={() => openProfile(next.user_id, { hideTrivias: true })}
-              className="mt-4 w-full flex flex-col items-center gap-2"
+              className="mt-1 w-full flex flex-col items-center gap-2"
             >
               <div className="w-20 h-20 rounded-full overflow-hidden ring-4 ring-primary/15">
                 <SafeAvatarImage
@@ -81,9 +96,39 @@ export function JoinRequestGate({
               </span>
             </button>
 
-            <p className="mt-3 text-center text-sm text-muted-foreground">
+            <p className="mt-3 text-center text-sm font-semibold text-foreground">
               {t("extra.joinRequestBody")}
             </p>
+
+            {/* Which side they land on. Two buttons named by team, each
+                tagged with what that team is to the host — "my team" or
+                "opponent" — because A and B mean nothing until you know
+                which one you are on. */}
+            {hostTeam && (
+              <div className="mt-4 flex items-center gap-1 p-1 rounded-2xl bg-muted">
+                {(["a", "b"] as const).map((side) => {
+                  const mine = side === hostTeam;
+                  const picked = team === side;
+                  return (
+                    <button
+                      key={side}
+                      type="button"
+                      onClick={() => setTeam(side)}
+                      className={`flex-1 flex flex-col items-center rounded-xl px-2 py-2 transition-colors ${
+                        picked ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
+                      }`}
+                    >
+                      <span className="text-[13px] font-bold">
+                        {side === "a" ? t("teamBattle.teamA") : t("teamBattle.teamB")}
+                      </span>
+                      <span className={`text-[11px] ${picked ? "text-primary" : ""}`}>
+                        {mine ? t("extra.joinRequestMyTeam") : t("extra.joinRequestOpponent")}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
 
             <div className="mt-5 flex gap-2">
               <button
@@ -96,7 +141,7 @@ export function JoinRequestGate({
               </button>
               <button
                 type="button"
-                onClick={() => void respond(next.id, true)}
+                onClick={() => void respond(next.id, true, team)}
                 className="flex-1 flex items-center justify-center gap-1.5 rounded-2xl bg-primary py-3 font-bold text-primary-foreground shadow-md active:scale-[0.98] transition-transform"
               >
                 <Check className="w-4 h-4" />

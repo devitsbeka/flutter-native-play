@@ -543,7 +543,11 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
       style={{ background: LILAC_BG }}
     >
       {/* Somebody asking into this arena, when it was published */}
-      <JoinRequestGate roomId={room?.id} isHost={isHost} />
+      <JoinRequestGate
+        roomId={room?.id}
+        isHost={isHost}
+        hostTeam={(participants.find((p) => p.is_host)?.team as TBTeam | null) ?? undefined}
+      />
 
       <LilacHeader
         title={t("teamBattle.title")}

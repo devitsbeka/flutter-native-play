@@ -105,13 +105,19 @@ export function useRoomJoinRequests(roomId: string | null | undefined, amHost: b
   );
 
   const respond = useCallback(
-    async (requestId: string, approve: boolean) => {
+    /**
+     * @param team  For the arena: which side an approved player lands on.
+     *              Left out everywhere else — the classic lobby and the
+     *              King's couch have no sides.
+     */
+    async (requestId: string, approve: boolean, team?: "a" | "b") => {
       // Drop it locally first: the round-trip plus the realtime echo is long
       // enough for a second tap to land on a decision already made.
       setPending((list) => list.filter((r) => r.id !== requestId));
       const { error } = await supabase.rpc("respond_room_join", {
         p_request_id: requestId,
         p_approve: approve,
+        ...(approve && team ? { p_team: team } : {}),
       });
       if (error) {
         console.error("[joinRequests] respond failed", error);

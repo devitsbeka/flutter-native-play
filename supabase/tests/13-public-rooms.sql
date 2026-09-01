@@ -366,6 +366,45 @@ BEGIN
   PERFORM pg_temp.as_user(NULL);
 END $$;
 
+-- ── the host names the side an approved player lands on ────────────────────
+
+DO $$
+DECLARE
+  v_host  uuid := 'bc000000-0000-0000-0000-00000000004a';
+  v_asker uuid := 'bc000000-0000-0000-0000-00000000004b';
+  v_room uuid;
+  v_req  uuid;
+BEGIN
+  INSERT INTO auth.users (id, email) VALUES
+    (v_host, 'host5@pub.test'), (v_asker, 'asker5@pub.test')
+  ON CONFLICT (id) DO NOTHING;
+  INSERT INTO public.profiles (user_id, nickname) VALUES
+    (v_host, 'Host5'), (v_asker, 'Asker5')
+  ON CONFLICT (user_id) DO UPDATE SET nickname = EXCLUDED.nickname;
+
+  INSERT INTO public.game_rooms (room_code, host_user_id, status, is_public, game_type_key)
+  VALUES ('ARENA2', v_host, 'waiting', true, 'team_battle') RETURNING id INTO v_room;
+  INSERT INTO public.room_participants (room_id, user_id, nickname, is_host, status, team)
+  VALUES (v_room, v_host, 'Host5', true, 'joined', 'a');
+
+  SET LOCAL ROLE authenticated;
+  PERFORM pg_temp.as_user(v_asker);
+  PERFORM public.request_room_join(v_room);
+  SELECT id INTO v_req FROM public.room_join_requests
+   WHERE room_id = v_room AND user_id = v_asker;
+
+  PERFORM pg_temp.as_user(v_host);
+  PERFORM pg_temp.must_fail(format('SELECT public.respond_room_join(%L, true, %L)', v_req, 'c'),
+    'a side has to be a or b');
+  PERFORM public.respond_room_join(v_req, true, 'b');
+  PERFORM pg_temp.must_equal(
+    (SELECT team FROM public.room_participants WHERE room_id = v_room AND user_id = v_asker),
+    'b', 'an approved player lands on the side the host named');
+
+  RESET ROLE;
+  PERFORM pg_temp.as_user(NULL);
+END $$;
+
 -- ── an invite is the yes, given earlier ────────────────────────────────────
 
 DO $$

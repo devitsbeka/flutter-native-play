@@ -226,6 +226,43 @@ describe("the public list", () => {
   });
 });
 
+describe("the doorstep names a side", () => {
+  it("asks 'with me or against me' in the arena only", () => {
+    const gate = read("src/components/team/JoinRequestGate.tsx");
+    // No header line any more — the one label under the face says it.
+    expect(gate).not.toMatch(/joinRequestTitle/);
+    // The picker exists only when a side is given; the classic lobby and
+    // the King's couch have none to give.
+    expect(gate).toMatch(/\{hostTeam && \(/);
+    expect(gate).toMatch(/joinRequestMyTeam/);
+    expect(gate).toMatch(/joinRequestOpponent/);
+    // Opponent by default, reset for each new asker.
+    expect(gate).toMatch(/useState<"a" \| "b" \| undefined>\(otherTeam\)/);
+    // The answer rides on the approval, never as a separate write.
+    expect(gate).toMatch(/respond\(next\.id, true, team\)/);
+    expect(read("src/hooks/useRoomJoinRequests.ts")).toMatch(/\.\.\.\(approve && team \? \{ p_team: team \} : \{\}\)/);
+  });
+
+  it("the arena passes the host's side; the other lobbies pass nothing", () => {
+    expect(read("src/pages/TeamBattlePage.tsx")).toMatch(
+      /hostTeam=\{\(participants\.find\(\(p\) => p\.is_host\)\?\.team as TBTeam \| null\) \?\? undefined\}/,
+    );
+    for (const file of ["src/components/team/RoomLobbyV2.tsx", "src/pages/KingPage.tsx"]) {
+      expect(read(file), file).not.toMatch(/hostTeam=/);
+    }
+  });
+
+  it("the RPC drops both signatures before recreating, so it re-runs clean", () => {
+    const sql = read("supabase/migrations/20260924100000_join_approval_picks_team.sql");
+    expect(sql).toMatch(/DROP FUNCTION IF EXISTS public\.respond_room_join\(uuid, boolean\);/);
+    expect(sql).toMatch(/DROP FUNCTION IF EXISTS public\.respond_room_join\(uuid, boolean, text\);/);
+    expect(sql).toMatch(/p_team text DEFAULT NULL/);
+    // A side left unsaid keeps whatever the row had — an invited seat may
+    // carry the team it was reserved for.
+    expect(sql).toMatch(/team = COALESCE\(EXCLUDED\.team, room_participants\.team\)/);
+  });
+});
+
 describe("a block, and what a removal costs", () => {
   it("the door shuts from the same modal that opens it", () => {
     const gate = read("src/components/team/JoinRequestGate.tsx");
