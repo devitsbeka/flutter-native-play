@@ -871,18 +871,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "game_rooms_game_type_key_fkey"
-            columns: ["game_type_key"]
-            isOneToOne: false
-            referencedRelation: "game_types"
-            referencedColumns: ["key"]
-          },
-          {
             foreignKeyName: "game_rooms_current_game_id_fkey"
             columns: ["current_game_id"]
             isOneToOne: false
             referencedRelation: "room_games"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_rooms_game_type_key_fkey"
+            columns: ["game_type_key"]
+            isOneToOne: false
+            referencedRelation: "game_types"
+            referencedColumns: ["key"]
           },
           {
             foreignKeyName: "game_rooms_tv_session_id_fkey"
@@ -1424,6 +1424,193 @@ export type Database = {
         }
         Relationships: []
       }
+      king_matches: {
+        Row: {
+          current_question_id: string | null
+          drawn_at: string | null
+          finished_at: string | null
+          id: string
+          king_score: number
+          language: string
+          options: Json | null
+          options_at: string | null
+          player_score: number
+          question_ids: string[]
+          started_at: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          current_question_id?: string | null
+          drawn_at?: string | null
+          finished_at?: string | null
+          id?: string
+          king_score?: number
+          language?: string
+          options?: Json | null
+          options_at?: string | null
+          player_score?: number
+          question_ids?: string[]
+          started_at?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          current_question_id?: string | null
+          drawn_at?: string | null
+          finished_at?: string | null
+          id?: string
+          king_score?: number
+          language?: string
+          options?: Json | null
+          options_at?: string | null
+          player_score?: number
+          question_ids?: string[]
+          started_at?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "king_matches_current_question_id_fkey"
+            columns: ["current_question_id"]
+            isOneToOne: false
+            referencedRelation: "king_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      king_questions: {
+        Row: {
+          correct_answer: string
+          created_at: string
+          difficulty: number
+          explanation: string
+          icon_slug: string | null
+          id: string
+          image_url: string | null
+          incorrect_answers: Json
+          is_active: boolean
+          language: string
+          question_text: string
+          source: string
+          translated_from: string | null
+        }
+        Insert: {
+          correct_answer: string
+          created_at?: string
+          difficulty?: number
+          explanation: string
+          icon_slug?: string | null
+          id?: string
+          image_url?: string | null
+          incorrect_answers: Json
+          is_active?: boolean
+          language?: string
+          question_text: string
+          source?: string
+          translated_from?: string | null
+        }
+        Update: {
+          correct_answer?: string
+          created_at?: string
+          difficulty?: number
+          explanation?: string
+          icon_slug?: string | null
+          id?: string
+          image_url?: string | null
+          incorrect_answers?: Json
+          is_active?: boolean
+          language?: string
+          question_text?: string
+          source?: string
+          translated_from?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "king_questions_translated_from_fkey"
+            columns: ["translated_from"]
+            isOneToOne: false
+            referencedRelation: "king_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      king_team_matches: {
+        Row: {
+          captain: string
+          current_question_id: string | null
+          drawn_at: string | null
+          finished_at: string | null
+          id: string
+          king_score: number
+          language: string
+          last_result: Json | null
+          options: Json | null
+          options_at: string | null
+          question_ids: string[]
+          room_id: string
+          started_at: string
+          status: string
+          suggestions: Json
+          team_score: number
+          updated_at: string
+        }
+        Insert: {
+          captain: string
+          current_question_id?: string | null
+          drawn_at?: string | null
+          finished_at?: string | null
+          id?: string
+          king_score?: number
+          language?: string
+          last_result?: Json | null
+          options?: Json | null
+          options_at?: string | null
+          question_ids?: string[]
+          room_id: string
+          started_at?: string
+          status?: string
+          suggestions?: Json
+          team_score?: number
+          updated_at?: string
+        }
+        Update: {
+          captain?: string
+          current_question_id?: string | null
+          drawn_at?: string | null
+          finished_at?: string | null
+          id?: string
+          king_score?: number
+          language?: string
+          last_result?: Json | null
+          options?: Json | null
+          options_at?: string | null
+          question_ids?: string[]
+          room_id?: string
+          started_at?: string
+          status?: string
+          suggestions?: Json
+          team_score?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "king_team_matches_current_question_id_fkey"
+            columns: ["current_question_id"]
+            isOneToOne: false
+            referencedRelation: "king_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "king_team_matches_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "game_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       knowledge_sources: {
         Row: {
           content_summary: string | null
@@ -1555,6 +1742,63 @@ export type Database = {
           y?: number
         }
         Relationships: []
+      }
+      matchmaking_queue: {
+        Row: {
+          enqueued_at: string
+          game_type_key: string
+          id: string
+          language: string
+          matched_room_id: string | null
+          party_id: string | null
+          rating: number
+          resolved_at: string | null
+          status: string
+          team_size: number | null
+          user_id: string
+        }
+        Insert: {
+          enqueued_at?: string
+          game_type_key: string
+          id?: string
+          language: string
+          matched_room_id?: string | null
+          party_id?: string | null
+          rating?: number
+          resolved_at?: string | null
+          status?: string
+          team_size?: number | null
+          user_id: string
+        }
+        Update: {
+          enqueued_at?: string
+          game_type_key?: string
+          id?: string
+          language?: string
+          matched_room_id?: string | null
+          party_id?: string | null
+          rating?: number
+          resolved_at?: string | null
+          status?: string
+          team_size?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "matchmaking_queue_game_type_key_fkey"
+            columns: ["game_type_key"]
+            isOneToOne: false
+            referencedRelation: "game_types"
+            referencedColumns: ["key"]
+          },
+          {
+            foreignKeyName: "matchmaking_queue_matched_room_id_fkey"
+            columns: ["matched_room_id"]
+            isOneToOne: false
+            referencedRelation: "game_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notifications: {
         Row: {
@@ -2348,11 +2592,13 @@ export type Database = {
       room_participants: {
         Row: {
           avatar_url: string | null
+          captain_vote: string | null
           country_code: string | null
           current_question: number | null
           has_seen_results: boolean | null
           id: string
           is_bot: boolean
+          is_captain: boolean
           is_host: boolean | null
           joined_at: string | null
           last_played_at: string | null
@@ -2370,11 +2616,13 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          captain_vote?: string | null
           country_code?: string | null
           current_question?: number | null
           has_seen_results?: boolean | null
           id?: string
           is_bot?: boolean
+          is_captain?: boolean
           is_host?: boolean | null
           joined_at?: string | null
           last_played_at?: string | null
@@ -2392,11 +2640,13 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          captain_vote?: string | null
           country_code?: string | null
           current_question?: number | null
           has_seen_results?: boolean | null
           id?: string
           is_bot?: boolean
+          is_captain?: boolean
           is_host?: boolean | null
           joined_at?: string | null
           last_played_at?: string | null
@@ -2487,6 +2737,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      room_vote_results: {
+        Row: {
+          game_id: string
+          question_index: number
+          room_id: string
+          settled_at: string
+          vote_counts: Json
+          winners: string[]
+        }
+        Insert: {
+          game_id: string
+          question_index: number
+          room_id: string
+          settled_at?: string
+          vote_counts?: Json
+          winners?: string[]
+        }
+        Update: {
+          game_id?: string
+          question_index?: number
+          room_id?: string
+          settled_at?: string
+          vote_counts?: Json
+          winners?: string[]
+        }
+        Relationships: []
       }
       shop_products: {
         Row: {
@@ -2668,17 +2945,17 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "team_battle_board_room_id_fkey"
-            columns: ["room_id"]
-            isOneToOne: false
-            referencedRelation: "game_rooms"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "team_battle_board_game_id_fkey"
             columns: ["game_id"]
             isOneToOne: false
             referencedRelation: "room_games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_battle_board_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "game_rooms"
             referencedColumns: ["id"]
           },
         ]
@@ -2743,10 +3020,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "team_battle_state_room_id_fkey"
-            columns: ["room_id"]
-            isOneToOne: true
-            referencedRelation: "game_rooms"
+            foreignKeyName: "team_battle_state_active_tile_fkey"
+            columns: ["active_tile"]
+            isOneToOne: false
+            referencedRelation: "team_battle_board"
             referencedColumns: ["id"]
           },
           {
@@ -2757,10 +3034,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "team_battle_state_active_tile_fkey"
-            columns: ["active_tile"]
-            isOneToOne: false
-            referencedRelation: "team_battle_board"
+            foreignKeyName: "team_battle_state_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: true
+            referencedRelation: "game_rooms"
             referencedColumns: ["id"]
           },
         ]
@@ -4662,18 +4939,201 @@ export type Database = {
       king_abandon_match: { Args: { p_match_id: string }; Returns: Json }
       king_draw_question: { Args: { p_match_id: string }; Returns: Json }
       king_expire_question: { Args: { p_match_id: string }; Returns: Json }
+      king_finish_question: {
+        Args: {
+          p_correct: boolean
+          p_match: Database["public"]["Tables"]["king_matches"]["Row"]
+        }
+        Returns: Json
+      }
       king_show_options: { Args: { p_match_id: string }; Returns: Json }
       king_start_match: { Args: { p_language?: string }; Returns: Json }
+      king_state: {
+        Args: { p_match: Database["public"]["Tables"]["king_matches"]["Row"] }
+        Returns: Json
+      }
       king_submit_answer: {
         Args: { p_answer: string; p_match_id: string }
         Returns: Json
       }
-      mm_cancel: { Args: never; Returns: Json }
-      mm_enqueue: {
-        Args: { p_game_type_key: string; p_language: string; p_team_size?: number }
+      king_team_advance: { Args: { p_room_id: string }; Returns: Json }
+      king_team_commit: {
+        Args: { p_answer: string; p_room_id: string }
         Returns: Json
       }
+      king_team_draw_into: {
+        Args: {
+          p_match: Database["public"]["Tables"]["king_team_matches"]["Row"]
+        }
+        Returns: {
+          captain: string
+          current_question_id: string | null
+          drawn_at: string | null
+          finished_at: string | null
+          id: string
+          king_score: number
+          language: string
+          last_result: Json | null
+          options: Json | null
+          options_at: string | null
+          question_ids: string[]
+          room_id: string
+          started_at: string
+          status: string
+          suggestions: Json
+          team_score: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "king_team_matches"
+          to: "king_team_matches"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      king_team_member: {
+        Args: { p_room_id: string; p_user: string }
+        Returns: {
+          avatar_url: string | null
+          captain_vote: string | null
+          country_code: string | null
+          current_question: number | null
+          has_seen_results: boolean | null
+          id: string
+          is_bot: boolean
+          is_captain: boolean
+          is_host: boolean | null
+          joined_at: string | null
+          last_played_at: string | null
+          last_read_at: string | null
+          nickname: string
+          room_id: string
+          score: number | null
+          status: Database["public"]["Enums"]["participant_status"] | null
+          team: string | null
+          total_rounds_played: number | null
+          total_score: number | null
+          total_wins: number | null
+          turn_order: number | null
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "room_participants"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      king_team_next: { Args: { p_room_id: string }; Returns: Json }
+      king_team_open_options: {
+        Args: {
+          p_match: Database["public"]["Tables"]["king_team_matches"]["Row"]
+        }
+        Returns: {
+          captain: string
+          current_question_id: string | null
+          drawn_at: string | null
+          finished_at: string | null
+          id: string
+          king_score: number
+          language: string
+          last_result: Json | null
+          options: Json | null
+          options_at: string | null
+          question_ids: string[]
+          room_id: string
+          started_at: string
+          status: string
+          suggestions: Json
+          team_score: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "king_team_matches"
+          to: "king_team_matches"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      king_team_options: { Args: { p_room_id: string }; Returns: Json }
+      king_team_resolve: {
+        Args: {
+          p_answer: string
+          p_match: Database["public"]["Tables"]["king_team_matches"]["Row"]
+        }
+        Returns: {
+          captain: string
+          current_question_id: string | null
+          drawn_at: string | null
+          finished_at: string | null
+          id: string
+          king_score: number
+          language: string
+          last_result: Json | null
+          options: Json | null
+          options_at: string | null
+          question_ids: string[]
+          room_id: string
+          started_at: string
+          status: string
+          suggestions: Json
+          team_score: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "king_team_matches"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      king_team_start: {
+        Args: { p_language?: string; p_room_id: string }
+        Returns: Json
+      }
+      king_team_state: {
+        Args: {
+          p_match: Database["public"]["Tables"]["king_team_matches"]["Row"]
+        }
+        Returns: Json
+      }
+      king_team_suggest: {
+        Args: { p_answer: string; p_room_id: string }
+        Returns: Json
+      }
+      king_team_view: { Args: { p_room_id: string }; Returns: Json }
+      lobby_manage_seat: {
+        Args: { p_action: string; p_room_id: string; p_user_id: string }
+        Returns: undefined
+      }
+      mm_cancel: { Args: never; Returns: Json }
+      mm_enqueue: {
+        Args: {
+          p_game_type_key: string
+          p_language: string
+          p_team_size?: number
+        }
+        Returns: Json
+      }
+      mm_entry_state: {
+        Args: {
+          p_entry: Database["public"]["Tables"]["matchmaking_queue"]["Row"]
+        }
+        Returns: Json
+      }
+      mm_required_players: {
+        Args: { p_game_type_key: string; p_team_size: number }
+        Returns: number
+      }
       mm_status: { Args: never; Returns: Json }
+      mm_try_match: {
+        Args: {
+          p_game_type_key: string
+          p_language: string
+          p_team_size: number
+        }
+        Returns: string
+      }
       national_question_progress: {
         Args: never
         Returns: {
@@ -4785,6 +5245,14 @@ export type Database = {
           video_url: string
         }[]
       }
+      settle_most_likely_votes: {
+        Args: {
+          p_game_id: string
+          p_question_index?: number
+          p_room_id: string
+        }
+        Returns: number
+      }
       settle_quick_game: {
         Args: { p_outcome: string; p_reference?: string }
         Returns: Json
@@ -4808,12 +5276,44 @@ export type Database = {
         Returns: string
       }
       tb_advance: { Args: { p_room_id: string }; Returns: string }
+      tb_advance_super: {
+        Args: {
+          p_state: Database["public"]["Tables"]["team_battle_state"]["Row"]
+        }
+        Returns: undefined
+      }
+      tb_close_turn: {
+        Args: {
+          p_state: Database["public"]["Tables"]["team_battle_state"]["Row"]
+        }
+        Returns: undefined
+      }
+      tb_next_player: {
+        Args: { p_game_id: string; p_room_id: string; p_team: string }
+        Returns: string
+      }
       tb_pick_tile: {
         Args: { p_room_id: string; p_tile_id: string }
         Returns: string
       }
       tb_remove_bot: {
         Args: { p_bot_id: string; p_room_id: string }
+        Returns: undefined
+      }
+      tb_resolve_rps: {
+        Args: {
+          p_state: Database["public"]["Tables"]["team_battle_state"]["Row"]
+        }
+        Returns: undefined
+      }
+      tb_resolve_super_vote: {
+        Args: {
+          p_state: Database["public"]["Tables"]["team_battle_state"]["Row"]
+        }
+        Returns: undefined
+      }
+      tb_set_captain: {
+        Args: { p_room_id: string; p_user_id: string }
         Returns: undefined
       }
       tb_settle: { Args: { p_room_id: string }; Returns: Json }
@@ -4832,6 +5332,14 @@ export type Database = {
       tb_submit_super: {
         Args: { p_answer: string; p_question_index: number; p_room_id: string }
         Returns: Json
+      }
+      tb_team_throw: {
+        Args: { p_room_id: string; p_team: string; p_throws: Json }
+        Returns: string
+      }
+      tb_vote_captain: {
+        Args: { p_candidate: string; p_room_id: string }
+        Returns: undefined
       }
       tb_vote_super: {
         Args: { p_candidate: string; p_room_id: string }

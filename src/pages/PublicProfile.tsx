@@ -15,13 +15,20 @@ export default function PublicProfile() {
   const hasOpened = useRef(false);
 
   // Open the profile modal BEFORE the browser paints — with a regular
-  // effect the route's fallback page flashed for a frame or two first
+  // effect the route's fallback page flashed for a frame or two first.
+  //
+  // Once per mount, guarded by the ref and NOT keyed on
+  // currentProfileUserId: keyed on it, closing the modal (id → null)
+  // re-ran this effect, which reopened the profile instantly — and that
+  // state change also cancelled the navigate-back timer below. The back
+  // button closed and reopened the same modal forever; the player was
+  // stuck on the profile with a button that did nothing.
   useLayoutEffect(() => {
-    if (userId && userId !== currentProfileUserId) {
+    if (userId && !hasOpened.current) {
       hasOpened.current = true;
       openProfile(userId);
     }
-  }, [userId, openProfile, currentProfileUserId]);
+  }, [userId, openProfile]);
 
   // When modal is closed, navigate back
   useEffect(() => {

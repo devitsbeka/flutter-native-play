@@ -239,30 +239,11 @@ render countdowns from `turn_deadline`, never decide expiry themselves.
 
 ---
 
-## 3. Game type: Versus King (formerly MyTrivia King)
+## 3. Game type: MyTrivia King
 
-> **SUPERSEDED (2026-08-30) by product decision — the King is now a CO-OP TEAM
-> game.** The solo design below shipped dark (migrations `20260918*`, suite
-> `11-*`) and its RPCs remain in the database, but nothing calls them: the
-> King card launches the team flow in
-> `supabase/migrations/20260921100000_versus_king.sql` (suite `13-*`),
-> `src/contexts/VersusKingContext.tsx` and `src/pages/KingPage.tsx`.
->
-> The team rules, per the owner's spec: a room of 2..10 friends against the
-> King. A 30-second vote elects a **captain**. Six rounds, each a random
-> category with five questions from the normal bank (the curated
-> `king_questions` pool is unused by this mode). On every question the
-> players vote by tapping an answer; the captain sees who picked what and
-> **locks the team's final answer** — the only answer that counts. ≥3 correct
-> finals take the round, else the King does; 3:3 after six rounds sends the
-> captain alone into a 20-second **blitz** question — correct wins the match,
-> anything else crowns the King. Payouts: `king_play` 50 to every player,
-> `king_win` 200 each when the team wins. All timers are server deadlines
-> driven by `kt_advance`, tb_advance-style.
-
-*Original (superseded) elevator pitch:* the digital What? Where? When?. Very
-hard questions that require **no prior knowledge — only logic**. One minute of
-real thinking, then commit. You against the MyTrivia King, first to 6.
+*Elevator pitch:* the digital What? Where? When?. Very hard questions that
+require **no prior knowledge — only logic**. One minute of real thinking, then
+commit. You against the MyTrivia King, first to 6.
 
 ### 3.1 Decided rules
 

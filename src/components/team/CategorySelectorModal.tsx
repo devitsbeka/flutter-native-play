@@ -179,12 +179,18 @@ export function CategorySelectorModal({
         </div>
       </div>
 
-      {/* Tabs, full bleed. The strip is a scroller: it should run to the
-          sheet's own edges, so a pill mid-scroll is cut by the edge rather
-          than stopping short of it inside the padding. The wrapper had both
-          `-mx-5` and `mx-auto` — the auto won, so the negative margin did
-          nothing and `px-5` then inset the row a second time. */}
-      <div className="-mx-5 mb-2">
+      {/* Tabs, edge to edge: it is a horizontal scroller, so a pill mid-scroll
+          should be cut by the sheet's edge rather than stopping short inside
+          the padding.
+
+          The number is arithmetic, not taste. GameModal pads its children by
+          24px (px-6) and IconTabBar already bleeds itself out by 16px
+          (-mx-4, re-padding its scroller by the same), so 8px is what is
+          left to cancel. This was -mx-5: 16 + 20 put the strip 12px past the
+          sheet on each side, and because the modal body scrolls vertically
+          its overflow-x computes to auto — so that spill turned the whole
+          sheet into a sideways scroller. */}
+      <div className="-mx-2 mb-2">
         <IconTabBar
           tabs={tabs}
           activeTab={activeTab}

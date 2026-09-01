@@ -60,6 +60,7 @@ const TeamV2 = lazy(() => import("./pages/TeamV2"));
 const TeamBattlePage = lazy(() => import("./pages/TeamBattlePage"));
 const KingPage = lazy(() => import("./pages/KingPage"));
 const QueuePage = lazy(() => import("./pages/QueuePage"));
+const OnlineGameHub = lazy(() => import("./pages/OnlineGameHub"));
 const Discover = lazy(() => import("./pages/Discover"));
 const CategoryPage = lazy(() => import("./pages/CategoryPage"));
 const CategoryQuizPage = lazy(() => import("./pages/CategoryQuizPage"));
@@ -282,6 +283,7 @@ const App = () => (
                 <Route path="/play/queue" element={<QueuePage />} />
                 <Route path="/team-battle" element={<TeamBattlePage />} />
                 <Route path="/king" element={<KingPage />} />
+                <Route path="/lobby/:gameType" element={<OnlineGameHub />} />
                 <Route path="/team" element={<TeamV2 />} />
                 <Route path="/trivia/:triviaId" element={<TriviaLobby />} />
                 <Route path="/collection/:collectionId" element={<CollectionLobby />} />

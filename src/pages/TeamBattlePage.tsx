@@ -1,22 +1,45 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { motion } from "framer-motion";
-import { Bot, ChevronLeft, Copy, Crown, Plus, Share2, Swords, X } from "lucide-react";
-import { toast } from "@/lib/toast";
+import { useEffect, useRef, useState, type MutableRefObject } from "react";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
+import { ChevronLeft, Pencil } from "lucide-react";
+import { containsBlockedText } from "@/utils/contentFilter";
+import { readAppLanguage } from "@/utils/appLanguage";
+import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
+import { FriendsStoriesBar } from "@/components/team/FriendsStoriesBar";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import { ChunkyButton } from "@/components/ui/chunky-button";
-import { SmartAvatar } from "@/components/shared/SmartAvatar";
-import { getGradientById } from "@/config/roomGradients";
 import {
   TeamBattleProvider,
   useTeamBattle,
+  type TBParticipant,
   type TBTeam,
 } from "@/contexts/TeamBattleContext";
 import { TeamBattleMatch } from "@/components/team-battle/TeamBattleMatch";
-import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
 import { useCategories } from "@/hooks/useCategories";
-import { excludePartyCategories } from "@/config/partyCategories";
+import { useGameInvitations } from "@/hooks/useGameInvitations";
+import {
+  AnimatedCoinPill,
+  CaptainInfoModal,
+  FriendPeek,
+  type InviteEntry,
+  LILAC_BG,
+  LilacHeader,
+  FitBox,
+  PlusSeat,
+  Seat,
+  SeatMenu,
+  type SeatMenuAction,
+  StartButton,
+} from "@/components/lobby/LilacLobby";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/lib/toast";
+import sceneArena from "@/assets/tb-lobby/scene-arena.webp";
+import iconBattleCrate from "@/assets/play-chooser/icon-crate.png";
+import crownIcon from "@/assets/crown-icon.png";
+import teamPenguins from "@/assets/tb-lobby/team-penguins.png";
+import teamFormula from "@/assets/tb-lobby/team-formula.png";
 
 /**
  * /team-battle — the Team Battle flow (docs/GAME_TYPES_DESIGN.md §2), its own
@@ -33,10 +56,19 @@ export default function TeamBattlePage() {
   );
 }
 
+/** People picked on the create screen, riding along in router state. */
+export type LoungeInvite = { id: string; nickname: string; avatarUrl: string | null };
+
 function TeamBattleInner() {
   const { user } = useAuth();
   const { room, state, joinRoom } = useTeamBattle();
   const [params] = useSearchParams();
+  const location = useLocation();
+  // Captured once at mount: the ?code= replace that follows room creation
+  // drops router state, so the list has to be held here.
+  const handoffRef = useRef<LoungeInvite[] | null>(
+    (location.state as { invite?: LoungeInvite[] } | null)?.invite ?? null,
+  );
   // Settling flips the room back to "waiting" within a round-trip; the
   // result screen stays up until the player dismisses it, or it would be an
   // unreadable flash on the way back to the lobby.
@@ -60,98 +92,149 @@ function TeamBattleInner() {
       (state.phase === "done" && !resultSeen));
 
   if (inMatch) return <TeamBattleMatch onResultDismiss={() => setResultSeen(true)} />;
-  if (room) return <TBLobby />;
-  return <TBEntry />;
+  if (room) return <TBLobby handoff={handoffRef} />;
+  return <TBGate joining={!!params.get("code")} />;
 }
 
-function TBEntry() {
+/**
+ * There is no entry step in the design — arriving here without a room means
+ * one gets created for you (or joined, when a ?code is in the URL) and the
+ * arena lobby opens. This gate is just the lilac wash while that happens,
+ * with a retry if the round-trip fails.
+ */
+function TBGate({ joining }: { joining: boolean }) {
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const { createRoom, joinRoom, loading } = useTeamBattle();
-  const [code, setCode] = useState("");
+  const { user } = useAuth();
+  const { createRoom } = useTeamBattle();
+  const [failed, setFailed] = useState(false);
+  const attempted = useRef(false);
+
+  useEffect(() => {
+    if (joining || !user || attempted.current) return;
+    attempted.current = true;
+    void createRoom().then((created) => {
+      if (!created) setFailed(true);
+      // The room's code goes into the URL so a refresh rejoins this room
+      // instead of minting a new one.
+      else navigate(`/team-battle?code=${created.room_code}`, { replace: true });
+    });
+  }, [joining, user, createRoom, navigate]);
 
   return (
-    <div className="h-[100dvh] w-full overflow-hidden safe-bleed bg-[#7E7ADB] relative">
-      {/* The VS-screen watermark treatment, with this mode's own mark */}
-      <Swords
-        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] h-[340px] text-white/[0.05] pointer-events-none"
-        aria-hidden
+    <div
+      className="h-[100dvh] w-full overflow-hidden safe-bleed relative flex flex-col items-center justify-center gap-6"
+      style={{ background: LILAC_BG }}
+    >
+      <button
+        onClick={() => navigate(-1)}
+        aria-label={t("common.back")}
+        className="absolute left-5 top-[calc(var(--safe-top)_+_1rem)] w-10 h-10 flex items-center justify-center rounded-full bg-white/40"
+      >
+        <ChevronLeft className="w-5 h-5 text-[#523b76]" />
+      </button>
+      {/* The arena's own crate, the same one the reel and the lobby header
+          wear. Without it this was a title and a spinner on an empty lilac
+          field, which reads as a screen that failed rather than one that is
+          working. */}
+      <motion.img
+        src={iconBattleCrate}
+        alt=""
+        className="w-[104px] h-[104px] object-contain drop-shadow-[0_8px_18px_rgba(88,50,160,0.28)]"
+        initial={{ scale: 0.85, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: "spring", stiffness: 420, damping: 26 }}
       />
-      <div className="w-full h-full flex flex-col max-w-[520px] mx-auto relative px-6">
-        <div className="flex items-center pt-[calc(var(--safe-top)_+_0.75rem)]">
-          <button
-            onClick={() => navigate(-1)}
-            aria-label={t("common.back")}
-            className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
-          >
-            <ChevronLeft className="w-5 h-5 text-white" />
-          </button>
-        </div>
-
-        <div className="flex-1 flex flex-col justify-center gap-8 pb-16">
-          <div className="text-center">
-            <motion.h1
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-4xl font-black text-white"
-              style={{ fontFamily: "'TASolivare', sans-serif", textShadow: "0 2px 10px rgba(0,0,0,0.35)" }}
-            >
-              {t("teamBattle.title")}
-            </motion.h1>
-            <p className="text-white/70 text-sm mt-3 max-w-[300px] mx-auto">
-              {t("teamBattle.entryHint")}
-            </p>
-          </div>
-
-          <div className="flex flex-col gap-4">
-            <ChunkyButton
-              variant="white"
-              size="xl"
-              className="w-full"
-              icon={<Swords className="w-5 h-5" />}
-              disabled={loading}
-              onClick={() => void createRoom()}
-            >
-              {t("teamBattle.createRoom")}
-            </ChunkyButton>
-
-            <div className="flex items-center gap-2 rounded-2xl bg-white/10 backdrop-blur-sm p-2 pl-4 border border-white/[0.12]">
-              <input
-                value={code}
-                onChange={(e) => setCode(e.target.value.toUpperCase())}
-                placeholder={t("teamBattle.codePlaceholder")}
-                maxLength={6}
-                className="flex-1 min-w-0 bg-transparent outline-none font-mono text-lg tracking-[0.3em] text-white placeholder:text-white/40"
-              />
-              <ChunkyButton
-                variant="mint"
-                size="md"
-                disabled={code.length < 6 || loading}
-                onClick={() => void joinRoom(code)}
-              >
-                {t("teamBattle.joinRoom")}
-              </ChunkyButton>
-            </div>
-          </div>
-        </div>
-      </div>
+      <p
+        className="text-[26px] text-[#523b76]"
+        style={{ fontFamily: "'TASolivare', sans-serif" }}
+      >
+        {t("teamBattle.title")}
+      </p>
+      {failed ? (
+        <ChunkyButton
+          variant="white"
+          size="lg"
+          onClick={() => {
+            setFailed(false);
+            attempted.current = false;
+            void createRoom().then((created) => {
+              if (!created) setFailed(true);
+              else navigate(`/team-battle?code=${created.room_code}`, { replace: true });
+            });
+          }}
+        >
+          {t("common.retry")}
+        </ChunkyButton>
+      ) : (
+        <motion.div
+          className="w-8 h-8 rounded-full border-[3px] border-[#8858d5]/30 border-t-[#8858d5]"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 0.9, repeat: Infinity, ease: "linear" }}
+        />
+      )}
     </div>
   );
 }
 
-function TBLobby() {
+// Seat slots per team, straight from the frame (943:21930): four avatar
+// spots and one empty podium per side. Team A wears the blue ring, Team B
+// the red one, exactly as the design's borders say.
+const TEAM_A_SLOTS: [number, number][] = [
+  [91, 431], [30, 457], [23, 517], [82, 546],
+];
+const TEAM_B_SLOTS: [number, number][] = [
+  [356, 431], [407, 457], [431, 514], [376, 546],
+];
+const PODIUM_A: [number, number] = [151, 572];
+const PODIUM_B: [number, number] = [302, 572];
+
+// The arena scene's edge fade (938:6267 overlay).
+const ARENA_FADE =
+  "url(\"data:image/svg+xml;utf8,<svg viewBox='0 0 435 780' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)' opacity='1'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(1.3318e-15 39 -21.75 2.3881e-15 217.5 390)'><stop stop-color='rgba(255,255,255,0)' offset='0'/><stop stop-color='rgba(245,217,255,1)' offset='1'/></radialGradient></defs></svg>\")";
+
+// Server rule: tiles even, ≥ 2×team size, ≤ 12 — these are the valid picks.
+
+function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null> }) {
   const { t } = useLanguage();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const {
-    room, participants, isHost, myTeam, setTeam, addBot, removeBot,
-    startMatch, leaveRoom, loading, state, settle,
+    room, participants, pendingInvites, isHost, myTeam, setTeam,
+    setCaptain, voteCaptain, manageSeat, startMatch, leaveRoom, loading, state, settle,
   } = useTeamBattle();
   const { categories } = useCategories();
-  const gradient = getGradientById(room?.background_gradient ?? undefined);
-  // Match length: total board tiles (each tile is one team's turn). The
-  // engine wants an even count between max(6, 2×team size) and 12; the
-  // context clamps whatever is picked into that window.
-  const [boardSize, setBoardSize] = useState(8);
+  const { openProfile } = usePlayerProfile();
+  const [inviteOpen, setInviteOpen] = useState(false);
+  /**
+   * The friends reel opens off a + seat rather than living under the header.
+   *
+   * The arena's empty seats are already the invitation, and a permanent row
+   * of faces above them was both a second way in and a permanent bite out of
+   * a screen that has to fit two teams, the captains and the CTA. Pressing a
+   * + brings the reel in (remembering which team the seat belonged to), a
+   * friend there gets the real invite, and the reel's own + still opens the
+   * full invite modal.
+   */
+  const [reelOpen, setReelOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
+  const [peek, setPeek] = useState<InviteEntry | null>(null);
+  const [invitedIds, setInvitedIds] = useState<Set<string>>(new Set());
+  const [captainInfo, setCaptainInfo] = useState<TBTeam | null>(null);
+  const [renameOpen, setRenameOpen] = useState(false);
+  const [nameDraft, setNameDraft] = useState("");
+  const nameAttempted = useRef(false);
+  const [rollFace, setRollFace] = useState<{ [k in TBTeam]?: TBParticipant }>({});
+  const rollTimers = useRef<{ [k in TBTeam]?: number }>({});
+  const [params, setParams] = useSearchParams();
+
+  // Keep the room's code in the URL: refresh, share, and the round-start
+  // watcher all address this exact room by it.
+  useEffect(() => {
+    if (room && params.get("code") !== room.room_code) {
+      setParams({ code: room.room_code }, { replace: true });
+    }
+  }, [room, params, setParams]);
 
   // A finished match parks the room back at "waiting" with a done state row;
   // the settle claim is idempotent, so any device landing here fires it.
@@ -159,208 +242,650 @@ function TBLobby() {
     if (state?.phase === "done" && !state.settled) void settle();
   }, [state?.phase, state?.settled, settle]);
 
-  // The app's Invite Friends screen — see KingPage's lobby for the pattern.
-  const [showInvite, setShowInvite] = useState(false);
-
-  // An unanswered invite is a reserved seat, not a player. The server start
-  // gate counts joined/ready/playing only, so the client gate must too — an
-  // invited friend who has not arrived must not hold the whole room hostage.
-  const arrived = participants.filter(
-    (p) => p.status !== "invited" && p.status !== "disconnected",
-  );
-  const pendingInvites = participants.filter((p) => p.status === "invited").length;
-  const teamOf = (team: TBTeam) => arrived.filter((p) => p.team === team);
+  const teamOf = (team: TBTeam) => participants.filter((p) => p.team === team);
+  const teamA = teamOf("a");
+  const teamB = teamOf("b");
   const teamsEqual =
-    teamOf("a").length > 0 &&
-    teamOf("a").length === teamOf("b").length &&
-    arrived.every((p) => p.team);
-
-  const copyCode = () => {
-    void navigator.clipboard?.writeText(room?.room_code ?? "");
-    toast.success(t("teamBattle.codeCopied"));
-  };
-
+    teamA.length > 0 && teamA.length === teamB.length && participants.every((p) => p.team);
+  // Nobody picks a duration any more: a battle is two rounds per seated
+  // player, so everyone gets at least two spotlight turns. Server cap 20
+  // (20260921210000) fits the lounge's ten seats.
+  const rounds = Math.min(20, Math.max(4, 2 * (teamA.length + teamB.length)));
+  // The match pool: every seat stakes 50 coins a round, AI players
+  // included. Each winning human collects their 50/round share at settle;
+  // a bot's share simply goes uncollected.
+  const potValue = 50 * rounds * Math.max(1, teamA.length, teamB.length);
 
   const start = () => {
-    // Party categories (Most Likely To) carry vote prompts, not trivia — a
-    // tile drawn from one would come back empty and burn a refetch walk.
-    const usable = excludePartyCategories(categories).filter(
-      (c) => c.tier === "free" || c.tier === "standard",
-    );
-    void startMatch(usable.map((c) => ({ uuid: c.uuid, name: c.name })), boardSize);
+    const usable = categories.filter((c) => c.tier === "free" || c.tier === "standard");
+    void startMatch(usable.map((c) => ({ uuid: c.uuid, name: c.name })), rounds);
   };
+
+  // The team the last-pressed + seat belonged to: peek invites carry it
+  // directly, and a modal invite gets moved onto it right after it lands
+  // (the modal itself cannot write a team).
+  const inviteTeamRef = useRef<TBTeam | null>(null);
+
+  // The peek's Invite button sends the real room invite — the same
+  // invited-participant row the invite modal writes, whose DB trigger
+  // delivers the notification. The invitee holds the tapped seat greyed
+  // until they accept.
+  // A team needs a name — same AI namer the King lounge and the classic
+  // create screen use. The host's device asks once for an unnamed room;
+  // everyone picks it up off the tb-room realtime channel.
+  useEffect(() => {
+    if (!room || room.room_name || nameAttempted.current) return;
+    if (!isHost) return;
+    nameAttempted.current = true;
+    const roomId = room.id;
+    void supabase.functions
+      .invoke("generate-room-name", { body: { language: readAppLanguage() } })
+      .then(async ({ data }) => {
+        const name = ((data?.name as string) || "")
+          .replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1F000}-\u{1F02F}]|[\u{1F0A0}-\u{1F0FF}]|[\u{1F100}-\u{1F64F}]|[\u{1F680}-\u{1F6FF}]|[\u{1FA00}-\u{1FAFF}]/gu, "")
+          .trim();
+        if (!name) return;
+        await supabase.from("game_rooms").update({ room_name: name }).eq("id", roomId);
+      });
+  }, [room, isHost]);
+
+  const saveTeamName = async () => {
+    const name = nameDraft.trim();
+    if (!room || !name) return;
+    if (containsBlockedText(name)) {
+      toast.error(t("extra.textNotAllowed"));
+      return;
+    }
+    setRenameOpen(false);
+    const { error } = await supabase.from("game_rooms").update({ room_name: name }).eq("id", room.id);
+    if (error) toast.error(error.message);
+  };
+
+  const inviteToGame = async (entry: InviteEntry) => {
+    if (!room) return;
+    const { data: existing } = await supabase
+      .from("room_participants")
+      .select("id")
+      .eq("room_id", room.id)
+      .eq("user_id", entry.id)
+      .maybeSingle();
+    if (existing) {
+      setInvitedIds((prev) => new Set([...prev, entry.id]));
+      return;
+    }
+    const { error } = await supabase.from("room_participants").insert({
+      room_id: room.id,
+      user_id: entry.id,
+      status: "invited",
+      nickname: entry.nickname,
+      avatar_url: entry.avatarUrl,
+      is_host: false,
+      ...(inviteTeamRef.current ? { team: inviteTeamRef.current } : {}),
+    });
+    if (error) {
+      console.error("[TB] invite failed", error);
+      toast.error(t("extra.inviteFailed"));
+      return;
+    }
+    setInvitedIds((prev) => new Set([...prev, entry.id]));
+    toast.success(t("extra.inviteSent"));
+  };
+
+  // Friends and room members picked on the create screen: seat them as
+  // invited the moment this lobby opens, and notify them.
+  const { sendInvitation } = useGameInvitations();
+  const inviteToGameRef = useRef(inviteToGame);
+  inviteToGameRef.current = inviteToGame;
+  useEffect(() => {
+    const list = handoff?.current;
+    if (!room || !list || list.length === 0) return;
+    handoff.current = null;
+    void (async () => {
+      for (const person of list) {
+        await inviteToGameRef.current({
+          id: person.id,
+          nickname: person.nickname,
+          avatarUrl: person.avatarUrl,
+          online: false,
+        });
+        await sendInvitation(person.id, room.id);
+      }
+    })();
+  }, [room, handoff, sendInvitation]);
+
+  // Modal invites land teamless; when the modal was launched from a + seat,
+  // park every teamless invite on that seat's team — the modal sends them
+  // as a batch now, not one per opening.
+  const assignPendingTeam = async () => {
+    const team = inviteTeamRef.current;
+    if (!team || !room) return;
+    const { data } = await supabase
+      .from("room_participants")
+      .select("user_id")
+      .eq("room_id", room.id)
+      .eq("status", "invited")
+      .is("team", null);
+    for (const row of data ?? []) {
+      await manageSeat(row.user_id, team === "a" ? "move_a" : "move_b");
+    }
+  };
+
+  // A + seat invites a friend onto that team — no AI players here, these
+  // lounges are for people. The invite modal opens with the team remembered
+  // so an accepted friend lands on the right side.
+  const seatAction = (team: TBTeam) => {
+    inviteTeamRef.current = team;
+    setReelOpen((v) => !v);
+  };
+
+  // Hold a seat to manage it: the host moves anyone between teams or
+  // removes them (pending invites and bots included); a player can switch
+  // their own team.
+  const [seatMenu, setSeatMenu] = useState<{ p: TBParticipant; pending: boolean } | null>(null);
+  type TBParticipant = (typeof participants)[number];
+
+  const seatMenuActions = (p: TBParticipant): SeatMenuAction[] => {
+    const actions: SeatMenuAction[] = [];
+    if (isHost) {
+      if (p.team !== "a")
+        actions.push({
+          label: t("lobby.moveTo", { team: t("teamBattle.teamA") }),
+          onPress: () => void manageSeat(p.user_id, "move_a"),
+        });
+      if (p.team !== "b")
+        actions.push({
+          label: t("lobby.moveTo", { team: t("teamBattle.teamB") }),
+          onPress: () => void manageSeat(p.user_id, "move_b"),
+        });
+      if (p.user_id !== user?.id)
+        actions.push({
+          label: t("lobby.removeSeat"),
+          destructive: true,
+          onPress: () => void manageSeat(p.user_id, "remove"),
+        });
+    } else if (p.user_id === user?.id) {
+      actions.push({
+        label: t("lobby.switchTeam"),
+        onPress: () => void setTeam(p.team === "a" ? "b" : "a"),
+      });
+    }
+    return actions;
+  };
+
+  // A seat tap opens the player IN PLACE — the profile modal over the
+  // lobby, not a route change. Navigating to /profile/:id from here left
+  // the couch behind, and its close-reopen bug stranded players on the
+  // profile screen. Pending invites are tappable too: the host gets the
+  // seat menu (move or withdraw the invite), everyone else sees who was
+  // invited.
+  const seatTap = (p: TBParticipant, pending: boolean) => {
+    if (p.is_bot) {
+      if (isHost) setSeatMenu({ p, pending });
+      return;
+    }
+    if (pending && isHost) {
+      setSeatMenu({ p, pending });
+      return;
+    }
+    openProfile(p.user_id);
+  };
+  const seatHold = (p: TBParticipant, pending: boolean) => {
+    if (seatMenuActions(p).length > 0) setSeatMenu({ p, pending });
+  };
+
+  // Teamless pending invites still occupy a seat — the emptier side.
+  const pendingA = pendingInvites.filter((p) => p.team === "a");
+  const pendingB = pendingInvites.filter((p) => p.team === "b");
+  pendingInvites
+    .filter((p) => !p.team)
+    .forEach((p) => {
+      (teamA.length + pendingA.length <= teamB.length + pendingB.length ? pendingA : pendingB).push(p);
+    });
+
+  const renderTeamSeats = (
+    team: TBTeam,
+    slots: [number, number][],
+    podium: [number, number],
+  ) => {
+    const entries = [
+      ...teamOf(team).map((p) => ({ p, pending: false })),
+      ...(team === "a" ? pendingA : pendingB).map((p) => ({ p, pending: true })),
+    ];
+    const ring = team === "a" ? ("blue" as const) : ("red" as const);
+    const all: [number, number][] = [...slots, podium];
+    return (
+      <AnimatePresence>
+        {all.map(([left, top], i) => {
+          const entry = entries[i];
+          return entry ? (
+            <Seat
+              key={`${team}-${entry.p.user_id}`}
+              left={left}
+              top={top - 305}
+              avatarUrl={entry.p.avatar_url}
+              nickname={entry.p.nickname}
+              ring={ring}
+              pending={entry.pending}
+              crown={
+                !entry.pending &&
+                entry.p.user_id === (team === "a" ? captainA : captainB)?.user_id
+              }
+              onClick={() => seatTap(entry.p, entry.pending)}
+              onLongPress={() => seatHold(entry.p, entry.pending)}
+              // Hold-and-drag reseats: the host drags anyone (pending
+              // invites and bots too), a player drags themselves. A pull
+              // far enough toward the other side of the arena moves them —
+              // the seat snaps back and the roster update reseats for real.
+              draggable={isHost || (!entry.pending && entry.p.user_id === user?.id)}
+              onDragMoved={(dx) => {
+                const toOther = team === "a" ? dx > 70 : dx < -70;
+                if (!toOther) return;
+                const target: TBTeam = team === "a" ? "b" : "a";
+                if (!entry.pending && entry.p.user_id === user?.id) {
+                  void setTeam(target);
+                } else if (isHost) {
+                  void manageSeat(entry.p.user_id, target === "a" ? "move_a" : "move_b");
+                }
+              }}
+            />
+          ) : (
+            <PlusSeat key={`plus-${team}-${i}`} left={left} top={top - 305} onClick={() => seatAction(team)} />
+          );
+        })}
+      </AnimatePresence>
+    );
+  };
+
+  // The named captain (tb_set_captain), falling back to the first human so
+  // the pill is never empty on a filled team.
+  const captainOf = (members: typeof participants) =>
+    members.find((p) => p.is_captain) ?? members.find((p) => !p.is_bot) ?? members[0];
+  const captainA = captainOf(teamA);
+  const captainB = captainOf(teamB);
+
+  // An all-AI team can't elect anyone — the host's device rolls the crown
+  // like a slot reel: the chip flips through the bots' faces, lands on one,
+  // and commits it with tb_set_captain. A sentinel (-1) marks a team already
+  // rolled so a failed RPC doesn't loop; it clears once the team changes.
+  useEffect(() => {
+    (["a", "b"] as TBTeam[]).forEach((team) => {
+      const members = participants.filter((p) => p.team === team);
+      const allBots = members.length > 0 && members.every((p) => p.is_bot);
+      const hasCaptain = members.some((p) => p.is_captain);
+      if (!isHost || !allBots || hasCaptain) {
+        if (rollTimers.current[team] === -1) rollTimers.current[team] = undefined;
+        return;
+      }
+      if (rollTimers.current[team] !== undefined) return;
+      const winner = members[Math.floor(Math.random() * members.length)];
+      let tick = 0;
+      const id = window.setInterval(() => {
+        tick += 1;
+        if (tick >= 14) {
+          window.clearInterval(id);
+          rollTimers.current[team] = -1;
+          setRollFace((prev) => ({ ...prev, [team]: undefined }));
+          void setCaptain(winner.user_id);
+        } else {
+          setRollFace((prev) => ({ ...prev, [team]: members[tick % members.length] }));
+        }
+      }, 100);
+      rollTimers.current[team] = id;
+    });
+  }, [participants, isHost, setCaptain]);
+
+  useEffect(() => {
+    const timers = rollTimers.current;
+    return () => {
+      (["a", "b"] as TBTeam[]).forEach((team) => {
+        const id = timers[team];
+        if (id !== undefined && id !== -1) window.clearInterval(id);
+      });
+    };
+  }, []);
 
   return (
     <div
-      className="h-[100dvh] w-full flex flex-col overflow-hidden safe-bleed"
-      style={{ background: gradient?.gradient ?? "#7E7ADB" }}
+      className="h-[100dvh] w-full overflow-hidden safe-bleed flex flex-col"
+      style={{ background: LILAC_BG }}
     >
-      <div className="w-full flex-1 min-h-0 flex flex-col max-w-[520px] mx-auto">
-        <div className="flex items-center justify-between px-5 pt-[calc(var(--safe-top)_+_0.75rem)] pb-3">
-          <h1
-            className="text-2xl font-black text-white flex items-center gap-2"
-            style={{ fontFamily: "'TASolivare', sans-serif" }}
+      <LilacHeader
+        title={t("teamBattle.title")}
+        icon={iconBattleCrate}
+        onBack={() => {
+          // Navigate away first so the gate never re-creates a room the
+          // instant this one clears.
+          navigate("/");
+          void leaveRoom();
+        }}
+        onHelp={() => setHelpOpen((v) => !v)}
+      />
+
+      {/* the same friends reel the home page uses — identical sizes/fonts,
+          but only once a + seat has asked for it */}
+      <AnimatePresence initial={false}>
+        {reelOpen && (
+          <motion.div
+            key="reel"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 340, damping: 34 }}
+            className="relative z-10 w-full shrink-0 overflow-hidden"
+            style={{ transform: "translateZ(0)" }}
           >
-            <Swords className="w-5 h-5" /> {t("teamBattle.title")}
-          </h1>
-          <button onClick={() => void leaveRoom()} className="text-white/60 text-xs font-bold">
-            {t("teamBattle.leave")}
-          </button>
-        </div>
-
-        <div className="flex-1 min-h-0 overflow-y-auto px-5 flex flex-col gap-4">
-          <div className="grid grid-cols-[1fr_auto] gap-3">
-            <button
-              onClick={copyCode}
-              className="rounded-2xl bg-white/10 backdrop-blur-sm border border-white/[0.12] p-4 flex items-center justify-between"
-            >
-              <div className="text-left">
-                <p className="text-[11px] text-white/60 font-semibold uppercase tracking-wide">
-                  {t("teamBattle.shareCode")}
-                </p>
-                <p className="font-mono text-2xl font-bold tracking-[0.3em] text-white">
-                  {room?.room_code}
-                </p>
-              </div>
-              <Copy className="w-5 h-5 text-white/60 ml-3" />
-            </button>
-            <button
-              onClick={() => setShowInvite(true)}
-              aria-label={t("teamBattle.invite")}
-              className="rounded-2xl bg-white/10 backdrop-blur-sm border border-white/[0.12] px-5 flex flex-col items-center justify-center gap-1"
-            >
-              <Share2 className="w-5 h-5 text-white" />
-              <span className="text-[11px] text-white/70 font-semibold">{t("teamBattle.invite")}</span>
-            </button>
-          </div>
-
-          {isHost && (
-            <div>
-              <p className="text-[11px] text-white/60 font-semibold uppercase tracking-wide mb-2">
-                {t("teamBattle.duration")}
-              </p>
-              <div className="grid grid-cols-3 gap-2">
-                {[6, 8, 12].map((n) => (
-                  <button
-                    key={n}
-                    onClick={() => setBoardSize(n)}
-                    className="rounded-xl py-2.5 text-sm font-bold transition-colors"
-                    style={{
-                      background: boardSize === n ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.1)",
-                      color: boardSize === n ? "#402666" : "rgba(255,255,255,0.75)",
-                      border: "1px solid rgba(255,255,255,0.15)",
-                    }}
-                  >
-                    {t("teamBattle.roundsN", { n })}
-                  </button>
-                ))}
-              </div>
+            <div className="px-4">
+              <FriendsStoriesBar
+                onAddFriendClick={() => setInviteOpen(true)}
+                onFriendClick={(f) =>
+                  setPeek({ id: f.friendId, nickname: f.nickname, avatarUrl: f.avatarUrl, online: !!f.isOnline })
+                }
+              />
             </div>
-          )}
-
-          <div className="grid grid-cols-2 gap-3">
-            {(["a", "b"] as TBTeam[]).map((team) => (
-              <div
-                key={team}
-                className="rounded-2xl bg-white/10 backdrop-blur-sm p-3 min-h-[190px] flex flex-col"
-                style={{
-                  border: myTeam === team ? "1.5px solid rgba(255,255,255,0.55)" : "1px solid rgba(255,255,255,0.12)",
-                }}
-              >
-                <p className="font-bold text-sm text-white mb-2">
-                  {teamLabelText(t, team)}
-                  <span className="text-white/50 font-normal"> · {teamOf(team).length}</span>
-                </p>
-                <div className="flex flex-col gap-2 flex-1">
-                  {teamOf(team).map((p) => (
-                    <div key={p.user_id} className="flex items-center gap-2 rounded-xl px-1 py-0.5">
-                      {p.is_bot ? (
-                        <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-                          <Bot className="w-4 h-4 text-white" />
-                        </div>
-                      ) : (
-                        <SmartAvatar avatarUrl={p.avatar_url} fallback={p.nickname} size="xs" />
-                      )}
-                      <span className="text-sm text-white truncate">
-                        {p.nickname}
-                        {p.user_id === user?.id ? ` (${t("teamBattle.you")})` : ""}
-                      </span>
-                      {p.is_host && <Crown className="w-3.5 h-3.5 text-amber-400 fill-amber-400 shrink-0" />}
-                      {p.is_bot && isHost && (
-                        <button
-                          onClick={() => void removeBot(p.user_id)}
-                          aria-label={t("common.close")}
-                          className="ml-auto text-white/40 hover:text-white"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-                <div className="flex items-center gap-3 mt-2">
-                  {myTeam !== team && (
-                    <button
-                      onClick={() => void setTeam(team)}
-                      className="text-xs font-bold text-[#83F7DA]"
-                    >
-                      {t("teamBattle.joinTeam")}
-                    </button>
-                  )}
-                  {isHost && teamOf(team).length < 5 && (
-                    <button
-                      onClick={() => void addBot(team)}
-                      className="text-xs font-bold text-white/60 flex items-center gap-1"
-                    >
-                      <Plus className="w-3 h-3" />
-                      <Bot className="w-3.5 h-3.5" />
-                      {t("teamBattle.addBot")}
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {pendingInvites > 0 && (
-            <p className="text-center text-xs text-white/60">
-              {t("teamBattle.invitedPendingCount", { n: pendingInvites })}
-            </p>
-          )}
-          {!teamsEqual && isHost && (
-            <p className="text-center text-xs text-white/60">{t("teamBattle.needEqualTeams")}</p>
-          )}
-          {!isHost && (
-            <p className="text-center text-sm text-white/60">{t("teamBattle.waitingHost")}</p>
-          )}
-        </div>
-
-        {isHost && (
-          <div
-            className="px-5 pt-4 pb-[calc(1.25rem_+_var(--safe-bottom))] bg-gradient-to-t from-black/50 via-black/20 to-transparent"
-          >
-            <ChunkyButton
-              variant="white"
-              size="xl"
-              className="w-full"
-              disabled={!teamsEqual || loading}
-              onClick={start}
-            >
-              {loading ? t("teamBattle.starting") : t("teamBattle.start")}
-            </ChunkyButton>
-          </div>
+          </motion.div>
         )}
+      </AnimatePresence>
+
+      <div className="w-full max-w-[468px] mx-auto shrink-0 border-t border-[#523b76]/[0.08]" />
+
+      {/* The match length, stated rather than picked: rounds follow the
+          couch (two per player) so it updates live as seats fill. */}
+      <div className="relative z-10 w-full max-w-[500px] mx-auto shrink-0 px-4 pt-2">
+        <p className="text-center font-[Nunito] font-black text-[16px] leading-[24px] text-[#334155] tracking-[-0.16px]">
+          {t("lobby.roundsN", { n: rounds })}
+        </p>
+        <p className="pt-[2px] font-[Nunito] font-normal leading-[20px] text-[#0c172c]/70 text-[13px] text-center tracking-[-0.16px]">
+          {t("lobby.autoRounds")}
+        </p>
       </div>
 
-      <InviteFriendsModal
-        isOpen={showInvite}
-        onClose={() => setShowInvite(false)}
-        roomId={room?.id}
-        roomCode={room?.room_code}
+      {/* Not clipped: the arena scene is drawn 139 design-units above this
+          box on purpose, and overflow-hidden cut it off exactly under the
+          rounds caption — a hard horizontal edge with flat lilac above it and
+          the scene below, with the room-name pill straddling the join. The
+          scene's own radial fade is only ~64% lilac at that line, which is
+          why the seam showed. Uncovered, the faded top runs up behind the
+          caption instead; the caption and the friends strip both carry z-10,
+          so they stay above it, and the page root still clips the screen. */}
+      <div className="flex-1 min-h-0">
+      <FitBox width={500} height={525} align="start">
+        {/* arena scene (938:6267) + edge fade */}
+        <div className="absolute left-[32px] top-[-139px] w-[435px] h-[780px] pointer-events-none">
+          <img alt="" className="absolute inset-0 max-w-none object-cover size-full" src={sceneArena} />
+          <div className="absolute inset-0" style={{ backgroundImage: ARENA_FADE }} />
+        </div>
+
+        {/* the pot (943:21933) — the winning team's real take: 50 coins a
+            round to every winning human (tb_settle, 20260921130000) */}
+        <AnimatedCoinPill left={158} top={192} width={190} value={potValue} />
+
+        {renderTeamSeats("a", TEAM_A_SLOTS, PODIUM_A)}
+        {renderTeamSeats("b", TEAM_B_SLOTS, PODIUM_B)}
+
+        {/* Team names row (943:21929) — and, between them, the room's own
+            name. It used to sit at the top of the scene, where it read as a
+            second header under the real one; here it belongs to the match it
+            names, one row above the captains. The three share a flex row
+            rather than being centred on top of each other, so a long team
+            name in Italian pushes the pill narrower instead of colliding
+            with it. AI-dealt on first open, host taps to rename. */}
+        <div className="absolute left-[26px] top-[404px] h-[40px] w-[441px] flex items-center justify-between gap-2">
+          <div className="flex gap-[10px] items-center shrink-0">
+            <img alt="" className="size-[36px] -scale-y-100 rotate-180 object-contain" src={teamPenguins} />
+            <p className="font-[Nunito] font-black leading-[24px] text-[#0c172c] text-[18px] tracking-[-0.16px] whitespace-nowrap">
+              {t("teamBattle.teamA")}
+            </p>
+          </div>
+          <motion.button
+            whileTap={{ scale: 0.95, y: 2 }}
+            transition={{ type: "spring", stiffness: 520, damping: 28 }}
+            onClick={
+              isHost
+                ? () => {
+                    setNameDraft(room?.room_name ?? "");
+                    setRenameOpen(true);
+                  }
+                : undefined
+            }
+            className="min-w-0 inline-flex items-center gap-2 max-w-[220px] h-[40px] px-4 rounded-[16px] bg-white/70 border border-[#e8e0f5] shadow-[0px_2.5px_0px_0px_#d8d0e8]"
+          >
+            <span
+              className="text-[18px] leading-[1.5] text-[#523b76] whitespace-nowrap overflow-hidden text-ellipsis"
+              style={{ fontFamily: "'TASolivare', sans-serif" }}
+            >
+              {room?.room_name || t("lobby.teamName")}
+            </span>
+            {isHost && <Pencil className="w-3.5 h-3.5 shrink-0 text-[#523b76]/50" />}
+          </motion.button>
+          <div className="flex gap-[10px] items-center shrink-0">
+            <p className="font-[Nunito] font-extrabold leading-[24px] text-[#0c172c] text-[18px] text-right tracking-[-0.16px] whitespace-nowrap">
+              {t("teamBattle.teamB")}
+            </p>
+            <img alt="" className="size-[36px] -scale-y-100 rotate-180 object-contain" src={teamFormula} />
+          </div>
+        </div>
+
+        {/* captains + VS (940:7751 / 936:21185 / 940:7825). The VS is drawn
+            FIRST on purpose: these are absolutely positioned siblings, so
+            they paint in DOM order, and between the two chips it landed on
+            top of the left captain's name. Behind them it stays decoration. */}
+        <p
+          className="absolute left-0 top-[469px] w-full text-[77px] leading-[43px] text-center not-italic text-[#f5d9ff]"
+          style={{ fontFamily: "'Slackey', 'TASolivare', cursive", textShadow: "0px 4px 4px #c7bccc" }}
+        >
+          VS
+        </p>
+        <TBCaptainChip
+          left={37}
+          accent="#e7ba87"
+          name={(rollFace.a ?? captainA)?.nickname}
+          avatarUrl={(rollFace.a ?? captainA)?.avatar_url}
+          rolling={!!rollFace.a}
+          onClick={() => setCaptainInfo("a")}
+        />
+        <TBCaptainChip
+          right={33}
+          accent="#ed6149"
+          name={(rollFace.b ?? captainB)?.nickname}
+          avatarUrl={(rollFace.b ?? captainB)?.avatar_url}
+          rolling={!!rollFace.b}
+          onClick={() => setCaptainInfo("b")}
+        />
+
+        {helpOpen && (
+          <div
+            className="absolute left-[32px] top-[20px] w-[435px] rounded-[24px] p-5 bg-white/95 border border-[#e8e0f5] z-10 shadow-[0px_8px_24px_0px_rgba(102,51,153,0.18)]"
+            onClick={() => setHelpOpen(false)}
+          >
+            <p className="font-bold text-[#402666] mb-1">{t("teamBattle.title")}</p>
+            <p className="text-sm text-[#402666]/70 leading-relaxed">{t("lobby.tbRules")}</p>
+          </div>
+        )}
+      </FitBox>
+      </div>
+
+      {isHost ? (
+        <StartButton
+          label={loading ? t("teamBattle.starting") : t("lobby.startGame")}
+          onClick={start}
+          disabled={!teamsEqual || loading}
+        />
+      ) : (
+        <p className="w-full max-w-[500px] mx-auto shrink-0 px-[24px] pt-[14px] pb-[20px] text-center font-[Nunito] font-semibold text-[15px] text-[#523b76]/70">
+          {t("teamBattle.waitingHost")}
+        </p>
+      )}
+
+      {room && (
+        <InviteFriendsModal
+          isOpen={inviteOpen}
+          onClose={() => {
+            setInviteOpen(false);
+            inviteTeamRef.current = null;
+          }}
+          inviteLink={`https://mytrivia.io/team-battle?code=${room.room_code}`}
+          roomId={room.id}
+          roomCode={room.room_code}
+          onInviteSuccess={() => void assignPendingTeam()}
+        />
+      )}
+
+      <SeatMenu
+        target={seatMenu ? { nickname: seatMenu.p.nickname, avatarUrl: seatMenu.p.avatar_url } : null}
+        onClose={() => setSeatMenu(null)}
+        actions={seatMenu ? seatMenuActions(seatMenu.p) : []}
+      />
+
+      {/* host renames the team — small white sheet over the lilac wash */}
+      {renameOpen && (
+        <div
+          className="fixed inset-0 z-[130] flex items-center justify-center px-8 backdrop-blur-[10px] bg-[rgba(245,217,255,0.6)]"
+          onClick={() => setRenameOpen(false)}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 14 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 420, damping: 28 }}
+            className="w-full max-w-[320px] rounded-[24px] bg-white/95 border border-[#e8e0f5] p-5 flex flex-col gap-3 shadow-[0px_8px_24px_0px_rgba(102,51,153,0.18)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-[19px] text-[#523b76] text-center" style={{ fontFamily: "'TASolivare', sans-serif" }}>
+              {t("lobby.teamName")}
+            </p>
+            <input
+              value={nameDraft}
+              onChange={(e) => setNameDraft(e.target.value)}
+              maxLength={40}
+              autoFocus
+              className="w-full h-[46px] rounded-[16px] border border-[#e8e0f5] bg-[#f8f5ff] px-4 font-[Nunito] font-semibold text-[15px] text-[#402666] outline-none focus:border-[#b99ce2]"
+            />
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              onClick={() => void saveTeamName()}
+              disabled={!nameDraft.trim()}
+              className="w-full h-[46px] rounded-[16px] bg-[#8858d5] text-white font-[Nunito] font-bold text-[15px] disabled:opacity-50"
+            >
+              {t("common.save")}
+            </motion.button>
+            <button
+              onClick={() => setRenameOpen(false)}
+              className="font-[Nunito] text-sm font-semibold text-[#523b76]/50"
+            >
+              {t("common.cancel")}
+            </button>
+          </motion.div>
+        </div>
+      )}
+
+      <CaptainInfoModal
+        open={captainInfo !== null}
+        onClose={() => setCaptainInfo(null)}
+        title={t("lobby.captainInfoTitle")}
+        body={t("lobby.captainInfoBody")}
+        chooseLabel={myTeam === captainInfo ? t("lobby.chooseCaptain") : undefined}
+        members={
+          captainInfo
+            ? teamOf(captainInfo).map((p) => ({
+                userId: p.user_id,
+                nickname: p.nickname,
+                avatarUrl: p.avatar_url,
+                isCaptain:
+                  p.user_id === (captainInfo === "a" ? captainA : captainB)?.user_id,
+                // Live tally: how many human teammates back this member
+                votes: teamOf(captainInfo).filter(
+                  (voter) => !voter.is_bot && voter.captain_vote === p.user_id,
+                ).length,
+                // Only humans can wear the armband; only teammates vote
+                selectable: !p.is_bot,
+              }))
+            : []
+        }
+        onChoose={myTeam === captainInfo ? (userId) => void voteCaptain(userId) : undefined}
+      />
+
+      <FriendPeek
+        friend={peek}
+        onClose={() => setPeek(null)}
+        actionLabel={t("lobby.inviteToGame")}
+        invitedLabel={t("lobby.invitedState")}
+        invited={
+          !!peek &&
+          (invitedIds.has(peek.id) || participants.some((p) => p.user_id === peek.id))
+        }
+        onAction={() => peek && void inviteToGame(peek)}
       />
     </div>
   );
 }
 
-const teamLabelText = (t: (k: string) => string, team: TBTeam) =>
-  team === "a" ? t("teamBattle.teamA") : t("teamBattle.teamB");
+// The TB captain pill (940:7751): name on the left, round avatar docked
+// right. Hugs its content — a short name makes a short pill. While an
+// all-AI team's crown is being rolled, each face drops through like a slot
+// reel; the settled captain's avatar wears the crown.
+function TBCaptainChip({
+  left,
+  right,
+  accent,
+  name,
+  avatarUrl,
+  rolling,
+  onClick,
+}: {
+  left?: number;
+  right?: number;
+  accent: string;
+  name?: string;
+  avatarUrl?: string | null;
+  rolling?: boolean;
+  onClick?: () => void;
+}) {
+  return (
+    <motion.button
+      onClick={onClick}
+      whileTap={{ scale: 0.95, y: 3 }}
+      transition={{ type: "spring", stiffness: 520, damping: 28 }}
+      className="absolute h-[50px] inline-flex items-center max-w-[180px] rounded-[16.85px] border-[1.153px] border-solid shadow-[0px_3.389px_0px_0px_#d8d0e8,0px_5.083px_13.556px_0px_rgba(0,0,0,0.1)]"
+      style={{
+        left,
+        right,
+        top: 453,
+        borderColor: accent,
+        background: "linear-gradient(to bottom, rgba(255,255,255,0.5), rgba(254,254,254,0.5))",
+      }}
+    >
+      <motion.div
+        key={name ?? "-"}
+        initial={rolling ? { y: -16, opacity: 0 } : false}
+        animate={{ y: 0, opacity: 1 }}
+        transition={
+          rolling
+            ? { duration: 0.09, ease: "easeOut" }
+            : { type: "spring", stiffness: 480, damping: 22 }
+        }
+        className="flex items-center gap-[8px] pl-[14px] pr-[8px] min-w-0"
+      >
+        {/* An unclaimed armband invites the tap outright; a worn one still
+            shows the little pencil so changing captain is discoverable. */}
+        <p className="font-[Nunito] font-black leading-[28.974px] text-[#334155] text-[16px] tracking-[-0.1686px] whitespace-nowrap overflow-hidden text-ellipsis">
+          {name ?? "—"}
+        </p>
+        <Pencil className="w-3 h-3 shrink-0 text-[#523b76]/45" />
+        <div className="relative shrink-0 size-[33px]">
+          <div className="absolute inset-0 rounded-[9999px] overflow-clip bg-[rgba(192,192,192,0.24)]">
+            {avatarUrl && (
+              <img alt="" className="absolute inset-0 max-w-none object-cover size-full rounded-[9999px]" src={avatarUrl} />
+            )}
+          </div>
+          {!rolling && !!name && (
+            <img
+              alt=""
+              src={crownIcon}
+              className="pointer-events-none absolute -top-[8px] left-[8px] w-[17px] object-contain drop-shadow -rotate-12"
+            />
+          )}
+        </div>
+      </motion.div>
+      <div className="absolute inset-0 pointer-events-none rounded-[inherit] shadow-[inset_0px_1.695px_0px_0px_white]" />
+    </motion.button>
+  );
+}

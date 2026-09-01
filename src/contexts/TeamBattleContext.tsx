@@ -25,6 +25,7 @@ import { t as tStandalone } from "@/utils/standaloneTranslation";
 import { getQuestions } from "@/services/questionService";
 import { shuffleArray } from "@/utils/shuffle";
 import { getRandomGradient } from "@/config/roomGradients";
+import { botAvatarFor, resolveAvatarUrl } from "@/utils/avatarUtils";
 
 export type TBPhase = "rps" | "board" | "rapid_fire" | "super_vote" | "super_round" | "done";
 export type TBTeam = "a" | "b";
@@ -37,6 +38,7 @@ export interface TBQuestion {
   image_url?: string | null;
   video_url?: string | null;
   audio_url?: string | null;
+  icon_slug?: string | null;
 }
 
 export type TBRoom = Tables<"game_rooms">;
@@ -44,9 +46,17 @@ export type TBParticipant = Tables<"room_participants">;
 export type TBTile = Tables<"team_battle_board">;
 export type TBState = Tables<"team_battle_state">;
 
+/** One answered rapid-fire question, broadcast live so the room spectates. */
+export interface TBPick {
+  index: number;
+  option: string;
+  correct: boolean;
+}
+
 interface TeamBattleContextValue {
   room: TBRoom | null;
   participants: TBParticipant[];
+  pendingInvites: TBParticipant[];
   tiles: TBTile[];
   state: TBState | null;
   loading: boolean;
@@ -59,11 +69,20 @@ interface TeamBattleContextValue {
   leaveRoom: () => Promise<void>;
   setTeam: (team: TBTeam) => Promise<void>;
   addBot: (team: TBTeam) => Promise<void>;
+  setCaptain: (userId: string) => Promise<void>;
+  voteCaptain: (candidateId: string) => Promise<void>;
+  manageSeat: (userId: string, action: "remove" | "move_a" | "move_b") => Promise<void>;
   removeBot: (botId: string) => Promise<void>;
-  startMatch: (categories: { uuid: string; name: string }[], tileCount?: number) => Promise<boolean>;
+  startMatch: (
+    categories: { uuid: string; name: string }[],
+    preferredTiles?: number,
+  ) => Promise<boolean>;
   submitRps: (gesture: TBGesture) => Promise<void>;
   pickTile: (tileId: string) => Promise<void>;
   submitAnswer: (questionIndex: number, answer: string) => Promise<{ correct: boolean } | null>;
+  turnPicks: TBPick[];
+  sendPick: (pick: TBPick) => void;
+  playedBy: Record<string, string>;
   voteSuper: (candidate: string) => Promise<void>;
   submitSuper: (questionIndex: number, answer: string) => Promise<{ correct: boolean } | null>;
   advance: () => Promise<void>;
@@ -89,6 +108,7 @@ const asQuestions = (
     imageUrl?: string | null;
     videoUrl?: string | null;
     audioUrl?: string | null;
+    iconSlug?: string | null;
   }[],
 ): TBQuestion[] =>
   qs.map((q) => ({
@@ -98,6 +118,7 @@ const asQuestions = (
     image_url: q.imageUrl ?? null,
     video_url: q.videoUrl ?? null,
     audio_url: q.audioUrl ?? null,
+    icon_slug: q.iconSlug ?? null,
   }));
 
 export function tileQuestions(tile: TBTile | undefined): TBQuestion[] {
@@ -114,11 +135,19 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
   const { user, profile } = useAuth();
   const [room, setRoom] = useState<TBRoom | null>(null);
   const [participants, setParticipants] = useState<TBParticipant[]>([]);
+  const [pendingInvites, setPendingInvites] = useState<TBParticipant[]>([]);
   const [tiles, setTiles] = useState<TBTile[]>([]);
   const [state, setState] = useState<TBState | null>(null);
   const [loading, setLoading] = useState(false);
   const channelsRef = useRef<ReturnType<typeof supabase.channel>[]>([]);
+  const liveChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const roomIdRef = useRef<string | null>(null);
+  const seatOpsRef = useRef(0);
+  // Spectation state: the active player's answers this turn (broadcast, not
+  // stored), and which player played each claimed tile (learned from state
+  // updates as the match runs).
+  const [turnPicks, setTurnPicks] = useState<TBPick[]>([]);
+  const [playedBy, setPlayedBy] = useState<Record<string, string>>({});
 
   const me = participants.find((p) => p.user_id === user?.id) ?? null;
   const isHost = !!room && room.host_user_id === user?.id;
@@ -126,12 +155,44 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
   const isSpotlight = !!state && !!user && state.active_player === user.id;
 
   const fetchParticipants = useCallback(async (roomId: string) => {
+    // While a seat operation is in flight, a realtime-triggered refetch can
+    // read the row the host just optimistically removed (the server delete
+    // hasn't committed yet) and resurrect the seat for a frame. manageSeat
+    // refetches once the server has answered, so skipping here loses nothing.
+    if (seatOpsRef.current > 0) return;
+    // Invitees sit at status "invited" until they accept: shown greyed in
+    // their reserved seat, but kept OUT of `participants` so they never
+    // count toward the equal-teams gate or the board size. The realtime
+    // channel refetches when they join.
     const { data } = await supabase
       .from("room_participants")
       .select("*")
       .eq("room_id", roomId)
+      .in("status", ["joined", "ready", "playing", "invited"])
       .order("joined_at", { ascending: true });
-    if (data) setParticipants(data);
+    if (data) {
+      // AI players wear one of the preset bot faces, keyed by their id, so
+      // every surface shows the same face instead of an initial circle.
+      // Human rows carry avatar SNAPSHOTS taken at insert time — stale after
+      // a profile change or a redeploy of a hashed asset path — so overlay
+      // the live profile avatar (the same fix useMyRooms carries) and run
+      // the result through resolveAvatarUrl.
+      const humanIds = data.filter((p) => !p.is_bot).map((p) => p.user_id);
+      const { data: profs } = humanIds.length
+        ? await supabase.from("profiles").select("user_id, avatar_url").in("user_id", humanIds)
+        : { data: [] as { user_id: string; avatar_url: string | null }[] };
+      const fresh = new Map((profs ?? []).map((pr) => [pr.user_id, pr.avatar_url]));
+      const dressed = data.map((p) =>
+        p.is_bot && !p.avatar_url
+          ? { ...p, avatar_url: botAvatarFor(p.user_id) }
+          : {
+              ...p,
+              avatar_url: resolveAvatarUrl(fresh.get(p.user_id) ?? p.avatar_url) ?? null,
+            },
+      );
+      setParticipants(dressed.filter((p) => p.status !== "invited"));
+      setPendingInvites(dressed.filter((p) => p.status === "invited"));
+    }
   }, []);
 
   const fetchMatch = useCallback(async (roomId: string) => {
@@ -204,10 +265,46 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
         (payload) => setRoom(payload.new as TBRoom),
       )
       .subscribe();
-    channelsRef.current = [stateCh, boardCh, partCh, roomCh];
+    // The spectation feed: every answered question is broadcast here so the
+    // rest of the room watches picks land in real time. self:true means the
+    // spotlight player's own device shares the same history.
+    const liveCh = supabase
+      .channel(`tb-live-${roomId}`, { config: { broadcast: { self: true } } })
+      .on("broadcast", { event: "pick" }, ({ payload }) => {
+        const pick = payload as TBPick;
+        setTurnPicks((prev) =>
+          prev.some((p) => p.index === pick.index) ? prev : [...prev, pick],
+        );
+      })
+      .subscribe();
+    liveChannelRef.current = liveCh;
+    channelsRef.current = [stateCh, boardCh, partCh, roomCh, liveCh];
 
-    return cleanupChannels;
+    return () => {
+      liveChannelRef.current = null;
+      cleanupChannels();
+    };
   }, [room?.id, cleanupChannels, fetchMatch, fetchParticipants]);
+
+  // Each new tile starts a fresh pick history; a fresh game forgets who
+  // played what.
+  useEffect(() => {
+    setTurnPicks([]);
+  }, [state?.active_tile]);
+  useEffect(() => {
+    setTurnPicks([]);
+    setPlayedBy({});
+  }, [state?.game_id]);
+  useEffect(() => {
+    const tileId = state?.active_tile;
+    const playerId = state?.active_player;
+    if (!tileId || !playerId) return;
+    setPlayedBy((prev) => (prev[tileId] === playerId ? prev : { ...prev, [tileId]: playerId }));
+  }, [state?.active_tile, state?.active_player]);
+
+  const sendPick = useCallback((pick: TBPick) => {
+    void liveChannelRef.current?.send({ type: "broadcast", event: "pick", payload: pick });
+  }, []);
 
   const createRoom = useCallback(async (): Promise<TBRoom | null> => {
     if (!user || !profile) {
@@ -265,15 +362,41 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
     }
   }, [user, profile]);
 
+  // The lobby renders seats strictly by team, so a joined-but-teamless row
+  // is invisible — which is exactly what happened to accepted invitees:
+  // their greyed seat vanished the moment they joined. Every join therefore
+  // lands on the emptier team unless a seat was already reserved for one.
+  const pickEmptierTeam = async (roomId: string): Promise<TBTeam> => {
+    const { data } = await supabase
+      .from("room_participants")
+      .select("team")
+      .eq("room_id", roomId)
+      .in("status", ["joined", "ready", "playing", "invited"]);
+    const a = data?.filter((r) => r.team === "a").length ?? 0;
+    const b = data?.filter((r) => r.team === "b").length ?? 0;
+    return a <= b ? "a" : "b";
+  };
+
   const enterRoomRow = useCallback(
     async (row: TBRoom): Promise<boolean> => {
       if (!user || !profile) return false;
       const { data: existing } = await supabase
         .from("room_participants")
-        .select("id")
+        .select("id, status, team")
         .eq("room_id", row.id)
         .eq("user_id", user.id)
         .maybeSingle();
+      // An invite-modal invitee arrives holding an "invited" row — accepting
+      // means flipping it to joined, or they stay invisible in the lobby.
+      if (existing && existing.status === "invited") {
+        await supabase
+          .from("room_participants")
+          .update({
+            status: "joined",
+            ...(existing.team ? {} : { team: await pickEmptierTeam(row.id) }),
+          })
+          .eq("id", existing.id);
+      }
       if (!existing) {
         // A running match takes no new players — the server-side rotation
         // and vote counts ignore mid-match joiners anyway, so don't let
@@ -298,6 +421,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
           country_code: profile.country_code,
           is_host: false,
           status: "joined",
+          team: await pickEmptierTeam(row.id),
         });
         if (error) {
           console.error("[TB] join failed", error);
@@ -348,6 +472,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
     }
     setRoom(null);
     setParticipants([]);
+    setPendingInvites([]);
     setTiles([]);
     setState(null);
   }, [user]);
@@ -386,24 +511,100 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
     if (error) console.error("[TB] remove bot failed", error);
   }, []);
 
+  // Host-only: name a team's captain — on a tied match that captain plays
+  // the super round (20260921100000_tb_captains.sql).
+  const setCaptain = useCallback(async (userId: string) => {
+    const roomId = roomIdRef.current;
+    if (!roomId) return;
+    const { error } = await supabase.rpc("tb_set_captain", {
+      p_room_id: roomId,
+      p_user_id: userId,
+    });
+    if (error) {
+      console.error("[TB] set captain failed", error);
+      toast.error(error.message);
+    }
+  }, []);
+
+  // Any teammate: cast (or change) a captain vote — the server re-tallies
+  // the team and the plurality leader wears is_captain
+  // (20260921150000_tb_captain_vote.sql).
+  const voteCaptain = useCallback(
+    async (candidateId: string) => {
+      const roomId = roomIdRef.current;
+      if (!roomId) return;
+      const { error } = await supabase.rpc("tb_vote_captain", {
+        p_room_id: roomId,
+        p_candidate: candidateId,
+      });
+      if (error) {
+        console.error("[TB] captain vote failed", error);
+        toast.error(error.message);
+      } else {
+        void fetchParticipants(roomId);
+      }
+    },
+    [fetchParticipants],
+  );
+
+  // Host-only seat management (lobby_manage_seat): remove a pending invite,
+  // a bot, or a player, or move someone to a team. Optimistic — the seat
+  // changes instantly (realtime DELETE events don't reliably reach filtered
+  // channels), and a server refusal restores the truth with a toast.
+  const manageSeat = useCallback(
+    async (userId: string, action: "remove" | "move_a" | "move_b") => {
+      const roomId = roomIdRef.current;
+      if (!roomId) return;
+      seatOpsRef.current += 1;
+      if (action === "remove") {
+        setParticipants((prev) => prev.filter((p) => p.user_id !== userId));
+        setPendingInvites((prev) => prev.filter((p) => p.user_id !== userId));
+      } else {
+        const team = action === "move_a" ? "a" : "b";
+        const move = (prev: TBParticipant[]) =>
+          prev.map((p) => (p.user_id === userId ? { ...p, team, is_captain: false } : p));
+        setParticipants(move);
+        setPendingInvites(move);
+      }
+      try {
+        const { error } = await supabase.rpc("lobby_manage_seat", {
+          p_room_id: roomId,
+          p_user_id: userId,
+          p_action: action,
+        });
+        if (error) {
+          console.error("[TB] manage seat failed", error);
+          toast.error(error.message);
+        }
+      } finally {
+        seatOpsRef.current -= 1;
+        // Converge on the server's truth either way: confirms the change on
+        // success, restores the seat on a refusal.
+        void fetchParticipants(roomId);
+      }
+    },
+    [fetchParticipants],
+  );
+
   // The host's device assembles the board material through the golden-standard
   // question pipeline and hands it over; the server prices and validates it.
   const startMatch = useCallback(
-    async (categories: { uuid: string; name: string }[], requestedTiles?: number): Promise<boolean> => {
+    async (
+      categories: { uuid: string; name: string }[],
+      preferredTiles?: number,
+    ): Promise<boolean> => {
       const roomId = roomIdRef.current;
       if (!roomId) return false;
       if (categories.length === 0) return false;
       setLoading(true);
       try {
         const teamSize = participants.filter((p) => p.team === "a").length;
-        // Even by construction (both operands of max are even), within the
-        // server's 12-tile cap, and large enough that everyone gets a turn.
-        // The lobby's match-length picker can ask for a larger board; the
-        // same floor and cap still apply, so the server never refuses it.
-        const minTiles = Math.max(6, 2 * teamSize);
-        const tileCount = requestedTiles
-          ? Math.min(12, Math.max(minTiles, requestedTiles - (requestedTiles % 2)))
-          : Math.min(12, minTiles);
+        // Two rounds per seated player (teams are equal by the server's own
+        // rule, so 4 per team-size). Even by construction, within the
+        // server's 20-tile cap (20260921210000), floored at 4 for a 1v1.
+        const minTiles = Math.max(4, 4 * teamSize);
+        const wanted = preferredTiles ?? minTiles;
+        const tileCount = Math.min(20, Math.max(minTiles, wanted - (wanted % 2)));
         const difficulties: string[] = [];
         for (let i = 0; i < tileCount; i++) {
           difficulties.push(i < tileCount / 3 ? "easy" : i < (2 * tileCount) / 3 ? "medium" : "hard");
@@ -559,6 +760,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
     () => ({
       room,
       participants,
+      pendingInvites,
       tiles,
       state,
       loading,
@@ -572,19 +774,25 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
       setTeam,
       addBot,
       removeBot,
+      setCaptain,
+      voteCaptain,
+      manageSeat,
       startMatch,
       submitRps,
       pickTile,
       submitAnswer,
+      turnPicks,
+      sendPick,
+      playedBy,
       voteSuper,
       submitSuper,
       advance,
       settle,
     }),
-    [room, participants, tiles, state, loading, isHost, myTeam, isSpotlight,
+    [room, participants, pendingInvites, tiles, state, loading, isHost, myTeam, isSpotlight,
      createRoom, joinRoom, enterRoom, leaveRoom, setTeam, addBot, removeBot,
-     startMatch, submitRps, pickTile, submitAnswer, voteSuper, submitSuper,
-     advance, settle],
+     setCaptain, voteCaptain, manageSeat, startMatch, submitRps, pickTile, submitAnswer,
+     turnPicks, sendPick, playedBy, voteSuper, submitSuper, advance, settle],
   );
 
   return <TeamBattleContext.Provider value={value}>{children}</TeamBattleContext.Provider>;

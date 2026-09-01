@@ -135,10 +135,14 @@ describe("the library modal", () => {
 
   it("lets the tab strip run to the sheet's edges", () => {
     // It is a horizontal scroller: a pill mid-scroll should be cut by the
-    // edge rather than stopping short inside the padding. The wrapper carried
-    // both -mx-5 and mx-auto, and auto won — so the bleed did nothing and
-    // px-5 inset the row a second time.
-    expect(modal).toMatch(/\{\/\* Tabs[\s\S]{0,400}?<div className="-mx-5 mb-2">/);
+    // edge rather than stopping short inside the padding.
+    //
+    // 8px, and the number matters. GameModal pads children by 24px (px-6)
+    // and IconTabBar bleeds itself by 16px already, so -mx-2 is what lands
+    // the strip exactly on the sheet's edge. It was -mx-5, which overshot by
+    // 12px a side; the body scrolls vertically, so its overflow-x computes
+    // to auto and the whole sheet scrolled sideways.
+    expect(modal).toMatch(/\{\/\* Tabs[\s\S]{0,700}?<div className="-mx-2 mb-2">/);
   });
 
   it("keeps Mixed to the unfiltered view", () => {
@@ -209,27 +213,32 @@ describe("the room icon and name sheet", () => {
 });
 
 /**
- * The lobby header: left-aligned on a phone, centred from md up.
+ * The lobby header: the room's name centred, at every width.
+ *
+ * It used to be left-aligned on a phone and centred only from md up, on the
+ * grounds that a Georgian name centred between three buttons ellipsises. It
+ * does — so the name is a size down from the page titles now — but the King
+ * and Battle lounges centre theirs, and a room whose title hangs off the
+ * back arrow was the odd one out of the three.
  */
 describe("the room title in the lobby header", () => {
   const lobby = read("src/components/team/RoomLobbyV2.tsx");
 
-  it("centres itself only where there is width for it", () => {
-    // A Georgian room name centred in the ~200px between three buttons is an
-    // ellipsis with space either side of it.
-    expect(lobby).toMatch(/md:flex-\[2\] md:justify-center/);
+  it("centres itself on a phone too", () => {
+    expect(lobby).toMatch(/flex-\[2\] items-center justify-center/);
+    expect(lobby).not.toMatch(/md:flex-\[2\]/);
   });
 
   it("gives both sides an equal share, so the middle is the middle", () => {
     // Centring within the leftover space puts the title ~18px off, because
     // the actions cluster is wider than the back button. Measured at 768px
     // and 1280px, the equal-share version lands exactly on centre.
-    const md1 = (lobby.match(/md:flex-1/g) ?? []).length;
-    expect(md1, "the back button's wrapper and the actions cluster").toBe(2);
+    const shares = (lobby.match(/flex shrink-0 flex-1 items-center/g) ?? []).length;
+    expect(shares, "the back button's wrapper and the actions cluster").toBe(2);
   });
 
   it("does not stretch the back button itself", () => {
     // flex-1 on the button would give the arrow a very wide tinted box.
-    expect(lobby).toMatch(/<div className="flex shrink-0 items-center md:flex-1">\s*<motion\.button\s*\n\s*onClick=\{handleExitRoom\}/);
+    expect(lobby).toMatch(/<div className="flex shrink-0 flex-1 items-center">\s*<motion\.button\s*\n\s*onClick=\{handleExitRoom\}/);
   });
 });

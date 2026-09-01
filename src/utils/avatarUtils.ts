@@ -153,6 +153,24 @@ const MASCOT_AVATARS: string[] = [
   mascotAvatar5, mascotAvatar6, mascotAvatar7, mascotAvatar8,
 ];
 
+const BOT_AVATARS: string[] = [
+  botAvatar1, botAvatar2, botAvatar3, botAvatar4, botAvatar5,
+  botAvatar6, botAvatar7, botAvatar8, botAvatar9, botAvatar10,
+];
+
+/**
+ * A preset face for an AI player, picked from its id so the same bot keeps
+ * the same face everywhere it appears — lobby seat, captain pill, match.
+ */
+export function botAvatarFor(seed: string | null | undefined): string {
+  const key = seed || '';
+  let hash = 0;
+  for (let i = 0; i < key.length; i++) {
+    hash = (hash * 31 + key.charCodeAt(i)) | 0;
+  }
+  return BOT_AVATARS[Math.abs(hash) % BOT_AVATARS.length];
+}
+
 /**
  * The avatar to show for someone who has not set one.
  *

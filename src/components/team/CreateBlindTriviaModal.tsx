@@ -4,8 +4,6 @@ import { anyBlockedText } from "@/utils/contentFilter";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, Sparkles, ChevronRight, Check, Loader2, RefreshCw, Globe, Lock, CheckCircle, Plus } from "lucide-react";
 import triviaBuzzer from "@/assets/trivia-buzzer.png";
-import pencilIcon from "@/assets/classic-yellow-pencil.png";
-import lockIcon from "@/assets/lock-icon.png";
 import bullseyeIcon from "@/assets/bullseye.png";
 import checkmarkIcon from "@/assets/checkmark.png";
 import { Input } from "@/components/ui/input";
@@ -87,8 +85,10 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
   const queryClient = useQueryClient();
   const { saveDraft, loadDraft, deleteDraft } = useTriviaDrafts();
   
-  const [step, setStep] = useState(1);
-  const [creatorMode, setCreatorMode] = useState<CreatorMode>(null);
+  // Publish is gone, so the open/edit mode went with it: every trivia is
+  // created blind ('play'), and the old mode-chooser step 1 is skipped.
+  const [step, setStep] = useState(2);
+  const [creatorMode, setCreatorMode] = useState<CreatorMode>("play");
   const [subject, setSubject] = useState("");
   const [questionCount, setQuestionCount] = useState(10);
   const [answerFormat, setAnswerFormat] = useState<"4_answers" | "true_false">("4_answers");
@@ -170,8 +170,8 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
   }, [open, resumeDraftId, fetchTopicSuggestions]);
 
   const resetForm = () => {
-    setStep(1);
-    setCreatorMode(null);
+    setStep(2);
+    setCreatorMode("play");
     setSubject("");
     setQuestionCount(10);
     setDifficulty("mixed");
@@ -181,11 +181,6 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
     setIsPublic(true);
     setCurrentDraftId(null);
     isClosingRef.current = false;
-  };
-
-  const handleModeSelect = (mode: CreatorMode) => {
-    setCreatorMode(mode);
-    setStep(2);
   };
 
   const handleSaveAndStartGame = async () => {
@@ -333,58 +328,6 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
 
   const renderStep = () => {
     switch (step) {
-      case 1:
-        return (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="space-y-6"
-          >
-            <div className="text-center">
-              <div className="inline-flex items-center justify-center mb-4">
-                <img src={triviaBuzzer} alt="Create Trivia" className="w-16 h-16 object-contain" />
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-2">{t("extra.cbtCreateTitle")}</h3>
-              <p className="text-white/70">{t("extra.cbtCreateSubtitle")}</p>
-            </div>
-
-            <div className="flex flex-col gap-3">
-              {/* Edit Mode */}
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => handleModeSelect("edit")}
-                className="p-4 rounded-2xl bg-white/15 border border-white/20 hover:bg-white/25 transition-all text-left flex items-center gap-4"
-              >
-                <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                  <img src={pencilIcon} alt="" className="w-10 h-10 object-contain" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-white text-base">{t("extra.cbtOpenMode")}</h4>
-                  <p className="text-white/60 text-xs mt-1">{t("extra.cbtOpenModeDesc")}</p>
-                </div>
-              </motion.button>
-
-              {/* Play Mode */}
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => handleModeSelect("play")}
-                className="p-4 rounded-2xl bg-white/15 border border-white/20 hover:bg-white/25 transition-all text-left flex items-center gap-4"
-              >
-                <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                  <img src={lockIcon} alt="" className="w-10 h-10 object-contain" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-white text-base">{t("extra.cbtClosedMode")}</h4>
-                  <p className="text-white/60 text-xs mt-1">{t("extra.cbtClosedModeDesc")}</p>
-                </div>
-              </motion.button>
-            </div>
-          </motion.div>
-        );
-
       case 2:
         return (
           <motion.div
@@ -579,7 +522,7 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
       return (
         <div className="flex gap-3">
           <button 
-            onClick={() => setStep(1)} 
+            onClick={() => void handleClose()} 
             className="flex-1 h-14 rounded-2xl bg-white/20 text-white font-medium flex items-center justify-center gap-2 hover:bg-white/30 transition-colors"
           >
             <ChevronLeft className="w-4 h-4" />

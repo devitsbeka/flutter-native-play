@@ -1,10 +1,11 @@
 /**
  * Party categories: multiplayer-only categories whose questions are not
  * trivia. The first (and so far only) one is "Most Likely To" — every player
- * votes for a player in the room, and the most-voted player becomes the
- * question's correct answer. Majority voters score; there is no fixed
- * correct answer, so these categories cannot be played solo, against the
- * clock on TV, or in mixed pools.
+ * votes for a player in the room, and the single most-voted player becomes
+ * the question's correct answer. Majority voters score; a split top vote
+ * pays nobody (no majority, no correct answer). There is no fixed correct
+ * answer, so these categories cannot be played solo, against the clock on
+ * TV, or in mixed pools.
  *
  * Their question rows are shaped to enforce that: correct_answer is the
  * '__vote__' sentinel and incorrect_answers is empty, which every generic
@@ -38,6 +39,9 @@ export const MOST_LIKELY_POINTS = 100;
 
 /** The design calls for 10 prompts per party round (bank of 36). */
 export const MOST_LIKELY_QUESTIONS_PER_ROUND = 10;
+
+/** A vote ballot never lists more than 4 names — see mostLikelyBallot. */
+export const MOST_LIKELY_BALLOT_SIZE = 4;
 
 /** Multiplayer-only categories, kept out of solo surfaces (Discover, levels). */
 export const PARTY_CATEGORY_IDS: readonly string[] = [MOST_LIKELY_CATEGORY_ID];
@@ -92,4 +96,21 @@ export function mostLikelyAnswerOptions(
     names.push(taken === 0 ? base : `${base} (${taken + 1})`);
   }
   return names;
+}
+
+/**
+ * One question's ballot. Small rooms vote on everyone; a room of more than
+ * four players gets a random 4-name subset — drawn PER QUESTION by the round
+ * initiator, so consecutive questions rotate through different names. The
+ * subset rides in room_questions.shuffled_answers like any answer list, so
+ * every device votes on the same four names.
+ */
+export function mostLikelyBallot(names: string[], size: number = MOST_LIKELY_BALLOT_SIZE): string[] {
+  if (names.length <= size) return names;
+  const pool = [...names];
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return pool.slice(0, size);
 }

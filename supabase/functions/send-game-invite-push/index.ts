@@ -78,7 +78,14 @@ Deno.serve(async (req: Request) => {
       // avatar_url too: the invite is FROM this player, so iOS draws their
       // face on the notification rather than the app icon.
       supabase.from("profiles").select("nickname, avatar_url").eq("user_id", user.id).maybeSingle(),
-      supabase.from("game_rooms").select("room_name, room_code").eq("id", invite.room_id).maybeSingle(),
+      // game_type_key says WHICH game this room is — a ვერსუს King couch, a
+      // ტრივია Battle arena, or an ordinary room — and the push should say
+      // so too: "invited you to a game" made every invitation look the same.
+      supabase
+        .from("game_rooms")
+        .select("room_name, room_code, room_icon, game_type_key")
+        .eq("id", invite.room_id)
+        .maybeSingle(),
       // The push is composed in the RECIPIENT's language — the one they
       // picked in the app, synced to profiles.preferred_language. The
       // sender's language is irrelevant: it is not their lock screen.
@@ -90,48 +97,87 @@ Deno.serve(async (req: Request) => {
 
     // One entry per app language; the column default is 'en', so players who
     // never touched the switcher get English — the safe universal fallback.
-    const MESSAGES: Record<string, { title: string; room: (n: string, w: string) => string; plain: (n: string) => string }> = {
+    // `game` is "invited you to <game name>" for the two lounges, whose brand
+    // names match the app's own locales (ვერსუს King keeps its Georgian
+    // brand everywhere, Trivia Battle translates only in Georgian).
+    const MESSAGES: Record<string, {
+      title: string;
+      room: (n: string, w: string) => string;
+      plain: (n: string) => string;
+      game: (n: string, g: string) => string;
+    }> = {
       ka: {
         title: "მოდი, ითამაშე 🎮",
         room: (n, w) => `${n} გიწვევს ოთახში „${w}“`,
         plain: (n) => `${n} გიწვევს თამაშში`,
+        game: (n, g) => `${n} გიწვევს თამაშში „${g}“`,
       },
       en: {
         title: "Come and play 🎮",
         room: (n, w) => `${n} invited you to ${w}`,
         plain: (n) => `${n} invited you to a game`,
+        game: (n, g) => `${n} invited you to ${g}`,
       },
       de: {
         title: "Komm und spiel mit 🎮",
         room: (n, w) => `${n} hat dich zu „${w}“ eingeladen`,
         plain: (n) => `${n} hat dich zu einem Spiel eingeladen`,
+        game: (n, g) => `${n} hat dich zu „${g}“ eingeladen`,
       },
       es: {
         title: "¡Ven a jugar! 🎮",
         room: (n, w) => `${n} te invitó a ${w}`,
         plain: (n) => `${n} te invitó a una partida`,
+        game: (n, g) => `${n} te invitó a ${g}`,
       },
       fr: {
         title: "Viens jouer 🎮",
         room: (n, w) => `${n} t'a invité à ${w}`,
         plain: (n) => `${n} t'a invité à une partie`,
+        game: (n, g) => `${n} t'a invité à ${g}`,
       },
       it: {
         title: "Vieni a giocare 🎮",
         room: (n, w) => `${n} ti ha invitato a ${w}`,
         plain: (n) => `${n} ti ha invitato a una partita`,
+        game: (n, g) => `${n} ti ha invitato a ${g}`,
       },
       pt: {
         title: "Vem jogar 🎮",
         room: (n, w) => `${n} convidou você para ${w}`,
         plain: (n) => `${n} convidou você para um jogo`,
+        game: (n, g) => `${n} convidou você para ${g}`,
       },
     };
     const lang = receiver?.preferred_language ?? "en";
     const msg = MESSAGES[lang] ?? MESSAGES.en;
 
+    // The two lounges: their brand name, their mascot (served from
+    // public/push/ so the URL survives every build), and their own deep
+    // link — /team?join= would drop the player on the wrong screen.
+    const SITE = "https://mytrivia.io";
+    const LOUNGES: Record<string, { name: (lang: string) => string; image: string; path: (code: string) => string }> = {
+      king: {
+        name: () => "ვერსუს King",
+        image: `${SITE}/push/versus-king.png`,
+        path: (code) => `/king?code=${encodeURIComponent(code)}`,
+      },
+      team_battle: {
+        name: (l) => (l === "ka" ? "ტრივია Battle" : "Trivia Battle"),
+        image: `${SITE}/push/trivia-battle.png`,
+        path: (code) => `/team-battle?code=${encodeURIComponent(code)}`,
+      },
+    };
+    const lounge = room?.game_type_key ? LOUNGES[room.game_type_key] : undefined;
+
     const title = msg.title;
-    const body = where ? msg.room(who, where) : msg.plain(who);
+    // A lounge invite names the game (plus the room's name when the host set
+    // one); an ordinary room invite names the room as before.
+    const body = lounge
+      ? msg.game(who, where ? `${lounge.name(lang)} · ${where}` : lounge.name(lang))
+      : where
+        ? msg.room(who, where)
+        : msg.plain(who);
 
     // `route` is what usePushNotifications navigates to when the notification
     // is tapped, and it has to be the room rather than the screen the room
@@ -142,12 +188,23 @@ Deno.serve(async (req: Request) => {
     // `/team?join=CODE` is the existing invite deep link: RoomRedirect maps
     // /room/:code onto it, and TeamV2 consumes `?join=` by joining directly
     // for a signed-in player. The code is the room's `room_code`, not its id
-    // — the id is a uuid TeamV2 does not look up.
+    // — the id is a uuid TeamV2 does not look up. Lounge rooms deep-link to
+    // their own pages instead, which consume `?code=`.
     //
     // Falls back to `/team` if the room has no code, which is better than a
     // link that lands on a join attempt that cannot succeed.
     const joinCode = room?.room_code?.trim();
-    const route = joinCode ? `/team?join=${encodeURIComponent(joinCode)}` : "/team";
+    const route = joinCode
+      ? lounge
+        ? lounge.path(joinCode)
+        : `/team?join=${encodeURIComponent(joinCode)}`
+      : "/team";
+
+    // What the notification SHOWS the invite is for: the lounge mascot, or an
+    // ordinary room's own icon when it has one (an https URL — asset paths
+    // from old rooms mean nothing outside the app).
+    const roomIcon = room?.room_icon?.trim();
+    const imageUrl = lounge?.image ?? (roomIcon && /^https:\/\//.test(roomIcon) ? roomIcon : undefined);
 
     const { sent, failed } = await sendToUsers(
       supabase,
@@ -160,7 +217,7 @@ Deno.serve(async (req: Request) => {
         room_id: String(invite.room_id),
         invitation_id: String(invite.id),
       },
-      undefined,
+      imageUrl,
       { name: who, avatarUrl: sender?.avatar_url },
     );
 

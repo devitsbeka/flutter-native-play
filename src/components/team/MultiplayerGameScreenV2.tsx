@@ -58,6 +58,13 @@ export function MultiplayerGameScreenV2() {
   // votes are already tallied. undefined while voting is still open.
   const voteResult = isMostLikelyRound ? voteResults[currentQuestionIndex] : undefined;
 
+  // The settled majority name — only a SINGLE top name counts. A split top
+  // vote (winners holds the tied names) has no majority: nobody is correct
+  // and settle_most_likely_votes paid nobody, so the reveal must not paint
+  // any name green.
+  const voteMajority =
+    voteResult && voteResult.winners.length === 1 ? voteResult.winners[0] : null;
+
   // The room's category decides how its pictures are drawn, and category_id
   // holds either the slug or a uuid depending on which path made the room —
   // so it is resolved rather than compared to a slug directly.
@@ -230,14 +237,14 @@ export function MultiplayerGameScreenV2() {
     if (!isMostLikelyRound || !voteResult || !selectedAnswer) return;
     if (verdictPlayedForRef.current === currentQuestionIndex) return;
     verdictPlayedForRef.current = currentQuestionIndex;
-    if (voteResult.winners.includes(selectedAnswer)) {
+    if (voteMajority === selectedAnswer) {
       playSound("correct-answer");
       vibrate(50);
     } else {
       playSound("wrong-answer");
       vibrate([50, 50, 50]);
     }
-  }, [isMostLikelyRound, voteResult, selectedAnswer, currentQuestionIndex, playSound, vibrate]);
+  }, [isMostLikelyRound, voteResult, voteMajority, selectedAnswer, currentQuestionIndex, playSound, vibrate]);
 
   // One advance per question, however many times the button is tapped.
   //
@@ -297,7 +304,7 @@ export function MultiplayerGameScreenV2() {
       // go green and a losing own pick goes red.
       if (isMostLikelyRound) {
         if (voteResult) {
-          if (voteResult.winners.includes(answer)) return "correct";
+          if (voteMajority === answer) return "correct";
           if (answer === selectedAnswer) return "wrong";
           return "default";
         }
@@ -311,7 +318,7 @@ export function MultiplayerGameScreenV2() {
       if (isSelected && !isCorrect) return "wrong";
       return "default";
     },
-    [answerRevealed, currentQuestion, selectedAnswer, isMostLikelyRound, voteResult]
+    [answerRevealed, currentQuestion, selectedAnswer, isMostLikelyRound, voteResult, voteMajority]
   );
 
   // Everyone who picked this answer, for the avatar badge on the answer row.
@@ -332,13 +339,13 @@ export function MultiplayerGameScreenV2() {
           // insert's is_correct is a placeholder false) — neutral until
           // then, then judged against the settled winners.
           isCorrect: isMostLikelyRound
-            ? (voteResult ? voteResult.winners.includes(answer) : null)
+            ? (voteResult ? voteMajority === answer : null)
             : submitted.is_correct,
         });
       }
       return out;
     },
-    [answerRevealed, currentOpponentAnswers, participants, isMostLikelyRound, voteResult]
+    [answerRevealed, currentOpponentAnswers, participants, isMostLikelyRound, voteResult, voteMajority]
   );
 
   // Check if this is a True/False question
@@ -555,9 +562,11 @@ export function MultiplayerGameScreenV2() {
         {isMostLikelyRound && answerRevealed && (
           <p className="text-center text-white/80 text-sm mb-2">
             {voteResult
-              ? voteResult.winners.length > 0
-                ? t("extra.mltMostVoted", { names: voteResult.winners.join(", ") })
-                : t("extra.mltNoVotes")
+              ? voteMajority
+                ? t("extra.mltMostVoted", { names: voteMajority })
+                : voteResult.winners.length > 1
+                  ? t("extra.mltSplitVote")
+                  : t("extra.mltNoVotes")
               : t("extra.mltWaitingVotes")}
           </p>
         )}

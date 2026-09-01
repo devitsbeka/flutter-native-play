@@ -3,8 +3,6 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { anyBlockedText } from "@/utils/contentFilter";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Trash2, Loader2, ChevronLeft, Sparkles, Settings, ChevronRight, Check, Play, Users } from "lucide-react";
-import pencilIcon from "@/assets/classic-yellow-pencil.png";
-import lockIcon from "@/assets/lock-icon.png";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -113,8 +111,10 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
   const { user } = useAuth();
   const queryClient = useQueryClient();
   
-  const [step, setStep] = useState(1);
-  const [creatorMode, setCreatorMode] = useState<CreatorMode>(null);
+  // Publish is gone, so the open/edit mode went with it: everything is
+  // created blind ('play'); the old mode-chooser step 1 is skipped.
+  const [step, setStep] = useState(2);
+  const [creatorMode, setCreatorMode] = useState<CreatorMode>("play");
   const [title, setTitle] = useState("");
   const [coverGradient] = useState(COVER_GRADIENTS[0]);
   const [isPublic, setIsPublic] = useState(false);
@@ -207,7 +207,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
   };
 
   const resetForm = () => {
-    setStep(1);
+    setStep(2);
     setCreatorMode(null);
     setTitle("");
     setIsPublic(false);
@@ -735,11 +735,6 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
     </AnimatePresence>
   );
 
-  const handleModeSelect = (mode: CreatorMode) => {
-    setCreatorMode(mode);
-    setStep(2);
-  };
-
   // Calculate total questions for summary
   const totalQuestions = roundQuestions.reduce((sum, rq) => sum + rq.length, 0);
 
@@ -892,7 +887,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
         <div className="fixed top-0 left-0 right-0 z-50 safe-top">
           <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full flex items-center justify-between px-4 py-3">
             <button 
-              onClick={step === 1 ? handleClose : () => setStep(step - 1)} 
+              onClick={step <= 2 ? handleClose : () => setStep(step - 1)} 
               className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors"
               disabled={isGenerating}
             >
@@ -925,59 +920,6 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
         <div className="h-full overflow-y-auto pt-[60px] pb-24">
           <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full p-5">
             <AnimatePresence>
-              {/* Step 1: Mode Selection */}
-              {step === 1 && (
-                <motion.div
-                  key="step1"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className="space-y-6"
-                >
-                  <div className="text-center">
-                    <div className="inline-flex items-center justify-center mb-4">
-                      <img src={iconCollections} alt="Create Collection" className="w-16 h-16 object-contain" />
-                    </div>
-                    <h3 className="text-2xl font-bold text-white mb-2">{t("extra.createTitle")}</h3>
-                    <p className="text-white/70">{t("extra.createSubtitle")}</p>
-                  </div>
-
-                  <div className="flex flex-col gap-3">
-                    {/* Edit Mode Card */}
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => handleModeSelect("edit")}
-                      className="relative p-4 rounded-2xl text-left transition-all bg-white/15 border border-white/20 hover:bg-white/25 hover:border-white/30 flex items-center gap-4"
-                    >
-                      <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                        <img src={pencilIcon} alt="" className="w-10 h-10 object-contain" />
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-white text-base">{t("extra.openType")}</h4>
-                        <p className="text-white/60 text-xs mt-1">{t("extra.openTypeDesc")}</p>
-                      </div>
-                    </motion.button>
-
-                    {/* Play Mode Card */}
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => handleModeSelect("play")}
-                      className="relative p-4 rounded-2xl text-left transition-all bg-white/15 border border-white/20 hover:bg-white/25 hover:border-white/30 flex items-center gap-4"
-                    >
-                      <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                        <img src={lockIcon} alt="" className="w-10 h-10 object-contain" />
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-white text-base">{t("extra.lockedType")}</h4>
-                        <p className="text-white/60 text-xs mt-1">{t("extra.lockedTypeDesc")}</p>
-                      </div>
-                    </motion.button>
-                  </div>
-                </motion.div>
-              )}
-
               {/* Step 2: Round Names */}
               {step === 2 && (
                 <motion.div

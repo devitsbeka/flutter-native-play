@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Shuffle, Library, Sparkles, ArrowLeft, Search, Plus, Check, AlertTriangle } from "lucide-react";
+import { X, Sparkles, ArrowLeft, Search, Check, AlertTriangle, Eye } from "lucide-react";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +9,9 @@ import { popularCategoryIcon } from "@/config/popularImageCategories";
 import { filterCategoriesForLanguage } from "@/utils/languageCategoryFilter";
 import { pinPartyCategoriesFirst } from "@/config/partyCategories";
 import { useAuth } from "@/contexts/AuthContext";
+import iconDiceCard from "@/assets/play-chooser/icon-dice.webp";
+import iconLibraryCard from "@/assets/play-chooser/icon-library.webp";
+import stickerAlbum from "@/assets/sticker-album.png";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { IconTabBar } from "@/components/shared/IconTabBar";
@@ -113,7 +116,6 @@ export function CategoryPickerModal({
   onSelectTrivia,
   onAddToQueue,
   showQueueOption = true,
-  roomGradient,
   excludeTriviaId,
 }: CategoryPickerModalProps) {
   const { user } = useAuth();
@@ -298,116 +300,86 @@ export function CategoryPickerModal({
 
   if (!isOpen) return null;
 
-  const defaultGradient = "linear-gradient(135deg, #1a1a2e, #16213e)";
-  const backgroundStyle = roomGradient || defaultGradient;
-
   return (
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 safe-screen z-[120] flex flex-col"
-        style={{ background: `#1a1a2e` }}
+        className="fixed inset-0 safe-screen z-[120] flex flex-col bg-background"
       >
-        {/* Opaque gradient overlay */}
-        <div 
-          className="absolute inset-0 -z-10" 
-          style={{ background: backgroundStyle }}
+        {/* Soft lilac wash — the same family as the screens behind it
+            (Figma 926-11424). The dark takeover this replaced read like a
+            different app; roomGradient is deliberately ignored now. */}
+        <div
+          className="absolute inset-0 -z-10 pointer-events-none"
+          style={{ background: "linear-gradient(180deg, rgba(249,219,255,0.55) 0%, rgba(249,219,255,0.3) 45%, rgba(249,219,255,0.55) 100%)" }}
         />
-        {/* Glass header */}
-        <div className="flex items-center justify-between p-4 bg-white/5 backdrop-blur-sm">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4">
           {view !== "main" ? (
             <motion.button
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               onClick={handleBack}
-              className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors"
+              className="w-10 h-10 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
             >
-              <ArrowLeft className="w-5 h-5 text-white" />
+              <ArrowLeft className="w-5 h-5 text-foreground" />
             </motion.button>
           ) : (
-            <div className="w-9" />
+            <div className="w-10" />
           )}
-          <h2 className="text-lg font-bold text-white">
+          <h2 className="text-lg font-display text-primary">
             {view === "main" && t("extra.cpSelectCategory")}
             {view === "library" && t("extra.cpLibrary")}
             {view === "my-trivias" && t("extra.cpMyTrivias")}
           </h2>
           <motion.button
             onClick={onClose}
-            className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors"
+            className="w-10 h-10 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <X className="w-5 h-5 text-white" />
+            <X className="w-5 h-5 text-foreground" />
           </motion.button>
         </div>
 
         {/* Content */}
         <div className={`flex-1 overflow-y-auto p-4 pb-8 ${selectedItems.length > 0 ? 'pb-40' : ''}`}>
           {view === "main" && (
-            <div className="space-y-3 max-w-md mx-auto">
-              {/* Random option */}
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => togglePick({ type: "random" })}
-                className={`w-full p-4 rounded-2xl backdrop-blur-sm transition-all text-left ${
-                  isPicked({ type: "random" })
-                    ? "bg-white/20 border-2 border-emerald-400"
-                    : "bg-white/10 border border-white/20 hover:bg-white/15"
-                }`}
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-xl bg-purple-500/20 flex items-center justify-center">
-                    <Shuffle className="w-7 h-7 text-purple-400" />
-                  </div>
-                   <div className="flex-1">
-                    <p className="font-semibold text-white text-lg">{t("extra.cpRandomTitle")}</p>
-                    <p className="text-white/60 text-sm">{t("extra.cpRandomDesc")}</p>
-                  </div>
-                  {isPicked({ type: "random" }) && (
-                    <Check className="w-5 h-5 text-emerald-300" />
+            /* The three sources as light cards with their 3D faces — the same
+               art the online-game reel wears (Figma 926-11424). */
+            <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
+              {(
+                [
+                  { key: "random", icon: iconDiceCard, title: t("extra.cpRandomTitle"), desc: t("extra.cpRandomDesc"), onTap: () => togglePick({ type: "random" }), picked: isPicked({ type: "random" }) },
+                  { key: "library", icon: iconLibraryCard, title: t("extra.cpLibraryTitle"), desc: t("extra.cpLibraryDesc"), onTap: () => setView("library"), picked: false },
+                  { key: "my-trivias", icon: stickerAlbum, title: t("extra.cpMyTriviasTitle"), desc: t("extra.cpMyTriviasDesc"), onTap: () => setView("my-trivias"), picked: false },
+                ]
+              ).map((card) => (
+                <motion.button
+                  key={card.key}
+                  whileTap={{ scale: 0.96 }}
+                  transition={{ type: "spring", stiffness: 480, damping: 28 }}
+                  onClick={card.onTap}
+                  className={`relative rounded-[24px] p-4 pt-6 bg-white/70 border border-solid text-left transition-shadow ${
+                    card.picked
+                      ? "border-[#7126d5] shadow-[0px_4px_4px_0px_rgba(113,38,213,0.42)]"
+                      : "border-[rgba(211,211,211,0.5)]"
+                  }`}
+                >
+                  {card.picked && (
+                    <div className="absolute right-[10px] top-[12px] w-[30px] h-[30px] rounded-full bg-[rgba(113,38,213,0.08)] flex items-center justify-center">
+                      <Check className="w-4 h-4 text-[#7126d5]" strokeWidth={3.5} />
+                    </div>
                   )}
-                </div>
-              </motion.button>
-
-              {/* Library option */}
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => setView("library")}
-                className="w-full p-4 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/15 transition-all text-left"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-xl bg-purple-500/20 flex items-center justify-center">
-                    <Library className="w-7 h-7 text-purple-400" />
+                  <div className="h-[96px] flex items-center justify-center mb-3">
+                    <img src={card.icon} alt="" className="w-[86px] h-[86px] object-contain" />
                   </div>
-                   <div className="flex-1">
-                    <p className="font-semibold text-white text-lg">{t("extra.cpLibraryTitle")}</p>
-                    <p className="text-white/60 text-sm">{t("extra.cpLibraryDesc")}</p>
-                  </div>
-                </div>
-              </motion.button>
-
-              {/* My Trivias option */}
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => setView("my-trivias")}
-                className="w-full p-4 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/15 transition-all text-left"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-xl bg-purple-500/20 flex items-center justify-center">
-                    <Sparkles className="w-7 h-7 text-purple-400" />
-                  </div>
-                   <div className="flex-1">
-                    <p className="font-semibold text-white text-lg">{t("extra.cpMyTriviasTitle")}</p>
-                    <p className="text-white/60 text-sm">{t("extra.cpMyTriviasDesc")}</p>
-                  </div>
-                </div>
-              </motion.button>
+                  <p className="font-[Nunito] font-bold text-[16px] leading-[24px] text-[#0f1729]">{card.title}</p>
+                  <p className="font-[Nunito] text-[14px] leading-[20px] text-[#6b7280]">{card.desc}</p>
+                </motion.button>
+              ))}
             </div>
           )}
 
@@ -415,12 +387,12 @@ export function CategoryPickerModal({
             <div className="space-y-4 max-w-md mx-auto">
               {/* Search */}
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input
                   placeholder={t("extra.cpSearchCategories")}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder:text-white/40 focus:border-white/40 outline-none backdrop-blur-sm"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/70 border border-border/50 text-foreground placeholder:text-muted-foreground/70 focus:border-primary/40 outline-none"
                 />
               </div>
 
@@ -434,13 +406,12 @@ export function CategoryPickerModal({
                 activeTab={activeTab}
                 onTabChange={(id) => setActiveTab(id as CategoryTabId)}
                 compact
-                tone="dark"
               />
 
               {/* Categories grid */}
               {loadingCategories ? (
                 <div className="flex items-center justify-center py-12">
-                  <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                 </div>
               ) : (
                 <>
@@ -452,15 +423,14 @@ export function CategoryPickerModal({
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: 0 }}
                         onClick={() => togglePick(MIXED_ITEM(t))}
-                        className={`relative p-3 rounded-xl backdrop-blur-sm transition-all text-left ${
+                        className={`relative p-3 rounded-xl transition-all text-left ${
                           isPicked(MIXED_ITEM(t))
-                            ? "bg-white/20 border-2 border-emerald-400"
-                            : "bg-white/10 border border-white/20 hover:bg-white/15"
+                            ? "bg-white border-2 border-[#7126d5]"
+                            : "bg-white/70 border border-border/50 hover:bg-white"
                         }`}
-                        style={{ background: "linear-gradient(135deg, rgba(147, 51, 234, 0.3), rgba(236, 72, 153, 0.3))" }}
                       >
                         {isPicked(MIXED_ITEM(t)) && (
-                          <Check className="absolute right-2 top-2 w-4 h-4 text-emerald-300" />
+                          <Check className="absolute right-2 top-2 w-4 h-4 text-[#7126d5]" />
                         )}
                         <div
                           className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden"
@@ -468,10 +438,10 @@ export function CategoryPickerModal({
                         >
                           <DynamicIcon slug="mystery-box" size={22} />
                         </div>
-                        <p className="mt-2 font-medium text-white text-sm leading-snug break-words">
+                        <p className="mt-2 font-medium text-foreground text-sm leading-snug break-words">
                           {t("extra.cpMixedCategory")}
                         </p>
-                        <p className="text-white/50 text-xs">{t("extra.cpMixedDesc")}</p>
+                        <p className="text-muted-foreground text-xs">{t("extra.cpMixedDesc")}</p>
                       </motion.button>
                     )}
 
@@ -487,14 +457,14 @@ export function CategoryPickerModal({
                           name: cat.name,
                           iconSlug: cat.icon_slug,
                         })}
-                        className={`relative p-3 rounded-xl backdrop-blur-sm transition-all text-left ${
+                        className={`relative p-3 rounded-xl transition-all text-left ${
                           isPicked({ type: "category", id: cat.id })
-                            ? "bg-white/20 border-2 border-emerald-400"
-                            : "bg-white/10 border border-white/20 hover:bg-white/15"
+                            ? "bg-white border-2 border-[#7126d5]"
+                            : "bg-white/70 border border-border/50 hover:bg-white"
                         }`}
                       >
                         {isPicked({ type: "category", id: cat.id }) && (
-                          <Check className="absolute right-2 top-2 w-4 h-4 text-emerald-300" />
+                          <Check className="absolute right-2 top-2 w-4 h-4 text-[#7126d5]" />
                         )}
                         {/* Icon on its own line, name underneath. The two used
                             to sit side by side, which left the name a sliver
@@ -513,10 +483,10 @@ export function CategoryPickerModal({
                             <span className="text-xl">{cat.icon}</span>
                           )}
                         </div>
-                        <p className="mt-2 font-medium text-white text-sm leading-snug break-words">
+                        <p className="mt-2 font-medium text-foreground text-sm leading-snug break-words">
                           {cat.name}
                         </p>
-                        <p className="text-white/50 text-xs">{t("extra.cpLevels", { count: cat.total_levels })}</p>
+                        <p className="text-muted-foreground text-xs">{t("extra.cpLevels", { count: cat.total_levels })}</p>
                       </motion.button>
                     ))}
                   </div>
@@ -529,24 +499,24 @@ export function CategoryPickerModal({
             <div className="space-y-4 max-w-md mx-auto">
               {/* Search */}
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input
                    placeholder={t("extra.cpSearchTrivias")}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder:text-white/40 focus:border-white/40 outline-none backdrop-blur-sm"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/70 border border-border/50 text-foreground placeholder:text-muted-foreground/70 focus:border-primary/40 outline-none"
                 />
               </div>
 
               {/* Trivias list */}
               {loadingTrivias ? (
                 <div className="flex items-center justify-center py-12">
-                  <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                 </div>
               ) : filteredTrivias.length === 0 ? (
                 <div className="text-center py-12">
-                   <Sparkles className="w-12 h-12 text-white/30 mx-auto mb-3" />
-                   <p className="text-white/60">{t("extra.cpNoTriviaFound")}</p>
+                   <Sparkles className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" />
+                   <p className="text-muted-foreground">{t("extra.cpNoTriviaFound")}</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -571,18 +541,12 @@ export function CategoryPickerModal({
                           id: trivia.id,
                           name: trivia.title,
                         })}
-                        className={`w-full p-3 rounded-xl backdrop-blur-sm transition-all text-left relative ${
+                        className={`w-full p-3 rounded-xl transition-all text-left relative ${
                           isPicked({ type: "trivia", id: trivia.id })
-                            ? "bg-white/20 border-2 border-emerald-400"
-                            : "bg-white/10 border border-white/20 hover:bg-white/15"
+                            ? "bg-white border-2 border-[#7126d5]"
+                            : "bg-white/70 border border-border/50 hover:bg-white"
                         }`}
                       >
-                        {/* Observer badge */}
-                         {willBeObserver && (
-                           <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-amber-500/80 text-white text-[10px] font-medium">
-                             👁️ {t("extra.cpObserverLabel")}
-                          </span>
-                        )}
                         <div className="flex items-center gap-3">
                           <div 
                             className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0"
@@ -597,27 +561,37 @@ export function CategoryPickerModal({
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium text-white truncate">{trivia.title}</p>
+                            <p className="font-medium text-foreground truncate">{trivia.title}</p>
                             <div className="flex items-center gap-2 flex-wrap">
-                               <p className="text-white/50 text-xs">
+                               <p className="text-muted-foreground text-xs">
                                  {t("extra.cpQuestionAndPlays", { questions: questionCount, plays: trivia.plays_count || 0 })}
                               </p>
                                {trivia.is_blind && (trivia.plays_count || 0) === 0 && (
-                                 <span className="px-1.5 py-0.5 rounded bg-green-500/20 text-green-300 text-[10px] font-medium">
+                                 <span className="px-1.5 py-0.5 rounded bg-green-500/15 text-green-600 text-[10px] font-medium">
                                    {t("extra.cpBlindLabel")}
                                 </span>
                               )}
                             </div>
-                            {/* Missing icons warning */}
+                            {/* Observer note and the missing-icons warning share
+                                a line under the title. The observer badge used to
+                                be pinned to the row's top-right corner, where it
+                                sat on top of the title of any trivia whose name
+                                reached the end of the row. */}
+                            {willBeObserver && (
+                              <span className="text-xs text-amber-600 flex items-center gap-1 mt-0.5">
+                                <Eye className="w-3 h-3" />
+                                {t("extra.cpObserverLabel")}
+                              </span>
+                            )}
                             {missingIconCount > 0 && (
-                               <span className="text-xs text-amber-400 flex items-center gap-1 mt-0.5">
+                               <span className="text-xs text-amber-600 flex items-center gap-1 mt-0.5">
                                  <AlertTriangle className="w-3 h-3" />
                                  {t("extra.cpMissingIcons", { count: missingIconCount })}
                               </span>
                             )}
                           </div>
                           {isPicked({ type: "trivia", id: trivia.id }) && (
-                            <Check className="w-5 h-5 text-emerald-300 flex-shrink-0" />
+                            <Check className="w-5 h-5 text-[#7126d5] flex-shrink-0" />
                           )}
                         </div>
                       </motion.button>
@@ -634,11 +608,11 @@ export function CategoryPickerModal({
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="p-4 bg-white/5 backdrop-blur-sm border-t border-white/10"
+            className="p-4 bg-white/60 backdrop-blur-sm border-t border-border/40"
           >
             <div className="max-w-md mx-auto">
               <ChunkyButton
-                variant="white"
+                variant="primary"
                 size="lg"
                 className="w-full"
                 onClick={handleAddPicked}

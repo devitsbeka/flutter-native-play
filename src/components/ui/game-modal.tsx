@@ -198,7 +198,7 @@ export function GameModal({
             exit={{ opacity: 0, y: 24, scale: 0.98 }}
             transition={{ type: "spring", stiffness: 380, damping: 32 }}
             onClick={(e) => e.stopPropagation()}
-            className="relative flex flex-col w-full h-full md:h-auto md:max-h-[85vh] md:w-[60%] md:min-w-[560px] md:max-w-3xl md:rounded-3xl md:overflow-hidden md:shadow-2xl"
+            className="relative flex flex-col w-full h-full overflow-x-clip md:h-auto md:max-h-[85vh] md:w-[60%] md:min-w-[560px] md:max-w-3xl md:rounded-3xl md:overflow-hidden md:shadow-2xl"
             style={{
               background: "linear-gradient(180deg, #FDFAFF 0%, #F6E8FF 100%)",
             }}
@@ -254,7 +254,10 @@ export function GameModal({
             
             {/* Scrollable content area */}
             <motion.div 
-              className={cn("flex-1 overflow-y-auto flex flex-col", className)}
+              // overflow-x-hidden on purpose: overflow-y-auto alone makes the x axis
+              // compute to auto, so any child that bleeds a few pixels wide turns
+              // the sheet into a horizontal scroller.
+              className={cn("flex-1 overflow-y-auto overflow-x-hidden flex flex-col", className)}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 }}

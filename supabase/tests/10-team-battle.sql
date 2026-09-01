@@ -323,7 +323,8 @@ BEGIN
   PERFORM pg_temp.must_equal(v_state.team_a_score, 200, 'final score for a');
   PERFORM pg_temp.must_equal(v_state.team_b_score, 160, 'final score for b');
 
-  -- Settlement: once, by anyone in the room; winners 350, losers 50.
+  -- Settlement: once, by anyone in the room; winners take 50/round + the
+  -- 50 participation coins, losers participation only (20260921130000).
   SELECT coins INTO v_alice_coins_before FROM public.profiles WHERE user_id = v_alice;
   SELECT coins INTO v_bob_coins_before FROM public.profiles WHERE user_id = v_bob;
 
@@ -338,7 +339,9 @@ BEGIN
 
   PERFORM pg_temp.must_equal(
     (SELECT coins FROM public.profiles WHERE user_id = v_alice),
-    v_alice_coins_before + 350, 'a winner is paid win + participation');
+    v_alice_coins_before + 50
+      + 50 * (SELECT count(*)::int FROM public.team_battle_board WHERE game_id = v_game),
+    'a winner is paid 50/round + participation');
   PERFORM pg_temp.must_equal(
     (SELECT coins FROM public.profiles WHERE user_id = v_bob),
     v_bob_coins_before + 50, 'a loser is paid participation only');
@@ -353,7 +356,9 @@ BEGIN
   PERFORM pg_temp.must_equal((v_settle ->> 'applied')::boolean, false, 'second settle is a no-op');
   PERFORM pg_temp.must_equal(
     (SELECT coins FROM public.profiles WHERE user_id = v_alice),
-    v_alice_coins_before + 350, 'a repeat settle pays nothing more');
+    v_alice_coins_before + 50
+      + 50 * (SELECT count(*)::int FROM public.team_battle_board WHERE game_id = v_game),
+    'a repeat settle pays nothing more');
 
   PERFORM pg_temp.must_equal(
     (SELECT status::text FROM public.game_rooms WHERE id = v_room), 'waiting',
@@ -374,11 +379,26 @@ BEGIN
   PERFORM pg_temp.as_user(v_alice);
   v_game := public.tb_start_match(v_room, v_board);
 
+  -- A tie replays the opener (20260921190000): the hand is revealed, the
+  -- throws reset, and the second hand decides.
   PERFORM public.tb_submit_rps(v_room, 'paper');
   PERFORM pg_temp.as_user(v_bob);
   PERFORM public.tb_submit_rps(v_room, 'paper');
   SELECT * INTO v_state FROM public.team_battle_state WHERE room_id = v_room;
-  PERFORM pg_temp.must_equal(v_state.phase, 'board', 'a gesture tie still resolves the opener');
+  PERFORM pg_temp.must_equal(v_state.phase, 'rps', 'a gesture tie replays the opener');
+  PERFORM pg_temp.must_equal((v_state.rps -> 'last' ->> 'tie')::boolean, true,
+    'the tied hand is recorded for the reveal');
+  PERFORM pg_temp.must_equal(v_state.rps -> 'throws', '{}'::jsonb, 'the rethrow starts clean');
+  PERFORM pg_temp.must_equal((v_state.rps ->> 'round')::int, 1, 'the round counter moves');
+
+  PERFORM pg_temp.as_user(v_alice);
+  PERFORM public.tb_submit_rps(v_room, 'rock');
+  PERFORM pg_temp.as_user(v_bob);
+  PERFORM public.tb_submit_rps(v_room, 'scissors');
+  SELECT * INTO v_state FROM public.team_battle_state WHERE room_id = v_room;
+  PERFORM pg_temp.must_equal(v_state.phase, 'board', 'the second hand resolves the opener');
+  PERFORM pg_temp.must_equal(v_state.rps -> 'last' ->> 'winner', 'a',
+    'the reveal names the winner');
 
   -- First turn: nobody picks. The board deadline expires (moved into the
   -- past by the fixture) and tb_advance auto-picks a tile instead of stalling.
@@ -484,6 +504,11 @@ BEGIN
     (SELECT count(*)::int FROM public.room_participants
       WHERE room_id = v_room AND is_bot), 2,
     'two bots seated');
+  -- 20260921140000: bots wear ordinary one-word names, not robo-prefixes.
+  PERFORM pg_temp.must_equal(
+    (SELECT count(*)::int FROM public.room_participants
+      WHERE room_id = v_room AND is_bot AND nickname LIKE '% %'), 0,
+    'bot names are one word');
 
   v_board := jsonb_build_object(
     'tiles', jsonb_build_array(
@@ -492,12 +517,22 @@ BEGIN
     'super_questions', pg_temp.mk_super(5));
   v_game := public.tb_start_match(v_room, v_board);
 
+  -- 20260921210000: the opener is the captains' duel — the two captains'
+  -- gestures ARE the team gestures, bots and teammates alike stay out of
+  -- it. Rock vs scissors must therefore resolve on the very first hand.
+  PERFORM pg_temp.as_user(v_alice);
   PERFORM public.tb_submit_rps(v_room, 'rock');
   PERFORM pg_temp.as_user(v_bob);
   PERFORM public.tb_submit_rps(v_room, 'scissors');
   SELECT * INTO v_state FROM public.team_battle_state WHERE room_id = v_room;
   PERFORM pg_temp.must_equal(v_state.phase, 'board',
-    'the opener resolves on the human throws alone');
+    'the opener resolves on the captains'' throws alone');
+  PERFORM pg_temp.must_equal(v_state.rps ->> 'winner', 'a',
+    'rock beats scissors even with a bot on each team');
+  PERFORM pg_temp.must_equal(
+    (SELECT count(*)::int FROM public.room_participants
+      WHERE room_id = v_room AND status = 'playing' AND is_captain), 2,
+    'the start crowned a captain per team');
 
   v_iter := 0;
   LOOP
@@ -568,6 +603,136 @@ BEGIN
   PERFORM pg_temp.must_equal(
     (SELECT count(*)::int FROM public.room_participants WHERE room_id = v_room), 2,
     'bots can be cleared out after the match');
+
+  -- ── captains (20260921100000): host-named, outrank votes, never a bot ────
+
+  PERFORM pg_temp.as_user(v_bob);
+  PERFORM pg_temp.must_fail(
+    format('SELECT public.tb_set_captain(%L, %L)', v_room, v_bob),
+    'only the host names captains');
+
+  -- Third human on team a, and a bot back on each side, to make the
+  -- champion ordering observable: humans > captaincy > votes.
+  PERFORM pg_temp.as_user(NULL);
+  INSERT INTO public.room_participants (room_id, user_id, nickname, is_host, status, team, is_bot)
+  VALUES (v_room, v_out, 'Trace', false, 'playing', 'a', false);
+  PERFORM pg_temp.as_user(v_alice);
+  PERFORM public.tb_add_bot(v_room, 'a');
+  PERFORM public.tb_add_bot(v_room, 'b');
+
+  PERFORM public.tb_set_captain(v_room, v_alice);
+  PERFORM pg_temp.must_equal(
+    (SELECT is_captain FROM public.room_participants WHERE room_id = v_room AND user_id = v_alice),
+    true, 'the host can captain a teammate');
+  PERFORM public.tb_set_captain(v_room, v_out);
+  PERFORM pg_temp.must_equal(
+    (SELECT count(*)::int FROM public.room_participants
+      WHERE room_id = v_room AND team = 'a' AND is_captain), 1,
+    'a team has exactly one captain — naming a new one clears the old');
+
+  -- Resolve with every vote against the captain: the captain still champions.
+  PERFORM pg_temp.as_user(NULL);
+  UPDATE public.team_battle_state
+     SET phase = 'super_vote', deadline = now() - interval '1 second',
+         super = jsonb_build_object('questions', COALESCE(super -> 'questions', '[]'::jsonb),
+                                    'votes', jsonb_build_object('x', v_alice::text))
+   WHERE room_id = v_room;
+  SELECT * INTO v_state FROM public.team_battle_state WHERE room_id = v_room;
+  PERFORM public.tb_resolve_super_vote(v_state);
+  SELECT * INTO v_state FROM public.team_battle_state WHERE room_id = v_room;
+  PERFORM pg_temp.must_equal(v_state.super ->> 'champion_a', v_out::text,
+    'the named captain outranks the vote tally');
+  PERFORM pg_temp.must_equal(v_state.super ->> 'champion_b', v_bob::text,
+    'a captainless team falls back to the human vote order');
+
+  -- A captained bot still never outranks a human teammate.
+  SELECT user_id INTO v_bot_a FROM public.room_participants
+   WHERE room_id = v_room AND team = 'a' AND is_bot LIMIT 1;
+  PERFORM pg_temp.as_user(v_alice);
+  PERFORM public.tb_set_captain(v_room, v_bot_a);
+  PERFORM pg_temp.as_user(NULL);
+  UPDATE public.team_battle_state
+     SET phase = 'super_vote', deadline = now() - interval '1 second',
+         super = jsonb_build_object('questions', COALESCE(super -> 'questions', '[]'::jsonb),
+                                    'votes', '{}'::jsonb)
+   WHERE room_id = v_room;
+  SELECT * INTO v_state FROM public.team_battle_state WHERE room_id = v_room;
+  PERFORM public.tb_resolve_super_vote(v_state);
+  SELECT * INTO v_state FROM public.team_battle_state WHERE room_id = v_room;
+  PERFORM pg_temp.must_equal(
+    (SELECT is_bot FROM public.room_participants
+      WHERE room_id = v_room AND user_id = (v_state.super ->> 'champion_a')::uuid),
+    false, 'a captained bot never champions over a human');
+
+  -- ── captain voting (20260921150000): the team elects, plurality leads ────
+
+  PERFORM pg_temp.as_user(v_bob);
+  PERFORM pg_temp.must_fail(
+    format('SELECT public.tb_vote_captain(%L, %L)', v_room, v_alice),
+    'votes stay inside the voter''s own team');
+  PERFORM pg_temp.must_fail(
+    format('SELECT public.tb_vote_captain(%L, %L)', v_room,
+      (SELECT user_id FROM public.room_participants
+        WHERE room_id = v_room AND team = 'b' AND is_bot LIMIT 1)),
+    'a bot cannot wear the armband by vote');
+
+  -- Alice backs Trace: one vote to none takes the armband (and strips the
+  -- bot the host had just named).
+  PERFORM pg_temp.as_user(v_alice);
+  PERFORM public.tb_vote_captain(v_room, v_out);
+  PERFORM pg_temp.must_equal(
+    (SELECT is_captain FROM public.room_participants WHERE room_id = v_room AND user_id = v_out),
+    true, 'the plurality leader wears the armband');
+  PERFORM pg_temp.must_equal(
+    (SELECT count(*)::int FROM public.room_participants
+      WHERE room_id = v_room AND team = 'a' AND is_captain), 1,
+    'voting keeps exactly one captain on the team');
+
+  -- Trace votes Alice back: a 1-1 tie goes to the earliest joiner.
+  PERFORM pg_temp.as_user(v_out);
+  PERFORM public.tb_vote_captain(v_room, v_alice);
+  PERFORM pg_temp.must_equal(
+    (SELECT is_captain FROM public.room_participants WHERE room_id = v_room AND user_id = v_alice),
+    true, 'a tie hands the armband to the earliest joiner');
+
+  -- Alice switches to herself: 2-0 and she keeps it outright.
+  PERFORM pg_temp.as_user(v_alice);
+  PERFORM public.tb_vote_captain(v_room, v_alice);
+  PERFORM pg_temp.must_equal(
+    (SELECT is_captain FROM public.room_participants WHERE room_id = v_room AND user_id = v_alice),
+    true, 'a changed vote re-tallies the team');
+
+  -- ── the pot scales with the board (20260921130000) ───────────────────────
+
+  PERFORM pg_temp.must_equal(
+    (SELECT bool_and(cg.coins = LEAST(600, 50 * (
+        SELECT count(*) FROM public.team_battle_board b
+         WHERE b.game_id::text = split_part(cg.reference, ':', 2))))
+       FROM public.currency_grants cg
+      WHERE cg.kind = 'team_battle_win' AND cg.user_id IN (v_alice, v_bob)),
+    true, 'every win payout is 50 coins per round of its board');
+
+  -- ── seat management (20260921120000): host-only, lobby-only ────────────
+
+  PERFORM pg_temp.as_user(v_bob);
+  PERFORM pg_temp.must_fail(
+    format('SELECT public.lobby_manage_seat(%L, %L, %L)', v_room, v_out, 'remove'),
+    'only the host manages seats');
+
+  PERFORM pg_temp.as_user(v_alice);
+  PERFORM public.lobby_manage_seat(v_room, v_bob, 'move_a');
+  PERFORM pg_temp.must_equal(
+    (SELECT team FROM public.room_participants WHERE room_id = v_room AND user_id = v_bob),
+    'a', 'the host can move a player between teams');
+  PERFORM public.lobby_manage_seat(v_room, v_bob, 'move_b');
+  PERFORM public.lobby_manage_seat(v_room, v_out, 'remove');
+  PERFORM pg_temp.must_equal(
+    (SELECT count(*)::int FROM public.room_participants
+      WHERE room_id = v_room AND user_id = v_out), 0,
+    'the host can remove a seat');
+  PERFORM pg_temp.must_fail(
+    format('SELECT public.lobby_manage_seat(%L, %L, %L)', v_room, v_alice, 'remove'),
+    'the host cannot remove their own seat');
 
   -- Cleanup so reruns start clean — the mode goes back to dark.
   PERFORM pg_temp.as_user(NULL);

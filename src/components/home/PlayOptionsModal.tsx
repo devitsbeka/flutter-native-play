@@ -3,13 +3,17 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useGameTypes } from "@/hooks/useGameTypes";
-import quickGameIcon from "@/assets/play-modes/quick-game.png";
-import playFriendsIcon from "@/assets/play-modes/play-friends.png";
-import triviaKingIcon from "@/assets/play-modes/trivia-king.png";
-import triviaBattleIcon from "@/assets/play-modes/trivia-battle.png";
+import { ScaledCanvas } from "@/components/lobby/LilacLobby";
+import bandOne from "@/assets/play-chooser/band-1.webp";
+import bandTwo from "@/assets/play-chooser/band-2.webp";
+import iconButton from "@/assets/play-chooser/icon-button.png";
+import iconHearts from "@/assets/play-chooser/icon-hearts.png";
+import iconKing from "@/assets/play-chooser/icon-king.webp";
+import iconCrate from "@/assets/play-chooser/icon-crate.png";
+import iconBack from "@/assets/play-chooser/icon-back.svg";
 
-// Same soft card treatment as the homepage profile widget (SceneHero)
 const CARD_SHADOW = "0px 2px 8px 0px rgba(102,51,153,0.06), 0px 8px 24px 0px rgba(102,51,153,0.12)";
+const TILE_INNER = "inset 0px 1px 0px 0px rgba(255,255,255,0.4)";
 
 interface PlayOptionsModalProps {
   isOpen: boolean;
@@ -18,28 +22,13 @@ interface PlayOptionsModalProps {
   onPlayWithFriends: () => void;
 }
 
-interface PlayOption {
-  id: string;
-  icon: string;
-  tileBg: string;
-  tileShadow: string;
-  title: string;
-  desc: string;
-  onClick?: () => void;
-  /** Dark-launched mode: rendered as a teaser with a "coming soon" pill. */
-  comingSoon?: boolean;
-  /** "new"/"beta" pill from the game type registry, shown when live. */
-  badge?: string | null;
-}
-
 /**
- * Shown when the main play button is pressed: a full-page takeover that blurs
- * everything but the background. Four ways to play — quick match and
- * play-with-friends full width, then Trivia King and Trivia Battle side by
- * side. This replaced the interim /play chooser page: King and Battle read
- * their liveness from the same game type registry that page did, so a mode
- * still dark-launches through the DB's game_types table, just as a card
- * here rather than a screen away.
+ * The "What do you feel like playing?" takeover, extracted from Figma
+ * 950:9956 (board 952:10090): a lilac blur wash over the home page, the
+ * TASolivare heading, and the four staggered cards — Quick Game, Play With
+ * Friends, New! Versus King, Play Team Battle — at design coordinates
+ * inside ScaledCanvas. King and Battle keep their dark-launch state from
+ * the game type registry.
  */
 export function PlayOptionsModal({
   isOpen,
@@ -60,103 +49,25 @@ export function PlayOptionsModal({
     return () => window.removeEventListener("keydown", onKey);
   }, [isOpen, onClose]);
 
-  const modeOption = (
-    key: "king" | "team_battle",
-    icon: string,
-    tileBg: string,
-    tileShadow: string,
-    title: string,
-  ): PlayOption | null => {
-    const gt = gameTypes.find((g) => g.key === key);
-    if (!gt) return null; // hidden via the registry
-    const comingSoon = gt.status === "coming_soon";
-    return {
-      id: key,
-      icon,
-      tileBg,
-      tileShadow,
-      title,
-      desc: t("extra.playCreateRoomInvite"),
-      comingSoon,
-      badge: gt.badge,
-      onClick: comingSoon
-        ? undefined
-        : () => {
-            onClose();
-            gt.launch?.(navigate);
-          },
-    };
+  const modeOf = (key: "king" | "team_battle") => gameTypes.find((g) => g.key === key);
+  const launch = (key: "king" | "team_battle") => {
+    const gt = modeOf(key);
+    if (!gt || gt.status === "coming_soon") return;
+    onClose();
+    gt.launch?.(navigate);
   };
+  const dark = (key: "king" | "team_battle") => modeOf(key)?.status === "coming_soon";
 
-  const fullWidthOptions: PlayOption[] = [
-    {
-      id: "quick",
-      icon: quickGameIcon,
-      tileBg: "linear-gradient(135deg, #4ADE80 0%, #34D399 45%, #14B8A6 100%)",
-      tileShadow: "0 6px 14px rgba(20,184,166,0.35), inset 0 1px 0 rgba(255,255,255,0.4)",
-      title: t("extra.playQuickGame"),
-      desc: t("extra.playQuickGameDesc"),
-      onClick: onQuickGame,
-    },
-    {
-      id: "friends",
-      icon: playFriendsIcon,
-      tileBg: "linear-gradient(135deg, #F9A8D4 0%, #F472B6 45%, #DB2777 100%)",
-      tileShadow: "0 6px 14px rgba(219,39,119,0.35), inset 0 1px 0 rgba(255,255,255,0.4)",
-      title: t("extra.playFriendsGame"),
-      desc: t("extra.playFriendsGameDesc"),
-      onClick: onPlayWithFriends,
-    },
-  ];
-
-  const halfWidthOptions = [
-    modeOption(
-      "king",
-      triviaKingIcon,
-      "linear-gradient(135deg, #93C5FD 0%, #60A5FA 45%, #4F46E5 100%)",
-      "0 6px 14px rgba(79,70,229,0.35), inset 0 1px 0 rgba(255,255,255,0.4)",
-      t("extra.playTriviaKing"),
-    ),
-    modeOption(
-      "team_battle",
-      triviaBattleIcon,
-      "linear-gradient(135deg, #FBBF24 0%, #F59E0B 45%, #F97316 100%)",
-      "0 6px 14px rgba(249,115,22,0.35), inset 0 1px 0 rgba(255,255,255,0.4)",
-      t("extra.playTriviaBattle"),
-    ),
-  ].filter((o): o is PlayOption => o !== null);
-
-  const cardBody = (option: PlayOption, compact: boolean) => (
-    <>
-      <motion.div
-        className="w-14 h-14 rounded-2xl flex items-center justify-center mb-3"
-        style={{
-          background: option.tileBg,
-          boxShadow: option.tileShadow,
-          filter: option.comingSoon ? "grayscale(0.55) opacity(0.8)" : undefined,
-        }}
-        animate={option.comingSoon ? undefined : { rotate: [0, -7, 7, 0] }}
-        transition={{ duration: 1.8, repeat: Infinity, repeatDelay: 1.4, ease: "easeInOut", delay: 0.9 }}
-      >
-        <img src={option.icon} alt="" className="w-10 h-10 object-contain select-none" draggable={false} />
-      </motion.div>
-      <span className="flex items-center gap-2">
-        <p className={`font-bold ${compact ? "text-[15px]" : "text-[17px]"} ${option.comingSoon ? "text-[#402666]/60" : "text-[#402666]"}`}>
-          {option.title}
-        </p>
-        {option.badge && !option.comingSoon && (
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#7C3AED] text-white uppercase">
-            {t(option.badge === "new" ? "gameTypes.badgeNew" : "gameTypes.badgeBeta")}
-          </span>
-        )}
-        {option.comingSoon && (
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#402666]/10 text-[#402666]/60 uppercase">
-            {t("gameTypes.comingSoon")}
-          </span>
-        )}
-      </span>
-      <p className="text-sm text-[#402666]/60 mt-1">{option.desc}</p>
-    </>
+  // The rotated 56px icon tile every card carries (950:9961 family).
+  const tile = (gradient: string, glow: string, rotate: number) => (
+    <div
+      className="absolute left-[24px] top-[18px] size-[56px] rounded-[20px]"
+      style={{
+        backgroundImage: gradient,
+        transform: `rotate(${rotate}deg)`,
+        boxShadow: `${TILE_INNER}, 0px 6px 7px ${glow}`,
+      }}
+    />
   );
 
   return (
@@ -167,64 +78,162 @@ export function PlayOptionsModal({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.25 }}
-          // The page still shows through, but blurred/washed enough that the
-          // purple title stays readable over busy scene artwork
-          className="fixed inset-0 safe-screen z-[100] flex flex-col items-center justify-center gap-7 px-6 bg-white/30 backdrop-blur-[14px] overflow-y-auto"
+          className="fixed inset-0 safe-screen z-[100] overflow-hidden backdrop-blur-[12px] bg-[rgba(245,217,255,0.7)]"
           onClick={onClose}
         >
-          <motion.h2
-            initial={{ opacity: 0, y: -20, scale: 0.92 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -12 }}
-            transition={{ type: "spring", stiffness: 420, damping: 26 }}
-            className="font-display text-2xl md:text-3xl font-bold text-[#402666] text-center max-w-[320px]"
-          >
-            {t("extra.howToPlayPrompt")}
-          </motion.h2>
+          <ScaledCanvas>
+            {/* the blurred color band behind the cards (950:10030) */}
+            <div
+              className="absolute h-[639px] left-[-239px] top-[294px] w-[1136px] opacity-55 pointer-events-none"
+              style={{ filter: "blur(37px)" }}
+            >
+              <img alt="" className="absolute max-w-none object-cover size-full" src={bandOne} />
+              <img alt="" className="absolute max-w-none object-cover size-full" src={bandTwo} />
+              <div
+                className="absolute inset-0"
+                style={{
+                  background:
+                    "linear-gradient(to bottom, rgba(246,222,255,0) 55.7%, #f6deff 88.4%)",
+                }}
+              />
+            </div>
 
-          <div
-            className="w-full max-w-[400px] flex flex-col gap-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {fullWidthOptions.map((option, i) => (
-              <motion.button
-                key={option.id}
-                initial={{ opacity: 0, y: 90, scale: 0.6, rotate: i % 2 === 0 ? -8 : 8 }}
-                animate={{ opacity: 1, y: 0, scale: 1, rotate: 0 }}
-                exit={{ opacity: 0, y: 40, scale: 0.85, transition: { duration: 0.15 } }}
-                transition={{ type: "spring", stiffness: 360, damping: 16, delay: 0.08 + i * 0.1 }}
-                whileHover={{ scale: 1.03, y: -6 }}
-                whileTap={{ scale: 0.96 }}
-                onClick={option.onClick}
-                className="w-full rounded-[24px] p-5 text-left"
-                style={{ background: "rgba(252,247,255,0.92)", boxShadow: CARD_SHADOW }}
-              >
-                {cardBody(option, false)}
-              </motion.button>
-            ))}
-
-            {halfWidthOptions.length > 0 && (
-              <div className="grid grid-cols-2 gap-4">
-                {halfWidthOptions.map((option, i) => (
-                  <motion.button
-                    key={option.id}
-                    initial={{ opacity: 0, y: 90, scale: 0.6, rotate: i % 2 === 0 ? -8 : 8 }}
-                    animate={{ opacity: 1, y: 0, scale: 1, rotate: 0 }}
-                    exit={{ opacity: 0, y: 40, scale: 0.85, transition: { duration: 0.15 } }}
-                    transition={{ type: "spring", stiffness: 360, damping: 16, delay: 0.28 + i * 0.1 }}
-                    whileHover={option.comingSoon ? undefined : { scale: 1.04, y: -6 }}
-                    whileTap={option.comingSoon ? undefined : { scale: 0.95 }}
-                    onClick={option.onClick}
-                    aria-disabled={option.comingSoon}
-                    className={`w-full rounded-[24px] p-5 text-left ${option.comingSoon ? "cursor-default" : ""}`}
-                    style={{ background: "rgba(252,247,255,0.92)", boxShadow: CARD_SHADOW }}
-                  >
-                    {cardBody(option, true)}
-                  </motion.button>
-                ))}
+            {/* header: back only (950:9999) */}
+            <div className="absolute left-[17px] top-[21px] w-[466px]">
+              <div className="flex items-center justify-between p-[16px]">
+                <button
+                  onClick={onClose}
+                  className="flex items-center justify-center rounded-[9999px] size-[40px] active:scale-95 transition-transform"
+                >
+                  <img alt="" className="block size-[20px]" src={iconBack} />
+                </button>
               </div>
-            )}
-          </div>
+            </div>
+
+            {/* heading (950:9998) */}
+            <motion.p
+              initial={{ opacity: 0, y: -16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ type: "spring", stiffness: 420, damping: 26 }}
+              className="absolute left-[52px] top-[134px] w-[400px] not-italic leading-[52px] text-[46px] tracking-[-0.16px] text-[#523b76]"
+              style={{ fontFamily: "'TASolivare', sans-serif" }}
+            >
+              {t("extra.howToPlayPrompt")}
+            </motion.p>
+
+            <div onClick={(e) => e.stopPropagation()}>
+              {/* Quick Game (950:9969) */}
+              <motion.button
+                initial={{ opacity: 0, y: 60, scale: 0.8 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ type: "spring", stiffness: 360, damping: 18, delay: 0.05 }}
+                whileTap={{ scale: 0.96 }}
+                onClick={() => {
+                  onClose();
+                  onQuickGame();
+                }}
+                className="absolute left-[40px] top-[306px] w-[205px] h-[157px] rounded-[24px] bg-[rgba(252,247,255,0.72)] text-left"
+                style={{ boxShadow: CARD_SHADOW }}
+              >
+                {tile(
+                  "linear-gradient(135deg, rgb(74,222,128) 0%, rgb(52,211,153) 45%, rgb(20,184,166) 100%)",
+                  "rgba(20,184,166,0.35)",
+                  -5.89,
+                )}
+                <img alt="" className="absolute left-[26px] top-[19px] size-[51px] object-contain" src={iconButton} />
+                <p className="absolute left-[25px] top-[107px] max-w-[170px] overflow-hidden text-ellipsis capitalize leading-[34.5px] text-[#402666] text-[20px] tracking-[-0.14px] whitespace-nowrap" style={{ fontFamily: "'Slackey', 'TASolivare', cursive" }}>
+                  {t("extra.playQuickGame")}
+                </p>
+              </motion.button>
+
+              {/* Play With Friends (950:9960) */}
+              <motion.button
+                initial={{ opacity: 0, y: 60, scale: 0.8 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ type: "spring", stiffness: 360, damping: 18, delay: 0.12 }}
+                whileTap={{ scale: 0.96 }}
+                onClick={() => {
+                  onClose();
+                  onPlayWithFriends();
+                }}
+                className="absolute left-[262px] top-[306px] w-[206px] h-[330px] rounded-[24px] text-left"
+                style={{
+                  boxShadow: CARD_SHADOW,
+                  background:
+                    "linear-gradient(to bottom, rgba(255,222,219,0.72) 0%, rgba(225,255,232,0.72) 51.4%, rgba(219,254,252,0.72) 94.7%)",
+                }}
+              >
+                {tile(
+                  // The Figma export carried a hard stop (grey 28.9% → magenta
+                  // 29.1%) that painted a pale wedge across the badge's corner.
+                  // Smooth magenta-to-peach, like every other tile's gradient.
+                  "linear-gradient(135deg, rgb(217,60,203) 0%, rgb(228,116,172) 55%, rgb(235,178,140) 100%)",
+                  "rgba(211,52,198,0.35)",
+                  -5.89,
+                )}
+                <img alt="" className="absolute left-[20px] top-[14px] size-[64px] object-contain" src={iconHearts} />
+                <p className="absolute left-[27px] top-[254px] font-[Nunito] font-bold leading-[25.5px] text-[#402666] text-[17px] tracking-[-0.16px] whitespace-nowrap">
+                  {t("lobby.playPrefix")}
+                </p>
+                <p className="absolute left-[25px] top-[280px] max-w-[170px] overflow-hidden text-ellipsis capitalize leading-[34.5px] text-[#402666] text-[20px] tracking-[-0.14px] whitespace-nowrap" style={{ fontFamily: "'Slackey', 'TASolivare', cursive" }}>
+                  {t("lobby.withFriends")}
+                </p>
+              </motion.button>
+
+              {/* Versus King (950:9978) */}
+              <motion.button
+                initial={{ opacity: 0, y: 60, scale: 0.8 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ type: "spring", stiffness: 360, damping: 18, delay: 0.19 }}
+                whileTap={dark("king") ? undefined : { scale: 0.96 }}
+                onClick={() => launch("king")}
+                aria-disabled={dark("king")}
+                className={`absolute left-[40px] top-[481px] w-[205px] h-[341px] rounded-[24px] bg-[rgba(252,247,255,0.72)] text-left ${dark("king") ? "opacity-70 grayscale-[0.4] cursor-default" : ""}`}
+                style={{ boxShadow: CARD_SHADOW }}
+              >
+                {tile(
+                  "linear-gradient(135deg, rgb(167,139,250) 0%, rgb(129,140,248) 45%, rgb(59,130,246) 100%)",
+                  "rgba(99,102,241,0.35)",
+                  -0.28,
+                )}
+                <img alt="" className="absolute left-[25px] top-[19px] size-[55px] object-contain" src={iconKing} />
+                <p className="absolute left-[27px] top-[262px] font-[Nunito] font-bold leading-[25.5px] opacity-50 text-[#402666] text-[17px] tracking-[-0.16px] whitespace-nowrap">
+                  {dark("king") ? t("gameTypes.comingSoon") : t("lobby.newBang")}
+                </p>
+                <p className="absolute left-[25px] top-[288px] max-w-[170px] overflow-hidden text-ellipsis capitalize leading-[34.5px] text-[#402666] text-[20px] tracking-[-0.14px] whitespace-nowrap" style={{ fontFamily: "'Slackey', 'TASolivare', cursive" }}>
+                  {t("lobby.vkTitle")}
+                </p>
+              </motion.button>
+
+              {/* Play Team Battle (950:9987) */}
+              <motion.button
+                initial={{ opacity: 0, y: 60, scale: 0.8 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ type: "spring", stiffness: 360, damping: 18, delay: 0.26 }}
+                whileTap={dark("team_battle") ? undefined : { scale: 0.96 }}
+                onClick={() => launch("team_battle")}
+                aria-disabled={dark("team_battle")}
+                className={`absolute left-[263px] top-[652px] w-[205px] h-[165px] rounded-[24px] text-left ${dark("team_battle") ? "opacity-70 grayscale-[0.4] cursor-default" : ""}`}
+                style={{
+                  boxShadow: CARD_SHADOW,
+                  background: "linear-gradient(to bottom, #fff7b8, #f3e9f9)",
+                }}
+              >
+                {tile(
+                  "linear-gradient(-51.54deg, rgb(252,28,106) 20.5%, rgb(248,240,129) 42.2%, rgb(246,59,115) 93.6%)",
+                  "rgba(246,59,115,0.35)",
+                  -0.28,
+                )}
+                <img alt="" className="absolute left-[28px] top-[26px] w-[49px] h-[44px] object-contain" src={iconCrate} />
+                <p className="absolute left-[24px] top-[92px] font-[Nunito] font-bold leading-[25.5px] text-[#402666] text-[17px] tracking-[-0.16px] whitespace-nowrap">
+                  {dark("team_battle") ? t("gameTypes.comingSoon") : t("lobby.playPrefix")}
+                </p>
+                <p className="absolute left-[24px] top-[118px] max-w-[170px] overflow-hidden text-ellipsis capitalize leading-[34.5px] text-[#402666] text-[20px] tracking-[-0.14px] whitespace-nowrap" style={{ fontFamily: "'Slackey', 'TASolivare', cursive" }}>
+                  {t("teamBattle.title")}
+                </p>
+              </motion.button>
+            </div>
+          </ScaledCanvas>
         </motion.div>
       )}
     </AnimatePresence>

@@ -118,7 +118,28 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [sentRequests, setSentRequests] = useState<Set<string>>(new Set());
-  const [invitingUser, setInvitingUser] = useState<string | null>(null);
+  // Room-invite mode picks first, sends on "done" — see sendRoomInvites.
+  const [pickedForRoom, setPickedForRoom] = useState<Set<string>>(new Set());
+  const [sendingInvites, setSendingInvites] = useState(false);
+  const [inviteSendError, setInviteSendError] = useState(false);
+  // Who is already on the couch (seated or holding an invite), so their tile
+  // can say so — greyed with a badge — instead of pretending they are
+  // invitable and quietly dropping them at send time.
+  const [alreadyInRoom, setAlreadyInRoom] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    if (!isOpen || !roomId) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("room_participants")
+        .select("user_id")
+        .eq("room_id", roomId);
+      if (!cancelled && data) setAlreadyInRoom(new Set(data.map(r => r.user_id)));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, roomId]);
   const [sendingRequestTo, setSendingRequestTo] = useState<string | null>(null);
   const [pendingOutgoingIds, setPendingOutgoingIds] = useState<Set<string>>(new Set());
   const [copied, setCopied] = useState(false);
@@ -340,71 +361,104 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
     }
   };
 
-  // Room invitation handler
-  const handleInviteToRoom = async (userId: string) => {
-    // Callers pick the right action for the mode now, so reaching here without
-    // a room is a bug rather than a state. Say so in the log instead of
-    // returning quietly, which is how the dead Invite button stayed invisible.
-    if (!roomId) {
-      console.warn("[InviteFriendsModal] invite to room with no roomId", { userId });
+  /**
+   * Room invites are picked, then sent — one tap per friend, one "done".
+   *
+   * A tile used to fire the invite the instant it was touched and close the
+   * screen 600ms later, so inviting three friends meant opening this screen
+   * three times and a stray tap was already an invitation. Now a tap toggles
+   * the pick and the green button below sends the whole set: everyone still
+   * gets their notification (notify_room_invite fires per inserted row), and
+   * nothing at all is sent until "done" says so.
+   */
+  const togglePickForRoom = (userId: string) =>
+    setPickedForRoom(prev => {
+      const next = new Set(prev);
+      if (next.has(userId)) next.delete(userId);
+      else next.add(userId);
+      return next;
+    });
+
+  const sendRoomInvites = async () => {
+    if (!roomId || sendingInvites) return;
+    // Leaving with nobody picked is a real answer, same as pre-room mode.
+    if (pickedForRoom.size === 0) {
+      handleClose();
       return;
     }
-
-    setInvitingUser(userId);
+    setSendingInvites(true);
+    setInviteSendError(false);
     try {
-      // Import supabase
-      const { supabase } = await import("@/integrations/supabase/client");
-      
-      // Check if already invited/in room
+      const ids = [...pickedForRoom];
       const { data: existing } = await supabase
         .from("room_participants")
-        .select("id")
+        .select("user_id")
         .eq("room_id", roomId)
-        .eq("user_id", userId)
-        .maybeSingle();
-      
-      if (existing) {
+        .in("user_id", ids);
+      const already = new Set((existing ?? []).map(r => r.user_id));
+      const toInvite = ids.filter(id => !already.has(id));
+
+      if (toInvite.length === 0) {
         toast.info(t("extra.userAlreadyInRoom"));
+        handleClose();
         return;
       }
-      
-      // Get the user's profile for nickname
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("nickname, avatar_url, country_code")
-        .eq("user_id", userId)
-        .maybeSingle();
-      
-      // Add as invited participant
-      await supabase.from("room_participants").insert({
-        room_id: roomId,
-        user_id: userId,
-        status: "invited",
-        nickname: profile?.nickname || "Player",
-        avatar_url: profile?.avatar_url,
-        country_code: profile?.country_code || "GE",
-        is_host: false,
-      });
-      
-      // Notification is automatically created by database trigger (notify_room_invite)
-      // when participant is added to room_participants table
-      
-      setSentRequests(prev => new Set([...prev, userId]));
-      // "მოიწვიე მეგობარი თამაშში". This is that, and until now nothing here
-      // told the missions so.
-      void trackMissionEvent("invited_to_room", 1);
-      toast.success(t("extra.inviteSent"));
 
-      // Auto-close modal after brief delay for visual feedback
-      setTimeout(() => {
-        handleClose();
-        onInviteSuccess?.();
-      }, 600);
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, nickname, avatar_url, country_code")
+        .in("user_id", toInvite);
+      const prof = new Map((profiles ?? []).map(p => [p.user_id, p]));
+
+      const { error } = await supabase.from("room_participants").insert(
+        toInvite.map(id => ({
+          room_id: roomId,
+          user_id: id,
+          status: "invited" as const,
+          nickname: prof.get(id)?.nickname || "Player",
+          avatar_url: prof.get(id)?.avatar_url,
+          country_code: prof.get(id)?.country_code || "GE",
+          is_host: false,
+        })),
+      );
+      if (error) throw error;
+
+      // "მოიწვიე მეგობარი თამაშში" — every one of these is that.
+      void trackMissionEvent("invited_to_room", toInvite.length);
+
+      // The participants insert above rings the in-app bell (the
+      // notify_room_invite trigger) — which only reaches a player with the
+      // app open. The push is what reaches everyone else, and it rides a
+      // game_invitations row per friend: send-game-invite-push re-reads the
+      // invitation server-side and composes its own text, so this cannot put
+      // arbitrary words on a lock screen. Fire-and-forget, never fatal — the
+      // invitations are already in the database either way.
+      if (user) {
+        void (async () => {
+          const { data: invRows } = await supabase
+            .from("game_invitations")
+            .insert(toInvite.map(id => ({ sender_id: user.id, receiver_id: id, room_id: roomId })))
+            .select("id");
+          for (const row of invRows ?? []) {
+            void supabase.functions
+              .invoke("send-game-invite-push", { body: { invitationId: row.id } })
+              .catch(e => console.warn("[invite] push failed:", e));
+          }
+        })().catch(e => console.warn("[invite] push failed:", e));
+      }
+
+      toast.success(t("extra.inviteSent"));
+      handleClose();
+      onInviteSuccess?.();
     } catch (error) {
+      // App toasts are muted by design (src/lib/toast), so a failure here
+      // has to say so ON the screen — a silent მზადაა reads as a dead
+      // button. The picks stay so the player can simply try again.
       console.error("Invite error:", error);
+      setInviteSendError(true);
       toast.error(t("extra.inviteFailed"));
     } finally {
-      setInvitingUser(null);
+      setSendingInvites(false);
     }
   };
 
@@ -413,6 +467,8 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
     setSearchResults([]);
     setSentRequests(new Set());
     setSendingRequestTo(null);
+    setPickedForRoom(new Set());
+    setInviteSendError(false);
     onClose();
   };
   
@@ -589,7 +645,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                 footer tallest. */}
             <div
               className={`mx-auto w-full max-w-[520px] p-4 ${
-                isPreRoomMode
+                isPreRoomMode || isRoomInviteMode
                   ? "pb-[calc(15rem+env(safe-area-inset-bottom))]"
                   : "pb-[calc(10rem+env(safe-area-inset-bottom))]"
               }`}
@@ -637,8 +693,11 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                           const renderRow = (result: SearchResult) => {
                             const isFriend = friendIds.has(result.user_id);
                             const isPendingOutgoing = pendingOutgoingIds.has(result.user_id);
-                            const isLoading = invitingUser === result.user_id || sendingRequestTo === result.user_id;
+                            const isLoading = sendingRequestTo === result.user_id;
                             const isSent = sentRequests.has(result.user_id);
+                            // Already seated or invited in this room — the
+                            // row says so instead of offering the invite.
+                            const isSeated = isRoomInviteMode && alreadyInRoom.has(result.user_id);
                             
                             const handleButtonAction = () => {
                               if (isFriend) {
@@ -657,7 +716,13 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                                 if (isPreRoomMode) {
                                   onFriendSelect?.(result.user_id);
                                 } else if (isRoomInviteMode) {
-                                  handleInviteToRoom(result.user_id);
+                                  if (isSeated) {
+                                    toast.info(t("extra.userAlreadyInRoom"));
+                                    return;
+                                  }
+                                  // Same contract as the grid: picking, not
+                                  // sending — the "done" button sends.
+                                  togglePickForRoom(result.user_id);
                                 } else {
                                   // Browse mode has no room yet, so inviting
                                   // means starting one with them in it — the
@@ -694,13 +759,16 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                               handleButtonAction();
                             };
                             
-                            const isDisabled = isSent || isLoading || (!isFriend && isPendingOutgoing);
+                            const isDisabled = isSent || isLoading || isSeated || (!isFriend && isPendingOutgoing);
                             // Picked for a room that does not exist yet. The
                             // grid below marks this with a tick; a search row
                             // that stayed on "Invite" after being pressed read
                             // as another press that had not worked.
                             const isPicked =
-                              isFriend && isPreRoomMode && !!selectedFriends?.has(result.user_id);
+                              isFriend &&
+                              (isPreRoomMode
+                                ? !!selectedFriends?.has(result.user_id)
+                                : isRoomInviteMode && pickedForRoom.has(result.user_id));
                             
                             return (
                               <motion.div
@@ -728,7 +796,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                                   onTouchEnd={handleTouch}
                                   disabled={isDisabled}
                                   className={`relative z-10 flex items-center gap-2 px-5 py-3 min-h-[48px] rounded-2xl text-sm font-semibold transition-colors border active:scale-95 ${
-                                    isSent || (!isFriend && isPendingOutgoing)
+                                    isSeated || isSent || (!isFriend && isPendingOutgoing)
                                       ? "bg-white/15 border-white/20 text-white/70"
                                       : isPicked
                                       ? "bg-white/25 border-white text-white"
@@ -742,6 +810,11 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                                     <>
                                       <Loader2 className="w-4 h-4 animate-spin" />
                                       {t("extra.sending")}
+                                    </>
+                                  ) : isSeated ? (
+                                    <>
+                                      <Check className="w-4 h-4" />
+                                      {t("extra.alreadyInvitedBadge")}
                                     </>
                                   ) : !isFriend && isPendingOutgoing ? (
                                     <>
@@ -884,55 +957,70 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                         the rest scroll inside the grid. */}
                     <div className="grid grid-cols-4 gap-2 max-h-[min(30vh,264px)] overflow-y-auto">
                       {orderedFriends.map((friend) => {
-                        const isSelected = selectedFriends?.has(friend.friendId) || false;
-                        const isInvited = !isBrowseMode && sentRequests.has(friend.friendId);
-                        const isInviting = invitingUser === friend.friendId;
-                        const marked = isSelected || isInvited;
+                        // Already on the couch — seated or holding an invite.
+                        // The tile goes black-and-white and says so, instead
+                        // of taking a pick that could never send.
+                        const seated = isRoomInviteMode && alreadyInRoom.has(friend.friendId);
+                        const marked = isPreRoomMode
+                          ? selectedFriends?.has(friend.friendId) || false
+                          : isRoomInviteMode
+                            ? pickedForRoom.has(friend.friendId)
+                            : false;
                         return (
                           <motion.button
                             key={friend.friendId}
                             onClick={() => {
                               if (isPreRoomMode) return onFriendSelect?.(friend.friendId);
-                              if (isRoomInviteMode) return handleInviteToRoom(friend.friendId);
+                              // A tap picks; the green button below sends.
+                              if (isRoomInviteMode) {
+                                if (!seated) togglePickForRoom(friend.friendId);
+                                return;
+                              }
                               // Nothing to invite them to from here, so the
                               // tile opens who they are rather than being a
                               // button that does nothing.
                               setProfileUserId(friend.friendId);
                             }}
-                            disabled={!isBrowseMode && (isInviting || isInvited)}
+                            disabled={sendingInvites || seated}
                             // The picked ring is drawn inside the tile. Outside
                             // it — which is where a plain `ring` goes — the
                             // grid scrolls, and the top and side edges of it
                             // were being cut off against the scroll box.
-                            className={`flex flex-col items-center p-2.5 rounded-xl transition-all disabled:opacity-70 ${
-                              marked
-                                ? "bg-white/25 ring-2 ring-inset ring-white"
-                                : "bg-white/10 hover:bg-white/15"
-                            }`}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
+                            className={`flex flex-col items-center p-2.5 rounded-xl transition-all ${
+                              seated
+                                ? "bg-white/5 opacity-60"
+                                : marked
+                                  ? "bg-white/25 ring-2 ring-inset ring-white"
+                                  : "bg-white/10 hover:bg-white/15"
+                            } ${sendingInvites ? "opacity-70" : ""}`}
+                            whileHover={seated ? undefined : { scale: 1.02 }}
+                            whileTap={seated ? undefined : { scale: 0.98 }}
                           >
-                            <div className="relative">
+                            <div className={`relative ${seated ? "grayscale" : ""}`}>
                               <SafeAvatar
                                 avatarUrl={friend.avatarUrl}
                                 fallback={friend.nickname}
                                 className="w-12 h-12 border border-white/20"
                                 fallbackClassName="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-xs font-bold"
                               />
-                              {isInviting && (
-                                <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40">
-                                  <Loader2 className="w-4 h-4 text-white animate-spin" />
-                                </div>
-                              )}
-                              {marked && !isInviting && (
-                                <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-white rounded-full flex items-center justify-center">
-                                  <Check className="w-3 h-3 text-primary" />
+                              {(marked || seated) && (
+                                <div
+                                  className={`absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full flex items-center justify-center ${
+                                    seated ? "bg-white/60" : "bg-white"
+                                  }`}
+                                >
+                                  <Check className={`w-3 h-3 ${seated ? "text-gray-600" : "text-primary"}`} />
                                 </div>
                               )}
                             </div>
                             <span className="text-xs text-white font-medium mt-1.5 max-w-[60px] truncate">
                               {friend.nickname}
                             </span>
+                            {seated && (
+                              <span className="text-[10px] text-white/60 max-w-[64px] truncate">
+                                {t("extra.alreadyInvitedBadge")}
+                              </span>
+                            )}
                           </motion.button>
                         );
                       })}
@@ -1029,20 +1117,38 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                   said what to do once you had chosen someone. Green, because
                   the button above it is the pale one and this is the one that
                   finishes the job. */}
-              {isPreRoomMode && (
+              {(isPreRoomMode || isRoomInviteMode) && (
                 <GreenPlayButton
-                  onClick={handleClose}
+                  // Pre-room: the picks were reported tap by tap, closing is
+                  // all that is left. Room mode: THIS is what sends — nothing
+                  // went out while picking.
+                  onClick={isPreRoomMode ? handleClose : () => void sendRoomInvites()}
                   // Slate until somebody is picked. Still pressable — leaving
                   // with nobody is a real answer, and the corner chevron being
                   // the only way out is what this button exists to fix.
-                  tone={selectedCount > 0 ? "green" : "muted"}
+                  tone={(isPreRoomMode ? selectedCount : pickedForRoom.size) > 0 ? "green" : "muted"}
                   className="mx-auto mt-3 h-14 w-full max-w-[460px] text-base"
-                  icon={<Check className="w-5 h-5" />}
+                  icon={
+                    sendingInvites ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <Check className="w-5 h-5" />
+                    )
+                  }
                 >
-                  {selectedCount > 0
-                    ? `${t("common.done")} · ${selectedCount}`
-                    : t("common.done")}
+                  {isPreRoomMode
+                    ? selectedCount > 0
+                      ? `${t("common.done")} · ${selectedCount}`
+                      : t("common.done")
+                    : pickedForRoom.size > 0
+                      ? `${t("common.done")} · ${pickedForRoom.size}`
+                      : t("common.done")}
                 </GreenPlayButton>
+              )}
+              {isRoomInviteMode && inviteSendError && (
+                <p className="mt-2 text-center text-sm font-semibold text-red-300">
+                  {t("extra.inviteFailed")}
+                </p>
               )}
             </div>
           </div>

@@ -11,6 +11,7 @@ import glitchIcon from "@/assets/glitch.png";
 import partyBlowerIcon from "@/assets/Party-Blower.webp";
 import triviaBuzzerIcon from "@/assets/trivia-buzzer-5.png";
 import collectionMagnetIcon from "@/assets/fridge-magnet-collection-2.png";
+import { ownerHasSeenTrivia } from "@/utils/triviaFairPlay";
 
 interface Trivia {
   id: string;
@@ -228,15 +229,23 @@ export function MyTriviasPickerModal({ open, onOpenChange, onSelect, onCreateTri
                           ? trivia.questions.filter((q: any) => !q.icon_slug).length
                           : 0;
                         
+                        // A trivia the host has played (or whose answers they
+                        // saw in the old open mode) can't be picked for a room
+                        // they'd play in — it would be an open-book exam. It
+                        // stays visible, black-and-white, so they know why.
+                        const unplayable = ownerHasSeenTrivia(trivia);
                         return (
                           <motion.button
                             key={trivia.id}
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: index * 0.03 }}
+                            disabled={unplayable}
                             onClick={() => handleSelect({ id: trivia.id, title: trivia.title, type: "trivia" })}
-                            className="w-full flex items-center gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors text-left"
-                            whileTap={{ scale: 0.98 }}
+                            className={`w-full flex items-center gap-3 p-3 rounded-xl bg-muted/50 transition-colors text-left ${
+                              unplayable ? "grayscale opacity-50" : "hover:bg-muted"
+                            }`}
+                            whileTap={unplayable ? undefined : { scale: 0.98 }}
                           >
                             <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center overflow-hidden flex-shrink-0">
                               {trivia.cover_image ? (

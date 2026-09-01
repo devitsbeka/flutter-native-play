@@ -194,8 +194,8 @@ export const roomFilterOptions: FilterOption<RoomFilter>[] = [
   { value: "all", labelKey: "extra.filterAll" },
   { value: "my_rooms", labelKey: "extra.filterMyRooms" },
   { value: "friends_rooms", labelKey: "extra.filterFriendsRooms" },
-  { value: "active", labelKey: "extra.filterActive" },
-  { value: "completed", labelKey: "extra.filterCompleted" },
+  { value: "king", labelKey: "lobby.vkTitle" },
+  { value: "team_battle", labelKey: "teamBattle.title" },
 ];
 
 // Room sort options removed - always sort by last activity
@@ -213,8 +213,6 @@ export const myTriviaFilterOptions: FilterOption<MyTriviaFilter>[] = [
   { value: "trivias", labelKey: "extra.filterTrivias" },
   { value: "collections", labelKey: "extra.filterCollections" },
   { value: "personal", labelKey: "extra.myTriviaPartyLabel" },
-  { value: "most_liked", labelKey: "extra.filterMostLiked" },
-  { value: "most_saved", labelKey: "extra.filterMostSaved" },
   { value: "most_played", labelKey: "extra.filterMostPlayed" },
 ];
 
@@ -233,15 +231,13 @@ export const exploreSortOptions: SortOption<ExploreSort>[] = [
 ];
 
 // Type exports
-export type RoomFilter = "all" | "my_rooms" | "friends_rooms" | "active" | "completed";
+export type RoomFilter = "all" | "my_rooms" | "friends_rooms" | "king" | "team_battle";
 export type MyTriviaFilter =
   | "all"
   | "private"
   | "published"
   | "trivias"
   | "collections"
-  | "most_liked"
-  | "most_saved"
   | "most_played"
   | "personal";
 export type ExploreFilter = "all" | "friends" | "trivias" | "collections";

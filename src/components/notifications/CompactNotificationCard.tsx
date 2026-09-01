@@ -16,6 +16,16 @@ import { NotificationIcon } from '@/components/notifications/NotificationIcon';
 import { shouldDismissSwipe, SWIPE_THRESHOLD, SWIPE_LIMIT } from '@/utils/swipeToDismiss';
 import { translateNotificationTitle, translateNotificationMessage } from '@/utils/notificationTranslations';
 import { useLocalizedCategoryName } from "@/utils/categoryDisplayName";
+import iconKingLounge from "@/assets/play-chooser/icon-king.webp";
+import iconBattleLounge from "@/assets/play-chooser/icon-crate.png";
+
+// The two lounges wear their own face on an invite — the King mascot, the
+// Battle crate — and name their game where an ordinary room names its
+// category. Same branding the rooms list uses (MyRoomsSection).
+const LOUNGE_META: Record<string, { icon: string; labelKey: string }> = {
+  king: { icon: iconKingLounge, labelKey: "lobby.vkTitle" },
+  team_battle: { icon: iconBattleLounge, labelKey: "teamBattle.title" },
+};
 
 interface CompactNotificationCardProps {
   notification: Notification;
@@ -110,7 +120,7 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
     queryFn: async () => {
       const { data } = await supabase
         .from('game_rooms')
-        .select('room_icon, room_name, category_name')
+        .select('room_icon, room_name, category_name, game_type_key')
         .eq('id', roomId!)
         .maybeSingle();
       return data ?? null;
@@ -119,7 +129,8 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
     staleTime: 30_000,
     gcTime: 60 * 60 * 1000,
   });
-  const roomIcon = liveRoom?.room_icon || storedRoomIcon || undefined;
+  const lounge = liveRoom?.game_type_key ? LOUNGE_META[liveRoom.game_type_key] : undefined;
+  const roomIcon = (lounge ? lounge.icon : undefined) || liveRoom?.room_icon || storedRoomIcon || undefined;
   const roomName = liveRoom?.room_name || storedRoomName || undefined;
   const categoryName = localizeCategory(liveRoom ? liveRoom.category_name ?? undefined : storedCategoryName);
   const triviaCover = notification.data?.trivia_cover as string | undefined;
@@ -433,7 +444,7 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
                     </p>
                   )}
                   
-                  {hasRoomContext && (roomName || categoryName) && (
+                  {hasRoomContext && (roomName || categoryName || lounge) && (
                     <div className="mt-2 p-2.5 rounded-xl bg-muted/50 border border-border/30 space-y-1.5">
                       {roomName && (
                         <div className="flex items-center gap-2 text-xs">
@@ -441,10 +452,12 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
                           <span className="font-medium text-foreground">{roomName}</span>
                         </div>
                       )}
-                      {categoryName && (
+                      {/* which GAME the invite is for: the lounge's brand name,
+                          or an ordinary room's category */}
+                      {(lounge || categoryName) && (
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           <Tag className="w-3.5 h-3.5" />
-                          <span>{categoryName}</span>
+                          <span>{lounge ? t(lounge.labelKey) : categoryName}</span>
                         </div>
                       )}
                     </div>

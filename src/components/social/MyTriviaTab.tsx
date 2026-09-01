@@ -4,11 +4,14 @@ import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { FeatureOnboardingCarousel, hasSeenFeatureOnboarding } from "@/components/team/FeatureOnboardingCarousel";
 import { useNavigate } from "react-router-dom";
-import { Plus, Play, Loader2, Globe, Lock, ChevronDown, ChevronUp, Layers, Pencil, FileEdit, Trash2, Check, PartyPopper } from "lucide-react";
+import { Plus, Play, Loader2, Globe, Lock, ChevronDown, ChevronUp, Layers, Pencil, FileEdit, Trash2, Check } from "lucide-react";
 import triviaBuzzerIcon from "@/assets/trivia-buzzer.png";
+import iconGroupOfPeople from "@/assets/group-of-people.png";
+import { ownerHasSeenTrivia } from "@/utils/triviaFairPlay";
 import purpleHeart3d from "@/assets/icons/purple-heart-3d.png";
 import bookmark3d from "@/assets/icons/bookmark-3d-orange.png";
 import pushButton3d from "@/assets/icons/push-button-3d.png";
+import collectionMagnetIcon from "@/assets/fridge-magnet-collection-2.png";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useMyQuizPosts } from "@/hooks/useSocialFeed";
 import { useMyCollections, useCollectionQuizzes } from "@/hooks/useCollections";
@@ -459,18 +462,14 @@ function CollectionCard({
         <div className="p-4">
           {/* Author Info + Collection Badge Row */}
           <div className="flex items-center justify-between">
-            {/* Left: Avatar + Name/Date */}
+            {/* Left: the collection's own face (not the author's avatar) */}
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-full overflow-hidden bg-secondary border-2 border-border flex-shrink-0">
-                <SafeAvatarImage 
-                  avatarUrl={profile?.avatar_url}
-                  fallback={profile?.nickname || 'U'}
-                  containerClassName="w-full h-full"
-                />
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <img src={collectionMagnetIcon} alt="" className="w-8 h-8 object-contain" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-foreground truncate text-sm">
-                  {profile?.nickname || t("extra.youLabel")}
+                  {t("extra.collectionLabel")}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {formatLocalTimeAgo(new Date(collection.created_at), t)}
@@ -660,11 +659,6 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
       className="relative bg-card rounded-2xl overflow-hidden shadow-lg cursor-pointer hover:shadow-xl transition-shadow"
       style={{ border: "2px solid rgba(236, 72, 153, 0.5)" }}
     >
-      {/* Party Badge */}
-      <div className="absolute top-3 left-14 z-10 flex h-8 items-center bg-pink-500/90 text-white px-3 rounded-full text-xs font-semibold shadow-md">
-        <span>My Trivia Party</span>
-      </div>
-
       {/* Edit Button */}
       <button 
         onClick={(e) => { e.stopPropagation(); onEdit(post); }}
@@ -703,20 +697,38 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
       {/* Author Info & Stats */}
       <div className="p-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full overflow-hidden bg-secondary border-2 border-border flex-shrink-0">
-            <SafeAvatarImage 
-              avatarUrl={profile?.avatar_url}
-              fallback={profile?.nickname || 'U'}
-              containerClassName="w-full h-full"
-            />
+          {/* the party's own face, not the host's avatar */}
+          <div className="w-10 h-10 rounded-lg bg-pink-500/15 flex items-center justify-center flex-shrink-0">
+            <img src={iconGroupOfPeople} alt="" className="w-7 h-7 object-contain" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-foreground truncate">
-              {profile?.nickname || t("extra.youLabel")}
+              {t("extra.myTriviaPartyLabel")}
             </p>
             <p className="text-xs text-muted-foreground">
               {formatLocalTimeAgo(new Date(post.created_at), t)}
             </p>
+          </div>
+          {/* Rides the meta row like the trivia and collection cards do. As a
+              full-width row of its own underneath, it made the party card
+              taller than everything beside it in the grid. */}
+          <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
+            <ChunkyButton
+              size="sm"
+              variant="outline"
+              className="h-10 text-sm"
+              onClick={handlePlayOnTV}
+              disabled={isStartingTV}
+            >
+              {isStartingTV ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <>
+                  <Play className="w-4 h-4" />
+                  <span>{t("extra.playBtn")}</span>
+                </>
+              )}
+            </ChunkyButton>
           </div>
         </div>
 
@@ -738,25 +750,6 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
         </div>
         )}
         
-        {/* Buttons Row */}
-        <div className="flex items-center gap-3 mt-3" onClick={(e) => e.stopPropagation()}>
-          <ChunkyButton
-            size="sm"
-            variant="primary"
-            className="flex-1 h-10 text-sm"
-            onClick={handlePlayOnTV}
-            disabled={isStartingTV}
-            icon={
-              isStartingTV ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Play className="w-4 h-4 fill-current" />
-              )
-            }
-          >
-            {t("extra.playWithFriendsBtn")}
-          </ChunkyButton>
-        </div>
       </div>
     </motion.div>
   );
@@ -791,14 +784,20 @@ function StandaloneQuizCard({
   // Tilt animation for new items - random left or right tilt
   const tiltDirection = post.id.charCodeAt(0) % 2 === 0 ? 15 : -15;
 
+  // Once the owner has seen the answers — played it, wrote it openly, or
+  // edited it — the button offers a challenge instead: friends can still be
+  // invited to beat the score, but a solo run would be an open-book exam.
+  const alreadyPlayedByMe = ownerHasSeenTrivia(post);
+
   const handlePlayClick = () => {
-    // If trivia is "blind" (locked/დახურული), show play mode selection
-    if (post.is_blind) {
-      onPlayModeSelect?.(post);
-    } else {
-      // Open trivia - navigate directly
-      navigate(`/trivia/${post.id}`);
+    // The chooser is the honest entry either way: it drops the solo option
+    // for a trivia the owner has already seen and keeps the challenge. Going
+    // straight to /trivia here was what let a seen trivia be replayed solo.
+    if (onPlayModeSelect) {
+      onPlayModeSelect(post);
+      return;
     }
+    navigate(`/trivia/${post.id}`);
   };
 
   return (
@@ -847,17 +846,13 @@ function StandaloneQuizCard({
       {/* Author Info & Stats */}
       <div className="p-4">
         <div className="flex items-center gap-3">
-          {/* Avatar with SafeAvatarImage for robust fallback handling */}
-          <div className="w-10 h-10 rounded-full overflow-hidden bg-secondary border-2 border-border flex-shrink-0">
-            <SafeAvatarImage 
-              avatarUrl={profile?.avatar_url}
-              fallback={profile?.nickname || 'U'}
-              containerClassName="w-full h-full"
-            />
+          {/* the trivia's own face — the buzzer — not the author's avatar */}
+          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+            <img src={triviaBuzzerIcon} alt="" className="w-7 h-7 object-contain" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-foreground truncate">
-              {profile?.nickname || t("extra.youLabel")}
+              {t("extra.triviaLabel")}
             </p>
             <p className="text-xs text-muted-foreground">
               {formatLocalTimeAgo(new Date(post.created_at), t)}
@@ -873,8 +868,14 @@ function StandaloneQuizCard({
                 className="h-10 text-sm"
                 onClick={handlePlayClick}
               >
-                <Play className="w-4 h-4" />
-                <span>{t("extra.playBtn")}</span>
+                {alreadyPlayedByMe ? (
+                  <span>{t("extra.challengeFriendBtn")}</span>
+                ) : (
+                  <>
+                    <Play className="w-4 h-4" />
+                    <span>{t("extra.playBtn")}</span>
+                  </>
+                )}
               </ChunkyButton>
             </div>
           )}
@@ -1225,14 +1226,6 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
     (item.likes_count || 0) + (item.saves_count || 0) + (item.plays_count || 0);
 
   switch (sortFilter) {
-    case "most_liked":
-      standalonePosts = standalonePosts.sort((a, b) => (b.likes_count || 0) - (a.likes_count || 0));
-      filteredCollections = filteredCollections.sort((a, b) => (b.likes_count || 0) - (a.likes_count || 0));
-      break;
-    case "most_saved":
-      standalonePosts = standalonePosts.sort((a, b) => (b.saves_count || 0) - (a.saves_count || 0));
-      filteredCollections = filteredCollections.sort((a, b) => (b.saves_count || 0) - (a.saves_count || 0));
-      break;
     case "most_played":
       standalonePosts = standalonePosts.sort((a, b) => (b.plays_count || 0) - (a.plays_count || 0));
       filteredCollections = filteredCollections.sort((a, b) => (b.plays_count || 0) - (a.plays_count || 0));
@@ -1260,11 +1253,7 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
   // exclusion rather than a list of filters so a new filter is date-sorted by
   // default instead of coming out in whatever order the arrays were built —
   // which is what "personal", "private" and "published" used to do.
-  if (sortFilter === "most_liked") {
-    unifiedFeed = unifiedFeed.sort((a, b) => (b.data.likes_count || 0) - (a.data.likes_count || 0));
-  } else if (sortFilter === "most_saved") {
-    unifiedFeed = unifiedFeed.sort((a, b) => (b.data.saves_count || 0) - (a.data.saves_count || 0));
-  } else if (sortFilter === "most_played") {
+  if (sortFilter === "most_played") {
     unifiedFeed = unifiedFeed.sort((a, b) => (b.data.plays_count || 0) - (a.data.plays_count || 0));
   } else {
     unifiedFeed = unifiedFeed.sort(
@@ -1541,6 +1530,7 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
         onPlaySolo={handlePlaySolo}
         onCreateRoom={handleCreateRoom}
         onPlayTV={handlePlayTV}
+        alreadyPlayed={ownerHasSeenTrivia(playModeTrivia)}
       />
     </motion.div>
   );

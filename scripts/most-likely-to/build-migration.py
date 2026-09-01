@@ -30,6 +30,12 @@ HERE = pathlib.Path(__file__).parent
 OUT = HERE.parent.parent / "supabase" / "migrations" / "20260916100000_most_likely_to.sql"
 
 NS = uuid.uuid5(uuid.NAMESPACE_URL, "flutter-native-play/most-likely-to")
+
+# NOTE: the prompts' icon_slug values and the majority-only settlement
+# (a split top vote pays nobody) live in a follow-up migration —
+# supabase/migrations/20260921230000_most_likely_majority_and_icons.sql —
+# addressed by these same uuid5 ids. If you regenerate and re-seed from
+# scratch, apply that migration after this one.
 LANGS = ["en", "ka", "de", "es", "fr", "it", "pt"]
 
 CATEGORY_SLUG = "most_likely_to"
