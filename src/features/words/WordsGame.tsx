@@ -581,13 +581,32 @@ export default function WordsGame() {
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#402666]/25 via-transparent to-[#402666]/30" />
 
       <div className="relative mx-auto flex h-full w-full max-w-[480px] flex-col px-4">
-        {/* Top bar: back, me, coins, friend (or an open seat), menu */}
-        <div className="mt-1 flex h-[76px] shrink-0 items-center gap-2">
-          <motion.button whileTap={{ scale: 0.82 }} onClick={goBack} aria-label={t("common.back")} className={`${roundButton} h-10 w-10 shrink-0`}>
+        {/* Header, the lounges' shape: back, a centred title, menu. The
+            level sits under the title so the row stays quiet. */}
+        <div className="relative mt-1 flex h-[56px] shrink-0 items-center justify-between">
+          <motion.button whileTap={{ scale: 0.82 }} onClick={goBack} aria-label={t("common.back")} className={`${roundButton} h-10 w-10`}>
             <ArrowLeft className="h-5 w-5" />
           </motion.button>
+          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-14">
+            <div
+              className="truncate text-[24px] leading-[26px] text-white [text-shadow:0_2px_8px_rgba(23,10,54,0.45)]"
+              style={{ fontFamily: "'TASolivare', 'Nunito', sans-serif" }}
+            >
+              {t("words.title")}
+            </div>
+            <div className="mt-0.5 truncate font-['Nunito'] text-[12px] font-bold uppercase tracking-wider text-white/85 [text-shadow:0_1px_6px_rgba(23,10,54,0.45)]">
+              {t("words.levelLabel", { n: level.number })} · {t("words.sceneProgress", { scene: t(scene.nameKey), i: sceneIndex + 1, total: LEVELS_PER_SCENE })}
+            </div>
+          </div>
+          <motion.button whileTap={{ scale: 0.82 }} onClick={() => { playSound("button-click"); setMenuOpen(true); }} aria-label={t("words.menu")} className={`${roundButton} h-10 w-10`}>
+            <Menu className="h-5 w-5" />
+          </motion.button>
+        </div>
 
-          <div className="flex w-[64px] shrink-0 flex-col items-center" title={myName}>
+        {/* Players: you on the left, your friend (or the open seat) on the
+            right, the purse between them. */}
+        <div className="mt-2 flex shrink-0 items-start justify-between px-1">
+          <div className="flex w-[64px] flex-col items-center" title={myName}>
             <QuizPlayerAvatar
               avatarUrl={profile?.avatar_url}
               animatedAvatarUrl={profile?.animated_avatar_url}
@@ -597,32 +616,24 @@ export default function WordsGame() {
             />
           </div>
 
-          <div className="flex min-w-0 flex-1 flex-col items-center">
-            <button
-              onClick={() => {
-                playSound("button-click");
-                setCoinsInfo(true);
-              }}
-              aria-label={`${coins} ${t("words.coinsTitle")}`}
-              className="flex h-10 items-center gap-1.5 rounded-full pl-1.5 pr-2 active:scale-95 transition-transform"
-              style={{
-                background: "linear-gradient(180deg,#bb95ef 0%,#9a6fdc 58%,#8a5ed1 100%)",
-                border: "1.5px solid #cbb0f4",
-                boxShadow: "0px 4px 0px 0px #7a51b8, 0px 8px 16px rgba(102,51,153,0.3), inset 0px 2px 0px rgba(255,255,255,0.45)",
-              }}
-            >
-              <img src={coinIcon} alt="" className="h-7 w-7" draggable={false} />
-              <span className="font-['Nunito'] text-[17px] font-black tabular-nums">{coins.toLocaleString()}</span>
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#2FA33A]">
-                <Plus className="h-3.5 w-3.5" strokeWidth={3.5} />
-              </span>
-            </button>
-            <div className="mt-1 truncate rounded-full bg-white/85 px-2.5 py-0.5 text-[11px] font-black uppercase tracking-wider text-[#523b76] shadow-sm" style={{ fontFamily: "'TASolivare', 'Nunito', sans-serif" }}>
-              {t("words.levelLabel", { n: level.number })} · {t("words.sceneProgress", { scene: t(scene.nameKey), i: sceneIndex + 1, total: LEVELS_PER_SCENE })}
-            </div>
-          </div>
+          <button
+            onClick={() => {
+              playSound("button-click");
+              setCoinsInfo(true);
+            }}
+            aria-label={`${coins} ${t("words.coinsTitle")}`}
+            className="mt-1 flex h-10 items-center gap-1.5 rounded-full pl-1.5 pr-4 active:scale-95 transition-transform"
+            style={{
+              background: "linear-gradient(180deg,#bb95ef 0%,#9a6fdc 58%,#8a5ed1 100%)",
+              border: "1.5px solid #cbb0f4",
+              boxShadow: "0px 4px 0px 0px #7a51b8, 0px 8px 16px rgba(102,51,153,0.3), inset 0px 2px 0px rgba(255,255,255,0.45)",
+            }}
+          >
+            <img src={coinIcon} alt="" className="h-7 w-7" draggable={false} />
+            <span className="font-['Nunito'] text-[17px] font-black tabular-nums">{coins.toLocaleString()}</span>
+          </button>
 
-          <div className="flex w-[64px] shrink-0 flex-col items-center">
+          <div className="flex w-[64px] flex-col items-center">
             {room.friend ? (
               <div className={room.friend.pending ? "opacity-60" : ""} title={room.friend.nickname}>
                 <QuizPlayerAvatar
@@ -642,7 +653,7 @@ export default function WordsGame() {
                 onClick={() => void openInvite()}
                 disabled={inviteOpening}
                 aria-label={t("words.inviteFriend")}
-                className="relative flex h-[50px] w-[50px] items-center justify-center rounded-full border border-white bg-[rgba(51,192,84,0.75)] shadow-[0_4px_0_#1E9A7F] disabled:opacity-70"
+                className="relative flex h-[50px] w-[50px] items-center justify-center rounded-full border-[3px] border-[#9C99E8] bg-[rgba(51,192,84,0.75)] shadow-[0_4px_0_#1E9A7F] disabled:opacity-70"
               >
                 <motion.div animate={{ scale: [1, 1.14, 1] }} transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}>
                   <Plus className="h-7 w-7 text-white" strokeWidth={3} />
@@ -650,10 +661,6 @@ export default function WordsGame() {
               </motion.button>
             )}
           </div>
-
-          <motion.button whileTap={{ scale: 0.82 }} onClick={() => { playSound("button-click"); setMenuOpen(true); }} aria-label={t("words.menu")} className={`${roundButton} h-10 w-10 shrink-0`}>
-            <Menu className="h-5 w-5" />
-          </motion.button>
         </div>
 
         {/* Board */}
