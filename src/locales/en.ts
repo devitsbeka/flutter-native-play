@@ -2907,7 +2907,7 @@ export const en: KaTranslations = {
     playWithFriendsTv: "Play with friends on TV",
     playOnBigScreenTitle: "Play on the big screen",
     playQuickGame: "Quick game",
-    playQuickGameDesc: "Random opponent and category",
+    playQuickGameDesc: "Random opponent",
     playFriendsGame: "Play online game with friends",
     playFriendsGameDesc: "Create a room and invite friends",
     playTriviaKing: "Play Trivia King",

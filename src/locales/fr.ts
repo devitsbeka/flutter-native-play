@@ -2495,7 +2495,7 @@ export const fr: KaTranslations = {
     playWithFriendsTv: "Joue avec tes amis sur la TV",
     playOnBigScreenTitle: "Joue sur grand écran",
     playQuickGame: "Partie rapide",
-    playQuickGameDesc: "Adversaire et catégorie aléatoires",
+    playQuickGameDesc: "Adversaire aléatoire",
     playFriendsGame: "Joue en ligne avec des amis",
     playFriendsGameDesc: "Crée un salon et invite tes amis",
     playTriviaKing: "Joue à Trivia King",

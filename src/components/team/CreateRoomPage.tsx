@@ -1005,57 +1005,62 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       {/* Content */}
       <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
         <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full px-4 py-3 space-y-3">
-        {/* Room Name with Icon - AI generated */}
-        <div>
-          <h2 className="text-[13.2px] font-medium text-muted-foreground mb-1.5">{t("extra.chooseRoomName")}</h2>
-          <div className="flex items-center gap-3 p-2.5 rounded-2xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
-                  {/* Clickable area for Icon + Name - opens picker modal */}
-                  <div
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => !isGeneratingName && setShowIconPickerModal(true)}
-                    onKeyDown={(e) => e.key === 'Enter' && !isGeneratingName && setShowIconPickerModal(true)}
-                    className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer hover:opacity-90 transition-opacity"
-                  >
-              {/* Icon */}
-              <div className="w-12 h-12 rounded-xl bg-background shadow-md flex items-center justify-center overflow-hidden shrink-0">
-                {isGeneratingName ? (
-                  <Loader2 className="w-5 h-5 text-primary animate-spin" />
-                ) : roomIcon ? (
-                  <img src={roomIcon} alt="" className="w-8 h-8 object-contain" />
-                ) : (
-                  <img src={triviaBuzzer} alt="" className="w-6 h-6 object-contain" />
-                )}
-              </div>
+        {/* Room Name with Icon - AI generated.
+            Hidden for the quick game: that one is matchmaking, not a room —
+            it goes straight to /game and never reads this name, so offering
+            to rename and re-roll something that will not exist is noise. */}
+        {gameChoice !== "quick" && (
+          <div>
+            <h2 className="text-[13.2px] font-medium text-muted-foreground mb-1.5">{t("extra.chooseRoomName")}</h2>
+            <div className="flex items-center gap-3 p-2.5 rounded-2xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
+                    {/* Clickable area for Icon + Name - opens picker modal */}
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => !isGeneratingName && setShowIconPickerModal(true)}
+                      onKeyDown={(e) => e.key === 'Enter' && !isGeneratingName && setShowIconPickerModal(true)}
+                      className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer hover:opacity-90 transition-opacity"
+                    >
+                {/* Icon */}
+                <div className="w-12 h-12 rounded-xl bg-background shadow-md flex items-center justify-center overflow-hidden shrink-0">
+                  {isGeneratingName ? (
+                    <Loader2 className="w-5 h-5 text-primary animate-spin" />
+                  ) : roomIcon ? (
+                    <img src={roomIcon} alt="" className="w-8 h-8 object-contain" />
+                  ) : (
+                    <img src={triviaBuzzer} alt="" className="w-6 h-6 object-contain" />
+                  )}
+                </div>
               
-              {/* Room Name */}
-              <p className="font-semibold text-foreground text-sm truncate text-left">
-                {roomName}
-              </p>
-                  </div>
+                {/* Room Name */}
+                <p className="font-semibold text-foreground text-sm truncate text-left">
+                  {roomName}
+                </p>
+                    </div>
 
-            {/* Edit button - opens modal */}
-            <button
-              onClick={() => setShowIconPickerModal(true)}
-              disabled={isGeneratingName}
-              className="p-2 rounded-xl bg-primary/10 hover:bg-primary/20 transition-colors"
-            >
-              <Pencil className="w-4 h-4 text-primary" />
-            </button>
+              {/* Edit button - opens modal */}
+              <button
+                onClick={() => setShowIconPickerModal(true)}
+                disabled={isGeneratingName}
+                className="p-2 rounded-xl bg-primary/10 hover:bg-primary/20 transition-colors"
+              >
+                <Pencil className="w-4 h-4 text-primary" />
+              </button>
             
-            {/* Regenerate button */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                generateRoomName();
-              }}
-              disabled={isGeneratingName}
-              className="p-2 rounded-xl bg-primary/10 hover:bg-primary/20 transition-colors disabled:opacity-50"
-            >
-              <RefreshCw className={`w-4 h-4 text-primary ${isGeneratingName ? 'animate-spin' : ''}`} />
-            </button>
+              {/* Regenerate button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  generateRoomName();
+                }}
+                disabled={isGeneratingName}
+                className="p-2 rounded-xl bg-primary/10 hover:bg-primary/20 transition-colors disabled:opacity-50"
+              >
+                <RefreshCw className={`w-4 h-4 text-primary ${isGeneratingName ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* What will you play? — the horizontal game reel (Figma 926-11729):
             quick / Random / Versus King / Trivia Battle / Library / My Trivia. */}

@@ -2912,7 +2912,7 @@ export const ka = {
     playWithFriendsTv: "ითამაშე მეგობრებთან ერთად TV-ზე",
     playOnBigScreenTitle: "დიდ ეკრანზე თამაში",
     playQuickGame: "სწრაფი თამაში",
-    playQuickGameDesc: "შემთხვევითი მოწინააღმდეგე და კატეგორია",
+    playQuickGameDesc: "შემთხვევითი მოწინააღმდეგე",
     playFriendsGame: "ითამაშე ონლაინ მეგობრებთან",
     playFriendsGameDesc: "შექმენი ოთახი და მოიწვიე მეგობრები",
     playTriviaKing: "ითამაშე Trivia King",
