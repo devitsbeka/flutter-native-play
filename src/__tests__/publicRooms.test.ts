@@ -53,7 +53,7 @@ describe("a room is private unless somebody published it", () => {
   it("every room-creating helper defaults to private", () => {
     expect(read("src/contexts/MultiplayerContextV2.tsx")).toMatch(/isPublic = false,/);
     expect(read("src/contexts/TeamBattleContext.tsx")).toMatch(
-      /createRoom = useCallback\(async \(isPublic = false, team: TBTeam = "a"\)/,
+      /createRoom = useCallback\(async \(isPublic = false, team: TBTeam = "a", teamSize = 2\)/,
     );
     // The Battle lounge makes its own room after a navigation, so the
     // switch travels in router state and falls back to private without it.
@@ -154,6 +154,8 @@ describe("the public list", () => {
     // King takes one of them, and a card reading 2/11 counts a bot.
     expect(roomSeats(room({ game_type_key: "king", max_players: 11 }))).toBe(10);
     expect(roomSeats(room({ game_type_key: "team_battle", max_players: 10 }))).toBe(10);
+    // Battle rooms come in sizes now — the card counts the room's own seats.
+    expect(roomSeats(room({ game_type_key: "team_battle", max_players: 4 }))).toBe(4);
     expect(roomSeats(room({ game_type_key: null, max_players: null }))).toBeNull();
   });
 

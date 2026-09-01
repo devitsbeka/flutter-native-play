@@ -2570,6 +2570,7 @@ export const ka = {
     moreExcl: "მეტი!",
     joinFreeBtn: "გაწევრიანდი უფასოდ",
     refreshBtn: "ახლიდან",
+    teamSizeLabel: "მოთამაშეების რაოდენობა",
     spinCategoryBtn: "დაატრიალე კატეგორია ({count} დარჩა)",
     createProfileAndPlay: "შექმენი შენი პროფილი და\nითამაშე უფასოდ!",
     createAccount: "შექმენი ანგარიში",

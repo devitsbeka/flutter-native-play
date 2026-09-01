@@ -2232,6 +2232,7 @@ export const pt: KaTranslations = {
     moreExcl: "mais!",
     joinFreeBtn: "Entre de graça",
     refreshBtn: "Reiniciar",
+    teamSizeLabel: "Número de jogadores",
     spinCategoryBtn: "Gire a categoria ({count} restantes)",
     createProfileAndPlay: "Crie seu perfil e\njogue de graça!",
     createAccount: "Criar conta",

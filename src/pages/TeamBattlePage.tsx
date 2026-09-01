@@ -114,14 +114,17 @@ function TBGate({ joining }: { joining: boolean }) {
   // navigation that makes this room. An arena reached any other way — a
   // shared link, the play chooser — is private, like every other room
   // created without an opinion.
-  const handoff = (location.state as { isPublic?: boolean; team?: TBTeam } | null) ?? null;
+  const handoff =
+    (location.state as { isPublic?: boolean; team?: TBTeam; teamSize?: number } | null) ?? null;
   const publish = handoff?.isPublic ?? false;
   const side: TBTeam = handoff?.team === "b" ? "b" : "a";
+  // Seats per side, from the create screen's player-count dropdown.
+  const teamSize = handoff?.teamSize ?? 2;
 
   useEffect(() => {
     if (joining || !user || attempted.current) return;
     attempted.current = true;
-    void createRoom(publish, side).then((created) => {
+    void createRoom(publish, side, teamSize).then((created) => {
       if (!created) setFailed(true);
       // The room's code goes into the URL so a refresh rejoins this room
       // instead of minting a new one.
@@ -166,7 +169,7 @@ function TBGate({ joining }: { joining: boolean }) {
           onClick={() => {
             setFailed(false);
             attempted.current = false;
-            void createRoom(publish, side).then((created) => {
+            void createRoom(publish, side, teamSize).then((created) => {
               if (!created) setFailed(true);
               else navigate(`/team-battle?code=${created.room_code}`, { replace: true });
             });
@@ -472,7 +475,10 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
       ...(team === "a" ? pendingA : pendingB).map((p) => ({ p, pending: true })),
     ];
     const ring = team === "a" ? ("blue" as const) : ("red" as const);
-    const all: [number, number][] = [...slots, podium];
+    // Only as many podiums as the room was created with (max_players is
+    // 2×team size): a 2-2 arena shows two seats a side, not five.
+    const perSide = Math.min(5, Math.max(2, Math.floor((room?.max_players ?? 10) / 2)));
+    const all: [number, number][] = [...slots, podium].slice(0, perSide);
     return (
       <AnimatePresence>
         {all.map(([left, top], i) => {

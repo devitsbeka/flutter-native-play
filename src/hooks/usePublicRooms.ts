@@ -116,8 +116,12 @@ export function publicRoomPath(room: Pick<PublicRoom, "game_type_key" | "game_mo
  * even though the King's row carries eleven (the King himself takes one).
  */
 export function roomSeats(room: Pick<PublicRoom, "game_type_key" | "max_players">): number | null {
-  if (room.game_type_key === "king" || room.game_type_key === "team_battle") {
+  if (room.game_type_key === "king") {
     return 10;
+  }
+  // Battle rooms come in sizes now (2-2 up to 5-5) — max_players carries it.
+  if (room.game_type_key === "team_battle") {
+    return room.max_players ?? 10;
   }
   return room.max_players ?? null;
 }

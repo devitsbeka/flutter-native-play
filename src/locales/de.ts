@@ -2214,6 +2214,7 @@ export const de: KaTranslations = {
     moreExcl: "mehr!",
     joinFreeBtn: "Kostenlos beitreten",
     refreshBtn: "Neu starten",
+    teamSizeLabel: "Spielerzahl",
     spinCategoryBtn: "Kategorie neu drehen ({count} übrig)",
     createProfileAndPlay: "Erstelle dein Profil und\nspiele kostenlos!",
     createAccount: "Konto erstellen",

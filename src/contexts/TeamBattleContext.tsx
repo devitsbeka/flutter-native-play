@@ -64,7 +64,7 @@ interface TeamBattleContextValue {
   isHost: boolean;
   myTeam: TBTeam | null;
   isSpotlight: boolean;
-  createRoom: (isPublic?: boolean, team?: TBTeam) => Promise<TBRoom | null>;
+  createRoom: (isPublic?: boolean, team?: TBTeam, teamSize?: number) => Promise<TBRoom | null>;
   joinRoom: (code: string) => Promise<boolean>;
   enterRoom: (roomId: string) => Promise<boolean>;
   leaveRoom: () => Promise<void>;
@@ -307,7 +307,10 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
     void liveChannelRef.current?.send({ type: "broadcast", event: "pick", payload: pick });
   }, []);
 
-  const createRoom = useCallback(async (isPublic = false, team: TBTeam = "a"): Promise<TBRoom | null> => {
+  // teamSize is seats PER SIDE (2..5), picked on the create screen — the
+  // room's max_players carries it as 2×size so the lobby, the join cap and
+  // the Public tab's card all read the same number.
+  const createRoom = useCallback(async (isPublic = false, team: TBTeam = "a", teamSize = 2): Promise<TBRoom | null> => {
     if (!user || !profile) {
       toast.error(tStandalone("extra.mpAuthRequired"));
       return null;
@@ -326,7 +329,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
             game_type_key: "team_battle",
             game_mode: "team_battle",
             min_players: 2,
-            max_players: 10,
+            max_players: 2 * Math.min(5, Math.max(2, Math.round(teamSize))),
             ...(await roomVisibilityFields(isPublic)),
             background_gradient: getRandomGradient(),
             last_activity_at: new Date().toISOString(),
@@ -605,9 +608,13 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
         const pool = shuffleArray(categories);
         let poolIdx = 0;
         const nextCat = () => pool[poolIdx++ % pool.length];
+        // A turn is a fixed three minutes now, not a fixed question count —
+        // a fast player burns through far more than the old 12, so each
+        // tile ships as many as the bank will give (a short bank just ends
+        // the turn early, as before).
         const fetchFor = async (cat: { uuid: string; name: string }) => ({
           cat,
-          res: await getQuestions({ mode: "vs", categoryUuid: cat.uuid, categoryName: cat.name, count: 12 }),
+          res: await getQuestions({ mode: "vs", categoryUuid: cat.uuid, categoryName: cat.name, count: 40 }),
         });
 
         // One fetch per tile plus the super round, all in flight at once —
@@ -654,7 +661,26 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
             tiles,
             super_questions: asQuestions(superRes.questions) as unknown as Json,
           } as unknown as Json,
+          // Three minutes on the clock, as many questions as they can
+          // answer (20260924100000). On a database that still clamps at 90
+          // the RPC refuses — retried once at the old maximum so a match
+          // can still start before the migration lands.
+          p_turn_seconds: 180,
         });
+        if (error && /between 20 and 90/.test(error.message ?? "")) {
+          const retry = await supabase.rpc("tb_start_match", {
+            p_room_id: roomId,
+            p_board: {
+              tiles,
+              super_questions: asQuestions(superRes.questions) as unknown as Json,
+            } as unknown as Json,
+            p_turn_seconds: 90,
+          });
+          if (!retry.error) return true;
+          console.error("[TB] start failed", retry.error);
+          toast.error(retry.error.message);
+          return false;
+        }
         if (error) {
           console.error("[TB] start failed", error);
           toast.error(error.message);

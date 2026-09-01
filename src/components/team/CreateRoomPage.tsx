@@ -6,6 +6,14 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { anyBlockedText, containsBlockedText } from "@/utils/contentFilter";
 import { Loader2, ArrowLeft, HelpCircle, X, RefreshCw, Play, Pencil, Gamepad2, Plus, Check, Globe, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { roomVisibilityFields } from "@/utils/roomVisibility";
 import { localizeCategoryNames } from "@/utils/localizeCategories";
 import { filterCategoriesForLanguage } from "@/utils/languageCategoryFilter";
@@ -223,6 +231,8 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
    * dragging their own avatar across the arena.
    */
   const [battleTeam, setBattleTeam] = useState<"a" | "b">("a");
+  // Seats per side for a Battle room: 2-2 (the minimum) up to 5-5.
+  const [battleTeamSize, setBattleTeamSize] = useState(2);
   const [isGeneratingName, setIsGeneratingName] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState("");
@@ -729,6 +739,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
           // whatever the switch said before the game type was picked.
           isPublic: gameChoice === "king" ? false : isPublic,
           team: gameChoice === "battle" ? battleTeam : undefined,
+          teamSize: gameChoice === "battle" ? battleTeamSize : undefined,
         },
       });
       return;
@@ -1112,33 +1123,50 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
               </button>
             </div>
 
-            {/* Published or private. Two labelled halves rather than a bare
-                switch: "public" alone does not say whether it means anyone
-                can watch, anyone can walk in, or anyone can find it, and the
-                line under the pair answers that in the one place someone is
-                deciding. Versus King doesn't offer it — that lounge is
-                friends-only and always private. */}
+            {/* Published or private — a real ON/OFF switch (owner's ask:
+                no tabs), with the hint underneath still saying what
+                publishing means. Versus King doesn't offer it — that
+                lounge is friends-only and always private. A Battle room
+                also picks its size here: seats per side, 2-2 up to 5-5,
+                carried to the arena as max_players. */}
             {gameChoice !== "king" && (
             <>
-            <div className="mt-2 flex items-center gap-1 p-1 rounded-2xl bg-muted">
-              {([
-                { on: true, icon: Globe, label: t("extra.roomPublic") },
-                { on: false, icon: Lock, label: t("extra.roomPrivate") },
-              ] as const).map(({ on, icon: Icon, label }) => (
-                <button
-                  key={String(on)}
-                  type="button"
-                  onClick={() => setIsPublic(on)}
-                  className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-[13px] font-semibold transition-colors ${
-                    isPublic === on
-                      ? "bg-background text-foreground shadow-sm"
-                      : "text-muted-foreground"
-                  }`}
-                >
-                  <Icon className="w-3.5 h-3.5" />
-                  {label}
-                </button>
-              ))}
+            <div className={`mt-2 grid gap-2 ${gameChoice === "battle" ? "grid-cols-2" : "grid-cols-1"}`}>
+              <div className="flex items-center justify-between gap-2 rounded-2xl bg-muted px-3.5 py-2.5">
+                <span className="flex items-center gap-1.5 min-w-0 text-[13px] font-semibold text-foreground">
+                  {isPublic ? (
+                    <Globe className="w-3.5 h-3.5 text-primary shrink-0" />
+                  ) : (
+                    <Lock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                  )}
+                  <span className="truncate">
+                    {isPublic ? t("extra.roomPublic") : t("extra.roomPrivate")}
+                  </span>
+                </span>
+                <Switch checked={isPublic} onCheckedChange={setIsPublic} />
+              </div>
+              {gameChoice === "battle" && (
+                <div className="flex flex-col justify-center gap-0.5 rounded-2xl bg-muted px-3.5 py-1.5">
+                  <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground truncate">
+                    {t("extra.teamSizeLabel")}
+                  </span>
+                  <Select
+                    value={String(battleTeamSize)}
+                    onValueChange={(v) => setBattleTeamSize(Number(v))}
+                  >
+                    <SelectTrigger className="h-7 border-0 bg-transparent p-0 text-[14px] font-bold shadow-none focus:ring-0">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[2, 3, 4, 5].map((n) => (
+                        <SelectItem key={n} value={String(n)}>
+                          {n} – {n}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
             <p className="mt-1 px-1 text-[11.5px] leading-snug text-muted-foreground">
               {isPublic ? t("extra.roomPublicHint") : t("extra.roomPrivateHint")}
