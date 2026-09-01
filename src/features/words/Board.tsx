@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
-import type { Layout } from "./layout";
-import { cellKey } from "./layout";
+import type { Layout, PlacedWord } from "./layout";
+import { cellKey, cellsOf } from "./layout";
 
 /**
  * The crossword board. Unfilled cells are dark tiles; a found word's cells
@@ -13,15 +13,28 @@ interface Props {
   revealed: Map<string, string>;
   /** Cells of the word just found, in order, so they pop in a wave. */
   wave: string[];
+  /** The cell a hint just revealed — it gets the sparkle. */
+  hintKey?: string | null;
+  /** Words whose every cell is showing; tapping one asks what it means. */
+  onWordTap?: (word: PlacedWord) => void;
   cellSize: number;
   gap: number;
   accent: string;
   tile: string;
 }
 
-export function Board({ layout, revealed, wave, cellSize, gap, accent, tile }: Props) {
+const SPARKS = [0, 60, 120, 180, 240, 300];
+
+export function Board({ layout, revealed, wave, hintKey, onWordTap, cellSize, gap, accent, tile }: Props) {
   const width = layout.cols * cellSize + (layout.cols - 1) * gap;
   const height = layout.rows * cellSize + (layout.rows - 1) * gap;
+
+  // Which word to open when a cell is tapped: the first fully-revealed word
+  // through that cell (a crossing cell belongs to two).
+  const wordAt = (key: string): PlacedWord | undefined =>
+    layout.words.find(
+      (p) => cellsOf(p).some((c) => cellKey(c.row, c.col) === key) && cellsOf(p).every((c) => revealed.has(cellKey(c.row, c.col))),
+    );
 
   const cells: JSX.Element[] = [];
   for (let r = 0; r < layout.rows; r++) {
@@ -30,6 +43,8 @@ export function Board({ layout, revealed, wave, cellSize, gap, accent, tile }: P
       if (!layout.cells.has(key)) continue;
       const letter = revealed.get(key);
       const waveIndex = wave.indexOf(key);
+      const sparkle = hintKey === key;
+      const tappable = !!letter && !!onWordTap && !!wordAt(key);
       cells.push(
         <div
           key={key}
@@ -40,6 +55,12 @@ export function Board({ layout, revealed, wave, cellSize, gap, accent, tile }: P
             width: cellSize,
             height: cellSize,
           }}
+          onClick={() => {
+            if (!tappable) return;
+            const w = wordAt(key);
+            if (w) onWordTap?.(w);
+          }}
+          role={tappable ? "button" : undefined}
         >
           <div
             className="absolute inset-0 rounded-[6px]"
@@ -67,6 +88,42 @@ export function Board({ layout, revealed, wave, cellSize, gap, accent, tile }: P
             >
               {letter}
             </motion.div>
+          )}
+          {sparkle && letter && (
+            // A hint lands like a little spell: a gold ring breathes out,
+            // six sparks fly, and the tile itself flashes bright.
+            <div className="pointer-events-none absolute inset-0 overflow-visible" key={`spark-${key}`}>
+              <motion.div
+                className="absolute inset-0 rounded-[6px]"
+                initial={{ opacity: 0.9, boxShadow: "0 0 0 0 rgba(255,216,77,0.9)" }}
+                animate={{ opacity: 0, boxShadow: "0 0 0 18px rgba(255,216,77,0)" }}
+                transition={{ duration: 0.9, ease: "easeOut" }}
+              />
+              <motion.div
+                className="absolute inset-0 rounded-[6px] bg-white"
+                initial={{ opacity: 0.85 }}
+                animate={{ opacity: 0 }}
+                transition={{ duration: 0.6, ease: "easeOut", delay: 0.05 }}
+              />
+              {SPARKS.map((deg) => (
+                <motion.span
+                  key={deg}
+                  className="absolute left-1/2 top-1/2 text-[#FFD84D]"
+                  style={{ fontSize: cellSize * 0.42, lineHeight: 1, textShadow: "0 0 6px rgba(255,216,77,0.9)" }}
+                  initial={{ x: "-50%", y: "-50%", scale: 0.2, opacity: 1, rotate: deg }}
+                  animate={{
+                    x: `calc(-50% + ${Math.cos((deg * Math.PI) / 180) * cellSize * 0.95}px)`,
+                    y: `calc(-50% + ${Math.sin((deg * Math.PI) / 180) * cellSize * 0.95}px)`,
+                    scale: [0.2, 1.1, 0.6],
+                    opacity: [1, 1, 0],
+                    rotate: deg + 90,
+                  }}
+                  transition={{ duration: 0.85, ease: "easeOut" }}
+                >
+                  ✦
+                </motion.span>
+              ))}
+            </div>
           )}
         </div>,
       );

@@ -39,6 +39,19 @@ describe("words shared state", () => {
     expect(mergeShared(a, b)).toBe(a);
   });
 
+  it("follows the room's language, since two banks cannot be added up", () => {
+    // The joiner asks with their own copy; the room's answer, in another
+    // language, replaces it whole — their level in the other bank is not
+    // this board.
+    const mine = { ...emptyShared(7, "en"), found: { ABOUT: "me" } };
+    const room = { ...emptyShared(2, "ka"), found: { "შორის": "host" } };
+    expect(hasNews(mine, room)).toBe(true);
+    const merged = mergeShared(mine, room);
+    expect(merged.lang).toBe("ka");
+    expect(merged.level).toBe(2);
+    expect(merged.found).toEqual({ "შორის": "host" });
+  });
+
   it("only calls something news when it carries something new", () => {
     const local = { ...emptyShared(2), found: { CROW: "a" } };
     expect(hasNews(local, { ...emptyShared(2), found: { CROW: "a" } })).toBe(false);

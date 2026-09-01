@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, X, UserRound } from "lucide-react";
+import { Ban, Check, X, UserRound } from "lucide-react";
 import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
@@ -32,7 +32,7 @@ export function JoinRequestGate({
 }) {
   const { t } = useLanguage();
   const { openProfile } = usePlayerProfile();
-  const { pending, respond } = useRoomJoinRequests(roomId, isHost);
+  const { pending, respond, block } = useRoomJoinRequests(roomId, isHost);
 
   const next = pending[0];
 
@@ -104,8 +104,23 @@ export function JoinRequestGate({
               </button>
             </div>
 
+            {/* Blocking is deliberately the small third option, under the
+                two real answers rather than beside them: it is the one
+                that cannot be taken back from this screen, and a row of
+                three equal buttons invites a mis-tap into the permanent
+                one. Declining answers this knock; blocking ends the
+                knocking — the room leaves their Public tab altogether. */}
+            <button
+              type="button"
+              onClick={() => void block(next.id)}
+              className="mt-3 w-full flex items-center justify-center gap-1.5 py-2 text-xs font-semibold text-destructive/80 active:scale-[0.98] transition-transform"
+            >
+              <Ban className="w-3.5 h-3.5" />
+              {t("extra.joinRequestBlock")}
+            </button>
+
             {pending.length > 1 && (
-              <p className="mt-3 text-center text-xs text-muted-foreground">
+              <p className="mt-1 text-center text-xs text-muted-foreground">
                 {t("extra.joinRequestMore", { count: pending.length - 1 })}
               </p>
             )}

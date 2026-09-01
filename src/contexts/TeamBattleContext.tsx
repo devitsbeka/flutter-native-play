@@ -64,7 +64,7 @@ interface TeamBattleContextValue {
   isHost: boolean;
   myTeam: TBTeam | null;
   isSpotlight: boolean;
-  createRoom: (isPublic?: boolean) => Promise<TBRoom | null>;
+  createRoom: (isPublic?: boolean, team?: TBTeam) => Promise<TBRoom | null>;
   joinRoom: (code: string) => Promise<boolean>;
   enterRoom: (roomId: string) => Promise<boolean>;
   leaveRoom: () => Promise<void>;
@@ -307,7 +307,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
     void liveChannelRef.current?.send({ type: "broadcast", event: "pick", payload: pick });
   }, []);
 
-  const createRoom = useCallback(async (isPublic = false): Promise<TBRoom | null> => {
+  const createRoom = useCallback(async (isPublic = false, team: TBTeam = "a"): Promise<TBRoom | null> => {
     if (!user || !profile) {
       toast.error(tStandalone("extra.mpAuthRequired"));
       return null;
@@ -347,7 +347,10 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
         country_code: profile.country_code,
         is_host: true,
         status: "joined",
-        team: "a",
+        // The side the host picked on the create screen. Everyone landed on
+        // "a" before, so the host's own team was the one thing about their
+        // match they could not choose.
+        team,
       });
       if (hostErr) {
         await supabase.from("game_rooms").delete().eq("id", created.id);
@@ -364,20 +367,6 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
     }
   }, [user, profile]);
 
-  // The lobby renders seats strictly by team, so a joined-but-teamless row
-  // is invisible — which is exactly what happened to accepted invitees:
-  // their greyed seat vanished the moment they joined. Every join therefore
-  // lands on the emptier team unless a seat was already reserved for one.
-  const pickEmptierTeam = async (roomId: string): Promise<TBTeam> => {
-    const { data } = await supabase
-      .from("room_participants")
-      .select("team")
-      .eq("room_id", roomId)
-      .in("status", ["joined", "ready", "playing", "invited"]);
-    const a = data?.filter((r) => r.team === "a").length ?? 0;
-    const b = data?.filter((r) => r.team === "b").length ?? 0;
-    return a <= b ? "a" : "b";
-  };
 
   const enterRoomRow = useCallback(
     async (row: TBRoom): Promise<boolean> => {
@@ -390,16 +379,13 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
         .maybeSingle();
       // An invite-modal invitee arrives holding an "invited" row — accepting
       // means flipping it to joined, or they stay invisible in the lobby.
-      // An approved join request (respond_room_join) arrives already
-      // "joined" but with NO team, and a teamless face renders on no podium
-      // — so a missing team gets dealt here either way.
-      if (existing && (existing.status === "invited" || !existing.team)) {
+      // A team is NOT dealt: an invite from a + seat already carries its
+      // side, and everyone else (approved join requests included) claims
+      // one in the lobby by tapping the + seat they want.
+      if (existing && existing.status === "invited") {
         await supabase
           .from("room_participants")
-          .update({
-            ...(existing.status === "invited" ? { status: "joined" } : {}),
-            ...(existing.team ? {} : { team: await pickEmptierTeam(row.id) }),
-          })
+          .update({ status: "joined" })
           .eq("id", existing.id);
       }
       if (!existing) {
@@ -418,6 +404,8 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
           toast.error(tStandalone("teamBattle.roomFull"));
           return false;
         }
+        // No team on arrival: the seats are the choice, and the lobby
+        // prompts the newcomer to claim one on the side they want.
         const { error } = await supabase.from("room_participants").insert({
           room_id: row.id,
           user_id: user.id,
@@ -426,7 +414,6 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
           country_code: profile.country_code,
           is_host: false,
           status: "joined",
-          team: await pickEmptierTeam(row.id),
         });
         if (error) {
           console.error("[TB] join failed", error);

@@ -26,6 +26,7 @@ const room = (over: Partial<PublicRoom> = {}): PublicRoom => ({
   room_name: "A room",
   room_icon: null,
   game_type_key: null,
+  game_mode: null,
   status: "waiting",
   created_at: null,
   last_activity_at: null,
@@ -52,11 +53,11 @@ describe("a room is private unless somebody published it", () => {
   it("every room-creating helper defaults to private", () => {
     expect(read("src/contexts/MultiplayerContextV2.tsx")).toMatch(/isPublic = false,/);
     expect(read("src/contexts/TeamBattleContext.tsx")).toMatch(
-      /createRoom = useCallback\(async \(isPublic = false\)/,
+      /createRoom = useCallback\(async \(isPublic = false, team: TBTeam = "a"\)/,
     );
     // The Battle lounge makes its own room after a navigation, so the
     // switch travels in router state and falls back to private without it.
-    expect(read("src/pages/TeamBattlePage.tsx")).toMatch(/\)\?\.isPublic \?\? false;/);
+    expect(read("src/pages/TeamBattlePage.tsx")).toMatch(/handoff\?\.isPublic \?\? false;/);
     // Versus King goes further: friends-only by owner's decision, so its
     // lounge ignores the switch entirely and always creates private.
     expect(read("src/pages/KingPage.tsx")).toMatch(/publishRef = useRef<boolean>\(false\)/);
@@ -143,6 +144,9 @@ describe("the public list", () => {
     expect(publicRoomPath(room({ game_type_key: "king" }))).toBe("/king?code=ABC123");
     expect(publicRoomPath(room({ game_type_key: "team_battle" }))).toBe("/team-battle?code=ABC123");
     expect(publicRoomPath(room())).toBe("/team?join=ABC123");
+    // Words rooms are told apart by game_mode when the catalog key is not
+    // applied yet, so the listing has to carry it — see roomRoutes.
+    expect(publicRoomPath(room({ game_mode: "words" }))).toBe("/words/ABC123");
   });
 
   it("asks the host rather than walking in", () => {
@@ -154,6 +158,64 @@ describe("the public list", () => {
     expect(section).not.toMatch(/from\("room_participants"\)\s*\n?\s*\.(insert|update|upsert|delete)/);
     // Only the answer 'joined' walks in — everything else waits.
     expect(section).toMatch(/if \(outcome === "joined"\)/);
+  });
+});
+
+describe("a block, and what a removal costs", () => {
+  it("the door shuts from the same modal that opens it", () => {
+    const gate = read("src/components/team/JoinRequestGate.tsx");
+    expect(gate).toMatch(/void block\(next\.id\)/);
+    // Under the two real answers, not beside them: a row of three equal
+    // buttons invites a mis-tap into the one that cannot be undone here.
+    expect(gate.indexOf("joinRequestBlock")).toBeGreaterThan(gate.indexOf("joinRequestAccept"));
+    expect(read("src/hooks/useRoomJoinRequests.ts")).toMatch(/supabase\.rpc\("block_room_join"/);
+  });
+
+  it("a blocked player loses sight of the room, and leaving spends an approval", () => {
+    const sql = read("supabase/migrations/20260923100000_battle_teams_and_blocks.sql");
+    // The listing is most of what makes a block stick.
+    expect(sql).toMatch(/AND b\.status = 'blocked'/);
+    expect(sql).toMatch(/IF v_existing = 'blocked' THEN\s*\n\s*RETURN 'blocked';/);
+    // A trigger, not a line in one removal path: there are several ways a
+    // seat empties and they all have to mean the same thing.
+    expect(sql).toMatch(/AFTER DELETE ON public\.room_participants/);
+    expect(sql).toMatch(/AND status <> 'blocked'/);
+  });
+});
+
+describe("the arena's two sides", () => {
+  it("has no room name of its own", () => {
+    const battle = read("src/pages/TeamBattlePage.tsx");
+    expect(battle).not.toMatch(/generate-room-name/);
+    // And its card leads with the game rather than with a dealt name.
+    const section = read("src/components/team/PublicRoomsSection.tsx");
+    expect(section).toMatch(/lounge \? t\(lounge\.labelKey\) : room\.room_name/);
+  });
+
+  it("lets a side's captain dress it, through the RPC", () => {
+    const battle = read("src/pages/TeamBattlePage.tsx");
+    expect(battle).toMatch(/supabase\.rpc\("tb_set_team_icon"/);
+    // Only that side's own captain gets the pencil — the host has no say
+    // over the other team's colours (owner's decision).
+    expect(battle).toMatch(/const canDress = !!user && mine\?\.user_id === user\.id/);
+    expect(battle).not.toMatch(/canDress = isHost \|\|/);
+    // Never a direct write: game_rooms' update policy is host-only, so a
+    // captain writing the column straight would fail silently under RLS.
+    expect(battle).not.toMatch(/update\(\{ team_[ab]_icon/);
+  });
+
+  it("the crests sit above the names, clear of the seats and the captains", () => {
+    const battle = read("src/pages/TeamBattlePage.tsx");
+    expect(battle).toMatch(/top-\[352px\] w-\[120px\] flex flex-col items-center/);
+    expect(battle).toMatch(/size-\[60px\] object-contain/);
+  });
+
+  it("the host picks their side when they make the room", () => {
+    const create = read("src/components/team/CreateRoomPage.tsx");
+    expect(create).toMatch(/const \[battleTeam, setBattleTeam\] = useState<"a" \| "b">\("a"\)/);
+    expect(create).toMatch(/team: gameChoice === "battle" \? battleTeam : undefined/);
+    // And the arena seats them there rather than always on A.
+    expect(read("src/contexts/TeamBattleContext.tsx")).toMatch(/\n        team,\n/);
   });
 });
 

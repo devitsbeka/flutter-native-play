@@ -2,12 +2,16 @@
  * The Words levels.
  *
  * Each level is one set of letters (the wheel) and the words the board asks
- * for. Every board word, and every bonus word, must be spellable from the
- * wheel — `src/__tests__/wordsLevels.test.ts` checks that, along with the
- * layout, so a typo here fails the test rather than a player.
+ * for. The bank itself is generated from the most common English words
+ * (levels.generated.ts); every board word and bonus word is checked against
+ * the wheel and the layout by `src/__tests__/wordsLevels.test.ts`.
  *
  * Levels come in packs of three, one pack per scene. Finishing a pack adds
  * its photo to the player's scrapbook.
+ *
+ * There is a bank for each of the app's seven languages, built by
+ * scripts/words-levels from that language's most common words as validated
+ * by its dictionary (and, for Georgian, as used in MyTrivia's own questions).
  */
 
 import mountain from "@/assets/words/mountain.webp";
@@ -33,15 +37,21 @@ export interface Scene {
 }
 
 export const SCENES: Scene[] = [
-  { id: "mountain", nameKey: "words.sceneMountain", image: mountain, accent: "#E63946", accentDark: "#B5202C", tile: "rgba(22, 40, 68, 0.88)" },
-  { id: "snow", nameKey: "words.sceneSnow", image: snow, accent: "#E5399B", accentDark: "#B81F78", tile: "rgba(46, 38, 60, 0.88)" },
-  { id: "lake", nameKey: "words.sceneLake", image: lake, accent: "#2E86DE", accentDark: "#1F5FA3", tile: "rgba(18, 36, 66, 0.88)" },
-  { id: "desert", nameKey: "words.sceneDesert", image: desert, accent: "#F2711C", accentDark: "#C25712", tile: "rgba(60, 34, 22, 0.88)" },
-  { id: "garden", nameKey: "words.sceneGarden", image: garden, accent: "#8E44AD", accentDark: "#6A2F84", tile: "rgba(44, 24, 60, 0.88)" },
-  { id: "clouds", nameKey: "words.sceneClouds", image: clouds, accent: "#EA5C8A", accentDark: "#BE3F6B", tile: "rgba(30, 30, 46, 0.88)" },
-  { id: "forest", nameKey: "words.sceneForest", image: forest, accent: "#2FB86A", accentDark: "#1F8A4E", tile: "rgba(20, 44, 30, 0.88)" },
-  { id: "night", nameKey: "words.sceneNight", image: night, accent: "#5B6CF0", accentDark: "#3E4CC0", tile: "rgba(18, 22, 48, 0.88)" },
+  { id: "mountain", nameKey: "words.sceneMountain", image: mountain, accent: "#8858d5", accentDark: "#6A3FB8", tile: "rgba(64, 38, 102, 0.82)" },
+  { id: "snow", nameKey: "words.sceneSnow", image: snow, accent: "#E5399B", accentDark: "#B81F78", tile: "rgba(64, 38, 102, 0.82)" },
+  { id: "lake", nameKey: "words.sceneLake", image: lake, accent: "#3B82F6", accentDark: "#1F5FA3", tile: "rgba(64, 38, 102, 0.82)" },
+  { id: "desert", nameKey: "words.sceneDesert", image: desert, accent: "#FF9A3D", accentDark: "#C25712", tile: "rgba(64, 38, 102, 0.82)" },
+  { id: "garden", nameKey: "words.sceneGarden", image: garden, accent: "#F25CA2", accentDark: "#D6427F", tile: "rgba(64, 38, 102, 0.82)" },
+  { id: "clouds", nameKey: "words.sceneClouds", image: clouds, accent: "#10B981", accentDark: "#047857", tile: "rgba(64, 38, 102, 0.82)" },
+  { id: "forest", nameKey: "words.sceneForest", image: forest, accent: "#2FB86A", accentDark: "#1F8A4E", tile: "rgba(64, 38, 102, 0.82)" },
+  { id: "night", nameKey: "words.sceneNight", image: night, accent: "#7C3AED", accentDark: "#5B21B6", tile: "rgba(40, 24, 72, 0.86)" },
 ];
+
+export interface RawLevel {
+  letters: string;
+  words: string[];
+  bonus: string[];
+}
 
 export interface Level {
   /** 1-based, what the player sees. */
@@ -55,48 +65,51 @@ export interface Level {
   bonus: string[];
 }
 
-const raw: Array<Omit<Level, "number" | "sceneId">> = [
-  // Mountain
-  { letters: "SAINT", words: ["SAINT", "SIT", "TAN", "ANT", "TIN"], bonus: ["SIN", "SAT", "ITS", "NIT", "ANTS", "STAIN", "SATIN", "TINS", "TANS"] },
-  { letters: "SPORT", words: ["SPORT", "STOP", "SORT", "SPOT", "PORT", "ROT", "TOP"], bonus: ["POT", "OPT", "PRO", "TOPS", "POTS", "OPTS", "PORTS", "ROTS", "STROP"] },
-  { letters: "HEAVEN", words: ["HEAVEN", "HEAVE", "EVEN", "HAVE", "EVE", "VANE"], bonus: ["HEN", "HAVEN", "NAVE", "VAN", "EAVE"] },
-  // Snow
-  { letters: "CROWN", words: ["CROWN", "CROW", "WORN", "CORN", "NOW", "OWN", "ROW"], bonus: ["WON", "NOR", "COW", "CON"] },
-  { letters: "FLAKE", words: ["FLAKE", "LAKE", "LEAK", "KALE", "FLEA", "ELF", "ALE"], bonus: ["LEAF", "FAKE", "ELK"] },
-  { letters: "WINTER", words: ["WINTER", "WRITE", "TWINE", "WIRE", "TIRE", "WINE", "NET"], bonus: ["WIT", "WET", "TIN", "WIN", "TEN", "TIE", "REIN", "RITE", "TIER", "WREN", "TWIN", "INERT", "WRIT"] },
-  // Lake
-  { letters: "WATER", words: ["WATER", "WEAR", "TEAR", "RATE", "WART", "ART", "EAT"], bonus: ["TEA", "ATE", "RAW", "WAR", "RAT", "TAR", "WET", "ARE", "EAR", "ERA", "AWE"] },
-  { letters: "SHORE", words: ["SHORE", "HORSE", "HOSE", "ROSE", "HERO", "SHOE", "HER"], bonus: ["ORE", "SORE", "HOES", "HERS", "SHE", "HOE", "ROE"] },
-  { letters: "STREAM", words: ["STREAM", "MASTER", "STEAM", "SMART", "MATE", "TEAM", "ARM"], bonus: ["RAT", "TAR", "ART", "MAT", "SAT", "SEA", "EAT", "TEA", "MEAT", "TAME", "SEAT", "EAST", "RATE", "TEAR", "STAR", "MART", "TRAM", "MARE", "REAM", "TERM", "STEM", "REST", "TAMER", "TEARS", "STARE", "MATES", "TAMES", "TRAMS", "MARTS"] },
-  // Desert
-  { letters: "CAMEL", words: ["CAMEL", "LAME", "MALE", "MEAL", "CLAM", "CALM", "ACE"], bonus: ["ELM", "ACME", "MACE", "ALE", "CAM"] },
-  { letters: "DUNES", words: ["DUNES", "DUNE", "SEND", "ENDS", "USED", "SUN", "DEN"], bonus: ["END", "USE", "DUE", "DUES", "SUED", "DENS", "SUE"] },
-  { letters: "SUNSET", words: ["SUNSET", "UNSET", "NESTS", "NEST", "SENT", "TUNE", "NUTS", "SUN"], bonus: ["TEN", "NET", "NUT", "USE", "SUE", "SET", "TUNES", "STUN", "STUNS", "TENS", "NETS", "SETS", "USES", "SUNS"] },
-  // Garden
-  { letters: "PETAL", words: ["PETAL", "PLATE", "LEAP", "PALE", "TALE", "LATE", "PEA"], bonus: ["PLEAT", "LEAPT", "PEAL", "PEAT", "TAPE", "PATE", "ALE", "ATE", "EAT", "TEA", "APT", "PAT", "TAP", "LAP", "PAL", "LET", "PET", "PLEA"] },
-  { letters: "BLOOM", words: ["BLOOM", "BOOM", "LOOM", "MOB", "LOB"], bonus: ["MOO", "BOO"] },
-  { letters: "FLOWER", words: ["FLOWER", "LOWER", "FLOW", "WOLF", "FOWL", "ROLE", "FLEW", "OWL"], bonus: ["LOW", "ROW", "FOR", "FEW", "ELF", "WOE", "OWE", "ORE", "ROE", "LORE", "FORE", "FOE", "WORE", "FLOE"] },
-  // Clouds
-  { letters: "STORM", words: ["STORM", "MOST", "SORT", "ROT", "TOM"], bonus: ["ROTS", "TOMS"] },
-  { letters: "RAINY", words: ["RAINY", "RAIN", "AIRY", "YARN", "ANY", "RAY"], bonus: ["NAY", "AIR", "RAN"] },
-  { letters: "CLOUDS", words: ["CLOUDS", "CLOUD", "COLD", "LOUD", "SOUL", "OLD", "DUO"], bonus: ["SOLD", "CLOD", "CLODS", "SCOLD", "DOC", "COD", "CUD", "SOD", "DOS", "COLDS"] },
-  // Forest
-  { letters: "TRUNK", words: ["TRUNK", "TURN", "RUNT", "RUN", "NUT"], bonus: ["URN", "RUT"] },
-  { letters: "BRANCH", words: ["BRANCH", "RANCH", "BARN", "CRAB", "CAB", "RAN"], bonus: ["NAB", "BAN", "ARC", "CAR", "BRA", "CAN", "CHAR", "ARCH", "BRAN", "CARB"] },
-  { letters: "LEAVES", words: ["LEAVES", "LEAVE", "EASEL", "SLAVE", "VASE", "SEAL", "SALE", "EVE"], bonus: ["SAVE", "SALVE", "SEE", "SEA", "ALE", "EEL", "EASE", "ELSE", "EAVE", "EAVES", "VALE", "VEAL", "ALES"] },
-  // Night
-  { letters: "STARS", words: ["STARS", "STAR", "RATS", "ARTS", "SAT", "TAR"], bonus: ["RAT", "ART", "TSAR", "TARS"] },
-  { letters: "DREAMS", words: ["DREAMS", "DREAM", "ARMED", "MADE", "READ", "DEAR", "ARM", "SAD"], bonus: ["DAME", "MARS", "RAMS", "ARMS", "DAMS", "MEAD", "DARE", "RAM", "MAD", "DAM", "ERA", "ARE", "EAR", "RED", "SEA", "SAME", "SEAM", "MESA", "MARE", "REAM", "SMEAR", "DAMES", "READS", "DEARS", "DARES"] },
-  { letters: "MOONLIT", words: ["MOONLIT", "MOTION", "MOON", "LOOM", "TOIL", "MINT", "LINT", "INTO"], bonus: ["LIMO", "MOOT", "LOOT", "TOOL", "OMIT", "LOIN", "LION", "OIL", "NIT", "TIN", "TON", "NOT", "LOT", "LIT", "MOO", "TOO", "MOLT", "LOTION"] },
-];
-
 export const LEVELS_PER_SCENE = 3;
 
-export const LEVELS: Level[] = raw.map((level, i) => ({
-  ...level,
-  number: i + 1,
-  sceneId: SCENES[Math.floor(i / LEVELS_PER_SCENE) % SCENES.length].id,
-}));
+/** The languages with a bank of their own — the app's seven. */
+export const WORDS_LANGUAGES = ["en", "ka", "es", "fr", "de", "it", "pt"] as const;
+export type WordsLanguage = (typeof WORDS_LANGUAGES)[number];
+
+export const isWordsLanguage = (v: unknown): v is WordsLanguage =>
+  typeof v === "string" && (WORDS_LANGUAGES as readonly string[]).includes(v);
+
+/** Any app language maps onto a bank; an unknown one plays in English. */
+export const bankLanguage = (lang: string | null | undefined): WordsLanguage =>
+  isWordsLanguage(lang) ? lang : "en";
+
+export function buildLevels(raw: RawLevel[]): Level[] {
+  return raw.map((level, i) => ({
+    ...level,
+    number: i + 1,
+    sceneId: SCENES[Math.floor(i / LEVELS_PER_SCENE) % SCENES.length].id,
+  }));
+}
+
+/**
+ * The banks are generated per language (scripts/words-levels) and each is
+ * its own chunk: a player loads the one they play in, ~100 KB, not seven.
+ */
+const loaders: Record<WordsLanguage, () => Promise<{ RAW_LEVELS: RawLevel[] }>> = {
+  en: () => import("./levels.en.generated"),
+  ka: () => import("./levels.ka.generated"),
+  es: () => import("./levels.es.generated"),
+  fr: () => import("./levels.fr.generated"),
+  de: () => import("./levels.de.generated"),
+  it: () => import("./levels.it.generated"),
+  pt: () => import("./levels.pt.generated"),
+};
+
+const cache = new Map<WordsLanguage, Level[]>();
+
+export async function loadLevels(lang: WordsLanguage): Promise<Level[]> {
+  const hit = cache.get(lang);
+  if (hit) return hit;
+  const { RAW_LEVELS } = await loaders[lang]();
+  const built = buildLevels(RAW_LEVELS);
+  cache.set(lang, built);
+  return built;
+}
 
 export const sceneOf = (level: Level): Scene =>
   SCENES.find((s) => s.id === level.sceneId) ?? SCENES[0];

@@ -159,13 +159,19 @@ function PublicRoomCard({
               className="w-14 h-14 object-contain drop-shadow-lg shrink-0"
             />
           )}
+          {/* A lounge IS its game: an arena called "Search Trail" with
+              "Trivia Battle" in small type under it advertised a name
+              nobody chose over the one thing a player is scanning for. The
+              classic rooms keep their own name, which somebody did choose. */}
           <div className="min-w-0 flex-1">
             <h3 className="font-display text-white text-lg leading-tight line-clamp-2 drop-shadow-md">
-              {room.room_name || t("extra.gameRoomDefault")}
+              {lounge ? t(lounge.labelKey) : room.room_name || t("extra.gameRoomDefault")}
             </h3>
-            <p className="text-white/70 text-sm truncate mt-0.5">
-              {lounge ? t(lounge.labelKey) : t("extra.publicRoomLabel")}
-            </p>
+            {!lounge && (
+              <p className="text-white/70 text-sm truncate mt-0.5">
+                {t("extra.publicRoomLabel")}
+              </p>
+            )}
           </div>
         </div>
 

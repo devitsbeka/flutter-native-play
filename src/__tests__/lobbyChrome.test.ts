@@ -23,30 +23,28 @@ const battle = read("src/pages/TeamBattlePage.tsx");
 const lilac = read("src/components/lobby/LilacLobby.tsx");
 const room = read("src/components/team/RoomLobbyV2.tsx");
 
-describe("the friends reel waits to be asked for", () => {
-  it("both lounges gate it behind their own open flag", () => {
+describe("the lounges invite through the invite page", () => {
+  it("neither lounge carries the friends reel", () => {
+    // It was tried both ways: always on (a permanent bite out of a screen
+    // that has to fit two teams, the captains and the CTA) and behind the
+    // + seats. Both put a second, weaker way in beside the real one — the
+    // invite page, which has search, the link and the share sheet.
     for (const src of [king, battle]) {
-      expect(src).toMatch(/const \[reelOpen, setReelOpen\] = useState\(false\)/);
-      // Rendered only when open — an unconditional <FriendsStoriesBar/> is
-      // exactly the thing this replaced.
-      expect(src).toMatch(/\{reelOpen && \(/);
+      expect(src).not.toMatch(/FriendsStoriesBar/);
+      expect(src).not.toMatch(/reelOpen/);
     }
   });
 
-  it("a + seat is what opens it", () => {
-    // King's plus seats toggle the reel directly; the arena's go through
-    // seatAction, which also remembers the team the seat belonged to.
-    expect(king).toMatch(/PlusSeat[^]*?onClick=\{\(\) => setReelOpen\(\(v\) => !v\)\}/);
+  it("a + seat opens the invite page", () => {
+    expect(king).toMatch(/PlusSeat[^]*?onClick=\{inviteFriends\}/);
+    // The arena's + also remembers which side the seat was on, so an
+    // accepted invite lands on the right team. For a player who has no
+    // team yet the same + is the seat itself — tapping it claims that
+    // side — so the invite page opens only for the already seated.
     expect(battle).toMatch(
-      /const seatAction = \(team: TBTeam\) => \{\s*\n\s*inviteTeamRef\.current = team;\s*\n\s*setReelOpen/,
+      /const seatAction = \(team: TBTeam\) => \{[^]*?inviteTeamRef\.current = team;\s*\n\s*setInviteOpen\(true\)/,
     );
-  });
-
-  it("the reel's own + still reaches the full invite modal", () => {
-    // Otherwise the search, the link and the share sheet become unreachable
-    // from the lounge.
-    expect(king).toContain("onAddFriendClick={inviteFriends}");
-    expect(battle).toContain("onAddFriendClick={() => setInviteOpen(true)}");
+    expect(battle).toMatch(/if \(iAmClaiming\) \{\s*\n\s*void setTeam\(team\);/);
   });
 });
 
@@ -63,11 +61,12 @@ describe("the room's name sits above the captain row", () => {
     expect(king).not.toContain('top-[44px] w-[435px]');
   });
 
-  it("the arena's name shares the team-names row, one row above the captains", () => {
-    expect(battle).toContain('top-[404px] h-[40px] w-[441px] flex items-center justify-between');
-    // Not centred on top of the team names but between them, so a long
-    // Italian team name narrows the pill instead of colliding with it.
-    expect(battle).toMatch(/min-w-0 inline-flex items-center gap-2 max-w-\[220px\]/);
+  it("the arena has no name of its own to place", () => {
+    // It is called Trivia Battle. The AI namer, the rename sheet and the
+    // pill that showed the result are all gone; the two SIDES are what
+    // carry an identity here, and their captains choose it.
+    expect(battle).not.toMatch(/generate-room-name/);
+    expect(battle).not.toMatch(/setRenameOpen/);
     expect(battle).not.toContain('top-[6px] w-[435px]');
   });
 });

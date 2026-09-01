@@ -75,7 +75,7 @@ export function WeekMissionsStrip({
 
   return (
     <div
-      className={`relative w-full overflow-hidden rounded-[24px] bg-[rgba(252,247,255,0.8)] ${className}`}
+      className={`relative w-full overflow-hidden rounded-[24px] bg-[rgba(253,250,255,0.94)] ${className}`}
       style={{ boxShadow: CARD_SHADOW }}
     >
         {/* Seven days plus the purse need more of the card than six did, so
@@ -195,7 +195,7 @@ export function WeekMissionsStrip({
             type="button"
             onClick={onGiftClick}
             aria-label={t("extra.dailyRewards")}
-            className={`relative h-[62px] w-[76px] shrink-0 rounded-full border-[3px] border-solid transition-colors ${
+            className={`relative h-[62px] w-[65px] shrink-0 rounded-full border-[3px] border-solid transition-colors ${
               dailyRewardClaimed
                 ? "border-[rgba(255,255,255,0.65)] shadow-[0px_2px_6px_0px_rgba(0,0,0,0.06),0px_2px_0px_0px_#cbc3d4]"
                 : "border-[rgba(255,255,255,0.9)] shadow-[0px_4px_12px_0px_rgba(0,0,0,0.1),0px_3px_0px_0px_#fdba74]"
@@ -206,7 +206,7 @@ export function WeekMissionsStrip({
                 : "linear-gradient(to bottom, #fff7ed, #fed7aa)",
             }}
           >
-            <span className="absolute left-[17.5px] top-[2px] block h-[48px] w-[41px] overflow-hidden">
+            <span className="absolute left-[12px] top-[2px] block h-[48px] w-[41px] overflow-hidden">
               <img
                 src={coinPurse}
                 alt=""
