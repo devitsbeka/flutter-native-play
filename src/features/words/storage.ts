@@ -1,15 +1,17 @@
 /**
- * Local save for the Expo word-wheel mode.
+ * Local save for the Words mode.
  *
- * This mode is an experiment and lives entirely on the device: the coins it
- * shows are its own play money, not the account's currency, so nothing here
- * touches the database (CLAUDE.md rule 3 — currency is server-authoritative
- * and this mode has no server side yet). Everything is one JSON blob in
- * localStorage, read once on mount and written on every change.
+ * What lives here is per device: the level a solo player is on, the words
+ * found on it, free hints won on the luck wheel, the scrapbook. A signed-in
+ * player's coins are their real wallet (useCurrency — credits through
+ * `credit_gameplay_reward`, spends through `update_user_currency`, per
+ * CLAUDE.md rule 3); the `coins` field below is only ever read for a guest,
+ * who has no wallet to draw on.
  */
 
-export interface ExpoSave {
+export interface WordsSave {
   version: 1;
+  /** Guest coins. A signed-in player's balance is their profile's. */
   coins: number;
   /** Free hints won on the luck wheel; spent before coins are. */
   freeHints: number;
@@ -27,7 +29,7 @@ export interface ExpoSave {
   bonusTotal: number;
 }
 
-const KEY = "mytrivia.expo.v1";
+const KEY = "mytrivia.words.v1";
 
 export const STARTING_COINS = 350;
 export const HINT_COST = 25;
@@ -35,7 +37,7 @@ export const LEVEL_REWARD = 20;
 export const BONUS_PAYOUT = 5;
 export const BONUS_EVERY = 5;
 
-export const freshSave = (): ExpoSave => ({
+export const freshSave = (): WordsSave => ({
   version: 1,
   coins: STARTING_COINS,
   freeHints: 0,
@@ -47,11 +49,11 @@ export const freshSave = (): ExpoSave => ({
   bonusTotal: 0,
 });
 
-export function loadSave(): ExpoSave {
+export function loadSave(): WordsSave {
   try {
     const raw = localStorage.getItem(KEY);
     if (!raw) return freshSave();
-    const parsed = JSON.parse(raw) as Partial<ExpoSave>;
+    const parsed = JSON.parse(raw) as Partial<WordsSave>;
     if (parsed.version !== 1) return freshSave();
     return { ...freshSave(), ...parsed };
   } catch {
@@ -59,7 +61,7 @@ export function loadSave(): ExpoSave {
   }
 }
 
-export function persistSave(save: ExpoSave) {
+export function persistSave(save: WordsSave) {
   try {
     localStorage.setItem(KEY, JSON.stringify(save));
   } catch {

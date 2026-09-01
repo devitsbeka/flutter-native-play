@@ -1,9 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { buildLayout, canSpell, cellsOf, cellKey } from "@/features/expo/layout";
-import { LEVELS, SCENES, LEVELS_PER_SCENE, sceneOf } from "@/features/expo/levels";
+import { buildLayout, canSpell, cellsOf, cellKey } from "@/features/words/layout";
+import { LEVELS, SCENES, LEVELS_PER_SCENE, sceneOf } from "@/features/words/levels";
 
 /**
- * Every Expo level has to be playable before it ships.
+ * Every Words level has to be playable before it ships.
  *
  * The level data is hand-written — a wheel of letters, the words on the
  * board, the bonus words — and each of those can be wrong in a way nothing
@@ -12,7 +12,7 @@ import { LEVELS, SCENES, LEVELS_PER_SCENE, sceneOf } from "@/features/expo/level
  * word the player is asked for and never shown. Both would surface as a
  * stuck player, not as an error.
  */
-describe("expo levels", () => {
+describe("words levels", () => {
   it("has whole packs, one scene each", () => {
     expect(LEVELS.length % LEVELS_PER_SCENE).toBe(0);
     expect(LEVELS.length / LEVELS_PER_SCENE).toBeLessThanOrEqual(SCENES.length);

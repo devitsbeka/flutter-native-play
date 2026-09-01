@@ -1,5 +1,5 @@
 /**
- * Crossword layout for the Expo word-wheel mode.
+ * Crossword layout for the Words mode.
  *
  * A level is a handful of words that all come from the same few letters. The
  * board shows them interlocked, the way a crossword does, and the player fills
@@ -8,7 +8,7 @@
  *
  * Deterministic on purpose: the same word list always yields the same board,
  * so a level looks the same on every device and a saved game can be restored
- * by word alone. `src/__tests__/expoLevels.test.ts` runs every level through
+ * by word alone. `src/__tests__/wordsLevels.test.ts` runs every level through
  * this and fails if one cannot be laid out, so a bad word list is caught
  * before it ships rather than by a player staring at a missing word.
  */

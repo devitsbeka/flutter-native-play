@@ -190,7 +190,7 @@ export function LetterWheel({ letters, size, accent, disc, disabled, onChange, o
               boxShadow: on ? "0 4px 12px rgba(0,0,0,0.3)" : "none",
               transitionProperty: "background-color, box-shadow",
               transitionDuration: "120ms",
-              fontFamily: "var(--font-body)",
+              fontFamily: "'Nunito', sans-serif",
             }}
             aria-label={l.ch}
           >

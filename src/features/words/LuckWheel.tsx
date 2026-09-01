@@ -1,21 +1,20 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Lightbulb, Sparkles } from "lucide-react";
-import { CoinIcon } from "./CoinIcon";
-
-/**
- * "Test Your Luck": the prize wheel that appears after some levels.
- *
- * Six wedges — hints and coins — and one spin. The wedge under the golden
- * pointer at the top when the wheel stops is the prize. The result is chosen
- * before the wheel moves and the wheel is animated to land on it, which is
- * what every prize wheel does and the only way the animation and the prize
- * are guaranteed to agree.
- */
-
+import { ChunkyButton } from "@/components/ui/chunky-button";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useSound } from "@/contexts/SoundContext";
+import coinIcon from "@/assets/icons/icon-coin.png";
 import { describePrize, type Prize } from "./prizes";
 
-export type { Prize };
+/**
+ * The prize wheel that follows some levels.
+ *
+ * Six wedges — hints and coins — and one spin. The wedge under the golden
+ * pointer when the wheel stops is the prize. The result is chosen before the
+ * wheel moves and the wheel is animated to land on it, which is the only way
+ * the animation and the prize are guaranteed to agree.
+ */
 
 interface Wedge {
   color: string;
@@ -47,28 +46,20 @@ function pickWedge(random: () => number): number {
 function WedgeIcon({ prize }: { prize: Prize }) {
   if (prize.kind === "hints") {
     return prize.amount > 1 ? (
-      <Sparkles className="h-9 w-9 text-white" strokeWidth={2.4} fill="white" />
+      <Sparkles className="h-8 w-8 text-white" strokeWidth={2.4} fill="white" />
     ) : (
-      <Lightbulb className="h-10 w-10 text-white" strokeWidth={2.4} fill="white" />
-    );
-  }
-  if (prize.amount >= 50) {
-    return (
-      <div className="relative h-11 w-11">
-        <CoinIcon size={30} className="absolute left-0 top-3" />
-        <CoinIcon size={30} className="absolute left-3 top-0" />
-      </div>
+      <Lightbulb className="h-9 w-9 text-white" strokeWidth={2.4} fill="white" />
     );
   }
   if (prize.amount >= 25) {
     return (
-      <div className="relative h-11 w-11">
-        <CoinIcon size={30} className="absolute left-1 top-3" />
-        <CoinIcon size={30} className="absolute left-3 top-0" />
+      <div className="relative h-10 w-10">
+        <img src={coinIcon} alt="" className="absolute left-0 top-2 h-7 w-7" draggable={false} />
+        <img src={coinIcon} alt="" className="absolute left-3 top-0 h-7 w-7" draggable={false} />
       </div>
     );
   }
-  return <CoinIcon size={40} />;
+  return <img src={coinIcon} alt="" className="h-9 w-9" draggable={false} />;
 }
 
 interface Props {
@@ -78,6 +69,8 @@ interface Props {
 }
 
 export function LuckWheel({ size, onDone, random = Math.random }: Props) {
+  const { t } = useLanguage();
+  const { playSound, vibrate } = useSound();
   const [rotation, setRotation] = useState(0);
   const [state, setState] = useState<"idle" | "spinning" | "landed">("idle");
   const [prize, setPrize] = useState<Prize | null>(null);
@@ -98,20 +91,22 @@ export function LuckWheel({ size, onDone, random = Math.random }: Props) {
     setPrize(WEDGES[k].prize);
     setState("spinning");
     setRotation(target);
+    playSound("button-click");
+    vibrate(30);
   };
 
   const radius = size / 2;
   const iconRadius = radius * 0.64;
+  const inner = size / 2 - size * 0.045;
 
   return (
     <div className="flex flex-col items-center">
       <div className="relative" style={{ width: size, height: size }}>
-        {/* Rim */}
         <div
           className="absolute inset-0 rounded-full"
           style={{
             background: "#1F3F8F",
-            boxShadow: "0 0 0 4px rgba(255,255,255,0.9), 0 0 40px rgba(255,255,255,0.35), 0 12px 40px rgba(0,0,0,0.45)",
+            boxShadow: "0 0 0 4px rgba(255,255,255,0.95), 0 10px 0 #D9D2E9, 0 14px 32px rgba(0,0,0,0.25)",
           }}
         />
         <motion.div
@@ -120,19 +115,21 @@ export function LuckWheel({ size, onDone, random = Math.random }: Props) {
           animate={{ rotate: rotation }}
           transition={{ duration: state === "spinning" ? 4.2 : 0, ease: [0.12, 0.8, 0.12, 1] }}
           onAnimationComplete={() => {
-            if (state === "spinning") setState("landed");
+            if (state !== "spinning") return;
+            setState("landed");
+            playSound("reward");
+            vibrate([40, 30, 120]);
           }}
         >
           {WEDGES.map((w, i) => {
             const angle = ((i * wedge + wedge / 2 - 90) * Math.PI) / 180;
-            const inner = size / 2 - size * 0.045;
             const x = inner + iconRadius * Math.cos(angle);
             const y = inner + iconRadius * Math.sin(angle);
             return (
               <div
                 key={i}
                 className="absolute flex items-center justify-center"
-                style={{ left: x - 24, top: y - 24, width: 48, height: 48 }}
+                style={{ left: x - 22, top: y - 22, width: 44, height: 44 }}
               >
                 <WedgeIcon prize={w.prize} />
               </div>
@@ -157,38 +154,21 @@ export function LuckWheel({ size, onDone, random = Math.random }: Props) {
               filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.35))",
             }}
           />
-          <CoinIcon size={size * 0.16} className="absolute inset-0 shadow-lg" />
+          <img src={coinIcon} alt="" className="absolute inset-0 h-full w-full drop-shadow-md" draggable={false} />
         </div>
       </div>
 
-      <div className="mt-8 h-16 flex items-center justify-center">
+      <div className="mt-6 flex w-full justify-center">
         {state === "landed" && prize ? (
-          <motion.button
-            initial={{ scale: 0.7, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            onClick={() => onDone(prize)}
-            className="rounded-[18px] px-10 py-3.5 text-[26px] font-bold text-white"
-            style={{
-              background: "linear-gradient(180deg,#5BD35B 0%,#2FA33A 100%)",
-              boxShadow: "0 5px 0 #1E7A2A, 0 10px 24px rgba(0,0,0,0.35)",
-              fontFamily: "var(--font-body)",
-            }}
-          >
-            Collect {describePrize(prize)}
-          </motion.button>
+          <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="w-full">
+            <ChunkyButton variant="gold" size="lg" className="w-full" onClick={() => onDone(prize)} showParticles>
+              {t("words.collect")} · {describePrize(t, prize)}
+            </ChunkyButton>
+          </motion.div>
         ) : (
-          <button
-            onClick={spin}
-            disabled={state !== "idle"}
-            className="rounded-[18px] px-12 py-3.5 text-[30px] font-bold text-white disabled:opacity-60"
-            style={{
-              background: "linear-gradient(180deg,#5BD35B 0%,#2FA33A 100%)",
-              boxShadow: "0 5px 0 #1E7A2A, 0 10px 24px rgba(0,0,0,0.35)",
-              fontFamily: "var(--font-body)",
-            }}
-          >
-            {state === "spinning" ? "Spinning…" : "Spin Now"}
-          </button>
+          <ChunkyButton variant="success" size="lg" className="w-full" onClick={spin} disabled={state !== "idle"}>
+            {state === "spinning" ? t("words.spinning") : t("words.spinNow")}
+          </ChunkyButton>
         )}
       </div>
     </div>

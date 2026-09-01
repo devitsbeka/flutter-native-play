@@ -1,3 +1,4 @@
+import { routeForRoom } from "@/utils/roomRoutes";
 import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -102,9 +103,7 @@ export function usePublicRooms(options?: { enabled?: boolean }) {
 
 /** Where a room card leads, which is not the same route for every game. */
 export function publicRoomPath(room: Pick<PublicRoom, "game_type_key" | "room_code">): string {
-  if (room.game_type_key === "king") return `/king?code=${room.room_code}`;
-  if (room.game_type_key === "team_battle") return `/team-battle?code=${room.room_code}`;
-  return `/team?join=${room.room_code}`;
+  return routeForRoom(room);
 }
 
 /**

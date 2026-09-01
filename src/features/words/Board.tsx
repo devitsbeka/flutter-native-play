@@ -62,7 +62,7 @@ export function Board({ layout, revealed, wave, cellSize, gap, accent, tile }: P
                 fontSize: cellSize * 0.62,
                 lineHeight: 1,
                 boxShadow: "0 3px 0 rgba(0,0,0,0.18), 0 2px 6px rgba(0,0,0,0.25)",
-                fontFamily: "var(--font-body)",
+                fontFamily: "'Nunito', sans-serif",
               }}
             >
               {letter}
