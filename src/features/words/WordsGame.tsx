@@ -14,7 +14,7 @@ import { AuthRequiredModal } from "@/components/shared/AuthRequiredModal";
 import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
 import { portal } from "@/lib/overlayPortal";
 import coinIcon from "@/assets/icons/icon-coin.png";
-import { LEVELS, LEVELS_PER_SCENE, sceneOf, solvedByPercent, type Level } from "./levels";
+import { LEVELS_PER_SCENE, bankLanguage, loadLevels, sceneOf, solvedByPercent, type Level, type WordsLanguage } from "./levels";
 import { buildLayout, cellKey, cellsOf } from "./layout";
 import {
   BONUS_EVERY,
@@ -22,6 +22,7 @@ import {
   HINT_COST,
   LEVEL_REWARD,
   clearSave,
+  freshProgress,
   freshSave,
   loadSave,
   persistSave,
@@ -79,7 +80,10 @@ const shuffle = <T,>(arr: T[]): T[] => {
   return out;
 };
 
-const levelAt = (n: number): Level => LEVELS[(n - 1) % LEVELS.length];
+const levelAt = (bank: Level[], n: number): Level => bank[(n - 1) % bank.length];
+
+/** A placeholder board while a language's bank is on its way. */
+const LOADING_LEVEL: Level = { number: 1, sceneId: "mountain", letters: "", words: [], bonus: [] };
 
 /** Luck wheel after every second level; a scrapbook page after every pack. */
 const luckAfter = (level: Level) => level.number % 2 === 0;
@@ -92,7 +96,8 @@ const roundButton =
   "flex items-center justify-center rounded-full bg-[#402666]/70 text-white backdrop-blur-sm shadow-[0_3px_0_rgba(64,38,102,0.45)] active:scale-95 transition-transform";
 
 export default function WordsGame() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const appLang = bankLanguage(language);
   const navigate = useNavigate();
   const location = useLocation();
   const { code: codeParam } = useParams<{ code?: string }>();
@@ -106,19 +111,55 @@ export default function WordsGame() {
   useEffect(() => persistSave(save), [save]);
 
   // ---- the board's state, shared or not ----
+  // Solo play is in the app's language; a shared board is in the room's,
+  // which the join exchange delivers (a join link opened in another
+  // language still shows the host's board).
   const [shared, setShared] = useState<SharedState>(() => {
-    if (codeParam) return loadSharedState(codeParam) ?? emptyShared(1);
-    const s = loadSave();
+    if (codeParam) return loadSharedState(codeParam) ?? emptyShared(1, appLang);
+    const p = loadSave().progress[appLang] ?? freshProgress();
     return {
-      level: s.level,
-      found: Object.fromEntries(s.found.map((w) => [w, SOLO])),
-      bonus: Object.fromEntries(s.bonusFound.map((w) => [w, SOLO])),
-      hinted: s.hinted,
+      lang: appLang,
+      level: p.level,
+      found: Object.fromEntries(p.found.map((w) => [w, SOLO])),
+      bonus: Object.fromEntries(p.bonusFound.map((w) => [w, SOLO])),
+      hinted: p.hinted,
       rev: 0,
     };
   });
   const sharedRef = useRef(shared);
   sharedRef.current = shared;
+
+  // A solo player who switches the app's language moves to that bank, at
+  // wherever they were in it.
+  useEffect(() => {
+    if (codeParam || roomRef.current || sharedRef.current.lang === appLang) return;
+    const p = loadSave().progress[appLang] ?? freshProgress();
+    const next: SharedState = {
+      lang: appLang,
+      level: p.level,
+      found: Object.fromEntries(p.found.map((w) => [w, SOLO])),
+      bonus: Object.fromEntries(p.bonusFound.map((w) => [w, SOLO])),
+      hinted: p.hinted,
+      rev: sharedRef.current.rev + 1,
+    };
+    sharedRef.current = next;
+    setShared(next);
+    setPhase("play");
+    setWave([]);
+  }, [appLang, codeParam]);
+
+  // ---- the level bank for the board's language ----
+  const [bank, setBank] = useState<{ lang: WordsLanguage; levels: Level[] } | null>(null);
+  useEffect(() => {
+    let alive = true;
+    void loadLevels(shared.lang).then((levels) => {
+      if (alive) setBank({ lang: shared.lang, levels });
+    });
+    return () => {
+      alive = false;
+    };
+  }, [shared.lang]);
+  const bankReady = bank?.lang === shared.lang;
 
   const [phase, setPhase] = useState<Phase>("play");
   const [wave, setWave] = useState<string[]>([]);
@@ -161,8 +202,9 @@ export default function WordsGame() {
       const next = mergeShared(before, incoming);
       setShared(next);
       if (roomRef.current) persistSharedState(roomRef.current.code, next);
-      if (next.level > before.level) {
-        // The friend moved on; follow them.
+      if (next.level > before.level || next.lang !== before.lang) {
+        // The friend moved on (or the room's board is in another language
+        // than ours); follow them.
         setPhase("play");
         setWave([]);
         setLastPrize(null);
@@ -211,7 +253,7 @@ export default function WordsGame() {
   }, [codeParam, authLoading, user]);
 
   // ---- the level ----
-  const level = levelAt(shared.level);
+  const level = bankReady && bank ? levelAt(bank.levels, shared.level) : LOADING_LEVEL;
   const scene = sceneOf(level);
   const layout = useMemo(() => buildLayout(level.words), [level]);
   const layoutRef = useRef(layout);
@@ -237,10 +279,15 @@ export default function WordsGame() {
       } else {
         setSave((s) => ({
           ...s,
-          level: next.level,
-          found: Object.keys(next.found),
-          bonusFound: Object.keys(next.bonus),
-          hinted: next.hinted,
+          progress: {
+            ...s.progress,
+            [next.lang]: {
+              level: next.level,
+              found: Object.keys(next.found),
+              bonusFound: Object.keys(next.bonus),
+              hinted: next.hinted,
+            },
+          },
         }));
       }
     },
@@ -261,7 +308,7 @@ export default function WordsGame() {
     return map;
   }, [layout, shared.found, shared.hinted]);
 
-  const allFound = layout.words.every((p) => p.word in shared.found);
+  const allFound = bankReady && layout.words.length > 0 && layout.words.every((p) => p.word in shared.found);
 
   // ---- scores ----
   const countFor = (id: string) =>
@@ -412,7 +459,7 @@ export default function WordsGame() {
     setWave([]);
     setLastPrize(null);
     setPhase("play");
-    commit((s) => ({ ...emptyShared(s.level + 1), rev: s.rev }));
+    commit((s) => ({ ...emptyShared(s.level + 1, s.lang), rev: s.rev }));
   };
 
   /** From the level-complete card: pay out, then whatever comes next. */
@@ -442,7 +489,7 @@ export default function WordsGame() {
     setPhase("play");
     setMenuOpen(false);
     playSound("button-click");
-    commit((s) => ({ ...emptyShared(s.level), rev: s.rev }));
+    commit((s) => ({ ...emptyShared(s.level, s.lang), rev: s.rev }));
   };
 
   const resetAll = () => {
@@ -452,9 +499,9 @@ export default function WordsGame() {
     setPhase("play");
     setResetAsk(false);
     setMenuOpen(false);
-    if (roomRef.current) commit((s) => ({ ...emptyShared(1), rev: s.rev }));
+    if (roomRef.current) commit((s) => ({ ...emptyShared(1, s.lang), rev: s.rev }));
     else {
-      const fresh = emptyShared(1);
+      const fresh = emptyShared(1, appLang);
       sharedRef.current = fresh;
       setShared(fresh);
     }
@@ -534,13 +581,32 @@ export default function WordsGame() {
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#402666]/25 via-transparent to-[#402666]/30" />
 
       <div className="relative mx-auto flex h-full w-full max-w-[480px] flex-col px-4">
-        {/* Top bar: back, me, coins, friend (or an open seat), menu */}
-        <div className="mt-1 flex h-[76px] shrink-0 items-center gap-2">
-          <motion.button whileTap={{ scale: 0.82 }} onClick={goBack} aria-label={t("common.back")} className={`${roundButton} h-10 w-10 shrink-0`}>
+        {/* Header, the lounges' shape: back, a centred title, menu. The
+            level sits under the title so the row stays quiet. */}
+        <div className="relative mt-1 flex h-[56px] shrink-0 items-center justify-between">
+          <motion.button whileTap={{ scale: 0.82 }} onClick={goBack} aria-label={t("common.back")} className={`${roundButton} h-10 w-10`}>
             <ArrowLeft className="h-5 w-5" />
           </motion.button>
+          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-14">
+            <div
+              className="truncate text-[24px] leading-[26px] text-white [text-shadow:0_2px_8px_rgba(23,10,54,0.45)]"
+              style={{ fontFamily: "'TASolivare', 'Nunito', sans-serif" }}
+            >
+              {t("words.title")}
+            </div>
+            <div className="mt-0.5 truncate font-['Nunito'] text-[12px] font-bold uppercase tracking-wider text-white/85 [text-shadow:0_1px_6px_rgba(23,10,54,0.45)]">
+              {t("words.levelLabel", { n: level.number })} · {t("words.sceneProgress", { scene: t(scene.nameKey), i: sceneIndex + 1, total: LEVELS_PER_SCENE })}
+            </div>
+          </div>
+          <motion.button whileTap={{ scale: 0.82 }} onClick={() => { playSound("button-click"); setMenuOpen(true); }} aria-label={t("words.menu")} className={`${roundButton} h-10 w-10`}>
+            <Menu className="h-5 w-5" />
+          </motion.button>
+        </div>
 
-          <div className="flex w-[64px] shrink-0 flex-col items-center" title={myName}>
+        {/* Players: you on the left, your friend (or the open seat) on the
+            right, the purse between them. */}
+        <div className="mt-2 flex shrink-0 items-start justify-between px-1">
+          <div className="flex w-[64px] flex-col items-center" title={myName}>
             <QuizPlayerAvatar
               avatarUrl={profile?.avatar_url}
               animatedAvatarUrl={profile?.animated_avatar_url}
@@ -550,32 +616,24 @@ export default function WordsGame() {
             />
           </div>
 
-          <div className="flex min-w-0 flex-1 flex-col items-center">
-            <button
-              onClick={() => {
-                playSound("button-click");
-                setCoinsInfo(true);
-              }}
-              aria-label={`${coins} ${t("words.coinsTitle")}`}
-              className="flex h-10 items-center gap-1.5 rounded-full pl-1.5 pr-2 active:scale-95 transition-transform"
-              style={{
-                background: "linear-gradient(180deg,#bb95ef 0%,#9a6fdc 58%,#8a5ed1 100%)",
-                border: "1.5px solid #cbb0f4",
-                boxShadow: "0px 4px 0px 0px #7a51b8, 0px 8px 16px rgba(102,51,153,0.3), inset 0px 2px 0px rgba(255,255,255,0.45)",
-              }}
-            >
-              <img src={coinIcon} alt="" className="h-7 w-7" draggable={false} />
-              <span className="font-['Nunito'] text-[17px] font-black tabular-nums">{coins.toLocaleString()}</span>
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#2FA33A]">
-                <Plus className="h-3.5 w-3.5" strokeWidth={3.5} />
-              </span>
-            </button>
-            <div className="mt-1 truncate rounded-full bg-white/85 px-2.5 py-0.5 text-[11px] font-black uppercase tracking-wider text-[#523b76] shadow-sm" style={{ fontFamily: "'TASolivare', 'Nunito', sans-serif" }}>
-              {t("words.levelLabel", { n: level.number })} · {t("words.sceneProgress", { scene: t(scene.nameKey), i: sceneIndex + 1, total: LEVELS_PER_SCENE })}
-            </div>
-          </div>
+          <button
+            onClick={() => {
+              playSound("button-click");
+              setCoinsInfo(true);
+            }}
+            aria-label={`${coins} ${t("words.coinsTitle")}`}
+            className="mt-1 flex h-10 items-center gap-1.5 rounded-full pl-1.5 pr-4 active:scale-95 transition-transform"
+            style={{
+              background: "linear-gradient(180deg,#bb95ef 0%,#9a6fdc 58%,#8a5ed1 100%)",
+              border: "1.5px solid #cbb0f4",
+              boxShadow: "0px 4px 0px 0px #7a51b8, 0px 8px 16px rgba(102,51,153,0.3), inset 0px 2px 0px rgba(255,255,255,0.45)",
+            }}
+          >
+            <img src={coinIcon} alt="" className="h-7 w-7" draggable={false} />
+            <span className="font-['Nunito'] text-[17px] font-black tabular-nums">{coins.toLocaleString()}</span>
+          </button>
 
-          <div className="flex w-[64px] shrink-0 flex-col items-center">
+          <div className="flex w-[64px] flex-col items-center">
             {room.friend ? (
               <div className={room.friend.pending ? "opacity-60" : ""} title={room.friend.nickname}>
                 <QuizPlayerAvatar
@@ -595,7 +653,7 @@ export default function WordsGame() {
                 onClick={() => void openInvite()}
                 disabled={inviteOpening}
                 aria-label={t("words.inviteFriend")}
-                className="relative flex h-[50px] w-[50px] items-center justify-center rounded-full border border-white bg-[rgba(51,192,84,0.75)] shadow-[0_4px_0_#1E9A7F] disabled:opacity-70"
+                className="relative flex h-[50px] w-[50px] items-center justify-center rounded-full border-[3px] border-[#9C99E8] bg-[rgba(51,192,84,0.75)] shadow-[0_4px_0_#1E9A7F] disabled:opacity-70"
               >
                 <motion.div animate={{ scale: [1, 1.14, 1] }} transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}>
                   <Plus className="h-7 w-7 text-white" strokeWidth={3} />
@@ -603,15 +661,11 @@ export default function WordsGame() {
               </motion.button>
             )}
           </div>
-
-          <motion.button whileTap={{ scale: 0.82 }} onClick={() => { playSound("button-click"); setMenuOpen(true); }} aria-label={t("words.menu")} className={`${roundButton} h-10 w-10 shrink-0`}>
-            <Menu className="h-5 w-5" />
-          </motion.button>
         </div>
 
         {/* Board */}
         <div ref={boardRef} className="flex min-h-0 flex-1 items-center justify-center py-2">
-          {boardArea.width > 0 && (
+          {boardArea.width > 0 && bankReady && (
             <Board layout={layout} revealed={revealed} wave={wave} cellSize={cellSize} gap={gap} accent={scene.accent} tile={scene.tile} />
           )}
         </div>
@@ -661,7 +715,7 @@ export default function WordsGame() {
           className="relative flex shrink-0 justify-center pb-[calc(0.75rem_+_var(--safe-bottom))] pt-1 transition-opacity duration-300"
           style={{ opacity: phase === "play" ? 1 : 0 }}
         >
-          {shell.width > 0 && (
+          {shell.width > 0 && bankReady && (
             <LetterWheel
               letters={wheel}
               size={wheelSize}
