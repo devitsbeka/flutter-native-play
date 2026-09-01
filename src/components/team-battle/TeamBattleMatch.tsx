@@ -587,17 +587,24 @@ function PhaseRapidFire() {
               <span className="text-white/60 font-normal"> · {tile.category_name}</span>
             </p>
           </div>
-          <div className="flex items-center gap-1 bg-white/10 px-3 py-1.5 rounded-full shrink-0">
-            <span className="text-white font-bold text-sm">{index + 1}</span>
-            <span className="text-white/60 text-sm">/ {questions.length}</span>
+          {/* Not "n / 12" any more: the turn is a fixed three minutes and
+              the count is open-ended, so the pill totals the run so far. */}
+          <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full shrink-0">
+            <span className="text-emerald-300 font-bold text-sm">
+              ✓ {turnPicks.filter((p) => p.correct).length}
+            </span>
+            <span className="text-red-300 font-bold text-sm">
+              ✗ {turnPicks.filter((p) => !p.correct).length}
+            </span>
           </div>
         </div>
 
         {/* the turn's running tally — a green/red dot per answered question,
-            so everyone reads the turn at a glance */}
+            so everyone reads the turn at a glance (only the freshest twelve:
+            a three-minute run would otherwise overflow the row) */}
         {!isBotTurn && turnPicks.length > 0 && (
           <div className="flex justify-center gap-1.5 px-4 pb-1 flex-shrink-0">
-            {turnPicks.map((p) => (
+            {turnPicks.slice(-12).map((p) => (
               <motion.span
                 key={p.index}
                 initial={{ scale: 0 }}

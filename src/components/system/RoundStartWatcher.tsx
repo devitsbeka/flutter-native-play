@@ -102,6 +102,13 @@ export function RoundStartWatcher() {
       // two people are on it — so nothing here should pull anyone anywhere.
       if (isWordsRoom(room)) return;
 
+      // Versus King is the same shape: its match opens with the captain
+      // vote, not the classic 3-2-1, so its players go to its page.
+      if (room.game_type_key === "king") {
+        if (room.room_code) navigate(`/king?code=${room.room_code}`);
+        return;
+      }
+
       setStartedRound({
         startedAt: room.started_at ?? null,
         categoryId: room.category_id ?? null,
