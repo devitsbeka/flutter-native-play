@@ -17,6 +17,9 @@ const PUBLIC_ROUTES = [
 	{ path: "/discover", name: "discover" },
 	{ path: "/vip", name: "PRO" },
 	{ path: "/team", name: "rooms" },
+	// Words is public and lazy-loaded: the one route whose chunk carries
+	// the scene photos, and the one a signed-out visitor can play in full.
+	{ path: "/words", name: "words" },
 	// /join is covered in tv-smoke.spec.ts, which asserts its actual UI
 	// rather than just that it painted — no need to load it twice.
 	{ path: "/privacy-policy", name: "privacy policy" },

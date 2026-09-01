@@ -4,8 +4,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { anyBlockedText, containsBlockedText } from "@/utils/contentFilter";
-import { Loader2, ArrowLeft, HelpCircle, X, RefreshCw, Play, Pencil, Gamepad2, Plus, Check } from "lucide-react";
+import { Loader2, ArrowLeft, HelpCircle, X, RefreshCw, Play, Pencil, Gamepad2, Plus, Check, Globe, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { roomVisibilityFields } from "@/utils/roomVisibility";
 import { localizeCategoryNames } from "@/utils/localizeCategories";
 import { filterCategoriesForLanguage } from "@/utils/languageCategoryFilter";
 import { readAppLanguage } from "@/utils/appLanguage";
@@ -42,6 +43,7 @@ import iconButtonCard from "@/assets/play-chooser/icon-button.png";
 import iconKingCard from "@/assets/play-chooser/icon-king.webp";
 import iconCrateCard from "@/assets/play-chooser/icon-crate.png";
 import iconLibraryCard from "@/assets/play-chooser/icon-library.webp";
+import iconWordsCard from "@/assets/play-chooser/icon-words.webp";
 import { getRandomGradient } from "@/config/roomGradients";
 
 /**
@@ -108,7 +110,7 @@ type SelectionMode = "random" | "library" | "create" | "my-trivias" | null;
  * My Trivia — as cards of their own (the old "classic friends room" card that
  * hid all three sources behind one more tap is gone).
  */
-type GameChoice = "quick" | "random" | "king" | "battle" | "library" | "mytrivias";
+type GameChoice = "quick" | "random" | "king" | "battle" | "words" | "library" | "mytrivias";
 
 /** A person to seat as "invited" — a friend, or a member of a picked room. */
 type InvitePerson = {
@@ -194,6 +196,21 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   // Room name & icon state - AI-generated via edge function
   const [roomName, setRoomName] = useState<string>(t("extra.loadingState"));
   const [roomIcon, setRoomIcon] = useState<string | null>(null);
+
+  /**
+   * Published, or just mine.
+   *
+   * A published room is listed on the Public tab for everyone, with its
+   * first round's category and how many seats are taken — and being listed
+   * is not the same as being open: strangers ask, and the host answers.
+   * Private is the old behaviour exactly, a room only reachable through its
+   * code, its link or an invitation.
+   *
+   * It starts published because a room nobody can find is the thing this
+   * screen was worst at: the only way to fill one was to already know who
+   * you wanted in it.
+   */
+  const [isPublic, setIsPublic] = useState(true);
   const [isGeneratingName, setIsGeneratingName] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState("");
@@ -592,7 +609,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   const createEnabled =
     gameChoice === null
       ? false
-      : gameChoice === "quick" || gameChoice === "king" || gameChoice === "battle"
+      : gameChoice === "quick" || gameChoice === "king" || gameChoice === "battle" || gameChoice === "words"
         ? true
         : gameChoice === "random"
           ? selectionMode === "random" && !!selectedCategory && !isSearchingRandom
@@ -691,7 +708,19 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     if (gameChoice === "king" || gameChoice === "battle") {
       const invite = collectInvitees();
       onClose();
-      navigate(gameChoice === "king" ? "/king" : "/team-battle", { state: { invite } });
+      navigate(gameChoice === "king" ? "/king" : "/team-battle", {
+        state: { invite, isPublic },
+      });
+      return;
+    }
+
+    // Words seats one friend. The first person picked here rides along and
+    // is invited the moment the board's room exists; the board itself opens
+    // at once, solo until they arrive.
+    if (gameChoice === "words") {
+      const invite = collectInvitees().slice(0, 1);
+      onClose();
+      navigate("/words", { state: { invite } });
       return;
     }
 
@@ -754,6 +783,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
             // CRITICAL: Set user_trivia_id for trivia type so TVSetupInline can find it
             user_trivia_id: challengeTrivia.type === "trivia" ? challengeTrivia.id : null,
             status: "waiting",
+            ...(await roomVisibilityFields(isPublic)),
           })
           .select()
           .single();
@@ -803,6 +833,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
               game_mode: `trivia:${createdTriviaId}`,
               user_trivia_id: createdTriviaId,
               status: "waiting",
+              ...(await roomVisibilityFields(isPublic)),
             })
             .select()
             .single();
@@ -833,7 +864,8 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
             customTriviaQuestions,
             effectiveRoomName,
             roomIcon,
-            plannedRoomCode
+            plannedRoomCode,
+            isPublic
           );
 
           if (room?.id) {
@@ -842,7 +874,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         }
       } else if (selectedCategory) {
         // Create the room with selected category
-        room = await createRoom(selectedCategory.category_id, selectedCategory.name, undefined, effectiveRoomName, roomIcon, plannedRoomCode);
+        room = await createRoom(selectedCategory.category_id, selectedCategory.name, undefined, effectiveRoomName, roomIcon, plannedRoomCode, isPublic);
 
         if (room?.id) {
           await persistQueuedRounds(room.id);
@@ -1059,6 +1091,35 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                 <RefreshCw className={`w-4 h-4 text-primary ${isGeneratingName ? 'animate-spin' : ''}`} />
               </button>
             </div>
+
+            {/* Published or private. Two labelled halves rather than a bare
+                switch: "public" alone does not say whether it means anyone
+                can watch, anyone can walk in, or anyone can find it, and the
+                line under the pair answers that in the one place someone is
+                deciding. */}
+            <div className="mt-2 flex items-center gap-1 p-1 rounded-2xl bg-muted">
+              {([
+                { on: true, icon: Globe, label: t("extra.roomPublic") },
+                { on: false, icon: Lock, label: t("extra.roomPrivate") },
+              ] as const).map(({ on, icon: Icon, label }) => (
+                <button
+                  key={String(on)}
+                  type="button"
+                  onClick={() => setIsPublic(on)}
+                  className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-[13px] font-semibold transition-colors ${
+                    isPublic === on
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground"
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  {label}
+                </button>
+              ))}
+            </div>
+            <p className="mt-1 px-1 text-[11.5px] leading-snug text-muted-foreground">
+              {isPublic ? t("extra.roomPublicHint") : t("extra.roomPrivateHint")}
+            </p>
           </div>
         )}
 
@@ -1075,6 +1136,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                   { key: "random", icon: iconDiceCard, title: t("extra.randomOption"), desc: t("extra.randomDesc") },
                   { key: "king", icon: iconKingCard, title: t("lobby.vkTitle"), desc: t("lobby.kingCardDesc") },
                   { key: "battle", icon: iconCrateCard, title: t("teamBattle.title"), desc: t("gameTypes.teamBattleDesc") },
+                  { key: "words", icon: iconWordsCard, title: t("gameTypes.wordsTitle"), desc: t("gameTypes.wordsDesc") },
                   { key: "library", icon: iconLibraryCard, title: t("extra.libraryOption"), desc: t("extra.libraryDesc") },
                   { key: "mytrivias", icon: stickerAlbum, title: t("extra.myTriviaOption"), desc: t("extra.myTriviaDesc") },
                 ] as { key: GameChoice; icon: string; title: string; desc: string }[]

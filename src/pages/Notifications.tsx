@@ -21,6 +21,7 @@ import { CompactGenerationCard } from '@/components/notifications/CompactGenerat
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PingPongVideo } from '@/components/shared/PingPongVideo';
 import { MAP_VIDEOS } from '@/config/videoConfig';
+import { routeForRoom, ROOM_KIND_COLUMNS } from "@/utils/roomRoutes";
 import { supabase } from '@/integrations/supabase/client';
 import { PUBLIC_SHARING_ENABLED } from "@/config/features";
 import {
@@ -202,7 +203,14 @@ export default function Notifications() {
       const roomCode = await acceptInvitation(invitationId);
       await markAsRead(notificationId);
       if (roomCode) {
-        navigate(`/team?join=${roomCode}`);
+        // The room decides its page (routeForRoom) — a Words or lounge
+        // invite is not a classic room.
+        const { data: typed } = await supabase
+          .from('game_rooms')
+          .select(ROOM_KIND_COLUMNS)
+          .eq('room_code', roomCode.toUpperCase())
+          .maybeSingle();
+        navigate(routeForRoom(typed, roomCode));
       } else {
         // Accepted, but the room can no longer be joined (deleted or
         // codeless). Saying nothing left the player staring at the list
@@ -245,7 +253,7 @@ export default function Notifications() {
             const roomCode = (data?.room_code as string | undefined) ?? undefined;
 
             if (roomId || roomCode) {
-              const q = supabase.from('game_rooms').select('tv_session_id, room_code, game_type_key');
+              const q = supabase.from('game_rooms').select('tv_session_id, room_code, game_type_key, game_mode');
               const { data: room } = roomId
                 ? await q.eq('id', roomId).maybeSingle()
                 : await q.eq('room_code', String(roomCode).toUpperCase()).maybeSingle();
@@ -258,9 +266,7 @@ export default function Notifications() {
               if (room?.room_code) {
                 // A lounge invite lands in its lounge — /team?join= would
                 // seat the player in a room its page never shows.
-                if (room.game_type_key === 'king') navigate(`/king?code=${room.room_code}`);
-                else if (room.game_type_key === 'team_battle') navigate(`/team-battle?code=${room.room_code}`);
-                else navigate(`/team?join=${room.room_code}`);
+                navigate(routeForRoom(room));
                 return;
               }
             }

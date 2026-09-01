@@ -10,6 +10,7 @@ import { useGenerationNotifications } from '@/hooks/useGenerationNotifications';
 import { useFriends } from '@/hooks/useFriends';
 import { useGameInvitations } from '@/hooks/useGameInvitations';
 import { useNavigate } from 'react-router-dom';
+import { routeForRoom, ROOM_KIND_COLUMNS } from "@/utils/roomRoutes";
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "@/lib/toast";
 import { CompactNotificationCard } from '@/components/notifications/CompactNotificationCard';
@@ -220,7 +221,14 @@ export function NotificationsPanel({ isOpen, onClose, defaultTab }: Notification
       await markAsRead(notificationId);
       if (roomCode) {
         onClose();
-        navigate(`/team?join=${roomCode}`);
+        // The room decides its page — a Words or lounge invite accepted
+        // here used to land in the classic hub, which never shows it.
+        const { data: typed } = await supabase
+          .from('game_rooms')
+          .select(ROOM_KIND_COLUMNS)
+          .eq('room_code', roomCode.toUpperCase())
+          .maybeSingle();
+        navigate(routeForRoom(typed, roomCode));
       }
     } catch (error) {
       toast.error(t("notificationsPanel.errorOccurred"));
@@ -250,14 +258,20 @@ export function NotificationsPanel({ isOpen, onClose, defaultTab }: Notification
     }
     
     switch (notification.type) {
+      // Four notifications that all mean "go to this room": it started,
+      // you were invited, the host said yes to your ask, or somebody is
+      // asking you — and for that last one the host's own lobby is where
+      // the accept/decline lives.
       case 'game_started':
+      case 'room_join_approved':
+      case 'room_join_request':
       case 'room_invite': {
         try {
           const roomId = (data?.room_id as string | undefined) ?? undefined;
           const roomCode = (data?.room_code as string | undefined) ?? undefined;
 
           if (roomId || roomCode) {
-            const q = supabase.from('game_rooms').select('tv_session_id, room_code, status, game_type_key');
+            const q = supabase.from('game_rooms').select('tv_session_id, room_code, status, game_type_key, game_mode');
             const { data: room } = roomId
               ? await q.eq('id', roomId).maybeSingle()
               : await q.eq('room_code', String(roomCode).toUpperCase()).maybeSingle();
@@ -267,13 +281,10 @@ export function NotificationsPanel({ isOpen, onClose, defaultTab }: Notification
               onClose();
               if (room.tv_session_id) {
                 navigate(`/join/session/${room.tv_session_id}`);
-              } else if (room.game_type_key === 'king') {
-                // Lounge invites land in their lounge, not the games tab.
-                navigate(`/king?code=${room.room_code}`);
-              } else if (room.game_type_key === 'team_battle') {
-                navigate(`/team-battle?code=${room.room_code}`);
               } else {
-                navigate(`/team?join=${room.room_code}`);
+                // Lounge and Words invites land on their own page, not the
+                // games tab — see routeForRoom.
+                navigate(routeForRoom(room));
               }
               return;
             }

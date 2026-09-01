@@ -78,166 +78,123 @@ export function CreateTriviaTypeModal({
           {/* Content (no page scroll; drafts scroll internally if needed) */}
           <div className="flex-1 overflow-hidden px-4 py-6 pb-[calc(1.5rem_+_var(--safe-bottom))] max-w-2xl mx-auto w-full">
             <div className="flex h-full flex-col space-y-3">
-            {/* Single Trivia Card */}
-            <motion.button
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0 }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => {
-                handleClose();
-                onSelectSingle();
-              }}
-              className="relative w-full p-4 rounded-2xl overflow-hidden text-left flex items-center gap-4"
-              style={{
-                background: "rgba(255, 255, 255, 0.12)",
-                backdropFilter: "blur(12px)",
-                border: "1px solid rgba(255, 255, 255, 0.2)",
-              }}
-            >
-              {/* Glow effect */}
-              <div
-                className="absolute inset-0 opacity-20"
-                style={{
-                  background: "radial-gradient(circle at left center, rgba(139, 92, 246, 0.4), transparent 50%)",
-                }}
-              />
-              
-              {/* Icon */}
-              <div className="relative shrink-0">
-                <img src={triviaBuzzer} alt="" className="w-14 h-14 object-contain" />
-              </div>
-              
-              {/* Text */}
-              <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-white text-[17.6px]">{t("extra.triviaLabel")}</h3>
-                  <p className="text-white/60 text-[13.8px]">{t("extra.triviaDesc2")}</p>
-              </div>
-            </motion.button>
-
-            {/* Collection Card */}
-            <motion.button
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.05 }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => {
-                handleClose();
-                onSelectCollection();
-              }}
-              className="relative w-full p-4 rounded-2xl overflow-hidden text-left flex items-center gap-4"
-              style={{
-                background: "rgba(255, 255, 255, 0.12)",
-                backdropFilter: "blur(12px)",
-                border: "1px solid rgba(255, 255, 255, 0.2)",
-              }}
-            >
-              {/* Glow effect */}
-              <div
-                className="absolute inset-0 opacity-20"
-                style={{
-                  background: "radial-gradient(circle at left center, rgba(34, 211, 238, 0.4), transparent 50%)",
-                }}
-              />
-              
-              {/* Icon */}
-              <div className="relative shrink-0">
-                <img src={iconCollections} alt="" className="w-14 h-14 object-contain" />
-              </div>
-              
-              {/* Text */}
-              <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-white text-[17.6px]">{t("extra.collectionLabel")}</h3>
-                  <p className="text-white/60 text-[13.8px]">{t("extra.collectionDesc2")}</p>
-              </div>
-            </motion.button>
-
-            {/* MyTrivia Party Card */}
-            {onSelectPersonal && (
-              <>
-                <motion.button
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => {
-                    handleClose();
-                    onSelectPersonal();
-                  }}
-                  className="relative w-full p-4 rounded-2xl overflow-hidden text-left flex items-center gap-4"
-                  style={{
-                    background: "rgba(255, 255, 255, 0.12)",
-                    backdropFilter: "blur(12px)",
-                    border: "1px solid rgba(255, 255, 255, 0.2)",
-                  }}
-                >
-                  {/* Glow effect */}
-                  <div
-                    className="absolute inset-0 opacity-20"
-                    style={{
-                      background: "radial-gradient(circle at left center, rgba(236, 72, 153, 0.4), transparent 50%)",
-                    }}
-                  />
-                  
-                  {/* Icon */}
-                  <div className="relative shrink-0">
-                    <img src={iconGroupOfPeople} alt="" className="w-14 h-14 object-contain" />
-                  </div>
-                  
-                  {/* Text */}
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-white text-[17.6px]">My Trivia Party</h3>
-                    <p className="text-white/60 text-[13.8px]">{t("extra.myTriviaPartyDesc2")}</p>
-                  </div>
-                </motion.button>
-              </>
-            )}
-
-            {/* Game Room Card */}
+            {/* The room comes first, and looks it.
+                Four cards of identical weight made "create a room" the
+                fourth option on a screen reached from a games list — the
+                thing most people came to do, filed under three kinds of
+                quiz. It leads now, at full size; the three quiz types are a
+                secondary row under their own label. */}
             {onSelectGameRoom && (
               <motion.button
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15 }}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => {
                   handleClose();
                   onSelectGameRoom();
                 }}
-                className="relative w-full p-4 rounded-2xl overflow-hidden text-left flex items-center gap-4"
+                className="relative w-full p-5 rounded-3xl overflow-hidden text-left flex items-center gap-4 shrink-0"
+                style={{
+                  background: "rgba(255, 255, 255, 0.2)",
+                  backdropFilter: "blur(12px)",
+                  border: "1.5px solid rgba(255, 255, 255, 0.38)",
+                  boxShadow: "0 10px 30px rgba(0,0,0,0.22)",
+                }}
+              >
+                <div
+                  className="absolute inset-0 opacity-30"
+                  style={{
+                    background: "radial-gradient(circle at left center, rgba(16, 185, 129, 0.55), transparent 55%)",
+                  }}
+                />
+                <div className="relative shrink-0">
+                  <img src={danceFloor} alt="" className="w-[72px] h-[72px] object-contain drop-shadow-lg" />
+                </div>
+                <div className="flex-1 min-w-0 relative">
+                  <h3 className="font-display text-white text-[22px] leading-tight">{t("extra.gameRoomLabel")}</h3>
+                  <p className="text-white/70 text-[14px] mt-0.5">{t("extra.playWithFriends")}</p>
+                </div>
+              </motion.button>
+            )}
+
+            {onSelectGameRoom && (
+              <p className="shrink-0 pt-1 px-1 text-[12px] font-semibold uppercase tracking-wide text-white/50">
+                {t("extra.orCreateTrivia")}
+              </p>
+            )}
+
+            {/* The three quiz types, secondary to the room above */}
+            {([
+              {
+                key: "trivia",
+                icon: triviaBuzzer,
+                title: t("extra.triviaLabel"),
+                desc: t("extra.triviaDesc2"),
+                glow: "rgba(139, 92, 246, 0.4)",
+                onPick: () => onSelectSingle(),
+              },
+              {
+                key: "collection",
+                icon: iconCollections,
+                title: t("extra.collectionLabel"),
+                desc: t("extra.collectionDesc2"),
+                glow: "rgba(34, 211, 238, 0.4)",
+                onPick: () => onSelectCollection(),
+              },
+              ...(onSelectPersonal
+                ? [{
+                    key: "personal",
+                    icon: iconGroupOfPeople,
+                    title: "My Trivia Party",
+                    desc: t("extra.myTriviaPartyDesc2"),
+                    glow: "rgba(236, 72, 153, 0.4)",
+                    onPick: () => onSelectPersonal(),
+                  }]
+                : []),
+            ]).map((card, i) => (
+              <motion.button
+                key={card.key}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.05 * (i + 1) }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => {
+                  handleClose();
+                  card.onPick();
+                }}
+                className={`relative w-full rounded-2xl overflow-hidden text-left flex items-center gap-4 shrink-0 ${
+                  onSelectGameRoom ? "p-3" : "p-4"
+                }`}
                 style={{
                   background: "rgba(255, 255, 255, 0.12)",
                   backdropFilter: "blur(12px)",
                   border: "1px solid rgba(255, 255, 255, 0.2)",
                 }}
               >
-                {/* Glow effect */}
                 <div
                   className="absolute inset-0 opacity-20"
                   style={{
-                    background: "radial-gradient(circle at left center, rgba(16, 185, 129, 0.4), transparent 50%)",
+                    background: `radial-gradient(circle at left center, ${card.glow}, transparent 50%)`,
                   }}
                 />
-                
-                {/* Icon */}
                 <div className="relative shrink-0">
-                  <img src={danceFloor} alt="" className="w-14 h-14 object-contain" />
+                  <img
+                    src={card.icon}
+                    alt=""
+                    className={onSelectGameRoom ? "w-11 h-11 object-contain" : "w-14 h-14 object-contain"}
+                  />
                 </div>
-                
-                {/* Text */}
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-white text-[17.6px]">{t("extra.gameRoomLabel")}</h3>
-                  <p className="text-white/60 text-[13.8px]">{t("extra.playWithFriends")}</p>
+                <div className="flex-1 min-w-0 relative">
+                  <h3 className="font-bold text-white text-[16px]">{card.title}</h3>
+                  <p className="text-white/60 text-[13px]">{card.desc}</p>
                 </div>
               </motion.button>
-            )}
+            ))}
 
               {/* Drafts List */}
-              <div className="h-[50px]" aria-hidden />
+              <div className="h-[24px] shrink-0" aria-hidden />
               <div className="flex-1 min-h-0">
                 <DraftsList 
                   onResumeDraft={handleResumeDraft}

@@ -18,6 +18,7 @@ import React, {
   useState,
 } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { roomVisibilityFields } from "@/utils/roomVisibility";
 import type { Json, Tables } from "@/integrations/supabase/types";
 import { useAuth } from "./AuthContext";
 import { toast } from "@/lib/toast";
@@ -63,7 +64,7 @@ interface TeamBattleContextValue {
   isHost: boolean;
   myTeam: TBTeam | null;
   isSpotlight: boolean;
-  createRoom: () => Promise<TBRoom | null>;
+  createRoom: (isPublic?: boolean) => Promise<TBRoom | null>;
   joinRoom: (code: string) => Promise<boolean>;
   enterRoom: (roomId: string) => Promise<boolean>;
   leaveRoom: () => Promise<void>;
@@ -306,7 +307,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
     void liveChannelRef.current?.send({ type: "broadcast", event: "pick", payload: pick });
   }, []);
 
-  const createRoom = useCallback(async (): Promise<TBRoom | null> => {
+  const createRoom = useCallback(async (isPublic = false): Promise<TBRoom | null> => {
     if (!user || !profile) {
       toast.error(tStandalone("extra.mpAuthRequired"));
       return null;
@@ -326,6 +327,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
             game_mode: "team_battle",
             min_players: 2,
             max_players: 10,
+            ...(await roomVisibilityFields(isPublic)),
             background_gradient: getRandomGradient(),
             last_activity_at: new Date().toISOString(),
           })

@@ -18,6 +18,8 @@
           "/join/*",
           "/room/*",
           "/team",
+          "/words",
+          "/words/*",
           "/tv/*",
           "/controller/*",
           "/collection/*",

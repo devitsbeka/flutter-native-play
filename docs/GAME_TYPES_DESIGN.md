@@ -490,3 +490,23 @@ then **Blitz Royale** (uses matchmaking investment, marketable).
 - Matchmaking liquidity: below what DAU does the global queue feel dead per
   language bucket? Have the "invite friends instead" fallback ready from day
   one.
+
+
+## 9. Words (shipped)
+
+`words` — a word-wheel crossword, solo or with one friend, at `/words` and
+`/words/:code`. Client code lives in `src/features/words`. It differs from
+the other lounges in two ways worth knowing:
+
+- **No server half.** Levels ship in the bundle; a friend game rides on a
+  realtime broadcast channel (`words-board-<roomId>`) and is reconciled by
+  `mergeShared` — no match table, no RPC. The room row exists only so the
+  app's invite machinery (participant rows, the bell trigger, the push) works
+  unchanged. Rooms are always private and never move to `playing`.
+- **The catalog row may lag the client.** `game_rooms.game_type_key` is a
+  foreign key into `game_types`, and the live database only gains the
+  `words` row when `20260901120000_words_game_type.sql` is applied through
+  Lovable. Until then the client stores rooms with a null key and
+  `game_mode = 'words'`, and every reader goes through
+  `src/utils/roomRoutes.ts`, which understands both shapes. Apply the
+  migration; nothing else changes.

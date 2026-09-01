@@ -10,6 +10,7 @@ import iconKingMascot from "@/assets/play-chooser/icon-king.webp";
 import crownIconAsset from "@/assets/crown-icon.png";
 import { resolveAvatarUrl } from "@/utils/avatarUtils";
 import { supabase } from "@/integrations/supabase/client";
+import { roomVisibilityFields } from "@/utils/roomVisibility";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useServerDeadline } from "@/hooks/useServerDeadline";
@@ -19,6 +20,7 @@ import { readAppLanguage } from "@/utils/appLanguage";
 import { toast } from "@/lib/toast";
 import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
 import { FriendsStoriesBar } from "@/components/team/FriendsStoriesBar";
+import { JoinRequestGate } from "@/components/team/JoinRequestGate";
 import {
   CaptainChip,
   AnimatedCoinPill,
@@ -321,6 +323,15 @@ export default function KingPage() {
   const [kingPending, setKingPending] = useState<Tables<"room_participants">[]>([]);
   const [seatMenu, setSeatMenu] = useState<Tables<"room_participants"> | null>(null);
   const roomAttempted = useRef(false);
+  // Published or private, decided on the create screen and carried here in
+  // router state: this lounge makes its own room on arrival, so the switch
+  // has to survive the navigation. Captured at mount because the ?code=
+  // replace that follows creation drops router state. A lounge opened any
+  // other way (a shared link, the play chooser) is private, like every
+  // other room created without an opinion.
+  const publishRef = useRef<boolean>(
+    (location.state as { isPublic?: boolean } | null)?.isPublic ?? false,
+  );
   const kingRoomRef = useRef<Tables<"game_rooms"> | null>(null);
   kingRoomRef.current = kingRoom;
   const channelRef = useRef<RealtimeChannel | null>(null);
@@ -374,6 +385,7 @@ export default function KingPage() {
           game_mode: "king",
           min_players: 1,
           max_players: 11,
+          ...(await roomVisibilityFields(publishRef.current)),
           last_activity_at: new Date().toISOString(),
         })
         .select()
@@ -735,6 +747,9 @@ export default function KingPage() {
         className="h-[100dvh] w-full overflow-hidden safe-bleed flex flex-col"
         style={{ background: LILAC_BG }}
       >
+        {/* Somebody asking onto this couch, when the lounge was published */}
+        <JoinRequestGate roomId={kingRoom?.id} isHost={kingRoom?.host_user_id === user?.id} />
+
         <LilacHeader
           title={t("lobby.vkTitle")}
           icon={iconKingMascot}

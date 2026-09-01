@@ -19,6 +19,9 @@ const DO_NOT_INTERRUPT = [
   // "already there" check above never covers it.)
   "/team-battle",
   "/king",
+  // A Words board, solo or with a friend: the drag across the wheel is the
+  // whole game, and a page change under a finger loses the word.
+  "/words",
 ];
 
 /**

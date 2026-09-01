@@ -1,3 +1,5 @@
+import { routeForRoom, ROOM_KIND_COLUMNS } from "@/utils/roomRoutes";
+import { supabase } from "@/integrations/supabase/client";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -71,7 +73,14 @@ export function SceneSidebar({ onQuickPlay }: SceneSidebarProps) {
     setInviteBusy(true);
     const roomCode = await acceptInvitation(invitation.id);
     setInviteBusy(false);
-    if (roomCode) navigate(`/team?join=${roomCode}`);
+    if (!roomCode) return;
+    // The room decides its page — see routeForRoom.
+    const { data: typed } = await supabase
+      .from("game_rooms")
+      .select(ROOM_KIND_COLUMNS)
+      .eq("room_code", roomCode.toUpperCase())
+      .maybeSingle();
+    navigate(routeForRoom(typed, roomCode));
   };
 
   const handleDecline = async () => {

@@ -23,7 +23,11 @@ export interface MyRoom {
   /** Registry key for the new game types — "king" / "team_battle" rooms
    * carry their own branding and live on their own routes. */
   game_type_key: string | null;
+  /** Words rooms may carry a null key with game_mode 'words' — see roomRoutes. */
+  game_mode: string | null;
   has_unread_activity: boolean;
+  /** Published to the Public tab. Private rooms are the default. */
+  is_public: boolean;
   cover_image: string | null;
   background_gradient: string | null;
   host_user_id: string;
@@ -305,7 +309,9 @@ async function fetchRoomsForUser(userId: string, options?: FetchRoomsOptions): P
       is_host: hostMap.get(room.id) || false,
       game_type: room.game_type,
       game_type_key: room.game_type_key ?? null,
+      game_mode: room.game_mode ?? null,
       has_unread_activity: room.has_unread_activity || false,
+      is_public: room.is_public === true,
       cover_image: room.cover_image || null,
       background_gradient: room.background_gradient || null,
       host_user_id: room.host_user_id,
@@ -391,6 +397,15 @@ interface UseMyRoomsOptions {
   searchQuery?: string;
   includeArchived?: boolean;
   limit?: number;
+  /**
+   * Which rooms belong on this list.
+   *
+   * "private" is what the Private tab passes: a published room lives on the
+   * Public tab, where its host sees it at the top of the list and everyone
+   * else sees it at all. Listing it in both places would show the host the
+   * same room twice with two different buttons on it.
+   */
+  visibility?: "all" | "private";
 }
 
 export function useMyRooms(options?: UseMyRoomsOptions) {
@@ -422,6 +437,7 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
     searchQuery = "",
     includeArchived = false,
     limit = 10,
+    visibility = "all",
   } = options || {};
 
   const isSearching = !!searchQuery.trim();
@@ -479,6 +495,10 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
         )
       : activeRooms;
 
+    if (visibility === "private") {
+      result = result.filter((room) => !room.is_public);
+    }
+
     // Apply filter
     switch (filter) {
       case "my_rooms":
@@ -530,7 +550,7 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
     );
 
     return result;
-  }, [activeRooms, filter, friendIds, searchQuery, invitedRoomIds]);
+  }, [activeRooms, filter, friendIds, searchQuery, invitedRoomIds, visibility]);
 
   return {
     rooms: filteredRooms.slice(0, limit),

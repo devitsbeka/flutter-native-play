@@ -44,7 +44,10 @@ VALUES
   -- Dark-launched: visible as "coming soon" teasers while is_live is false
   -- (a badge with is_live=false renders as a teaser; no badge would hide it).
   ('team_battle', 'Team Battle',    'Two teams, a board of priced categories',          2, 10, true, true,  false, 30, 'beta'),
-  ('king',        'MyTrivia King',  'Hard logic questions. One minute. First to 6.',    1, 1,  true, false, false, 40, 'beta')
+  ('king',        'MyTrivia King',  'Hard logic questions. One minute. First to 6.',    1, 1,  true, false, false, 40, 'beta'),
+  -- Words: a word-wheel crossword, solo or with one friend. Live on arrival —
+  -- it has no server half to gate (see supabase/migrations/20260901120000_words_game_type.sql).
+  ('words',       'Words',          'Spell words from a wheel of letters. Solo or with a friend.', 1, 2, true, false, true, 50, 'new')
 ON CONFLICT (key) DO NOTHING;
 
 ALTER TABLE public.game_rooms

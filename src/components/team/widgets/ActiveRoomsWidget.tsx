@@ -10,6 +10,8 @@ import { QuizCategoryIcon } from "@/components/ui/quiz-category-icon";
 import { useLocalizedCategoryName } from "@/utils/categoryDisplayName";
 import iconKingLounge from "@/assets/play-chooser/icon-king.webp";
 import iconBattleLounge from "@/assets/play-chooser/icon-crate.png";
+import iconWordsLounge from "@/assets/play-chooser/icon-words.webp";
+import { roomKind, routeForRoom } from "@/utils/roomRoutes";
 
 interface ActiveRoomsWidgetProps {
   onViewAll: () => void;
@@ -80,12 +82,15 @@ export function ActiveRoomsWidget({ onViewAll, onJoinRoom }: ActiveRoomsWidgetPr
               
             // Lounge rooms carry their game's identity and live on their
             // own routes — never the classic join flow.
+            const kind = roomKind(room);
             const lounge =
-              room.game_type_key === "king"
-                ? { icon: iconKingLounge, label: t("lobby.vkTitle"), path: `/king?code=${room.room_code}` }
-                : room.game_type_key === "team_battle"
-                  ? { icon: iconBattleLounge, label: t("teamBattle.title"), path: `/team-battle?code=${room.room_code}` }
-                  : null;
+              kind === "king"
+                ? { icon: iconKingLounge, label: t("lobby.vkTitle"), path: routeForRoom(room) }
+                : kind === "team_battle"
+                  ? { icon: iconBattleLounge, label: t("teamBattle.title"), path: routeForRoom(room) }
+                  : kind === "words"
+                    ? { icon: iconWordsLounge, label: t("words.title"), path: routeForRoom(room) }
+                    : null;
             return (
               <button
                 key={room.id}
