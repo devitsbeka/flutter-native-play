@@ -4,6 +4,8 @@ import { useCountdown } from "../promo";
 interface SaleBannerProps {
   label: string;
   cta: string;
+  /** When the offer ends — the clock counts to it (or to midnight, if sooner). */
+  endsAt: string;
   onClick: () => void;
   /** Distance from the viewport's bottom — the tab bar's height plus the inset. */
   bottom: string;
@@ -13,8 +15,8 @@ interface SaleBannerProps {
  * The 45px offer strip pinned just above the tab bar: leaf mark, the label,
  * a live HH : MM : SS, and a white "Get PRO" button 16px from the right.
  */
-export function SaleBanner({ label, cta, onClick, bottom }: SaleBannerProps) {
-  const countdown = useCountdown();
+export function SaleBanner({ label, cta, endsAt, onClick, bottom }: SaleBannerProps) {
+  const countdown = useCountdown(endsAt);
   return (
     <div className="fixed left-0 right-0 z-40" style={{ bottom }}>
       <div

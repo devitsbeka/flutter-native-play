@@ -1,14 +1,15 @@
-import type { TransformedCategory } from "@/hooks/useCategories";
 import { SectionHeading } from "./SectionHeading";
-import { PortraitCard } from "./PortraitCard";
+import { PortraitCard, type PortraitCategory } from "./PortraitCard";
 import { ViewLink } from "./ViewLink";
 
 interface CategoryRowProps {
   title: string;
   subtitle: string;
-  categories: Array<Pick<TransformedCategory, "id" | "name" | "icon_slug">>;
+  categories: PortraitCategory[];
   viewLabel: string;
-  onCategory: (id: string) => void;
+  /** True for a category this player cannot open without PRO. */
+  isLocked: (category: PortraitCategory) => boolean;
+  onCategory: (category: PortraitCategory) => void;
   onView: () => void;
 }
 
@@ -16,7 +17,7 @@ interface CategoryRowProps {
  * A titled row of portrait cards with "→ View collection" under it. Heading,
  * then 18px, the cards, then 14px, the link — the reference's rhythm.
  */
-export function CategoryRow({ title, subtitle, categories, viewLabel, onCategory, onView }: CategoryRowProps) {
+export function CategoryRow({ title, subtitle, categories, viewLabel, isLocked, onCategory, onView }: CategoryRowProps) {
   return (
     <section>
       <SectionHeading title={title} subtitle={subtitle} />
@@ -25,7 +26,7 @@ export function CategoryRow({ title, subtitle, categories, viewLabel, onCategory
         style={{ gap: 16, paddingLeft: 28, paddingRight: 28, marginTop: 18, scrollPaddingLeft: 28 }}
       >
         {categories.map((c) => (
-          <PortraitCard key={c.id} category={c} onClick={() => onCategory(c.id)} />
+          <PortraitCard key={c.id} category={c} locked={isLocked(c)} onClick={() => onCategory(c)} />
         ))}
       </div>
       <div style={{ paddingLeft: 32, marginTop: 14 }}>

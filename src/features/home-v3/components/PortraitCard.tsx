@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Lock } from "lucide-react";
 import { CATEGORY_IMAGES } from "@/config/videoConfig";
 import { POPULAR_CATEGORY_PALETTES, popularCategoryIcon } from "@/config/popularImageCategories";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
@@ -27,9 +28,17 @@ function palette(id: string): [string, string] {
   return PASTELS[Math.abs(hash) % PASTELS.length] as [string, string];
 }
 
+export type PortraitCategory = Pick<TransformedCategory, "id" | "name" | "icon_slug" | "tier">;
+
 interface PortraitCardProps {
-  category: Pick<TransformedCategory, "id" | "name" | "icon_slug">;
+  category: PortraitCategory;
   onClick: () => void;
+  /**
+   * A premium category and no subscription. The card wears the same PRO
+   * badge as Discover's and its picture is dimmed; the tap still lands (on
+   * the paywall) — an offer, not a dead tile.
+   */
+  locked?: boolean;
   /** The name under the card. Ink on the page, white inside the dark band. */
   nameColor?: string;
 }
@@ -42,12 +51,13 @@ interface PortraitCardProps {
  * gradient with its icon otherwise — the six picture-guess categories carry
  * their designed art and palette, like everywhere else in the app.
  */
-export function PortraitCard({ category, onClick, nameColor = V3.ink }: PortraitCardProps) {
+export function PortraitCard({ category, onClick, locked = false, nameColor = V3.ink }: PortraitCardProps) {
   const still = CATEGORY_IMAGES[category.id];
   const art = popularCategoryIcon(category.id);
   const [broken, setBroken] = useState(false);
   const [top, bottom] = useMemo(() => palette(category.id), [category.id]);
   const showStill = !!still && !broken;
+  const dim = locked ? { filter: "grayscale(0.85)", opacity: 0.55 } : undefined;
 
   return (
     <button
@@ -73,12 +83,35 @@ export function PortraitCard({ category, onClick, nameColor = V3.ink }: Portrait
             draggable={false}
             onError={() => setBroken(true)}
             className="absolute inset-0 w-full h-full object-cover"
+            style={dim}
           />
         ) : art ? (
-          <img src={art} alt="" draggable={false} style={{ width: 104, height: 104, objectFit: "contain", filter: "drop-shadow(0 6px 12px rgba(0,0,0,0.25))" }} />
+          <img
+            src={art}
+            alt=""
+            draggable={false}
+            style={{ width: 104, height: 104, objectFit: "contain", filter: "drop-shadow(0 6px 12px rgba(0,0,0,0.25))", ...dim }}
+          />
         ) : (
-          <div style={{ filter: "drop-shadow(0 6px 12px rgba(0,0,0,0.25))" }}>
+          <div style={{ filter: "drop-shadow(0 6px 12px rgba(0,0,0,0.25))", ...dim }}>
             <DynamicIcon categoryId={category.id} slug={category.icon_slug ?? undefined} size={88} />
+          </div>
+        )}
+
+        {locked && (
+          <div
+            className="absolute flex items-center gap-1 rounded-full border-2 border-purple-300"
+            style={{
+              top: 10,
+              right: 10,
+              height: 26,
+              padding: "0 9px",
+              background: "linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)",
+              boxShadow: "0 3px 0 0 rgba(139,92,246,0.3), inset 0 2px 0 rgba(255,255,255,0.3)",
+            }}
+          >
+            <Lock className="w-3 h-3 text-white" strokeWidth={3} />
+            <span style={{ color: "#ffffff", fontSize: 11, fontWeight: 700, lineHeight: "12px", letterSpacing: "0.04em" }}>PRO</span>
           </div>
         )}
       </div>

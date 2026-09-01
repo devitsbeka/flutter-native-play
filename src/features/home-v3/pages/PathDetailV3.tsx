@@ -1,8 +1,12 @@
 import { useMemo, useState } from "react";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
+import { Lock } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useCategories } from "@/hooks/useCategories";
+import { useCategories, type TransformedCategory } from "@/hooks/useCategories";
+import { useCategoryProgress } from "@/hooks/useCategoryProgress";
+import { useVipStatus } from "@/hooks/useVipStatus";
 import { CategoryArtwork } from "@/components/shared/CategoryArtwork";
+import { ProPaywallModal } from "@/components/pro/ProPaywallModal";
 import { V3 } from "../theme";
 import { findPath, pathCategories, pathStats } from "../paths";
 import { RichText } from "../components/RichText";
@@ -16,14 +20,19 @@ import categoriesIcon from "@/assets/icon-collections.png";
 /**
  * A path's own page — the reference's story-path screen on white paper: the
  * hero icon, the title, a grey chip, the level range, a folded description,
- * two stat tiles, and the categories in the path, each on its plinth.
+ * two stat tiles, and the categories in the path, each on its plinth with
+ * the player's own progress under its name. A premium category wears the
+ * PRO badge for a player without PRO and opens the paywall.
  */
 export default function PathDetailV3() {
   const { pathId } = useParams<{ pathId: string }>();
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { categories } = useCategories();
+  const { getCategoryProgress } = useCategoryProgress();
+  const { isVip } = useVipStatus();
   const [expanded, setExpanded] = useState(false);
+  const [paywallOpen, setPaywallOpen] = useState(false);
 
   const path = findPath(pathId);
   const own = useMemo(() => (path ? pathCategories(path, categories) : []), [path, categories]);
@@ -33,6 +42,8 @@ export default function PathDetailV3() {
   if (!path) return <Navigate to="/v3" replace />;
 
   const goBack = () => (window.history.length > 1 ? navigate(-1) : navigate("/v3"));
+  const isLocked = (c: TransformedCategory) => !isVip && c.tier === "premium";
+  const openCategory = (c: TransformedCategory) => (isLocked(c) ? setPaywallOpen(true) : navigate(`/category/${c.id}`));
 
   return (
     <div
@@ -139,27 +150,55 @@ export default function PathDetailV3() {
 
         {/* Categories */}
         <ul className="list-none m-0 p-0" style={{ marginTop: 56 }}>
-          {own.map((c) => (
-            <li key={c.id}>
-              <button
-                type="button"
-                onClick={() => navigate(`/category/${c.id}`)}
-                className="flex items-center w-full text-left active:opacity-70"
-                style={{ height: 140, WebkitTapHighlightColor: "transparent" }}
-              >
-                <div className="flex justify-end shrink-0" style={{ width: 268 }}>
-                  <Plinth>
-                    <CategoryArtwork categoryId={c.id} iconSlug={c.icon_slug} size={72} />
-                  </Plinth>
-                </div>
-                <div style={{ marginLeft: 31, marginRight: 24, fontSize: 17, fontWeight: 700, lineHeight: "24px", color: "#000000" }}>
-                  {c.name}
-                </div>
-              </button>
-            </li>
-          ))}
+          {own.map((c) => {
+            const locked = isLocked(c);
+            const current = Math.min(getCategoryProgress(c.id), c.totalLevels || 1);
+            return (
+              <li key={c.id}>
+                <button
+                  type="button"
+                  onClick={() => openCategory(c)}
+                  className="flex items-center w-full text-left active:opacity-70"
+                  style={{ height: 140, WebkitTapHighlightColor: "transparent" }}
+                >
+                  <div className="flex justify-end shrink-0" style={{ width: 268 }}>
+                    <Plinth dim={locked}>
+                      <CategoryArtwork categoryId={c.id} iconSlug={c.icon_slug} size={72} />
+                    </Plinth>
+                  </div>
+                  <div style={{ marginLeft: 31, marginRight: 24, minWidth: 0 }}>
+                    <div style={{ fontSize: 17, fontWeight: 700, lineHeight: "24px", color: "#000000" }}>{c.name}</div>
+                    {locked ? (
+                      <div
+                        className="inline-flex items-center gap-1 rounded-full"
+                        style={{
+                          marginTop: 6,
+                          height: 22,
+                          padding: "0 8px",
+                          background: "linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)",
+                          color: "#ffffff",
+                          fontSize: 11,
+                          fontWeight: 700,
+                          letterSpacing: "0.04em",
+                        }}
+                      >
+                        <Lock className="w-3 h-3" strokeWidth={3} />
+                        PRO
+                      </div>
+                    ) : (
+                      <div style={{ marginTop: 2, fontSize: 14, fontWeight: 500, lineHeight: "18px", color: V3.muted }}>
+                        {t("homeV3.levelOf", { current, total: c.totalLevels })}
+                      </div>
+                    )}
+                  </div>
+                </button>
+              </li>
+            );
+          })}
         </ul>
       </div>
+
+      <ProPaywallModal isOpen={paywallOpen} onClose={() => setPaywallOpen(false)} />
     </div>
   );
 }
@@ -182,7 +221,7 @@ function StatTile({ icon, label, value }: { icon: string; label: string; value: 
 }
 
 /** The flat disc a category's icon stands on, 96 wide like the reference's. */
-function Plinth({ children }: { children: React.ReactNode }) {
+function Plinth({ dim = false, children }: { dim?: boolean; children: React.ReactNode }) {
   return (
     <div className="relative flex items-end justify-center" style={{ width: 96, height: 113 }}>
       <svg className="absolute bottom-0 left-0" width="96" height="46" viewBox="0 0 96 46" aria-hidden>
@@ -190,7 +229,9 @@ function Plinth({ children }: { children: React.ReactNode }) {
         <ellipse cx="48" cy="22" rx="47" ry="17" fill="#e9d6c4" />
         <ellipse cx="48" cy="22" rx="38" ry="12" fill="#d8b696" />
       </svg>
-      <div className="relative" style={{ marginBottom: 14 }}>{children}</div>
+      <div className="relative" style={{ marginBottom: 14, ...(dim ? { filter: "grayscale(0.85)", opacity: 0.55 } : {}) }}>
+        {children}
+      </div>
     </div>
   );
 }

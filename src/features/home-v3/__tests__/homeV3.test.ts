@@ -1,6 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { PATHS, findPath, pathCategories, pathStats, startWithCategories, HOME_ROWS } from "../paths";
 import { countdownTarget, formatCountdown, promoIsLive } from "../promo";
+import { promotionLabel } from "../usePromotion";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { splitRich } from "../richText";
 import { translations, LANGUAGES } from "@/locales";
 
@@ -80,6 +83,26 @@ describe("the offer strip", () => {
   it("is over once the date has passed", () => {
     expect(promoIsLive(Date.parse("2026-09-01T00:00:00Z"), "2026-09-30T23:59:59+04:00")).toBe(true);
     expect(promoIsLive(Date.parse("2026-10-01T00:00:00Z"), "2026-09-30T23:59:59+04:00")).toBe(false);
+  });
+
+  it("labels itself in the player's language and falls back to English", () => {
+    const promo = { id: "x", label: { en: "Autumn Offer", ka: "შემოდგომის შეთავაზება" }, endsAt: "2026-09-30T23:59:59+04:00" };
+    expect(promotionLabel(promo, "ka")).toBe("შემოდგომის შეთავაზება");
+    expect(promotionLabel(promo, "fr")).toBe("Autumn Offer");
+  });
+
+  it("keeps the promotions table in the generated Supabase types", () => {
+    // The strip reads `public.promotions` (supabase/migrations/20260924120000_promotions.sql).
+    // Regenerating types against a database without that migration would
+    // silently drop the table and break usePromotion.ts — apply the
+    // migration first, then regenerate. See CLAUDE.md rule 1.
+    const types = readFileSync(resolve(process.cwd(), "src/integrations/supabase/types.ts"), "utf8");
+    expect(/\bpromotions:\s*\{/.test(types)).toBe(true);
+  });
+
+  it("seeds the migration with a label in every language", () => {
+    const sql = readFileSync(resolve(process.cwd(), "supabase/migrations/20260924120000_promotions.sql"), "utf8");
+    for (const { code } of LANGUAGES) expect(sql, code).toMatch(new RegExp(`"${code}": "`));
   });
 });
 

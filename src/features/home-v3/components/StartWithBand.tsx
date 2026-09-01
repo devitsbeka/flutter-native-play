@@ -1,13 +1,13 @@
-import type { TransformedCategory } from "@/hooks/useCategories";
 import { V3 } from "../theme";
-import { PortraitCard } from "./PortraitCard";
+import { PortraitCard, type PortraitCategory } from "./PortraitCard";
 import { ViewLink } from "./ViewLink";
 
 interface StartWithBandProps {
   title: string;
-  categories: Array<Pick<TransformedCategory, "id" | "name" | "icon_slug">>;
+  categories: PortraitCategory[];
   viewLabel: string;
-  onCategory: (id: string) => void;
+  isLocked: (category: PortraitCategory) => boolean;
+  onCategory: (category: PortraitCategory) => void;
   onView: () => void;
 }
 
@@ -22,7 +22,7 @@ const BAND_HEIGHT = 32 + 26 + 18 + 218;
  * box, which is what lets the names hang below its edge. The faint curves
  * are its texture, kept to a few percent.
  */
-export function StartWithBand({ title, categories, viewLabel, onCategory, onView }: StartWithBandProps) {
+export function StartWithBand({ title, categories, viewLabel, isLocked, onCategory, onView }: StartWithBandProps) {
   return (
     <section className="relative">
       <div className="absolute left-0 right-0 top-0 overflow-hidden" style={{ height: BAND_HEIGHT, background: V3.band }} aria-hidden>
@@ -42,7 +42,7 @@ export function StartWithBand({ title, categories, viewLabel, onCategory, onView
         style={{ gap: 16, paddingLeft: 28, paddingRight: 28, marginTop: 18, scrollPaddingLeft: 28 }}
       >
         {categories.map((c) => (
-          <PortraitCard key={c.id} category={c} onClick={() => onCategory(c.id)} />
+          <PortraitCard key={c.id} category={c} locked={isLocked(c)} onClick={() => onCategory(c)} />
         ))}
       </div>
       <div style={{ paddingLeft: 32, marginTop: 14 }}>

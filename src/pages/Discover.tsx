@@ -94,7 +94,11 @@ function LazySection({ children, minHeight = 280 }: { children: React.ReactNode;
 export default function Discover() {
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const [activeTab, setActiveTab] = useState("all");
+  // `?tab=favorites` opens on that tab: the V3 home's heart lands here, and a
+  // link is the only way to arrive on a tab rather than on "all".
+  const [activeTab, setActiveTab] = useState(
+    () => (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("tab")) || "all",
+  );
   const [searchQuery, setSearchQuery] = useState("");
   // The input reads searchQuery so the caret never lags; the filtering reads
   // this, which React is free to leave a frame behind. Without it every

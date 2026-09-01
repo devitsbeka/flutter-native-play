@@ -13,36 +13,50 @@ Two screens:
 | `/v3`                | "Stories" home (captures 1–4)             | `pages/HomeV3.tsx`            |
 | `/v3/path/:pathId`   | Path detail ("The Hundred Years' War")    | `pages/PathDetailV3.tsx`      |
 
-## The content mapping
+## Where every value comes from
 
-The reference is a library of stories; MyTrivia is a library of categories.
-Every noun maps one-to-one and every number is derived from the live category
-list (`useCategories`, so it follows the player's language):
+Nothing on either screen is typed in. Every noun of the reference maps to
+a MyTrivia thing, and every number and state is read from the system:
 
-| Reference            | MyTrivia                                                    |
-| -------------------- | ----------------------------------------------------------- |
-| Stories (title)      | Quizzes                                                     |
-| Path                 | A group of categories — `paths.ts` cuts the list by `type`  |
-| story / chapter      | category / level                                            |
-| 9 stories, 36 chapters | N categories, sum of their `total_levels`                 |
-| streak flame         | mission streak (`useMissionStreak`)                         |
-| heart count          | favourite categories (`useFavorites`)                       |
-| search               | the app's spotlight search                                  |
-| Stories to Start With | the six picture-guess categories (Discover's Popular row)  |
-| Pro hero / benefits  | PRO — the paywall's own six benefits; hidden for subscribers |
-| collection rows      | Classic / Just for Fun / Learn Something                    |
-| View all stories     | `/discover`                                                 |
-| Autumn Sale strip    | offer strip counting down (`promo.ts`), hidden for PRO      |
-| tabs Home · Highlights · Battle · Profile | Home · Explore (`/discover`) · Battle (`/team`) · Profile |
-| 1337 – 1453          | Level 1 – N                                                 |
-| description          | `homeV3.path_*_desc`, with `**bold**` runs                  |
+| On screen                          | Source                                                                     |
+| ---------------------------------- | -------------------------------------------------------------------------- |
+| Category names, order, count       | `useCategories` — translated per language, language-specific ones filtered |
+| Path counters (N categories, M levels) | `paths.ts` cuts that list by `type`; levels are the sum of `total_levels` |
+| "Level 1 – N" on a path            | the largest `total_levels` in the path                                     |
+| Streak flame + count               | `useMissionStreak`; the flame opens the missions sheet                      |
+| Heart + count                      | `useFavorites`; the heart opens Discover on its Favourites tab (`?tab=favorites`) |
+| Search                             | the app's spotlight search                                                  |
+| PRO badges on cards                | `category.tier === "premium"` and no subscription; the tap opens the paywall |
+| PRO hero, benefits, offer strip    | hidden for subscribers (`useVipStatus`)                                     |
+| The six benefits                   | the paywall's own strings; the friends line is read off the plan the store offers on this platform, exactly as the paywall reads it |
+| Offer strip label and end          | `public.promotions` — one live row, label in every language (`usePromotion`) |
+| Offer strip clock                  | counts to the end of the local day, or to the offer's end on its last day  |
+| Progress under each category       | `useCategoryProgress` ("Level 3 of 20")                                     |
+| Portraits on the closing band      | the first three categories in the list that have a still                    |
+| Categories to Start With           | the six picture-guess categories, in the database's order                   |
+| Tapping a category                 | `/category/:id` — the real level grid, and play                             |
 
-The four paths: **classic**, **fun** (minus the picture and party
-categories), **educational**, **pictures**. A category is on exactly one path
-and the party category on none; `__tests__/homeV3.test.ts` pins that.
+The four paths are the reference's paths: **classic**, **fun** (minus the
+picture and party categories), **educational**, **pictures**. A category is
+on exactly one path and the party category on none; `__tests__/homeV3.test.ts`
+pins that. Their titles, tags and descriptions are UI copy under `homeV3` in
+all seven locales, the way every other screen's copy is; descriptions carry
+`**bold**` markers that `RichText` renders.
 
-Strings live under `homeV3` in every locale. Path descriptions carry
-`**bold**` markers that `RichText` renders, so the locale files stay plain.
+## The offer strip and its table
+
+`supabase/migrations/20260924120000_promotions.sql` creates
+`public.promotions`: a label per language, `starts_at`, `ends_at`, `active`.
+Anyone can read a row while it is live (the policy hides scheduled and
+expired rows), only admins can write. The strip shows the soonest-ending
+live row and nothing when there is none, so an offer can be started, changed
+or ended from the database with no deploy — and an old build can never show
+a stale one.
+
+Until the migration is applied through Lovable the query fails and the strip
+simply stays off; nothing else on the page depends on it. The generated
+types carry the table by hand (see the test in `__tests__/homeV3.test.ts`):
+apply the migration before regenerating them, per CLAUDE.md rule 1.
 
 ## Measurements
 

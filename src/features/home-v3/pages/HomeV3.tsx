@@ -1,8 +1,8 @@
-import { useMemo, useState } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useCategories } from "@/hooks/useCategories";
+import { useCategories, type TransformedCategory } from "@/hooks/useCategories";
 import { useVipStatus } from "@/hooks/useVipStatus";
 import { useMissionStreak } from "@/hooks/useMissionStreak";
 import { useFavorites } from "@/hooks/useFavorites";
@@ -11,24 +11,23 @@ import { CATEGORY_IMAGES } from "@/config/videoConfig";
 import { V3 } from "../theme";
 import { HOME_ROWS, PATHS, findPath, pathCategories, pathStats, startWithCategories } from "../paths";
 import { promoIsLive } from "../promo";
+import { promotionLabel, usePromotion } from "../usePromotion";
+import { useProBenefits } from "../proBenefits";
 import { V3Header } from "../components/V3Header";
 import { SectionHeading } from "../components/SectionHeading";
 import { PathCard } from "../components/PathCard";
 import { StartWithBand } from "../components/StartWithBand";
 import { ProHero } from "../components/ProHero";
 import { ProBenefits } from "../components/ProBenefits";
-import { PRO_BENEFITS } from "../proBenefits";
 import { CategoryRow } from "../components/CategoryRow";
 import { ViewAllCard } from "../components/ViewAllCard";
 import { SaleBanner } from "../components/SaleBanner";
 import { TabBar, type V3Tab } from "../components/TabBar";
+import type { PortraitCategory } from "../components/PortraitCard";
 
-/** The three faces in the closing band, in the order they fan. */
-const VIEW_ALL_PICTURES = [
-  CATEGORY_IMAGES.world_history,
-  CATEGORY_IMAGES.geography,
-  CATEGORY_IMAGES.science,
-];
+// The streak's own screen. Lazy: it is the missions sheet the classic home
+// carries, and most visits never open it.
+const MissionsModal = lazy(() => import("@/components/home/MissionsModal").then((m) => ({ default: m.MissionsModal })));
 
 /**
  * The V3 home — the reference's "Stories" screen with MyTrivia's content in
@@ -36,20 +35,28 @@ const VIEW_ALL_PICTURES = [
  * levels; PRO is PRO. Reachable at /v3 (and mytrivia://v3 on device) as a
  * preview alongside the current home, the same way /dev/v2 was.
  *
+ * Everything on it is read from the system: the categories and their
+ * counts from `useCategories`, the streak and the favourites from their
+ * hooks, the PRO benefits from the plan the store offers, the offer strip
+ * from `public.promotions`, locks from each category's tier.
+ *
  * Scrolls itself: the document scroller is disabled on iOS (CLAUDE.md 4b),
  * and the two strips at the foot are fixed, so the page reserves their
  * height at its end rather than ending behind them.
  */
 export default function HomeV3() {
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { categories } = useCategories();
   const { isVip } = useVipStatus();
   const { currentStreak } = useMissionStreak();
   const { favorites } = useFavorites();
+  const promotion = usePromotion();
+  const benefits = useProBenefits();
   const [paywallOpen, setPaywallOpen] = useState(false);
+  const [missionsOpen, setMissionsOpen] = useState(false);
 
-  const showPromo = !isVip && promoIsLive();
+  const showPromo = !isVip && !!promotion && promoIsLive(Date.now(), promotion.endsAt);
   // What the fixed strips cover of the scroller: the scroller already stops
   // at the safe-area inset, and the tab bar reaches (inset − 6px) below its
   // own content, so the inset is subtracted back out.
@@ -69,14 +76,16 @@ export default function HomeV3() {
       })).filter((r) => r.categories.length > 0),
     [categories],
   );
+  // The three faces in the closing band: the first categories in the list
+  // that have a still of their own.
+  const viewAllPictures = useMemo(
+    () => categories.map((c) => CATEGORY_IMAGES[c.id]).filter(Boolean).slice(0, 3),
+    [categories],
+  );
   const totalCategories = categories.length;
 
-  const benefits = useMemo(
-    () => PRO_BENEFITS.map((b) => ({ id: b.id, icon: b.icon, title: t(b.titleKey), blurb: t(b.blurbKey) })),
-    [t],
-  );
-
-  const openCategory = (id: string) => navigate(`/category/${id}`);
+  const isLocked = (c: PortraitCategory | TransformedCategory) => !isVip && c.tier === "premium";
+  const openCategory = (c: PortraitCategory) => (isLocked(c) ? setPaywallOpen(true) : navigate(`/category/${c.id}`));
   const openPath = (id: string) => navigate(`/v3/path/${id}`);
   const openPaywall = () => setPaywallOpen(true);
 
@@ -103,7 +112,13 @@ export default function HomeV3() {
         className="h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] overflow-y-auto overflow-x-hidden scrollbar-hide"
         style={{ background: V3.bg, fontFamily: V3.font, paddingBottom: scrollerPadding }}
       >
-        <V3Header title={t("homeV3.title")} streak={currentStreak} favorites={favorites.size} />
+        <V3Header
+          title={t("homeV3.title")}
+          streak={currentStreak}
+          favorites={favorites.size}
+          onStreak={() => setMissionsOpen(true)}
+          onFavorites={() => navigate("/discover?tab=favorites")}
+        />
 
         {/* Paths */}
         <section style={{ marginTop: 32 }}>
@@ -135,15 +150,18 @@ export default function HomeV3() {
         </section>
 
         {/* Categories to start with */}
-        <div style={{ marginTop: 24 }}>
-          <StartWithBand
-            title={t("homeV3.startWithTitle")}
-            categories={startWith}
-            viewLabel={t("homeV3.viewCollection")}
-            onCategory={openCategory}
-            onView={() => openPath("pictures")}
-          />
-        </div>
+        {startWith.length > 0 && (
+          <div style={{ marginTop: 24 }}>
+            <StartWithBand
+              title={t("homeV3.startWithTitle")}
+              categories={startWith}
+              viewLabel={t("homeV3.viewCollection")}
+              isLocked={isLocked}
+              onCategory={openCategory}
+              onView={() => openPath("pictures")}
+            />
+          </div>
+        )}
 
         {/* PRO — for everyone who has not bought it */}
         {!isVip && (
@@ -171,6 +189,7 @@ export default function HomeV3() {
               subtitle={t(`homeV3.row_${row.id}_subtitle`)}
               categories={row.categories}
               viewLabel={t("homeV3.viewCollection")}
+              isLocked={isLocked}
               onCategory={openCategory}
               onView={() => openPath(row.path)}
             />
@@ -182,16 +201,17 @@ export default function HomeV3() {
             title={t("homeV3.viewAllTitle")}
             subtitle={t("homeV3.viewAllSubtitle", { count: totalCategories })}
             cta={t("homeV3.view")}
-            pictures={VIEW_ALL_PICTURES}
+            pictures={viewAllPictures}
             onClick={() => navigate("/discover")}
           />
         </div>
       </div>
 
-      {showPromo && (
+      {showPromo && promotion && (
         <SaleBanner
-          label={t("homeV3.promoLabel")}
+          label={promotionLabel(promotion, language)}
           cta={t("homeV3.promoCta")}
+          endsAt={promotion.endsAt}
           onClick={openPaywall}
           bottom={`calc(${V3.tabBarHeight}px + ${V3.tabBarInset})`}
         />
@@ -208,6 +228,11 @@ export default function HomeV3() {
       />
 
       <ProPaywallModal isOpen={paywallOpen} onClose={() => setPaywallOpen(false)} />
+      {missionsOpen && (
+        <Suspense fallback={null}>
+          <MissionsModal isOpen={missionsOpen} onClose={() => setMissionsOpen(false)} />
+        </Suspense>
+      )}
     </>
   );
 }

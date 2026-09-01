@@ -8,6 +8,10 @@ interface V3HeaderProps {
   streak: number;
   /** Favourite categories — the heart's counter. */
   favorites: number;
+  /** The flame opens the missions the streak is made of. */
+  onStreak: () => void;
+  /** The heart opens the favourites. */
+  onFavorites: () => void;
 }
 
 /**
@@ -15,7 +19,7 @@ interface V3HeaderProps {
  * with favourites, search. The title's cap-top sits 23px under the safe area
  * and the marks are centred on it.
  */
-export function V3Header({ title, streak, favorites }: V3HeaderProps) {
+export function V3Header({ title, streak, favorites, onStreak, onFavorites }: V3HeaderProps) {
   return (
     <header
       className="flex items-center justify-between"
@@ -36,10 +40,10 @@ export function V3Header({ title, streak, favorites }: V3HeaderProps) {
       </h1>
 
       <div className="flex items-center" style={{ gap: 18, paddingTop: 1 }}>
-        <Counter value={streak}>
+        <Counter value={streak} onClick={onStreak}>
           <FlameIcon lit={streak > 0} />
         </Counter>
-        <Counter value={favorites}>
+        <Counter value={favorites} onClick={onFavorites}>
           <HeartIcon />
         </Counter>
         {/* The app's spotlight search, wearing the reference's magnifier:
@@ -55,9 +59,14 @@ export function V3Header({ title, streak, favorites }: V3HeaderProps) {
   );
 }
 
-function Counter({ value, children }: { value: number; children: React.ReactNode }) {
+function Counter({ value, onClick, children }: { value: number; onClick: () => void; children: React.ReactNode }) {
   return (
-    <div className="flex items-center" style={{ gap: 7 }}>
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex items-center active:opacity-70"
+      style={{ gap: 7, WebkitTapHighlightColor: "transparent" }}
+    >
       {children}
       <span
         style={{
@@ -71,6 +80,6 @@ function Counter({ value, children }: { value: number; children: React.ReactNode
       >
         {value}
       </span>
-    </div>
+    </button>
   );
 }
