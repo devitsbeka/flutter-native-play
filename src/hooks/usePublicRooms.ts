@@ -122,6 +122,26 @@ export function roomSeats(room: Pick<PublicRoom, "game_type_key" | "max_players"
   return room.max_players ?? null;
 }
 
+/**
+ * The Public tab's order: my own rooms first (hosted, and ones I already
+ * sit in — the cards I came back for), then my friends' rooms, then
+ * everyone else's, each group newest first.
+ */
+export function sortPublicRooms(
+  rooms: PublicRoom[],
+  friendIds: ReadonlySet<string>,
+): PublicRoom[] {
+  const tier = (r: PublicRoom) =>
+    r.my_state === "host" || r.my_state === "joined"
+      ? 0
+      : friendIds.has(r.host_user_id)
+        ? 1
+        : 2;
+  const born = (r: PublicRoom) =>
+    new Date(r.created_at ?? r.last_activity_at ?? 0).getTime();
+  return [...rooms].sort((a, b) => tier(a) - tier(b) || born(b) - born(a));
+}
+
 export function filterPublicRooms(
   rooms: PublicRoom[],
   filter: PublicRoomFilter,

@@ -16,7 +16,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { filterPublicRooms, publicRoomPath, roomSeats, type PublicRoom } from "@/hooks/usePublicRooms";
+import { filterPublicRooms, publicRoomPath, roomSeats, sortPublicRooms, type PublicRoom } from "@/hooks/usePublicRooms";
 
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 
@@ -130,6 +130,23 @@ describe("the public list", () => {
     expect(filterPublicRooms(rooms, "all", "arena").map((r) => r.id)).toEqual(["b"]);
     // The category is the thing people are shopping for on this tab.
     expect(filterPublicRooms(rooms, "all", "history").length).toBe(2);
+  });
+
+  it("orders mine first, then my friends' rooms, then the rest newest first", () => {
+    const rooms = [
+      room({ id: "old-stranger", host_user_id: "s1", created_at: "2026-01-01T00:00:00Z" }),
+      room({ id: "new-stranger", host_user_id: "s2", created_at: "2026-06-01T00:00:00Z" }),
+      room({ id: "friends", host_user_id: "f1", created_at: "2026-02-01T00:00:00Z" }),
+      room({ id: "mine", host_user_id: "me", my_state: "host", created_at: "2026-01-15T00:00:00Z" }),
+      room({ id: "im-in", host_user_id: "s3", my_state: "joined", created_at: "2026-03-01T00:00:00Z" }),
+    ];
+    expect(sortPublicRooms(rooms, new Set(["f1"])).map((r) => r.id)).toEqual([
+      "im-in", // rooms I sit in count as mine, newest of the two
+      "mine",
+      "friends",
+      "new-stranger",
+      "old-stranger",
+    ]);
   });
 
   it("counts the lounges' seats even when the row does not", () => {

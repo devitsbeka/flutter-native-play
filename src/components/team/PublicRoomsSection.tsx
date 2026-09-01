@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { useFriends } from "@/contexts/FriendsContext";
 import { motion } from "framer-motion";
 import { Globe, Loader2, Users, Clock } from "lucide-react";
 import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
@@ -15,6 +16,7 @@ import {
   filterPublicRooms,
   publicRoomPath,
   roomSeats,
+  sortPublicRooms,
   usePublicRooms,
   type PublicRoom,
   type PublicRoomFilter,
@@ -236,7 +238,11 @@ export function PublicRoomsSection({
   const { data, isLoading, refetch } = usePublicRooms();
   const [busyId, setBusyId] = useState<string | null>(null);
 
-  const rooms = filterPublicRooms(data ?? [], filter, searchQuery);
+  // Mine first, then my friends' rooms, then everyone else's — each group
+  // newest first.
+  const { friends } = useFriends();
+  const friendIds = useMemo(() => new Set(friends.map((f) => f.friendId)), [friends]);
+  const rooms = sortPublicRooms(filterPublicRooms(data ?? [], filter, searchQuery), friendIds);
 
   // The joined faces for each listed room. The public_rooms RPC carries only
   // the host and a count; the card wants to show WHO is on the couch, so the
