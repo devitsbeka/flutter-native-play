@@ -53,7 +53,7 @@ describe("a room is private unless somebody published it", () => {
   it("every room-creating helper defaults to private", () => {
     expect(read("src/contexts/MultiplayerContextV2.tsx")).toMatch(/isPublic = false,/);
     expect(read("src/contexts/TeamBattleContext.tsx")).toMatch(
-      /createRoom = useCallback\(async \(isPublic = false, team: TBTeam = "a", teamSize = 2\)/,
+      /createRoom = useCallback\(async \(isPublic = false, team: TBTeam = "a", teamSize = 5\)/,
     );
     // The Battle lounge makes its own room after a navigation, so the
     // switch travels in router state and falls back to private without it.
@@ -86,14 +86,86 @@ describe("a room is private unless somebody published it", () => {
     expect(read("src/hooks/usePublicRooms.ts")).toMatch(/PGRST202/);
   });
 
-  it("the create screen offers the switch, published first", () => {
+  it("only offers the switch for what can actually be published", () => {
     const create = read("src/components/team/CreateRoomPage.tsx");
     expect(create).toContain("const [isPublic, setIsPublic] = useState(true)");
-    // Every insert on this screen carries it — one that does not would make
-    // a private room while the switch on screen said public.
-    const inserts = (create.match(/roomVisibilityFields\(isPublic\)/g) ?? []).length;
+    // Three of the six can go on the Public tab. The quick game has no room
+    // to list, the King's couch is a private duel, and My Trivia is your own
+    // quiz — those are created private, with no switch shown.
+    expect(create).toMatch(
+      /const canPublish =\s*\n?\s*gameChoice === "random" \|\| gameChoice === "library" \|\| gameChoice === "battle";/,
+    );
+    expect(create).toMatch(/const publishRoom = canPublish && isPublic;/);
+    // Every write goes through the guarded value, never the raw switch —
+    // otherwise a King room made with the switch left on would publish.
+    expect(create).not.toMatch(/roomVisibilityFields\(isPublic\)/);
+    const inserts = (create.match(/roomVisibilityFields\(publishRoom\)/g) ?? []).length;
     expect(inserts).toBe(2);
-    expect(create).toMatch(/plannedRoomCode, isPublic\)/);
+    expect(create).toMatch(/plannedRoomCode, publishRoom\)/);
+    // The name is dealt locally now and never shown here — the lobby is
+    // where a host renames a room they are looking at.
+    expect(create).not.toMatch(/generate-room-name/);
+    expect(create).toMatch(/generateRoomIdentity\(readAppLanguage\(\)\)/);
+    expect(create).toMatch(/isPublic: publishRoom/);
+  });
+
+  it("the switch sits with the button that acts on it", () => {
+    const create = read("src/components/team/CreateRoomPage.tsx");
+    // Above the CTA, not at the top under the room's name — three scrolls
+    // from the decision it modifies.
+    const togglePos = create.indexOf("extra.roomPublicHint");
+    const ctaPos = create.indexOf("extra.createBtn");
+    expect(togglePos).toBeGreaterThan(-1);
+    expect(togglePos).toBeLessThan(ctaPos);
+    expect(create.indexOf("extra.whatToPlay")).toBeLessThan(togglePos);
+  });
+});
+
+describe("the arena is sized before it is opened", () => {
+  it("the host picks 2-2 through 5-5, under the switch", () => {
+    const create = read("src/components/team/CreateRoomPage.tsx");
+    expect(create).toMatch(/const \[battleTeamSize, setBattleTeamSize\] = useState\(5\)/);
+    expect(create).toMatch(/\[2, 3, 4, 5\]\.map\(\(size\) =>/);
+    // The toggle sits ABOVE the sizing row (owner's ask), both above the
+    // button.
+    expect(create.indexOf("extra.roomPublicHint")).toBeLessThan(
+      create.indexOf("extra.playersPerTeam"),
+    );
+    expect(create).toMatch(/teamSize: gameChoice === "battle" \? battleTeamSize : undefined/);
+  });
+
+  it("the size caps the room and the seats the lobby draws", () => {
+    expect(read("src/contexts/TeamBattleContext.tsx")).toMatch(
+      /max_players: 2 \* Math\.max\(2, Math\.min\(5, Math\.round\(teamSize\)\)\)/,
+    );
+    const battle = read("src/pages/TeamBattlePage.tsx");
+    expect(battle).toMatch(/const perSide = Math\.max\(2, Math\.min\(5, Math\.floor\(\(room\?\.max_players \?\? 10\) \/ 2\)\)\)/);
+    expect(battle).toMatch(/\.slice\(0, perSide\)/);
+  });
+});
+
+describe("the private tab and the lobby it opens", () => {
+  it("the + makes a private room and lands in its lobby", () => {
+    const page = read("src/pages/TeamV2.tsx");
+    // Not the create screen: that screen is for deciding what to publish,
+    // and on the Private tab every one of those questions is answered.
+    expect(page).toMatch(/const createPrivateRoomAndOpen = async \(\) => \{/);
+    expect(page).toMatch(/onSelectGameRoom=\{\(\) => void createPrivateRoomAndOpen\(\)\}/);
+    // Explicitly private, and named so the lobby has a title.
+    expect(page).toMatch(/generateRoomIdentity\(readAppLanguage\(\)\)/);
+    expect(page).toMatch(/undefined,\s*\n\s*false,\s*\n\s*\);/);
+  });
+
+  it("a game needs two people before it can start", () => {
+    const lobby = read("src/components/team/RoomLobbyV2.tsx");
+    // A pending invitation is a participant row too; counting it would arm
+    // the button for somebody who has not arrived.
+    expect(lobby).toMatch(/\(p\.status as string\) !== "invited"/);
+    expect(lobby).toMatch(/const enoughPlayers = seatedPlayers >= 2;/);
+    expect(lobby).toMatch(/\(!needsCategorySelection && !enoughPlayers\)/);
+    // Picking a category stays open to a lone host — it is what gives the
+    // second player a reason to accept.
+    expect(lobby).toMatch(/rlNeedsSecondPlayer/);
   });
 });
 

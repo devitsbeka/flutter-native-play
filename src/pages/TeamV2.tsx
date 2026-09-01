@@ -73,6 +73,8 @@ import {
 } from "@/components/team/UnifiedFiltersBar";
 import { supabase } from "@/integrations/supabase/client";
 import { instantTouchProps } from "@/utils/instantTouch";
+import { generateRoomIdentity } from "@/utils/roomNameGenerator";
+import { readAppLanguage } from "@/utils/appLanguage";
 import { toast } from "@/lib/toast";
 
 function TeamContentV2() {
@@ -230,6 +232,30 @@ function TeamContentV2() {
         setIsStartingChallenge(false);
       }
     })();
+  };
+
+  /**
+   * The Private tab's + makes the room and opens its lobby.
+   *
+   * It used to open the create screen, which is the screen for deciding
+   * WHAT to publish — a game type, a category, public or private. On the
+   * Private tab all of that is already answered: it is a private room, and
+   * the category, the players and the rounds are chosen in the lobby, which
+   * is where the host is going anyway. Two screens to reach the one they
+   * wanted.
+   */
+  const createPrivateRoomAndOpen = async () => {
+    const identity = generateRoomIdentity(readAppLanguage());
+    const room = await createRoom(
+      undefined,
+      undefined,
+      undefined,
+      identity.name,
+      null,
+      undefined,
+      false,
+    );
+    if (room) navigate(`/team?room=${room.room_code}`);
   };
 
   // Shared by CreateRoomScreen callbacks: create room -> lobby
@@ -1331,7 +1357,7 @@ function TeamContentV2() {
           if (draftId) setPersonalTriviaDraftId(draftId);
           setShowPersonalTriviaModal(true);
         }}
-        onSelectGameRoom={() => setShowCreateModal(true)}
+        onSelectGameRoom={() => void createPrivateRoomAndOpen()}
       />
       <GameStylePersonalTrivia
         isOpen={showPersonalTriviaModal}

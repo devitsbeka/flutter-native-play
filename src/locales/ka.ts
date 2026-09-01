@@ -2430,6 +2430,7 @@ export const ka = {
     joinRequestBlock: "დაბლოკვა",
     pickIconHint: "აირჩიე აიკონი",
     pickYourSide: "აირჩიე გუნდი",
+    playersPerTeam: "მოთამაშე გუნდში",
     orCreateTrivia: "ან შექმენი ტრივია",
     roomCardStart: "ითამაშე",
     roomStatusOnline: "ონლაინ",
@@ -3461,6 +3462,7 @@ export const ka = {
     rlStarting: "იწყება...",
     rlChooseCategory: "აირჩიე კატეგორია",
     rlStartGame: "თამაშის დაწყება",
+    rlNeedsSecondPlayer: "მოიწვიე მეგობარი — თამაში ორი მოთამაშიდან იწყება",
     // Room menu & dialogs
     rlHowItWorks: "როგორ მუშაობს",
     rlRenameRoom: "ოთახის სახელის შეცვლა",

@@ -115,11 +115,32 @@ function TBGate({ joining }: { joining: boolean }) {
   // shared link, the play chooser — is private, like every other room
   // created without an opinion.
   const handoff =
-    (location.state as { isPublic?: boolean; team?: TBTeam; teamSize?: number } | null) ?? null;
+    (location.state as {
+      isPublic?: boolean;
+      team?: TBTeam;
+      teamSize?: number;
+      teamIcons?: { a: string | null; b: string | null };
+    } | null) ?? null;
   const publish = handoff?.isPublic ?? false;
   const side: TBTeam = handoff?.team === "b" ? "b" : "a";
-  // Seats per side, from the create screen's player-count dropdown.
-  const teamSize = handoff?.teamSize ?? 2;
+  const teamSize = handoff?.teamSize ?? 5;
+  // Crests dealt (or picked) on the create screen. Written through the RPC
+  // once the room exists — the host may dress a captainless side, and at
+  // creation both sides are exactly that. Fire-and-forget: a failed crest
+  // is a cosmetic loss, not a blocked room.
+  const applyCrests = (roomId: string) => {
+    const icons = handoff?.teamIcons;
+    if (!icons) return;
+    (["a", "b"] as const).forEach((team) => {
+      const icon = icons[team];
+      if (!icon) return;
+      void supabase
+        .rpc("tb_set_team_icon", { p_room_id: roomId, p_team: team, p_icon: icon })
+        .then(({ error }) => {
+          if (error) console.error("[TB] crest apply failed", error);
+        });
+    });
+  };
 
   useEffect(() => {
     if (joining || !user || attempted.current) return;
@@ -128,9 +149,13 @@ function TBGate({ joining }: { joining: boolean }) {
       if (!created) setFailed(true);
       // The room's code goes into the URL so a refresh rejoins this room
       // instead of minting a new one.
-      else navigate(`/team-battle?code=${created.room_code}`, { replace: true });
+      else {
+        applyCrests(created.id);
+        navigate(`/team-battle?code=${created.room_code}`, { replace: true });
+      }
     });
-  }, [joining, user, createRoom, navigate, publish, side]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [joining, user, createRoom, navigate, publish, side, teamSize]);
 
   return (
     <div
@@ -171,7 +196,10 @@ function TBGate({ joining }: { joining: boolean }) {
             attempted.current = false;
             void createRoom(publish, side, teamSize).then((created) => {
               if (!created) setFailed(true);
-              else navigate(`/team-battle?code=${created.room_code}`, { replace: true });
+              else {
+                applyCrests(created.id);
+                navigate(`/team-battle?code=${created.room_code}`, { replace: true });
+              }
             });
           }}
         >
@@ -475,9 +503,10 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
       ...(team === "a" ? pendingA : pendingB).map((p) => ({ p, pending: true })),
     ];
     const ring = team === "a" ? ("blue" as const) : ("red" as const);
-    // Only as many podiums as the room was created with (max_players is
-    // 2×team size): a 2-2 arena shows two seats a side, not five.
-    const perSide = Math.min(5, Math.max(2, Math.floor((room?.max_players ?? 10) / 2)));
+    // Only the seats this match is set for. The arena drew all five a side
+    // whatever the room's size, so a 2v2 opened with eight empty podiums
+    // and no way to tell it apart from a 5v5 nobody had joined yet.
+    const perSide = Math.max(2, Math.min(5, Math.floor((room?.max_players ?? 10) / 2)));
     const all: [number, number][] = [...slots, podium].slice(0, perSide);
     return (
       <AnimatePresence>

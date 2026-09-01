@@ -307,10 +307,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
     void liveChannelRef.current?.send({ type: "broadcast", event: "pick", payload: pick });
   }, []);
 
-  // teamSize is seats PER SIDE (2..5), picked on the create screen — the
-  // room's max_players carries it as 2×size so the lobby, the join cap and
-  // the Public tab's card all read the same number.
-  const createRoom = useCallback(async (isPublic = false, team: TBTeam = "a", teamSize = 2): Promise<TBRoom | null> => {
+  const createRoom = useCallback(async (isPublic = false, team: TBTeam = "a", teamSize = 5): Promise<TBRoom | null> => {
     if (!user || !profile) {
       toast.error(tStandalone("extra.mpAuthRequired"));
       return null;
@@ -329,7 +326,8 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
             game_type_key: "team_battle",
             game_mode: "team_battle",
             min_players: 2,
-            max_players: 2 * Math.min(5, Math.max(2, Math.round(teamSize))),
+            // Two equal sides, as the host set them on the create screen.
+            max_players: 2 * Math.max(2, Math.min(5, Math.round(teamSize))),
             ...(await roomVisibilityFields(isPublic)),
             background_gradient: getRandomGradient(),
             last_activity_at: new Date().toISOString(),

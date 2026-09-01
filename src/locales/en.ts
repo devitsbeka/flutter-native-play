@@ -2425,6 +2425,7 @@ export const en: KaTranslations = {
     joinRequestBlock: "Block them",
     pickIconHint: "Pick an icon",
     pickYourSide: "Pick your side",
+    playersPerTeam: "Players per team",
     orCreateTrivia: "Or create a trivia",
     roomCardStart: "Play",
     roomStatusOnline: "Online",
@@ -3456,6 +3457,7 @@ export const en: KaTranslations = {
     rlStarting: "Starting...",
     rlChooseCategory: "Choose Category",
     rlStartGame: "Start Game",
+    rlNeedsSecondPlayer: "Invite a friend — a game needs two players",
     // Room menu & dialogs
     rlHowItWorks: "How it works",
     rlRenameRoom: "Rename room",

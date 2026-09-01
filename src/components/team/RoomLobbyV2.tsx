@@ -676,6 +676,21 @@ export function RoomLobbyV2() {
 
   if (!currentRoom) return null;
 
+  /**
+   * A game needs somebody to play against.
+   *
+   * The gate was `>= 1`, which is every room the moment its host walks in,
+   * so "start game" was armed on an empty lobby and the round began with
+   * one player in it. A pending invitation is a row here too (status
+   * 'invited', greyed in the list), and counting it would arm the button
+   * for somebody who has not arrived — so only seated players count.
+   *
+   * Picking a category is deliberately NOT gated: the host arrives at an
+   * empty room and has to choose what it plays before there is any reason
+   * for a second person to accept.
+   */
+  const seatedPlayers = participants.filter((p) => (p.status as string) !== "invited").length;
+  const enoughPlayers = seatedPlayers >= 2;
   const canStartGame = participants.length >= 1;
   const roomGradient = getGradientById(currentRoom?.background_gradient);
   const roomName = currentRoom.room_name || t("extra.gameRoomDefault");
@@ -1021,12 +1036,18 @@ export function RoomLobbyV2() {
               };
               
               return (
+                <>
                 <ChunkyButton
                   variant="white"
                   size="xl"
                   className="w-full"
                   onClick={handleStartOrPick}
-                  disabled={!canStartGame || isStarting || loading}
+                  disabled={
+                    !canStartGame
+                    || isStarting
+                    || loading
+                    || (!needsCategorySelection && !enoughPlayers)
+                  }
                   icon={needsCategorySelection ? <Plus className="w-5 h-5" /> : <Play className="w-5 h-5" />}
                 >
                   {isStarting 
@@ -1036,6 +1057,14 @@ export function RoomLobbyV2() {
                       : t("extra.rlStartGame")
                   }
                 </ChunkyButton>
+                {!needsCategorySelection && !enoughPlayers && !isStarting && (
+                  // A disabled button with no reason beside it reads as a
+                  // broken button.
+                  <p className="mt-2 text-center text-[13px] font-medium text-white/80 drop-shadow-sm">
+                    {t("extra.rlNeedsSecondPlayer")}
+                  </p>
+                )}
+                </>
               );
             })()
           ) : (
