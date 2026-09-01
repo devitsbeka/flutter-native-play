@@ -133,6 +133,18 @@ function TBGate({ joining }: { joining: boolean }) {
       >
         <ChevronLeft className="w-5 h-5 text-[#523b76]" />
       </button>
+      {/* The arena's own crate, the same one the reel and the lobby header
+          wear. Without it this was a title and a spinner on an empty lilac
+          field, which reads as a screen that failed rather than one that is
+          working. */}
+      <motion.img
+        src={iconBattleCrate}
+        alt=""
+        className="w-[104px] h-[104px] object-contain drop-shadow-[0_8px_18px_rgba(88,50,160,0.28)]"
+        initial={{ scale: 0.85, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: "spring", stiffness: 420, damping: 26 }}
+      />
       <p
         className="text-[26px] text-[#523b76]"
         style={{ fontFamily: "'TASolivare', sans-serif" }}
