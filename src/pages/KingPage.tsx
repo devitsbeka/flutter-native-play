@@ -730,7 +730,7 @@ export default function KingPage() {
                 className="inline-flex items-center gap-2 max-w-[330px] h-[42px] px-4 rounded-[16px] bg-white/70 border border-[#e8e0f5] shadow-[0px_2.5px_0px_0px_#d8d0e8]"
               >
                 <span
-                  className="text-[19px] leading-none text-[#523b76] whitespace-nowrap overflow-hidden text-ellipsis"
+                  className="text-[19px] leading-[1.5] text-[#523b76] whitespace-nowrap overflow-hidden text-ellipsis"
                   style={{ fontFamily: "'TASolivare', sans-serif" }}
                 >
                   {kingRoom?.room_name || t("lobby.teamName")}

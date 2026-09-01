@@ -597,7 +597,7 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
             className="inline-flex items-center gap-2 max-w-[330px] h-[40px] px-4 rounded-[16px] bg-white/70 border border-[#e8e0f5] shadow-[0px_2.5px_0px_0px_#d8d0e8]"
           >
             <span
-              className="text-[18px] leading-none text-[#523b76] whitespace-nowrap overflow-hidden text-ellipsis"
+              className="text-[18px] leading-[1.5] text-[#523b76] whitespace-nowrap overflow-hidden text-ellipsis"
               style={{ fontFamily: "'TASolivare', sans-serif" }}
             >
               {room?.room_name || t("lobby.teamName")}
@@ -629,7 +629,16 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
           </div>
         </div>
 
-        {/* captains + VS (940:7751 / 936:21185 / 940:7825) */}
+        {/* captains + VS (940:7751 / 936:21185 / 940:7825). The VS is drawn
+            FIRST on purpose: these are absolutely positioned siblings, so
+            they paint in DOM order, and between the two chips it landed on
+            top of the left captain's name. Behind them it stays decoration. */}
+        <p
+          className="absolute left-0 top-[469px] w-full text-[77px] leading-[43px] text-center not-italic text-[#f5d9ff]"
+          style={{ fontFamily: "'Slackey', 'TASolivare', cursive", textShadow: "0px 4px 4px #c7bccc" }}
+        >
+          VS
+        </p>
         <TBCaptainChip
           left={37}
           accent="#e7ba87"
@@ -638,12 +647,6 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
           rolling={!!rollFace.a}
           onClick={() => setCaptainInfo("a")}
         />
-        <p
-          className="absolute left-0 top-[469px] w-full text-[77px] leading-[43px] text-center not-italic text-[#f5d9ff]"
-          style={{ fontFamily: "'Slackey', 'TASolivare', cursive", textShadow: "0px 4px 4px #c7bccc" }}
-        >
-          VS
-        </p>
         <TBCaptainChip
           right={33}
           accent="#ed6149"
