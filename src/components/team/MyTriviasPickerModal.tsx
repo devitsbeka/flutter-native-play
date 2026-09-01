@@ -11,6 +11,7 @@ import glitchIcon from "@/assets/glitch.png";
 import partyBlowerIcon from "@/assets/Party-Blower.webp";
 import triviaBuzzerIcon from "@/assets/trivia-buzzer-5.png";
 import collectionMagnetIcon from "@/assets/fridge-magnet-collection-2.png";
+import { ownerHasSeenTrivia } from "@/utils/triviaFairPlay";
 
 interface Trivia {
   id: string;
@@ -232,7 +233,7 @@ export function MyTriviasPickerModal({ open, onOpenChange, onSelect, onCreateTri
                         // saw in the old open mode) can't be picked for a room
                         // they'd play in — it would be an open-book exam. It
                         // stays visible, black-and-white, so they know why.
-                        const unplayable = !trivia.is_blind || (trivia.plays_count || 0) > 0;
+                        const unplayable = ownerHasSeenTrivia(trivia);
                         return (
                           <motion.button
                             key={trivia.id}

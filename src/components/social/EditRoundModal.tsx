@@ -236,6 +236,11 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
           is_public: isPublic,
           icon_slug: iconSlug,
           questions: structuredClone(questions) as unknown as Json,
+          // This screen lists every question beside its correct answer, so
+          // whoever saved from here has read the lot. A blind trivia stops
+          // being blind at that point — otherwise their own card keeps
+          // offering "play" on a quiz they now know by heart.
+          is_blind: false,
         })
         .eq("id", round.id);
 

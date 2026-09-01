@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { Plus, Play, Loader2, Globe, Lock, ChevronDown, ChevronUp, Layers, Pencil, FileEdit, Trash2, Check } from "lucide-react";
 import triviaBuzzerIcon from "@/assets/trivia-buzzer.png";
 import iconGroupOfPeople from "@/assets/group-of-people.png";
+import { ownerHasSeenTrivia } from "@/utils/triviaFairPlay";
 import purpleHeart3d from "@/assets/icons/purple-heart-3d.png";
 import bookmark3d from "@/assets/icons/bookmark-3d-orange.png";
 import pushButton3d from "@/assets/icons/push-button-3d.png";
@@ -783,19 +784,20 @@ function StandaloneQuizCard({
   // Tilt animation for new items - random left or right tilt
   const tiltDirection = post.id.charCodeAt(0) % 2 === 0 ? 15 : -15;
 
-  // One play per person: once the owner has played their blind trivia the
-  // button turns into a challenge — friends can still be invited to beat
-  // the score, but a second solo run would be an open-book exam.
-  const alreadyPlayedByMe = !!post.is_blind && (post.plays_count || 0) > 0;
+  // Once the owner has seen the answers — played it, wrote it openly, or
+  // edited it — the button offers a challenge instead: friends can still be
+  // invited to beat the score, but a solo run would be an open-book exam.
+  const alreadyPlayedByMe = ownerHasSeenTrivia(post);
 
   const handlePlayClick = () => {
-    // If trivia is "blind" (locked/დახურული), show play mode selection
-    if (post.is_blind) {
-      onPlayModeSelect?.(post);
-    } else {
-      // Open trivia - navigate directly
-      navigate(`/trivia/${post.id}`);
+    // The chooser is the honest entry either way: it drops the solo option
+    // for a trivia the owner has already seen and keeps the challenge. Going
+    // straight to /trivia here was what let a seen trivia be replayed solo.
+    if (onPlayModeSelect) {
+      onPlayModeSelect(post);
+      return;
     }
+    navigate(`/trivia/${post.id}`);
   };
 
   return (
@@ -1528,7 +1530,7 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
         onPlaySolo={handlePlaySolo}
         onCreateRoom={handleCreateRoom}
         onPlayTV={handlePlayTV}
-        alreadyPlayed={!!playModeTrivia?.is_blind && (playModeTrivia?.plays_count || 0) > 0}
+        alreadyPlayed={ownerHasSeenTrivia(playModeTrivia)}
       />
     </motion.div>
   );
