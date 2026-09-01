@@ -1613,6 +1613,11 @@ export const it: KaTranslations = {
     sceneClouds: "Nuvole",
     sceneForest: "Foresta",
     sceneNight: "Notte",
+    wordInfoSubtitle: "Cosa significa questa parola",
+    lookingUp: "Sto cercando…",
+    noDefinition: "Nessuna spiegazione trovata per questa parola.",
+    reportWord: "Segnala questa parola",
+    reportThanks: "Grazie, daremo un'occhiata",
   },
 
   extra: {

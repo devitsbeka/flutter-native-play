@@ -35,6 +35,7 @@ import { Board } from "./Board";
 import { LuckWheel } from "./LuckWheel";
 import { describePrize, type Prize } from "./prizes";
 import { Scrapbook } from "./Scrapbook";
+import { WordInfoModal } from "./WordInfoModal";
 
 /**
  * Words.
@@ -174,6 +175,8 @@ export default function WordsGame() {
   const [inviteOpening, setInviteOpening] = useState(false);
   const [lastPrize, setLastPrize] = useState<Prize | null>(null);
   const [roomGone, setRoomGone] = useState(false);
+  const [hintKey, setHintKey] = useState<string | null>(null);
+  const [wordInfo, setWordInfo] = useState<string | null>(null);
   const feedbackTimer = useRef<number | null>(null);
 
   const say = useCallback((kind: Feedback["kind"], text: string) => {
@@ -441,11 +444,14 @@ export default function WordsGame() {
 
     const key = hidden[Math.floor(Math.random() * hidden.length)];
     setWave([key]);
+    setHintKey(key);
+    window.setTimeout(() => setHintKey((k) => (k === key ? null : k)), 1000);
     commit((s) => {
       const next = { ...s, hinted: [...s.hinted, key] };
       return { ...next, found: withAutoFound(next) };
     });
-    vibrate(40);
+    playSound("power-up");
+    vibrate([30, 20, 60]);
   };
 
   const doShuffle = () => {
@@ -666,7 +672,20 @@ export default function WordsGame() {
         {/* Board */}
         <div ref={boardRef} className="flex min-h-0 flex-1 items-center justify-center py-2">
           {boardArea.width > 0 && bankReady && (
-            <Board layout={layout} revealed={revealed} wave={wave} cellSize={cellSize} gap={gap} accent={scene.accent} tile={scene.tile} />
+            <Board
+              layout={layout}
+              revealed={revealed}
+              wave={wave}
+              hintKey={hintKey}
+              onWordTap={(w) => {
+                playSound("button-click");
+                setWordInfo(w.word);
+              }}
+              cellSize={cellSize}
+              gap={gap}
+              accent={scene.accent}
+              tile={scene.tile}
+            />
           )}
         </div>
 
@@ -911,6 +930,8 @@ export default function WordsGame() {
       </GameModal>
 
       <Scrapbook isOpen={scrapbookOpen} unlocked={save.scrapbook} onClose={() => setScrapbookOpen(false)} />
+
+      <WordInfoModal word={wordInfo} lang={shared.lang} levelNumber={level.number} onClose={() => setWordInfo(null)} />
 
       <GameModal
         isOpen={roomGone}

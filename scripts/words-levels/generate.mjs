@@ -22,10 +22,11 @@ const here = dirname(fileURLToPath(import.meta.url));
 const lang = process.argv[2] ?? "en";
 // The English list is lower-case; the other languages' lists are already in
 // board form (see filter-language.py). The generator works in one case.
-const words = readFileSync(resolve(here, `common-${lang}.txt`), "utf8")
-  .split("\n")
-  .filter(Boolean)
-  .map((w) => w.toLowerCase());
+const lines = readFileSync(resolve(here, `common-${lang}.txt`), "utf8").split("\n").filter(Boolean);
+// "# board-cutoff N": words past N are rare — bonus only, never on the board.
+const cutoffMatch = lines[0].match(/^# board-cutoff (\d+)/);
+const boardCutoff = cutoffMatch ? Number(cutoffMatch[1]) : Infinity;
+const words = lines.filter((l) => !l.startsWith("#")).map((w) => w.toLowerCase());
 const rank = new Map(words.map((w, i) => [w, i]));
 
 // Words that read badly on a family game board even though the list is the
@@ -46,7 +47,7 @@ const BLOCK = new Set([
 // The same idea per language: words a family board should not ask for,
 // in the board's own (accent-stripped, lower-case) form.
 const BLOCK_BY_LANG = {
-  es: ["pedo", "culo", "caca", "puta", "puto", "mierda", "cono", "joder", "teta", "tetas", "polla", "verga", "pene", "pis"],
+  es: ["pedo", "culo", "caca", "puta", "puto", "mierda", "cono", "joder", "teta", "tetas", "polla", "verga", "pene", "pis", "nro", "seo", "sra", "srta", "uds", "tel"],
   fr: ["merde", "pute", "putain", "con", "conne", "cul", "bite", "nique", "salope", "foutre", "chier", "pisse", "sein", "seins"],
   it: ["cazzo", "merda", "culo", "puttana", "figa", "troia", "stronzo", "vaffa", "pisciare", "tette", "sesso"],
   pt: ["merda", "puta", "puto", "caralho", "foda", "foder", "porra", "bosta", "caca", "piroca", "buceta", "xoxota", "sexo"],
@@ -157,6 +158,7 @@ const levels = [];
 const seenBase = new Set();
 for (const base of words) {
   if (base.length < 5 || base.length > (lang === "ka" ? 8 : 7) || !usable(base)) continue;
+  if (rank.get(base) >= boardCutoff) continue; // the wheel itself must be a known word
   const sorted = [...base].sort().join("");
   if (seenBase.has(sorted)) continue; // the same wheel twice is the same level
   const subs = [];
@@ -169,8 +171,9 @@ for (const base of words) {
   // Board: the base plus the best-known sub-words, longer ones first so a
   // board is not six three-letter words, up to 7 in all.
   const ranked = subs.sort((a, b) => rank.get(a) - rank.get(b));
-  const longer = ranked.filter((w) => w.length >= 4);
-  const short = ranked.filter((w) => w.length === 3);
+  const known = ranked.filter((w) => rank.get(w) < boardCutoff);
+  const longer = known.filter((w) => w.length >= 4);
+  const short = known.filter((w) => w.length === 3);
   const board = [base];
   const tryAdd = (w) => {
     if (board.length >= 7) return;
