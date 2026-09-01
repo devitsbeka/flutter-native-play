@@ -3960,7 +3960,7 @@ export const it: KaTranslations = {
     chooseFromLibraryLabel: "Scegli da libreria",
     chooseCategoriesLabel: "Scegli categorie",
     createGameRoomLabel: "Crea stanza gioco",
-    myTriviaPartyLabel: "Mio Trivia Party",
+    myTriviaPartyLabel: "My Trivia Party",
     yourQuestionsLabel: "Le tue domande",
     chooseGameTypeLabel: "Scegli cosa giocare",
     tvPlayOnTv: "Gioca su TV",

@@ -4,8 +4,9 @@ import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { FeatureOnboardingCarousel, hasSeenFeatureOnboarding } from "@/components/team/FeatureOnboardingCarousel";
 import { useNavigate } from "react-router-dom";
-import { Plus, Play, Loader2, Globe, Lock, ChevronDown, ChevronUp, Layers, Pencil, FileEdit, Trash2, Check, PartyPopper } from "lucide-react";
+import { Plus, Play, Loader2, Globe, Lock, ChevronDown, ChevronUp, Layers, Pencil, FileEdit, Trash2, Check } from "lucide-react";
 import triviaBuzzerIcon from "@/assets/trivia-buzzer.png";
+import iconGroupOfPeople from "@/assets/group-of-people.png";
 import purpleHeart3d from "@/assets/icons/purple-heart-3d.png";
 import bookmark3d from "@/assets/icons/bookmark-3d-orange.png";
 import pushButton3d from "@/assets/icons/push-button-3d.png";
@@ -657,11 +658,6 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
       className="relative bg-card rounded-2xl overflow-hidden shadow-lg cursor-pointer hover:shadow-xl transition-shadow"
       style={{ border: "2px solid rgba(236, 72, 153, 0.5)" }}
     >
-      {/* Party Badge */}
-      <div className="absolute top-3 left-14 z-10 flex h-8 items-center bg-pink-500/90 text-white px-3 rounded-full text-xs font-semibold shadow-md">
-        <span>My Trivia Party</span>
-      </div>
-
       {/* Edit Button */}
       <button 
         onClick={(e) => { e.stopPropagation(); onEdit(post); }}
@@ -702,7 +698,7 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
         <div className="flex items-center gap-3">
           {/* the party's own face, not the host's avatar */}
           <div className="w-10 h-10 rounded-lg bg-pink-500/15 flex items-center justify-center flex-shrink-0">
-            <PartyPopper className="w-6 h-6 text-pink-500" />
+            <img src={iconGroupOfPeople} alt="" className="w-7 h-7 object-contain" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-foreground truncate">
@@ -711,6 +707,27 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
             <p className="text-xs text-muted-foreground">
               {formatLocalTimeAgo(new Date(post.created_at), t)}
             </p>
+          </div>
+          {/* Rides the meta row like the trivia and collection cards do. As a
+              full-width row of its own underneath, it made the party card
+              taller than everything beside it in the grid. */}
+          <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
+            <ChunkyButton
+              size="sm"
+              variant="outline"
+              className="h-10 text-sm"
+              onClick={handlePlayOnTV}
+              disabled={isStartingTV}
+            >
+              {isStartingTV ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <>
+                  <Play className="w-4 h-4" />
+                  <span>{t("extra.playBtn")}</span>
+                </>
+              )}
+            </ChunkyButton>
           </div>
         </div>
 
@@ -732,25 +749,6 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
         </div>
         )}
         
-        {/* Buttons Row */}
-        <div className="flex items-center gap-3 mt-3" onClick={(e) => e.stopPropagation()}>
-          <ChunkyButton
-            size="sm"
-            variant="primary"
-            className="flex-1 h-10 text-sm"
-            onClick={handlePlayOnTV}
-            disabled={isStartingTV}
-            icon={
-              isStartingTV ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Play className="w-4 h-4 fill-current" />
-              )
-            }
-          >
-            {t("extra.playWithFriendsBtn")}
-          </ChunkyButton>
-        </div>
       </div>
     </motion.div>
   );

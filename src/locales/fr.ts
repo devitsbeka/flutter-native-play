@@ -3903,7 +3903,7 @@ export const fr: KaTranslations = {
     chooseFromLibraryLabel: "Choisir dans la bibliothèque",
     chooseCategoriesLabel: "Choisir des catégories",
     createGameRoomLabel: "Créer une salle de jeu",
-    myTriviaPartyLabel: "Mon Trivia Party",
+    myTriviaPartyLabel: "My Trivia Party",
     yourQuestionsLabel: "Vos questions",
     chooseGameTypeLabel: "Choisissez à quoi jouer",
     tvPlayOnTv: "Jouer sur TV",

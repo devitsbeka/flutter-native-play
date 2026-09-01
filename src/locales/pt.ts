@@ -3977,7 +3977,7 @@ export const pt: KaTranslations = {
     chooseFromLibraryLabel: "Escolher da biblioteca",
     chooseCategoriesLabel: "Escolher categorias",
     createGameRoomLabel: "Criar sala de jogo",
-    myTriviaPartyLabel: "Minha Trivia Party",
+    myTriviaPartyLabel: "My Trivia Party",
     yourQuestionsLabel: "Suas perguntas",
     chooseGameTypeLabel: "Escolha o que jogar",
     tvPlayOnTv: "Jogar na TV",

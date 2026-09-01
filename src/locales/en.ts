@@ -4533,7 +4533,7 @@ export const en: KaTranslations = {
     chooseCategoriesLabel: "Choose categories",
     createGameRoomLabel: "Create a game room",
     // multipleRoundsLabel - defined above
-    myTriviaPartyLabel: "MyTrivia Party",
+    myTriviaPartyLabel: "My Trivia Party",
     yourQuestionsLabel: "Your questions",
     chooseGameTypeLabel: "Choose what to play",
     // TVConnectModal
