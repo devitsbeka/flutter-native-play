@@ -1050,10 +1050,13 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
         <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full px-4 py-3 space-y-3">
         {/* Room Name with Icon - AI generated.
-            Hidden for the quick game: that one is matchmaking, not a room —
-            it goes straight to /game and never reads this name, so offering
-            to rename and re-roll something that will not exist is noise. */}
-        {gameChoice !== "quick" && (
+            Hidden for anything that does not read it. The quick game is
+            matchmaking, not a room — it goes straight to /game. The two
+            lounges make their own room after the navigation: the King deals
+            its couch a name on arrival, and the arena has no name at all
+            (it is called Trivia Battle). All three offered a name to
+            rename and re-roll that nothing would ever show. */}
+        {gameChoice !== "quick" && gameChoice !== "king" && gameChoice !== "battle" && (
           <div>
             <h2 className="text-[13.2px] font-medium text-muted-foreground mb-1.5">{t("extra.chooseRoomName")}</h2>
             <div className="flex items-center gap-3 p-2.5 rounded-2xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
