@@ -2,7 +2,7 @@
 
 `src/features/home-v3` is a replica of a reference design (five iPhone
 captures of a history-stories app) with MyTrivia's content in it. It is
-reachable at **`/v3`** on the web and `mytrivia://v3` on device, as a preview
+reachable at **`mytrivia.io/newui`** (and `mytrivia://newui` on device), as a preview
 beside the current home — the same arrangement `/dev/v2` had. Nothing on the
 existing routes changes.
 
@@ -10,8 +10,8 @@ Two screens:
 
 | Route                | Reference screen                          | File                          |
 | -------------------- | ----------------------------------------- | ----------------------------- |
-| `/v3`                | "Stories" home (captures 1–4)             | `pages/HomeV3.tsx`            |
-| `/v3/path/:pathId`   | Path detail ("The Hundred Years' War")    | `pages/PathDetailV3.tsx`      |
+| `/newui`             | "Stories" home (captures 1–4)             | `pages/HomeV3.tsx`            |
+| `/newui/path/:pathId` | Path detail ("The Hundred Years' War")    | `pages/PathDetailV3.tsx`      |
 
 ## Where every value comes from
 

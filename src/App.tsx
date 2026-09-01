@@ -78,8 +78,8 @@ const Notifications = lazy(() => import("./pages/Notifications"));
 // The Words mode. Its own chunk: the scene photos alone are larger than
 // most pages, and nothing else in the app needs them.
 const Words = lazy(() => import("./pages/Words"));
-// The V3 home design (src/features/home-v3): the reference's "Stories" screen
-// with MyTrivia's content in it. A preview at its own path, like /dev/v2 —
+// The new-UI home (src/features/home-v3): the reference's "Stories" screen
+// with MyTrivia's content in it. A preview at mytrivia.io/newui, like /dev/v2 —
 // the routes are cheap, the chunk loads only when visited, and it exposes
 // nothing the app does not already show.
 const HomeV3 = lazy(() => import("./features/home-v3/pages/HomeV3"));
@@ -116,6 +116,11 @@ function LegalByLanguage({ page }: { page: "privacy" | "terms" }) {
   if (!isLegalLanguage(lang)) return <Navigate to={base} replace />;
 
   return page === "privacy" ? <PrivacyPolicy lang={lang} /> : <TermsOfService lang={lang} />;
+}
+/** /v3/path/:id was the new-UI preview's first address; it moved to /newui. */
+function NewUiPathRedirect() {
+  const { pathId } = useParams<{ pathId: string }>();
+  return <Navigate to={`/newui/path/${pathId ?? ""}`} replace />;
 }
 const Support = lazy(() => import("./pages/Support"));
 const DeleteAccount = lazy(() => import("./pages/DeleteAccount"));
@@ -270,9 +275,12 @@ const App = () => (
                     not a security boundary. Also reachable on device via
                     mytrivia://dev/v2. */}
                 <Route path="/dev/v2" element={<Index />} />
-                {/* V3 home preview — see the lazy import above. */}
-                <Route path="/v3" element={<HomeV3 />} />
-                <Route path="/v3/path/:pathId" element={<PathDetailV3 />} />
+                {/* The new-UI preview (mytrivia.io/newui) — see the lazy import above. */}
+                <Route path="/newui" element={<HomeV3 />} />
+                <Route path="/newui/path/:pathId" element={<PathDetailV3 />} />
+                {/* The preview's first address; anything shared from it still lands. */}
+                <Route path="/v3" element={<Navigate to="/newui" replace />} />
+                <Route path="/v3/path/:pathId" element={<NewUiPathRedirect />} />
                 <Route path="/loading" element={<Loading />} />
                 <Route path="/trivialoader" element={<TriviaLoader />} />
                 

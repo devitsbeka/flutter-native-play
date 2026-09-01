@@ -39,9 +39,9 @@ export default function PathDetailV3() {
   const stats = useMemo(() => (path ? pathStats(path, categories) : { categories: 0, levels: 0 }), [path, categories]);
   const maxLevels = useMemo(() => own.reduce((m, c) => Math.max(m, c.totalLevels || 0), 0), [own]);
 
-  if (!path) return <Navigate to="/v3" replace />;
+  if (!path) return <Navigate to="/newui" replace />;
 
-  const goBack = () => (window.history.length > 1 ? navigate(-1) : navigate("/v3"));
+  const goBack = () => (window.history.length > 1 ? navigate(-1) : navigate("/newui"));
   const isLocked = (c: TransformedCategory) => !isVip && c.tier === "premium";
   const openCategory = (c: TransformedCategory) => (isLocked(c) ? setPaywallOpen(true) : navigate(`/category/${c.id}`));
 

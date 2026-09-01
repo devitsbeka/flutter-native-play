@@ -32,7 +32,7 @@ const MissionsModal = lazy(() => import("@/components/home/MissionsModal").then(
 /**
  * The V3 home — the reference's "Stories" screen with MyTrivia's content in
  * it. Paths are groups of categories, stories are categories, chapters are
- * levels; PRO is PRO. Reachable at /v3 (and mytrivia://v3 on device) as a
+ * levels; PRO is PRO. Reachable at /newui (mytrivia.io/newui; mytrivia://newui on device) as a
  * preview alongside the current home, the same way /dev/v2 was.
  *
  * Everything on it is read from the system: the categories and their
@@ -86,7 +86,7 @@ export default function HomeV3() {
 
   const isLocked = (c: PortraitCategory | TransformedCategory) => !isVip && c.tier === "premium";
   const openCategory = (c: PortraitCategory) => (isLocked(c) ? setPaywallOpen(true) : navigate(`/category/${c.id}`));
-  const openPath = (id: string) => navigate(`/v3/path/${id}`);
+  const openPath = (id: string) => navigate(`/newui/path/${id}`);
   const openPaywall = () => setPaywallOpen(true);
 
   const onTab = (tab: V3Tab) => {
