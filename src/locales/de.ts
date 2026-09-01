@@ -1521,6 +1521,8 @@ export const de: KaTranslations = {
     winnerTakes: "Der Gewinner erhält:",
     captainLabel: "Kapitän:",
     chooseCaptain: "Kapitän wählen",
+    chooseCaptainTitle: "Wähle den Teamkapitän",
+    votePick: "Wählen",
     startGame: "Spiel starten",
     pickDuration: "Dauer wählen",
     autoRounds: "Jeder Spieler spielt zweimal",
@@ -1545,7 +1547,7 @@ export const de: KaTranslations = {
     classicCardDesc: "Klassischer Raum — Bibliothek und deine Trivias",
     teamName: "Teamname",
     captainInfoTitle: "Team-Kapitän",
-    captainInfoBody: "Der Kapitän führt das Team an: Endet das Match unentschieden, tritt der Kapitän in der Superrunde als Champion des Teams an und antwortet für alle. Das Team wählt seinen Kapitän per Abstimmung — tippe auf einen Mitspieler, um deine Stimme abzugeben. Spielst du allein, bist du der Kapitän.",
+    captainInfoBody: "Der Kapitän ist der Anführer des Teams: Steht es am Ende unentschieden, treten in der Entscheidungsrunde nur die Kapitäne gegeneinander an.",
   },
 
   // Words — the word-wheel crossword mode (src/features/words)

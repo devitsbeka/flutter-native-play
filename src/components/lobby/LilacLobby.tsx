@@ -540,12 +540,22 @@ export function SeatMenu({
  * lilac wash, subtle white card, the app's crown dropping in. When the
  * host opens it, the team's faces sit below and a tap hands the crown over.
  */
+/**
+ * The captain vote modal (982:30224): the team's hat on top, the team as a
+ * story reel underneath — tap a face (or its "choose" pill) to cast your
+ * vote, and your pick wears the pink check while everyone else keeps the
+ * pill. The crown still marks the standing captain, and the lore sits in
+ * small print below. Opened on the other team it is read-only: faces and
+ * lore, no pills.
+ */
 export function CaptainInfoModal({
   open,
   onClose,
   title,
   body,
-  chooseLabel,
+  pickLabel,
+  icon,
+  myVoteUserId,
   members,
   onChoose,
 }: {
@@ -553,7 +563,12 @@ export function CaptainInfoModal({
   onClose: () => void;
   title: string;
   body: string;
-  chooseLabel?: string;
+  /** The pill on a votable face ("choose"). Only shown when onChoose is given. */
+  pickLabel?: string;
+  /** The team's own emblem for the top of the card; the crown without one. */
+  icon?: string;
+  /** Whose face wears the check — the viewer's current vote. */
+  myVoteUserId?: string | null;
   members?: {
     userId: string;
     nickname: string;
@@ -566,6 +581,7 @@ export function CaptainInfoModal({
 }) {
   const { t } = useLanguage();
   if (!open) return null;
+  const ring = "linear-gradient(135deg, rgb(147,51,234) 0%, rgb(236,72,153) 50%, rgb(249,115,22) 100%)";
   return (
     <div
       className="fixed inset-0 z-[130] flex items-center justify-center px-7 backdrop-blur-[10px] bg-[rgba(245,217,255,0.6)]"
@@ -575,77 +591,80 @@ export function CaptainInfoModal({
         initial={{ opacity: 0, scale: 0.9, y: 14 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 420, damping: 28 }}
-        className="w-full max-w-[340px] rounded-[28px] bg-white/95 border border-[#e8e0f5] p-6 flex flex-col items-center gap-3 shadow-[0px_8px_24px_0px_rgba(102,51,153,0.18),0px_2px_8px_0px_rgba(102,51,153,0.08)]"
+        className="w-full max-w-[340px] rounded-[24px] bg-white p-6 pt-7 flex flex-col items-center gap-3 shadow-[0px_8px_24px_0px_rgba(102,51,153,0.18),0px_2px_8px_0px_rgba(102,51,153,0.08)]"
         onClick={(e) => e.stopPropagation()}
       >
         <motion.img
           alt=""
-          src={crownIcon}
+          src={icon ?? crownIcon}
           initial={{ scale: 0.4, y: -16, rotate: -20 }}
           animate={{ scale: 1, y: 0, rotate: 0 }}
           transition={{ type: "spring", stiffness: 320, damping: 15 }}
-          className="size-[56px] object-contain drop-shadow"
+          className="size-[72px] object-contain drop-shadow"
         />
-        <p className="text-[20px] text-[#523b76] text-center" style={{ fontFamily: "'TASolivare', sans-serif" }}>
+        <p className="text-[19px] text-[#523b76] text-center" style={{ fontFamily: "'TASolivare', sans-serif" }}>
           {title}
         </p>
-        {/* The vote leads, the lore follows: opened to PICK a captain, the
-            faces come first — one tap on a teammate casts the vote, the
-            crown hops over live. The explainer drops below in small print. */}
-        {onChoose && members && members.length > 0 && (
-          <>
-            {chooseLabel && (
-              <p className="font-[Nunito] font-bold text-[14px] text-[#523b76]">{chooseLabel}</p>
-            )}
-            <div className="flex flex-wrap justify-center gap-3">
+        {members && members.length > 0 && (
+          <div className="w-[calc(100%+3rem)] -mx-6 overflow-x-auto scrollbar-hide">
+            <div className="flex gap-[10px] items-start px-6 pt-1 pb-1 w-max mx-auto">
               {members.map((m) => {
-                const canPick = m.selectable !== false;
+                const canPick = !!onChoose && m.selectable !== false;
+                const voted = m.userId === myVoteUserId;
                 return (
                   <motion.button
                     key={m.userId}
-                    whileTap={canPick ? { scale: 0.85 } : undefined}
+                    whileTap={canPick ? { scale: 0.9 } : undefined}
                     transition={{ type: "spring", stiffness: 500, damping: 26 }}
                     disabled={!canPick}
-                    onClick={() => {
-                      if (!canPick) return;
-                      onChoose(m.userId);
-                      onClose();
-                    }}
-                    className={`relative flex flex-col items-center gap-1 w-[76px] ${canPick ? "" : "opacity-40"}`}
+                    onClick={() => canPick && onChoose?.(m.userId)}
+                    className={`flex flex-col items-center gap-[6px] shrink-0 w-[76px] ${
+                      onChoose && m.selectable === false ? "opacity-40" : ""
+                    }`}
                   >
-                    <span
-                      className={`relative block size-[60px] rounded-full overflow-clip ${
-                        m.isCaptain ? "ring-2 ring-[#e7ba87]" : "ring-1 ring-[#e8e0f5]"
-                      }`}
-                    >
-                      <InviteAvatar url={m.avatarUrl} nickname={m.nickname} />
-                    </span>
-                    {m.isCaptain && (
-                      <img
-                        alt=""
-                        src={crownIcon}
-                        className="pointer-events-none absolute -top-[12px] left-[27px] w-[26px] object-contain drop-shadow -rotate-12"
-                      />
-                    )}
-                    {(m.votes ?? 0) > 0 && (
-                      <span className="absolute top-[42px] right-[4px] min-w-[20px] h-[20px] px-1 rounded-full bg-[#7126d5] text-white text-[11px] font-[Nunito] font-bold flex items-center justify-center shadow">
-                        {m.votes}
+                    <span className="relative block">
+                      <span className="block p-[3px] rounded-full" style={{ backgroundImage: ring }}>
+                        <span className="block p-[2px] bg-white rounded-full">
+                          <span className="relative block size-[54px] rounded-full overflow-clip">
+                            <InviteAvatar url={m.avatarUrl} nickname={m.nickname} />
+                          </span>
+                        </span>
                       </span>
-                    )}
-                    <span className="font-[Nunito] text-[11px] font-semibold text-[#402666] max-w-full truncate">
+                      {m.isCaptain && (
+                        <img
+                          alt=""
+                          src={crownIcon}
+                          className="pointer-events-none absolute -top-[10px] -left-[4px] w-[24px] object-contain drop-shadow -rotate-12"
+                        />
+                      )}
+                      {/* the vote pill overlaps the avatar's bottom edge:
+                          your pick wears the pink check, the rest offer the
+                          word */}
+                      {voted ? (
+                        <span className="absolute -bottom-[6px] left-1/2 -translate-x-1/2 h-[24px] px-[10px] rounded-full bg-white border-2 border-[#ec4899] flex items-center shadow-sm">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
+                            <path d="M4 12.5 9.5 18 20 6.5" stroke="#ec4899" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </span>
+                      ) : (
+                        canPick &&
+                        pickLabel && (
+                          <span className="absolute -bottom-[6px] left-1/2 -translate-x-1/2 h-[22px] px-[10px] rounded-full bg-[#0f1729]/55 backdrop-blur-[2px] flex items-center text-white text-[11px] font-[Nunito] font-bold whitespace-nowrap">
+                            {pickLabel}
+                          </span>
+                        )
+                      )}
+                    </span>
+                    <span className="font-[Nunito] text-[12px] font-semibold text-[#0f1729] max-w-full truncate pt-[2px]">
                       {m.nickname}
                     </span>
                   </motion.button>
                 );
               })}
             </div>
-          </>
+          </div>
         )}
-        <p
-          className={`font-[Nunito] leading-relaxed text-[#402666]/70 text-center ${
-            onChoose && members && members.length > 0 ? "text-[12px] text-[#402666]/55" : "text-[14px]"
-          }`}
-        >
+        <p className="font-[Nunito] text-[14px] leading-relaxed text-[#402666]/65 text-center px-1">
           {body}
         </p>
         <button onClick={onClose} className="font-[Nunito] text-sm font-semibold text-[#523b76]/50 pt-1">

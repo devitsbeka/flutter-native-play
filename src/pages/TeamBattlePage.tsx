@@ -851,9 +851,17 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
       <CaptainInfoModal
         open={captainInfo !== null}
         onClose={() => setCaptainInfo(null)}
-        title={t("lobby.captainInfoTitle")}
+        title={
+          myTeam === captainInfo
+            ? t("lobby.chooseCaptainTitle")
+            : t("lobby.captainInfoTitle")
+        }
         body={t("lobby.captainInfoBody")}
-        chooseLabel={myTeam === captainInfo ? t("lobby.chooseCaptain") : undefined}
+        pickLabel={t("lobby.votePick")}
+        icon={captainInfo === "a" ? teamPenguins : teamFormula}
+        myVoteUserId={
+          participants.find((p) => p.user_id === user?.id)?.captain_vote ?? null
+        }
         members={
           captainInfo
             ? teamOf(captainInfo).map((p) => ({

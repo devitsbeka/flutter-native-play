@@ -1531,6 +1531,8 @@ export const es: KaTranslations = {
     winnerTakes: "El ganador se lleva:",
     captainLabel: "Capitán:",
     chooseCaptain: "Elige capitán",
+    chooseCaptainTitle: "Elige al capitán del equipo",
+    votePick: "Elegir",
     startGame: "Empezar partida",
     pickDuration: "Elige duración",
     autoRounds: "Cada jugador juega dos veces",
@@ -1555,7 +1557,7 @@ export const es: KaTranslations = {
     classicCardDesc: "Sala clásica: biblioteca y tus trivias",
     teamName: "Nombre del equipo",
     captainInfoTitle: "Capitán del equipo",
-    captainInfoBody: "El capitán lidera el equipo: si el partido termina en empate, el capitán sale como campeón del equipo en la super ronda y responde por todos. El equipo elige a su capitán por votación: toca a un compañero para dar tu voto. Si juegas solo, el capitán eres tú.",
+    captainInfoBody: "El capitán es el líder del equipo: si el marcador termina empatado, solo los capitanes se enfrentan en la ronda decisiva.",
   },
 
   // Words — the word-wheel crossword mode (src/features/words)
