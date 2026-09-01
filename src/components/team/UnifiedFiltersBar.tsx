@@ -189,6 +189,35 @@ export function UnifiedFiltersBar<F extends string, S extends string>({
   );
 }
 
+/**
+ * The Private tab's one filter, across two kinds of thing.
+ *
+ * That tab holds a person's rooms AND their trivias, because both are "mine
+ * and not published" and splitting them into two tabs made the second one
+ * hard to find. So the filter spans both: the first four chips choose which
+ * rooms, the last three choose which trivias, and each of those hides the
+ * other list entirely — asking for collections and getting a wall of rooms
+ * above them is not a filter.
+ */
+export const privateFilterOptions: FilterOption<PrivateFilter>[] = [
+  { value: "all", labelKey: "extra.filterAll" },
+  { value: "my_rooms", labelKey: "extra.filterMyRooms" },
+  { value: "friends_rooms", labelKey: "extra.filterFriendsRooms" },
+  { value: "king", labelKey: "lobby.vkTitle" },
+  { value: "team_battle", labelKey: "teamBattle.title" },
+  { value: "trivias", labelKey: "extra.filterTrivias" },
+  { value: "collections", labelKey: "extra.filterCollections" },
+  { value: "personal", labelKey: "extra.myTriviaPartyLabel" },
+];
+
+/** The Public tab: everything, or one kind of game. */
+export const publicRoomFilterOptions: FilterOption<PublicRoomsFilter>[] = [
+  { value: "all", labelKey: "extra.filterAll" },
+  { value: "classic", labelKey: "extra.tabRooms" },
+  { value: "king", labelKey: "lobby.vkTitle" },
+  { value: "team_battle", labelKey: "teamBattle.title" },
+];
+
 // Pre-defined filter options for rooms
 export const roomFilterOptions: FilterOption<RoomFilter>[] = [
   { value: "all", labelKey: "extra.filterAll" },
@@ -232,6 +261,16 @@ export const exploreSortOptions: SortOption<ExploreSort>[] = [
 
 // Type exports
 export type RoomFilter = "all" | "my_rooms" | "friends_rooms" | "king" | "team_battle";
+export type PrivateFilter =
+  | "all"
+  | "my_rooms"
+  | "friends_rooms"
+  | "king"
+  | "team_battle"
+  | "trivias"
+  | "collections"
+  | "personal";
+export type PublicRoomsFilter = "all" | "classic" | "king" | "team_battle";
 export type MyTriviaFilter =
   | "all"
   | "private"

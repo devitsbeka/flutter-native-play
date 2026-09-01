@@ -101,13 +101,15 @@ export function TeamRightSidebar({
           </div>
         </motion.div>
 
-        {/* Active Rooms Widget - Hidden when on Rooms tab */}
-        {activeTab !== "rooms" && (
+        {/* Active Rooms Widget — hidden on Private, which is already a list
+            of these rooms; a widget repeating the column beside it is not a
+            shortcut to anywhere. */}
+        {activeTab !== "private" && (
           <ActiveRoomsWidget onViewAll={onViewAllRooms} onJoinRoom={onJoinRoom} />
         )}
 
-        {/* My Trivias Widget - Hidden when on My Trivia tab */}
-        {activeTab !== "my-content" && (
+        {/* My Trivias Widget — hidden on Private for the same reason */}
+        {activeTab !== "private" && (
           <MyTriviasWidget onViewAll={onViewAllTrivias} />
         )}
 

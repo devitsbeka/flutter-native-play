@@ -790,6 +790,7 @@ export type Database = {
           id: string
           is_archived: boolean | null
           is_permanent: boolean | null
+          is_public: boolean
           last_activity_at: string | null
           max_players: number | null
           min_players: number | null
@@ -823,6 +824,7 @@ export type Database = {
           id?: string
           is_archived?: boolean | null
           is_permanent?: boolean | null
+          is_public?: boolean
           last_activity_at?: string | null
           max_players?: number | null
           min_players?: number | null
@@ -856,6 +858,7 @@ export type Database = {
           id?: string
           is_archived?: boolean | null
           is_permanent?: boolean | null
+          is_public?: boolean
           last_activity_at?: string | null
           max_players?: number | null
           min_players?: number | null
@@ -2558,6 +2561,41 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "room_games_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "game_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      room_join_requests: {
+        Row: {
+          created_at: string
+          id: string
+          responded_at: string | null
+          room_id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          responded_at?: string | null
+          room_id: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          responded_at?: string | null
+          room_id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_join_requests_room_id_fkey"
             columns: ["room_id"]
             isOneToOne: false
             referencedRelation: "game_rooms"
@@ -5199,6 +5237,35 @@ export type Database = {
           nickname: string
           user_id: string
         }[]
+      }
+      public_rooms: {
+        Args: { p_limit?: number }
+        Returns: {
+          created_at: string
+          first_category_icon: string
+          first_category_name: string
+          game_type_key: string
+          host_avatar_url: string
+          host_nickname: string
+          host_user_id: string
+          id: string
+          last_activity_at: string
+          max_players: number
+          my_state: string
+          player_count: number
+          room_code: string
+          room_icon: string
+          room_name: string
+          status: string
+        }[]
+      }
+      request_room_join: {
+        Args: { p_room_id: string }
+        Returns: string
+      }
+      respond_room_join: {
+        Args: { p_approve: boolean; p_request_id: string }
+        Returns: string
       }
       room_preview: {
         Args: { p_room_code: string }

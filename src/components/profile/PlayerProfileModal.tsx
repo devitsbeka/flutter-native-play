@@ -60,6 +60,16 @@ interface PlayerProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
   userId: string | null;
+  /**
+   * Drop the trivias tab.
+   *
+   * Opened from a join request, this sheet answers one question — who is
+   * asking to come in — and the answer is their name, their record and what
+   * they have won. Their quizzes are a shop window in the middle of a yes/no
+   * decision, and tapping one would navigate the host out of the lobby they
+   * were deciding in.
+   */
+  hideTrivias?: boolean;
 }
 
 const ACHIEVEMENT_ICONS: Record<string, string> = {
@@ -94,7 +104,7 @@ const TAB_TRIGGER_CLASS = [
 const TAB_ICON_CLASS =
   "w-9 h-9 transition-all group-data-[state=inactive]:opacity-60";
 
-export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileModalProps) {
+export function PlayerProfileModal({ isOpen, onClose, userId, hideTrivias }: PlayerProfileModalProps) {
   const { user, profile } = useAuth();
   const bubbleVideo = useResponsiveVideo("/videos/floating-blob.mp4");
   const { isAdmin } = useAdminRole();
@@ -145,9 +155,14 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
   // the reader — a refetch that comes back with nothing to put in it — and a
   // Tabs whose value names no trigger renders an empty panel with nothing
   // selected, which is what "switching tabs is broken" looks like.
-  const fallbackTab = showInfoTab ? "info" : "trivias";
+  const showTriviasTab = !hideTrivias;
+  const fallbackTab = showInfoTab ? "info" : showTriviasTab ? "trivias" : "trophies";
   const activeTab =
-    chosenTab && (chosenTab !== "info" || showInfoTab) ? chosenTab : fallbackTab;
+    chosenTab
+    && (chosenTab !== "info" || showInfoTab)
+    && (chosenTab !== "trivias" || showTriviasTab)
+      ? chosenTab
+      : fallbackTab;
 
   // Navigate to trivia/collection lobby pages
   const handlePlayTrivia = (triviaId: string) => {
@@ -579,7 +594,9 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                 <Tabs value={activeTab} onValueChange={setChosenTab} className="px-4 pb-4">
                   <TabsList
                     className={`grid w-full mb-4 h-auto gap-1 rounded-2xl bg-primary/[0.07] p-1.5 ${
-                      showInfoTab ? "grid-cols-3" : "grid-cols-2"
+                      ["grid-cols-1", "grid-cols-2", "grid-cols-3"][
+                        (showInfoTab ? 1 : 0) + (showTriviasTab ? 1 : 0)
+                      ]
                     }`}
                   >
                     {showInfoTab && (
@@ -592,10 +609,12 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                         <span className="text-xs">{t("extra.infoTab")}</span>
                       </TabsTrigger>
                     )}
-                    <TabsTrigger value="trivias" className={TAB_TRIGGER_CLASS}>
-                      <img src={iconTrivia} alt="" className={TAB_ICON_CLASS} />
-                      <span className="text-xs">{t("extra.triviasTab")}</span>
-                    </TabsTrigger>
+                    {showTriviasTab && (
+                      <TabsTrigger value="trivias" className={TAB_TRIGGER_CLASS}>
+                        <img src={iconTrivia} alt="" className={TAB_ICON_CLASS} />
+                        <span className="text-xs">{t("extra.triviasTab")}</span>
+                      </TabsTrigger>
+                    )}
                     <TabsTrigger value="trophies" className={TAB_TRIGGER_CLASS}>
                       <img src={iconTrophy} alt="" className={TAB_ICON_CLASS} />
                       <span className="text-xs">{t("extra.trophiesTab")}</span>

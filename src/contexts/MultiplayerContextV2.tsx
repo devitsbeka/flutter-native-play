@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { t as tStandalone } from "@/utils/standaloneTranslation";
 import { supabase } from "@/integrations/supabase/client";
+import { roomVisibilityFields } from "@/utils/roomVisibility";
 import type { Json } from "@/integrations/supabase/types";
 import { useAuth } from "./AuthContext";
 import { TriviaQuestion } from "@/hooks/useTrivia";
@@ -370,7 +371,7 @@ interface MultiplayerContextType extends MultiplayerState {
   isMostLikelyRound: boolean;
 
   // Actions
-  createRoom: (categoryId?: string, categoryName?: string, customQuestions?: any[], roomName?: string | null, roomIcon?: string | null, preferredRoomCode?: string) => Promise<GameRoom | null>;
+  createRoom: (categoryId?: string, categoryName?: string, customQuestions?: any[], roomName?: string | null, roomIcon?: string | null, preferredRoomCode?: string, isPublic?: boolean) => Promise<GameRoom | null>;
   enterRoom: (roomCode: string) => Promise<boolean>;
   startGame: (hostShouldObserve?: boolean) => Promise<void>;
   startNewRound: () => Promise<void>; // Any player can start a new round
@@ -1219,7 +1220,14 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
      * the link carries. A collision falls back to a fresh code on the next
      * attempt, which costs that one shared link and nothing else.
      */
-    preferredRoomCode?: string
+    preferredRoomCode?: string,
+    /**
+     * Publish the room to the Public tab. Defaults to false, matching the
+     * column default: a caller that has no opinion — matchmaking, a
+     * challenge, anything added later — makes a private room, and only the
+     * create screen's switch publishes one.
+     */
+    isPublic = false,
   ): Promise<GameRoom | null> => {
     if (!user || !profile) {
       toast.error(tStandalone("extra.mpAuthRequired"));
@@ -1255,6 +1263,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             total_questions: customQuestions?.length || 5,
             room_name: finalRoomName,
             room_icon: finalRoomIcon,
+            ...(await roomVisibilityFields(isPublic)),
             last_activity_at: new Date().toISOString(),
           })
           .select()
