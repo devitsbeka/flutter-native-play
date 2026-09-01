@@ -36,6 +36,8 @@ import iconCollections from "@/assets/icon-collections.png";
 import storyDice from "@/assets/story-dice.png";
 import secretBookcase from "@/assets/secret-bookcase.png";
 import triviaBuzzer from "@/assets/trivia-buzzer-3.png";
+import teamPenguinsIcon from "@/assets/tb-lobby/team-penguins.png";
+import teamFormulaIcon from "@/assets/tb-lobby/team-formula.png";
 import iconGroupOfPeople from "@/assets/group-of-people.png";
 import stickerAlbum from "@/assets/sticker-album.png";
 import iconDiceCard from "@/assets/play-chooser/icon-dice.webp";
@@ -210,6 +212,16 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
    * you wanted in it.
    */
   const [isPublic, setIsPublic] = useState(true);
+
+  /**
+   * Which side of the arena the host takes.
+   *
+   * Everyone who made a Trivia Battle used to land on Team A, because the
+   * room's first seat says so — so the host's own side was the one thing
+   * about the match they could not choose, and moving afterwards meant
+   * dragging their own avatar across the arena.
+   */
+  const [battleTeam, setBattleTeam] = useState<"a" | "b">("a");
   const [isGeneratingName, setIsGeneratingName] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState("");
@@ -708,7 +720,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       const invite = collectInvitees();
       onClose();
       navigate(gameChoice === "king" ? "/king" : "/team-battle", {
-        state: { invite, isPublic },
+        state: { invite, isPublic, team: gameChoice === "battle" ? battleTeam : undefined },
       });
       return;
     }
@@ -1174,6 +1186,38 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
           </div>
 
           <div className="space-y-3 mt-1">
+            {/* Which side of the arena you take. Two buttons rather than a
+                dropdown: there are exactly two, and the whole choice is
+                which of them you tap. */}
+            {gameChoice === "battle" && (
+              <div>
+                <h2 className="text-[13.2px] font-medium text-muted-foreground mb-1.5">
+                  {t("extra.pickYourSide")}
+                </h2>
+                <div className="flex items-center gap-1 p-1 rounded-2xl bg-muted">
+                  {(["a", "b"] as const).map((side) => (
+                    <button
+                      key={side}
+                      type="button"
+                      onClick={() => setBattleTeam(side)}
+                      className={`flex-1 flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-[13px] font-semibold transition-colors ${
+                        battleTeam === side
+                          ? "bg-background text-foreground shadow-sm"
+                          : "text-muted-foreground"
+                      }`}
+                    >
+                      <img
+                        src={side === "a" ? teamPenguinsIcon : teamFormulaIcon}
+                        alt=""
+                        className="w-6 h-6 object-contain"
+                      />
+                      {side === "a" ? t("teamBattle.teamA") : t("teamBattle.teamB")}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Random Option - the roll status/preview under the Random card */}
             {gameChoice === "random" && (
             <div className="rounded-2xl overflow-hidden">

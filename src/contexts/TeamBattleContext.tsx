@@ -64,7 +64,7 @@ interface TeamBattleContextValue {
   isHost: boolean;
   myTeam: TBTeam | null;
   isSpotlight: boolean;
-  createRoom: (isPublic?: boolean) => Promise<TBRoom | null>;
+  createRoom: (isPublic?: boolean, team?: TBTeam) => Promise<TBRoom | null>;
   joinRoom: (code: string) => Promise<boolean>;
   enterRoom: (roomId: string) => Promise<boolean>;
   leaveRoom: () => Promise<void>;
@@ -307,7 +307,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
     void liveChannelRef.current?.send({ type: "broadcast", event: "pick", payload: pick });
   }, []);
 
-  const createRoom = useCallback(async (isPublic = false): Promise<TBRoom | null> => {
+  const createRoom = useCallback(async (isPublic = false, team: TBTeam = "a"): Promise<TBRoom | null> => {
     if (!user || !profile) {
       toast.error(tStandalone("extra.mpAuthRequired"));
       return null;
@@ -347,7 +347,10 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
         country_code: profile.country_code,
         is_host: true,
         status: "joined",
-        team: "a",
+        // The side the host picked on the create screen. Everyone landed on
+        // "a" before, so the host's own team was the one thing about their
+        // match they could not choose.
+        team,
       });
       if (hostErr) {
         await supabase.from("game_rooms").delete().eq("id", created.id);

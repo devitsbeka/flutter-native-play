@@ -83,6 +83,27 @@ export function useRoomJoinRequests(roomId: string | null | undefined, amHost: b
     };
   }, [active, roomId, load]);
 
+  /**
+   * Shut the door for good.
+   *
+   * A decline answers this one knock; some people knock again. A block
+   * takes the room off their Public tab entirely, refuses a fresh ask, and
+   * empties their seat if they were already in — see block_room_join.
+   */
+  const block = useCallback(
+    async (requestId: string) => {
+      setPending((list) => list.filter((r) => r.id !== requestId));
+      const { error } = await supabase.rpc("block_room_join", { p_request_id: requestId });
+      if (error) {
+        console.error("[joinRequests] block failed", error);
+        void load();
+        return false;
+      }
+      return true;
+    },
+    [load],
+  );
+
   const respond = useCallback(
     async (requestId: string, approve: boolean) => {
       // Drop it locally first: the round-trip plus the realtime echo is long
@@ -102,5 +123,5 @@ export function useRoomJoinRequests(roomId: string | null | undefined, amHost: b
     [load],
   );
 
-  return { pending, respond, reload: load };
+  return { pending, respond, block, reload: load };
 }
