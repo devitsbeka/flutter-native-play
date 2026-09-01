@@ -145,18 +145,27 @@ export function LilacHeader({
 }) {
   return (
     <div className="relative z-10 w-full max-w-[500px] mx-auto shrink-0 flex items-center justify-between px-4 py-3" style={{ transform: "translateZ(0)" }}>
-      <div className="flex gap-[12px] items-center">
-        <motion.button
-          onClick={onBack}
-          whileTap={{ scale: 0.82 }}
-          transition={{ type: "spring", stiffness: 500, damping: 26 }}
-          className="flex items-center justify-center rounded-[9999px] size-[40px]"
-        >
-          <img alt="" className="block size-[20px]" src={iconBack} />
-        </motion.button>
-        {icon && <img alt="" className="block size-[34px] object-contain drop-shadow-sm -mr-[2px]" src={icon} />}
+      <motion.button
+        onClick={onBack}
+        whileTap={{ scale: 0.82 }}
+        transition={{ type: "spring", stiffness: 500, damping: 26 }}
+        className="relative z-10 flex items-center justify-center rounded-[9999px] size-[40px]"
+      >
+        <img alt="" className="block size-[20px]" src={iconBack} />
+      </motion.button>
+
+      {/* The game's name in the middle of the row, not beside the back
+          arrow. Centred against the whole row rather than against what is
+          left over: the row's two ends are a 40px button and a 40px button
+          (or nothing), so an overlay centred on the row is the true middle
+          either way. It sits under the buttons in the stack and takes no
+          pointer events, so the arrow and the help button stay tappable
+          right up to their edges, and px-[56px] keeps a long title from
+          running underneath them — it ellipsises instead. */}
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center gap-[8px] px-[56px]">
+        {icon && <img alt="" className="block size-[34px] shrink-0 object-contain drop-shadow-sm" src={icon} />}
         <p
-          className="leading-[28px] not-italic text-[26px] tracking-[-0.16px] whitespace-nowrap"
+          className="leading-[28px] not-italic text-[24px] tracking-[-0.16px] min-w-0 truncate"
           style={{ fontFamily: "'TASolivare', sans-serif", color: HEADING_COLOR }}
         >
           {title}

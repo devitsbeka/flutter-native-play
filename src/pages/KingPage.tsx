@@ -637,6 +637,18 @@ export default function KingPage() {
   const [peek, setPeek] = useState<InviteEntry | null>(null);
   const inviteFriends = useCallback(() => setInviteOpen(true), []);
 
+  /**
+   * The friends reel is what a + seat opens.
+   *
+   * It used to sit under the header on every visit, a row of faces above a
+   * lounge whose own seats are the thing you tap — two competing ways in,
+   * one of them permanently taking a chunk of a screen that has none to
+   * spare. Now the empty seats are the invitation: pressing one brings the
+   * reel in, tapping a friend there sends the real invite, and its own +
+   * still opens the full invite modal (search, link, share).
+   */
+  const [reelOpen, setReelOpen] = useState(false);
+
   const thinkSeconds = useServerDeadline(
     stage === "thinking" ? state?.question?.think_deadline : undefined,
     showOptions,
@@ -695,22 +707,37 @@ export default function KingPage() {
           onHelp={() => setHelpOpen((v) => !v)}
         />
 
-        {/* the same friends reel the home page uses — identical sizes/fonts */}
-        <div className="relative z-10 w-full shrink-0 px-4" style={{ transform: "translateZ(0)" }}>
-          <FriendsStoriesBar
-            onAddFriendClick={inviteFriends}
-            onFriendClick={(f) =>
-              setPeek({ id: f.friendId, nickname: f.nickname, avatarUrl: f.avatarUrl, online: !!f.isOnline })
-            }
-          />
-        </div>
+        {/* the same friends reel the home page uses — identical sizes/fonts,
+            but only once a + seat has asked for it */}
+        <AnimatePresence initial={false}>
+          {reelOpen && (
+            <motion.div
+              key="reel"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 340, damping: 34 }}
+              className="relative z-10 w-full shrink-0 overflow-hidden"
+              style={{ transform: "translateZ(0)" }}
+            >
+              <div className="px-4">
+                <FriendsStoriesBar
+                  onAddFriendClick={inviteFriends}
+                  onFriendClick={(f) =>
+                    setPeek({ id: f.friendId, nickname: f.nickname, avatarUrl: f.avatarUrl, online: !!f.isOnline })
+                  }
+                />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Unclipped for the same reason as the arena — see TeamBattlePage.
             The King's lounge is also drawn above this box (-133), and its
             fade is applied twice, so the join was softer here but the room
             name still sat on flat lilac rather than on the scene. */}
         <div className="flex-1 min-h-0">
-          <FitBox width={500} height={681}>
+          <FitBox width={500} height={728}>
             {/* scene (940:7476) + its double edge fade (940:7551/7666) */}
             <div className="absolute left-[32px] top-[-133px] w-[435px] h-[780px] pointer-events-none">
               <img alt="" className="absolute inset-0 max-w-none object-cover size-full" src={sceneKing} />
@@ -718,8 +745,12 @@ export default function KingPage() {
               <div className="absolute inset-0" style={{ backgroundImage: KING_SCENE_FADE }} />
             </div>
 
-            {/* the team's name — AI-dealt on first open, host taps to rename */}
-            <div className="absolute left-[32px] top-[44px] w-[435px] flex justify-center">
+            {/* The team's name — AI-dealt on first open, host taps to
+                rename. It belongs to the couch below it rather than to the
+                header: up at the top of the scene it read as a second title
+                under the real one, so it now sits centred in the clear band
+                between the front seats and the captain row. */}
+            <div className="absolute left-[32px] top-[590px] w-[435px] flex justify-center">
               <motion.button
                 whileTap={{ scale: 0.95, y: 2 }}
                 transition={{ type: "spring", stiffness: 520, damping: 28 }}
@@ -786,18 +817,18 @@ export default function KingPage() {
                   }
                 />
               ) : (
-                <PlusSeat key={`plus-${i}`} left={left} top={top - 160} onClick={inviteFriends} />
+                <PlusSeat key={`plus-${i}`} left={left} top={top - 160} onClick={() => setReelOpen((v) => !v)} />
               );
             })}
             </AnimatePresence>
 
             {/* Captain (940:7788 + 936:21188) — the room's host */}
-            <p className="absolute left-[38px] top-[576px] font-[Nunito] font-medium leading-[24px] text-[#0c172c] text-[15px] tracking-[-0.16px]">
+            <p className="absolute left-[38px] top-[638px] font-[Nunito] font-medium leading-[24px] text-[#0c172c] text-[15px] tracking-[-0.16px]">
               {t("lobby.captainLabel")}
             </p>
             <CaptainChip
               left={38}
-              top={610}
+              top={668}
               avatarUrl={(kingParts.find((p) => p.is_host) ?? kingParts[0])?.avatar_url ?? profile?.avatar_url}
               name={(kingParts.find((p) => p.is_host) ?? kingParts[0])?.nickname ?? profile?.nickname}
               placeholder={t("lobby.chooseCaptain")}

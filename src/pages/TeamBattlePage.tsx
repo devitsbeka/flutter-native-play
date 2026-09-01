@@ -206,6 +206,17 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
   const { categories } = useCategories();
   const { openProfile } = usePlayerProfile();
   const [inviteOpen, setInviteOpen] = useState(false);
+  /**
+   * The friends reel opens off a + seat rather than living under the header.
+   *
+   * The arena's empty seats are already the invitation, and a permanent row
+   * of faces above them was both a second way in and a permanent bite out of
+   * a screen that has to fit two teams, the captains and the CTA. Pressing a
+   * + brings the reel in (remembering which team the seat belonged to), a
+   * friend there gets the real invite, and the reel's own + still opens the
+   * full invite modal.
+   */
+  const [reelOpen, setReelOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [peek, setPeek] = useState<InviteEntry | null>(null);
   const [invitedIds, setInvitedIds] = useState<Set<string>>(new Set());
@@ -364,7 +375,7 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
   // so an accepted friend lands on the right side.
   const seatAction = (team: TBTeam) => {
     inviteTeamRef.current = team;
-    setInviteOpen(true);
+    setReelOpen((v) => !v);
   };
 
   // Hold a seat to manage it: the host moves anyone between teams or
@@ -550,15 +561,30 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
         onHelp={() => setHelpOpen((v) => !v)}
       />
 
-      {/* the same friends reel the home page uses — identical sizes/fonts */}
-      <div className="relative z-10 w-full shrink-0 px-4" style={{ transform: "translateZ(0)" }}>
-        <FriendsStoriesBar
-          onAddFriendClick={() => setInviteOpen(true)}
-          onFriendClick={(f) =>
-            setPeek({ id: f.friendId, nickname: f.nickname, avatarUrl: f.avatarUrl, online: !!f.isOnline })
-          }
-        />
-      </div>
+      {/* the same friends reel the home page uses — identical sizes/fonts,
+          but only once a + seat has asked for it */}
+      <AnimatePresence initial={false}>
+        {reelOpen && (
+          <motion.div
+            key="reel"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 340, damping: 34 }}
+            className="relative z-10 w-full shrink-0 overflow-hidden"
+            style={{ transform: "translateZ(0)" }}
+          >
+            <div className="px-4">
+              <FriendsStoriesBar
+                onAddFriendClick={() => setInviteOpen(true)}
+                onFriendClick={(f) =>
+                  setPeek({ id: f.friendId, nickname: f.nickname, avatarUrl: f.avatarUrl, online: !!f.isOnline })
+                }
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="w-full max-w-[468px] mx-auto shrink-0 border-t border-[#523b76]/[0.08]" />
 
@@ -589,8 +615,27 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
           <div className="absolute inset-0" style={{ backgroundImage: ARENA_FADE }} />
         </div>
 
-        {/* the team's name — AI-dealt on first open, host taps to rename */}
-        <div className="absolute left-[32px] top-[6px] w-[435px] flex justify-center z-10">
+        {/* the pot (943:21933) — the winning team's real take: 50 coins a
+            round to every winning human (tb_settle, 20260921130000) */}
+        <AnimatedCoinPill left={158} top={192} width={190} value={potValue} />
+
+        {renderTeamSeats("a", TEAM_A_SLOTS, PODIUM_A)}
+        {renderTeamSeats("b", TEAM_B_SLOTS, PODIUM_B)}
+
+        {/* Team names row (943:21929) — and, between them, the room's own
+            name. It used to sit at the top of the scene, where it read as a
+            second header under the real one; here it belongs to the match it
+            names, one row above the captains. The three share a flex row
+            rather than being centred on top of each other, so a long team
+            name in Italian pushes the pill narrower instead of colliding
+            with it. AI-dealt on first open, host taps to rename. */}
+        <div className="absolute left-[26px] top-[404px] h-[40px] w-[441px] flex items-center justify-between gap-2">
+          <div className="flex gap-[10px] items-center shrink-0">
+            <img alt="" className="size-[36px] -scale-y-100 rotate-180 object-contain" src={teamPenguins} />
+            <p className="font-[Nunito] font-black leading-[24px] text-[#0c172c] text-[18px] tracking-[-0.16px] whitespace-nowrap">
+              {t("teamBattle.teamA")}
+            </p>
+          </div>
           <motion.button
             whileTap={{ scale: 0.95, y: 2 }}
             transition={{ type: "spring", stiffness: 520, damping: 28 }}
@@ -602,7 +647,7 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
                   }
                 : undefined
             }
-            className="inline-flex items-center gap-2 max-w-[330px] h-[40px] px-4 rounded-[16px] bg-white/70 border border-[#e8e0f5] shadow-[0px_2.5px_0px_0px_#d8d0e8]"
+            className="min-w-0 inline-flex items-center gap-2 max-w-[220px] h-[40px] px-4 rounded-[16px] bg-white/70 border border-[#e8e0f5] shadow-[0px_2.5px_0px_0px_#d8d0e8]"
           >
             <span
               className="text-[18px] leading-[1.5] text-[#523b76] whitespace-nowrap overflow-hidden text-ellipsis"
@@ -612,24 +657,7 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
             </span>
             {isHost && <Pencil className="w-3.5 h-3.5 shrink-0 text-[#523b76]/50" />}
           </motion.button>
-        </div>
-
-        {/* the pot (943:21933) — the winning team's real take: 50 coins a
-            round to every winning human (tb_settle, 20260921130000) */}
-        <AnimatedCoinPill left={158} top={192} width={190} value={potValue} />
-
-        {renderTeamSeats("a", TEAM_A_SLOTS, PODIUM_A)}
-        {renderTeamSeats("b", TEAM_B_SLOTS, PODIUM_B)}
-
-        {/* team names row (943:21929), with the host's labeled AI-player buttons */}
-        <div className="absolute left-[26px] top-[408px] w-[441px] flex items-center justify-between">
-          <div className="flex gap-[10px] items-center">
-            <img alt="" className="size-[36px] -scale-y-100 rotate-180 object-contain" src={teamPenguins} />
-            <p className="font-[Nunito] font-black leading-[24px] text-[#0c172c] text-[18px] tracking-[-0.16px] whitespace-nowrap">
-              {t("teamBattle.teamA")}
-            </p>
-          </div>
-          <div className="flex gap-[10px] items-center">
+          <div className="flex gap-[10px] items-center shrink-0">
             <p className="font-[Nunito] font-extrabold leading-[24px] text-[#0c172c] text-[18px] text-right tracking-[-0.16px] whitespace-nowrap">
               {t("teamBattle.teamB")}
             </p>
