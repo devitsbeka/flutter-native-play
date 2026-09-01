@@ -198,7 +198,7 @@ export function GameModal({
             exit={{ opacity: 0, y: 24, scale: 0.98 }}
             transition={{ type: "spring", stiffness: 380, damping: 32 }}
             onClick={(e) => e.stopPropagation()}
-            className="relative flex flex-col w-full h-full md:h-auto md:max-h-[85vh] md:w-[60%] md:min-w-[560px] md:max-w-3xl md:rounded-3xl md:overflow-hidden md:shadow-2xl"
+            className="relative flex flex-col w-full h-full overflow-x-clip md:h-auto md:max-h-[85vh] md:w-[60%] md:min-w-[560px] md:max-w-3xl md:rounded-3xl md:overflow-hidden md:shadow-2xl"
             style={{
               background: "linear-gradient(180deg, #FDFAFF 0%, #F6E8FF 100%)",
             }}
