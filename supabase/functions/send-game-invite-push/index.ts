@@ -83,7 +83,7 @@ Deno.serve(async (req: Request) => {
       // so too: "invited you to a game" made every invitation look the same.
       supabase
         .from("game_rooms")
-        .select("room_name, room_code, room_icon, game_type_key")
+        .select("room_name, room_code, room_icon, game_type_key, game_mode")
         .eq("id", invite.room_id)
         .maybeSingle(),
       // The push is composed in the RECIPIENT's language — the one they
@@ -167,8 +167,17 @@ Deno.serve(async (req: Request) => {
         image: `${SITE}/push/trivia-battle.png`,
         path: (code) => `/team-battle?code=${encodeURIComponent(code)}`,
       },
+      words: {
+        name: (l) =>
+          ({ ka: "სიტყვები", es: "Palabras", fr: "Mots", de: "Wörter", it: "Parole", pt: "Palavras" } as Record<string, string>)[l] ?? "Words",
+        image: `${SITE}/push/words.png`,
+        path: (code) => `/words/${encodeURIComponent(code)}`,
+      },
     };
-    const lounge = room?.game_type_key ? LOUNGES[room.game_type_key] : undefined;
+    // Words rooms may carry a null key with game_mode = 'words' until the
+    // catalog row is applied (see src/utils/roomRoutes.ts).
+    const loungeKey = room?.game_type_key ?? (room?.game_mode === "words" ? "words" : undefined);
+    const lounge = loungeKey ? LOUNGES[loungeKey] : undefined;
 
     const title = msg.title;
     // A lounge invite names the game (plus the room's name when the host set

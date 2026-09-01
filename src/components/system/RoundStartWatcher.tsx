@@ -1,3 +1,4 @@
+import { isWordsRoom } from "@/utils/roomRoutes";
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -45,6 +46,7 @@ type RoomRow = {
   category_id?: string | null;
   category_name?: string | null;
   game_type_key?: string | null;
+  game_mode?: string | null;
   room_code?: string | null;
 };
 
@@ -96,6 +98,9 @@ export function RoundStartWatcher() {
         if (room.room_code) navigate(`/team-battle?code=${room.room_code}`);
         return;
       }
+      // A Words room never "starts" — the board is live from the moment
+      // two people are on it — so nothing here should pull anyone anywhere.
+      if (isWordsRoom(room)) return;
 
       setStartedRound({
         startedAt: room.started_at ?? null,
@@ -122,7 +127,7 @@ export function RoundStartWatcher() {
       // the count itself — see the note above.
       const { data: rooms } = await supabase
         .from("game_rooms")
-        .select("id, status, current_game_id, started_at, category_id, category_name, game_type_key, room_code, last_activity_at")
+        .select("id, status, current_game_id, started_at, category_id, category_name, game_type_key, game_mode, room_code, last_activity_at")
         .in("id", roomIds)
         .in("status", ["waiting", "ready", "playing"])
         .order("last_activity_at", { ascending: false })

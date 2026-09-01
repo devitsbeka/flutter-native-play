@@ -1,3 +1,4 @@
+import { roomKind, routeForRoom, ROOM_KIND_COLUMNS } from "@/utils/roomRoutes";
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
@@ -520,14 +521,14 @@ function TeamContentV2() {
       peekedJoinCodeRef.current = joinCode;
       void supabase
         .from("game_rooms")
-        .select("game_type_key")
+        .select(ROOM_KIND_COLUMNS)
         .eq("room_code", joinCode.toUpperCase())
         .maybeSingle()
         .then(({ data: typed }) => {
-          if (typed?.game_type_key === "team_battle") {
-            navigate(`/team-battle?code=${joinCode.toUpperCase()}`, { replace: true });
-          } else if (typed?.game_type_key === "king") {
-            navigate(`/king?code=${joinCode.toUpperCase()}`, { replace: true });
+          // Words rooms included: a push sent before the edge function knew
+          // the mode still says /team?join=, and this is where it recovers.
+          if (roomKind(typed) !== "classic") {
+            navigate(routeForRoom(typed, joinCode), { replace: true });
           } else {
             setClassicJoinCode(joinCode);
           }

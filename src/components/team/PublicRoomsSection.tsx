@@ -20,6 +20,7 @@ import {
 } from "@/hooks/usePublicRooms";
 import iconKingLounge from "@/assets/play-chooser/icon-king.webp";
 import iconBattleLounge from "@/assets/play-chooser/icon-crate.png";
+import iconWordsLounge from "@/assets/play-chooser/icon-words.webp";
 import crownIcon from "@/assets/crown-icon.png";
 
 /**
@@ -35,6 +36,7 @@ import crownIcon from "@/assets/crown-icon.png";
 const LOUNGES: Record<string, { icon: string; labelKey: string }> = {
   king: { icon: iconKingLounge, labelKey: "lobby.vkTitle" },
   team_battle: { icon: iconBattleLounge, labelKey: "teamBattle.title" },
+  words: { icon: iconWordsLounge, labelKey: "words.title" },
 };
 
 function PublicRoomCard({
