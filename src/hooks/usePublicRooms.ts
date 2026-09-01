@@ -20,6 +20,8 @@ export interface PublicRoom {
   room_name: string | null;
   room_icon: string | null;
   game_type_key: string | null;
+  /** Words rooms carry their kind here when the catalog key is not set. */
+  game_mode: string | null;
   status: string;
   created_at: string | null;
   last_activity_at: string | null;
@@ -102,7 +104,7 @@ export function usePublicRooms(options?: { enabled?: boolean }) {
 }
 
 /** Where a room card leads, which is not the same route for every game. */
-export function publicRoomPath(room: Pick<PublicRoom, "game_type_key" | "room_code">): string {
+export function publicRoomPath(room: Pick<PublicRoom, "game_type_key" | "game_mode" | "room_code">): string {
   return routeForRoom(room);
 }
 

@@ -26,6 +26,7 @@ const room = (over: Partial<PublicRoom> = {}): PublicRoom => ({
   room_name: "A room",
   room_icon: null,
   game_type_key: null,
+  game_mode: null,
   status: "waiting",
   created_at: null,
   last_activity_at: null,
@@ -138,6 +139,9 @@ describe("the public list", () => {
     expect(publicRoomPath(room({ game_type_key: "king" }))).toBe("/king?code=ABC123");
     expect(publicRoomPath(room({ game_type_key: "team_battle" }))).toBe("/team-battle?code=ABC123");
     expect(publicRoomPath(room())).toBe("/team?join=ABC123");
+    // Words rooms are told apart by game_mode when the catalog key is not
+    // applied yet, so the listing has to carry it — see roomRoutes.
+    expect(publicRoomPath(room({ game_mode: "words" }))).toBe("/words/ABC123");
   });
 
   it("asks the host rather than walking in", () => {

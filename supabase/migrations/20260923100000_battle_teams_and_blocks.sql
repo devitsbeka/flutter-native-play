@@ -176,13 +176,25 @@ CREATE TRIGGER room_participants_clear_join_request
 -- A blocked player does not see the room at all. Hiding it is most of what
 -- makes a block stick: a list they cannot see is a room they cannot knock
 -- on, whatever the button would have done.
-CREATE OR REPLACE FUNCTION public.public_rooms(p_limit integer DEFAULT 40)
+-- Dropped rather than replaced: this adds a column to the returned row, and
+-- CREATE OR REPLACE cannot change a function's return type — it fails the
+-- whole statement and leaves the previous definition standing, so the block
+-- filter below would have been silently absent while everything else in
+-- this file applied.
+DROP FUNCTION IF EXISTS public.public_rooms(integer);
+
+CREATE FUNCTION public.public_rooms(p_limit integer DEFAULT 40)
 RETURNS TABLE (
   id uuid,
   room_code text,
   room_name text,
   room_icon text,
   game_type_key text,
+  -- Words rooms are told apart by game_mode as well as by the key: until
+  -- the game_types catalog row is applied the key is null and the mode is
+  -- 'words' (20260901120000). roomRoutes.roomKind reads both, and without
+  -- this column a published Words room's card would open the classic lobby.
+  game_mode text,
   status text,
   created_at timestamptz,
   last_activity_at timestamptz,
@@ -206,6 +218,7 @@ AS $$
     r.room_name,
     r.room_icon,
     r.game_type_key,
+    r.game_mode,
     r.status::text,
     r.created_at,
     r.last_activity_at,

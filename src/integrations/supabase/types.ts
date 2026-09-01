@@ -5254,6 +5254,7 @@ export type Database = {
           created_at: string
           first_category_icon: string
           first_category_name: string
+          game_mode: string
           game_type_key: string
           host_avatar_url: string
           host_nickname: string
