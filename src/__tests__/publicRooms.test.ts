@@ -54,10 +54,12 @@ describe("a room is private unless somebody published it", () => {
     expect(read("src/contexts/TeamBattleContext.tsx")).toMatch(
       /createRoom = useCallback\(async \(isPublic = false\)/,
     );
-    // The lounges make their own room after a navigation, so the switch
-    // travels in router state and falls back to private without it.
-    expect(read("src/pages/KingPage.tsx")).toMatch(/\)\?\.isPublic \?\? false,/);
+    // The Battle lounge makes its own room after a navigation, so the
+    // switch travels in router state and falls back to private without it.
     expect(read("src/pages/TeamBattlePage.tsx")).toMatch(/\)\?\.isPublic \?\? false;/);
+    // Versus King goes further: friends-only by owner's decision, so its
+    // lounge ignores the switch entirely and always creates private.
+    expect(read("src/pages/KingPage.tsx")).toMatch(/publishRef = useRef<boolean>\(false\)/);
   });
 
   it("survives a database that has not had the migration yet", () => {
@@ -118,12 +120,15 @@ describe("the public list", () => {
       room({ id: "b", game_type_key: "team_battle", room_name: "Arena" }),
       room({ id: "c", game_type_key: null, room_name: "Plain" }),
     ];
-    expect(filterPublicRooms(rooms, "king", "").map((r) => r.id)).toEqual(["a"]);
+    // Versus King is friends-only: a king room never reaches the public
+    // list, whatever filter is asked for — even one an older build
+    // managed to publish.
+    expect(filterPublicRooms(rooms, "king", "")).toEqual([]);
     expect(filterPublicRooms(rooms, "classic", "").map((r) => r.id)).toEqual(["c"]);
-    expect(filterPublicRooms(rooms, "all", "").length).toBe(3);
+    expect(filterPublicRooms(rooms, "all", "").map((r) => r.id)).toEqual(["b", "c"]);
     expect(filterPublicRooms(rooms, "all", "arena").map((r) => r.id)).toEqual(["b"]);
     // The category is the thing people are shopping for on this tab.
-    expect(filterPublicRooms(rooms, "all", "history").length).toBe(3);
+    expect(filterPublicRooms(rooms, "all", "history").length).toBe(2);
   });
 
   it("counts the lounges' seats even when the row does not", () => {
@@ -144,8 +149,9 @@ describe("the public list", () => {
     const section = read("src/components/team/PublicRoomsSection.tsx");
     expect(section).toMatch(/supabase\.rpc\("request_room_join"/);
     // Never a direct seat write: the policy would refuse it anyway, and a
-    // refusal the UI does not expect reads as a broken button.
-    expect(section).not.toMatch(/from\("room_participants"\)/);
+    // refusal the UI does not expect reads as a broken button. (Reading the
+    // seated faces for the card is fine — the write is the promise.)
+    expect(section).not.toMatch(/from\("room_participants"\)\s*\n?\s*\.(insert|update|upsert|delete)/);
     // Only the answer 'joined' walks in — everything else waits.
     expect(section).toMatch(/if \(outcome === "joined"\)/);
   });

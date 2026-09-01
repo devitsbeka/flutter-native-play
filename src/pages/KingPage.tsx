@@ -323,15 +323,11 @@ export default function KingPage() {
   const [kingPending, setKingPending] = useState<Tables<"room_participants">[]>([]);
   const [seatMenu, setSeatMenu] = useState<Tables<"room_participants"> | null>(null);
   const roomAttempted = useRef(false);
-  // Published or private, decided on the create screen and carried here in
-  // router state: this lounge makes its own room on arrival, so the switch
-  // has to survive the navigation. Captured at mount because the ?code=
-  // replace that follows creation drops router state. A lounge opened any
-  // other way (a shared link, the play chooser) is private, like every
-  // other room created without an opinion.
-  const publishRef = useRef<boolean>(
-    (location.state as { isPublic?: boolean } | null)?.isPublic ?? false,
-  );
+  // Versus King is friends-only by owner's decision: the couch fills by
+  // invitation, never by being found. Whatever the create screen said, this
+  // lounge's room is private — and the public feed drops king rooms too
+  // (filterPublicRooms), so one published by an older build stays unlisted.
+  const publishRef = useRef<boolean>(false);
   const kingRoomRef = useRef<Tables<"game_rooms"> | null>(null);
   kingRoomRef.current = kingRoom;
   const channelRef = useRef<RealtimeChannel | null>(null);

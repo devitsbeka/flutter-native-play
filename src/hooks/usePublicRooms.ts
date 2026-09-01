@@ -126,7 +126,10 @@ export function filterPublicRooms(
   searchQuery: string,
 ): PublicRoom[] {
   return rooms.filter((room) => {
-    if (filter === "king" && room.game_type_key !== "king") return false;
+    // Versus King is friends-only: its lounges are never listed, even when
+    // an older build managed to publish one. (The "king" chip is gone from
+    // the filter bar; a stale value simply finds nothing.)
+    if (room.game_type_key === "king" || filter === "king") return false;
     if (filter === "team_battle" && room.game_type_key !== "team_battle") return false;
     if (filter === "classic" && room.game_type_key) return false;
     return matchesQuery(searchQuery, [

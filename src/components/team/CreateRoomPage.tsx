@@ -708,8 +708,10 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     if (gameChoice === "king" || gameChoice === "battle") {
       const invite = collectInvitees();
       onClose();
+      // Versus King is friends-only: its lounge never publishes, whatever
+      // the switch said before the game type was picked.
       navigate(gameChoice === "king" ? "/king" : "/team-battle", {
-        state: { invite, isPublic },
+        state: { invite, isPublic: gameChoice === "king" ? false : isPublic },
       });
       return;
     }
@@ -1096,7 +1098,10 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                 switch: "public" alone does not say whether it means anyone
                 can watch, anyone can walk in, or anyone can find it, and the
                 line under the pair answers that in the one place someone is
-                deciding. */}
+                deciding. Versus King doesn't offer it — that lounge is
+                friends-only and always private. */}
+            {gameChoice !== "king" && (
+            <>
             <div className="mt-2 flex items-center gap-1 p-1 rounded-2xl bg-muted">
               {([
                 { on: true, icon: Globe, label: t("extra.roomPublic") },
@@ -1120,6 +1125,8 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
             <p className="mt-1 px-1 text-[11.5px] leading-snug text-muted-foreground">
               {isPublic ? t("extra.roomPublicHint") : t("extra.roomPrivateHint")}
             </p>
+            </>
+            )}
           </div>
         )}
 
