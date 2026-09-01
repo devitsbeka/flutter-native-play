@@ -390,11 +390,14 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
         .maybeSingle();
       // An invite-modal invitee arrives holding an "invited" row — accepting
       // means flipping it to joined, or they stay invisible in the lobby.
-      if (existing && existing.status === "invited") {
+      // An approved join request (respond_room_join) arrives already
+      // "joined" but with NO team, and a teamless face renders on no podium
+      // — so a missing team gets dealt here either way.
+      if (existing && (existing.status === "invited" || !existing.team)) {
         await supabase
           .from("room_participants")
           .update({
-            status: "joined",
+            ...(existing.status === "invited" ? { status: "joined" } : {}),
             ...(existing.team ? {} : { team: await pickEmptierTeam(row.id) }),
           })
           .eq("id", existing.id);

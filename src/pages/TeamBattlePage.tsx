@@ -383,6 +383,27 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
     }
   };
 
+  // An approved join request seats the player server-side with NO team
+  // (respond_room_join writes the row), and a teamless face renders on no
+  // podium — the guest looked accepted and stayed invisible. The host's
+  // device deals every teamless arrival onto the emptier side the moment
+  // they appear; the guest's own device does the same on entry
+  // (enterRoomRow), whichever comes first.
+  const dealtRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    if (!isHost || room?.status !== "waiting") return;
+    const seated = (side: TBTeam) =>
+      participants.filter((p) => p.team === side).length +
+      pendingInvites.filter((p) => p.team === side).length;
+    participants
+      .filter((p) => !p.team && !p.is_bot && p.status !== "invited")
+      .forEach((p) => {
+        if (dealtRef.current.has(p.user_id)) return;
+        dealtRef.current.add(p.user_id);
+        void manageSeat(p.user_id, seated("a") <= seated("b") ? "move_a" : "move_b");
+      });
+  }, [isHost, room?.status, participants, pendingInvites, manageSeat]);
+
   // A + seat invites a friend onto that team — no AI players here, these
   // lounges are for people. The invite modal opens with the team remembered
   // so an accepted friend lands on the right side.
