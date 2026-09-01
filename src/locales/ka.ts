@@ -1893,6 +1893,11 @@ export const ka = {
     sceneClouds: "ღრუბლები",
     sceneForest: "ტყე",
     sceneNight: "ღამე",
+    wordInfoSubtitle: "რას ნიშნავს ეს სიტყვა",
+    lookingUp: "ვეძებთ…",
+    noDefinition: "ამ სიტყვის განმარტება ჯერ ვერ მოიძებნა.",
+    reportWord: "სიტყვის გასაჩივრება",
+    reportThanks: "მადლობა, გადავხედავთ",
   },
 
   extra: {

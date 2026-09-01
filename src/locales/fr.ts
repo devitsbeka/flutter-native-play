@@ -1607,6 +1607,11 @@ export const fr: KaTranslations = {
     sceneClouds: "Nuages",
     sceneForest: "Forêt",
     sceneNight: "Nuit",
+    wordInfoSubtitle: "Ce que ce mot veut dire",
+    lookingUp: "Recherche…",
+    noDefinition: "Pas encore d'explication pour ce mot.",
+    reportWord: "Signaler ce mot",
+    reportThanks: "Merci, on va regarder",
   },
 
   extra: {

@@ -1888,6 +1888,11 @@ export const en: KaTranslations = {
     sceneClouds: "Clouds",
     sceneForest: "Forest",
     sceneNight: "Night",
+    wordInfoSubtitle: "What this word means",
+    lookingUp: "Looking it up…",
+    noDefinition: "No explanation found yet for this word.",
+    reportWord: "Report this word",
+    reportThanks: "Thanks, we'll take a look",
   },
 
   extra: {
