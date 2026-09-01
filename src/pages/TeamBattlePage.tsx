@@ -22,7 +22,6 @@ import { useGameInvitations } from "@/hooks/useGameInvitations";
 import {
   AnimatedCoinPill,
   CaptainInfoModal,
-  FriendPeek,
   type InviteEntry,
   LILAC_BG,
   LilacHeader,
@@ -218,7 +217,14 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
    */
   const [reelOpen, setReelOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
-  const [peek, setPeek] = useState<InviteEntry | null>(null);
+  /**
+   * A friend tapped in the reel is STAGED, not invited: their avatar takes
+   * the seat the + press asked about, wearing a mini "Invite" pill, and only
+   * that pill sends the real invite. Nothing here opens the profile page —
+   * this is an invite flow, and the tap already says who they mean.
+   * Tapping the staged avatar again clears it.
+   */
+  const [staged, setStaged] = useState<{ entry: InviteEntry; team: TBTeam } | null>(null);
   const [invitedIds, setInvitedIds] = useState<Set<string>>(new Set());
   const [captainInfo, setCaptainInfo] = useState<TBTeam | null>(null);
   const [renameOpen, setRenameOpen] = useState(false);
@@ -378,6 +384,42 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
     setReelOpen((v) => !v);
   };
 
+  // Reel tap → stage on the seat. Someone already seated or invited stays
+  // where they are (their seat is the answer); anyone else lands on the
+  // + seat's team, or the emptier side when the reel was left open.
+  const stageFriend = (entry: InviteEntry) => {
+    if (
+      invitedIds.has(entry.id) ||
+      participants.some((p) => p.user_id === entry.id) ||
+      pendingInvites.some((p) => p.user_id === entry.id)
+    )
+      return;
+    const seated = (team: TBTeam) =>
+      participants.filter((p) => p.team === team).length +
+      pendingInvites.filter((p) => p.team === team).length;
+    const team = inviteTeamRef.current ?? (seated("a") <= seated("b") ? "a" : "b");
+    setStaged({ entry, team });
+  };
+
+  const confirmStagedInvite = async () => {
+    if (!staged || !room) return;
+    setStaged(null);
+    inviteTeamRef.current = staged.team;
+    await inviteToGame(staged.entry);
+    await sendInvitation(staged.entry.id, room.id);
+  };
+
+  // A staged friend who lands in the room some other way (the invite modal,
+  // a shared link) must not keep a ghost on a second seat.
+  useEffect(() => {
+    if (
+      staged &&
+      (participants.some((p) => p.user_id === staged.entry.id) ||
+        pendingInvites.some((p) => p.user_id === staged.entry.id))
+    )
+      setStaged(null);
+  }, [participants, pendingInvites, staged]);
+
   // Hold a seat to manage it: the host moves anyone between teams or
   // removes them (pending invites and bots included); a player can switch
   // their own team.
@@ -453,10 +495,29 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
     ];
     const ring = team === "a" ? ("blue" as const) : ("red" as const);
     const all: [number, number][] = [...slots, podium];
+    // The staged friend previews on this team's first open seat, wearing
+    // the mini Invite pill until it is pressed (or the avatar is tapped
+    // off the seat).
+    const stagedHere = staged?.team === team ? staged.entry : null;
     return (
       <AnimatePresence>
         {all.map(([left, top], i) => {
           const entry = entries[i];
+          if (!entry && stagedHere && i === entries.length) {
+            return (
+              <Seat
+                key={`staged-${team}-${stagedHere.id}`}
+                left={left}
+                top={top - 305}
+                avatarUrl={stagedHere.avatarUrl}
+                nickname={stagedHere.nickname}
+                ring={ring}
+                pending
+                onClick={() => setStaged(null)}
+                action={{ label: t("lobby.invite"), onPress: () => void confirmStagedInvite() }}
+              />
+            );
+          }
           return entry ? (
             <Seat
               key={`${team}-${entry.p.user_id}`}
@@ -578,7 +639,7 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
               <FriendsStoriesBar
                 onAddFriendClick={() => setInviteOpen(true)}
                 onFriendClick={(f) =>
-                  setPeek({ id: f.friendId, nickname: f.nickname, avatarUrl: f.avatarUrl, online: !!f.isOnline })
+                  stageFriend({ id: f.friendId, nickname: f.nickname, avatarUrl: f.avatarUrl, online: !!f.isOnline })
                 }
               />
             </div>
@@ -803,17 +864,6 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
         onChoose={myTeam === captainInfo ? (userId) => void voteCaptain(userId) : undefined}
       />
 
-      <FriendPeek
-        friend={peek}
-        onClose={() => setPeek(null)}
-        actionLabel={t("lobby.inviteToGame")}
-        invitedLabel={t("lobby.invitedState")}
-        invited={
-          !!peek &&
-          (invitedIds.has(peek.id) || participants.some((p) => p.user_id === peek.id))
-        }
-        onAction={() => peek && void inviteToGame(peek)}
-      />
     </div>
   );
 }

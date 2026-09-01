@@ -297,6 +297,9 @@ export function Seat({
       onDragMoved gets the release offset (screen px) to decide the drop. */
   draggable?: boolean;
   onDragMoved?: (dx: number, dy: number) => void;
+  /** A mini confirmation pill under the avatar — a staged, not-yet-sent
+      invite wears one so the seat itself asks "Invite?". */
+  action?: { label: string; onPress: () => void };
 }) {
   const timer = useRef<number | null>(null);
   const fired = useRef(false);
@@ -383,6 +386,22 @@ export function Seat({
           transition={{ type: "spring", stiffness: 420, damping: 16 }}
           className="pointer-events-none absolute -top-[13px] left-[13px] w-[24px] object-contain drop-shadow"
         />
+      )}
+      {/* Not a nested <button>: the seat root is one already. */}
+      {action && (
+        <motion.span
+          role="button"
+          initial={{ opacity: 0, y: 4, scale: 0.8 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ type: "spring", stiffness: 480, damping: 24 }}
+          onClick={(e) => {
+            e.stopPropagation();
+            action.onPress();
+          }}
+          className="absolute left-1/2 -translate-x-1/2 top-[56px] z-20 inline-flex h-[26px] items-center rounded-full bg-[#33c054] px-3 font-[Nunito] text-[12px] font-bold whitespace-nowrap text-white shadow-[0px_2px_0px_0px_rgba(0,0,0,0.18)]"
+        >
+          {action.label}
+        </motion.span>
       )}
     </motion.button>
   );

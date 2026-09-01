@@ -22,7 +22,6 @@ import { FriendsStoriesBar } from "@/components/team/FriendsStoriesBar";
 import {
   CaptainChip,
   AnimatedCoinPill,
-  FriendPeek,
   type InviteEntry,
   LILAC_BG,
   LilacHeader,
@@ -634,8 +633,44 @@ export default function KingPage() {
   // social share) wired to this lounge's real room — an invited friend gets
   // the notification and lands on this couch.
   const [inviteOpen, setInviteOpen] = useState(false);
-  const [peek, setPeek] = useState<InviteEntry | null>(null);
   const inviteFriends = useCallback(() => setInviteOpen(true), []);
+
+  /**
+   * A friend tapped in the reel is STAGED, not invited: their avatar takes
+   * the next open seat wearing a mini "Invite" pill, and only that pill
+   * sends the real invite (participant row + notification). Nothing here
+   * opens the profile page — the reel is an invite flow. Tapping the staged
+   * avatar again clears it.
+   */
+  const [staged, setStaged] = useState<InviteEntry | null>(null);
+  const stageFriend = useCallback(
+    (entry: InviteEntry) => {
+      if (
+        invitedIds.has(entry.id) ||
+        kingParts.some((p) => p.user_id === entry.id) ||
+        kingPending.some((p) => p.user_id === entry.id)
+      )
+        return;
+      setStaged(entry);
+    },
+    [invitedIds, kingParts, kingPending],
+  );
+  const confirmStagedInvite = useCallback(async () => {
+    if (!staged || !kingRoom) return;
+    setStaged(null);
+    await inviteToGame(staged);
+    await sendInvitation(staged.id, kingRoom.id);
+  }, [staged, kingRoom, inviteToGame, sendInvitation]);
+  // A staged friend who lands on the couch some other way (the invite
+  // modal, a shared link) must not keep a ghost on a second seat.
+  useEffect(() => {
+    if (
+      staged &&
+      (kingParts.some((p) => p.user_id === staged.id) ||
+        kingPending.some((p) => p.user_id === staged.id))
+    )
+      setStaged(null);
+  }, [kingParts, kingPending, staged]);
 
   /**
    * The friends reel is what a + seat opens.
@@ -724,7 +759,7 @@ export default function KingPage() {
                 <FriendsStoriesBar
                   onAddFriendClick={inviteFriends}
                   onFriendClick={(f) =>
-                    setPeek({ id: f.friendId, nickname: f.nickname, avatarUrl: f.avatarUrl, online: !!f.isOnline })
+                    stageFriend({ id: f.friendId, nickname: f.nickname, avatarUrl: f.avatarUrl, online: !!f.isOnline })
                   }
                 />
               </div>
@@ -789,6 +824,22 @@ export default function KingPage() {
               const active = kingParts[i];
               const pending = !active ? kingPending[i - kingParts.length] : undefined;
               const part = active ?? pending;
+              // The staged friend previews on the first open seat, wearing
+              // the mini Invite pill until it is pressed (or tapped off).
+              if (!part && staged && i === kingParts.length + kingPending.length) {
+                return (
+                  <Seat
+                    key={`staged-${staged.id}`}
+                    left={left}
+                    top={top - 160}
+                    avatarUrl={staged.avatarUrl}
+                    nickname={staged.nickname}
+                    pending
+                    onClick={() => setStaged(null)}
+                    action={{ label: t("lobby.invite"), onPress: () => void confirmStagedInvite() }}
+                  />
+                );
+              }
               return part ? (
                 <Seat
                   key={part.user_id}
@@ -949,17 +1000,6 @@ export default function KingPage() {
           </div>
         )}
 
-        <FriendPeek
-          friend={peek}
-          onClose={() => setPeek(null)}
-          actionLabel={t("lobby.inviteToGame")}
-          invitedLabel={t("lobby.invitedState")}
-          invited={
-            !!peek &&
-            (invitedIds.has(peek.id) || kingParts.some((p) => p.user_id === peek.id))
-          }
-          onAction={() => peek && void inviteToGame(peek)}
-        />
       </div>
     );
   }
