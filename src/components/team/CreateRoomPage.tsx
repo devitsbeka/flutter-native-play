@@ -215,6 +215,21 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   const [isPublic, setIsPublic] = useState(true);
 
   /**
+   * Which of the six can go on the Public tab at all.
+   *
+   * A published room is one a stranger could usefully walk into: a random
+   * category, a category from the library, or an arena that wants ten
+   * people. The other three are not rooms in that sense — the quick game is
+   * matchmaking with no room to list, the King's couch is a private duel
+   * against the King, and My Trivia is your own quiz, which is yours to
+   * hand out rather than to advertise. They are created private, and the
+   * switch is not offered rather than offered and ignored.
+   */
+  const canPublish =
+    gameChoice === "random" || gameChoice === "library" || gameChoice === "battle";
+  const publishRoom = canPublish && isPublic;
+
+  /**
    * Which side of the arena the host takes.
    *
    * Everyone who made a Trivia Battle used to land on Team A, because the
@@ -721,7 +736,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       const invite = collectInvitees();
       onClose();
       navigate(gameChoice === "king" ? "/king" : "/team-battle", {
-        state: { invite, isPublic, team: gameChoice === "battle" ? battleTeam : undefined },
+        state: { invite, isPublic: publishRoom, team: gameChoice === "battle" ? battleTeam : undefined },
       });
       return;
     }
@@ -795,7 +810,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
             // CRITICAL: Set user_trivia_id for trivia type so TVSetupInline can find it
             user_trivia_id: challengeTrivia.type === "trivia" ? challengeTrivia.id : null,
             status: "waiting",
-            ...(await roomVisibilityFields(isPublic)),
+            ...(await roomVisibilityFields(publishRoom)),
           })
           .select()
           .single();
@@ -845,7 +860,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
               game_mode: `trivia:${createdTriviaId}`,
               user_trivia_id: createdTriviaId,
               status: "waiting",
-              ...(await roomVisibilityFields(isPublic)),
+              ...(await roomVisibilityFields(publishRoom)),
             })
             .select()
             .single();
@@ -877,7 +892,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
             effectiveRoomName,
             roomIcon,
             plannedRoomCode,
-            isPublic
+            publishRoom
           );
 
           if (room?.id) {
@@ -886,7 +901,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         }
       } else if (selectedCategory) {
         // Create the room with selected category
-        room = await createRoom(selectedCategory.category_id, selectedCategory.name, undefined, effectiveRoomName, roomIcon, plannedRoomCode, isPublic);
+        room = await createRoom(selectedCategory.category_id, selectedCategory.name, undefined, effectiveRoomName, roomIcon, plannedRoomCode, publishRoom);
 
         if (room?.id) {
           await persistQueuedRounds(room.id);
@@ -1107,34 +1122,6 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
               </button>
             </div>
 
-            {/* Published or private. Two labelled halves rather than a bare
-                switch: "public" alone does not say whether it means anyone
-                can watch, anyone can walk in, or anyone can find it, and the
-                line under the pair answers that in the one place someone is
-                deciding. */}
-            <div className="mt-2 flex items-center gap-1 p-1 rounded-2xl bg-muted">
-              {([
-                { on: true, icon: Globe, label: t("extra.roomPublic") },
-                { on: false, icon: Lock, label: t("extra.roomPrivate") },
-              ] as const).map(({ on, icon: Icon, label }) => (
-                <button
-                  key={String(on)}
-                  type="button"
-                  onClick={() => setIsPublic(on)}
-                  className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-[13px] font-semibold transition-colors ${
-                    isPublic === on
-                      ? "bg-background text-foreground shadow-sm"
-                      : "text-muted-foreground"
-                  }`}
-                >
-                  <Icon className="w-3.5 h-3.5" />
-                  {label}
-                </button>
-              ))}
-            </div>
-            <p className="mt-1 px-1 text-[11.5px] leading-snug text-muted-foreground">
-              {isPublic ? t("extra.roomPublicHint") : t("extra.roomPrivateHint")}
-            </p>
           </div>
         )}
 
@@ -1615,6 +1602,41 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       {/* Footer - Normal Button */}
       <div className="border-t border-border/30 shrink-0">
         <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full px-4 py-4">
+        {/* Published or private, immediately above the button that acts on
+            it. It used to sit at the top under the room's name, three
+            scrolls away from the decision it modifies and on screen for
+            three choices that cannot be published at all. Two labelled
+            halves rather than a bare switch: "public" alone does not say
+            whether it means anyone can watch, walk in, or find it, and the
+            line under the pair answers that where somebody is deciding. */}
+        {canPublish && (
+          <div className="mb-3">
+            <div className="flex items-center gap-1 p-1 rounded-2xl bg-muted">
+              {([
+                { on: true, icon: Globe, label: t("extra.roomPublic") },
+                { on: false, icon: Lock, label: t("extra.roomPrivate") },
+              ] as const).map(({ on, icon: Icon, label }) => (
+                <button
+                  key={String(on)}
+                  type="button"
+                  onClick={() => setIsPublic(on)}
+                  className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-[13px] font-semibold transition-colors ${
+                    isPublic === on
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground"
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  {label}
+                </button>
+              ))}
+            </div>
+            <p className="mt-1 px-1 text-[11.5px] leading-snug text-muted-foreground">
+              {isPublic ? t("extra.roomPublicHint") : t("extra.roomPrivateHint")}
+            </p>
+          </div>
+        )}
+
         <ChunkyButton
           onClick={handleCreate}
           disabled={loading || isCreating || !createEnabled}

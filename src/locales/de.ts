@@ -2999,6 +2999,7 @@ export const de: KaTranslations = {
     rlStarting: "Wird gestartet...",
     rlChooseCategory: "Kategorie wählen",
     rlStartGame: "Spiel starten",
+    rlNeedsSecondPlayer: "Lade jemanden ein — ein Spiel braucht zwei",
     rlHowItWorks: "So funktioniert's",
     rlRenameRoom: "Raum umbenennen",
     rlChangeBackground: "Hintergrund ändern",

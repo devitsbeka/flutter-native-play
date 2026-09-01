@@ -3450,6 +3450,7 @@ export const ka = {
     rlStarting: "იწყება...",
     rlChooseCategory: "აირჩიე კატეგორია",
     rlStartGame: "თამაშის დაწყება",
+    rlNeedsSecondPlayer: "მოიწვიე მეგობარი — თამაში ორი მოთამაშიდან იწყება",
     // Room menu & dialogs
     rlHowItWorks: "როგორ მუშაობს",
     rlRenameRoom: "ოთახის სახელის შეცვლა",
