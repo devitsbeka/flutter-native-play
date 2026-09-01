@@ -705,7 +705,11 @@ export default function KingPage() {
           />
         </div>
 
-        <div className="flex-1 min-h-0 overflow-hidden">
+        {/* Unclipped for the same reason as the arena — see TeamBattlePage.
+            The King's lounge is also drawn above this box (-133), and its
+            fade is applied twice, so the join was softer here but the room
+            name still sat on flat lilac rather than on the scene. */}
+        <div className="flex-1 min-h-0">
           <FitBox width={500} height={681}>
             {/* scene (940:7476) + its double edge fade (940:7551/7666) */}
             <div className="absolute left-[32px] top-[-133px] w-[435px] h-[780px] pointer-events-none">

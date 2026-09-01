@@ -573,7 +573,15 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
         </p>
       </div>
 
-      <div className="flex-1 min-h-0 overflow-hidden">
+      {/* Not clipped: the arena scene is drawn 139 design-units above this
+          box on purpose, and overflow-hidden cut it off exactly under the
+          rounds caption — a hard horizontal edge with flat lilac above it and
+          the scene below, with the room-name pill straddling the join. The
+          scene's own radial fade is only ~64% lilac at that line, which is
+          why the seam showed. Uncovered, the faded top runs up behind the
+          caption instead; the caption and the friends strip both carry z-10,
+          so they stay above it, and the page root still clips the screen. */}
+      <div className="flex-1 min-h-0">
       <FitBox width={500} height={525} align="start">
         {/* arena scene (938:6267) + edge fade */}
         <div className="absolute left-[32px] top-[-139px] w-[435px] h-[780px] pointer-events-none">
