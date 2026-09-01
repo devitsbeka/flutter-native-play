@@ -115,20 +115,22 @@ function TBGate({ joining }: { joining: boolean }) {
   // navigation that makes this room. An arena reached any other way — a
   // shared link, the play chooser — is private, like every other room
   // created without an opinion.
-  const handoff = (location.state as { isPublic?: boolean; team?: TBTeam } | null) ?? null;
+  const handoff =
+    (location.state as { isPublic?: boolean; team?: TBTeam; teamSize?: number } | null) ?? null;
   const publish = handoff?.isPublic ?? false;
   const side: TBTeam = handoff?.team === "b" ? "b" : "a";
+  const teamSize = handoff?.teamSize ?? 5;
 
   useEffect(() => {
     if (joining || !user || attempted.current) return;
     attempted.current = true;
-    void createRoom(publish, side).then((created) => {
+    void createRoom(publish, side, teamSize).then((created) => {
       if (!created) setFailed(true);
       // The room's code goes into the URL so a refresh rejoins this room
       // instead of minting a new one.
       else navigate(`/team-battle?code=${created.room_code}`, { replace: true });
     });
-  }, [joining, user, createRoom, navigate, publish, side]);
+  }, [joining, user, createRoom, navigate, publish, side, teamSize]);
 
   return (
     <div
@@ -167,7 +169,7 @@ function TBGate({ joining }: { joining: boolean }) {
           onClick={() => {
             setFailed(false);
             attempted.current = false;
-            void createRoom(publish, side).then((created) => {
+            void createRoom(publish, side, teamSize).then((created) => {
               if (!created) setFailed(true);
               else navigate(`/team-battle?code=${created.room_code}`, { replace: true });
             });
@@ -439,7 +441,11 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
       ...(team === "a" ? pendingA : pendingB).map((p) => ({ p, pending: true })),
     ];
     const ring = team === "a" ? ("blue" as const) : ("red" as const);
-    const all: [number, number][] = [...slots, podium];
+    // Only the seats this match is set for. The arena drew all five a side
+    // whatever the room's size, so a 2v2 opened with eight empty podiums
+    // and no way to tell it apart from a 5v5 nobody had joined yet.
+    const perSide = Math.max(2, Math.min(5, Math.floor((room?.max_players ?? 10) / 2)));
+    const all: [number, number][] = [...slots, podium].slice(0, perSide);
     return (
       <AnimatePresence>
         {all.map(([left, top], i) => {

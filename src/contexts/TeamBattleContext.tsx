@@ -64,7 +64,7 @@ interface TeamBattleContextValue {
   isHost: boolean;
   myTeam: TBTeam | null;
   isSpotlight: boolean;
-  createRoom: (isPublic?: boolean, team?: TBTeam) => Promise<TBRoom | null>;
+  createRoom: (isPublic?: boolean, team?: TBTeam, teamSize?: number) => Promise<TBRoom | null>;
   joinRoom: (code: string) => Promise<boolean>;
   enterRoom: (roomId: string) => Promise<boolean>;
   leaveRoom: () => Promise<void>;
@@ -307,7 +307,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
     void liveChannelRef.current?.send({ type: "broadcast", event: "pick", payload: pick });
   }, []);
 
-  const createRoom = useCallback(async (isPublic = false, team: TBTeam = "a"): Promise<TBRoom | null> => {
+  const createRoom = useCallback(async (isPublic = false, team: TBTeam = "a", teamSize = 5): Promise<TBRoom | null> => {
     if (!user || !profile) {
       toast.error(tStandalone("extra.mpAuthRequired"));
       return null;
@@ -326,7 +326,8 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
             game_type_key: "team_battle",
             game_mode: "team_battle",
             min_players: 2,
-            max_players: 10,
+            // Two equal sides, as the host set them on the create screen.
+            max_players: 2 * Math.max(2, Math.min(5, Math.round(teamSize))),
             ...(await roomVisibilityFields(isPublic)),
             background_gradient: getRandomGradient(),
             last_activity_at: new Date().toISOString(),

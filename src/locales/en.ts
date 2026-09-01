@@ -2421,6 +2421,7 @@ export const en: KaTranslations = {
     joinRequestBlock: "Block them",
     pickIconHint: "Pick an icon",
     pickYourSide: "Pick your side",
+    playersPerTeam: "Players per team",
     orCreateTrivia: "Or create a trivia",
     roomCardStart: "Play",
     roomStatusOnline: "Online",

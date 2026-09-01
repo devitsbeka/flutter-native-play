@@ -2105,6 +2105,7 @@ export const it: KaTranslations = {
     joinRequestBlock: "Blocca",
     pickIconHint: "Scegli un'icona",
     pickYourSide: "Scegli la tua squadra",
+    playersPerTeam: "Giocatori per squadra",
     orCreateTrivia: "Oppure crea un trivia",
     roomCardStart: "Gioca",
     howItWorksTitle: "Come funziona?",

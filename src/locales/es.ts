@@ -2113,6 +2113,7 @@ export const es: KaTranslations = {
     joinRequestBlock: "Bloquear",
     pickIconHint: "Elige un icono",
     pickYourSide: "Elige tu equipo",
+    playersPerTeam: "Jugadores por equipo",
     orCreateTrivia: "O crea una trivia",
     roomCardStart: "Jugar",
     roomStatusOnline: "En línea",

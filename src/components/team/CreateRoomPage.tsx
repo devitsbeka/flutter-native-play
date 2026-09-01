@@ -6,6 +6,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { anyBlockedText, containsBlockedText } from "@/utils/contentFilter";
 import { Loader2, ArrowLeft, HelpCircle, X, RefreshCw, Play, Pencil, Gamepad2, Plus, Check, Globe, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { generateRoomIdentity } from "@/utils/roomNameGenerator";
 import { roomVisibilityFields } from "@/utils/roomVisibility";
 import { localizeCategoryNames } from "@/utils/localizeCategories";
 import { filterCategoriesForLanguage } from "@/utils/languageCategoryFilter";
@@ -196,8 +197,17 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   });
   
   // Room name & icon state - AI-generated via edge function
-  const [roomName, setRoomName] = useState<string>(t("extra.loadingState"));
-  const [roomIcon, setRoomIcon] = useState<string | null>(null);
+  /**
+   * The room's name, dealt once and never shown on this screen.
+   *
+   * It used to be the first thing here: a generated name, an icon, a pencil
+   * and a re-roll, above the choice of what to even play. Naming a room is
+   * something a host does to a room they are looking at — the lobby has the
+   * same rename sheet, and that is where it belongs. Dealt from the local
+   * tables rather than the edge function, so there is no spinner and no
+   * round-trip for something nobody is reading yet.
+   */
+  const [roomName] = useState<string>(() => generateRoomIdentity(readAppLanguage()).name);
 
   /**
    * Published, or just mine.
@@ -238,7 +248,17 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
    * dragging their own avatar across the arena.
    */
   const [battleTeam, setBattleTeam] = useState<"a" | "b">("a");
-  const [isGeneratingName, setIsGeneratingName] = useState(false);
+
+  /**
+   * How many a side the arena is set for: 2-2 through 5-5.
+   *
+   * The arena always laid out five seats per team whatever the match was
+   * actually going to be, so a 2v2 opened with eight empty podiums and no
+   * way to say "this is a 2v2". It caps the room (max_players) and the
+   * seats the lobby draws. Five is the default because that is what every
+   * arena was before this, so nothing shrinks unless somebody asks.
+   */
+  const [battleTeamSize, setBattleTeamSize] = useState(5);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState("");
   
@@ -249,7 +269,6 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   const [showCreateCollectionModal, setShowCreateCollectionModal] = useState(false);
   const [collectionInitialSubject, setCollectionInitialSubject] = useState<string>("");
   const [showCreateOptionsMenu, setShowCreateOptionsMenu] = useState(false);
-  const [showIconPickerModal, setShowIconPickerModal] = useState(false);
   const [showMyTriviasModal, setShowMyTriviasModal] = useState(false);
   const [showPersonalTriviaModal, setShowPersonalTriviaModal] = useState(autoOpenPersonalTrivia || false);
 
@@ -306,43 +325,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   const currentLanguage = readAppLanguage();
   const defaultFallback = currentLanguage === 'ka' ? 'სახალისო გუნდი' : 'Fun Squad';
 
-  // Generate room name via edge function
-  const generateRoomName = async () => {
-    setIsGeneratingName(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('generate-room-name', {
-        body: { language: currentLanguage }
-      });
-      if (!error && data) {
-        // Strip emojis from the name - only show the library icon
-        const nameWithoutEmoji = (data.name || defaultFallback)
-          .replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1F000}-\u{1F02F}]|[\u{1F0A0}-\u{1F0FF}]|[\u{1F100}-\u{1F64F}]|[\u{1F680}-\u{1F6FF}]|[\u{1FA00}-\u{1FAFF}]/gu, '')
-          .trim();
-        setRoomName(nameWithoutEmoji || defaultFallback);
-        setRoomIcon(data.icon_url || null);
-      } else {
-        console.error('Error generating room name:', error);
-        setRoomName(defaultFallback);
-        toast({
-          title: t("common.error"),
-          description: t("extra.nameGenerationError"),
-          variant: "destructive",
-        });
-      }
-    } catch (e) {
-      console.error('Failed to generate room name:', e);
-      setRoomName(defaultFallback);
-      toast({
-        title: t("common.error"),
-        description: t("extra.nameGenerationError"),
-        variant: "destructive",
-      });
-    } finally {
-      setIsGeneratingName(false);
-    }
-  };
-
-  // Fetch categories from database & generate room name on mount
+  // Fetch categories from database
   useEffect(() => {
     const fetchCategories = async () => {
       setLoadingCategories(true);
@@ -364,7 +347,6 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     };
 
     fetchCategories();
-    generateRoomName();
   }, []);
 
   // Handle pre-selected category from parent (library selection)
@@ -542,7 +524,6 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     setCustomTriviaTitle(triviaTitle);
     setCustomTriviaSubject("personal");
     setSelectionMode("create");
-    setRoomName(triviaTitle);
     setIsPersonalTrivia(true);
   };
 
@@ -736,7 +717,12 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       const invite = collectInvitees();
       onClose();
       navigate(gameChoice === "king" ? "/king" : "/team-battle", {
-        state: { invite, isPublic: publishRoom, team: gameChoice === "battle" ? battleTeam : undefined },
+        state: {
+          invite,
+          isPublic: publishRoom,
+          team: gameChoice === "battle" ? battleTeam : undefined,
+          teamSize: gameChoice === "battle" ? battleTeamSize : undefined,
+        },
       });
       return;
     }
@@ -774,10 +760,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     // Resolve everyone to invite before creating the room
     const invitees = collectInvitees();
 
-    // If the AI name hasn't arrived yet, create with the fallback name
-    // immediately - never make the user wait on a cosmetic edge function
-    const effectiveRoomName =
-      roomName === t("extra.loadingState") || isGeneratingName ? defaultFallback : roomName;
+    const effectiveRoomName = roomName;
 
     setIsCreating(true);
 
@@ -802,7 +785,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
             room_code: roomCode,
             host_user_id: user.id,
             room_name: effectiveRoomName,
-            room_icon: roomIcon,
+            room_icon: null,
             // Ensure lobby can render the initial selection (otherwise it appears empty)
             category_name: challengeTrivia.title,
             game_type: "async",
@@ -854,7 +837,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
               room_code: roomCode,
               host_user_id: user.id,
               room_name: effectiveRoomName,
-              room_icon: roomIcon,
+              room_icon: null,
               category_name: customTriviaTitle,
               game_type: "async",
               game_mode: `trivia:${createdTriviaId}`,
@@ -890,7 +873,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
             customTriviaTitle || "Custom Trivia",
             customTriviaQuestions,
             effectiveRoomName,
-            roomIcon,
+            null,
             plannedRoomCode,
             publishRoom
           );
@@ -901,7 +884,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         }
       } else if (selectedCategory) {
         // Create the room with selected category
-        room = await createRoom(selectedCategory.category_id, selectedCategory.name, undefined, effectiveRoomName, roomIcon, plannedRoomCode, publishRoom);
+        room = await createRoom(selectedCategory.category_id, selectedCategory.name, undefined, effectiveRoomName, null, plannedRoomCode, publishRoom);
 
         if (room?.id) {
           await persistQueuedRounds(room.id);
@@ -1064,67 +1047,6 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       {/* Content */}
       <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
         <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full px-4 py-3 space-y-3">
-        {/* Room Name with Icon - AI generated.
-            Hidden for anything that does not read it. The quick game is
-            matchmaking, not a room — it goes straight to /game. The two
-            lounges make their own room after the navigation: the King deals
-            its couch a name on arrival, and the arena has no name at all
-            (it is called Trivia Battle). All three offered a name to
-            rename and re-roll that nothing would ever show. */}
-        {gameChoice !== "quick" && gameChoice !== "king" && gameChoice !== "battle" && (
-          <div>
-            <h2 className="text-[13.2px] font-medium text-muted-foreground mb-1.5">{t("extra.chooseRoomName")}</h2>
-            <div className="flex items-center gap-3 p-2.5 rounded-2xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
-                    {/* Clickable area for Icon + Name - opens picker modal */}
-                    <div
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => !isGeneratingName && setShowIconPickerModal(true)}
-                      onKeyDown={(e) => e.key === 'Enter' && !isGeneratingName && setShowIconPickerModal(true)}
-                      className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer hover:opacity-90 transition-opacity"
-                    >
-                {/* Icon */}
-                <div className="w-12 h-12 rounded-xl bg-background shadow-md flex items-center justify-center overflow-hidden shrink-0">
-                  {isGeneratingName ? (
-                    <Loader2 className="w-5 h-5 text-primary animate-spin" />
-                  ) : roomIcon ? (
-                    <img src={roomIcon} alt="" className="w-8 h-8 object-contain" />
-                  ) : (
-                    <img src={triviaBuzzer} alt="" className="w-6 h-6 object-contain" />
-                  )}
-                </div>
-              
-                {/* Room Name */}
-                <p className="font-semibold text-foreground text-sm truncate text-left">
-                  {roomName}
-                </p>
-                    </div>
-
-              {/* Edit button - opens modal */}
-              <button
-                onClick={() => setShowIconPickerModal(true)}
-                disabled={isGeneratingName}
-                className="p-2 rounded-xl bg-primary/10 hover:bg-primary/20 transition-colors"
-              >
-                <Pencil className="w-4 h-4 text-primary" />
-              </button>
-            
-              {/* Regenerate button */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  generateRoomName();
-                }}
-                disabled={isGeneratingName}
-                className="p-2 rounded-xl bg-primary/10 hover:bg-primary/20 transition-colors disabled:opacity-50"
-              >
-                <RefreshCw className={`w-4 h-4 text-primary ${isGeneratingName ? 'animate-spin' : ''}`} />
-              </button>
-            </div>
-
-          </div>
-        )}
-
         {/* What will you play? — the horizontal game reel (Figma 926-11729):
             quick / Random / Versus King / Trivia Battle / Library / My Trivia. */}
         <div>
@@ -1498,7 +1420,6 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                           onClick={() => {
                             setChallengeTrivia(null);
                             setSelectionMode(null);
-                            setRoomName("");
                             setQueuedRounds([]);
                           }}
                           className="p-2 shrink-0 bg-black/45 border border-white/30 backdrop-blur-sm hover:bg-black/60 rounded-lg transition-colors"
@@ -1602,6 +1523,33 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       {/* Footer - Normal Button */}
       <div className="border-t border-border/30 shrink-0">
         <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full px-4 py-4">
+        {/* How big the match is, above the switch and the button both — it
+            is the first thing about an arena that a host actually decides,
+            and the two sides are equal by the server's own rule. */}
+        {gameChoice === "battle" && (
+          <div className="mb-3">
+            <h2 className="text-[13.2px] font-medium text-muted-foreground mb-1.5">
+              {t("extra.playersPerTeam")}
+            </h2>
+            <div className="flex items-center gap-1 p-1 rounded-2xl bg-muted">
+              {[2, 3, 4, 5].map((size) => (
+                <button
+                  key={size}
+                  type="button"
+                  onClick={() => setBattleTeamSize(size)}
+                  className={`flex-1 rounded-xl px-2 py-2 text-[13px] font-bold tabular-nums transition-colors ${
+                    battleTeamSize === size
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground"
+                  }`}
+                >
+                  {size}-{size}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Published or private, immediately above the button that acts on
             it. It used to sit at the top under the room's name, three
             scrolls away from the decision it modifies and on screen for
@@ -1704,24 +1652,6 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
           });
         }}
         initialRoundSubject={collectionInitialSubject}
-      />
-
-      {/* Room Icon Picker Modal */}
-      <RoomIconPickerModal
-        isOpen={showIconPickerModal}
-        onClose={() => setShowIconPickerModal(false)}
-        currentIconUrl={roomIcon}
-        roomName={roomName}
-        onConfirm={(iconUrl, newName) => {
-          // Same screen the lobby rename has — renaming during creation was
-          // a free pass, and room names ride push notifications.
-          if (containsBlockedText(newName)) {
-            toast({ title: t("extra.textNotAllowed"), variant: "destructive" });
-            return;
-          }
-          setRoomIcon(iconUrl);
-          setRoomName(newName);
-        }}
       />
 
       {/* My Trivias Picker Modal */}

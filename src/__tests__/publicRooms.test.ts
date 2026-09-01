@@ -53,7 +53,7 @@ describe("a room is private unless somebody published it", () => {
   it("every room-creating helper defaults to private", () => {
     expect(read("src/contexts/MultiplayerContextV2.tsx")).toMatch(/isPublic = false,/);
     expect(read("src/contexts/TeamBattleContext.tsx")).toMatch(
-      /createRoom = useCallback\(async \(isPublic = false, team: TBTeam = "a"\)/,
+      /createRoom = useCallback\(async \(isPublic = false, team: TBTeam = "a", teamSize = 5\)/,
     );
     // The lounges make their own room after a navigation, so the switch
     // travels in router state and falls back to private without it.
@@ -100,6 +100,10 @@ describe("a room is private unless somebody published it", () => {
     const inserts = (create.match(/roomVisibilityFields\(publishRoom\)/g) ?? []).length;
     expect(inserts).toBe(2);
     expect(create).toMatch(/plannedRoomCode, publishRoom\)/);
+    // The name is dealt locally now and never shown here — the lobby is
+    // where a host renames a room they are looking at.
+    expect(create).not.toMatch(/generate-room-name/);
+    expect(create).toMatch(/generateRoomIdentity\(readAppLanguage\(\)\)/);
     expect(create).toMatch(/isPublic: publishRoom/);
   });
 
@@ -112,6 +116,28 @@ describe("a room is private unless somebody published it", () => {
     expect(togglePos).toBeGreaterThan(-1);
     expect(togglePos).toBeLessThan(ctaPos);
     expect(create.indexOf("extra.whatToPlay")).toBeLessThan(togglePos);
+  });
+});
+
+describe("the arena is sized before it is opened", () => {
+  it("the host picks 2-2 through 5-5, above the switch", () => {
+    const create = read("src/components/team/CreateRoomPage.tsx");
+    expect(create).toMatch(/const \[battleTeamSize, setBattleTeamSize\] = useState\(5\)/);
+    expect(create).toMatch(/\[2, 3, 4, 5\]\.map\(\(size\) =>/);
+    // Above the public/private switch, which is itself above the button.
+    expect(create.indexOf("extra.playersPerTeam")).toBeLessThan(
+      create.indexOf("extra.roomPublicHint"),
+    );
+    expect(create).toMatch(/teamSize: gameChoice === "battle" \? battleTeamSize : undefined/);
+  });
+
+  it("the size caps the room and the seats the lobby draws", () => {
+    expect(read("src/contexts/TeamBattleContext.tsx")).toMatch(
+      /max_players: 2 \* Math\.max\(2, Math\.min\(5, Math\.round\(teamSize\)\)\)/,
+    );
+    const battle = read("src/pages/TeamBattlePage.tsx");
+    expect(battle).toMatch(/const perSide = Math\.max\(2, Math\.min\(5, Math\.floor\(\(room\?\.max_players \?\? 10\) \/ 2\)\)\)/);
+    expect(battle).toMatch(/\.slice\(0, perSide\)/);
   });
 });
 

@@ -2426,6 +2426,7 @@ export const ka = {
     joinRequestBlock: "დაბლოკვა",
     pickIconHint: "აირჩიე აიკონი",
     pickYourSide: "აირჩიე გუნდი",
+    playersPerTeam: "მოთამაშე გუნდში",
     orCreateTrivia: "ან შექმენი ტრივია",
     roomCardStart: "ითამაშე",
     roomStatusOnline: "ონლაინ",
