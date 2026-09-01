@@ -508,6 +508,21 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     setQueuedRounds([]);
   };
 
+  // The reel's cards, so the picked one can scroll itself in. A card tapped
+  // at the edge of the strip stayed half off-screen with its tick hidden,
+  // which read as the tap not registering.
+  const cardRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+
+  useEffect(() => {
+    if (!gameChoice) return;
+    cardRefs.current[gameChoice]?.scrollIntoView({
+      behavior: "smooth",
+      inline: "center",
+      // "nearest" vertically: centring would drag the whole form up too.
+      block: "nearest",
+    });
+  }, [gameChoice]);
+
   // Set when the + picker adds rounds; the effect below then creates the
   // room as if Create had been pressed — the queue is shown and managed in
   // the lobby, not on this screen.
@@ -933,7 +948,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 bg-background flex flex-col overflow-hidden p-4 pt-[calc(1rem_+_var(--safe-top))] pb-[calc(1rem_+_var(--safe-bottom))]"
+      className="fixed inset-0 z-50 bg-background flex flex-col overflow-hidden pt-[var(--safe-top)] pb-[var(--safe-bottom)]"
     >
       {/* Bubble background video behind the whole page, washed light so the
           form stays readable (negative z paints it under the content) */}
@@ -956,11 +971,13 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         />
       </div>
 
-      {/* Frosted popup panel — a real container now: header, form and the
-          create button all live inside it. h-full, not content-hugging: the
-          panel keeps one height whatever card is picked, so the header and
-          the create button never jump — only the middle scrolls. */}
-      <div className="relative m-auto flex h-full w-full max-w-[740px] md:max-w-[560px] flex-col overflow-hidden rounded-[24px] border border-white/70 bg-white/60 backdrop-blur-xl shadow-[0_12px_40px_rgba(104,71,204,0.18)]">
+      {/* Full-bleed: the page IS the screen. This was a frosted card inset
+          from every edge, which cost a margin all the way round on a phone
+          and left the reel's cards clipped by it. The header, form and
+          create button still centre their own column, so nothing stretches
+          on a wide screen. Fixed height, so only the middle scrolls and the
+          button never moves. */}
+      <div className="relative flex h-full w-full flex-col overflow-hidden">
 
       {/* Header - simplified */}
       <div className="border-b border-border/30 shrink-0">
@@ -1061,6 +1078,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                 return (
                   <motion.button
                     key={card.key}
+                    ref={(el) => { cardRefs.current[card.key] = el; }}
                     whileTap={{ scale: 0.96 }}
                     transition={{ type: "spring", stiffness: 480, damping: 28 }}
                     onClick={() => {
