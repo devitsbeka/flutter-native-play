@@ -38,15 +38,10 @@ export const V3 = {
   detailRing: "#dbdbdb",
   /** Rubik, the one face every screen of the reference is set in. */
   font: "'Rubik', 'Nunito', 'Inter', -apple-system, sans-serif",
-  /** The chrome pinned to the bottom of the home screen.
-   *
-   * The tab bar's content is 51px; the reference lets its labels run 6px
-   * into the home-indicator inset rather than sitting above it, which is why
-   * the bar's bottom padding is the inset less six (a 6px floor keeps the
-   * labels off the edge on a screen with no inset at all). */
-  tabBarHeight: 51,
-  tabBarInset: "max(6px, calc(var(--safe-bottom) - 6px))",
+  /** The offer strip stacked over the tab bar (see TabBar.tsx for the bar's own sizes). */
   saleBannerHeight: 45,
+  /** Gap between the strip, the capsule, and the content above them. */
+  chromeGap: 8,
   /** Phones are the design; wider screens get the same column, centred. */
   maxWidth: 480,
 } as const;

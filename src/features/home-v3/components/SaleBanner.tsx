@@ -1,5 +1,6 @@
 import { V3 } from "../theme";
 import { useCountdown } from "../promo";
+import { IOS_TAB_BAR_INSET_X } from "./TabBar";
 
 interface SaleBannerProps {
   label: string;
@@ -12,17 +13,21 @@ interface SaleBannerProps {
 }
 
 /**
- * The 45px offer strip pinned just above the tab bar: leaf mark, the label,
- * a live HH : MM : SS, and a white "Get PRO" button 16px from the right.
+ * The 45px offer strip stacked just above the tab bar's capsule, with the
+ * capsule's own side inset and rounding: leaf mark, the label, a live
+ * HH : MM : SS, and a white "Get PRO" button 16px from the right.
  */
 export function SaleBanner({ label, cta, endsAt, onClick, bottom }: SaleBannerProps) {
   const countdown = useCountdown(endsAt);
   return (
-    <div className="fixed left-0 right-0 z-40" style={{ bottom }}>
+    <div className="fixed left-0 right-0 z-40" style={{ bottom, paddingLeft: IOS_TAB_BAR_INSET_X, paddingRight: IOS_TAB_BAR_INSET_X }}>
       <div
         className="relative mx-auto flex items-center"
         style={{
+          maxWidth: 448,
           height: V3.saleBannerHeight,
+          borderRadius: 16,
+          boxShadow: "0 6px 18px rgba(208, 80, 52, 0.28)",
           background: V3.sale,
           fontFamily: V3.font,
           color: "#ffffff",

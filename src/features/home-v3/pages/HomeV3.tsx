@@ -22,7 +22,7 @@ import { ProBenefits } from "../components/ProBenefits";
 import { CategoryRow } from "../components/CategoryRow";
 import { ViewAllCard } from "../components/ViewAllCard";
 import { SaleBanner } from "../components/SaleBanner";
-import { TabBar, type V3Tab } from "../components/TabBar";
+import { IOS_TAB_BAR_FLOAT, IOS_TAB_BAR_HEIGHT, TabBar, type V3Tab } from "../components/TabBar";
 import type { PortraitCategory } from "../components/PortraitCard";
 
 // The streak's own screen. Lazy: it is the missions sheet the classic home
@@ -57,11 +57,11 @@ export default function HomeV3() {
   const [missionsOpen, setMissionsOpen] = useState(false);
 
   const showPromo = !isVip && !!promotion && promoIsLive(Date.now(), promotion.endsAt);
-  // What the fixed strips cover of the scroller: the scroller already stops
-  // at the safe-area inset, and the tab bar reaches (inset − 6px) below its
-  // own content, so the inset is subtracted back out.
-  const chromeHeight = V3.tabBarHeight + (showPromo ? V3.saleBannerHeight : 0);
-  const scrollerPadding = `calc(${chromeHeight}px + ${V3.tabBarInset} - var(--safe-bottom))`;
+  // What the floating chrome covers of the scroller, which already stops at
+  // the safe-area inset: the capsule's float and height, the strip and its
+  // gap when it is on, and a gap so content stops short of them.
+  const capsuleTop = IOS_TAB_BAR_FLOAT + IOS_TAB_BAR_HEIGHT;
+  const scrollerPadding = capsuleTop + (showPromo ? V3.saleBannerHeight + V3.chromeGap : 0) + V3.chromeGap;
 
   const paths = useMemo(
     () => PATHS.map((p) => ({ path: p, stats: pathStats(p, categories) })).filter((p) => p.stats.categories > 0),
@@ -113,7 +113,6 @@ export default function HomeV3() {
         style={{ background: V3.bg, fontFamily: V3.font, paddingBottom: scrollerPadding }}
       >
         <V3Header
-          title={t("homeV3.title")}
           streak={currentStreak}
           favorites={favorites.size}
           onStreak={() => setMissionsOpen(true)}
@@ -213,7 +212,7 @@ export default function HomeV3() {
           cta={t("homeV3.promoCta")}
           endsAt={promotion.endsAt}
           onClick={openPaywall}
-          bottom={`calc(${V3.tabBarHeight}px + ${V3.tabBarInset})`}
+          bottom={`calc(var(--safe-bottom) + ${capsuleTop + V3.chromeGap}px)`}
         />
       )}
       <TabBar
