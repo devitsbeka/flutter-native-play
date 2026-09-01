@@ -13,10 +13,13 @@ import { LEVELS, SCENES, LEVELS_PER_SCENE, sceneOf } from "@/features/words/leve
  * stuck player, not as an error.
  */
 describe("words levels", () => {
-  it("has whole packs, one scene each", () => {
+  it("has whole packs, cycling through the scenes", () => {
     expect(LEVELS.length % LEVELS_PER_SCENE).toBe(0);
-    expect(LEVELS.length / LEVELS_PER_SCENE).toBeLessThanOrEqual(SCENES.length);
+    expect(LEVELS.length).toBeGreaterThanOrEqual(500);
     for (const level of LEVELS) expect(sceneOf(level).id).toBe(level.sceneId);
+    // Every scene gets its turn before any repeats.
+    const firstPack = LEVELS.slice(0, LEVELS_PER_SCENE * SCENES.length).map((l) => l.sceneId);
+    expect(new Set(firstPack).size).toBe(SCENES.length);
   });
 
   it("numbers levels from one, in order", () => {

@@ -54,6 +54,15 @@ interface RoomIconPickerModalProps {
   currentIconUrl: string | null;
   roomName: string;
   onConfirm: (iconUrl: string, newName: string) => void;
+  /**
+   * Pick an icon and nothing else.
+   *
+   * A team's crest has no name to go with it — the sides are called Team A
+   * and Team B — so the name field, the AI namer that fires on every icon
+   * tap, and the "rename your room" hint all become noise around the one
+   * control that matters. roomName is then just the heading.
+   */
+  iconOnly?: boolean;
 }
 
 /**
@@ -84,6 +93,7 @@ export function RoomIconPickerModal({
   currentIconUrl,
   roomName,
   onConfirm,
+  iconOnly = false,
 }: RoomIconPickerModalProps) {
   const { t, language } = useLanguage();
   const ICON_CATEGORIES = ICON_CATEGORIES_DATA.map(c => ({ ...c, label: t(`extra.${c.key}`) }));
@@ -313,14 +323,15 @@ export function RoomIconPickerModal({
     setSelectedIcon(icon.icon_url);
     addRecentIcon(icon.slug);
     
-    // Only auto-generate name if user hasn't manually edited it
-    if (!hasManuallyEditedName.current) {
+    // Only auto-generate name if user hasn't manually edited it — and never
+    // in icon-only mode, where there is no name to generate.
+    if (!iconOnly && !hasManuallyEditedName.current) {
       await generateNameForIcon(icon.slug);
     }
   };
 
   const handleConfirmClick = () => {
-    if (selectedIcon && editableName.trim()) {
+    if (selectedIcon && (iconOnly || editableName.trim())) {
       onConfirm(selectedIcon, editableName.trim());
       onClose();
     }
@@ -374,7 +385,9 @@ export function RoomIconPickerModal({
                 >
                   <ChevronLeft className="w-5 h-5 text-foreground" />
                 </button>
-                <h1 className="text-lg font-bold text-foreground">{t("extra.ripTitle")}</h1>
+                <h1 className="text-lg font-bold text-foreground">
+                  {iconOnly ? roomName : t("extra.ripTitle")}
+                </h1>
               </div>
             </div>
           </div>
@@ -406,6 +419,12 @@ export function RoomIconPickerModal({
                   <img src={triviaBuzzer} alt="" className="w-10 h-10 object-contain" />
                 )}
               </div>
+              {iconOnly ? (
+                <div className="flex-1 min-w-0">
+                  <p className="text-base font-semibold text-foreground">{roomName}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t("extra.pickIconHint")}</p>
+                </div>
+              ) : (
               <div className="flex-1 min-w-0 space-y-1">
                 <div className="relative">
                   <Input
@@ -430,6 +449,7 @@ export function RoomIconPickerModal({
                   {t("extra.ripEditHint")}
                 </p>
               </div>
+              )}
             </div>
             </div>
           </div>

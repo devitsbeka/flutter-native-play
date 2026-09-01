@@ -5,7 +5,7 @@ import { ChevronLeft, Pencil } from "lucide-react";
 import { containsBlockedText } from "@/utils/contentFilter";
 import { readAppLanguage } from "@/utils/appLanguage";
 import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
-import { FriendsStoriesBar } from "@/components/team/FriendsStoriesBar";
+import { RoomIconPickerModal } from "@/components/team/RoomIconPickerModal";
 import { JoinRequestGate } from "@/components/team/JoinRequestGate";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -115,18 +115,20 @@ function TBGate({ joining }: { joining: boolean }) {
   // navigation that makes this room. An arena reached any other way — a
   // shared link, the play chooser — is private, like every other room
   // created without an opinion.
-  const publish = (location.state as { isPublic?: boolean } | null)?.isPublic ?? false;
+  const handoff = (location.state as { isPublic?: boolean; team?: TBTeam } | null) ?? null;
+  const publish = handoff?.isPublic ?? false;
+  const side: TBTeam = handoff?.team === "b" ? "b" : "a";
 
   useEffect(() => {
     if (joining || !user || attempted.current) return;
     attempted.current = true;
-    void createRoom(publish).then((created) => {
+    void createRoom(publish, side).then((created) => {
       if (!created) setFailed(true);
       // The room's code goes into the URL so a refresh rejoins this room
       // instead of minting a new one.
       else navigate(`/team-battle?code=${created.room_code}`, { replace: true });
     });
-  }, [joining, user, createRoom, navigate, publish]);
+  }, [joining, user, createRoom, navigate, publish, side]);
 
   return (
     <div
@@ -165,7 +167,7 @@ function TBGate({ joining }: { joining: boolean }) {
           onClick={() => {
             setFailed(false);
             attempted.current = false;
-            void createRoom(publish).then((created) => {
+            void createRoom(publish, side).then((created) => {
               if (!created) setFailed(true);
               else navigate(`/team-battle?code=${created.room_code}`, { replace: true });
             });
@@ -213,24 +215,12 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
   const { categories } = useCategories();
   const { openProfile } = usePlayerProfile();
   const [inviteOpen, setInviteOpen] = useState(false);
-  /**
-   * The friends reel opens off a + seat rather than living under the header.
-   *
-   * The arena's empty seats are already the invitation, and a permanent row
-   * of faces above them was both a second way in and a permanent bite out of
-   * a screen that has to fit two teams, the captains and the CTA. Pressing a
-   * + brings the reel in (remembering which team the seat belonged to), a
-   * friend there gets the real invite, and the reel's own + still opens the
-   * full invite modal.
-   */
-  const [reelOpen, setReelOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [peek, setPeek] = useState<InviteEntry | null>(null);
   const [invitedIds, setInvitedIds] = useState<Set<string>>(new Set());
   const [captainInfo, setCaptainInfo] = useState<TBTeam | null>(null);
-  const [renameOpen, setRenameOpen] = useState(false);
-  const [nameDraft, setNameDraft] = useState("");
-  const nameAttempted = useRef(false);
+  // Which side's crest is being picked, if any.
+  const [crestFor, setCrestFor] = useState<TBTeam | null>(null);
   const [rollFace, setRollFace] = useState<{ [k in TBTeam]?: TBParticipant }>({});
   const rollTimers = useRef<{ [k in TBTeam]?: number }>({});
   const [params, setParams] = useSearchParams();
@@ -277,34 +267,24 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
   // invited-participant row the invite modal writes, whose DB trigger
   // delivers the notification. The invitee holds the tapped seat greyed
   // until they accept.
-  // A team needs a name — same AI namer the King lounge and the classic
-  // create screen use. The host's device asks once for an unnamed room;
-  // everyone picks it up off the tb-room realtime channel.
-  useEffect(() => {
-    if (!room || room.room_name || nameAttempted.current) return;
-    if (!isHost) return;
-    nameAttempted.current = true;
-    const roomId = room.id;
-    void supabase.functions
-      .invoke("generate-room-name", { body: { language: readAppLanguage() } })
-      .then(async ({ data }) => {
-        const name = ((data?.name as string) || "")
-          .replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1F000}-\u{1F02F}]|[\u{1F0A0}-\u{1F0FF}]|[\u{1F100}-\u{1F64F}]|[\u{1F680}-\u{1F6FF}]|[\u{1FA00}-\u{1FAFF}]/gu, "")
-          .trim();
-        if (!name) return;
-        await supabase.from("game_rooms").update({ room_name: name }).eq("id", roomId);
-      });
-  }, [room, isHost]);
+  // The arena has no name of its own. It used to be dealt one by the AI
+  // namer, shown on a pill in the middle of the lobby and again as the
+  // title of its card on the Public tab — so a Trivia Battle advertised
+  // itself as "Search Trail", with the game it actually is in small grey
+  // type underneath. It is called Trivia Battle. What the two SIDES are
+  // called, and what they wear, is the part worth choosing, and that is
+  // the captains' to choose (tb_set_team_icon).
 
-  const saveTeamName = async () => {
-    const name = nameDraft.trim();
-    if (!room || !name) return;
-    if (containsBlockedText(name)) {
-      toast.error(t("extra.textNotAllowed"));
-      return;
-    }
-    setRenameOpen(false);
-    const { error } = await supabase.from("game_rooms").update({ room_name: name }).eq("id", room.id);
+  // A crest is written through the RPC, not straight onto the room: the
+  // room's own update policy is host-only, and the whole point is that the
+  // side's elected captain owns its colours.
+  const setTeamIcon = async (team: TBTeam, iconUrl: string) => {
+    if (!room) return;
+    const { error } = await supabase.rpc("tb_set_team_icon", {
+      p_room_id: room.id,
+      p_team: team,
+      p_icon: iconUrl,
+    });
     if (error) toast.error(error.message);
   };
 
@@ -382,7 +362,7 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
   // so an accepted friend lands on the right side.
   const seatAction = (team: TBTeam) => {
     inviteTeamRef.current = team;
-    setReelOpen((v) => !v);
+    setInviteOpen(true);
   };
 
   // Hold a seat to manage it: the host moves anyone between teams or
@@ -571,30 +551,6 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
         onHelp={() => setHelpOpen((v) => !v)}
       />
 
-      {/* the same friends reel the home page uses — identical sizes/fonts,
-          but only once a + seat has asked for it */}
-      <AnimatePresence initial={false}>
-        {reelOpen && (
-          <motion.div
-            key="reel"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 340, damping: 34 }}
-            className="relative z-10 w-full shrink-0 overflow-hidden"
-            style={{ transform: "translateZ(0)" }}
-          >
-            <div className="px-4">
-              <FriendsStoriesBar
-                onAddFriendClick={() => setInviteOpen(true)}
-                onFriendClick={(f) =>
-                  setPeek({ id: f.friendId, nickname: f.nickname, avatarUrl: f.avatarUrl, online: !!f.isOnline })
-                }
-              />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       <div className="w-full max-w-[468px] mx-auto shrink-0 border-t border-[#523b76]/[0.08]" />
 
@@ -632,48 +588,52 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
         {renderTeamSeats("a", TEAM_A_SLOTS, PODIUM_A)}
         {renderTeamSeats("b", TEAM_B_SLOTS, PODIUM_B)}
 
-        {/* Team names row (943:21929) — and, between them, the room's own
-            name. It used to sit at the top of the scene, where it read as a
-            second header under the real one; here it belongs to the match it
-            names, one row above the captains. The three share a flex row
-            rather than being centred on top of each other, so a long team
-            name in Italian pushes the pill narrower instead of colliding
-            with it. AI-dealt on first open, host taps to rename. */}
-        <div className="absolute left-[26px] top-[404px] h-[40px] w-[441px] flex items-center justify-between gap-2">
-          <div className="flex gap-[10px] items-center shrink-0">
-            <img alt="" className="size-[36px] -scale-y-100 rotate-180 object-contain" src={teamPenguins} />
-            <p className="font-[Nunito] font-black leading-[24px] text-[#0c172c] text-[18px] tracking-[-0.16px] whitespace-nowrap">
-              {t("teamBattle.teamA")}
-            </p>
-          </div>
-          <motion.button
-            whileTap={{ scale: 0.95, y: 2 }}
-            transition={{ type: "spring", stiffness: 520, damping: 28 }}
-            onClick={
-              isHost
-                ? () => {
-                    setNameDraft(room?.room_name ?? "");
-                    setRenameOpen(true);
-                  }
-                : undefined
-            }
-            className="min-w-0 inline-flex items-center gap-2 max-w-[220px] h-[40px] px-4 rounded-[16px] bg-white/70 border border-[#e8e0f5] shadow-[0px_2.5px_0px_0px_#d8d0e8]"
-          >
-            <span
-              className="text-[18px] leading-[1.5] text-[#523b76] whitespace-nowrap overflow-hidden text-ellipsis"
-              style={{ fontFamily: "'TASolivare', sans-serif" }}
+        {/* The two sides, each under its own crest (943:21929).
+            The crest used to be a 36px sticker beside the label, the same
+            one in every arena ever played. It is 60px above the name now,
+            and it belongs to the side rather than to the app: the captain
+            that side ELECTED picks it, which is the first thing winning a
+            captain vote is actually good for. The host can pick too, since
+            a team that has not voted yet has nobody else who could.
+
+            The row sits above the captain chips at 453 rather than beside
+            them, and the middle is empty on purpose — that is where the
+            room's name used to be. */}
+        {(["a", "b"] as const).map((team) => {
+          const isA = team === "a";
+          const icon = (isA ? room?.team_a_icon : room?.team_b_icon)
+            ?? (isA ? teamPenguins : teamFormula);
+          const mine = isA ? captainA : captainB;
+          const canDress = isHost || (!!user && mine?.user_id === user.id);
+          return (
+            <div
+              key={team}
+              className="absolute top-[352px] w-[120px] flex flex-col items-center gap-1"
+              style={isA ? { left: 26 } : { right: 26 }}
             >
-              {room?.room_name || t("lobby.teamName")}
-            </span>
-            {isHost && <Pencil className="w-3.5 h-3.5 shrink-0 text-[#523b76]/50" />}
-          </motion.button>
-          <div className="flex gap-[10px] items-center shrink-0">
-            <p className="font-[Nunito] font-extrabold leading-[24px] text-[#0c172c] text-[18px] text-right tracking-[-0.16px] whitespace-nowrap">
-              {t("teamBattle.teamB")}
-            </p>
-            <img alt="" className="size-[36px] -scale-y-100 rotate-180 object-contain" src={teamFormula} />
-          </div>
-        </div>
+              <motion.button
+                whileTap={canDress ? { scale: 0.92 } : undefined}
+                transition={{ type: "spring", stiffness: 520, damping: 28 }}
+                onClick={canDress ? () => setCrestFor(team) : undefined}
+                className="relative"
+              >
+                <img
+                  alt=""
+                  className="size-[60px] object-contain drop-shadow-[0_4px_10px_rgba(88,50,160,0.22)]"
+                  src={icon}
+                />
+                {canDress && (
+                  <span className="absolute -right-1 -bottom-1 flex size-[20px] items-center justify-center rounded-full bg-white shadow-[0px_2px_4px_rgba(0,0,0,0.18)]">
+                    <Pencil className="w-3 h-3 text-[#523b76]" />
+                  </span>
+                )}
+              </motion.button>
+              <p className="font-[Nunito] font-black leading-[22px] text-[#0c172c] text-[18px] tracking-[-0.16px] whitespace-nowrap">
+                {isA ? t("teamBattle.teamA") : t("teamBattle.teamB")}
+              </p>
+            </div>
+          );
+        })}
 
         {/* captains + VS (940:7751 / 936:21185 / 940:7825). The VS is drawn
             FIRST on purpose: these are absolutely positioned siblings, so
@@ -746,45 +706,20 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
         actions={seatMenu ? seatMenuActions(seatMenu.p) : []}
       />
 
-      {/* host renames the team — small white sheet over the lilac wash */}
-      {renameOpen && (
-        <div
-          className="fixed inset-0 z-[130] flex items-center justify-center px-8 backdrop-blur-[10px] bg-[rgba(245,217,255,0.6)]"
-          onClick={() => setRenameOpen(false)}
-        >
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 14 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ type: "spring", stiffness: 420, damping: 28 }}
-            className="w-full max-w-[320px] rounded-[24px] bg-white/95 border border-[#e8e0f5] p-5 flex flex-col gap-3 shadow-[0px_8px_24px_0px_rgba(102,51,153,0.18)]"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <p className="text-[19px] text-[#523b76] text-center" style={{ fontFamily: "'TASolivare', sans-serif" }}>
-              {t("lobby.teamName")}
-            </p>
-            <input
-              value={nameDraft}
-              onChange={(e) => setNameDraft(e.target.value)}
-              maxLength={40}
-              autoFocus
-              className="w-full h-[46px] rounded-[16px] border border-[#e8e0f5] bg-[#f8f5ff] px-4 font-[Nunito] font-semibold text-[15px] text-[#402666] outline-none focus:border-[#b99ce2]"
-            />
-            <motion.button
-              whileTap={{ scale: 0.97 }}
-              onClick={() => void saveTeamName()}
-              disabled={!nameDraft.trim()}
-              className="w-full h-[46px] rounded-[16px] bg-[#8858d5] text-white font-[Nunito] font-bold text-[15px] disabled:opacity-50"
-            >
-              {t("common.save")}
-            </motion.button>
-            <button
-              onClick={() => setRenameOpen(false)}
-              className="font-[Nunito] text-sm font-semibold text-[#523b76]/50"
-            >
-              {t("common.cancel")}
-            </button>
-          </motion.div>
-        </div>
+
+      {crestFor && (
+        <RoomIconPickerModal
+          isOpen
+          iconOnly
+          onClose={() => setCrestFor(null)}
+          currentIconUrl={(crestFor === "a" ? room?.team_a_icon : room?.team_b_icon) ?? null}
+          roomName={crestFor === "a" ? t("teamBattle.teamA") : t("teamBattle.teamB")}
+          onConfirm={(iconUrl) => {
+            const team = crestFor;
+            setCrestFor(null);
+            void setTeamIcon(team, iconUrl);
+          }}
+        />
       )}
 
       <CaptainInfoModal

@@ -19,7 +19,6 @@ import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import { readAppLanguage } from "@/utils/appLanguage";
 import { toast } from "@/lib/toast";
 import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
-import { FriendsStoriesBar } from "@/components/team/FriendsStoriesBar";
 import { JoinRequestGate } from "@/components/team/JoinRequestGate";
 import {
   CaptainChip,
@@ -649,17 +648,6 @@ export default function KingPage() {
   const [peek, setPeek] = useState<InviteEntry | null>(null);
   const inviteFriends = useCallback(() => setInviteOpen(true), []);
 
-  /**
-   * The friends reel is what a + seat opens.
-   *
-   * It used to sit under the header on every visit, a row of faces above a
-   * lounge whose own seats are the thing you tap — two competing ways in,
-   * one of them permanently taking a chunk of a screen that has none to
-   * spare. Now the empty seats are the invitation: pressing one brings the
-   * reel in, tapping a friend there sends the real invite, and its own +
-   * still opens the full invite modal (search, link, share).
-   */
-  const [reelOpen, setReelOpen] = useState(false);
 
   const thinkSeconds = useServerDeadline(
     stage === "thinking" ? state?.question?.think_deadline : undefined,
@@ -722,30 +710,6 @@ export default function KingPage() {
           onHelp={() => setHelpOpen((v) => !v)}
         />
 
-        {/* the same friends reel the home page uses — identical sizes/fonts,
-            but only once a + seat has asked for it */}
-        <AnimatePresence initial={false}>
-          {reelOpen && (
-            <motion.div
-              key="reel"
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 340, damping: 34 }}
-              className="relative z-10 w-full shrink-0 overflow-hidden"
-              style={{ transform: "translateZ(0)" }}
-            >
-              <div className="px-4">
-                <FriendsStoriesBar
-                  onAddFriendClick={inviteFriends}
-                  onFriendClick={(f) =>
-                    setPeek({ id: f.friendId, nickname: f.nickname, avatarUrl: f.avatarUrl, online: !!f.isOnline })
-                  }
-                />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         {/* Unclipped for the same reason as the arena — see TeamBattlePage.
             The King's lounge is also drawn above this box (-133), and its
@@ -832,7 +796,7 @@ export default function KingPage() {
                   }
                 />
               ) : (
-                <PlusSeat key={`plus-${i}`} left={left} top={top - 160} onClick={() => setReelOpen((v) => !v)} />
+                <PlusSeat key={`plus-${i}`} left={left} top={top - 160} onClick={inviteFriends} />
               );
             })}
             </AnimatePresence>

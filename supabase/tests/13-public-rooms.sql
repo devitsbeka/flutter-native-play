@@ -47,7 +47,8 @@ BEGIN
     INTO bad
     FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
    WHERE n.nspname = 'public'
-     AND p.proname IN ('public_rooms', 'request_room_join', 'respond_room_join')
+     AND p.proname IN ('public_rooms', 'request_room_join', 'respond_room_join',
+                       'block_room_join', 'tb_set_team_icon')
      AND has_function_privilege('anon', p.oid, 'EXECUTE');
   IF bad IS NOT NULL THEN
     RAISE EXCEPTION 'anon can call: % -- revoke FROM PUBLIC, anon', bad;
@@ -223,6 +224,143 @@ BEGIN
   PERFORM pg_temp.must_equal(
     (SELECT my_state FROM public.public_rooms(40) WHERE room_code = 'PUBLIC'),
     'host', 'the listing knows its host');
+
+  RESET ROLE;
+  PERFORM pg_temp.as_user(NULL);
+END $$;
+
+-- ── a block sticks, and leaving spends the yes ─────────────────────────────
+
+DO $$
+DECLARE
+  v_host  uuid := 'bc000000-0000-0000-0000-00000000002a';
+  v_pest  uuid := 'bc000000-0000-0000-0000-00000000002b';
+  v_guest uuid := 'bc000000-0000-0000-0000-00000000002c';
+  v_room uuid;
+  v_req  uuid;
+  v_out  text;
+BEGIN
+  INSERT INTO auth.users (id, email) VALUES
+    (v_host, 'host3@pub.test'), (v_pest, 'pest@pub.test'), (v_guest, 'guest3@pub.test')
+  ON CONFLICT (id) DO NOTHING;
+  INSERT INTO public.profiles (user_id, nickname) VALUES
+    (v_host, 'Host3'), (v_pest, 'Pest'), (v_guest, 'Guest3')
+  ON CONFLICT (user_id) DO UPDATE SET nickname = EXCLUDED.nickname;
+
+  INSERT INTO public.game_rooms (room_code, host_user_id, status, is_public)
+  VALUES ('PUBIN3', v_host, 'waiting', true) RETURNING id INTO v_room;
+  INSERT INTO public.room_participants (room_id, user_id, nickname, is_host, status)
+  VALUES (v_room, v_host, 'Host3', true, 'joined');
+
+  SET LOCAL ROLE authenticated;
+
+  -- Somebody knocks and is blocked rather than declined.
+  PERFORM pg_temp.as_user(v_pest);
+  PERFORM public.request_room_join(v_room);
+  SELECT id INTO v_req FROM public.room_join_requests
+   WHERE room_id = v_room AND user_id = v_pest;
+
+  PERFORM pg_temp.as_user(v_guest);
+  PERFORM pg_temp.must_fail(format('SELECT public.block_room_join(%L)', v_req),
+    'a bystander cannot block somebody out of a room they do not host');
+
+  PERFORM pg_temp.as_user(v_host);
+  PERFORM pg_temp.must_equal(public.block_room_join(v_req), 'blocked', 'the host blocks');
+
+  -- The block is the whole point: no second knock, and no room to knock on.
+  PERFORM pg_temp.as_user(v_pest);
+  PERFORM pg_temp.must_equal(public.request_room_join(v_room), 'blocked',
+    'a blocked player cannot ask again');
+  PERFORM pg_temp.must_equal(
+    (SELECT count(*) FROM public.public_rooms(40) WHERE id = v_room),
+    0::bigint, 'a blocked player cannot even see the room');
+  PERFORM pg_temp.must_fail(format(
+    $q$INSERT INTO public.room_participants (room_id, user_id, nickname, status)
+       VALUES (%L, %L, 'Pest', 'joined')$q$, v_room, v_pest),
+    'and still cannot write themselves in');
+
+  -- Everyone else sees it exactly as before.
+  PERFORM pg_temp.as_user(v_guest);
+  PERFORM pg_temp.must_equal(
+    (SELECT count(*) FROM public.public_rooms(40) WHERE id = v_room),
+    1::bigint, 'the block is one player, not the room');
+
+  -- Approved, then removed: the permission is spent, so they ask again.
+  v_out := public.request_room_join(v_room);
+  SELECT id INTO v_req FROM public.room_join_requests
+   WHERE room_id = v_room AND user_id = v_guest;
+  PERFORM pg_temp.as_user(v_host);
+  PERFORM public.respond_room_join(v_req, true);
+  PERFORM pg_temp.must_equal(
+    (SELECT count(*) FROM public.room_participants WHERE room_id = v_room AND user_id = v_guest),
+    1::bigint, 'approved and seated');
+
+  PERFORM public.lobby_manage_seat(v_room, v_guest, 'remove');
+  PERFORM pg_temp.must_equal(
+    (SELECT count(*) FROM public.room_join_requests WHERE room_id = v_room AND user_id = v_guest),
+    0::bigint, 'removing them spends the approval');
+
+  PERFORM pg_temp.as_user(v_guest);
+  PERFORM pg_temp.must_fail(format(
+    $q$INSERT INTO public.room_participants (room_id, user_id, nickname, status)
+       VALUES (%L, %L, 'Guest3', 'joined')$q$, v_room, v_guest),
+    'a removed player cannot walk back in on the old approval');
+  PERFORM pg_temp.must_equal(public.request_room_join(v_room), 'pending',
+    'a removed player knocks again');
+
+  RESET ROLE;
+  PERFORM pg_temp.as_user(NULL);
+END $$;
+
+-- ── the arena's crests belong to its captains ──────────────────────────────
+
+DO $$
+DECLARE
+  v_host uuid := 'bc000000-0000-0000-0000-00000000003a';
+  v_cap  uuid := 'bc000000-0000-0000-0000-00000000003b';
+  v_grunt uuid := 'bc000000-0000-0000-0000-00000000003c';
+  v_room uuid;
+BEGIN
+  INSERT INTO auth.users (id, email) VALUES
+    (v_host, 'host4@pub.test'), (v_cap, 'cap@pub.test'), (v_grunt, 'grunt@pub.test')
+  ON CONFLICT (id) DO NOTHING;
+  INSERT INTO public.profiles (user_id, nickname) VALUES
+    (v_host, 'Host4'), (v_cap, 'Cap'), (v_grunt, 'Grunt')
+  ON CONFLICT (user_id) DO UPDATE SET nickname = EXCLUDED.nickname;
+
+  INSERT INTO public.game_rooms (room_code, host_user_id, status, game_type_key)
+  VALUES ('ARENA1', v_host, 'waiting', 'team_battle') RETURNING id INTO v_room;
+  INSERT INTO public.room_participants (room_id, user_id, nickname, is_host, status, team, is_captain)
+  VALUES (v_room, v_host,  'Host4', true,  'joined', 'a', false),
+         (v_room, v_cap,   'Cap',   false, 'joined', 'b', true),
+         (v_room, v_grunt, 'Grunt', false, 'joined', 'b', false);
+
+  SET LOCAL ROLE authenticated;
+
+  -- The elected captain of B dresses B.
+  PERFORM pg_temp.as_user(v_cap);
+  PERFORM public.tb_set_team_icon(v_room, 'b', 'https://icons/rocket.png');
+  PERFORM pg_temp.must_equal(
+    (SELECT team_b_icon FROM public.game_rooms WHERE id = v_room),
+    'https://icons/rocket.png', 'the captain sets their own side''s crest');
+
+  -- And nobody else's.
+  PERFORM pg_temp.must_fail(format(
+    'SELECT public.tb_set_team_icon(%L, %L, %L)', v_room, 'a', 'https://icons/x.png'),
+    'a captain cannot redress the other side');
+
+  -- A player who is not the captain has no say.
+  PERFORM pg_temp.as_user(v_grunt);
+  PERFORM pg_temp.must_fail(format(
+    'SELECT public.tb_set_team_icon(%L, %L, %L)', v_room, 'b', 'https://icons/x.png'),
+    'a team-mate who was not elected cannot');
+
+  -- The host can dress either side — somebody has to, before a team votes.
+  PERFORM pg_temp.as_user(v_host);
+  PERFORM public.tb_set_team_icon(v_room, 'a', 'https://icons/anchor.png');
+  PERFORM pg_temp.must_equal(
+    (SELECT team_a_icon FROM public.game_rooms WHERE id = v_room),
+    'https://icons/anchor.png', 'the host can dress a side with no captain yet');
 
   RESET ROLE;
   PERFORM pg_temp.as_user(NULL);
