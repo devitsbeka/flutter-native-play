@@ -283,6 +283,7 @@ export function Seat({
   onLongPress,
   draggable,
   onDragMoved,
+  action,
 }: {
   left: number;
   top: number;
