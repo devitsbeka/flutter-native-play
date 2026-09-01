@@ -218,7 +218,9 @@ function search(
  * words it could not place.
  */
 export function buildLayout(wordList: string[], maxDim = 9): Layout & { unplaced: string[] } {
-  const words = wordList.map((w) => w.toUpperCase());
+  // Words arrive in board form already (upper case for Latin scripts,
+  // mkhedruli for Georgian, which has no case to change).
+  const words = [...wordList];
   // Longest first, then stable by the order the level author gave, so the
   // author can nudge the board by reordering equal-length words.
   const order = words
@@ -266,8 +268,8 @@ export function buildLayout(wordList: string[], maxDim = 9): Layout & { unplaced
  */
 export function canSpell(letters: string, word: string): boolean {
   const pool = new Map<string, number>();
-  for (const ch of letters.toUpperCase()) pool.set(ch, (pool.get(ch) ?? 0) + 1);
-  for (const ch of word.toUpperCase()) {
+  for (const ch of letters) pool.set(ch, (pool.get(ch) ?? 0) + 1);
+  for (const ch of word) {
     const left = pool.get(ch) ?? 0;
     if (left === 0) return false;
     pool.set(ch, left - 1);

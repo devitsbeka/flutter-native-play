@@ -8,6 +8,10 @@
  *
  * Levels come in packs of three, one pack per scene. Finishing a pack adds
  * its photo to the player's scrapbook.
+ *
+ * There is a bank for each of the app's seven languages, built by
+ * scripts/words-levels from that language's most common words as validated
+ * by its dictionary (and, for Georgian, as used in MyTrivia's own questions).
  */
 
 import mountain from "@/assets/words/mountain.webp";
@@ -18,7 +22,6 @@ import garden from "@/assets/words/garden.webp";
 import clouds from "@/assets/words/clouds.webp";
 import forest from "@/assets/words/forest.webp";
 import night from "@/assets/words/night.webp";
-import { RAW_LEVELS } from "./levels.generated";
 
 export interface Scene {
   id: string;
@@ -44,6 +47,12 @@ export const SCENES: Scene[] = [
   { id: "night", nameKey: "words.sceneNight", image: night, accent: "#7C3AED", accentDark: "#5B21B6", tile: "rgba(40, 24, 72, 0.86)" },
 ];
 
+export interface RawLevel {
+  letters: string;
+  words: string[];
+  bonus: string[];
+}
+
 export interface Level {
   /** 1-based, what the player sees. */
   number: number;
@@ -56,17 +65,51 @@ export interface Level {
   bonus: string[];
 }
 
-// The level bank is generated from the most common English words — see
-// scripts/words-levels/generate.mjs. Regenerate rather than edit.
-const raw: Array<Omit<Level, "number" | "sceneId">> = RAW_LEVELS;
-
 export const LEVELS_PER_SCENE = 3;
 
-export const LEVELS: Level[] = raw.map((level, i) => ({
-  ...level,
-  number: i + 1,
-  sceneId: SCENES[Math.floor(i / LEVELS_PER_SCENE) % SCENES.length].id,
-}));
+/** The languages with a bank of their own — the app's seven. */
+export const WORDS_LANGUAGES = ["en", "ka", "es", "fr", "de", "it", "pt"] as const;
+export type WordsLanguage = (typeof WORDS_LANGUAGES)[number];
+
+export const isWordsLanguage = (v: unknown): v is WordsLanguage =>
+  typeof v === "string" && (WORDS_LANGUAGES as readonly string[]).includes(v);
+
+/** Any app language maps onto a bank; an unknown one plays in English. */
+export const bankLanguage = (lang: string | null | undefined): WordsLanguage =>
+  isWordsLanguage(lang) ? lang : "en";
+
+export function buildLevels(raw: RawLevel[]): Level[] {
+  return raw.map((level, i) => ({
+    ...level,
+    number: i + 1,
+    sceneId: SCENES[Math.floor(i / LEVELS_PER_SCENE) % SCENES.length].id,
+  }));
+}
+
+/**
+ * The banks are generated per language (scripts/words-levels) and each is
+ * its own chunk: a player loads the one they play in, ~100 KB, not seven.
+ */
+const loaders: Record<WordsLanguage, () => Promise<{ RAW_LEVELS: RawLevel[] }>> = {
+  en: () => import("./levels.en.generated"),
+  ka: () => import("./levels.ka.generated"),
+  es: () => import("./levels.es.generated"),
+  fr: () => import("./levels.fr.generated"),
+  de: () => import("./levels.de.generated"),
+  it: () => import("./levels.it.generated"),
+  pt: () => import("./levels.pt.generated"),
+};
+
+const cache = new Map<WordsLanguage, Level[]>();
+
+export async function loadLevels(lang: WordsLanguage): Promise<Level[]> {
+  const hit = cache.get(lang);
+  if (hit) return hit;
+  const { RAW_LEVELS } = await loaders[lang]();
+  const built = buildLevels(RAW_LEVELS);
+  cache.set(lang, built);
+  return built;
+}
 
 export const sceneOf = (level: Level): Scene =>
   SCENES.find((s) => s.id === level.sceneId) ?? SCENES[0];
