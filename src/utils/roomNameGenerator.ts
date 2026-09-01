@@ -1,71 +1,131 @@
-// Theme-based room name generator - multilingual with 120+ unique options across 15 themes
+/**
+ * Room names: a mood and a creature, e.g. "Sleepy Dragons".
+ *
+ * The old list was 120 fixed phrases per language — "Shield Wall", "Enchanted
+ * Clan" — translated fantasy boilerplate that named nothing anybody was doing
+ * and read as filler in Georgian ("მოჯადოე კლანი"). A mood times a creature
+ * is funnier, and there are hundreds of them, so the name is rarely one you
+ * have seen before.
+ *
+ * The creature carries its own icon slug, so the picture always matches the
+ * name — "Sleepy Dragons" gets a dragon. Every slug here was checked against
+ * the production icon_library; a creature whose icon does not exist (fox,
+ * penguin, whale, dinosaur) is deliberately absent however good the name.
+ *
+ * Two pieces of grammar decide the shape:
+ *
+ *  - Word order. Georgian, English and German put the adjective first
+ *    ("Sleepy Dragons"); French, Spanish, Italian and Portuguese put it after
+ *    the noun ("Dragons Endormis"). Getting this backwards is what makes a
+ *    generated name read as machine output.
+ *  - Gender. Romance adjectives agree with their noun, so every creature here
+ *    is masculine plural in all four — which is why owls, tigers, monkeys and
+ *    frogs are missing: they are feminine in at least one, and would need a
+ *    second adjective form each.
+ *
+ * The edge function generate-room-name carries the same two tables and is the
+ * live source; this is the client's fallback for when it cannot be reached.
+ * roomNameGenerator.sync.test.ts fails if the two drift apart.
+ */
 
-type LangCode = 'ka' | 'en' | 'fr' | 'de' | 'es' | 'it' | 'pt';
+export type LangCode = "ka" | "en" | "fr" | "de" | "es" | "it" | "pt";
 
-const THEMED_ROOM_NAMES_KA: Record<string, string[]> = {
-  champion: ["ოქროს თასი", "ვარსკვლავთა ბრძოლა", "მედლების კლუბი", "ჩემპიონები", "პირველობის რინგი", "გამარჯვებულთა ზონა", "ტრიუმფის არენა", "პოდიუმის გზა"],
-  adventure: ["კოსმოსის მოგზაური", "ექსპედიცია X", "აღმოჩენის გზა", "მკვლევართა კლანი", "ჰორიზონტის მიღმა", "საზღვრების მიღმა", "ძიების ბილიკი", "ახალი ტერიტორია"],
-  creature: ["ცეცხლის მცველი", "მითიური ბუნაგი", "ლეგენდის კვალი", "ჯადოსნური არსება", "ფანტასტიური კლუბი", "მონსტრების ლიგა", "ზღაპრის სამყარო", "ფრთოსანთა კლანი"],
-  animal: ["მტაცებლის ხროვა", "ბუნაგის მეფე", "მფრინავი მხედარი", "ველური კლანი", "ბუნების ძალა", "თათების ლიგა", "ფოლადის კლანჭა", "სწრაფი ნადირი"],
-  battle: ["ჯავშნის რინგი", "კლინკის ჟღერა", "მეომრის ბილიკი", "ფარების კედელი", "გლადიატორები", "რაინდთა კლანი", "ბრძოლის მოედანი", "ფოლადის გუნდი"],
-  magic: ["ჯადოქართა სახლი", "კრისტალის კოშკი", "მოჯადოე კლანი", "შელოცვის წრე", "მაგიური ბროლი", "ალქიმიკოსები", "ჯადოს სკოლა", "მისტიკის კლუბი"],
-  party: ["ზეიმის მოედანი", "ფეიერვერკი", "სახალისო ბუდე", "წვეულების კლუბი", "ბალონების ომი", "კონფეტის წვიმა", "დღესასწაული", "ფესტივალი"],
-  nature: ["მწვერვალის ჯგუფი", "მზის ხეობა", "ტყის კლანი", "მთის მგლები", "ბუნების ძალა", "მწვანე ლიგა", "ხეობის მცველი", "კლდის არწივები"],
-  tech: ["კიბერ არენა", "პიქსელების ომი", "დიჯიტალ გვარდია", "კოდის მეომრები", "ტექნო კლანი", "რობოტების ლიგა", "ჩიპის ჯგუფი", "მატრიცის რინგი"],
-  music: ["რიტმის კლუბი", "ნოტების ბრძოლა", "ჰარმონია", "მელოდიის კლანი", "კონცერტის ზონა", "ბითების არენა", "როკის ბუნაგი", "ჯაზის კლუბი"],
-  mystery: ["საიდუმლო კლუბი", "გამოცანის სახლი", "დეტექტივები", "შერლოკის კლანი", "მისტერიის ზონა", "გასაღების მფლობელი", "ნიღბის უკან", "საიდუმლო საზოგადო"],
-  speed: ["მეხის სიჩქარე", "ელვის გუნდი", "თავგადასავალი", "რბოლის კლუბი", "ტურბო არენა", "სწრაფი და ფოლადი", "ნიტროს რინგი", "სიჩქარის ეშმაკი"],
-  ocean: ["ზღვის მგლები", "ოკეანის კლანი", "ტალღის მხედარი", "მეკობრეები", "წყალქვეშა ლიგა", "ზვიგენის კბილი", "ნავთსადგური", "კაპიტნის ხიდი"],
-  food: ["გემოვნების ბრძოლა", "შეფთა დუელი", "გურმანთა კლუბი", "რეცეპტის საიდუმლო", "სამზარეულოს ომი", "დეგუსტაცია", "ფლეივერის ზონა", "გასტრო არენა"],
-  space: ["გალაქტიკის რინგი", "ვარსკვლავთა ჯგუფი", "კოსმიური კლანი", "ასტრონავტები", "ორბიტის მცველი", "პლანეტების ლიგა", "მეტეორის გზა", "კოსმოსის კაპიტანი"],
+const LANGS: LangCode[] = ["ka", "en", "fr", "de", "es", "it", "pt"];
+
+/** Georgian fits fewer characters in the room-name row than Latin script. */
+export const MAX_ROOM_NAME_KA = 18;
+export const MAX_ROOM_NAME_LATIN = 22;
+
+/** Languages that read adjective-first. The rest put it after the noun. */
+const ADJECTIVE_FIRST: LangCode[] = ["ka", "en", "de"];
+
+export const ROOM_MOODS: Record<LangCode, string[]> = {
+  ka: ["მძინარე", "მშიერი", "ზარმაცი", "გიჟი", "მხიარული", "ჯიუტი", "ეშმაკური", "ბრაზიანი", "სწრაფი", "მამაცი", "ხმაურიანი", "საიდუმლო"],
+  en: ["Sleepy", "Hungry", "Lazy", "Crazy", "Cheerful", "Stubborn", "Sneaky", "Angry", "Speedy", "Brave", "Noisy", "Secret"],
+  de: ["Verschlafene", "Hungrige", "Faule", "Verrückte", "Fröhliche", "Sture", "Schlaue", "Wütende", "Schnelle", "Mutige", "Laute", "Geheime"],
+  fr: ["Endormis", "Affamés", "Paresseux", "Fous", "Joyeux", "Têtus", "Malins", "Fâchés", "Rapides", "Braves", "Bruyants", "Secrets"],
+  es: ["Dormilones", "Hambrientos", "Perezosos", "Locos", "Alegres", "Tercos", "Astutos", "Furiosos", "Veloces", "Valientes", "Ruidosos", "Secretos"],
+  it: ["Assonnati", "Affamati", "Pigri", "Pazzi", "Allegri", "Testardi", "Furbi", "Arrabbiati", "Veloci", "Coraggiosi", "Rumorosi", "Segreti"],
+  pt: ["Sonolentos", "Famintos", "Preguiçosos", "Loucos", "Alegres", "Teimosos", "Astutos", "Furiosos", "Velozes", "Corajosos", "Barulhentos", "Secretos"],
 };
 
-const THEMED_ROOM_NAMES_EN: Record<string, string[]> = {
-  champion: ["Golden Cup", "Stars Battle", "Medals Club", "Champions", "Title Ring", "Winners Zone", "Triumph Arena", "Podium Way"],
-  adventure: ["Space Traveler", "Expedition X", "Discovery Path", "Explorers Clan", "Beyond Horizon", "Beyond Borders", "Search Trail", "New Territory"],
-  creature: ["Fire Guardian", "Mythical Den", "Legend's Trail", "Magic Creature", "Fantastic Club", "Monsters League", "Fairytale World", "Winged Clan"],
-  animal: ["Predator Pack", "Den King", "Flying Rider", "Wild Clan", "Nature's Power", "Paws League", "Steel Claw", "Swift Hunter"],
-  battle: ["Armor Ring", "Blade Clang", "Warrior's Path", "Shield Wall", "Gladiators", "Knights Clan", "Battle Arena", "Steel Team"],
-  magic: ["Wizards House", "Crystal Tower", "Enchanted Clan", "Spell Circle", "Magic Orb", "Alchemists", "Magic School", "Mystic Club"],
-  party: ["Celebration Plaza", "Fireworks", "Fun Nest", "Party Club", "Balloon War", "Confetti Rain", "Holiday", "Festival"],
-  nature: ["Summit Group", "Sun Valley", "Forest Clan", "Mountain Wolves", "Nature's Force", "Green League", "Valley Guardian", "Rock Eagles"],
-  tech: ["Cyber Arena", "Pixel War", "Digital Guard", "Code Warriors", "Techno Clan", "Robots League", "Chip Squad", "Matrix Ring"],
-  music: ["Rhythm Club", "Notes Battle", "Harmony", "Melody Clan", "Concert Zone", "Beats Arena", "Rock Den", "Jazz Club"],
-  mystery: ["Secret Club", "Riddle House", "Detectives", "Sherlock Clan", "Mystery Zone", "Key Holder", "Behind the Mask", "Secret Society"],
-  speed: ["Thunder Speed", "Lightning Team", "Thrill", "Racing Club", "Turbo Arena", "Fast & Steel", "Nitro Ring", "Speed Demon"],
-  ocean: ["Sea Wolves", "Ocean Clan", "Wave Rider", "Pirates", "Underwater League", "Shark Tooth", "Harbor", "Captain's Bridge"],
-  food: ["Taste Battle", "Chefs Duel", "Gourmets Club", "Recipe Secret", "Kitchen War", "Tasting", "Flavor Zone", "Gastro Arena"],
-  space: ["Galaxy Ring", "Stars Group", "Cosmic Clan", "Astronauts", "Orbit Guardian", "Planets League", "Meteor Path", "Space Captain"],
-};
-
-function getNamesByLang(lang: LangCode): Record<string, string[]> {
-  if (lang === 'ka') return THEMED_ROOM_NAMES_KA;
-  // All Latin-script languages use EN for the client-side fallback
-  return THEMED_ROOM_NAMES_EN;
-}
+/** `icon` is an icon_library slug that exists in production. */
+export const ROOM_CREATURES: Array<{ icon: string } & Record<LangCode, string>> = [
+  { icon: "dragon",          ka: "დრაკონები",   en: "Dragons",    de: "Drachen",     fr: "Dragons",      es: "Dragones",   it: "Draghi",     pt: "Dragões" },
+  { icon: "panda",           ka: "პანდები",     en: "Pandas",     de: "Pandas",      fr: "Pandas",       es: "Pandas",     it: "Panda",      pt: "Pandas" },
+  { icon: "shark",           ka: "ზვიგენები",   en: "Sharks",     de: "Haie",        fr: "Requins",      es: "Tiburones",  it: "Squali",     pt: "Tubarões" },
+  { icon: "lion",            ka: "ლომები",      en: "Lions",      de: "Löwen",       fr: "Lions",        es: "Leones",     it: "Leoni",      pt: "Leões" },
+  { icon: "cat",             ka: "კატები",      en: "Cats",       de: "Katzen",      fr: "Chats",        es: "Gatos",      it: "Gatti",      pt: "Gatos" },
+  { icon: "wizard",          ka: "ჯადოქრები",   en: "Wizards",    de: "Zauberer",    fr: "Sorciers",     es: "Magos",      it: "Maghi",      pt: "Magos" },
+  { icon: "robot",           ka: "რობოტები",    en: "Robots",     de: "Roboter",     fr: "Robots",       es: "Robots",     it: "Robot",      pt: "Robôs" },
+  { icon: "zombie",          ka: "ზომბები",     en: "Zombies",    de: "Zombies",     fr: "Zombies",      es: "Zombis",     it: "Zombie",     pt: "Zumbis" },
+  { icon: "ninja",           ka: "ნინძები",     en: "Ninjas",     de: "Ninjas",      fr: "Ninjas",       es: "Ninjas",     it: "Ninja",      pt: "Ninjas" },
+  { icon: "wolf",            ka: "მგლები",      en: "Wolves",     de: "Wölfe",       fr: "Loups",        es: "Lobos",      it: "Lupi",       pt: "Lobos" },
+  { icon: "pirate",          ka: "მეკობრეები",  en: "Pirates",    de: "Piraten",     fr: "Pirates",      es: "Piratas",    it: "Pirati",     pt: "Piratas" },
+  { icon: "bear",            ka: "დათვები",     en: "Bears",      de: "Bären",       fr: "Ours",         es: "Osos",       it: "Orsi",       pt: "Ursos" },
+  { icon: "ghost",           ka: "მოჩვენებები", en: "Ghosts",     de: "Geister",     fr: "Fantômes",     es: "Fantasmas",  it: "Fantasmi",   pt: "Fantasmas" },
+  { icon: "dolphin",         ka: "დელფინები",   en: "Dolphins",   de: "Delfine",     fr: "Dauphins",     es: "Delfines",   it: "Delfini",    pt: "Golfinhos" },
+  { icon: "dog",             ka: "ძაღლები",     en: "Dogs",       de: "Hunde",       fr: "Chiens",       es: "Perros",     it: "Cani",       pt: "Cães" },
+  { icon: "elephant",        ka: "სპილოები",    en: "Elephants",  de: "Elefanten",   fr: "Éléphants",    es: "Elefantes",  it: "Elefanti",   pt: "Elefantes" },
+  { icon: "rabbit",          ka: "კურდღლები",   en: "Rabbits",    de: "Hasen",       fr: "Lapins",       es: "Conejos",    it: "Conigli",    pt: "Coelhos" },
+  { icon: "hedgehog",        ka: "ზღარბები",    en: "Hedgehogs",  de: "Igel",        fr: "Hérissons",    es: "Erizos",     it: "Ricci",      pt: "Ouriços" },
+  { icon: "samurai",         ka: "სამურაები",   en: "Samurai",    de: "Samurai",     fr: "Samouraïs",    es: "Samuráis",   it: "Samurai",    pt: "Samurais" },
+  { icon: "vampire",         ka: "ვამპირები",   en: "Vampires",   de: "Vampire",     fr: "Vampires",     es: "Vampiros",   it: "Vampiri",    pt: "Vampiros" },
+  { icon: "troll",           ka: "ტროლები",     en: "Trolls",     de: "Trolle",      fr: "Trolls",       es: "Trols",      it: "Troll",      pt: "Trolls" },
+  { icon: "goblin",          ka: "გობლინები",   en: "Goblins",    de: "Kobolde",     fr: "Gobelins",     es: "Goblins",    it: "Goblin",     pt: "Goblins" },
+  { icon: "yeti",            ka: "იეტები",      en: "Yetis",      de: "Yetis",       fr: "Yétis",        es: "Yetis",      it: "Yeti",       pt: "Yetis" },
+  { icon: "astronaut",       ka: "კოსმონავტები", en: "Astronauts", de: "Astronauten", fr: "Astronautes",  es: "Astronautas", it: "Astronauti", pt: "Astronautas" },
+  { icon: "knight-in-armor", ka: "რაინდები",    en: "Knights",    de: "Ritter",      fr: "Chevaliers",   es: "Caballeros", it: "Cavalieri",  pt: "Cavaleiros" },
+  { icon: "octopus",         ka: "რვაფეხები",   en: "Octopuses",  de: "Kraken",      fr: "Poulpes",      es: "Pulpos",     it: "Polpi",      pt: "Polvos" },
+  { icon: "crab",            ka: "კიბორჩხალები", en: "Crabs",      de: "Krabben",     fr: "Crabes",       es: "Cangrejos",  it: "Granchi",    pt: "Caranguejos" },
+  { icon: "koala",           ka: "კოალები",     en: "Koalas",     de: "Koalas",      fr: "Koalas",       es: "Koalas",     it: "Koala",      pt: "Coalas" },
+  { icon: "raccoon",         ka: "ენოტები",     en: "Raccoons",   de: "Waschbären",  fr: "Ratons",       es: "Mapaches",   it: "Procioni",   pt: "Guaxinins" },
+  { icon: "hamster",         ka: "ზაზუნები",    en: "Hamsters",   de: "Hamster",     fr: "Hamsters",     es: "Hámsters",   it: "Criceti",    pt: "Hamsters" },
+];
 
 function normalizeLang(lang: string | null | undefined): LangCode {
-  if (!lang) return 'en';
-  const l = lang.toLowerCase().trim();
-  if (['ka', 'en', 'fr', 'de', 'es', 'it', 'pt'].includes(l)) return l as LangCode;
-  return 'en';
+  const l = (lang || "").toLowerCase().trim();
+  return (LANGS as string[]).includes(l) ? (l as LangCode) : "en";
 }
 
-// Flatten all names for quick random access
-const ALL_NAMES_KA = Object.values(THEMED_ROOM_NAMES_KA).flat();
-const ALL_NAMES_EN = Object.values(THEMED_ROOM_NAMES_EN).flat();
+export function maxRoomNameLength(lang: LangCode): number {
+  return lang === "ka" ? MAX_ROOM_NAME_KA : MAX_ROOM_NAME_LATIN;
+}
+
+/** "Sleepy Dragons" / "Dragons Endormis", per the language's word order. */
+export function composeRoomName(mood: string, creature: string, lang: LangCode): string {
+  return ADJECTIVE_FIRST.includes(lang) ? `${mood} ${creature}` : `${creature} ${mood}`;
+}
+
+/**
+ * Every pairing that fits the row. Georgian words are long, so a handful of
+ * combinations ("ხმაურიანი კიბორჩხალები") are too wide to render — they are
+ * dropped here rather than truncated with an ellipsis on screen.
+ */
+export function roomNameCandidates(lang: LangCode): Array<{ name: string; icon: string }> {
+  const max = maxRoomNameLength(lang);
+  const out: Array<{ name: string; icon: string }> = [];
+  for (const mood of ROOM_MOODS[lang]) {
+    for (const creature of ROOM_CREATURES) {
+      const name = composeRoomName(mood, creature[lang], lang);
+      if (name.length <= max) out.push({ name, icon: creature.icon });
+    }
+  }
+  return out;
+}
+
+/** A room name and the icon that belongs with it. */
+export function generateRoomIdentity(language?: string): { name: string; icon: string } {
+  const lang = normalizeLang(language);
+  const candidates = roomNameCandidates(lang);
+  return candidates[Math.floor(Math.random() * candidates.length)];
+}
 
 export function generateRoomName(language?: string): string {
-  const lang = normalizeLang(language);
-  const names = lang === 'ka' ? ALL_NAMES_KA : ALL_NAMES_EN;
-  return names[Math.floor(Math.random() * names.length)];
+  return generateRoomIdentity(language).name;
 }
 
-// Language-appropriate default fallback name
+/** Language-appropriate default, for when even the tables are unreachable. */
 export function getDefaultRoomName(language?: string): string {
-  const lang = normalizeLang(language);
-  return lang === 'ka' ? 'სახალისო გუნდი' : 'Fun Squad';
+  return normalizeLang(language) === "ka" ? "სახალისო გუნდი" : "Fun Squad";
 }
-
-// Export for potential future use
-export { THEMED_ROOM_NAMES_KA as THEMED_ROOM_NAMES, ALL_NAMES_KA as TRIVIA_NAMES };

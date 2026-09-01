@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Sparkles, ArrowLeft, Search, Check, AlertTriangle } from "lucide-react";
+import { X, Sparkles, ArrowLeft, Search, Check, AlertTriangle, Eye } from "lucide-react";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -547,12 +547,6 @@ export function CategoryPickerModal({
                             : "bg-white/70 border border-border/50 hover:bg-white"
                         }`}
                       >
-                        {/* Observer badge */}
-                         {willBeObserver && (
-                           <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-amber-500/80 text-white text-[10px] font-medium">
-                             👁️ {t("extra.cpObserverLabel")}
-                          </span>
-                        )}
                         <div className="flex items-center gap-3">
                           <div 
                             className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0"
@@ -578,7 +572,17 @@ export function CategoryPickerModal({
                                 </span>
                               )}
                             </div>
-                            {/* Missing icons warning */}
+                            {/* Observer note and the missing-icons warning share
+                                a line under the title. The observer badge used to
+                                be pinned to the row's top-right corner, where it
+                                sat on top of the title of any trivia whose name
+                                reached the end of the row. */}
+                            {willBeObserver && (
+                              <span className="text-xs text-amber-600 flex items-center gap-1 mt-0.5">
+                                <Eye className="w-3 h-3" />
+                                {t("extra.cpObserverLabel")}
+                              </span>
+                            )}
                             {missingIconCount > 0 && (
                                <span className="text-xs text-amber-600 flex items-center gap-1 mt-0.5">
                                  <AlertTriangle className="w-3 h-3" />
