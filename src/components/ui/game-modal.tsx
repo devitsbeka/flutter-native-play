@@ -254,7 +254,10 @@ export function GameModal({
             
             {/* Scrollable content area */}
             <motion.div 
-              className={cn("flex-1 overflow-y-auto flex flex-col", className)}
+              // overflow-x-hidden on purpose: overflow-y-auto alone makes the x axis
+              // compute to auto, so any child that bleeds a few pixels wide turns
+              // the sheet into a horizontal scroller.
+              className={cn("flex-1 overflow-y-auto overflow-x-hidden flex flex-col", className)}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 }}

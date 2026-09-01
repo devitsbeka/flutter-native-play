@@ -135,10 +135,14 @@ describe("the library modal", () => {
 
   it("lets the tab strip run to the sheet's edges", () => {
     // It is a horizontal scroller: a pill mid-scroll should be cut by the
-    // edge rather than stopping short inside the padding. The wrapper carried
-    // both -mx-5 and mx-auto, and auto won — so the bleed did nothing and
-    // px-5 inset the row a second time.
-    expect(modal).toMatch(/\{\/\* Tabs[\s\S]{0,400}?<div className="-mx-5 mb-2">/);
+    // edge rather than stopping short inside the padding.
+    //
+    // 8px, and the number matters. GameModal pads children by 24px (px-6)
+    // and IconTabBar bleeds itself by 16px already, so -mx-2 is what lands
+    // the strip exactly on the sheet's edge. It was -mx-5, which overshot by
+    // 12px a side; the body scrolls vertically, so its overflow-x computes
+    // to auto and the whole sheet scrolled sideways.
+    expect(modal).toMatch(/\{\/\* Tabs[\s\S]{0,700}?<div className="-mx-2 mb-2">/);
   });
 
   it("keeps Mixed to the unfiltered view", () => {
