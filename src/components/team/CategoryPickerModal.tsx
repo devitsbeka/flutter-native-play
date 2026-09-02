@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { localizeCategoryNames } from "@/utils/localizeCategories";
 import { popularCategoryIcon } from "@/config/popularImageCategories";
 import { filterCategoriesForLanguage } from "@/utils/languageCategoryFilter";
-import { pinPartyCategoriesFirst } from "@/config/partyCategories";
+import { excludePartyCategories, pinPartyCategoriesFirst } from "@/config/partyCategories";
 import { useAuth } from "@/contexts/AuthContext";
 import iconDiceCard from "@/assets/play-chooser/icon-dice.webp";
 import iconLibraryCard from "@/assets/play-chooser/icon-library.webp";
@@ -71,6 +71,12 @@ interface CategoryPickerModalProps {
     icon_slug?: string | null;
   }) => void;
   showQueueOption?: boolean;
+  /**
+   * Party categories ("Most Likely To") are a private room's game: friends
+   * the host invited, voting on each other. A public room, a TV session or
+   * a solo surface never lists them. Off unless the opener says otherwise.
+   */
+  allowParty?: boolean;
   roomGradient?: string;
   excludeTriviaId?: string | null; // Trivia that was just played - should be hidden
 }
@@ -116,6 +122,7 @@ export function CategoryPickerModal({
   onSelectTrivia,
   onAddToQueue,
   showQueueOption = true,
+  allowParty = false,
   excludeTriviaId,
 }: CategoryPickerModalProps) {
   const { user } = useAuth();
@@ -166,7 +173,7 @@ export function CategoryPickerModal({
 
   // Fetch categories
   const { data: categories = [], isLoading: loadingCategories } = useQuery<Category[]>({
-    queryKey: ["categories-picker", language],
+    queryKey: ["categories-picker", language, allowParty],
     queryFn: async (): Promise<Category[]> => {
       const result = await supabase
         .from("categories")
@@ -176,9 +183,10 @@ export function CategoryPickerModal({
 
       if (result.error) throw result.error;
       // categories.name is Georgian; overlay the reader's language. Party
-      // categories ("Most Likely To") lead the wall — they are what a room
-      // full of people is here to play together.
-      return pinPartyCategoriesFirst(await localizeCategoryNames(
+      // categories ("Most Likely To") lead the wall of a PRIVATE room — they
+      // are what a room full of friends is here to play together — and are
+      // absent from every other wall.
+      return (allowParty ? pinPartyCategoriesFirst : excludePartyCategories)(await localizeCategoryNames(
         filterCategoriesForLanguage(result.data || [], language).map(d => ({
           id: d.id,
           categoryId: d.category_id,

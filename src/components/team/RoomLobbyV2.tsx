@@ -1237,6 +1237,7 @@ export function RoomLobbyV2() {
         onSelectTrivia={handleSelectTrivia}
         onAddToQueue={handleAddToQueue}
         showQueueOption={true}
+        allowParty={!currentRoom?.is_public}
         roomGradient={roomGradient?.gradient}
         excludeTriviaId={currentRoom?.user_trivia_id}
       />

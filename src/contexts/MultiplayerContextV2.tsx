@@ -283,6 +283,8 @@ export interface GameRoom {
   room_name: string | null;
   room_icon: string | null;
   host_user_id: string;
+  /** Listed on the Public tab (20260922100000). Absent on rows read before the column existed. */
+  is_public?: boolean;
   category_id: string | null;
   category_name: string | null;
   status: "waiting" | "ready" | "playing" | "completed" | "cancelled";

@@ -1328,6 +1328,7 @@ function TeamContentV2() {
       <CategorySelectorModal
         open={showCategorySelectorModal}
         onOpenChange={setShowCategorySelectorModal}
+        allowParty
         onSelect={(category) => {
           setShowCategorySelectorModal(false);
           // Store the pre-selected category and open create room

@@ -819,6 +819,7 @@ export function GameResultsScreenV2() {
         onSelectTrivia={handleSelectTrivia}
         onAddToQueue={handleAddToQueue}
         showQueueOption={true}
+        allowParty={!currentRoom?.is_public}
         roomGradient={currentRoom?.background_gradient || undefined}
         excludeTriviaId={currentRoom?.user_trivia_id}
       />

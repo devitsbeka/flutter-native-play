@@ -28,6 +28,7 @@ import { useResponsiveVideo } from "@/hooks/useResponsiveVideo";
 import { createNotification, useNotifications } from "@/hooks/useNotifications";
 // Room names are AI-generated via edge function during room creation
 import { TVPlayModal } from "@/components/team/TVPlayModal";
+import { isPartyCategory } from "@/config/partyCategories";
 import { CategorySelectorModal } from "@/components/team/CategorySelectorModal";
 import { CategoryPickerModal } from "@/components/team/CategoryPickerModal";
 import { CreateBlindTriviaModal } from "@/components/team/CreateBlindTriviaModal";
@@ -243,8 +244,12 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
    * hand out rather than to advertise. They are created private, and the
    * switch is not offered rather than offered and ignored.
    */
+  // A party category ("Most Likely To") is friends voting on each other —
+  // a private room's game, never a published one. Picking it takes the
+  // public switch off the screen; the room stays private.
+  const partyPicked = isPartyCategory(selectedCategory?.category_id ?? selectedCategory?.id);
   const canPublish =
-    gameChoice === "random" || gameChoice === "library" || gameChoice === "battle";
+    (gameChoice === "random" || gameChoice === "library" || gameChoice === "battle") && !partyPicked;
   const publishRoom = canPublish && isPublic;
 
   /**
@@ -1796,6 +1801,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         onOpenChange={setShowCategoriesModal}
         onSelect={handleLibraryCategorySelect}
         selectedCategoryId={selectedCategory?.id}
+        allowParty={!publishRoom}
       />
 
       {/* Create Blind Trivia Modal - Hides answers from creator */}
@@ -1845,6 +1851,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         onSelectTrivia={() => setShowQueuePicker(false)}
         onAddToQueue={handleAddPreRoomQueueItem}
         showQueueOption={true}
+        allowParty={!publishRoom}
       />
 
       {/* Personal Trivia Modal - Game UI Style */}

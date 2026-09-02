@@ -171,10 +171,10 @@ export const useCategories = () => {
 
       // Filter categories based on language rules. Party categories (the
       // multiplayer-only vote ones, e.g. "Most Likely To") stay IN this list —
-      // Discover features them in Popular — but surfaces that actually start
-      // solo play (VS-bot pools, leaderboard play, friend challenges) apply
-      // excludePartyCategories themselves, and CategoryPage routes a party
-      // category to the multiplayer flow instead of a level grid.
+      // a private room's picker shows them — but every public surface
+      // (Discover, quick play, VS-bot pools, leaderboard play, friend
+      // challenges) applies excludePartyCategories itself, and CategoryPage
+      // routes a party category to the multiplayer flow instead of a grid.
       const filtered = filterCategoriesForLanguage(data || [], lang);
 
       const transformed = filtered.map(transformCategory);

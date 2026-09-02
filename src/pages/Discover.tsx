@@ -27,7 +27,7 @@ import { PRICES } from "@/config/pricing";
 import { matchesQuery } from "@/utils/searchMatch";
 import { orderByPopularity, readRecentlyViewedIds, RECENTLY_VIEWED_KEY } from "@/utils/categoryTabs";
 import { funRowCategories } from "@/utils/discoverRows";
-import { isPartyCategory } from "@/config/partyCategories";
+import { excludePartyCategories, isPartyCategory } from "@/config/partyCategories";
 
 /* The cover's artwork, drawn at the 500x946 the design was laid out at.
    object-cover on a narrower phone crops the sides, which is what the
@@ -245,7 +245,11 @@ export default function Discover() {
     if (isVip && activeTab === "free") setActiveTab("all");
   }, [isVip, activeTab]);
 
-  const { categories, loading } = useCategories();
+  const { categories: allCategories, loading } = useCategories();
+  // Party categories ("Most Likely To") are a private room's game — friends
+  // the host invited, voting on each other. Discover is the PUBLIC library,
+  // so they are not on it; a private room's own picker is where they live.
+  const categories = useMemo(() => excludePartyCategories(allCategories), [allCategories]);
   /**
    * The premium slugs as the catalogue actually reports them, so a database
    * that has had the migration decides and the client's fallback list only

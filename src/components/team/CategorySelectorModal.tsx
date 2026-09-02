@@ -5,7 +5,7 @@ import { Search, Check } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { filterCategoriesForLanguage } from "@/utils/languageCategoryFilter";
-import { pinPartyCategoriesFirst } from "@/config/partyCategories";
+import { excludePartyCategories, pinPartyCategoriesFirst } from "@/config/partyCategories";
 import { categoryGradient } from "@/utils/categoryGradient";
 import { CategoryArtwork } from "@/components/shared/CategoryArtwork";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -47,6 +47,8 @@ interface CategorySelectorModalProps {
   onOpenChange: (open: boolean) => void;
   onSelect: (category: Category) => void;
   selectedCategoryId?: string | null;
+  /** Party categories are a private room's game — see CategoryPickerModal. */
+  allowParty?: boolean;
 }
 
 export function CategorySelectorModal({
@@ -54,6 +56,7 @@ export function CategorySelectorModal({
   onOpenChange,
   onSelect,
   selectedCategoryId,
+  allowParty = false,
 }: CategorySelectorModalProps) {
   const { t, language } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
@@ -82,7 +85,7 @@ export function CategorySelectorModal({
   const recentIds = useMemo(() => (open ? readRecentlyViewedIds() : []), [open]);
 
   const { data: categories = [], isLoading } = useQuery({
-    queryKey: ["categories-for-room", language],
+    queryKey: ["categories-for-room", language, allowParty],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("categories")
@@ -105,15 +108,16 @@ export function CategorySelectorModal({
         if (translations && translations.length > 0) {
           const transMap: Record<string, string> = {};
           translations.forEach((t: any) => { transMap[t.category_id] = t.name; });
-          return pinPartyCategoriesFirst(filtered.map((cat: any) => ({
+          return (allowParty ? pinPartyCategoriesFirst : excludePartyCategories)(filtered.map((cat: any) => ({
             ...cat,
             name: transMap[cat.id] || cat.name,
           }))) as Category[];
         }
       }
 
-      // Party categories ("Most Likely To") lead the wall — see CategoryPickerModal.
-      return pinPartyCategoriesFirst(filtered) as Category[];
+      // Party categories ("Most Likely To") lead a private room's wall and
+      // are absent from every other — see CategoryPickerModal.
+      return (allowParty ? pinPartyCategoriesFirst : excludePartyCategories)(filtered) as Category[];
     },
     enabled: open,
   });

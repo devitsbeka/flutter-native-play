@@ -93,7 +93,7 @@ describe("a room is private unless somebody published it", () => {
     // to list, the King's couch is a private duel, and My Trivia is your own
     // quiz — those are created private, with no switch shown.
     expect(create).toMatch(
-      /const canPublish =\s*\n?\s*gameChoice === "random" \|\| gameChoice === "library" \|\| gameChoice === "battle";/,
+      /const canPublish =\s*\n?\s*\(gameChoice === "random" \|\| gameChoice === "library" \|\| gameChoice === "battle"\) && !partyPicked;/,
     );
     expect(create).toMatch(/const publishRoom = canPublish && isPublic;/);
     // Every write goes through the guarded value, never the raw switch —
