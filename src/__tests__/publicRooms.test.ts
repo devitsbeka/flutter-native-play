@@ -122,15 +122,19 @@ describe("a room is private unless somebody published it", () => {
 });
 
 describe("the arena is sized before it is opened", () => {
-  it("the host picks 2-2 through 5-5, under the switch", () => {
+  it("the host picks 2-2 through 5-5 from a dropdown beside the switch", () => {
     const create = read("src/components/team/CreateRoomPage.tsx");
-    expect(create).toMatch(/const \[battleTeamSize, setBattleTeamSize\] = useState\(5\)/);
+    // 2-2 is the default — the smallest game that can start — and the last
+    // pick is remembered per device (owner's ask).
+    expect(create).toMatch(/localStorage\.getItem\("mt\.battleTeamSize"\)/);
+    expect(create).toMatch(/return saved >= 2 && saved <= 5 \? saved : 2;/);
+    expect(create).toMatch(/localStorage\.setItem\("mt\.battleTeamSize", String\(n\)\)/);
+    // ONE row, not two (owner's ask): the visibility switch and the size
+    // dropdown sit side by side above the button, keeping the footer short
+    // so the team pickers above never scroll out of reach.
+    expect(create).toMatch(/<div className="flex items-stretch gap-2">/);
+    expect(create).toMatch(/onValueChange=\{\(v\) => setBattleTeamSize\(Number\(v\)\)\}/);
     expect(create).toMatch(/\[2, 3, 4, 5\]\.map\(\(size\) =>/);
-    // The toggle sits ABOVE the sizing row (owner's ask), both above the
-    // button.
-    expect(create.indexOf("extra.roomPublicHint")).toBeLessThan(
-      create.indexOf("extra.playersPerTeam"),
-    );
     expect(create).toMatch(/teamSize: gameChoice === "battle" \? battleTeamSize : undefined/);
   });
 
