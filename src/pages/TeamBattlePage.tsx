@@ -28,6 +28,7 @@ import {
   LILAC_BG,
   LilacHeader,
   FitBox,
+  EmptySeat,
   PlusSeat,
   Seat,
   SeatMenu,
@@ -274,6 +275,9 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
   const teamB = teamOf("b");
   const teamsEqual =
     teamA.length > 0 && teamA.length === teamB.length && participants.every((p) => p.team);
+  // A battle needs at least 2 a side (owner's rule; the cap is the room's
+  // own 5-5). The host's Start waits for both benches to fill to two.
+  const enoughPlayers = teamA.length >= 2 && teamB.length >= 2;
   // Nobody picks a duration any more: a battle is two rounds per seated
   // player, so everyone gets at least two spotlight turns. Server cap 20
   // (20260921210000) fits the lounge's ten seats.
@@ -549,7 +553,21 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
               }}
             />
           ) : (
-            <PlusSeat key={`plus-${team}-${i}`} left={left} top={top - 305} onClick={() => seatAction(team)} />
+            // An open seat is only ACTIONABLE on your own side (or anywhere
+            // while you are still claiming one): you invite into your team,
+            // never onto the bench across the arena — that side just shows
+            // a stroke-only circle in its colour so its free places read.
+            iAmClaiming || team === myTeam ? (
+              <PlusSeat
+                key={`plus-${team}-${i}`}
+                left={left}
+                top={top - 305}
+                ring={ring}
+                onClick={() => seatAction(team)}
+              />
+            ) : (
+              <EmptySeat key={`empty-${team}-${i}`} left={left} top={top - 305} ring={ring} />
+            )
           );
         })}
       </AnimatePresence>
@@ -648,12 +666,16 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
           >
             {t("lobby.claimSeatHint")}
           </motion.p>
+        ) : othersClaiming.length > 0 ? (
+          <p className="pt-[6px] font-[Nunito] font-semibold leading-[20px] text-[#523b76]/70 text-[13px] text-center tracking-[-0.16px]">
+            {t("lobby.pickingTeam", {
+              name: othersClaiming.map((p) => p.nickname).join(", "),
+            })}
+          </p>
         ) : (
-          othersClaiming.length > 0 && (
+          !enoughPlayers && (
             <p className="pt-[6px] font-[Nunito] font-semibold leading-[20px] text-[#523b76]/70 text-[13px] text-center tracking-[-0.16px]">
-              {t("lobby.pickingTeam", {
-                name: othersClaiming.map((p) => p.nickname).join(", "),
-              })}
+              {t("teamBattle.minTwoPerTeam")}
             </p>
           )
         )}
@@ -787,7 +809,7 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
           <StartButton
             label={loading ? t("teamBattle.starting") : t("lobby.startGame")}
             onClick={start}
-            disabled={!teamsEqual || loading}
+            disabled={!teamsEqual || !enoughPlayers || loading}
           />
         </>
       ) : (

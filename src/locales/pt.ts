@@ -1435,6 +1435,7 @@ export const pt: KaTranslations = {
     matchInProgress: "Já há uma partida em andamento — entre na próxima",
     notEnoughQuestions: "Ainda não há perguntas suficientes no seu idioma",
     startFailed: "Não foi possível iniciar a partida",
+    minTwoPerTeam: "São precisos pelo menos 2 jogadores por equipa para começar",
     rpsTitle: "Pedra · Papel · Tesoura",
     rpsSubtitle: "A equipe vencedora escolhe primeiro",
     rpsWaiting: "Esperando os outros gestos…",

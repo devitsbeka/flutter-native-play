@@ -409,12 +409,30 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
           toast.error(tStandalone("teamBattle.roomFull"));
           return false;
         }
-        // No team on arrival: the seats are the choice, and the lobby
-        // prompts the newcomer to claim one on the side they want. A
-        // returning HOST keeps their flag — leaving deletes the row, and
-        // the Public card's request short-circuits with "joined" for the
-        // host without re-seating them, so this insert is how they get
-        // their seat back.
+        // A joiner sits down as the host's OPPONENT: whatever side the host
+        // picked, the newcomer lands across the arena from it (falling back
+        // to the host's own side only when the opposing bench is full, and
+        // to a teamless claim when the host has no side yet). A returning
+        // HOST keeps their flag — leaving deletes the row, and the Public
+        // card's request short-circuits with "joined" for the host without
+        // re-seating them, so this insert is how they get their seat back.
+        const { data: seated } = await supabase
+          .from("room_participants")
+          .select("user_id, team")
+          .eq("room_id", row.id)
+          .in("status", ["joined", "ready", "playing", "invited"]);
+        const hostTeam = (seated ?? []).find((p) => p.user_id === row.host_user_id)?.team as
+          | TBTeam
+          | null
+          | undefined;
+        const perSide = Math.max(2, Math.min(5, Math.floor((row.max_players ?? 10) / 2)));
+        const onSide = (side: TBTeam) => (seated ?? []).filter((p) => p.team === side).length;
+        let team: TBTeam | null = null;
+        if (user.id !== row.host_user_id && (hostTeam === "a" || hostTeam === "b")) {
+          const opposite: TBTeam = hostTeam === "a" ? "b" : "a";
+          if (onSide(opposite) < perSide) team = opposite;
+          else if (onSide(hostTeam) < perSide) team = hostTeam;
+        }
         const { error } = await supabase.from("room_participants").insert({
           room_id: row.id,
           user_id: user.id,
@@ -423,6 +441,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
           country_code: profile.country_code,
           is_host: row.host_user_id === user.id,
           status: "joined",
+          ...(team ? { team } : {}),
         });
         if (error) {
           console.error("[TB] join failed", error);
