@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { useFriends } from "@/contexts/FriendsContext";
 import { motion } from "framer-motion";
 import { Globe, Loader2, Users, Clock } from "lucide-react";
 import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
@@ -14,6 +16,7 @@ import {
   filterPublicRooms,
   publicRoomPath,
   roomSeats,
+  sortPublicRooms,
   usePublicRooms,
   type PublicRoom,
   type PublicRoomFilter,
@@ -39,13 +42,22 @@ const LOUNGES: Record<string, { icon: string; labelKey: string }> = {
   words: { icon: iconWordsLounge, labelKey: "words.title" },
 };
 
+/** A joined (non-host) face on the card, so a filling room shows its people. */
+interface CardPlayer {
+  user_id: string;
+  nickname: string | null;
+  avatar_url: string | null;
+}
+
 function PublicRoomCard({
   room,
+  players,
   index,
   onAsk,
   busy,
 }: {
   room: PublicRoom;
+  players: CardPlayer[];
   index: number;
   onAsk: (room: PublicRoom) => void;
   busy: boolean;
@@ -79,29 +91,55 @@ function PublicRoomCard({
         enableNoise={false}
         className="relative p-3 min-h-[172px] flex flex-col rounded-2xl"
       >
-        {/* Top: who runs it, and how full it is */}
+        {/* Top: who runs it, who already joined, and how full it is */}
         <div className="relative z-10 flex items-start justify-between gap-2">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              openProfile(room.host_user_id);
-            }}
-            className="flex items-center gap-2 min-w-0 rounded-full bg-white/15 backdrop-blur-md border border-white/20 pl-1 pr-2.5 py-1"
-          >
-            <div className="relative w-6 h-6 rounded-full overflow-hidden shrink-0">
-              <SafeAvatarImage
-                avatarUrl={room.host_avatar_url}
-                fallback={room.host_nickname || "?"}
-                className="w-full h-full object-cover"
-                containerClassName="w-full h-full"
-              />
-            </div>
-            <img src={crownIcon} alt="" className="w-3 h-3 object-contain shrink-0" />
-            <span className="text-white text-xs font-semibold truncate max-w-[104px]">
-              {room.host_nickname || t("extra.friendFallback")}
-            </span>
-          </button>
+          <div className="flex items-center gap-1.5 min-w-0">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                openProfile(room.host_user_id);
+              }}
+              className="flex items-center gap-2 min-w-0 rounded-full bg-white/15 backdrop-blur-md border border-white/20 pl-1 pr-2.5 py-1"
+            >
+              <div className="relative w-6 h-6 rounded-full overflow-hidden shrink-0">
+                <SafeAvatarImage
+                  avatarUrl={room.host_avatar_url}
+                  fallback={room.host_nickname || "?"}
+                  className="w-full h-full object-cover"
+                  containerClassName="w-full h-full"
+                />
+              </div>
+              <img src={crownIcon} alt="" className="w-3 h-3 object-contain shrink-0" />
+              <span className="text-white text-xs font-semibold truncate max-w-[104px]">
+                {room.host_nickname || t("extra.friendFallback")}
+              </span>
+            </button>
+            {/* Who already joined, right next to the host — a filling room
+                shows its faces, not just a count. */}
+            {players.length > 0 && (
+              <span className="flex items-center shrink-0">
+                {players.slice(0, 3).map((p, i) => (
+                  <span
+                    key={p.user_id}
+                    className={`relative block w-6 h-6 rounded-full overflow-hidden border-2 border-white/60 shrink-0 ${i > 0 ? "-ml-2" : ""}`}
+                  >
+                    <SafeAvatarImage
+                      avatarUrl={p.avatar_url}
+                      fallback={p.nickname || "?"}
+                      className="w-full h-full object-cover"
+                      containerClassName="w-full h-full"
+                    />
+                  </span>
+                ))}
+                {players.length > 3 && (
+                  <span className="-ml-2 w-6 h-6 rounded-full bg-white/30 border-2 border-white/60 flex items-center justify-center text-[9px] font-bold text-white shrink-0">
+                    +{players.length - 3}
+                  </span>
+                )}
+              </span>
+            )}
+          </div>
 
           {/* Seats. The lounges are what this is for — their card is
               "is there room on that couch" — so they always show the pair;
@@ -200,7 +238,37 @@ export function PublicRoomsSection({
   const { data, isLoading, refetch } = usePublicRooms();
   const [busyId, setBusyId] = useState<string | null>(null);
 
-  const rooms = filterPublicRooms(data ?? [], filter, searchQuery);
+  // Mine first, then my friends' rooms, then everyone else's — each group
+  // newest first.
+  const { friends } = useFriends();
+  const friendIds = useMemo(() => new Set(friends.map((f) => f.friendId)), [friends]);
+  const rooms = sortPublicRooms(filterPublicRooms(data ?? [], filter, searchQuery), friendIds);
+
+  // The joined faces for each listed room. The public_rooms RPC carries only
+  // the host and a count; the card wants to show WHO is on the couch, so the
+  // seated participants ride in on one grouped query for the visible rooms.
+  const roomIds = rooms.map((r) => r.id);
+  const { data: playersByRoom } = useQuery({
+    queryKey: ["public-room-players", roomIds],
+    enabled: roomIds.length > 0,
+    staleTime: 10_000,
+    refetchInterval: 25_000,
+    queryFn: async (): Promise<Map<string, CardPlayer[]>> => {
+      const { data: rows } = await supabase
+        .from("room_participants")
+        .select("room_id, user_id, nickname, avatar_url, is_host, status")
+        .in("room_id", roomIds)
+        .in("status", ["joined", "ready", "playing"]);
+      const map = new Map<string, CardPlayer[]>();
+      (rows ?? []).forEach((p) => {
+        if (p.is_host) return;
+        const arr = map.get(p.room_id) ?? [];
+        arr.push({ user_id: p.user_id, nickname: p.nickname, avatar_url: p.avatar_url });
+        map.set(p.room_id, arr);
+      });
+      return map;
+    },
+  });
 
   const ask = async (room: PublicRoom) => {
     if (busyId) return;
@@ -254,6 +322,7 @@ export function PublicRoomsSection({
         <PublicRoomCard
           key={room.id}
           room={room}
+          players={playersByRoom?.get(room.id) ?? []}
           index={i}
           onAsk={(r) => void ask(r)}
           busy={busyId === room.id}

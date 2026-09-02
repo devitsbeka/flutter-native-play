@@ -1805,6 +1805,10 @@ export const ka = {
     winnerTakes: "გამარჯვებული იღებს:",
     captainLabel: "კაპიტანი:",
     chooseCaptain: "აირჩიე კაპიტანი",
+    chooseCaptainTitle: "აირჩიე გუნდის კაპიტანი",
+    claimSeatHint: "აირჩიე გუნდი — შეეხე თავისუფალ ადგილს",
+    pickingTeam: "{name} ირჩევს გუნდს…",
+    votePick: "არჩევა",
     startGame: "თამაშის დაწყება",
     pickDuration: "აირჩიე ხანგრძლივობა",
     autoRounds: "თითოეული მოთამაშე ორჯერ თამაშობს",
@@ -1829,7 +1833,7 @@ export const ka = {
     classicCardDesc: "კლასიკური ოთახი — ბიბლიოთეკა და შენი ტრივიები",
     teamName: "გუნდის სახელი",
     captainInfoTitle: "გუნდის კაპიტანი",
-    captainInfoBody: "კაპიტანი გუნდის ლიდერია: თუ ანგარიში გათანაბრდა, სუპერ რაუნდში სწორედ ის გამოდის გუნდის ჩემპიონად და პასუხობს ყველას მაგივრად. კაპიტანს გუნდი ხმის მიცემით ირჩევს — შეეხე თანაგუნდელს და მიეცი ხმა. მარტო თამაშისას კაპიტანი შენ ხარ.",
+    captainInfoBody: "კაპიტანი გუნდის ლიდერია, თუ ანგარიში გათანაბრდა, გადამწყვეტ რაუნდში მოსაგებად, მხოლოდ კაპიტნები ერკინებიან ერთმანეთს.",
   },
 
   // Words — the word-wheel crossword mode (src/features/words)
@@ -2570,6 +2574,8 @@ export const ka = {
     moreExcl: "მეტი!",
     joinFreeBtn: "გაწევრიანდი უფასოდ",
     refreshBtn: "ახლიდან",
+    teamSizeLabel: "მოთამაშეების რაოდენობა",
+    spinCategoryBtn: "დაატრიალე კატეგორია ({count} დარჩა)",
     createProfileAndPlay: "შექმენი შენი პროფილი და\nითამაშე უფასოდ!",
     createAccount: "შექმენი ანგარიში",
     alreadyHaveAccount: "უკვე გაქვს ანგარიში?",

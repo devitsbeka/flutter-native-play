@@ -116,10 +116,34 @@ export function publicRoomPath(room: Pick<PublicRoom, "game_type_key" | "game_mo
  * even though the King's row carries eleven (the King himself takes one).
  */
 export function roomSeats(room: Pick<PublicRoom, "game_type_key" | "max_players">): number | null {
-  if (room.game_type_key === "king" || room.game_type_key === "team_battle") {
+  if (room.game_type_key === "king") {
     return 10;
   }
+  // Battle rooms come in sizes now (2-2 up to 5-5) — max_players carries it.
+  if (room.game_type_key === "team_battle") {
+    return room.max_players ?? 10;
+  }
   return room.max_players ?? null;
+}
+
+/**
+ * The Public tab's order: my own rooms first (hosted, and ones I already
+ * sit in — the cards I came back for), then my friends' rooms, then
+ * everyone else's, each group newest first.
+ */
+export function sortPublicRooms(
+  rooms: PublicRoom[],
+  friendIds: ReadonlySet<string>,
+): PublicRoom[] {
+  const tier = (r: PublicRoom) =>
+    r.my_state === "host" || r.my_state === "joined"
+      ? 0
+      : friendIds.has(r.host_user_id)
+        ? 1
+        : 2;
+  const born = (r: PublicRoom) =>
+    new Date(r.created_at ?? r.last_activity_at ?? 0).getTime();
+  return [...rooms].sort((a, b) => tier(a) - tier(b) || born(b) - born(a));
 }
 
 export function filterPublicRooms(
@@ -128,7 +152,10 @@ export function filterPublicRooms(
   searchQuery: string,
 ): PublicRoom[] {
   return rooms.filter((room) => {
-    if (filter === "king" && room.game_type_key !== "king") return false;
+    // Versus King is friends-only: its lounges are never listed, even when
+    // an older build managed to publish one. (The "king" chip is gone from
+    // the filter bar; a stale value simply finds nothing.)
+    if (room.game_type_key === "king" || filter === "king") return false;
     if (filter === "team_battle" && room.game_type_key !== "team_battle") return false;
     if (filter === "classic" && room.game_type_key) return false;
     return matchesQuery(searchQuery, [

@@ -16,7 +16,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { filterPublicRooms, publicRoomPath, roomSeats, type PublicRoom } from "@/hooks/usePublicRooms";
+import { filterPublicRooms, publicRoomPath, roomSeats, sortPublicRooms, type PublicRoom } from "@/hooks/usePublicRooms";
 
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 
@@ -55,10 +55,12 @@ describe("a room is private unless somebody published it", () => {
     expect(read("src/contexts/TeamBattleContext.tsx")).toMatch(
       /createRoom = useCallback\(async \(isPublic = false, team: TBTeam = "a", teamSize = 5\)/,
     );
-    // The lounges make their own room after a navigation, so the switch
-    // travels in router state and falls back to private without it.
-    expect(read("src/pages/KingPage.tsx")).toMatch(/\)\?\.isPublic \?\? false,/);
+    // The Battle lounge makes its own room after a navigation, so the
+    // switch travels in router state and falls back to private without it.
     expect(read("src/pages/TeamBattlePage.tsx")).toMatch(/handoff\?\.isPublic \?\? false;/);
+    // Versus King goes further: friends-only by owner's decision, so its
+    // lounge ignores the switch entirely and always creates private.
+    expect(read("src/pages/KingPage.tsx")).toMatch(/publishRef = useRef<boolean>\(false\)/);
   });
 
   it("survives a database that has not had the migration yet", () => {
@@ -120,13 +122,14 @@ describe("a room is private unless somebody published it", () => {
 });
 
 describe("the arena is sized before it is opened", () => {
-  it("the host picks 2-2 through 5-5, above the switch", () => {
+  it("the host picks 2-2 through 5-5, under the switch", () => {
     const create = read("src/components/team/CreateRoomPage.tsx");
     expect(create).toMatch(/const \[battleTeamSize, setBattleTeamSize\] = useState\(5\)/);
     expect(create).toMatch(/\[2, 3, 4, 5\]\.map\(\(size\) =>/);
-    // Above the public/private switch, which is itself above the button.
-    expect(create.indexOf("extra.playersPerTeam")).toBeLessThan(
-      create.indexOf("extra.roomPublicHint"),
+    // The toggle sits ABOVE the sizing row (owner's ask), both above the
+    // button.
+    expect(create.indexOf("extra.roomPublicHint")).toBeLessThan(
+      create.indexOf("extra.playersPerTeam"),
     );
     expect(create).toMatch(/teamSize: gameChoice === "battle" \? battleTeamSize : undefined/);
   });
@@ -190,12 +193,32 @@ describe("the public list", () => {
       room({ id: "b", game_type_key: "team_battle", room_name: "Arena" }),
       room({ id: "c", game_type_key: null, room_name: "Plain" }),
     ];
-    expect(filterPublicRooms(rooms, "king", "").map((r) => r.id)).toEqual(["a"]);
+    // Versus King is friends-only: a king room never reaches the public
+    // list, whatever filter is asked for — even one an older build
+    // managed to publish.
+    expect(filterPublicRooms(rooms, "king", "")).toEqual([]);
     expect(filterPublicRooms(rooms, "classic", "").map((r) => r.id)).toEqual(["c"]);
-    expect(filterPublicRooms(rooms, "all", "").length).toBe(3);
+    expect(filterPublicRooms(rooms, "all", "").map((r) => r.id)).toEqual(["b", "c"]);
     expect(filterPublicRooms(rooms, "all", "arena").map((r) => r.id)).toEqual(["b"]);
     // The category is the thing people are shopping for on this tab.
-    expect(filterPublicRooms(rooms, "all", "history").length).toBe(3);
+    expect(filterPublicRooms(rooms, "all", "history").length).toBe(2);
+  });
+
+  it("orders mine first, then my friends' rooms, then the rest newest first", () => {
+    const rooms = [
+      room({ id: "old-stranger", host_user_id: "s1", created_at: "2026-01-01T00:00:00Z" }),
+      room({ id: "new-stranger", host_user_id: "s2", created_at: "2026-06-01T00:00:00Z" }),
+      room({ id: "friends", host_user_id: "f1", created_at: "2026-02-01T00:00:00Z" }),
+      room({ id: "mine", host_user_id: "me", my_state: "host", created_at: "2026-01-15T00:00:00Z" }),
+      room({ id: "im-in", host_user_id: "s3", my_state: "joined", created_at: "2026-03-01T00:00:00Z" }),
+    ];
+    expect(sortPublicRooms(rooms, new Set(["f1"])).map((r) => r.id)).toEqual([
+      "im-in", // rooms I sit in count as mine, newest of the two
+      "mine",
+      "friends",
+      "new-stranger",
+      "old-stranger",
+    ]);
   });
 
   it("counts the lounges' seats even when the row does not", () => {
@@ -203,6 +226,8 @@ describe("the public list", () => {
     // King takes one of them, and a card reading 2/11 counts a bot.
     expect(roomSeats(room({ game_type_key: "king", max_players: 11 }))).toBe(10);
     expect(roomSeats(room({ game_type_key: "team_battle", max_players: 10 }))).toBe(10);
+    // Battle rooms come in sizes now — the card counts the room's own seats.
+    expect(roomSeats(room({ game_type_key: "team_battle", max_players: 4 }))).toBe(4);
     expect(roomSeats(room({ game_type_key: null, max_players: null }))).toBeNull();
   });
 
@@ -219,8 +244,9 @@ describe("the public list", () => {
     const section = read("src/components/team/PublicRoomsSection.tsx");
     expect(section).toMatch(/supabase\.rpc\("request_room_join"/);
     // Never a direct seat write: the policy would refuse it anyway, and a
-    // refusal the UI does not expect reads as a broken button.
-    expect(section).not.toMatch(/from\("room_participants"\)/);
+    // refusal the UI does not expect reads as a broken button. (Reading the
+    // seated faces for the card is fine — the write is the promise.)
+    expect(section).not.toMatch(/from\("room_participants"\)\s*\n?\s*\.(insert|update|upsert|delete)/);
     // Only the answer 'joined' walks in — everything else waits.
     expect(section).toMatch(/if \(outcome === "joined"\)/);
   });
@@ -297,10 +323,10 @@ describe("the arena's two sides", () => {
   it("lets a side's captain dress it, through the RPC", () => {
     const battle = read("src/pages/TeamBattlePage.tsx");
     expect(battle).toMatch(/supabase\.rpc\("tb_set_team_icon"/);
-    // That side's own captain and nobody else — hosting buys no pencil on
-    // the other side (20260925100000).
-    expect(battle).toMatch(/const canDress = !!user && mine\?\.user_id === user\.id;/);
-    expect(battle).not.toMatch(/const canDress = isHost/);
+    // Only that side's own captain gets the pencil — the host has no say
+    // over the other team's colours (owner's decision).
+    expect(battle).toMatch(/const canDress = !!user && mine\?\.user_id === user\.id/);
+    expect(battle).not.toMatch(/canDress = isHost \|\|/);
     // Never a direct write: game_rooms' update policy is host-only, so a
     // captain writing the column straight would fail silently under RLS.
     expect(battle).not.toMatch(/update\(\{ team_[ab]_icon/);

@@ -24,7 +24,6 @@ import {
   CaptainChip,
   CaptainInfoModal,
   AnimatedCoinPill,
-  FriendPeek,
   type InviteEntry,
   LILAC_BG,
   LilacHeader,
@@ -326,15 +325,11 @@ export default function KingPage() {
   // The captain sheet: who leads the couch, and the vote that decides it.
   const [captainInfoOpen, setCaptainInfoOpen] = useState(false);
   const roomAttempted = useRef(false);
-  // Published or private, decided on the create screen and carried here in
-  // router state: this lounge makes its own room on arrival, so the switch
-  // has to survive the navigation. Captured at mount because the ?code=
-  // replace that follows creation drops router state. A lounge opened any
-  // other way (a shared link, the play chooser) is private, like every
-  // other room created without an opinion.
-  const publishRef = useRef<boolean>(
-    (location.state as { isPublic?: boolean } | null)?.isPublic ?? false,
-  );
+  // Versus King is friends-only by owner's decision: the couch fills by
+  // invitation, never by being found. Whatever the create screen said, this
+  // lounge's room is private — and the public feed drops king rooms too
+  // (filterPublicRooms), so one published by an older build stays unlisted.
+  const publishRef = useRef<boolean>(false);
   const kingRoomRef = useRef<Tables<"game_rooms"> | null>(null);
   kingRoomRef.current = kingRoom;
   const channelRef = useRef<RealtimeChannel | null>(null);
@@ -672,7 +667,6 @@ export default function KingPage() {
   // social share) wired to this lounge's real room — an invited friend gets
   // the notification and lands on this couch.
   const [inviteOpen, setInviteOpen] = useState(false);
-  const [peek, setPeek] = useState<InviteEntry | null>(null);
   const inviteFriends = useCallback(() => setInviteOpen(true), []);
 
 
@@ -986,17 +980,6 @@ export default function KingPage() {
           </div>
         )}
 
-        <FriendPeek
-          friend={peek}
-          onClose={() => setPeek(null)}
-          actionLabel={t("lobby.inviteToGame")}
-          invitedLabel={t("lobby.invitedState")}
-          invited={
-            !!peek &&
-            (invitedIds.has(peek.id) || kingParts.some((p) => p.user_id === peek.id))
-          }
-          onAction={() => peek && void inviteToGame(peek)}
-        />
       </div>
     );
   }

@@ -1800,6 +1800,10 @@ export const en: KaTranslations = {
     winnerTakes: "Winner takes:",
     captainLabel: "Captain:",
     chooseCaptain: "Choose Captain",
+    chooseCaptainTitle: "Choose the team captain",
+    claimSeatHint: "Pick your team — tap an open seat",
+    pickingTeam: "{name} is picking a team…",
+    votePick: "Choose",
     startGame: "Start the Game",
     pickDuration: "Pick duration",
     autoRounds: "Every player plays twice",
@@ -1824,7 +1828,7 @@ export const en: KaTranslations = {
     classicCardDesc: "Classic room — library and your trivias",
     teamName: "Team name",
     captainInfoTitle: "Team Captain",
-    captainInfoBody: "The captain leads the team: if the match ends in a tie, the captain steps up as the team's champion in the super round and answers for everyone. Teams elect their captain by vote — tap a teammate to cast yours. Playing solo, you are the captain.",
+    captainInfoBody: "The captain is the team's leader — if the score ends tied, only the captains face each other in the deciding round.",
   },
 
   // Words — the word-wheel crossword mode (src/features/words)
@@ -2565,6 +2569,8 @@ export const en: KaTranslations = {
     moreExcl: "more!",
     joinFreeBtn: "Join for free",
     refreshBtn: "Restart",
+    teamSizeLabel: "Number of players",
+    spinCategoryBtn: "Spin category ({count} left)",
     createProfileAndPlay: "Create your profile and\nplay for free!",
     createAccount: "Create account",
     alreadyHaveAccount: "Already have an account?",

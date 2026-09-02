@@ -368,20 +368,6 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
     }
   }, [user, profile]);
 
-  // The lobby renders seats strictly by team, so a joined-but-teamless row
-  // is invisible — which is exactly what happened to accepted invitees:
-  // their greyed seat vanished the moment they joined. Every join therefore
-  // lands on the emptier team unless a seat was already reserved for one.
-  const pickEmptierTeam = async (roomId: string): Promise<TBTeam> => {
-    const { data } = await supabase
-      .from("room_participants")
-      .select("team")
-      .eq("room_id", roomId)
-      .in("status", ["joined", "ready", "playing", "invited"]);
-    const a = data?.filter((r) => r.team === "a").length ?? 0;
-    const b = data?.filter((r) => r.team === "b").length ?? 0;
-    return a <= b ? "a" : "b";
-  };
 
   const enterRoomRow = useCallback(
     async (row: TBRoom): Promise<boolean> => {
@@ -394,13 +380,13 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
         .maybeSingle();
       // An invite-modal invitee arrives holding an "invited" row — accepting
       // means flipping it to joined, or they stay invisible in the lobby.
+      // A team is NOT dealt: an invite from a + seat already carries its
+      // side, and everyone else (approved join requests included) claims
+      // one in the lobby by tapping the + seat they want.
       if (existing && existing.status === "invited") {
         await supabase
           .from("room_participants")
-          .update({
-            status: "joined",
-            ...(existing.team ? {} : { team: await pickEmptierTeam(row.id) }),
-          })
+          .update({ status: "joined" })
           .eq("id", existing.id);
       }
       if (!existing) {
@@ -419,6 +405,8 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
           toast.error(tStandalone("teamBattle.roomFull"));
           return false;
         }
+        // No team on arrival: the seats are the choice, and the lobby
+        // prompts the newcomer to claim one on the side they want.
         const { error } = await supabase.from("room_participants").insert({
           room_id: row.id,
           user_id: user.id,
@@ -427,7 +415,6 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
           country_code: profile.country_code,
           is_host: false,
           status: "joined",
-          team: await pickEmptierTeam(row.id),
         });
         if (error) {
           console.error("[TB] join failed", error);
@@ -619,9 +606,13 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
         const pool = shuffleArray(categories);
         let poolIdx = 0;
         const nextCat = () => pool[poolIdx++ % pool.length];
+        // A turn is a fixed three minutes now, not a fixed question count —
+        // a fast player burns through far more than the old 12, so each
+        // tile ships as many as the bank will give (a short bank just ends
+        // the turn early, as before).
         const fetchFor = async (cat: { uuid: string; name: string }) => ({
           cat,
-          res: await getQuestions({ mode: "vs", categoryUuid: cat.uuid, categoryName: cat.name, count: 12 }),
+          res: await getQuestions({ mode: "vs", categoryUuid: cat.uuid, categoryName: cat.name, count: 40 }),
         });
 
         // One fetch per tile plus the super round, all in flight at once —
@@ -668,7 +659,26 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
             tiles,
             super_questions: asQuestions(superRes.questions) as unknown as Json,
           } as unknown as Json,
+          // Three minutes on the clock, as many questions as they can
+          // answer (20260924100000). On a database that still clamps at 90
+          // the RPC refuses — retried once at the old maximum so a match
+          // can still start before the migration lands.
+          p_turn_seconds: 180,
         });
+        if (error && /between 20 and 90/.test(error.message ?? "")) {
+          const retry = await supabase.rpc("tb_start_match", {
+            p_room_id: roomId,
+            p_board: {
+              tiles,
+              super_questions: asQuestions(superRes.questions) as unknown as Json,
+            } as unknown as Json,
+            p_turn_seconds: 90,
+          });
+          if (!retry.error) return true;
+          console.error("[TB] start failed", retry.error);
+          toast.error(retry.error.message);
+          return false;
+        }
         if (error) {
           console.error("[TB] start failed", error);
           toast.error(error.message);

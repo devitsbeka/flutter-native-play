@@ -38,10 +38,13 @@ describe("the lounges invite through the invite page", () => {
   it("a + seat opens the invite page", () => {
     expect(king).toMatch(/PlusSeat[^]*?onClick=\{inviteFriends\}/);
     // The arena's + also remembers which side the seat was on, so an
-    // accepted invite lands on the right team.
+    // accepted invite lands on the right team. For a player who has no
+    // team yet the same + is the seat itself — tapping it claims that
+    // side — so the invite page opens only for the already seated.
     expect(battle).toMatch(
-      /const seatAction = \(team: TBTeam\) => \{\s*\n\s*inviteTeamRef\.current = team;\s*\n\s*setInviteOpen\(true\)/,
+      /const seatAction = \(team: TBTeam\) => \{[^]*?inviteTeamRef\.current = team;\s*\n\s*setInviteOpen\(true\)/,
     );
+    expect(battle).toMatch(/if \(iAmClaiming\) \{\s*\n\s*void setTeam\(team\);/);
   });
 });
 

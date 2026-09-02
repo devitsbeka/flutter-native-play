@@ -210,11 +210,11 @@ export const privateFilterOptions: FilterOption<PrivateFilter>[] = [
   { value: "personal", labelKey: "extra.myTriviaPartyLabel" },
 ];
 
-/** The Public tab: everything, or one kind of game. */
+/** The Public tab: everything, or one kind of game. Versus King is absent
+ * on purpose — its lounges are friends-only and never listed publicly. */
 export const publicRoomFilterOptions: FilterOption<PublicRoomsFilter>[] = [
   { value: "all", labelKey: "extra.filterAll" },
   { value: "classic", labelKey: "extra.tabRooms" },
-  { value: "king", labelKey: "lobby.vkTitle" },
   { value: "team_battle", labelKey: "teamBattle.title" },
 ];
 
