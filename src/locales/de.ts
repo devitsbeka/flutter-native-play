@@ -1472,6 +1472,7 @@ export const de: KaTranslations = {
     teamSuggestHint: "Tippe deine Antwort an — der Kapitän entscheidet",
     captainLock: "Antwort festlegen",
     captainNextHint: "Der Kapitän geht zur nächsten Frage",
+    captainInfoBody: "Der Kapitän führt das Team: Er öffnet die Antwortoptionen und sperrt die Antwort des Teams ein. Das Team wählt seinen Kapitän per Abstimmung – tippe auf einen Mitspieler, um ihm deine Stimme zu geben. Ohne Abstimmung führt der Gastgeber.",
     teamWon: "Euer Team hat den König besiegt!",
     teamLost: "Diesmal gewann der König",
     commitHint: "Antwort festlegen",

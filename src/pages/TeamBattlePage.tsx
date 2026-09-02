@@ -603,8 +603,11 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
             one in every arena ever played. It is 60px above the name now,
             and it belongs to the side rather than to the app: the captain
             that side ELECTED picks it, which is the first thing winning a
-            captain vote is actually good for. The host can pick too, since
-            a team that has not voted yet has nobody else who could.
+            captain vote is actually good for. Hosting buys nothing here —
+            the host dresses the side they captain and never the other one
+            (tb_set_team_icon, 20260925100000). A side that has not voted
+            still has a captain for this: captainOf's fallback, its
+            earliest-joined human, which is who the server agrees on.
 
             The row sits above the captain chips at 453 rather than beside
             them, and the middle is empty on purpose — that is where the
@@ -614,7 +617,7 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
           const icon = (isA ? room?.team_a_icon : room?.team_b_icon)
             ?? (isA ? teamPenguins : teamFormula);
           const mine = isA ? captainA : captainB;
-          const canDress = isHost || (!!user && mine?.user_id === user.id);
+          const canDress = !!user && mine?.user_id === user.id;
           return (
             <div
               key={team}

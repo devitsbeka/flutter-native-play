@@ -86,3 +86,24 @@ describe("the game's name is centred in the header", () => {
     expect(room).not.toMatch(/md:flex-\[2\]/);
   });
 });
+
+describe("the couch elects its captain, like the arena", () => {
+  it("the King's chip opens the vote sheet and the vote goes through the shared RPC", () => {
+    // Tapping the captain chip opens the same CaptainInfoModal the arena
+    // uses, with a live tally, and choosing casts a tb_vote_captain vote —
+    // the one function that serves both lobbies since 20260925100000.
+    expect(king).toMatch(/CaptainChip[^]*?onClick=\{\(\) => setCaptainInfoOpen\(true\)\}/);
+    expect(king).toMatch(/<CaptainInfoModal[^]*?body=\{t\("king\.captainInfoBody"\)\}/);
+    expect(king).toMatch(/supabase\.rpc\("tb_vote_captain"/);
+    expect(king).toMatch(/voter\.captain_vote === p\.user_id/);
+  });
+
+  it("the host wears the armband only until somebody is voted in", () => {
+    // Elected first, host as the fallback — the same order king_team_start
+    // applies when it seats the duel's captain.
+    expect(king).toMatch(
+      /const kingCaptain =\s*\n\s*kingParts\.find\(\(p\) => p\.is_captain && !p\.is_bot\) \?\?\s*\n\s*kingParts\.find\(\(p\) => p\.is_host\)/,
+    );
+    expect(king).not.toMatch(/name=\{\(kingParts\.find\(\(p\) => p\.is_host\)/);
+  });
+});

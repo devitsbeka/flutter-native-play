@@ -355,12 +355,21 @@ BEGIN
     'SELECT public.tb_set_team_icon(%L, %L, %L)', v_room, 'b', 'https://icons/x.png'),
     'a team-mate who was not elected cannot');
 
-  -- The host can dress either side — somebody has to, before a team votes.
+  -- The host dresses their OWN side: nobody on A has been voted in, so
+  -- its captain is its earliest-joined human, which is the host.
   PERFORM pg_temp.as_user(v_host);
   PERFORM public.tb_set_team_icon(v_room, 'a', 'https://icons/anchor.png');
   PERFORM pg_temp.must_equal(
     (SELECT team_a_icon FROM public.game_rooms WHERE id = v_room),
-    'https://icons/anchor.png', 'the host can dress a side with no captain yet');
+    'https://icons/anchor.png', 'the host dresses the side they lead by default');
+
+  -- …and never the other one (20260925100000): hosting is not captaining.
+  PERFORM pg_temp.must_fail(format(
+    'SELECT public.tb_set_team_icon(%L, %L, %L)', v_room, 'b', 'https://icons/x.png'),
+    'the host cannot redress the other side');
+  PERFORM pg_temp.must_equal(
+    (SELECT team_b_icon FROM public.game_rooms WHERE id = v_room),
+    'https://icons/rocket.png', 'B keeps the crest its captain chose');
 
   RESET ROLE;
   PERFORM pg_temp.as_user(NULL);

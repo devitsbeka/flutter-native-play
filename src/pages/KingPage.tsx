@@ -22,6 +22,7 @@ import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
 import { JoinRequestGate } from "@/components/team/JoinRequestGate";
 import {
   CaptainChip,
+  CaptainInfoModal,
   AnimatedCoinPill,
   FriendPeek,
   type InviteEntry,
@@ -322,6 +323,8 @@ export default function KingPage() {
   const [kingParts, setKingParts] = useState<Tables<"room_participants">[]>([]);
   const [kingPending, setKingPending] = useState<Tables<"room_participants">[]>([]);
   const [seatMenu, setSeatMenu] = useState<Tables<"room_participants"> | null>(null);
+  // The captain sheet: who leads the couch, and the vote that decides it.
+  const [captainInfoOpen, setCaptainInfoOpen] = useState(false);
   const roomAttempted = useRef(false);
   // Published or private, decided on the create screen and carried here in
   // router state: this lounge makes its own room on arrival, so the switch
@@ -468,6 +471,30 @@ export default function KingPage() {
       setKingPending(resolved.filter((part) => part.status === "invited"));
     }
   }, []);
+
+  // Any seated human: cast (or change) a captain vote. The couch is one
+  // team, so the server tallies everyone on it and the plurality leader
+  // wears is_captain — the same tb_vote_captain the arena uses, which
+  // serves King rooms since 20260925100000. The host is a candidate like
+  // anybody else: the couch can vote them out of the armband before the
+  // duel starts, and king_team_start seats whoever wears it.
+  const voteKingCaptain = useCallback(
+    async (candidateId: string) => {
+      const roomId = kingRoomRef.current?.id;
+      if (!roomId) return;
+      const { error } = await supabase.rpc("tb_vote_captain", {
+        p_room_id: roomId,
+        p_candidate: candidateId,
+      });
+      if (error) {
+        console.error("[king] captain vote failed", error);
+        toast.error(error.message);
+      } else {
+        void refreshKingParts();
+      }
+    },
+    [refreshKingParts],
+  );
 
   useEffect(() => {
     if (!kingRoom) return;
@@ -688,6 +715,15 @@ export default function KingPage() {
     );
   }
 
+  // Who leads the couch: the elected captain, and until anybody has been
+  // voted in, the host — the same fallback king_team_start applies when it
+  // seats the duel's captain.
+  const kingCaptain =
+    kingParts.find((p) => p.is_captain && !p.is_bot) ??
+    kingParts.find((p) => p.is_host) ??
+    kingParts[0];
+  const meSeated = !!user && kingParts.some((p) => p.user_id === user.id && !p.is_bot);
+
   // The lobby is the Versus King frame (Figma 940:7474) rendered at design
   // coordinates: the King's lounge scene, your friends in the invite row,
   // seats around the couch, and the Start CTA driving the existing match.
@@ -801,16 +837,19 @@ export default function KingPage() {
             })}
             </AnimatePresence>
 
-            {/* Captain (940:7788 + 936:21188) — the room's host */}
+            {/* Captain (940:7788 + 936:21188) — elected by the couch, the
+                host only until a vote says otherwise. Tapping the chip
+                opens the same vote sheet the arena has. */}
             <p className="absolute left-[38px] top-[638px] font-[Nunito] font-medium leading-[24px] text-[#0c172c] text-[15px] tracking-[-0.16px]">
               {t("lobby.captainLabel")}
             </p>
             <CaptainChip
               left={38}
               top={668}
-              avatarUrl={(kingParts.find((p) => p.is_host) ?? kingParts[0])?.avatar_url ?? profile?.avatar_url}
-              name={(kingParts.find((p) => p.is_host) ?? kingParts[0])?.nickname ?? profile?.nickname}
+              avatarUrl={kingCaptain?.avatar_url ?? profile?.avatar_url}
+              name={kingCaptain?.nickname ?? profile?.nickname}
               placeholder={t("lobby.chooseCaptain")}
+              onClick={() => setCaptainInfoOpen(true)}
             />
 
             {(helpOpen || noPool) && (
@@ -843,6 +882,25 @@ export default function KingPage() {
               ? kingRoom?.host_user_id !== user?.id
               : !state)
           }
+        />
+
+        <CaptainInfoModal
+          open={captainInfoOpen}
+          onClose={() => setCaptainInfoOpen(false)}
+          title={t("lobby.captainInfoTitle")}
+          body={t("king.captainInfoBody")}
+          chooseLabel={meSeated ? t("lobby.chooseCaptain") : undefined}
+          members={kingParts.map((p) => ({
+            userId: p.user_id,
+            nickname: p.nickname,
+            avatarUrl: p.avatar_url,
+            isCaptain: p.user_id === kingCaptain?.user_id,
+            // Live tally: how many humans on the couch back this member
+            votes: kingParts.filter((voter) => !voter.is_bot && voter.captain_vote === p.user_id).length,
+            // Only humans can wear the armband
+            selectable: !p.is_bot,
+          }))}
+          onChoose={meSeated ? (userId) => void voteKingCaptain(userId) : undefined}
         />
 
         <InviteFriendsModal

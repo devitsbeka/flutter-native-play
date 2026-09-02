@@ -297,8 +297,10 @@ describe("the arena's two sides", () => {
   it("lets a side's captain dress it, through the RPC", () => {
     const battle = read("src/pages/TeamBattlePage.tsx");
     expect(battle).toMatch(/supabase\.rpc\("tb_set_team_icon"/);
-    // Host or that side's own captain — nobody else gets the pencil.
-    expect(battle).toMatch(/const canDress = isHost \|\| \(!!user && mine\?\.user_id === user\.id\)/);
+    // That side's own captain and nobody else — hosting buys no pencil on
+    // the other side (20260925100000).
+    expect(battle).toMatch(/const canDress = !!user && mine\?\.user_id === user\.id;/);
+    expect(battle).not.toMatch(/const canDress = isHost/);
     // Never a direct write: game_rooms' update policy is host-only, so a
     // captain writing the column straight would fail silently under RLS.
     expect(battle).not.toMatch(/update\(\{ team_[ab]_icon/);

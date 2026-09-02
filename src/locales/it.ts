@@ -1475,6 +1475,7 @@ export const it: KaTranslations = {
     teamSuggestHint: "Tocca la tua risposta — decide il capitano",
     captainLock: "Blocca la risposta",
     captainNextHint: "Il capitano passa alla prossima domanda",
+    captainInfoBody: "Il capitano guida la squadra: apre le opzioni e blocca la risposta della squadra. La squadra sceglie il capitano votando: tocca un compagno per dargli il tuo voto. Senza voti, guida l'host.",
     teamWon: "La tua squadra ha battuto il Re!",
     teamLost: "Stavolta ha vinto il Re",
     commitHint: "Conferma la tua risposta",

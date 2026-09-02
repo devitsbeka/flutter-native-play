@@ -528,3 +528,71 @@ BEGIN
 END $$;
 
 \echo 'ok: the King speaks all seven languages'
+
+-- ══ the couch elects its captain (20260925100000) ══════════════════════════
+
+DO $$
+DECLARE
+  v_host uuid := 'aaaa1111-0000-4000-8000-00000000c101'::uuid;
+  v_mate uuid := 'aaaa1111-0000-4000-8000-00000000c102'::uuid;
+  v_third uuid := 'aaaa1111-0000-4000-8000-00000000c103'::uuid;
+  v_out  uuid := 'aaaa1111-0000-4000-8000-00000000c104'::uuid;
+  v_room uuid;
+  v_state jsonb;
+BEGIN
+  INSERT INTO auth.users (id, email) VALUES
+    (v_host, 'cvhost@tb.test'), (v_mate, 'cvmate@tb.test'),
+    (v_third, 'cvthird@tb.test'), (v_out, 'cvout@tb.test')
+  ON CONFLICT (id) DO NOTHING;
+  INSERT INTO public.profiles (user_id, nickname, coins, gems) VALUES
+    (v_host, 'cvhost', 0, 0), (v_mate, 'cvmate', 0, 0),
+    (v_third, 'cvthird', 0, 0), (v_out, 'cvout', 0, 0)
+  ON CONFLICT (user_id) DO NOTHING;
+
+  INSERT INTO public.game_rooms (room_code, host_user_id, status, game_type_key)
+  VALUES ('KINGCV', v_host, 'waiting', 'king') RETURNING id INTO v_room;
+  INSERT INTO public.room_participants (room_id, user_id, nickname, is_host, status, joined_at)
+  VALUES (v_room, v_host,  'cvhost',  true,  'joined', now() - interval '3 minutes'),
+         (v_room, v_mate,  'cvmate',  false, 'joined', now() - interval '2 minutes'),
+         (v_room, v_third, 'cvthird', false, 'joined', now() - interval '1 minute');
+
+  -- Only the couch votes, and only for someone on it.
+  PERFORM pg_temp.as_user(v_out);
+  PERFORM pg_temp.must_fail(
+    format('SELECT public.tb_vote_captain(%L, %L)', v_room, v_mate),
+    'an outsider has no vote on the couch');
+  PERFORM pg_temp.as_user(v_mate);
+  PERFORM pg_temp.must_fail(
+    format('SELECT public.tb_vote_captain(%L, %L)', v_room, v_out),
+    'the couch cannot elect someone who is not on it');
+
+  -- Two of three back the mate: the host loses the armband before the
+  -- duel starts.
+  PERFORM public.tb_vote_captain(v_room, v_mate);
+  PERFORM pg_temp.as_user(v_third);
+  PERFORM public.tb_vote_captain(v_room, v_mate);
+  PERFORM pg_temp.must_equal(
+    (SELECT is_captain FROM public.room_participants WHERE room_id = v_room AND user_id = v_mate),
+    true, 'the couch''s plurality leader wears the armband');
+  PERFORM pg_temp.must_equal(
+    (SELECT count(*)::int FROM public.room_participants WHERE room_id = v_room AND is_captain),
+    1, 'one captain on the couch');
+
+  -- Starting is still the host's call, but the duel seats the elected
+  -- captain, not the host.
+  PERFORM pg_temp.as_user(v_mate);
+  PERFORM pg_temp.must_fail(
+    format('SELECT public.king_team_start(%L, %L)', v_room, 'en'),
+    'an elected captain does not get to start the duel');
+  PERFORM pg_temp.as_user(v_host);
+  v_state := public.king_team_start(v_room, 'en');
+  PERFORM pg_temp.must_equal((v_state ->> 'captain')::uuid, v_mate,
+    'the duel seats the captain the couch voted in');
+
+  PERFORM pg_temp.as_user(NULL);
+  DELETE FROM public.king_team_matches WHERE room_id = v_room;
+  DELETE FROM public.room_participants WHERE room_id = v_room;
+  DELETE FROM public.game_rooms WHERE id = v_room;
+END $$;
+
+\echo 'ok: the couch elects its captain and the duel seats them'
