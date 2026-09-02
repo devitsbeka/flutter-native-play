@@ -156,22 +156,35 @@ export function roomSeats(room: Pick<PublicRoom, "game_type_key" | "max_players"
 export function sortPublicRooms(
   rooms: PublicRoom[],
   friendIds: ReadonlySet<string>,
+  ctx?: PublicRoomContext,
 ): PublicRoom[] {
   const mine = (r: PublicRoom) => r.my_state === "host" || r.my_state === "joined";
   const full = (r: PublicRoom) => {
     const seats = roomSeats(r);
     return seats != null && r.player_count >= seats;
   };
+  // A room whose whole couch has closed the app is a room you will wait in
+  // alone — it goes to the very back, never first (owner's rule: we need
+  // ONLINE players in rooms to play). The viewer counts as online, so
+  // their own rooms never sink on them.
+  const dead = (r: PublicRoom) => {
+    if (!ctx) return false;
+    const seated = ctx.seatedByRoom.get(r.id) ?? [];
+    const people = seated.includes(r.host_user_id) ? seated : [r.host_user_id, ...seated];
+    return !people.some((id) => ctx.onlineIds.has(id));
+  };
   const tier = (r: PublicRoom) =>
-    mine(r) && full(r)
-      ? 0
-      : r.my_state === "pending"
-        ? 1
-        : mine(r)
-          ? 2
-          : friendIds.has(r.host_user_id)
-            ? 3
-            : 4;
+    dead(r)
+      ? 9
+      : mine(r) && full(r)
+        ? 0
+        : r.my_state === "pending"
+          ? 1
+          : mine(r)
+            ? 2
+            : friendIds.has(r.host_user_id)
+              ? 3
+              : 4;
   const remaining = (r: PublicRoom) => {
     const seats = roomSeats(r);
     if (seats == null) return 98;
