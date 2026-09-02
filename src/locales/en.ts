@@ -2415,6 +2415,7 @@ export const en: KaTranslations = {
     firstRoundLabel: "First round",
     roomNoCategoryYet: "No category picked yet",
     joinWaitingHost: "Waiting",
+    withdrawJoin: "Withdraw",
     joinAsked: "Asked to join — waiting for the host",
     joinAskFailed: "Could not send the request",
     publicEmptyTitle: "No public rooms yet",

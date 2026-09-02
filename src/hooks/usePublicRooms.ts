@@ -141,23 +141,37 @@ export function roomSeats(room: Pick<PublicRoom, "game_type_key" | "max_players"
 }
 
 /**
- * The Public tab's order: my own rooms first (hosted, and ones I already
- * sit in — the cards I came back for), then my friends' rooms, then
- * everyone else's, each group newest first.
+ * The Public tab's order: the room I'm WAITING on first (one game at a
+ * time — that ask is the thing I'm doing), then my own rooms (hosted, and
+ * ones I already sit in), then my friends' rooms, then everyone else's.
+ * Within each group, the room closest to filling comes first — a couch
+ * needing one more player starts sooner than one waiting on eight — with
+ * full rooms (nothing to join) and un-capped rooms after, newest first as
+ * the tie-break.
  */
 export function sortPublicRooms(
   rooms: PublicRoom[],
   friendIds: ReadonlySet<string>,
 ): PublicRoom[] {
   const tier = (r: PublicRoom) =>
-    r.my_state === "host" || r.my_state === "joined"
+    r.my_state === "pending"
       ? 0
-      : friendIds.has(r.host_user_id)
+      : r.my_state === "host" || r.my_state === "joined"
         ? 1
-        : 2;
+        : friendIds.has(r.host_user_id)
+          ? 2
+          : 3;
+  const remaining = (r: PublicRoom) => {
+    const seats = roomSeats(r);
+    if (seats == null) return 98;
+    const open = seats - r.player_count;
+    return open > 0 ? open : 99;
+  };
   const born = (r: PublicRoom) =>
     new Date(r.created_at ?? r.last_activity_at ?? 0).getTime();
-  return [...rooms].sort((a, b) => tier(a) - tier(b) || born(b) - born(a));
+  return [...rooms].sort(
+    (a, b) => tier(a) - tier(b) || remaining(a) - remaining(b) || born(b) - born(a),
+  );
 }
 
 export function filterPublicRooms(

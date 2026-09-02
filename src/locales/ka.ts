@@ -2420,6 +2420,7 @@ export const ka = {
     firstRoundLabel: "პირველი რაუნდი",
     roomNoCategoryYet: "კატეგორია ჯერ არ არის არჩეული",
     joinWaitingHost: "ველოდებით",
+    withdrawJoin: "გაუქმება",
     joinAsked: "თხოვნა გაიგზავნა — ველოდებით ჰოსტის პასუხს",
     joinAskFailed: "თხოვნა ვერ გაიგზავნა",
     publicEmptyTitle: "საჯარო ოთახი ჯერ არ არის",

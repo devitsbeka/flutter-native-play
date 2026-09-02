@@ -60,12 +60,22 @@ DO $$
 DECLARE n bigint;
 BEGIN
   -- A client that could write this table could approve itself into any
-  -- room, which is the entire gate.
+  -- room, which is the entire gate. The one carve-out is the asker taking
+  -- back their OWN still-pending ask (20260926100000): a DELETE that can
+  -- only un-ask, never answer — so inserts and updates stay at zero, and
+  -- every delete policy must be pinned to auth.uid() + pending.
   SELECT count(*) INTO n FROM pg_policies
    WHERE schemaname = 'public'
      AND tablename = 'room_join_requests'
-     AND cmd IN ('INSERT', 'UPDATE', 'DELETE', 'ALL');
-  PERFORM pg_temp.must_equal(n, 0::bigint, 'no client write policies on room_join_requests');
+     AND cmd IN ('INSERT', 'UPDATE', 'ALL');
+  PERFORM pg_temp.must_equal(n, 0::bigint, 'no client insert/update policies on room_join_requests');
+  SELECT count(*) INTO n FROM pg_policies
+   WHERE schemaname = 'public'
+     AND tablename = 'room_join_requests'
+     AND cmd = 'DELETE'
+     AND NOT (qual LIKE '%auth.uid()%' AND qual LIKE '%pending%');
+  PERFORM pg_temp.must_equal(n, 0::bigint,
+    'every delete policy on room_join_requests is the asker''s own pending withdraw');
 END $$;
 
 -- Supabase grants its client roles table privileges; this shim does not.
@@ -74,7 +84,7 @@ END $$;
 -- assertion has to be the policy's doing.
 GRANT SELECT, INSERT ON public.room_participants TO authenticated;
 GRANT SELECT ON public.game_rooms TO authenticated;
-GRANT SELECT ON public.room_join_requests TO authenticated;
+GRANT SELECT, DELETE ON public.room_join_requests TO authenticated;
 GRANT SELECT ON public.profiles TO authenticated;
 GRANT SELECT ON public.notifications TO authenticated;
 GRANT SELECT ON public.game_invitations TO authenticated;
@@ -450,6 +460,62 @@ BEGIN
     0::bigint, 'and never files a request');
 
   RESET ROLE;
+  PERFORM pg_temp.as_user(NULL);
+END $$;
+
+-- ── a pending ask is the asker's to take back — and only a pending one ────
+
+DO $$
+DECLARE
+  v_host uuid := 'bc000000-0000-0000-0000-00000000003a';
+  v_one  uuid := 'bc000000-0000-0000-0000-00000000003b';
+  v_two  uuid := 'bc000000-0000-0000-0000-00000000003c';
+  v_room uuid;
+  v_out  text;
+BEGIN
+  INSERT INTO auth.users (id, email) VALUES
+    (v_host, 'host3@pub.test'), (v_one, 'one@pub.test'), (v_two, 'two@pub.test')
+  ON CONFLICT (id) DO NOTHING;
+  INSERT INTO public.profiles (user_id, nickname) VALUES
+    (v_host, 'Host3'), (v_one, 'One'), (v_two, 'Two')
+  ON CONFLICT (user_id) DO UPDATE SET nickname = EXCLUDED.nickname;
+
+  INSERT INTO public.game_rooms (room_code, host_user_id, status, is_public)
+  VALUES ('PUBWD1', v_host, 'waiting', true) RETURNING id INTO v_room;
+  INSERT INTO public.room_participants (room_id, user_id, nickname, is_host, status)
+  VALUES (v_room, v_host, 'Host3', true, 'joined');
+
+  SET LOCAL ROLE authenticated;
+  PERFORM pg_temp.as_user(v_one);
+  v_out := public.request_room_join(v_room);
+  PERFORM pg_temp.as_user(v_two);
+  v_out := public.request_room_join(v_room);
+
+  -- One's withdraw removes One's row and cannot touch Two's, however the
+  -- delete is phrased: RLS matches only the asker's own pending rows.
+  PERFORM pg_temp.as_user(v_one);
+  DELETE FROM public.room_join_requests WHERE room_id = v_room;
+  RESET ROLE;
+  PERFORM pg_temp.must_equal(
+    (SELECT count(*) FROM public.room_join_requests WHERE room_id = v_room AND user_id = v_one),
+    0::bigint, 'the asker takes a pending ask back');
+  PERFORM pg_temp.must_equal(
+    (SELECT count(*) FROM public.room_join_requests WHERE room_id = v_room AND user_id = v_two),
+    1::bigint, 'and cannot take back anyone else''s');
+
+  -- An answered request keeps its answer: a decline is not erasable to ask
+  -- again as if it never happened through this door.
+  UPDATE public.room_join_requests
+     SET status = 'declined', responded_at = now()
+   WHERE room_id = v_room AND user_id = v_two;
+  SET LOCAL ROLE authenticated;
+  PERFORM pg_temp.as_user(v_two);
+  DELETE FROM public.room_join_requests WHERE room_id = v_room AND user_id = v_two;
+  RESET ROLE;
+  PERFORM pg_temp.must_equal(
+    (SELECT count(*) FROM public.room_join_requests WHERE room_id = v_room AND user_id = v_two),
+    1::bigint, 'an answered request keeps its answer');
+
   PERFORM pg_temp.as_user(NULL);
 END $$;
 
