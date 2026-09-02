@@ -19,6 +19,7 @@ import {
 } from "@/contexts/TeamBattleContext";
 import { TeamBattleMatch } from "@/components/team-battle/TeamBattleMatch";
 import { useCategories } from "@/hooks/useCategories";
+import { excludePartyCategories } from "@/config/partyCategories";
 import { useGameInvitations } from "@/hooks/useGameInvitations";
 import {
   AnimatedCoinPill,
@@ -240,7 +241,7 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
   const navigate = useNavigate();
   const {
     room, participants, pendingInvites, isHost, myTeam, setTeam,
-    setCaptain, voteCaptain, manageSeat, startMatch, leaveRoom, loading, state, settle,
+    setCaptain, voteCaptain, manageSeat, startMatch, startError, leaveRoom, loading, state, settle,
   } = useTeamBattle();
   const { categories } = useCategories();
   const { openProfile } = usePlayerProfile();
@@ -283,7 +284,11 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
   const potValue = 50 * rounds * Math.max(1, teamA.length, teamB.length);
 
   const start = () => {
-    const usable = categories.filter((c) => c.tier === "free" || c.tier === "standard");
+    // Party categories (Most Likely To) have no fixed answers — a board
+    // tile built from them is unwinnable. Keep them out of the pool.
+    const usable = excludePartyCategories(categories).filter(
+      (c) => c.tier === "free" || c.tier === "standard",
+    );
     void startMatch(usable.map((c) => ({ uuid: c.uuid, name: c.name })), rounds);
   };
 
@@ -770,11 +775,21 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
       </div>
 
       {isHost ? (
-        <StartButton
-          label={loading ? t("teamBattle.starting") : t("lobby.startGame")}
-          onClick={start}
-          disabled={!teamsEqual || loading}
-        />
+        <>
+          {/* Toasts are suppressed app-wide, so a refused start must say
+              why HERE — a dead button under a silent error reads as a
+              broken game. */}
+          {startError && !loading && (
+            <p className="w-full max-w-[500px] mx-auto shrink-0 px-6 pb-1 text-center font-[Nunito] font-bold text-[13px] text-[#dc2626]">
+              {t("teamBattle.startFailed")}: {startError}
+            </p>
+          )}
+          <StartButton
+            label={loading ? t("teamBattle.starting") : t("lobby.startGame")}
+            onClick={start}
+            disabled={!teamsEqual || loading}
+          />
+        </>
       ) : (
         <p className="w-full max-w-[500px] mx-auto shrink-0 px-[24px] pt-[14px] pb-[20px] text-center font-[Nunito] font-semibold text-[15px] text-[#523b76]/70">
           {t("teamBattle.waitingHost")}

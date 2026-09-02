@@ -78,6 +78,9 @@ interface TeamBattleContextValue {
     categories: { uuid: string; name: string }[],
     preferredTiles?: number,
   ) => Promise<boolean>;
+  /** Why the last start attempt failed — the lobby shows it, since toasts
+      are suppressed app-wide and a dead Start button explains nothing. */
+  startError: string | null;
   submitRps: (gesture: TBGesture) => Promise<void>;
   pickTile: (tileId: string) => Promise<void>;
   submitAnswer: (questionIndex: number, answer: string) => Promise<{ correct: boolean } | null>;
@@ -140,6 +143,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
   const [tiles, setTiles] = useState<TBTile[]>([]);
   const [state, setState] = useState<TBState | null>(null);
   const [loading, setLoading] = useState(false);
+  const [startError, setStartError] = useState<string | null>(null);
   const channelsRef = useRef<ReturnType<typeof supabase.channel>[]>([]);
   const liveChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const roomIdRef = useRef<string | null>(null);
@@ -406,14 +410,18 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
           return false;
         }
         // No team on arrival: the seats are the choice, and the lobby
-        // prompts the newcomer to claim one on the side they want.
+        // prompts the newcomer to claim one on the side they want. A
+        // returning HOST keeps their flag — leaving deletes the row, and
+        // the Public card's request short-circuits with "joined" for the
+        // host without re-seating them, so this insert is how they get
+        // their seat back.
         const { error } = await supabase.from("room_participants").insert({
           room_id: row.id,
           user_id: user.id,
           nickname: profile.nickname || "Player",
           avatar_url: profile.avatar_url,
           country_code: profile.country_code,
-          is_host: false,
+          is_host: row.host_user_id === user.id,
           status: "joined",
         });
         if (error) {
@@ -588,7 +596,11 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
     ): Promise<boolean> => {
       const roomId = roomIdRef.current;
       if (!roomId) return false;
-      if (categories.length === 0) return false;
+      setStartError(null);
+      if (categories.length === 0) {
+        setStartError(tStandalone("teamBattle.notEnoughQuestions"));
+        return false;
+      }
       setLoading(true);
       try {
         const teamSize = participants.filter((p) => p.team === "a").length;
@@ -635,6 +647,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
         for (let i = 0; i < difficulties.length; i++) {
           const filled = await fill(fetched[i]);
           if (!filled) {
+            setStartError(tStandalone("teamBattle.notEnoughQuestions"));
             toast.error(tStandalone("teamBattle.notEnoughQuestions"));
             return false;
           }
@@ -648,6 +661,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
 
         const superFilled = await fill(fetched[difficulties.length]);
         if (!superFilled) {
+          setStartError(tStandalone("teamBattle.notEnoughQuestions"));
           toast.error(tStandalone("teamBattle.notEnoughQuestions"));
           return false;
         }
@@ -676,15 +690,23 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
           });
           if (!retry.error) return true;
           console.error("[TB] start failed", retry.error);
+          setStartError(retry.error.message);
           toast.error(retry.error.message);
           return false;
         }
         if (error) {
           console.error("[TB] start failed", error);
+          setStartError(error.message);
           toast.error(error.message);
           return false;
         }
         return true;
+      } catch (e) {
+        // A thrown fetch used to vanish into a void'd promise — the button
+        // just did nothing. Surface it where the host is looking.
+        console.error("[TB] start failed", e);
+        setStartError(e instanceof Error ? e.message : String(e));
+        return false;
       } finally {
         setLoading(false);
       }
@@ -794,6 +816,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
       voteCaptain,
       manageSeat,
       startMatch,
+      startError,
       submitRps,
       pickTile,
       submitAnswer,
@@ -807,7 +830,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
     }),
     [room, participants, pendingInvites, tiles, state, loading, isHost, myTeam, isSpotlight,
      createRoom, joinRoom, enterRoom, leaveRoom, setTeam, addBot, removeBot,
-     setCaptain, voteCaptain, manageSeat, startMatch, submitRps, pickTile, submitAnswer,
+     setCaptain, voteCaptain, manageSeat, startMatch, startError, submitRps, pickTile, submitAnswer,
      turnPicks, sendPick, playedBy, voteSuper, submitSuper, advance, settle],
   );
 

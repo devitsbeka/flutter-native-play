@@ -1702,6 +1702,7 @@ export const en: KaTranslations = {
     roomNotFound: "No room with that code",
     matchInProgress: "A match is already running — join the next one",
     notEnoughQuestions: "Not enough questions in your language yet",
+    startFailed: "Couldn\'t start the match",
     rpsTitle: "Rock · Paper · Scissors",
     rpsSubtitle: "The winning team picks first",
     rpsWaiting: "Waiting for the other throws…",

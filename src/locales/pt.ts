@@ -1434,6 +1434,7 @@ export const pt: KaTranslations = {
     roomNotFound: "Nenhuma sala com esse código",
     matchInProgress: "Já há uma partida em andamento — entre na próxima",
     notEnoughQuestions: "Ainda não há perguntas suficientes no seu idioma",
+    startFailed: "Não foi possível iniciar a partida",
     rpsTitle: "Pedra · Papel · Tesoura",
     rpsSubtitle: "A equipe vencedora escolhe primeiro",
     rpsWaiting: "Esperando os outros gestos…",

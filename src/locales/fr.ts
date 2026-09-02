@@ -1423,6 +1423,7 @@ export const fr: KaTranslations = {
     roomNotFound: "Aucun salon avec ce code",
     matchInProgress: "Un match est déjà en cours — rejoins le prochain",
     notEnoughQuestions: "Pas encore assez de questions dans ta langue",
+    startFailed: "Impossible de lancer la partie",
     rpsTitle: "Pierre · Feuille · Ciseaux",
     rpsSubtitle: "L'équipe gagnante choisit en premier",
     rpsWaiting: "En attente des autres gestes…",

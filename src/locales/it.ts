@@ -1429,6 +1429,7 @@ export const it: KaTranslations = {
     roomNotFound: "Nessuna stanza con quel codice",
     matchInProgress: "Una partita è già in corso — unisciti alla prossima",
     notEnoughQuestions: "Non ci sono ancora abbastanza domande nella tua lingua",
+    startFailed: "Impossibile avviare la partita",
     rpsTitle: "Sasso · Carta · Forbici",
     rpsSubtitle: "La squadra vincente sceglie per prima",
     rpsWaiting: "In attesa degli altri gesti…",
