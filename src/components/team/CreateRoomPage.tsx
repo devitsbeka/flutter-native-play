@@ -261,6 +261,17 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     b: null,
   });
   const [crestPickerFor, setCrestPickerFor] = useState<"a" | "b" | null>(null);
+  // The cards never open on the same stock hat and race car: the moment
+  // Battle is picked, both sides get dealt a random crest from the library
+  // (once — a re-visit keeps what was dealt or chosen).
+  const crestsDealtRef = useRef(false);
+  useEffect(() => {
+    if (gameChoice !== "battle" || crestsDealtRef.current) return;
+    crestsDealtRef.current = true;
+    void rollTeamIcon("a");
+    void rollTeamIcon("b");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameChoice]);
   const crestPoolRef = useRef<string[]>([]);
   const rollTeamIcon = async (side: "a" | "b") => {
     if (crestPoolRef.current.length === 0) {
@@ -1150,9 +1161,9 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
 
           <div className="space-y-3 mt-1">
             {/* Which side of the arena you take — two big cards, the crest
-                above the name. A tap picks the side AND deals its crest a
-                fresh random icon; a tap on the crest itself opens the
-                picker to choose one deliberately. */}
+                above the name, both dealt a random crest on arrival. A tap
+                picks the side; a tap on the side already picked (or on the
+                crest itself) opens the picker to choose the icon yourself. */}
             {gameChoice === "battle" && (
               <div>
                 <h2 className="text-[13.2px] font-medium text-muted-foreground mb-1.5">
@@ -1164,8 +1175,8 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                       key={side}
                       type="button"
                       onClick={() => {
-                        setBattleTeam(side);
-                        void rollTeamIcon(side);
+                        if (battleTeam === side) setCrestPickerFor(side);
+                        else setBattleTeam(side);
                       }}
                       className={`flex flex-col items-center gap-2 rounded-2xl px-3 py-4 border-2 transition-colors ${
                         battleTeam === side

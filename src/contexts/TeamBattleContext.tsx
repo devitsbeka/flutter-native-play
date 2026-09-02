@@ -673,11 +673,12 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
             tiles,
             super_questions: asQuestions(superRes.questions) as unknown as Json,
           } as unknown as Json,
-          // Three minutes on the clock, as many questions as they can
-          // answer (20260924100000). On a database that still clamps at 90
-          // the RPC refuses — retried once at the old maximum so a match
-          // can still start before the migration lands.
-          p_turn_seconds: 180,
+          // Two minutes on the clock, as many questions as they can
+          // answer (the 20260924100000 migration allows up to 180). On a
+          // database that still clamps at 90 the RPC refuses — retried once
+          // at the old maximum so a match can still start before the
+          // migration lands.
+          p_turn_seconds: 120,
         });
         if (error && /between 20 and 90/.test(error.message ?? "")) {
           const retry = await supabase.rpc("tb_start_match", {

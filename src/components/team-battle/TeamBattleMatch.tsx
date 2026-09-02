@@ -563,6 +563,9 @@ function PhaseRapidFire() {
     }
     if (!choice) return submitting ? "loading" : "default";
     if (option === choice.option) return choice.correct ? "correct" : "wrong";
+    // A miss surfaces the right answer for the spotlight player too —
+    // spectators already got it, and red alone teaches nothing.
+    if (!choice.correct && option === question.correct_answer) return "correct";
     return "disabled";
   };
 
