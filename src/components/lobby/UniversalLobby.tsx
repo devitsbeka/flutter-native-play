@@ -169,7 +169,15 @@ export function UniversalLobby({
             the screen and dissolves into its own blur. */}
         <motion.div
           className="absolute left-0 top-[-54px] h-[667px] w-full overflow-hidden"
-          style={{ transformOrigin: "50% 42%" }}
+          // The scene is 667 tall in the frame (1018:6748) and the frame is
+          // 946: on a phone that edge lands across the card, a hard line
+          // where the haze stops and the wash begins. The last stretch
+          // dissolves into the wash instead.
+          style={{
+            transformOrigin: "50% 42%",
+            WebkitMaskImage: "linear-gradient(to bottom, #000 72%, transparent 100%)",
+            maskImage: "linear-gradient(to bottom, #000 72%, transparent 100%)",
+          }}
           initial={reduceMotion ? false : { scale: 0.72, borderRadius: 28 }}
           animate={{ scale: 1, borderRadius: 0 }}
           transition={{ type: "spring", stiffness: 150, damping: 26 }}
