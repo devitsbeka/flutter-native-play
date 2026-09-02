@@ -881,9 +881,10 @@ export default function KingPage() {
         <CaptainInfoModal
           open={captainInfoOpen}
           onClose={() => setCaptainInfoOpen(false)}
-          title={t("lobby.captainInfoTitle")}
+          title={meSeated ? t("lobby.chooseCaptainTitle") : t("lobby.captainInfoTitle")}
           body={t("king.captainInfoBody")}
-          chooseLabel={meSeated ? t("lobby.chooseCaptain") : undefined}
+          pickLabel={t("lobby.votePick")}
+          myVoteUserId={kingParts.find((p) => p.user_id === user?.id)?.captain_vote ?? null}
           members={kingParts.map((p) => ({
             userId: p.user_id,
             nickname: p.nickname,
