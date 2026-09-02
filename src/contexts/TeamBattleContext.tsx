@@ -750,7 +750,17 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
         // the turn early, as before).
         const fetchFor = async (cat: { uuid: string; name: string }) => ({
           cat,
-          res: await getQuestions({ mode: "vs", categoryUuid: cat.uuid, categoryName: cat.name, count: 40 }),
+          // skipImagePreload: a whole board's worth of image checks in one
+          // burst is what gets the edge proxy throttled by Wikimedia —
+          // dropping good questions and looping this build. The match shows
+          // one question at a time; its images load fine one at a time.
+          res: await getQuestions({
+            mode: "vs",
+            categoryUuid: cat.uuid,
+            categoryName: cat.name,
+            count: 40,
+            skipImagePreload: true,
+          }),
         });
 
         // One fetch per tile plus the super round, all in flight at once —

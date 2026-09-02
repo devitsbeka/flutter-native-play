@@ -51,6 +51,15 @@ export interface QuestionContext {
   levelNumber?: number;       // For category mode level progression
   count?: number;             // Number of questions needed (default: 5-10)
   excludeIds?: string[];      // Additional IDs to exclude
+  /**
+   * Skip the per-question image preload gate. Team Battle builds a ~21-tile
+   * board in one press — hundreds of image checks in a burst, which is
+   * exactly the traffic shape that gets the edge proxy 429-throttled by
+   * Wikimedia (surfacing as 503s), dropping good questions and looping the
+   * board build. The match renders one question at a time, so its images
+   * load one at a time and the card's own onError fallback covers a miss.
+   */
+  skipImagePreload?: boolean;
 }
 
 export interface FormattedQuestion {
@@ -429,7 +438,7 @@ export async function getQuestions(ctx: QuestionContext): Promise<QuestionResult
       }
       return getTVQuestions(categoryUuid, count, language);
     case 'vs':
-      return getVSQuestions(categoryUuid, count, language);
+      return getVSQuestions(categoryUuid, count, language, ctx.skipImagePreload);
     default:
       throw new Error(`Unknown mode: ${ctx.mode}`);
   }
@@ -793,11 +802,12 @@ async function getTVQuestions(
 async function getVSQuestions(
   categoryUuid: string | undefined,
   count: number,
-  language: string
+  language: string,
+  skipImagePreload = false
 ): Promise<QuestionResult> {
   // If a specific category is selected, use single-category mode
   if (categoryUuid) {
-    return getSingleCategoryVSQuestions(categoryUuid, count, language);
+    return getSingleCategoryVSQuestions(categoryUuid, count, language, skipImagePreload);
   }
   
   // Otherwise, use multi-category random mode (original behavior)
@@ -810,7 +820,8 @@ async function getVSQuestions(
 async function getSingleCategoryVSQuestions(
   categoryUuid: string,
   count: number,
-  language: string
+  language: string,
+  skipImagePreload = false
 ): Promise<QuestionResult> {
   let exhausted = false;
   let wasReset = false;
@@ -917,7 +928,10 @@ async function getSingleCategoryVSQuestions(
     };
   }
   
-  const selected = await selectWithValidImages(preferUnseenMedia(dedupeByQuestionText(shuffleArray(validQuestions))), count);
+  const ordered = preferUnseenMedia(dedupeByQuestionText(shuffleArray(validQuestions)));
+  const selected = skipImagePreload
+    ? ordered.slice(0, count)
+    : await selectWithValidImages(ordered, count);
   
   // Mark as seen
   if (selected.length > 0) {
