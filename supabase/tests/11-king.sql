@@ -596,3 +596,40 @@ BEGIN
 END $$;
 
 \echo 'ok: the couch elects its captain and the duel seats them'
+
+-- ══ the King asks shorter questions, and more of them (20260926100000) ═════
+
+DO $$
+DECLARE
+  v_lang text;
+  v_long public.king_questions%ROWTYPE;
+  v_short public.king_questions%ROWTYPE;
+BEGIN
+  FOREACH v_lang IN ARRAY ARRAY['en', 'ka', 'es', 'de', 'fr', 'it', 'pt'] LOOP
+    PERFORM pg_temp.must_equal(
+      (SELECT count(*)::int FROM public.king_questions
+        WHERE language = v_lang AND source = 'short-' || v_lang || '-1' AND is_active),
+      24, 'the short pool has 24 ' || v_lang || ' puzzles');
+  END LOOP;
+  PERFORM pg_temp.must_equal(
+    (SELECT count(*)::int FROM public.king_questions
+      WHERE source LIKE 'short-%' AND language <> 'en' AND translated_from IS NULL),
+    0, 'every translated short puzzle points back to its English row');
+  PERFORM pg_temp.must_equal(
+    (SELECT count(*)::int FROM public.king_questions
+      WHERE source LIKE 'short-%' AND (icon_slug IS NULL OR icon_slug = '')),
+    0, 'every short puzzle wears an icon');
+  -- The whole short pool passes its own bar.
+  PERFORM pg_temp.must_equal(
+    (SELECT count(*)::int FROM public.king_questions q
+      WHERE q.source LIKE 'short-%' AND public.king_question_is_long(q)),
+    0, 'no short puzzle is long by the draw''s rule');
+  -- And the rule itself tells the two apart.
+  SELECT * INTO v_long FROM public.king_questions WHERE source = 'seed-en-1'
+    ORDER BY length(question_text) DESC LIMIT 1;
+  SELECT * INTO v_short FROM public.king_questions WHERE source = 'short-en-1' LIMIT 1;
+  PERFORM pg_temp.must_equal(public.king_question_is_long(v_long), true, 'the longest seed puzzle is long');
+  PERFORM pg_temp.must_equal(public.king_question_is_long(v_short), false, 'a short puzzle is short');
+END $$;
+
+\echo 'ok: the King has 24 short puzzles in every language and deals them first'

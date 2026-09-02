@@ -40,8 +40,15 @@ const CARD_SHADOW = "0px 2px 8px 0px rgba(102,51,153,0.06), 0px 8px 24px 0px rgb
 // The duel plays on the game screens' periwinkle (same as Team Battle), so
 // the light cards carry the contrast and the purple CTA no longer sinks
 // into a near-identical background — CTAs are white with purple type.
+// A column: the header, score and question scroll in the middle; the one
+// action of the moment — "I know it!", the captain's lock, "next" — sits in
+// a footer pinned to the bottom, where every other game screen keeps its
+// button. It used to ride under the question, which put it at a different
+// height every phase and, on a tall puzzle, below the fold.
 const DUEL_SHELL =
-  "h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] overflow-y-auto bg-[#7E7BDC]";
+  "h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] overflow-hidden bg-[#7E7BDC] flex flex-col";
+const DUEL_BODY = "flex-1 min-h-0 overflow-y-auto";
+const DUEL_FOOTER = "shrink-0 max-w-md mx-auto w-full px-5 pt-3 pb-5";
 const DUEL_CTA =
   "rounded-[20px] p-4 bg-white text-[#6D28D9] font-bold shadow-[0px_4px_0px_0px_rgba(64,38,102,0.25)] active:translate-y-[2px] transition-transform";
 
@@ -988,7 +995,8 @@ export default function KingPage() {
 
   return (
     <div className={DUEL_SHELL}>
-      <div className="max-w-md mx-auto px-5 pb-6">
+      <div className={DUEL_BODY}>
+      <div className="max-w-md mx-auto px-5 pb-4">
         <div className="flex items-center gap-2 pt-3 pb-1">
           <button
             onClick={() => void abandon()}
@@ -1039,9 +1047,6 @@ export default function KingPage() {
             </div>
             <p className="font-mono text-3xl text-white font-bold text-center">{thinkSeconds}</p>
             <p className="text-sm text-white/70 text-center -mt-2">{t("king.thinkHint")}</p>
-            <button onClick={() => void showOptions()} disabled={!soloCtaArmed} className={DUEL_CTA}>
-              {t("king.haveIt")}
-            </button>
           </div>
         )}
 
@@ -1122,13 +1127,6 @@ export default function KingPage() {
               <p className="text-xs text-[#402666]/40 mb-1">{t("king.logicLabel")}</p>
               <p className="text-sm text-[#402666]/80 leading-relaxed">{reveal.explanation}</p>
             </div>
-            <button
-              onClick={() => (state?.status === "playing" ? void draw() : setStage("result"))}
-              disabled={busy || !soloCtaArmed}
-              className={`${DUEL_CTA} ${busy ? "opacity-50" : ""}`}
-            >
-              {state?.status === "playing" ? t("king.next") : t("common.continue")}
-            </button>
           </div>
         )}
 
@@ -1171,6 +1169,26 @@ export default function KingPage() {
           </div>
         )}
       </div>
+      </div>
+
+      {stage === "thinking" && state?.question && (
+        <div className={DUEL_FOOTER}>
+          <button onClick={() => void showOptions()} disabled={!soloCtaArmed} className={`${DUEL_CTA} w-full`}>
+            {t("king.haveIt")}
+          </button>
+        </div>
+      )}
+      {stage === "reveal" && reveal && (
+        <div className={DUEL_FOOTER}>
+          <button
+            onClick={() => (state?.status === "playing" ? void draw() : setStage("result"))}
+            disabled={busy || !soloCtaArmed}
+            className={`${DUEL_CTA} w-full ${busy ? "opacity-50" : ""}`}
+          >
+            {state?.status === "playing" ? t("king.next") : t("common.continue")}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -1240,7 +1258,8 @@ function KingTeamDuel({
 
   return (
     <div className={DUEL_SHELL}>
-      <div className="max-w-md mx-auto px-5 pb-6">
+      <div className={DUEL_BODY}>
+      <div className="max-w-md mx-auto px-5 pb-4">
         <div className="flex items-center gap-2 pt-3 pb-1">
           <button
             onClick={onExit}
@@ -1298,11 +1317,7 @@ function KingTeamDuel({
               </p>
             </div>
             <p className="font-mono text-3xl text-white font-bold text-center">{thinkLeft}</p>
-            {isCaptain ? (
-              <button onClick={onOptions} disabled={!ctaArmed} className={DUEL_CTA}>
-                {t("king.haveIt")}
-              </button>
-            ) : (
+            {!isCaptain && (
               <p className="text-sm text-white/70 text-center">{t("king.teamDiscussHint")}</p>
             )}
           </div>
@@ -1383,15 +1398,6 @@ function KingTeamDuel({
                 );
               })}
             </div>
-            {isCaptain && (
-              <button
-                onClick={() => capPick && onCommit(capPick)}
-                disabled={!capPick || !ctaArmed}
-                className={`${DUEL_CTA} ${capPick ? "" : "opacity-40"}`}
-              >
-                {t("king.captainLock")}
-              </button>
-            )}
           </div>
         )}
 
@@ -1435,11 +1441,7 @@ function KingTeamDuel({
                 </>
               )}
             </div>
-            {isCaptain ? (
-              <button onClick={onNext} disabled={!ctaArmed} className={DUEL_CTA}>
-                {t("king.next")}
-              </button>
-            ) : (
+            {!isCaptain && (
               <p className="text-sm text-white/70 text-center">
                 {t("king.captainNextHint")}
               </p>
@@ -1478,6 +1480,34 @@ function KingTeamDuel({
           </div>
         )}
       </div>
+      </div>
+
+      {/* The captain's one action of the moment, pinned to the bottom. */}
+      {isCaptain && phase === "think" && view.question && (
+        <div className={DUEL_FOOTER}>
+          <button onClick={onOptions} disabled={!ctaArmed} className={`${DUEL_CTA} w-full`}>
+            {t("king.haveIt")}
+          </button>
+        </div>
+      )}
+      {isCaptain && phase === "commit" && view.question && (
+        <div className={DUEL_FOOTER}>
+          <button
+            onClick={() => capPick && onCommit(capPick)}
+            disabled={!capPick || !ctaArmed}
+            className={`${DUEL_CTA} w-full ${capPick ? "" : "opacity-40"}`}
+          >
+            {t("king.captainLock")}
+          </button>
+        </div>
+      )}
+      {isCaptain && phase === "reveal" && view.last_result && (
+        <div className={DUEL_FOOTER}>
+          <button onClick={onNext} disabled={!ctaArmed} className={`${DUEL_CTA} w-full`}>
+            {t("king.next")}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

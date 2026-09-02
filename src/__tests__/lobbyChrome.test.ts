@@ -165,3 +165,15 @@ describe("the host's side is the side they chose", () => {
     expect(battle).toMatch(/if \(!toOther \|\| !isHost \|\| entry\.p\.user_id === user\?\.id\) return;/);
   });
 });
+
+describe("the King's duel keeps its one action at the bottom", () => {
+  it("the shell is a column with a scrolling body and a pinned footer", () => {
+    expect(king).toMatch(/const DUEL_SHELL =\s*\n\s*"[^"]*overflow-hidden[^"]*flex flex-col"/);
+    expect(king).toMatch(/const DUEL_BODY = "flex-1 min-h-0 overflow-y-auto"/);
+    expect(king).toMatch(/const DUEL_FOOTER = "shrink-0 max-w-md mx-auto w-full px-5 pt-3 pb-5"/);
+    // Every CTA of the duel lives in a footer, none under the question.
+    const footers = king.match(/<div className=\{DUEL_FOOTER\}>/g) ?? [];
+    expect(footers.length).toBe(5);
+    expect(king).not.toMatch(/<p className="text-sm text-white\/70 text-center -mt-2">\{t\("king\.thinkHint"\)\}<\/p>\s*<button/);
+  });
+});
