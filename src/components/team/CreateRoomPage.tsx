@@ -1420,7 +1420,19 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
           {/* The cards are the row's own items so they stretch to its
               height: a percentage height would not resolve through the
               min-height chain above, and left them 0px tall. */}
-          <div className="-mx-4 flex min-h-[340px] flex-1 snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto overflow-y-hidden px-4 pb-2 pt-1 scrollbar-hide">
+          {/* Nothing picked: the cards take the height the screen has —
+              they ARE the screen. Something picked: the row gives most of
+              it back, a banner rather than a poster, so what the pick
+              unfolds underneath (which side of the arena, the trivia, the
+              library preview) and the footer's switch and sizing row all
+              sit in view without a scroll. The picked card kept its poster
+              height and the side picker was two cut-off tops under it. */}
+          <div
+            className={cn(
+              "-mx-4 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto overflow-y-hidden px-4 pb-2 pt-1 scrollbar-hide transition-[height] duration-300",
+              gameChoice ? "h-[224px] min-h-0 flex-none md:h-[280px]" : "min-h-[340px] flex-1",
+            )}
+          >
             {(
               [
                 { key: "quick", art: featuredQuick, title: t("extra.playQuickGame"), desc: t("extra.playQuickGameDesc") },
@@ -1468,10 +1480,20 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                       even where a prop strays into it. */}
                   <div className="absolute inset-x-0 bottom-0 h-[55%] bg-gradient-to-t from-[#f3e6ff] via-[#f3e6ff]/80 to-transparent" />
                   <div className="absolute inset-x-0 bottom-0 px-5 pb-5">
-                    <p className="font-[Nunito] font-extrabold text-[24px] leading-[28px] text-[#0f1729] tracking-[-0.3px]">
+                    <p
+                      className={cn(
+                        "font-[Nunito] font-extrabold text-[#0f1729] tracking-[-0.3px]",
+                        gameChoice ? "text-[20px] leading-[24px]" : "text-[24px] leading-[28px]",
+                      )}
+                    >
                       {card.title}
                     </p>
-                    <p className="font-[Nunito] text-[14px] leading-[20px] text-[#4b5563] tracking-[-0.16px] mt-1 line-clamp-2">
+                    <p
+                      className={cn(
+                        "font-[Nunito] text-[14px] leading-[20px] text-[#4b5563] tracking-[-0.16px] mt-1",
+                        gameChoice ? "line-clamp-1" : "line-clamp-2",
+                      )}
+                    >
                       {card.desc}
                     </p>
                   </div>

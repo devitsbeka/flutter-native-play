@@ -321,6 +321,14 @@ describe("the public list", () => {
   });
 });
 
+describe("the create screen's carousel", () => {
+  it("shrinks the cards once something is picked, so the pick's detail is in view", () => {
+    const page = read("src/components/team/CreateRoomPage.tsx");
+    // Poster height with nothing picked; a banner once a mode is picked.
+    expect(page).toMatch(/gameChoice \? "h-\[224px\] min-h-0 flex-none md:h-\[280px\]" : "min-h-\[340px\] flex-1"/);
+  });
+});
+
 describe("the doorstep names a side", () => {
   it("asks 'with me or against me' in the arena only", () => {
     const gate = read("src/components/team/JoinRequestGate.tsx");
