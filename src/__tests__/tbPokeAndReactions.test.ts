@@ -67,3 +67,15 @@ describe("the icons", () => {
     expect(read("src/integrations/supabase/types.ts")).toMatch(/room_reactions: \{/);
   });
 });
+
+describe("the invitation popup", () => {
+  it("answers on the spot: Join accepts and opens the room, Decline says no", () => {
+    const hook = read("src/hooks/useGameInvitations.ts");
+    expect(hook).toMatch(/select\("room_code, category_name, game_type_key, game_mode"\)/);
+    expect(hook).toMatch(/actionButton: \{\s*label: tStandalone\("extra\.notifJoin"\)/);
+    expect(hook).toMatch(/const code = await acceptInvitation\(invitationId\);\s*if \(code\) navigate\(routeForRoom\(room, code\)\);/);
+    expect(hook).toMatch(/secondaryButton: \{\s*label: tStandalone\("extra\.notifDecline"\)/);
+    // The modal holds while a button is offered (no auto-dismiss timer).
+    expect(read("src/components/ui/notification-modal.tsx")).toMatch(/if \(actionButton\) return;/);
+  });
+});

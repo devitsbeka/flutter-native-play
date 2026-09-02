@@ -5,6 +5,9 @@ interface NotifyOptions {
   description?: string;
   icon?: string | React.ReactNode;
   duration?: number;
+  /** A button that answers the popup — the modal stays up until it is pressed. */
+  actionButton?: { label: string; onClick: () => void };
+  secondaryButton?: { label: string; onClick: () => void; disabled?: boolean };
 }
 
 export function useNotificationModal() {
