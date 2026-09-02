@@ -1,7 +1,14 @@
 import { useEffect, useMemo, useRef, useState, type MutableRefObject } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { ChevronLeft, Pencil } from "lucide-react";
+import { UniversalLobby, LobbyInviteRow, LobbyInfoRow, type LobbyPlayer, type LobbyPlayerGroup } from "@/components/lobby/UniversalLobby";
+import { LOBBY_SCENES } from "@/utils/lobbyScene";
+import { roomVisibilityFields } from "@/utils/roomVisibility";
+import { useFriends } from "@/hooks/useFriends";
+import { useNotifications } from "@/hooks/useNotifications";
+import coinIconAsset from "@/assets/tb-lobby/coin.png";
+import iconBattleCrate from "@/assets/play-chooser/icon-crate.png";
 import { containsBlockedText } from "@/utils/contentFilter";
 import { readAppLanguage } from "@/utils/appLanguage";
 import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
@@ -22,24 +29,14 @@ import { useCategories } from "@/hooks/useCategories";
 import { excludePartyCategories } from "@/config/partyCategories";
 import { useGameInvitations } from "@/hooks/useGameInvitations";
 import {
-  AnimatedCoinPill,
   CaptainInfoModal,
   type InviteEntry,
   LILAC_BG,
-  LilacHeader,
-  FitBox,
-  EmptySeat,
-  PlusSeat,
-  Seat,
   SeatMenu,
   type SeatMenuAction,
-  StartButton,
 } from "@/components/lobby/LilacLobby";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast";
-import sceneArena from "@/assets/tb-lobby/scene-arena.webp";
-import iconBattleCrate from "@/assets/play-chooser/icon-crate.png";
-import crownIcon from "@/assets/crown-icon.png";
 import { dealtCrests, fetchCrestPool } from "@/utils/roomCrests";
 import { dealTeamNames } from "@/utils/teamNameGenerator";
 
@@ -204,24 +201,6 @@ function TBGate({ joining }: { joining: boolean }) {
   );
 }
 
-// Seat slots per team, straight from the frame (943:21930): four avatar
-// spots and one empty podium per side. Team A wears the blue ring, Team B
-// the red one, exactly as the design's borders say.
-const TEAM_A_SLOTS: [number, number][] = [
-  [91, 431], [30, 457], [23, 517], [82, 546],
-];
-const TEAM_B_SLOTS: [number, number][] = [
-  [356, 431], [407, 457], [431, 514], [376, 546],
-];
-const PODIUM_A: [number, number] = [151, 572];
-const PODIUM_B: [number, number] = [302, 572];
-
-// The arena scene's edge fade (938:6267 overlay).
-const ARENA_FADE =
-  "url(\"data:image/svg+xml;utf8,<svg viewBox='0 0 435 780' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)' opacity='1'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(1.3318e-15 39 -21.75 2.3881e-15 217.5 390)'><stop stop-color='rgba(255,255,255,0)' offset='0'/><stop stop-color='rgba(245,217,255,1)' offset='1'/></radialGradient></defs></svg>\")";
-
-// Server rule: tiles even, ≥ 2×team size, ≤ 12 — these are the valid picks.
-
 function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null> }) {
   const { t } = useLanguage();
   const { user } = useAuth();
@@ -233,7 +212,8 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
   const { categories } = useCategories();
   const { openProfile } = usePlayerProfile();
   const [inviteOpen, setInviteOpen] = useState(false);
-  const [helpOpen, setHelpOpen] = useState(false);
+  const { friends } = useFriends();
+  const { unreadCount } = useNotifications();
   const [invitedIds, setInvitedIds] = useState<Set<string>>(new Set());
   const [captainInfo, setCaptainInfo] = useState<TBTeam | null>(null);
   // Which side's crest is being picked, if any.
@@ -508,18 +488,21 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
 
   const seatMenuActions = (p: TBParticipant): SeatMenuAction[] => {
     const actions: SeatMenuAction[] = [];
+    if (!p.is_bot && p.status !== "invited") {
+      actions.push({ label: t("extra.viewProfile"), onPress: () => openProfile(p.user_id) });
+    }
     // The host rearranges everyone BUT themselves: the side they chose on
     // the create screen is the side they play — the owner's rule — so
     // their own seat offers no move, and no drag either (below).
     if (isHost && p.user_id !== user?.id) {
       if (p.team !== "a")
         actions.push({
-          label: t("lobby.moveTo", { team: t("teamBattle.teamA") }),
+          label: t("lobby.moveTo", { team: teamName("a") }),
           onPress: () => void manageSeat(p.user_id, "move_a"),
         });
       if (p.team !== "b")
         actions.push({
-          label: t("lobby.moveTo", { team: t("teamBattle.teamB") }),
+          label: t("lobby.moveTo", { team: teamName("b") }),
           onPress: () => void manageSeat(p.user_id, "move_b"),
         });
       actions.push({
@@ -534,25 +517,19 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
     return actions;
   };
 
-  // A seat tap opens the player IN PLACE — the profile modal over the
+  // A row tap opens the player IN PLACE — the profile modal over the
   // lobby, not a route change. Navigating to /profile/:id from here left
   // the couch behind, and its close-reopen bug stranded players on the
-  // profile screen. Pending invites are tappable too: the host gets the
-  // seat menu (move or withdraw the invite), everyone else sees who was
-  // invited.
+  // profile screen. The host gets the seat menu for everyone but
+  // themselves (a list row has one gesture, so the menu carries the
+  // profile too); pending invites are tappable the same way, so the host
+  // can move or withdraw an invite and everyone else sees who was asked.
   const seatTap = (p: TBParticipant, pending: boolean) => {
-    if (p.is_bot) {
-      if (isHost) setSeatMenu({ p, pending });
-      return;
-    }
-    if (pending && isHost) {
+    if (isHost && p.user_id !== user?.id) {
       setSeatMenu({ p, pending });
       return;
     }
-    openProfile(p.user_id);
-  };
-  const seatHold = (p: TBParticipant, pending: boolean) => {
-    if (seatMenuActions(p).length > 0) setSeatMenu({ p, pending });
+    if (!p.is_bot && !pending) openProfile(p.user_id);
   };
 
   // Teamless pending invites still occupy a seat — the emptier side.
@@ -564,71 +541,25 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
       (teamA.length + pendingA.length <= teamB.length + pendingB.length ? pendingA : pendingB).push(p);
     });
 
-  const renderTeamSeats = (
-    team: TBTeam,
-    slots: [number, number][],
-    podium: [number, number],
-  ) => {
+  // One bench of the universal lobby: the side's seated players, then its
+  // pending invites, faded. Only the seats this match is set for — the
+  // arena used to draw all five a side whatever the room's size.
+  const benchRows = (team: TBTeam, captain: TBParticipant | undefined): LobbyPlayer[] => {
     const entries = [
       ...teamOf(team).map((p) => ({ p, pending: false })),
       ...(team === "a" ? pendingA : pendingB).map((p) => ({ p, pending: true })),
     ];
-    const ring = team === "a" ? ("blue" as const) : ("red" as const);
-    // Only the seats this match is set for. The arena drew all five a side
-    // whatever the room's size, so a 2v2 opened with eight empty podiums
-    // and no way to tell it apart from a 5v5 nobody had joined yet.
-    const all: [number, number][] = [...slots, podium].slice(0, perSide);
-    return (
-      <AnimatePresence>
-        {all.map(([left, top], i) => {
-          const entry = entries[i];
-          return entry ? (
-            <Seat
-              key={`${team}-${entry.p.user_id}`}
-              left={left}
-              top={top - 305}
-              avatarUrl={entry.p.avatar_url}
-              nickname={entry.p.nickname}
-              ring={ring}
-              pending={entry.pending}
-              crown={
-                !entry.pending &&
-                entry.p.user_id === (team === "a" ? captainA : captainB)?.user_id
-              }
-              onClick={() => seatTap(entry.p, entry.pending)}
-              onLongPress={() => seatHold(entry.p, entry.pending)}
-              // Hold-and-drag reseats — HOST ONLY. Seats are assigned (an
-              // invitee sits with their inviter, a join request sits
-              // opposite the host), so players don't wander benches; the
-              // host can still rearrange anyone, pending invites included.
-              draggable={isHost && entry.p.user_id !== user?.id}
-              onDragMoved={(dx) => {
-                const toOther = team === "a" ? dx > 70 : dx < -70;
-                if (!toOther || !isHost || entry.p.user_id === user?.id) return;
-                const target: TBTeam = team === "a" ? "b" : "a";
-                void manageSeat(entry.p.user_id, target === "a" ? "move_a" : "move_b");
-              }}
-            />
-          ) : (
-            // An open seat is only ACTIONABLE on your own side: you invite
-            // into your team, never onto the bench across the arena — that
-            // side just shows a stroke-only circle in its colour so its
-            // free places read.
-            team === myTeam ? (
-              <PlusSeat
-                key={`plus-${team}-${i}`}
-                left={left}
-                top={top - 305}
-                ring={ring}
-                onClick={() => seatAction(team)}
-              />
-            ) : (
-              <EmptySeat key={`empty-${team}-${i}`} left={left} top={top - 305} ring={ring} />
-            )
-          );
-        })}
-      </AnimatePresence>
-    );
+    return entries.slice(0, perSide).map(({ p, pending }) => ({
+      id: p.user_id,
+      name: p.nickname,
+      avatarUrl: p.avatar_url,
+      // The crown marks the side's captain here, not the room's host: in
+      // the arena the captain is the role that matters on a bench.
+      isHost: !pending && p.user_id === captain?.user_id,
+      isYou: p.user_id === user?.id,
+      pending,
+      onPress: () => seatTap(p, pending),
+    }));
   };
 
   // The named captain (tb_set_captain), falling back to the first human so
@@ -699,10 +630,207 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
     };
   }, []);
 
+  const inviteFaces = [...friends]
+    .filter((f) => f.status === "accepted")
+    .sort((a, b) => Number(!!b.isOnline) - Number(!!a.isOnline))
+    .slice(0, 3)
+    .map((f) => ({ url: f.avatarUrl, online: !!f.isOnline }));
+
+  // The host can still publish or withdraw the arena from the lobby; the
+  // row's own update policy is host-only, and the write goes through the
+  // same guard every game_rooms visibility write does.
+  const setVisibility = async (value: string) => {
+    if (!room || !isHost) return;
+    const { error } = await supabase
+      .from("game_rooms")
+      .update({ ...(await roomVisibilityFields(value === "public")) })
+      .eq("id", room.id);
+    if (error) toast.error(error.message);
+  };
+
+  // The bench's heading: its crest (the captain dresses it), its name, how
+  // full it is, and the captain chip that opens the vote sheet. While an
+  // all-AI side's crown is being rolled the chip flips through the bots'
+  // faces like a slot reel.
+  const benchTitle = (team: TBTeam) => {
+    const isA = team === "a";
+    const icon = isA ? dealt.a : dealt.b;
+    const mine = isA ? captainA : captainB;
+    const face = (isA ? rollFace.a : rollFace.b) ?? mine;
+    // Only the side's captain dresses its crest — the host gets no say
+    // over the other team (and their own side only while they wear its
+    // armband). An empty side has nobody to ask.
+    const canDress = !!user && mine?.user_id === user.id;
+    const accent = isA ? "#e7ba87" : "#ed6149";
+    return (
+      <div className={isA ? "flex flex-col" : "mt-[18px] flex flex-col"}>
+        {!isA && (
+          <p
+            className="mb-[10px] text-center font-hero text-[26px] leading-[30px] text-[#d8b2e8]"
+            style={{ textShadow: "0px 2px 2px rgba(199,188,204,0.6)" }}
+          >
+            VS
+          </p>
+        )}
+        <div className="flex items-center gap-3 pl-[2px] pr-[4px]">
+          <motion.button
+            type="button"
+            whileTap={canDress ? { scale: 0.92 } : undefined}
+            transition={{ type: "spring", stiffness: 520, damping: 28 }}
+            onClick={canDress ? () => setCrestFor(team) : undefined}
+            className="relative shrink-0"
+          >
+            {icon ? (
+              <img
+                alt=""
+                className="size-[60px] object-contain drop-shadow-[0_4px_10px_rgba(88,50,160,0.22)]"
+                src={icon}
+              />
+            ) : (
+              // The pool hasn't landed yet (or is empty): a quiet slot,
+              // never the stock pair.
+              <span className="block size-[60px] rounded-full bg-white/40 border-2 border-dashed border-[#b9a5e6]" />
+            )}
+            {canDress && (
+              <span className="absolute -right-1 -bottom-1 flex size-[20px] items-center justify-center rounded-full bg-white shadow-[0px_2px_4px_rgba(0,0,0,0.18)]">
+                <Pencil className="w-3 h-3 text-[#523b76]" />
+              </span>
+            )}
+          </motion.button>
+          <div className="min-w-0 flex-1">
+            <p className="truncate font-[Nunito] font-black leading-[22px] text-[#0c172c] text-[18px] tracking-[-0.16px]">
+              {teamName(team)}
+            </p>
+            <p className="font-[Nunito] text-[12px] leading-4 text-[#402666]/60">
+              {teamOf(team).length}/{perSide}
+            </p>
+          </div>
+          <motion.button
+            type="button"
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setCaptainInfo(team)}
+            className="flex h-[40px] max-w-[46%] items-center gap-2 rounded-full border border-[rgba(156,100,181,0.5)] bg-white/60 py-[3px] pl-3 pr-[3px]"
+          >
+            <span className="min-w-0 text-left">
+              <span className="block font-[Nunito] text-[10px] leading-3 text-[#402666]/60">{t("lobby.captainLabel")}</span>
+              <span className="block max-w-[96px] truncate font-[Nunito] text-[13px] font-bold leading-4 text-[#402666]">
+                {face?.nickname ?? t("lobby.chooseCaptain")}
+              </span>
+            </span>
+            <span
+              className="block h-8 w-8 shrink-0 overflow-hidden rounded-full bg-[#e9d8ff]"
+              style={{ boxShadow: `0 0 0 2px ${accent}` }}
+            >
+              {face?.avatar_url && <img alt="" src={face.avatar_url} className="h-full w-full object-cover" />}
+            </span>
+          </motion.button>
+        </div>
+      </div>
+    );
+  };
+
+  // An open seat is only ACTIONABLE on your own side: you invite into your
+  // team, never onto the bench across the arena.
+  const benchFooter = (team: TBTeam) => {
+    const taken = teamOf(team).length + (team === "a" ? pendingA : pendingB).length;
+    if (team !== myTeam || taken >= perSide) return null;
+    return (
+      <LobbyInviteRow
+        className="mb-[6px] mt-[6px]"
+        faces={inviteFaces}
+        label={t("lobby.uInvite")}
+        onPress={() => seatAction(team)}
+      />
+    );
+  };
+
+  const benches: LobbyPlayerGroup[] = (["a", "b"] as TBTeam[]).map((team) => ({
+    key: team,
+    title: benchTitle(team),
+    players: benchRows(team, team === "a" ? captainA : captainB),
+    footer: benchFooter(team),
+  }));
+
   return (
-    <div
-      className="h-[100dvh] w-full overflow-y-auto overflow-x-hidden safe-bleed flex flex-col"
-      style={{ background: LILAC_BG }}
+    <UniversalLobby
+      sceneArt={LOBBY_SCENES.battle}
+      // The arena has no name of its own (see above): it is called
+      // Trivia Battle, and the two SIDES carry the identity.
+      roomName={t("teamBattle.title")}
+      onBack={() => {
+        // Navigate away first so the gate never re-creates a room the
+        // instant this one clears. Back is the online-game page the
+        // arena was opened from — not the home screen.
+        navigate("/team");
+        void leaveRoom();
+      }}
+      unreadCount={unreadCount}
+      labels={{
+        rules: t("lobby.uGameRules"),
+        players: t("lobby.uPlayersTab"),
+        invite: t("lobby.uInvite"),
+        you: t("lobby.uYou"),
+        rounds: (count) => t("lobby.uRoundsShort", { count }),
+      }}
+      rules={[
+        {
+          key: "visibility",
+          label: t("lobby.uVisibility"),
+          options: [
+            { value: "public", label: t("extra.roomPublic") },
+            { value: "private", label: t("extra.roomPrivate") },
+          ],
+          value: room?.is_public ? "public" : "private",
+          onChange: isHost ? (value) => void setVisibility(value) : undefined,
+        },
+      ]}
+      rulesExtra={
+        <>
+          {/* The size the host set on the create screen; the match length,
+              stated rather than picked (two rounds a player, live as seats
+              fill); and the pot — the winning team's real take, 50 coins a
+              round to every winning human (tb_settle). */}
+          <LobbyInfoRow label={t("lobby.uTeamSize")}>
+            {perSide} v {perSide}
+          </LobbyInfoRow>
+          <LobbyInfoRow label={t("lobby.roundsN", { n: rounds })} hint={t("lobby.autoRounds")} />
+          <LobbyInfoRow label={t("lobby.winnerTakes")}>
+            <img alt="" src={coinIconAsset} className="h-6 w-6 object-contain" />
+            {potValue}
+          </LobbyInfoRow>
+          <p className="px-[6px] pt-[2px] font-[Nunito] text-[13px] leading-[18px] text-[#402666]/70">
+            {t("lobby.tbRules")}
+          </p>
+        </>
+      }
+      players={benches}
+      playersHint={!enoughPlayers ? t("teamBattle.minTwoPerTeam") : null}
+      inviteFaces={inviteFaces}
+      initialTab="players"
+      start={
+        isHost
+          ? {
+              label: loading ? t("teamBattle.starting") : t("lobby.startGame"),
+              onPress: start,
+              disabled: !teamsEqual || !enoughPlayers || loading,
+              loading,
+            }
+          : {
+              label: t("lobby.startGame"),
+              onPress: () => undefined,
+              disabled: true,
+              caption: t("teamBattle.waitingHost"),
+            }
+      }
+      footerExtra={
+        // Toasts are suppressed app-wide, so a refused start must say why
+        // HERE — a dead button under a silent error reads as a broken game.
+        isHost && startError && !loading ? (
+          <p className="pb-2 text-center font-[Nunito] font-bold text-[13px] text-[#dc2626]">
+            {t("teamBattle.startFailed")}: {startError}
+          </p>
+        ) : null
+      }
     >
       {/* Somebody asking into this arena, when it was published */}
       <JoinRequestGate
@@ -710,188 +838,6 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
         isHost={isHost}
         hostTeam={(participants.find((p) => p.is_host)?.team as TBTeam | null) ?? undefined}
       />
-
-      <LilacHeader
-        title={t("teamBattle.title")}
-        icon={iconBattleCrate}
-        onBack={() => {
-          // Navigate away first so the gate never re-creates a room the
-          // instant this one clears. Back is the online-game page the
-          // arena was opened from — not the home screen.
-          navigate("/team");
-          void leaveRoom();
-        }}
-        onHelp={() => setHelpOpen((v) => !v)}
-      />
-
-      <div className="w-full max-w-[468px] mx-auto shrink-0 border-t border-[#523b76]/[0.08]" />
-
-      {/* The match length, stated rather than picked: rounds follow the
-          couch (two per player) so it updates live as seats fill. */}
-      <div className="relative z-10 w-full max-w-[500px] mx-auto shrink-0 px-4 pt-2">
-        <p className="text-center font-[Nunito] font-black text-[16px] leading-[24px] text-[#334155] tracking-[-0.16px]">
-          {t("lobby.roundsN", { n: rounds })}
-        </p>
-        <p className="pt-[2px] font-[Nunito] font-normal leading-[20px] text-[#0c172c]/70 text-[13px] text-center tracking-[-0.16px]">
-          {t("lobby.autoRounds")}
-        </p>
-        {/* Seats are dealt automatically, so what's worth saying here is
-            what the room is short of — or, for a guest, that the host holds
-            the Start. Said HERE, at the top, because the bottom of this
-            page can sit below the fold on a window whose 100dvh disagrees
-            with reality (split view), and a waiting line nobody can see
-            reads as a frozen lobby. */}
-        {!enoughPlayers ? (
-          <p className="pt-[6px] font-[Nunito] font-semibold leading-[20px] text-[#523b76]/70 text-[13px] text-center tracking-[-0.16px]">
-            {t("teamBattle.minTwoPerTeam")}
-          </p>
-        ) : !isHost ? (
-          <p className="pt-[6px] font-[Nunito] font-semibold leading-[20px] text-[#523b76]/70 text-[13px] text-center tracking-[-0.16px]">
-            {t("teamBattle.waitingHost")}
-          </p>
-        ) : null}
-      </div>
-
-      {/* Not clipped: the arena scene is drawn 139 design-units above this
-          box on purpose, and overflow-hidden cut it off exactly under the
-          rounds caption — a hard horizontal edge with flat lilac above it and
-          the scene below, with the room-name pill straddling the join. The
-          scene's own radial fade is only ~64% lilac at that line, which is
-          why the seam showed. Uncovered, the faded top runs up behind the
-          caption instead; the caption and the friends strip both carry z-10,
-          so they stay above it, and the page root still clips the screen. */}
-      <div className="flex-1 min-h-0">
-      <FitBox width={500} height={525} align="start">
-        {/* arena scene (938:6267) + edge fade */}
-        <div className="absolute left-[32px] top-[-139px] w-[435px] h-[780px] pointer-events-none">
-          <img alt="" className="absolute inset-0 max-w-none object-cover size-full" src={sceneArena} />
-          <div className="absolute inset-0" style={{ backgroundImage: ARENA_FADE }} />
-        </div>
-
-        {/* the pot (943:21933) — the winning team's real take: 50 coins a
-            round to every winning human (tb_settle, 20260921130000) */}
-        <AnimatedCoinPill left={158} top={192} width={190} value={potValue} />
-
-        {renderTeamSeats("a", TEAM_A_SLOTS, PODIUM_A)}
-        {renderTeamSeats("b", TEAM_B_SLOTS, PODIUM_B)}
-
-        {/* The two sides, each under its own crest (943:21929).
-            The crest used to be a 36px sticker beside the label, the same
-            one in every arena ever played. It is 60px above the name now,
-            and it belongs to the side rather than to the app: the captain
-            that side ELECTED picks it, which is the first thing winning a
-            captain vote is actually good for. Hosting buys nothing here —
-            the host dresses the side they captain and never the other one
-            (tb_set_team_icon, 20260925100000). A side that has not voted
-            still has a captain for this: captainOf's fallback, its
-            earliest-joined human, which is who the server agrees on.
-
-            The row sits above the captain chips at 453 rather than beside
-            them, and the middle is empty on purpose — that is where the
-            room's name used to be. */}
-        {(["a", "b"] as const).map((team) => {
-          const isA = team === "a";
-          const icon = isA ? dealt.a : dealt.b;
-          const mine = isA ? captainA : captainB;
-          // Only the side's captain dresses its crest — the host gets no
-          // say over the other team (and their own side only while they
-          // wear its armband). An empty side has nobody to ask.
-          const canDress = !!user && mine?.user_id === user.id;
-          return (
-            <div
-              key={team}
-              className="absolute top-[352px] w-[120px] flex flex-col items-center gap-1"
-              style={isA ? { left: 26 } : { right: 26 }}
-            >
-              <motion.button
-                whileTap={canDress ? { scale: 0.92 } : undefined}
-                transition={{ type: "spring", stiffness: 520, damping: 28 }}
-                onClick={canDress ? () => setCrestFor(team) : undefined}
-                className="relative"
-              >
-                {icon ? (
-                  <img
-                    alt=""
-                    className="size-[60px] object-contain drop-shadow-[0_4px_10px_rgba(88,50,160,0.22)]"
-                    src={icon}
-                  />
-                ) : (
-                  // The pool hasn't landed yet (or is empty): a quiet slot,
-                  // never the stock pair.
-                  <span className="block size-[60px] rounded-full bg-white/40 border-2 border-dashed border-[#b9a5e6]" />
-                )}
-                {canDress && (
-                  <span className="absolute -right-1 -bottom-1 flex size-[20px] items-center justify-center rounded-full bg-white shadow-[0px_2px_4px_rgba(0,0,0,0.18)]">
-                    <Pencil className="w-3 h-3 text-[#523b76]" />
-                  </span>
-                )}
-              </motion.button>
-              <p className="max-w-[150px] truncate font-[Nunito] font-black leading-[22px] text-[#0c172c] text-[18px] tracking-[-0.16px] whitespace-nowrap">
-                {teamName(team)}
-              </p>
-            </div>
-          );
-        })}
-
-        {/* captains + VS (940:7751 / 936:21185 / 940:7825). The VS is drawn
-            FIRST on purpose: these are absolutely positioned siblings, so
-            they paint in DOM order, and between the two chips it landed on
-            top of the left captain's name. Behind them it stays decoration. */}
-        <p
-          className="absolute left-0 top-[469px] w-full text-[77px] leading-[43px] text-center not-italic text-[#f5d9ff]"
-          style={{ fontFamily: "'Slackey', 'TASolivare', cursive", textShadow: "0px 4px 4px #c7bccc" }}
-        >
-          VS
-        </p>
-        <TBCaptainChip
-          left={37}
-          accent="#e7ba87"
-          name={(rollFace.a ?? captainA)?.nickname}
-          avatarUrl={(rollFace.a ?? captainA)?.avatar_url}
-          rolling={!!rollFace.a}
-          onClick={() => setCaptainInfo("a")}
-        />
-        <TBCaptainChip
-          right={33}
-          accent="#ed6149"
-          name={(rollFace.b ?? captainB)?.nickname}
-          avatarUrl={(rollFace.b ?? captainB)?.avatar_url}
-          rolling={!!rollFace.b}
-          onClick={() => setCaptainInfo("b")}
-        />
-
-        {helpOpen && (
-          <div
-            className="absolute left-[32px] top-[20px] w-[435px] rounded-[24px] p-5 bg-white/95 border border-[#e8e0f5] z-10 shadow-[0px_8px_24px_0px_rgba(102,51,153,0.18)]"
-            onClick={() => setHelpOpen(false)}
-          >
-            <p className="font-bold text-[#402666] mb-1">{t("teamBattle.title")}</p>
-            <p className="text-sm text-[#402666]/70 leading-relaxed">{t("lobby.tbRules")}</p>
-          </div>
-        )}
-      </FitBox>
-      </div>
-
-      {isHost ? (
-        <>
-          {/* Toasts are suppressed app-wide, so a refused start must say
-              why HERE — a dead button under a silent error reads as a
-              broken game. */}
-          {startError && !loading && (
-            <p className="w-full max-w-[500px] mx-auto shrink-0 px-6 pb-1 text-center font-[Nunito] font-bold text-[13px] text-[#dc2626]">
-              {t("teamBattle.startFailed")}: {startError}
-            </p>
-          )}
-          <StartButton
-            label={loading ? t("teamBattle.starting") : t("lobby.startGame")}
-            onClick={start}
-            disabled={!teamsEqual || !enoughPlayers || loading}
-            loading={loading}
-          />
-        </>
-      ) : null}
-      {/* The guest's waiting line moved UP under the rounds caption — the
-          bottom of this page can sit below the fold in split view. */}
 
       {room && (
         <InviteFriendsModal
@@ -912,7 +858,6 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
         onClose={() => setSeatMenu(null)}
         actions={seatMenu ? seatMenuActions(seatMenu.p) : []}
       />
-
 
       {crestFor && (
         <RoomIconPickerModal
@@ -977,79 +922,6 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
             : undefined
         }
       />
-
-    </div>
-  );
-}
-
-// The TB captain pill (940:7751): name on the left, round avatar docked
-// right. Hugs its content — a short name makes a short pill. While an
-// all-AI team's crown is being rolled, each face drops through like a slot
-// reel; the settled captain's avatar wears the crown.
-function TBCaptainChip({
-  left,
-  right,
-  accent,
-  name,
-  avatarUrl,
-  rolling,
-  onClick,
-}: {
-  left?: number;
-  right?: number;
-  accent: string;
-  name?: string;
-  avatarUrl?: string | null;
-  rolling?: boolean;
-  onClick?: () => void;
-}) {
-  return (
-    <motion.button
-      onClick={onClick}
-      whileTap={{ scale: 0.95, y: 3 }}
-      transition={{ type: "spring", stiffness: 520, damping: 28 }}
-      className="absolute h-[50px] inline-flex items-center max-w-[180px] rounded-[16.85px] border-[1.153px] border-solid shadow-[0px_3.389px_0px_0px_#d8d0e8,0px_5.083px_13.556px_0px_rgba(0,0,0,0.1)]"
-      style={{
-        left,
-        right,
-        top: 453,
-        borderColor: accent,
-        background: "linear-gradient(to bottom, rgba(255,255,255,0.5), rgba(254,254,254,0.5))",
-      }}
-    >
-      <motion.div
-        key={name ?? "-"}
-        initial={rolling ? { y: -16, opacity: 0 } : false}
-        animate={{ y: 0, opacity: 1 }}
-        transition={
-          rolling
-            ? { duration: 0.09, ease: "easeOut" }
-            : { type: "spring", stiffness: 480, damping: 22 }
-        }
-        className="flex items-center gap-[8px] pl-[14px] pr-[8px] min-w-0"
-      >
-        {/* An unclaimed armband invites the tap outright; a worn one still
-            shows the little pencil so changing captain is discoverable. */}
-        <p className="font-[Nunito] font-black leading-[28.974px] text-[#334155] text-[16px] tracking-[-0.1686px] whitespace-nowrap overflow-hidden text-ellipsis">
-          {name ?? "—"}
-        </p>
-        <Pencil className="w-3 h-3 shrink-0 text-[#523b76]/45" />
-        <div className="relative shrink-0 size-[33px]">
-          <div className="absolute inset-0 rounded-[9999px] overflow-clip bg-[rgba(192,192,192,0.24)]">
-            {avatarUrl && (
-              <img alt="" className="absolute inset-0 max-w-none object-cover size-full rounded-[9999px]" src={avatarUrl} />
-            )}
-          </div>
-          {!rolling && !!name && (
-            <img
-              alt=""
-              src={crownIcon}
-              className="pointer-events-none absolute -top-[8px] left-[8px] w-[17px] object-contain drop-shadow -rotate-12"
-            />
-          )}
-        </div>
-      </motion.div>
-      <div className="absolute inset-0 pointer-events-none rounded-[inherit] shadow-[inset_0px_1.695px_0px_0px_white]" />
-    </motion.button>
+    </UniversalLobby>
   );
 }

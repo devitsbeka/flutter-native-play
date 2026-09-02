@@ -5,12 +5,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { containsBlockedText } from "@/utils/contentFilter";
 import { Share2, ArrowLeft, Edit2, MessageCircle, Send, X, Trash2, Play, Tv, AlertTriangle, Palette, MoreVertical, Info, LogOut, Plus, BellRing } from "lucide-react";
-import { createNotification } from "@/hooks/useNotifications";
+import { createNotification, useNotifications } from "@/hooks/useNotifications";
 import { resolveAvatarUrl } from "@/utils/avatarUtils";
 import { shareOrCopy } from "@/utils/shareLink";
 import { isRoomActive } from "@/hooks/useMyRooms";
 import { RoomIconPickerModal } from "./RoomIconPickerModal";
-import { useMultiplayerV2, getShareLink } from "@/contexts/MultiplayerContextV2";
+import { useMultiplayerV2, getShareLink, QUESTIONS_PER_ROUND, questionsPerRound } from "@/contexts/MultiplayerContextV2";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -40,6 +40,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { UniversalLobby, type LobbyPlayer, type LobbyRuleRow } from "@/components/lobby/UniversalLobby";
+import { classicLobbyScene } from "@/utils/lobbyScene";
+import { roomVisibilityFields } from "@/utils/roomVisibility";
+import { useFriends } from "@/hooks/useFriends";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -87,6 +91,8 @@ export function RoomLobbyV2() {
   const [showHostObserverWarning, setShowHostObserverWarning] = useState(false);
   const [willBeObserver, setWillBeObserver] = useState(false); // Pre-calculate if host will be observer
   const prevParticipantsRef = useRef<string[]>([]);
+  const { friends } = useFriends();
+  const { unreadCount } = useNotifications();
 
   // The TV entry points create the room first — mounting this lobby — and only
   // then navigate to ?tvMode=true, so the mount-time initializer above misses
@@ -695,404 +701,164 @@ export function RoomLobbyV2() {
   const roomGradient = getGradientById(currentRoom?.background_gradient);
   const roomName = currentRoom.room_name || t("extra.gameRoomDefault");
 
+  // What the universal lobby shows for this room.
+  const hasContent = queue.length > 0 || currentRoom.category_id || currentRoom.user_trivia_id;
+  // Only offer "choose a category" when there's truly nothing to play
+  const needsCategorySelection = !hasContent;
+  const handleStartOrPick = () => {
+    if (needsCategorySelection) {
+      // No content or returned from game - just open picker (no auto-start)
+      setStartAfterPick(false);
+      setShowCategoryPicker(true);
+    } else {
+      handleStartGame();
+    }
+  };
+  const lobbyPlayers: LobbyPlayer[] = participants.map((p) => ({
+    id: p.id,
+    name: p.nickname,
+    avatarUrl: p.avatar_url,
+    isHost: p.is_host,
+    isYou: p.user_id === user?.id,
+    score: p.total_score || 0,
+    rounds: p.total_rounds_played || 0,
+    pending: (p.status as string) === "invited",
+    // The host's tap on somebody else: "come and play" for a seated player,
+    // the invitation again for a placeholder who never arrived.
+    onPress:
+      isHost && p.user_id !== user?.id
+        ? (p.status as string) === "invited"
+          ? () => void handleResendInvitation(p.user_id)
+          : () => void handleInvitePlayer(p.user_id)
+        : undefined,
+  }));
+  const inviteFaces = [...friends]
+    .filter((f) => f.status === "accepted")
+    .sort((a, b) => Number(!!b.isOnline) - Number(!!a.isOnline))
+    .slice(0, 3)
+    .map((f) => ({ url: f.avatarUrl, online: !!f.isOnline }));
+  // The rules the host sets: how many questions a round deals, and whether
+  // the room is on the public list. Both are the room row's own columns —
+  // the context reads total_questions when it deals, the public tab reads
+  // is_public — and the realtime row update brings the choice back here.
+  const setQuestions = async (value: string) => {
+    if (!isHost) return;
+    await supabase.from("game_rooms").update({ total_questions: Number(value) }).eq("id", currentRoom.id);
+  };
+  const setVisibility = async (value: string) => {
+    if (!isHost) return;
+    await supabase
+      .from("game_rooms")
+      .update({ ...(await roomVisibilityFields(value === "public")) })
+      .eq("id", currentRoom.id);
+  };
+  const isPublicRoom = Boolean((currentRoom as { is_public?: boolean }).is_public);
+  const lobbyRules: LobbyRuleRow[] = [
+    {
+      key: "questions",
+      label: t("lobby.uQuestionsPerRound"),
+      options: QUESTIONS_PER_ROUND.map((n) => ({ value: String(n), label: String(n) })),
+      value: String(questionsPerRound(currentRoom.total_questions)),
+      onChange: isHost ? (v) => void setQuestions(v) : undefined,
+    },
+    {
+      key: "visibility",
+      label: t("lobby.uVisibility"),
+      options: [
+        { value: "public", label: t("extra.roomPublic") },
+        { value: "private", label: t("extra.roomPrivate") },
+      ],
+      value: isPublicRoom ? "public" : "private",
+      onChange: isHost ? (v) => void setVisibility(v) : undefined,
+    },
+  ];
+
   return (
-    /* The room's gradient runs under the status bar, and the header still
-       clears it.
-       #root carries a padding-top of --safe-top so every screen's content
-       misses the clock. That is right for a screen whose background is the
-       page wash, and wrong here: it would leave a band of the wash above a
-       dark gradient. Cancelling with a negative margin and re-adding the
-       same value as padding puts the background back at the true top edge
-       while leaving everything inside exactly where the root put it. */
-    /* h-[100dvh] + overflow-y-auto, NOT min-h-screen: the native shell
-       disables the document scroller outright (AGENTS.md 4b), so a page
-       that merely grows past the viewport is frozen solid on device — the
-       lobby shipped that way and could not be scrolled at all once the TV
-       card and player strip pushed content below the fold. A fixed-height
-       box that scrolls itself is the recipe every standalone page uses. */
-    <div
-      className="h-[100dvh] relative flex flex-col overflow-hidden"
-      style={{
-        background: roomGradient?.gradient || 'var(--background)',
-        /* Not .safe-bleed: that re-adds the top inset as padding, and the
-           sticky header would then need a negative margin to reach the true
-           top — which iOS WebKit answers by clamping the sticky box to the
-           content edge, shifting the whole header DOWN by one extra
-           safe-top (the giant gap above the lobby header on device;
-           Chromium does not clamp, which is why it looked right in the
-           browser). So the root cancels #root's padding without re-adding
-           it, content starts at the true screen edge, and the header
-           carries the inset itself. */
-        marginTop: "calc(-1 * var(--safe-top))",
-        marginBottom: "calc(-1 * var(--safe-bottom))",
-        paddingBottom: "var(--safe-bottom)",
+    <UniversalLobby
+      sceneArt={classicLobbyScene(currentRoom)}
+      roomName={roomName}
+      onRename={isHost ? () => setShowIconPicker(true) : undefined}
+      onBack={handleExitRoom}
+      unreadCount={unreadCount}
+      category={{
+        label:
+          (justReturnedFromResults && !madeNewSelection && queue.length === 0)
+            ? t("lobby.uSelectCategory")
+            : currentRoom.category_name || t("lobby.uSelectCategory"),
+        onPress: isHost ? () => { setStartAfterPick(false); setShowCategoryPicker(true); } : undefined,
       }}
+      tv={isHost ? { label: t("lobby.uPlayOnTv"), onPress: () => setIsTVModeEnabled(true) } : undefined}
+      labels={{
+        rules: t("lobby.uGameRules"),
+        players: t("lobby.uPlayersTab"),
+        invite: t("lobby.uInvite"),
+        you: t("lobby.uYou"),
+        rounds: (count) => t("lobby.uRoundsShort", { count }),
+      }}
+      rules={lobbyRules}
+      players={lobbyPlayers}
+      playersHint={enoughPlayers ? null : t("lobby.uInviteHint")}
+      inviteFaces={inviteFaces}
+      onInvite={() => setShowInviteModal(true)}
+      playersExtra={<ChallengeResultsSection roomId={currentRoom.id} />}
+      initialTab={needsCategorySelection || !enoughPlayers ? "players" : "rules"}
+      start={
+        isHost
+          ? {
+              label: isStarting
+                ? t("extra.rlStarting")
+                : needsCategorySelection
+                  ? t("extra.rlChooseCategory")
+                  : t("lobby.uStartGame"),
+              onPress: handleStartOrPick,
+              disabled:
+                !canStartGame
+                || isStarting
+                || loading
+                || (!needsCategorySelection && !enoughPlayers),
+              loading: isStarting,
+              icon: needsCategorySelection ? <Plus className="h-5 w-5" /> : undefined,
+              caption: !needsCategorySelection && !enoughPlayers && !isStarting ? t("extra.rlNeedsSecondPlayer") : null,
+            }
+          : {
+              label: pingCooldown ? t("extra.pingHostSent") : t("extra.pingHostBtn"),
+              onPress: () => void handlePingHost(),
+              disabled: pingCooldown,
+              icon: <BellRing className="h-5 w-5" />,
+              caption: t("team.waitingForHost"),
+            }
+      }
     >
-      {/* Somebody asking to come into a published room. Mounted here rather
-          than beside the header so it is above everything the lobby draws —
-          the person asking is waiting on the answer. */}
+      {/* Somebody asking to come into a published room, above everything. */}
       <JoinRequestGate roomId={currentRoom.id} isHost={isHost} />
 
-      {/* Header. A plain flex row at the top — the content area below is
-          the scroller, so nothing sticky is needed and no negative margins
-          are in play (iOS WebKit clamps sticky boxes with negative margins,
-          which is what shoved this header down a full safe-top). The blur's
-          own padding keeps the row clear of the status bar. */}
-      <div className="relative z-30 w-full shrink-0">
-        {/* Header content with subtle background blur */}
-        <div
-          className="px-4 sm:px-6 pb-4 backdrop-blur-md bg-black/10"
-          style={{ paddingTop: "calc(var(--safe-top) + 1rem)" }}
-        >
-          <div className="flex items-center justify-between gap-2">
-            {/* Wrapped so the share falls on the wrapper: stretching the
-                button itself would give the back arrow a 400px tinted
-                background to sit in the corner of. */}
-            <div className="flex shrink-0 flex-1 items-center">
-              <motion.button
-                onClick={handleExitRoom}
-                className="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-white/10 border border-white/[0.12]"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <ArrowLeft className="w-4 h-4 text-white" />
-              </motion.button>
-            </div>
-
-            {/* The room's name, centred in the row at every width — the
-                same place the King and Battle lobbies now put theirs, so
-                the three rooms read as one family instead of one of them
-                hanging its title off the back arrow.
-
-                Centring is exact rather than "centred in what is left over":
-                the back button and the actions each take an equal share of
-                the row, so the middle share is genuinely the middle. Sizing
-                the name against the leftover space would put it a couple of
-                dozen pixels off, because the actions cluster is wider than
-                the back button. A phone has barely 170px of middle, which is
-                why the name is a size down from the page titles and
-                ellipsises rather than wrapping.
-
-                For the host it is also the way in: tapping the name opens the
-                same rename-and-icon page the menu offers, which is what makes
-                the pencil and palette buttons that used to sit under it
-                unnecessary. A guest gets the same line without the tap. */}
-            {isHost ? (
-              <motion.button
-                onClick={() => setShowIconPicker(true)}
-                className="flex min-w-0 flex-[2] items-center justify-center gap-2 rounded-xl px-1 py-1 text-center hover:bg-white/10"
-                whileTap={{ scale: 0.98 }}
-                title={t("extra.rlRenameRoom")}
-              >
-                {currentRoom.room_icon && (
-                  <img src={currentRoom.room_icon} alt="" className="h-7 w-7 shrink-0 object-contain" />
-                )}
-                <h2 className="truncate text-sm font-bold text-white drop-shadow-lg">{roomName}</h2>
-              </motion.button>
-            ) : (
-              <div className="flex min-w-0 flex-[2] items-center justify-center gap-2 px-1">
-                {currentRoom.room_icon && (
-                  <img src={currentRoom.room_icon} alt="" className="h-7 w-7 shrink-0 object-contain" />
-                )}
-                <h2 className="truncate text-sm font-bold text-white drop-shadow-lg">{roomName}</h2>
-              </div>
-            )}
-
-            <div className="flex shrink-0 flex-1 items-center justify-end gap-2">
-              {/* TEMPORARILY HIDDEN - Chat toggle */}
-              {/* <motion.button
-                onClick={() => setShowChat(!showChat)}
-                className="flex items-center justify-center w-10 h-10 rounded-xl relative bg-white/10 backdrop-blur-sm border border-white/20"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <MessageCircle className="w-4 h-4 text-white" />
-                {unreadMessageCount > 0 && !showChat && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                    {unreadMessageCount}
-                  </span>
-                )}
-              </motion.button> */}
-
-              {/* Share button */}
-              <motion.button
-                onClick={handleShare}
-                className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/10 border border-white/[0.12]"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Share2 className="w-4 h-4 text-white" />
-              </motion.button>
-
-              {/* Three-dot menu */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <motion.button
-                    className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/10 border border-white/[0.12]"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <MoreVertical className="w-4 h-4 text-white" />
-                  </motion.button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48 bg-card border-border">
-                  <DropdownMenuItem onClick={() => setShowHowItWorks(true)} className="cursor-pointer">
-                    <Info className="w-4 h-4 mr-2" />
-                    {t("extra.rlHowItWorks")}
-                  </DropdownMenuItem>
-                  {/* The host's two editing actions. They were a pencil and a
-                      palette under the room's name — two unlabelled glyphs
-                      that only the host ever saw, in the middle of the page.
-                      Named, in the menu the rest of the room's actions are
-                      already in. */}
-                  {isHost && (
-                    <>
-                      <DropdownMenuItem onClick={() => setShowIconPicker(true)} className="cursor-pointer">
-                        <Edit2 className="w-4 h-4 mr-2" />
-                        {t("extra.rlRenameRoom")}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setShowGradientPicker(true)} className="cursor-pointer">
-                        <Palette className="w-4 h-4 mr-2" />
-                        {t("extra.rlChangeBackground")}
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLeaveConfirm} className="cursor-pointer">
-                    <LogOut className="w-4 h-4 mr-2" />
-                    {t("extra.rlLeaveRoom")}
-                  </DropdownMenuItem>
-                  {isHost && (
-                    <DropdownMenuItem 
-                      onClick={handleDeleteRoom} 
-                      className="cursor-pointer text-destructive focus:text-destructive"
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      {t("extra.rlDeleteRoom")}
-                    </DropdownMenuItem>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-
-        </div>
-
-        {/* Fade-out gradient for smooth transition */}
-        <div 
-          className="absolute bottom-0 left-0 right-0 h-8 -mb-8 pointer-events-none"
-          style={{
-            background: 'linear-gradient(to bottom, rgba(0,0,0,0.1), transparent)'
-          }}
-        />
-      </div>
-
-      {/* Scrollable content area. min-h-0: a flex child's implicit
-          min-height is its content, so without this the box grows past the
-          viewport instead of scrolling — the frozen lobby on device. */}
-      <div className="flex-1 min-h-0 overflow-y-auto relative z-10 px-4 sm:px-6 pb-32 sm:max-w-[520px] mx-auto w-full will-change-transform">
-
-        {/* Category Picker Section */}
-        <CategoryPickerSection
-          categoryName={
-            // Show category if: user made new selection OR queue has items
-            (justReturnedFromResults && !madeNewSelection && queue.length === 0) ? null : (
-              currentRoom.category_name ??
-              (((currentRoom as any).game_mode?.startsWith('trivia:') || (currentRoom as any).game_mode?.startsWith('collection:'))
-                ? null  // Don't use room_name as category fallback
-                : null)
-            )
-          }
-          categoryId={(justReturnedFromResults && !madeNewSelection && queue.length === 0) ? null : currentRoom.category_id}
-          iconSlug={
-            (justReturnedFromResults && !madeNewSelection && queue.length === 0) ? null : (
-              currentRoom.category_name === t("extra.randomCategoryName") 
-                ? null
-                : currentRoom.category_id 
-                  ? getCategoryIconSlug(currentRoom.category_id) 
-                  : currentRoom.category_name 
-                    ? getCategoryIconSlug(currentRoom.category_name)
-                    : null
-            )
-          }
-          isHost={isHost}
-          queue={queue}  // Always show queue - remove conditional hiding
-          onOpenPicker={() => setShowCategoryPicker(true)}
-          onRemoveQueueItem={removeFromQueue}
-          onReorderQueue={reorderQueue}
-          isAlreadyPlayed={!!lastPlayedTriviaId && lastPlayedTriviaId === currentRoom.user_trivia_id}
-          willBeObserver={willBeObserver}
-        />
-
-        {/* TV Mode Toggle - Host only */}
-        {isHost && (
+      {/* Play on TV: the pairing code entry, as a sheet over the lobby. */}
+      <AnimatePresence>
+        {isTVModeEnabled && (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={tvHintGlow
-              ? {
-                  opacity: 1,
-                  y: 0,
-                  boxShadow: [
-                    "0 0 0px rgba(139,92,246,0)",
-                    "0 0 24px rgba(139,92,246,0.6)",
-                    "0 0 0px rgba(139,92,246,0)",
-                  ],
-                }
-              : { opacity: 1, y: 0 }
-            }
-            transition={tvHintGlow
-              ? { boxShadow: { repeat: 2, duration: 1 }, opacity: { duration: 0.3 }, y: { duration: 0.3 } }
-              : undefined
-            }
-            onAnimationComplete={() => {
-              if (tvHintGlow) {
-                setTvHintGlow(false);
-                searchParams.delete("tvHint");
-                setSearchParams(searchParams, { replace: true });
-              }
-            }}
-            className="w-full p-4 rounded-2xl bg-white/10 border border-white/[0.12] mb-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[120] flex items-end justify-center bg-[rgba(64,38,102,0.35)] backdrop-blur-[6px] p-4 pb-[calc(1rem_+_var(--safe-bottom))]"
+            onClick={() => setIsTVModeEnabled(false)}
           >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <img 
-                  src={retroTvIcon} 
-                  alt="TV" 
-                  className="w-10 h-10 object-contain"
-                />
-                <div>
-                  <p className="text-white font-medium text-sm">{t("extra.tvModeLabel")}</p>
-                  <p className="text-white/60 text-xs">{t("extra.tvQuestionsOnTV")}</p>
-                </div>
-              </div>
-              <Switch
-                checked={isTVModeEnabled}
-                onCheckedChange={handleTVModeToggle}
+            <motion.div
+              initial={{ y: 40, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 40, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 380, damping: 32 }}
+              className="w-full max-w-[468px] rounded-[24px] border-2 border-white/60 bg-[rgba(252,247,255,0.92)] p-2 shadow-[0px_8px_24px_0px_rgba(102,51,153,0.18)]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <TVSetupInline
+                onComplete={handleTVSetupComplete}
+                onCancel={() => setIsTVModeEnabled(false)}
+                roomId={currentRoom.id}
               />
-            </div>
+            </motion.div>
           </motion.div>
         )}
-
-        {/* TV Setup (when enabled) */}
-        <AnimatePresence>
-          {isTVModeEnabled && currentRoom && (
-            <TVSetupInline
-              onComplete={handleTVSetupComplete}
-              onCancel={() => setIsTVModeEnabled(false)}
-              roomId={currentRoom.id}
-            />
-          )}
-        </AnimatePresence>
-
-        {/* Scoreboard */}
-        <div className="w-full">
-          <RoomScoreboard
-            participants={participants as any}
-            matches={matches}
-            currentUserId={user?.id}
-            showHostCrown={true}
-            maxPlayers={currentRoom.max_players || 10}
-            isHost={isHost}
-            isRoomActive={isRoomActive(currentRoom.last_activity_at || null, currentRoom.created_at)}
-            onInviteFriends={() => setShowInviteModal(true)}
-            onRemoveParticipant={handleRemoveParticipant}
-            onResendInvitation={handleResendInvitation}
-            onInvitePlayer={handleInvitePlayer}
-          />
-        </div>
-
-        {/* Challenge Results */}
-        <ChallengeResultsSection roomId={currentRoom.id} />
-
-        {/* Invite Friends Modal */}
-        <InviteFriendsModal
-          isOpen={showInviteModal}
-          onClose={() => setShowInviteModal(false)}
-          inviteLink={getShareLink(currentRoom.room_code)}
-          roomId={currentRoom.id}
-          roomCode={currentRoom.room_code}
-        />
-      </div>
-
-      {/* Fixed Bottom Button */}
-      <div className="fixed bottom-0 left-0 right-0 z-20 px-5 pt-4 pb-[calc(1.5rem_+_var(--safe-bottom))] bg-gradient-to-t from-black/60 via-black/30 to-transparent">
-        <div className="max-w-[520px] mx-auto">
-          {isHost ? (
-            // Show different button based on context
-            (() => {
-              const hasContent = queue.length > 0 || currentRoom.category_id || currentRoom.user_trivia_id;
-              // Only show "აირჩიე კატეგორია" when there's truly nothing to play
-              const needsCategorySelection = !hasContent;
-              
-              const handleStartOrPick = () => {
-                if (needsCategorySelection) {
-                  // No content or returned from game - just open picker (no auto-start)
-                  setStartAfterPick(false);
-                  setShowCategoryPicker(true);
-                } else {
-                  // Content selected - start the game
-                  handleStartGame();
-                }
-              };
-              
-              return (
-                <>
-                <ChunkyButton
-                  variant="white"
-                  size="xl"
-                  className="w-full"
-                  onClick={handleStartOrPick}
-                  disabled={
-                    !canStartGame
-                    || isStarting
-                    || loading
-                    || (!needsCategorySelection && !enoughPlayers)
-                  }
-                  icon={needsCategorySelection ? <Plus className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-                >
-                  {isStarting 
-                    ? t("extra.rlStarting")
-                    : needsCategorySelection 
-                      ? t("extra.rlChooseCategory")
-                      : t("extra.rlStartGame")
-                  }
-                </ChunkyButton>
-                {!needsCategorySelection && !enoughPlayers && !isStarting && (
-                  // A disabled button with no reason beside it reads as a
-                  // broken button.
-                  <p className="mt-2 text-center text-[13px] font-medium text-white/80 drop-shadow-sm">
-                    {t("extra.rlNeedsSecondPlayer")}
-                  </p>
-                )}
-                </>
-              );
-            })()
-          ) : (
-            /* space-y-5, not 3: the button carries a chunky drop shadow that
-               eats most of a 12px gap, so the caption read as attached to it
-               rather than as a separate line. */
-            <div className="text-center py-2 space-y-5">
-              <ChunkyButton
-                variant="white"
-                size="lg"
-                className="w-full"
-                onClick={handlePingHost}
-                disabled={pingCooldown}
-                icon={<BellRing className="w-5 h-5" />}
-              >
-                {pingCooldown ? t("extra.pingHostSent") : t("extra.pingHostBtn")}
-              </ChunkyButton>
-              <motion.div
-                animate={{ opacity: [0.5, 1, 0.5] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                className="text-white/80 font-medium"
-              >
-                {t("team.waitingForHost")}
-              </motion.div>
-            </div>
-          )}
-        </div>
-      </div>
+      </AnimatePresence>
 
       {/* Leave Confirmation Modal */}
       <AnimatePresence>
@@ -1271,6 +1037,6 @@ export function RoomLobbyV2() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </UniversalLobby>
   );
 }

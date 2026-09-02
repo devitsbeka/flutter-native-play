@@ -8,7 +8,7 @@
  * is easy to undo by accident:
  *
  *  - the reel is opened by a + seat, not rendered unconditionally;
- *  - the room's name lives one row above the captains, in the middle;
+ *  - the room's name is the universal lobby's title, over the scene;
  *  - the game's name is centred in the header at every width.
  */
 
@@ -35,8 +35,10 @@ describe("the lounges invite through the invite page", () => {
     }
   });
 
-  it("a + seat opens the invite page", () => {
-    expect(king).toMatch(/PlusSeat[^]*?onClick=\{inviteFriends\}/);
+  it("the invite row opens the invite page", () => {
+    // The King's couch is the universal lobby now; its "Invite" row is the
+    // one door to the invite page.
+    expect(king).toMatch(/onInvite=\{inviteFriends\}/);
     // The arena's + also remembers which side the seat was on, so an
     // accepted invite lands on the right team. Nobody claims a seat by
     // tapping one: seats are dealt (owner's direction — an approved join
@@ -125,23 +127,23 @@ describe("the lounges invite through the invite page", () => {
     const context = read("src/contexts/TeamBattleContext.tsx");
     expect(context).toMatch(/asQuestions\(filled\.res\.questions\.slice\(0, 30\)\)/);
     expect(context).toMatch(/asQuestions\(superRes\.questions\.slice\(0, 30\)\)/);
-    // And the guest's "waiting for the host" line sits at the TOP, under
-    // the rounds caption, where a short window can't hide it.
+    // And the guest's "waiting for the host" line is the caption of the
+    // universal lobby's Start footer, which is pinned to the bottom of a
+    // fixed-height screen — never below a fold.
     const battle = read("src/pages/TeamBattlePage.tsx");
-    expect(battle).toMatch(/: !isHost \? \(\s*\n\s*<p[^]*?teamBattle\.waitingHost/);
+    expect(battle).toMatch(/caption: t\("teamBattle\.waitingHost"\)/);
   });
 });
 
 describe("the room's name sits above the captain row", () => {
-  it("the King's name is below its seats, above the captain label", () => {
-    // Design coordinates inside the FitBox: name, then label, then chip,
-    // in that order and none of them overlapping.
-    expect(king).toContain('top-[590px] w-[435px] flex justify-center');
-    expect(king).toContain("top-[638px]"); // captain label
-    expect(king).toContain("top={668}"); // captain chip
-    // The canvas grew to hold the moved block; the chip's bottom (668+52)
-    // has to still be inside it.
-    expect(king).toContain("<FitBox width={500} height={728}>");
+  it("the King's name is the universal lobby's title, and the host can rename it", () => {
+    // One lobby for every mode (Figma 1018:5815): the couch hands its name
+    // and its own scene to UniversalLobby rather than placing it on a
+    // FitBox canvas of its own.
+    expect(king).toContain("<UniversalLobby");
+    expect(king).toMatch(/sceneArt=\{LOBBY_SCENES\.king\}/);
+    expect(king).toMatch(/onRename=/);
+    expect(king).not.toContain("<FitBox width={500}");
     expect(king).not.toContain('top-[44px] w-[435px]');
   });
 
@@ -163,13 +165,12 @@ describe("the game's name is centred in the header", () => {
     expect(lilac).not.toContain("text-[26px] tracking-[-0.16px] whitespace-nowrap");
   });
 
-  it("the classic room centres its name at every width, not only on md+", () => {
-    expect(room).toContain("flex min-w-0 flex-[2] items-center justify-center gap-2 px-1");
-    expect(room).toContain('<h2 className="truncate text-sm font-bold text-white drop-shadow-lg">');
-    // The two ends take an equal share, which is what makes the middle the
-    // real middle rather than what is left over.
-    expect(room).toContain('<div className="flex shrink-0 flex-1 items-center">');
-    expect(room).toContain('<div className="flex shrink-0 flex-1 items-center justify-end gap-2">');
+  it("the classic room hands its name to the universal lobby, which sets it over the scene", () => {
+    // The classic room no longer draws a header of its own: it renders the
+    // one lobby every mode shares (Figma 1018:5815) and passes the name in.
+    expect(room).toContain("<UniversalLobby");
+    expect(room).toMatch(/roomName=\{roomName\}/);
+    expect(room).not.toContain('<h2 className="truncate text-sm font-bold text-white drop-shadow-lg">');
     expect(room).not.toMatch(/md:flex-\[2\]/);
   });
 });
@@ -179,7 +180,7 @@ describe("the couch elects its captain, like the arena", () => {
     // Tapping the captain chip opens the same CaptainInfoModal the arena
     // uses, with a live tally, and choosing casts a tb_vote_captain vote —
     // the one function that serves both lobbies since 20260925100000.
-    expect(king).toMatch(/CaptainChip[^]*?onClick=\{\(\) => setCaptainInfoOpen\(true\)\}/);
+    expect(king).toMatch(/onClick=\{\(\) => setCaptainInfoOpen\(true\)\}/);
     expect(king).toMatch(/<CaptainInfoModal[^]*?body=\{t\("king\.captainInfoBody"\)\}/);
     expect(king).toMatch(/supabase\.rpc\("tb_vote_captain"/);
     expect(king).toMatch(/voter\.captain_vote === p\.user_id/);
@@ -213,8 +214,10 @@ describe("the host's side is the side they chose", () => {
 
   it("the host cannot move their own seat — no menu entry, no drag", () => {
     expect(battle).toMatch(/if \(isHost && p\.user_id !== user\?\.id\) \{/);
-    expect(battle).toMatch(/draggable=\{isHost && entry\.p\.user_id !== user\?\.id\}/);
-    expect(battle).toMatch(/if \(!toOther \|\| !isHost \|\| entry\.p\.user_id === user\?\.id\) return;/);
+    // The benches are rows of the universal lobby now: the seat menu is
+    // the one way to reseat anyone, and there is no drag to sneak past it.
+    expect(battle).not.toMatch(/draggable=/);
+    expect(battle).toMatch(/if \(isHost && p\.user_id !== user\?\.id\) \{\s*\n\s*setSeatMenu\(\{ p, pending \}\);/);
   });
 });
 
