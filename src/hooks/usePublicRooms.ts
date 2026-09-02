@@ -195,6 +195,11 @@ export function filterPublicRooms(
     // Versus King is friends-only: its lounges are never listed, even when
     // an older build managed to publish one.
     if (room.game_type_key === "king") return false;
+    // A game that has started is not a room to join: its card said
+    // "waiting" over a match already running. Only rooms whose host has
+    // not pressed Start are listed; a started room stays on the Private
+    // tab for its own players — the replay, the scores.
+    if (room.status !== "waiting") return false;
     // "My rooms" is the ones I created, as on the Private tab — a room I
     // merely sit in is somebody else's.
     if (filter === "my_rooms" && room.my_state !== "host") return false;

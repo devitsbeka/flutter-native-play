@@ -211,6 +211,10 @@ describe("the public list", () => {
     // list, whatever filter is asked for — even one an older build
     // managed to publish.
     expect(filterPublicRooms(rooms, "all", "", ctx).map((r) => r.id)).toEqual(["b", "c", "d"]);
+    // A started game is not a room to join: it leaves the Public tab for
+    // its players' Private tab.
+    const started = [...rooms, room({ id: "e", room_name: "Running", host_user_id: "far", status: "playing" })];
+    expect(filterPublicRooms(started, "all", "", ctx).map((r) => r.id)).toEqual(["b", "c", "d"]);
     // Active: somebody seated (the host counts) is in the app right now.
     // The arena's host is away but a player on it is here; the ghost town's
     // whole couch has left.

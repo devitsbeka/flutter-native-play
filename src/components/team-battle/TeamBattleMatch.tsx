@@ -27,6 +27,7 @@ import {
   type TBTeam,
   type TBTile,
 } from "@/contexts/TeamBattleContext";
+import { dealtCrests, fetchCrestPool } from "@/utils/roomCrests";
 
 // The app's chunky-3D language (see QuizAnswerButton/QuizTrueFalseButton):
 // a solid depth layer behind a face, on the periwinkle game background.
@@ -80,13 +81,37 @@ function useTileCategory(tile: TBTile | undefined) {
 function ScoreHeader({ seconds, maxSeconds }: { seconds?: number; maxSeconds?: number }) {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const { state, myTeam } = useTeamBattle();
+  const { state, myTeam, room } = useTeamBattle();
+  // The sides' crests, the same ones the lobby showed: the captains' picks
+  // from the room row, or the deck's deal for a side that never chose (the
+  // lobby's rule, so the match wears what the lobby wore).
+  const [crestPool, setCrestPool] = useState<string[]>([]);
+  useEffect(() => {
+    void fetchCrestPool().then(setCrestPool);
+  }, []);
+  const crests = useMemo(
+    () =>
+      dealtCrests(room?.id ?? "", crestPool, {
+        a: room?.team_a_icon ?? null,
+        b: room?.team_b_icon ?? null,
+      }),
+    [room?.id, room?.team_a_icon, room?.team_b_icon, crestPool],
+  );
   if (!state) return null;
   const side = (team: TBTeam) => (
     <div className={`flex flex-col ${team === "a" ? "items-start" : "items-end"}`}>
-      <span className="text-white/70 text-[11px] font-semibold uppercase tracking-wide">
-        {teamLabel(t, team)}
-        {myTeam === team ? ` · ${t("teamBattle.you")}` : ""}
+      <span className={`flex items-center gap-1.5 ${team === "a" ? "" : "flex-row-reverse"}`}>
+        {crests[team] && (
+          <img
+            alt=""
+            src={crests[team] ?? undefined}
+            className="w-6 h-6 object-contain drop-shadow-sm shrink-0"
+          />
+        )}
+        <span className="text-white/70 text-[11px] font-semibold uppercase tracking-wide">
+          {teamLabel(t, team)}
+          {myTeam === team ? ` · ${t("teamBattle.you")}` : ""}
+        </span>
       </span>
       <motion.span
         key={team === "a" ? state.team_a_score : state.team_b_score}

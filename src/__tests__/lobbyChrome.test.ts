@@ -202,3 +202,12 @@ describe("the King's duel keeps its one action at the bottom", () => {
     expect(king).not.toMatch(/<p className="text-sm text-white\/70 text-center -mt-2">\{t\("king\.thinkHint"\)\}<\/p>\s*<button/);
   });
 });
+
+describe("the match wears the sides' crests", () => {
+  it("the score header shows each team's crest, the lobby's deal for an unchosen side", () => {
+    const match = read("src/components/team-battle/TeamBattleMatch.tsx");
+    expect(match).toMatch(/import \{ dealtCrests, fetchCrestPool \} from "@\/utils\/roomCrests"/);
+    expect(match).toMatch(/dealtCrests\(room\?\.id \?\? "", crestPool, \{\s*a: room\?\.team_a_icon \?\? null,\s*b: room\?\.team_b_icon \?\? null,/);
+    expect(match).toMatch(/src=\{crests\[team\] \?\? undefined\}/);
+  });
+});
