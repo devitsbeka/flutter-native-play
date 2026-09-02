@@ -1947,8 +1947,9 @@ export const fr: KaTranslations = {
     myTriviaOption: "Mon Trivia",
     myTriviaDesc: "Choisir parmi vos trivias créés",
     // The create screen's mode cards (Figma 1013:1405)
-    modeRandomTitle: "Partie rapide",
-    modeQuickTitle: "Trivia classique",
+    modeRandomTitle: "Partie aléatoire",
+    modeQuickTitle: "Partie rapide",
+    modeLibraryTitle: "Trivia classique",
     modeKingTitle: "vs. King",
     modeBattleTitle: "Bataille d'équipes",
     modeRandomDesc: "Joue au hasard parmi les modes de MyTrivia.",

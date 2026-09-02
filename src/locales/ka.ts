@@ -2268,8 +2268,9 @@ export const ka = {
     myTriviaOption: "ჩემი ტრივია",
     myTriviaDesc: "აირჩიე შენი შექმნილი ტრივიებიდან",
     // The create screen's mode cards (Figma 1013:1405)
-    modeRandomTitle: "სწრაფი თამაში",
-    modeQuickTitle: "კლასიკური ტრივია",
+    modeRandomTitle: "შემთხვევითი თამაში",
+    modeQuickTitle: "სწრაფი თამაში",
+    modeLibraryTitle: "კლასიკური ტრივია",
     modeKingTitle: "ვერსუს King",
     modeBattleTitle: "გუნდური ბრძოლა",
     modeRandomDesc: "ითამაშე შემთხვევით MyTrivia-ს სხვადასხვა რეჟიმიდან.",

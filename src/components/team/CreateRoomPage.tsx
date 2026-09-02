@@ -1520,7 +1520,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                 { key: "king", art: featuredKing, artTop: 0, descW: 273, players: "1-10", title: t("extra.modeKingTitle"), desc: t("lobby.kingCardDesc") },
                 { key: "battle", art: featuredBattle, artTop: -4.56, descW: 273, players: "4-10", title: t("extra.modeBattleTitle"), desc: t("gameTypes.teamBattleDesc") },
                 { key: "words", art: featuredWords, artTop: 0.04, descW: 329, players: "1-2", title: t("gameTypes.wordsTitle"), desc: t("extra.modeWordsDesc") },
-                { key: "library", art: featuredLibrary, artTop: -2.86, descW: 273, players: null, title: t("extra.libraryOption"), desc: t("extra.libraryDesc") },
+                { key: "library", art: featuredLibrary, artTop: -2.86, descW: 273, players: null, title: t("extra.modeLibraryTitle"), desc: t("extra.libraryDesc") },
                 { key: "mytrivias", art: featuredMyTrivias, artTop: -0.02, descW: 273, players: null, title: t("extra.myTriviaOption"), desc: t("extra.myTriviaDesc") },
               ] as { key: GameChoice; art: string; artTop: number; descW: number; players: string | null; title: string; desc: string }[]
             ).map((card, i) => {
