@@ -78,6 +78,9 @@ interface TeamBattleContextValue {
     categories: { uuid: string; name: string }[],
     preferredTiles?: number,
   ) => Promise<boolean>;
+  /** Why the last start attempt failed — the lobby shows it, since toasts
+      are suppressed app-wide and a dead Start button explains nothing. */
+  startError: string | null;
   submitRps: (gesture: TBGesture) => Promise<void>;
   pickTile: (tileId: string) => Promise<void>;
   submitAnswer: (questionIndex: number, answer: string) => Promise<{ correct: boolean } | null>;
@@ -140,6 +143,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
   const [tiles, setTiles] = useState<TBTile[]>([]);
   const [state, setState] = useState<TBState | null>(null);
   const [loading, setLoading] = useState(false);
+  const [startError, setStartError] = useState<string | null>(null);
   const channelsRef = useRef<ReturnType<typeof supabase.channel>[]>([]);
   const liveChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const roomIdRef = useRef<string | null>(null);
@@ -378,15 +382,41 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
         .eq("room_id", row.id)
         .eq("user_id", user.id)
         .maybeSingle();
+      // Seats are ASSIGNED, never wandered into: an invitee keeps the side
+      // their inviter put them on, and anyone who arrives without one — an
+      // approved join request (respond_room_join writes a teamless row), a
+      // teamless invite — is seated OPPOSITE the host, falling back to the
+      // host's side only when that bench is full.
+      const assignSeat = async (): Promise<TBTeam | null> => {
+        const { data: seated } = await supabase
+          .from("room_participants")
+          .select("user_id, team")
+          .eq("room_id", row.id)
+          .in("status", ["joined", "ready", "playing", "invited"]);
+        const hostTeam = (seated ?? []).find((p) => p.user_id === row.host_user_id)?.team as
+          | TBTeam
+          | null
+          | undefined;
+        const perSide = Math.max(2, Math.min(5, Math.floor((row.max_players ?? 10) / 2)));
+        const onSide = (side: TBTeam) => (seated ?? []).filter((p) => p.team === side).length;
+        if (user.id === row.host_user_id || (hostTeam !== "a" && hostTeam !== "b")) return null;
+        const opposite: TBTeam = hostTeam === "a" ? "b" : "a";
+        if (onSide(opposite) < perSide) return opposite;
+        if (onSide(hostTeam) < perSide) return hostTeam;
+        return null;
+      };
       // An invite-modal invitee arrives holding an "invited" row — accepting
       // means flipping it to joined, or they stay invisible in the lobby.
-      // A team is NOT dealt: an invite from a + seat already carries its
-      // side, and everyone else (approved join requests included) claims
-      // one in the lobby by tapping the + seat they want.
-      if (existing && existing.status === "invited") {
+      // A joined row with no team (an approval the guest never claimed) gets
+      // repaired the same way.
+      if (existing && (existing.status === "invited" || !existing.team)) {
+        const dealt = existing.team ? null : await assignSeat();
         await supabase
           .from("room_participants")
-          .update({ status: "joined" })
+          .update({
+            ...(existing.status === "invited" ? { status: "joined" } : {}),
+            ...(dealt ? { team: dealt } : {}),
+          })
           .eq("id", existing.id);
       }
       if (!existing) {
@@ -405,16 +435,21 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
           toast.error(tStandalone("teamBattle.roomFull"));
           return false;
         }
-        // No team on arrival: the seats are the choice, and the lobby
-        // prompts the newcomer to claim one on the side they want.
+        // A fresh joiner sits down as the host's OPPONENT (assignSeat). A
+        // returning HOST keeps their flag — leaving deletes the row, and
+        // the Public card's request short-circuits with "joined" for the
+        // host without re-seating them, so this insert is how they get
+        // their seat back.
+        const team = await assignSeat();
         const { error } = await supabase.from("room_participants").insert({
           room_id: row.id,
           user_id: user.id,
           nickname: profile.nickname || "Player",
           avatar_url: profile.avatar_url,
           country_code: profile.country_code,
-          is_host: false,
+          is_host: row.host_user_id === user.id,
           status: "joined",
+          ...(team ? { team } : {}),
         });
         if (error) {
           console.error("[TB] join failed", error);
@@ -588,7 +623,11 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
     ): Promise<boolean> => {
       const roomId = roomIdRef.current;
       if (!roomId) return false;
-      if (categories.length === 0) return false;
+      setStartError(null);
+      if (categories.length === 0) {
+        setStartError(tStandalone("teamBattle.notEnoughQuestions"));
+        return false;
+      }
       setLoading(true);
       try {
         const teamSize = participants.filter((p) => p.team === "a").length;
@@ -635,6 +674,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
         for (let i = 0; i < difficulties.length; i++) {
           const filled = await fill(fetched[i]);
           if (!filled) {
+            setStartError(tStandalone("teamBattle.notEnoughQuestions"));
             toast.error(tStandalone("teamBattle.notEnoughQuestions"));
             return false;
           }
@@ -648,6 +688,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
 
         const superFilled = await fill(fetched[difficulties.length]);
         if (!superFilled) {
+          setStartError(tStandalone("teamBattle.notEnoughQuestions"));
           toast.error(tStandalone("teamBattle.notEnoughQuestions"));
           return false;
         }
@@ -659,11 +700,12 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
             tiles,
             super_questions: asQuestions(superRes.questions) as unknown as Json,
           } as unknown as Json,
-          // Three minutes on the clock, as many questions as they can
-          // answer (20260924100000). On a database that still clamps at 90
-          // the RPC refuses — retried once at the old maximum so a match
-          // can still start before the migration lands.
-          p_turn_seconds: 180,
+          // Two minutes on the clock, as many questions as they can
+          // answer (the 20260924100000 migration allows up to 180). On a
+          // database that still clamps at 90 the RPC refuses — retried once
+          // at the old maximum so a match can still start before the
+          // migration lands.
+          p_turn_seconds: 120,
         });
         if (error && /between 20 and 90/.test(error.message ?? "")) {
           const retry = await supabase.rpc("tb_start_match", {
@@ -676,15 +718,23 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
           });
           if (!retry.error) return true;
           console.error("[TB] start failed", retry.error);
+          setStartError(retry.error.message);
           toast.error(retry.error.message);
           return false;
         }
         if (error) {
           console.error("[TB] start failed", error);
+          setStartError(error.message);
           toast.error(error.message);
           return false;
         }
         return true;
+      } catch (e) {
+        // A thrown fetch used to vanish into a void'd promise — the button
+        // just did nothing. Surface it where the host is looking.
+        console.error("[TB] start failed", e);
+        setStartError(e instanceof Error ? e.message : String(e));
+        return false;
       } finally {
         setLoading(false);
       }
@@ -794,6 +844,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
       voteCaptain,
       manageSeat,
       startMatch,
+      startError,
       submitRps,
       pickTile,
       submitAnswer,
@@ -807,7 +858,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
     }),
     [room, participants, pendingInvites, tiles, state, loading, isHost, myTeam, isSpotlight,
      createRoom, joinRoom, enterRoom, leaveRoom, setTeam, addBot, removeBot,
-     setCaptain, voteCaptain, manageSeat, startMatch, submitRps, pickTile, submitAnswer,
+     setCaptain, voteCaptain, manageSeat, startMatch, startError, submitRps, pickTile, submitAnswer,
      turnPicks, sendPick, playedBy, voteSuper, submitSuper, advance, settle],
   );
 

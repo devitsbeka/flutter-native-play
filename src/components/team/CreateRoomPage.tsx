@@ -261,6 +261,17 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     b: null,
   });
   const [crestPickerFor, setCrestPickerFor] = useState<"a" | "b" | null>(null);
+  // The cards never open on the same stock hat and race car: the moment
+  // Battle is picked, both sides get dealt a random crest from the library
+  // (once — a re-visit keeps what was dealt or chosen).
+  const crestsDealtRef = useRef(false);
+  useEffect(() => {
+    if (gameChoice !== "battle" || crestsDealtRef.current) return;
+    crestsDealtRef.current = true;
+    void rollTeamIcon("a");
+    void rollTeamIcon("b");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameChoice]);
   const crestPoolRef = useRef<string[]>([]);
   const rollTeamIcon = async (side: "a" | "b") => {
     if (crestPoolRef.current.length === 0) {
@@ -276,9 +287,11 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     const pool = crestPoolRef.current;
     if (pool.length === 0) return;
     setTeamIcons((prev) => {
+      const other = prev[side === "a" ? "b" : "a"];
       let next = prev[side];
-      // A reroll that lands on the same icon reads as a dead tap.
-      for (let tries = 0; tries < 5 && next === prev[side]; tries++) {
+      // A deal that repeats this side's icon reads as a dead tap, and two
+      // sides wearing the same crest reads as one team.
+      for (let tries = 0; tries < 8 && (next === prev[side] || next === other); tries++) {
         next = pool[Math.floor(Math.random() * pool.length)];
       }
       return { ...prev, [side]: next };

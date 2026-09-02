@@ -676,8 +676,25 @@ export function CaptainInfoModal({
   );
 }
 
-/** An open seat — the translucent green plus circle (940:7478…). */
-export function PlusSeat({ left, top, onClick }: { left: number; top: number; onClick?: () => void }) {
+export const TEAM_RING_COLORS = {
+  blue: "rgba(68,111,238,0.61)",
+  red: "#ed6149",
+  white: "#ffffff",
+} as const;
+
+/** An open seat — the translucent green plus circle (940:7478…). The ring
+ * takes the side's colour so an open seat says which team it belongs to. */
+export function PlusSeat({
+  left,
+  top,
+  onClick,
+  ring = "white",
+}: {
+  left: number;
+  top: number;
+  onClick?: () => void;
+  ring?: keyof typeof TEAM_RING_COLORS;
+}) {
   return (
     <motion.button
       initial={{ scale: 0.7, opacity: 0 }}
@@ -686,8 +703,8 @@ export function PlusSeat({ left, top, onClick }: { left: number; top: number; on
       whileTap={{ scale: 0.82 }}
       transition={{ type: "spring", stiffness: 420, damping: 28 }}
       onClick={onClick}
-      className="absolute bg-[rgba(51,192,84,0.6)] border border-solid border-white overflow-clip rounded-[9999px] size-[52px]"
-      style={{ left, top }}
+      className="absolute bg-[rgba(51,192,84,0.6)] overflow-clip rounded-[9999px] size-[52px]"
+      style={{ left, top, border: `2px solid ${TEAM_RING_COLORS[ring]}` }}
     >
       {/* a slow breath on the plus itself — an open seat quietly asks */}
       <motion.div
@@ -698,6 +715,32 @@ export function PlusSeat({ left, top, onClick }: { left: number; top: number; on
         <img alt="" className="block max-w-none size-full" src={plusSeat} />
       </motion.div>
     </motion.button>
+  );
+}
+
+/**
+ * The OTHER team's open seat: a stroke-only circle in that side's colour.
+ * You cannot invite onto the bench across the arena, so it carries no + —
+ * it just says a place is free over there.
+ */
+export function EmptySeat({
+  left,
+  top,
+  ring,
+}: {
+  left: number;
+  top: number;
+  ring: keyof typeof TEAM_RING_COLORS;
+}) {
+  return (
+    <motion.div
+      initial={{ scale: 0.7, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      exit={{ scale: 0.7, opacity: 0 }}
+      transition={{ type: "spring", stiffness: 420, damping: 28 }}
+      className="absolute rounded-[9999px] size-[52px] bg-white/10"
+      style={{ left, top, border: `2px dashed ${TEAM_RING_COLORS[ring]}` }}
+    />
   );
 }
 

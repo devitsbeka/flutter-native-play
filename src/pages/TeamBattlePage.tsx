@@ -19,6 +19,7 @@ import {
 } from "@/contexts/TeamBattleContext";
 import { TeamBattleMatch } from "@/components/team-battle/TeamBattleMatch";
 import { useCategories } from "@/hooks/useCategories";
+import { excludePartyCategories } from "@/config/partyCategories";
 import { useGameInvitations } from "@/hooks/useGameInvitations";
 import {
   AnimatedCoinPill,
@@ -27,6 +28,7 @@ import {
   LILAC_BG,
   LilacHeader,
   FitBox,
+  EmptySeat,
   PlusSeat,
   Seat,
   SeatMenu,
@@ -240,7 +242,7 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
   const navigate = useNavigate();
   const {
     room, participants, pendingInvites, isHost, myTeam, setTeam,
-    setCaptain, voteCaptain, manageSeat, startMatch, leaveRoom, loading, state, settle,
+    setCaptain, voteCaptain, manageSeat, startMatch, startError, leaveRoom, loading, state, settle,
   } = useTeamBattle();
   const { categories } = useCategories();
   const { openProfile } = usePlayerProfile();
@@ -273,6 +275,9 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
   const teamB = teamOf("b");
   const teamsEqual =
     teamA.length > 0 && teamA.length === teamB.length && participants.every((p) => p.team);
+  // A battle needs at least 2 a side (owner's rule; the cap is the room's
+  // own 5-5). The host's Start waits for both benches to fill to two.
+  const enoughPlayers = teamA.length >= 2 && teamB.length >= 2;
   // Nobody picks a duration any more: a battle is two rounds per seated
   // player, so everyone gets at least two spotlight turns. Server cap 20
   // (20260921210000) fits the lounge's ten seats.
@@ -283,7 +288,11 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
   const potValue = 50 * rounds * Math.max(1, teamA.length, teamB.length);
 
   const start = () => {
-    const usable = categories.filter((c) => c.tier === "free" || c.tier === "standard");
+    // Party categories (Most Likely To) have no fixed answers — a board
+    // tile built from them is unwinnable. Keep them out of the pool.
+    const usable = excludePartyCategories(categories).filter(
+      (c) => c.tier === "free" || c.tier === "standard",
+    );
     void startMatch(usable.map((c) => ({ uuid: c.uuid, name: c.name })), rounds);
   };
 
@@ -336,7 +345,13 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
       nickname: entry.nickname,
       avatar_url: entry.avatarUrl,
       is_host: false,
-      ...(inviteTeamRef.current ? { team: inviteTeamRef.current } : {}),
+      // An invitee sits with whoever invited them: the + seat's side when
+      // one asked, otherwise the inviter's own team.
+      ...(inviteTeamRef.current
+        ? { team: inviteTeamRef.current }
+        : myTeam
+          ? { team: myTeam }
+          : {}),
     });
     if (error) {
       console.error("[TB] invite failed", error);
@@ -373,7 +388,9 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
   // park every teamless invite on that seat's team — the modal sends them
   // as a batch now, not one per opening.
   const assignPendingTeam = async () => {
-    const team = inviteTeamRef.current;
+    // Modal invites without a + seat's side still belong with their
+    // inviter — park every teamless invite on the inviter's team.
+    const team = inviteTeamRef.current ?? myTeam;
     if (!team || !room) return;
     const { data } = await supabase
       .from("room_participants")
@@ -454,12 +471,10 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
           destructive: true,
           onPress: () => void manageSeat(p.user_id, "remove"),
         });
-    } else if (p.user_id === user?.id) {
-      actions.push({
-        label: t("lobby.switchTeam"),
-        onPress: () => void setTeam(p.team === "a" ? "b" : "a"),
-      });
     }
+    // No self-service side switching: seats are ASSIGNED — an invitee sits
+    // with whoever invited them, a join request sits opposite the host —
+    // and only the host rearranges the benches.
     return actions;
   };
 
@@ -527,24 +542,34 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
               }
               onClick={() => seatTap(entry.p, entry.pending)}
               onLongPress={() => seatHold(entry.p, entry.pending)}
-              // Hold-and-drag reseats: the host drags anyone (pending
-              // invites and bots too), a player drags themselves. A pull
-              // far enough toward the other side of the arena moves them —
-              // the seat snaps back and the roster update reseats for real.
-              draggable={isHost || (!entry.pending && entry.p.user_id === user?.id)}
+              // Hold-and-drag reseats — HOST ONLY. Seats are assigned (an
+              // invitee sits with their inviter, a join request sits
+              // opposite the host), so players don't wander benches; the
+              // host can still rearrange anyone, pending invites included.
+              draggable={isHost}
               onDragMoved={(dx) => {
                 const toOther = team === "a" ? dx > 70 : dx < -70;
-                if (!toOther) return;
+                if (!toOther || !isHost) return;
                 const target: TBTeam = team === "a" ? "b" : "a";
-                if (!entry.pending && entry.p.user_id === user?.id) {
-                  void setTeam(target);
-                } else if (isHost) {
-                  void manageSeat(entry.p.user_id, target === "a" ? "move_a" : "move_b");
-                }
+                void manageSeat(entry.p.user_id, target === "a" ? "move_a" : "move_b");
               }}
             />
           ) : (
-            <PlusSeat key={`plus-${team}-${i}`} left={left} top={top - 305} onClick={() => seatAction(team)} />
+            // An open seat is only ACTIONABLE on your own side (or anywhere
+            // while you are still claiming one): you invite into your team,
+            // never onto the bench across the arena — that side just shows
+            // a stroke-only circle in its colour so its free places read.
+            iAmClaiming || team === myTeam ? (
+              <PlusSeat
+                key={`plus-${team}-${i}`}
+                left={left}
+                top={top - 305}
+                ring={ring}
+                onClick={() => seatAction(team)}
+              />
+            ) : (
+              <EmptySeat key={`empty-${team}-${i}`} left={left} top={top - 305} ring={ring} />
+            )
           );
         })}
       </AnimatePresence>
@@ -643,12 +668,16 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
           >
             {t("lobby.claimSeatHint")}
           </motion.p>
+        ) : othersClaiming.length > 0 ? (
+          <p className="pt-[6px] font-[Nunito] font-semibold leading-[20px] text-[#523b76]/70 text-[13px] text-center tracking-[-0.16px]">
+            {t("lobby.pickingTeam", {
+              name: othersClaiming.map((p) => p.nickname).join(", "),
+            })}
+          </p>
         ) : (
-          othersClaiming.length > 0 && (
+          !enoughPlayers && (
             <p className="pt-[6px] font-[Nunito] font-semibold leading-[20px] text-[#523b76]/70 text-[13px] text-center tracking-[-0.16px]">
-              {t("lobby.pickingTeam", {
-                name: othersClaiming.map((p) => p.nickname).join(", "),
-              })}
+              {t("teamBattle.minTwoPerTeam")}
             </p>
           )
         )}
@@ -770,11 +799,21 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
       </div>
 
       {isHost ? (
-        <StartButton
-          label={loading ? t("teamBattle.starting") : t("lobby.startGame")}
-          onClick={start}
-          disabled={!teamsEqual || loading}
-        />
+        <>
+          {/* Toasts are suppressed app-wide, so a refused start must say
+              why HERE — a dead button under a silent error reads as a
+              broken game. */}
+          {startError && !loading && (
+            <p className="w-full max-w-[500px] mx-auto shrink-0 px-6 pb-1 text-center font-[Nunito] font-bold text-[13px] text-[#dc2626]">
+              {t("teamBattle.startFailed")}: {startError}
+            </p>
+          )}
+          <StartButton
+            label={loading ? t("teamBattle.starting") : t("lobby.startGame")}
+            onClick={start}
+            disabled={!teamsEqual || !enoughPlayers || loading}
+          />
+        </>
       ) : (
         <p className="w-full max-w-[500px] mx-auto shrink-0 px-[24px] pt-[14px] pb-[20px] text-center font-[Nunito] font-semibold text-[15px] text-[#523b76]/70">
           {t("teamBattle.waitingHost")}

@@ -36,6 +36,8 @@ import {
 } from "@/hooks/usePublicRooms";
 import iconKingLounge from "@/assets/play-chooser/icon-king.webp";
 import iconBattleLounge from "@/assets/play-chooser/icon-crate.png";
+import teamPenguins from "@/assets/tb-lobby/team-penguins.png";
+import teamFormula from "@/assets/tb-lobby/team-formula.png";
 import iconWordsLounge from "@/assets/play-chooser/icon-words.webp";
 import crownIcon from "@/assets/crown-icon.png";
 import sceneArena from "@/assets/tb-lobby/scene-arena.webp";
@@ -57,10 +59,10 @@ const LOUNGES: Record<string, { icon: string; labelKey: string }> = {
 };
 
 /**
- * Ink for the two surfaces a card can sit on. The gradient cards are deep
- * and saturated, where white reads; the arena scene is pale lilac, where
- * white vanishes — so a scene card writes in the brand's dark purple and
- * its frosted pills go white rather than smoked.
+ * One ink for every card: white. The gradient cards are deep and saturated
+ * already; the pale arena scene gets DARKENED to match (reduced opacity
+ * over deep purple, a dark wash, an inner shadow) rather than switching
+ * the text to dark — the owner's call, and one ink is one less seam.
  */
 const INK = {
   light: {
@@ -70,14 +72,6 @@ const INK = {
     pill: "bg-white/15 border-white/20",
     ring: "border-white/60",
     more: "bg-white/30 text-white",
-  },
-  dark: {
-    text: "text-[#2E1065]",
-    muted: "text-[#2E1065]/75",
-    faint: "text-[#2E1065]/60",
-    pill: "bg-white/55 border-white/70",
-    ring: "border-white/90",
-    more: "bg-white/70 text-[#2E1065]",
   },
 } as const;
 
@@ -91,6 +85,7 @@ interface CardPlayer {
 function PublicRoomCard({
   room,
   players,
+  crests,
   index,
   onAsk,
   onRemove,
@@ -98,6 +93,8 @@ function PublicRoomCard({
 }: {
   room: PublicRoom;
   players: CardPlayer[];
+  /** A Battle room's two team crests — its real face on the card. */
+  crests?: { a: string | null; b: string | null };
   index: number;
   onAsk: (room: PublicRoom) => void;
   /** Delete it (the host) or leave it (a seated guest). */
@@ -119,7 +116,9 @@ function PublicRoomCard({
   // its lobby, empty, seats waiting — not one of the gradients every other
   // room wears.
   const scene = room.game_type_key === "team_battle" ? sceneArena : null;
-  const ink = scene ? INK.dark : INK.light;
+  // The scene is DARKENED under the ink (reduced opacity over deep purple,
+  // a dark wash, an inner shadow), so every card writes in the same white.
+  const ink = INK.light;
 
   const enter = () => navigate(publicRoomPath(room));
 
@@ -133,12 +132,21 @@ function PublicRoomCard({
     >
       <div className="relative p-3 min-h-[172px] flex flex-col rounded-2xl overflow-hidden">
         {scene ? (
-          <img
-            alt=""
-            src={scene}
-            className="absolute inset-0 w-full h-full object-cover"
-            style={{ objectPosition: "50% 42%" }}
-          />
+          <>
+            {/* The arena, dimmed to a backdrop: the pale lilac scene at
+                full strength swallowed every word on it. Deep purple under
+                a faded image, a dark wash on top, and an inner shadow
+                holding the edges — the picture stays, the text reads. */}
+            <div className="absolute inset-0 bg-[#352258]" />
+            <img
+              alt=""
+              src={scene}
+              className="absolute inset-0 w-full h-full object-cover opacity-45"
+              style={{ objectPosition: "50% 42%" }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#2E1065]/80 via-[#2E1065]/35 to-[#2E1065]/45" />
+            <div className="absolute inset-0 rounded-2xl shadow-[inset_0_0_48px_rgba(20,8,45,0.6)]" />
+          </>
         ) : (
           <div className="absolute inset-0">
             <GradientBackground
@@ -235,19 +243,36 @@ function PublicRoomCard({
 
         {/* Middle: the room, and the round it plays first */}
         <div className="relative z-10 flex-1 flex items-center gap-3 py-3">
-          {(lounge || room.room_icon) && (
-            <img
-              src={lounge?.icon ?? room.room_icon!}
-              alt=""
-              className="w-14 h-14 object-contain drop-shadow-lg shrink-0"
-            />
+          {room.game_type_key === "team_battle" ? (
+            // The two crests ARE the arena's face — the sides the captains
+            // dressed, tilted toward each other like the matchup they are.
+            <span className="flex items-center shrink-0 -space-x-3">
+              <img
+                src={crests?.a ?? teamPenguins}
+                alt=""
+                className="w-12 h-12 object-contain drop-shadow-lg -rotate-6"
+              />
+              <img
+                src={crests?.b ?? teamFormula}
+                alt=""
+                className="w-12 h-12 object-contain drop-shadow-lg rotate-6"
+              />
+            </span>
+          ) : (
+            (lounge || room.room_icon) && (
+              <img
+                src={lounge?.icon ?? room.room_icon!}
+                alt=""
+                className="w-14 h-14 object-contain drop-shadow-lg shrink-0"
+              />
+            )
           )}
           {/* A lounge IS its game: an arena called "Search Trail" with
               "Trivia Battle" in small type under it advertised a name
               nobody chose over the one thing a player is scanning for. The
               classic rooms keep their own name, which somebody did choose. */}
           <div className="min-w-0 flex-1">
-            <h3 className={`font-display text-lg leading-tight line-clamp-2 ${scene ? "" : "drop-shadow-md"} ${ink.text}`}>
+            <h3 className={`font-display text-lg leading-tight line-clamp-2 drop-shadow-md ${ink.text}`}>
               {lounge ? t(lounge.labelKey) : room.room_name || t("extra.gameRoomDefault")}
             </h3>
             {!lounge && (
@@ -342,12 +367,21 @@ export function PublicRoomsSection({
     queryFn: async (): Promise<{
       faces: Map<string, CardPlayer[]>;
       seated: Map<string, string[]>;
+      crests: Map<string, { a: string | null; b: string | null }>;
     }> => {
-      const { data: rows } = await supabase
-        .from("room_participants")
-        .select("room_id, user_id, nickname, avatar_url, is_host, status")
-        .in("room_id", allIds)
-        .in("status", ["joined", "ready", "playing"]);
+      const [{ data: rows }, { data: crestRows }] = await Promise.all([
+        supabase
+          .from("room_participants")
+          .select("room_id, user_id, nickname, avatar_url, is_host, status")
+          .in("room_id", allIds)
+          .in("status", ["joined", "ready", "playing"]),
+        // A Battle room's face is its two crests — the RPC doesn't carry
+        // them, so they ride in on the same refresh.
+        supabase
+          .from("game_rooms")
+          .select("id, team_a_icon, team_b_icon")
+          .in("id", allIds),
+      ]);
       const faces = new Map<string, CardPlayer[]>();
       const seated = new Map<string, string[]>();
       (rows ?? []).forEach((p) => {
@@ -357,7 +391,11 @@ export function PublicRoomsSection({
         arr.push({ user_id: p.user_id, nickname: p.nickname, avatar_url: p.avatar_url });
         faces.set(p.room_id, arr);
       });
-      return { faces, seated };
+      const crests = new Map<string, { a: string | null; b: string | null }>();
+      (crestRows ?? []).forEach((r) => {
+        crests.set(r.id, { a: r.team_a_icon ?? null, b: r.team_b_icon ?? null });
+      });
+      return { faces, seated, crests };
     },
   });
 
@@ -502,12 +540,15 @@ export function PublicRoomsSection({
   }
 
   return (
-    <div className="px-4 pt-3 pb-6 space-y-3">
+    // A width-based grid, not a column of stretched banners: one card per
+    // row on a phone, two on tablets, three on wide screens.
+    <div className="px-4 pt-3 pb-6 grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-3">
       {rooms.map((room, i) => (
         <PublicRoomCard
           key={room.id}
           room={room}
           players={playersByRoom?.get(room.id) ?? []}
+          crests={seating?.crests.get(room.id)}
           index={i}
           onAsk={(r) => void ask(r)}
           onRemove={setRemoving}

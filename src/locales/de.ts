@@ -1426,6 +1426,8 @@ export const de: KaTranslations = {
     roomNotFound: "Kein Raum mit diesem Code",
     matchInProgress: "Ein Match läuft bereits — steig beim nächsten ein",
     notEnoughQuestions: "Noch nicht genug Fragen in deiner Sprache",
+    startFailed: "Das Match konnte nicht gestartet werden",
+    minTwoPerTeam: "Zum Start braucht jedes Team mindestens 2 Spieler",
     rpsTitle: "Stein · Papier · Schere",
     rpsSubtitle: "Das Gewinnerteam wählt zuerst",
     rpsWaiting: "Warten auf die anderen Würfe…",
