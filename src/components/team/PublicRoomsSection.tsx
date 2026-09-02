@@ -142,7 +142,9 @@ function PublicRoomCard({
       className="relative rounded-2xl overflow-hidden shadow-lg"
       onClick={() => (inside ? enter() : onAsk(room))}
     >
-      <div className="relative p-3 min-h-[216px] flex flex-col rounded-2xl overflow-hidden">
+      {/* The private tab's card proportions (MyRoomsSection): the same
+          shape on both tabs, and taller than the strip this used to be. */}
+      <div className="relative p-3 min-h-[216px] aspect-[1.45/1] md:aspect-[1.15/1] flex flex-col rounded-2xl overflow-hidden">
         {scene ? (
           <>
             {/* The arena, dimmed to a backdrop: the pale lilac scene at
@@ -504,6 +506,45 @@ export function PublicRoomsSection({
     if (user) ids.add(user.id);
     return ids;
   }, [online, user]);
+
+  // The host said yes: walk in. A player who asked is waiting for exactly
+  // this answer, and the room may fill and start while they read a card
+  // that has only just changed its button. So an approval arriving while
+  // this list is on screen opens the room itself. Each request is handled
+  // once, whatever the channel replays.
+  const walkedInRef = useMemo(() => new Set<string>(), []);
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`join-approved-${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "room_join_requests",
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const row = payload.new as { id?: string; room_id?: string; status?: string };
+          if (row.status !== "approved" || !row.id || !row.room_id || walkedInRef.has(row.id)) return;
+          walkedInRef.add(row.id);
+          void (async () => {
+            const { data: target } = await supabase
+              .from("game_rooms")
+              .select("room_code, game_type_key, game_mode, status")
+              .eq("id", row.room_id!)
+              .maybeSingle();
+            if (!target || target.status === "cancelled") return;
+            navigate(publicRoomPath(target));
+          })();
+        },
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [user, navigate, walkedInRef]);
 
   // Who is knocking on the rooms I host. The table's policy shows a host
   // their own rooms' requests and nobody else's, so the query is simply

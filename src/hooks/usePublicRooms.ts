@@ -141,26 +141,37 @@ export function roomSeats(room: Pick<PublicRoom, "game_type_key" | "max_players"
 }
 
 /**
- * The Public tab's order: the room I'm WAITING on first (one game at a
- * time — that ask is the thing I'm doing), then my own rooms (hosted, and
- * ones I already sit in), then my friends' rooms, then everyone else's.
- * Within each group, the room closest to filling comes first — a couch
- * needing one more player starts sooner than one waiting on eight — with
- * full rooms (nothing to join) and un-capped rooms after, newest first as
- * the tie-break.
+ * The Public tab's order — the owner's priorities: get people into a game
+ * quickly, and lose no room.
+ *
+ * First, a room I'm in whose every seat is taken: it is ready to play and
+ * I am one of the players, so nothing on this tab matters more. Then the
+ * room I'm WAITING on (one game at a time — that ask is the thing I'm
+ * doing), then my other rooms (hosted, and ones I sit in), then my
+ * friends' rooms, then everyone else's. Within each group, the room
+ * closest to filling comes first — a couch needing one more player starts
+ * sooner than one waiting on eight — with full rooms (nothing to join) and
+ * un-capped rooms after, newest first as the tie-break.
  */
 export function sortPublicRooms(
   rooms: PublicRoom[],
   friendIds: ReadonlySet<string>,
 ): PublicRoom[] {
+  const mine = (r: PublicRoom) => r.my_state === "host" || r.my_state === "joined";
+  const full = (r: PublicRoom) => {
+    const seats = roomSeats(r);
+    return seats != null && r.player_count >= seats;
+  };
   const tier = (r: PublicRoom) =>
-    r.my_state === "pending"
+    mine(r) && full(r)
       ? 0
-      : r.my_state === "host" || r.my_state === "joined"
+      : r.my_state === "pending"
         ? 1
-        : friendIds.has(r.host_user_id)
+        : mine(r)
           ? 2
-          : 3;
+          : friendIds.has(r.host_user_id)
+            ? 3
+            : 4;
   const remaining = (r: PublicRoom) => {
     const seats = roomSeats(r);
     if (seats == null) return 98;

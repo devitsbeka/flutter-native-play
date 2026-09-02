@@ -335,6 +335,29 @@ describe("the public list", () => {
     ]);
   });
 
+  it("a full room I'm in comes before everything — it is ready to play", () => {
+    const rooms = [
+      room({ id: "friends-full", host_user_id: "f1", game_type_key: "team_battle", max_players: 4, player_count: 4, created_at: "2026-06-05T00:00:00Z" }),
+      room({ id: "waiting-on", host_user_id: "s4", my_state: "pending", created_at: "2026-06-04T00:00:00Z" }),
+      room({ id: "mine-empty", host_user_id: "me", my_state: "host", game_type_key: "team_battle", max_players: 4, player_count: 1, created_at: "2026-06-03T00:00:00Z" }),
+      room({ id: "im-in-full", host_user_id: "s2", my_state: "joined", game_type_key: "team_battle", max_players: 4, player_count: 4, created_at: "2026-06-01T00:00:00Z" }),
+    ];
+    expect(sortPublicRooms(rooms, new Set(["f1"])).map((r) => r.id)).toEqual([
+      "im-in-full",
+      "waiting-on",
+      "mine-empty",
+      "friends-full",
+    ]);
+  });
+
+  it("an approval opens the room, once, and the card wears the private tab's proportions", () => {
+    const section = read("src/components/team/PublicRoomsSection.tsx");
+    expect(section).toMatch(/event: "UPDATE",\s*schema: "public",\s*table: "room_join_requests",\s*filter: `user_id=eq\.\$\{user\.id\}`/);
+    expect(section).toMatch(/row\.status !== "approved"[^]*?walkedInRef\.add\(row\.id\)/);
+    expect(section).toMatch(/navigate\(publicRoomPath\(target\)\)/);
+    expect(section).toMatch(/min-h-\[216px\] aspect-\[1\.45\/1\] md:aspect-\[1\.15\/1\]/);
+  });
+
   it("within a group, the couch closest to starting comes first", () => {
     const rooms = [
       room({ id: "empty", host_user_id: "s1", game_type_key: "team_battle", max_players: 10, player_count: 2, created_at: "2026-06-01T00:00:00Z" }),
