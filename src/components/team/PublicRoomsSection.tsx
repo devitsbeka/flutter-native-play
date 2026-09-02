@@ -142,7 +142,7 @@ function PublicRoomCard({
               alt=""
               src={scene}
               className="absolute inset-0 w-full h-full object-cover opacity-45"
-              style={{ objectPosition: "50% 42%" }}
+              style={{ objectPosition: "50% 30%" }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[#2E1065]/80 via-[#2E1065]/35 to-[#2E1065]/45" />
             <div className="absolute inset-0 rounded-2xl shadow-[inset_0_0_48px_rgba(20,8,45,0.6)]" />
@@ -242,46 +242,50 @@ function PublicRoomCard({
         </div>
 
         {/* Middle: the room, and the round it plays first */}
-        <div className="relative z-10 flex-1 flex items-center gap-3 py-3">
-          {room.game_type_key === "team_battle" ? (
-            // The two crests ARE the arena's face — the sides the captains
-            // dressed, tilted toward each other like the matchup they are.
-            <span className="flex items-center shrink-0 -space-x-3">
-              <img
-                src={crests?.a ?? teamPenguins}
-                alt=""
-                className="w-12 h-12 object-contain drop-shadow-lg -rotate-6"
-              />
-              <img
-                src={crests?.b ?? teamFormula}
-                alt=""
-                className="w-12 h-12 object-contain drop-shadow-lg rotate-6"
-              />
-            </span>
-          ) : (
-            (lounge || room.room_icon) && (
+        {room.game_type_key === "team_battle" ? (
+          // The matchup frames its own name: one crest on each wing, the
+          // title centered between them. The crests are what the captains
+          // dressed — or the pair the room was dealt when nobody has yet.
+          <div className="relative z-10 flex-1 flex items-center justify-between gap-2 py-3">
+            <img
+              src={crests?.a ?? teamPenguins}
+              alt=""
+              className="w-12 h-12 object-contain drop-shadow-lg -rotate-6 shrink-0"
+            />
+            <h3 className={`flex-1 min-w-0 text-center font-display text-lg leading-tight line-clamp-2 drop-shadow-md ${ink.text}`}>
+              {lounge ? t(lounge.labelKey) : room.room_name || t("extra.gameRoomDefault")}
+            </h3>
+            <img
+              src={crests?.b ?? teamFormula}
+              alt=""
+              className="w-12 h-12 object-contain drop-shadow-lg rotate-6 shrink-0"
+            />
+          </div>
+        ) : (
+          <div className="relative z-10 flex-1 flex items-center gap-3 py-3">
+            {(lounge || room.room_icon) && (
               <img
                 src={lounge?.icon ?? room.room_icon!}
                 alt=""
                 className="w-14 h-14 object-contain drop-shadow-lg shrink-0"
               />
-            )
-          )}
-          {/* A lounge IS its game: an arena called "Search Trail" with
-              "Trivia Battle" in small type under it advertised a name
-              nobody chose over the one thing a player is scanning for. The
-              classic rooms keep their own name, which somebody did choose. */}
-          <div className="min-w-0 flex-1">
-            <h3 className={`font-display text-lg leading-tight line-clamp-2 drop-shadow-md ${ink.text}`}>
-              {lounge ? t(lounge.labelKey) : room.room_name || t("extra.gameRoomDefault")}
-            </h3>
-            {!lounge && (
-              <p className={`text-sm truncate mt-0.5 ${ink.muted}`}>
-                {t("extra.publicRoomLabel")}
-              </p>
             )}
+            {/* A lounge IS its game: an arena called "Search Trail" with
+                "Trivia Battle" in small type under it advertised a name
+                nobody chose over the one thing a player is scanning for. The
+                classic rooms keep their own name, which somebody did choose. */}
+            <div className="min-w-0 flex-1">
+              <h3 className={`font-display text-lg leading-tight line-clamp-2 drop-shadow-md ${ink.text}`}>
+                {lounge ? t(lounge.labelKey) : room.room_name || t("extra.gameRoomDefault")}
+              </h3>
+              {!lounge && (
+                <p className={`text-sm truncate mt-0.5 ${ink.muted}`}>
+                  {t("extra.publicRoomLabel")}
+                </p>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Bottom: the first round on the left, the way in on the right */}
         <div className={`relative z-10 backdrop-blur-md border rounded-xl px-3 py-2.5 flex items-center justify-between gap-2 ${ink.pill}`}>
@@ -369,7 +373,7 @@ export function PublicRoomsSection({
       seated: Map<string, string[]>;
       crests: Map<string, { a: string | null; b: string | null }>;
     }> => {
-      const [{ data: rows }, { data: crestRows }] = await Promise.all([
+      const [{ data: rows }, { data: crestRows }, { data: iconRows }] = await Promise.all([
         supabase
           .from("room_participants")
           .select("room_id, user_id, nickname, avatar_url, is_host, status")
@@ -381,6 +385,14 @@ export function PublicRoomsSection({
           .from("game_rooms")
           .select("id, team_a_icon, team_b_icon")
           .in("id", allIds),
+        // The pool a captainless room draws its face from: without it every
+        // undressed room wore the same hat-and-car pair, and the list read
+        // as one room repeated.
+        supabase
+          .from("icon_library")
+          .select("icon_url")
+          .not("icon_url", "is", null)
+          .limit(80),
       ]);
       const faces = new Map<string, CardPlayer[]>();
       const seated = new Map<string, string[]>();
@@ -391,9 +403,29 @@ export function PublicRoomsSection({
         arr.push({ user_id: p.user_id, nickname: p.nickname, avatar_url: p.avatar_url });
         faces.set(p.room_id, arr);
       });
+      // What the captains set wins; a side nobody dressed gets dealt a crest
+      // from the library — seeded by the room id, so each room keeps ITS
+      // random pair across refreshes instead of reshuffling every poll.
+      const pool = (iconRows ?? []).map((r) => r.icon_url as string).filter(Boolean);
+      const seed = (s: string) => {
+        let h = 0;
+        for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+        return h;
+      };
       const crests = new Map<string, { a: string | null; b: string | null }>();
       (crestRows ?? []).forEach((r) => {
-        crests.set(r.id, { a: r.team_a_icon ?? null, b: r.team_b_icon ?? null });
+        let a = r.team_a_icon ?? null;
+        let b = r.team_b_icon ?? null;
+        if (pool.length > 1) {
+          const h = seed(r.id);
+          if (!a) a = pool[h % pool.length];
+          if (!b) {
+            let j = (h + 7) % pool.length;
+            if (pool[j] === a) j = (j + 1) % pool.length;
+            b = pool[j];
+          }
+        }
+        crests.set(r.id, { a, b });
       });
       return { faces, seated, crests };
     },

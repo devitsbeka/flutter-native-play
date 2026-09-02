@@ -248,6 +248,15 @@ describe("the public list", () => {
     expect(section).toMatch(/object-cover opacity-\d+/);
     expect(section).toMatch(/bg-gradient-to-t from-\[#2E1065\]/);
     expect(section).toMatch(/shadow-\[inset_/);
+    // The scene is framed on the crowned mascot, not the empty podium row.
+    expect(section).toMatch(/objectPosition: "50% 30%"/);
+    // Crest — centered title — crest, and a captainless side is dealt a
+    // per-room crest from the library rather than the same stock pair.
+    expect(section).toMatch(
+      /crests\?\.a \?\? teamPenguins[^]*?flex-1 min-w-0 text-center font-display[^]*?crests\?\.b \?\? teamFormula/,
+    );
+    expect(section).toMatch(/from\("icon_library"\)/);
+    expect(section).toMatch(/const h = seed\(r\.id\);/);
   });
 
   it("offers active, mine, friends' and all — in that order, and no game chips", () => {
