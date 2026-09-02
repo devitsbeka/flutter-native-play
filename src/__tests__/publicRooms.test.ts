@@ -187,21 +187,79 @@ describe("the two tabs do not show the same room twice", () => {
 });
 
 describe("the public list", () => {
-  it("filters by game and searches name, category and host", () => {
+  it("filters by who is in a room, not by game, and searches name, category and host", () => {
     const rooms = [
-      room({ id: "a", game_type_key: "king", room_name: "Kings couch" }),
-      room({ id: "b", game_type_key: "team_battle", room_name: "Arena" }),
-      room({ id: "c", game_type_key: null, room_name: "Plain" }),
+      room({ id: "a", game_type_key: "king", room_name: "Kings couch", host_user_id: "me" }),
+      room({ id: "b", game_type_key: "team_battle", room_name: "Arena", host_user_id: "pal" }),
+      room({ id: "c", game_type_key: null, room_name: "Plain", host_user_id: "me", my_state: "host" }),
+      room({ id: "d", game_type_key: null, room_name: "Ghost town", host_user_id: "far" }),
     ];
+    const ctx = {
+      seatedByRoom: new Map([
+        ["b", ["pal", "buddy"]],
+        ["c", ["me"]],
+        ["d", ["far", "gone"]],
+      ]),
+      onlineIds: new Set(["me", "buddy"]),
+      friendIds: new Set(["pal"]),
+    };
     // Versus King is friends-only: a king room never reaches the public
     // list, whatever filter is asked for — even one an older build
     // managed to publish.
-    expect(filterPublicRooms(rooms, "king", "")).toEqual([]);
-    expect(filterPublicRooms(rooms, "classic", "").map((r) => r.id)).toEqual(["c"]);
-    expect(filterPublicRooms(rooms, "all", "").map((r) => r.id)).toEqual(["b", "c"]);
-    expect(filterPublicRooms(rooms, "all", "arena").map((r) => r.id)).toEqual(["b"]);
+    expect(filterPublicRooms(rooms, "all", "", ctx).map((r) => r.id)).toEqual(["b", "c", "d"]);
+    // Active: somebody seated (the host counts) is in the app right now.
+    // The arena's host is away but a player on it is here; the ghost town's
+    // whole couch has left.
+    expect(filterPublicRooms(rooms, "active", "", ctx).map((r) => r.id)).toEqual(["b", "c"]);
+    // Mine: the rooms I created, as on the Private tab.
+    expect(filterPublicRooms(rooms, "my_rooms", "", ctx).map((r) => r.id)).toEqual(["c"]);
+    // My friends': hosted by a friend.
+    expect(filterPublicRooms(rooms, "friends_rooms", "", ctx).map((r) => r.id)).toEqual(["b"]);
+    expect(filterPublicRooms(rooms, "all", "arena", ctx).map((r) => r.id)).toEqual(["b"]);
     // The category is the thing people are shopping for on this tab.
-    expect(filterPublicRooms(rooms, "all", "history").length).toBe(2);
+    expect(filterPublicRooms(rooms, "all", "history", ctx).length).toBe(3);
+  });
+
+  it("a card offers the way out to the people who are in, and calls an unpicked round mixed", () => {
+    const section = read("src/components/team/PublicRoomsSection.tsx");
+    // The host deletes, a seated guest leaves; both through a confirm.
+    expect(section).toMatch(/\{inside && \([^]*?room\.my_state === "host" \? \([^]*?<Trash2[^]*?<LogOut/);
+    expect(section).toMatch(/from\("game_rooms"\)\s*\.delete\(\)/);
+    expect(section).toMatch(/from\("room_participants"\)\s*\.delete\(\)[^]*?\.eq\("user_id", user\.id\)/);
+    expect(section).toMatch(/<AlertDialog open=\{removing !== null\}/);
+    // A room with no round picked plays a mixed first round — not "not
+    // chosen yet", which reads as a room that is not ready.
+    expect(section).toMatch(/\{category \|\| t\("game\.difficulty\.mixed"\)\}/);
+    expect(section).not.toContain("roomNoCategoryYet");
+    // Refiltering the tab starts the list at the top, not half under the
+    // sticky stack.
+    const page = read("src/pages/TeamV2.tsx");
+    expect(page).toMatch(/\}, \[publicFilter, publicSearchQuery, privateFilter, privateSearchQuery\]\);/);
+  });
+
+  it("a Trivia Battle card is its arena, darkened under white ink", () => {
+    // Owner's direction: the pale arena scene gets a dark backdrop — the
+    // image at reduced opacity over deep purple, a dark wash, an inner
+    // shadow — so the card writes in the same white as every other card.
+    const section = read("src/components/team/PublicRoomsSection.tsx");
+    expect(section).toMatch(/import sceneArena from "@\/assets\/tb-lobby\/scene-arena\.webp"/);
+    expect(section).toMatch(/const scene = room\.game_type_key === "team_battle" \? sceneArena : null;/);
+    expect(section).toMatch(/const ink = INK\.light;/);
+    expect(section).toMatch(/object-cover opacity-\d+/);
+    expect(section).toMatch(/bg-gradient-to-t from-\[#2E1065\]/);
+    expect(section).toMatch(/shadow-\[inset_/);
+  });
+
+  it("offers active, mine, friends' and all — in that order, and no game chips", () => {
+    const bar = read("src/components/team/UnifiedFiltersBar.tsx");
+    expect(bar).toMatch(
+      /publicRoomFilterOptions[^]*?\{ value: "active"[^]*?\{ value: "my_rooms"[^]*?\{ value: "friends_rooms"[^]*?\{ value: "all"/,
+    );
+    expect(bar).toMatch(/PublicRoomsFilter = "all" \| "active" \| "my_rooms" \| "friends_rooms"/);
+    const section = read("src/components/team/PublicRoomsSection.tsx");
+    // Presence goes through the function, never the owner-only table.
+    expect(section).toMatch(/onlineUserIds\(everyone\)/);
+    expect(section).not.toMatch(/from\("user_presence"\)/);
   });
 
   it("orders mine first, then my friends' rooms, then the rest newest first", () => {
@@ -245,8 +303,10 @@ describe("the public list", () => {
     expect(section).toMatch(/supabase\.rpc\("request_room_join"/);
     // Never a direct seat write: the policy would refuse it anyway, and a
     // refusal the UI does not expect reads as a broken button. (Reading the
-    // seated faces for the card is fine — the write is the promise.)
-    expect(section).not.toMatch(/from\("room_participants"\)\s*\n?\s*\.(insert|update|upsert|delete)/);
+    // seated faces for the card is fine — the write is the promise. So is
+    // deleting your OWN row: that is leaving, and "Users can leave rooms"
+    // allows exactly that.)
+    expect(section).not.toMatch(/from\("room_participants"\)\s*\n?\s*\.(insert|update|upsert)/);
     // Only the answer 'joined' walks in — everything else waits.
     expect(section).toMatch(/if \(outcome === "joined"\)/);
   });

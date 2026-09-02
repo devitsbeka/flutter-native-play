@@ -14,6 +14,7 @@ import powersIcon from "@/assets/icons/icon-powers.png";
 import { ChestRewardModal } from "@/components/home/ChestRewardModal";
 import { SideMenuDrawer } from "@/components/home/SideMenuDrawer";
 import { DailyRewardsModal } from "@/components/home/DailyRewardsModal";
+import { StreakModal } from "@/components/home/StreakModal";
 import { MissionsModal } from "@/components/home/MissionsModal";
 import { LevelInfoModal } from "@/components/home/LevelInfoModal";
 import { NotEnoughStakeModal } from "@/components/home/NotEnoughStakeModal";
@@ -287,6 +288,7 @@ export default function Index() {
   const [isSideMenuOpen, setIsSideMenuOpen] = useState(false);
   const [isSoundModalOpen, setIsSoundModalOpen] = useState(false);
   const [isDailyRewardsOpen, setIsDailyRewardsOpen] = useState(false);
+  const [showStreakModal, setShowStreakModal] = useState(false);
 
   // `/?daily=1` opens the daily rewards on arrival. The rewards modal lives
   // here, so screens elsewhere that want to point a player at it — the
@@ -826,6 +828,12 @@ export default function Index() {
         currentStreak={currentStreak || 1}
         onClaim={() => setIsDailyRewardsOpen(false)}
       />
+      <StreakModal
+        isOpen={showStreakModal}
+        onClose={() => setShowStreakModal(false)}
+        currentStreak={currentStreak}
+        bestStreak={profile?.best_streak || 0}
+      />
       <PowerUpDetailModal 
         isOpen={selectedPowerUp !== null} 
         onClose={() => setSelectedPowerUp(null)} 
@@ -905,7 +913,6 @@ export default function Index() {
             sceneUrl={sceneUrl}
             sceneVideoUrl={sceneVideoUrl}
             showDefaultScene={showDefaultScene}
-            defaultVideoSrc={DEFAULT_SCENE_VIDEO}
           />
         )}
         {/* Personalized scene (or the default Trivia King loop) as the
@@ -1161,29 +1168,24 @@ export default function Index() {
           </div>
         )}
 
-        {/* Phone profile card (Figma 626:1179) — nickname, level, the chunky
-            coin/gem pills and the weekly streak. It positions itself just
-            above the bottom nav, so it is placed here for reading order
-            rather than for where it lands. Desktop keeps SceneHero's stack. */}
+        {/* Phone profile card (Figma 991:948) — flag, nickname and rank, the
+            chunky coin/gem pills, and the purse and flame tabs for daily
+            rewards and the streak. It positions itself just above the bottom
+            nav, so it is placed here for reading order rather than for where
+            it lands. Desktop keeps SceneHero's stack. */}
         {user && (
           <MobileProfileCard
             nickname={profile?.nickname || t("game.guest")}
             countryCode={myCountry}
             rank={myRank}
-            level={levelInfo.level}
             coins={coins}
             gems={gems}
             onNameClick={() => setShowChangeNameModal(true)}
             onRankClick={() => navigate("/leaderboards")}
-            onLevelClick={() => setShowLevelModal(true)}
             onCoinsClick={() => navigate("/power-ups?section=coins")}
             onGemsClick={() => navigate("/power-ups?section=gems-lari")}
             onGiftClick={() => setIsDailyRewardsOpen(true)}
-            dailyRewardClaimed={!canClaimDaily}
-            onMissionsClick={(dateISO) => {
-              setMissionsDate(dateISO);
-              setShowMissionsModal(true);
-            }}
+            onStreakClick={() => setShowStreakModal(true)}
           />
         )}
 

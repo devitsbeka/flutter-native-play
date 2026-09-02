@@ -2460,6 +2460,7 @@ export const en: KaTranslations = {
     filterMyRooms: "My Rooms",
     filterFriendsRooms: "Friends'",
     filterActive: "Active",
+    publicFilterEmpty: "Nothing here for that filter — try All.",
     filterCompleted: "Completed",
     filterLabel: "Filter",
     // Social feed filters

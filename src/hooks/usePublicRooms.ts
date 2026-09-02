@@ -37,7 +37,21 @@ export interface PublicRoom {
   my_state: "host" | "joined" | "pending" | "approved" | "declined" | "none";
 }
 
-export type PublicRoomFilter = "all" | "king" | "team_battle" | "classic";
+/**
+ * The Public tab's four filters — the owner's list, in the owner's order:
+ * active (somebody in it is in the app right now), my rooms, my friends'
+ * rooms, all. Not by game: which game a card plays is written on it.
+ */
+export type PublicRoomFilter = "all" | "active" | "my_rooms" | "friends_rooms";
+
+/** What the filters need to know beyond the room row itself. */
+export interface PublicRoomContext {
+  /** Everyone seated in each room, keyed by room id. The host is a seat too. */
+  seatedByRoom: ReadonlyMap<string, readonly string[]>;
+  /** Who, of all those people, is in the app right now. */
+  onlineIds: ReadonlySet<string>;
+  friendIds: ReadonlySet<string>;
+}
 
 export const PUBLIC_ROOMS_KEY = ["public-rooms"] as const;
 
@@ -150,14 +164,24 @@ export function filterPublicRooms(
   rooms: PublicRoom[],
   filter: PublicRoomFilter,
   searchQuery: string,
+  ctx?: PublicRoomContext,
 ): PublicRoom[] {
   return rooms.filter((room) => {
     // Versus King is friends-only: its lounges are never listed, even when
-    // an older build managed to publish one. (The "king" chip is gone from
-    // the filter bar; a stale value simply finds nothing.)
-    if (room.game_type_key === "king" || filter === "king") return false;
-    if (filter === "team_battle" && room.game_type_key !== "team_battle") return false;
-    if (filter === "classic" && room.game_type_key) return false;
+    // an older build managed to publish one.
+    if (room.game_type_key === "king") return false;
+    // "My rooms" is the ones I created, as on the Private tab — a room I
+    // merely sit in is somebody else's.
+    if (filter === "my_rooms" && room.my_state !== "host") return false;
+    if (filter === "friends_rooms" && !ctx?.friendIds.has(room.host_user_id)) return false;
+    // "Active" is a room with a live person in it: the host or anyone seated
+    // whose heartbeat is inside the online window. A room whose whole couch
+    // has closed the app is a room you will wait in alone.
+    if (filter === "active") {
+      const seated = ctx?.seatedByRoom.get(room.id) ?? [];
+      const people = seated.includes(room.host_user_id) ? seated : [room.host_user_id, ...seated];
+      if (!people.some((id) => ctx?.onlineIds.has(id))) return false;
+    }
     return matchesQuery(searchQuery, [
       room.room_name,
       room.first_category_name,

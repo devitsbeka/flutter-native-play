@@ -2465,6 +2465,7 @@ export const ka = {
     filterMyRooms: "ჩემი შექმნილი",
     filterFriendsRooms: "მეგობრების",
     filterActive: "აქტიური",
+    publicFilterEmpty: "ამ ფილტრით ოთახი ვერ მოიძებნა — სცადე „ყველა“.",
     filterCompleted: "დასრულებული",
     filterLabel: "ფილტრი",
     // Social feed filters

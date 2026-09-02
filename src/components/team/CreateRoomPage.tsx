@@ -35,19 +35,19 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useIconLibrary } from "@/hooks/useIconLibrary";
 import iconCollections from "@/assets/icon-collections.png";
-import storyDice from "@/assets/story-dice.png";
 import secretBookcase from "@/assets/secret-bookcase.png";
 import triviaBuzzer from "@/assets/trivia-buzzer-3.png";
 import teamPenguinsIcon from "@/assets/tb-lobby/team-penguins.png";
 import teamFormulaIcon from "@/assets/tb-lobby/team-formula.png";
 import iconGroupOfPeople from "@/assets/group-of-people.png";
 import stickerAlbum from "@/assets/sticker-album.png";
-import iconDiceCard from "@/assets/play-chooser/icon-dice.webp";
-import iconButtonCard from "@/assets/play-chooser/icon-button.png";
-import iconKingCard from "@/assets/play-chooser/icon-king.webp";
-import iconCrateCard from "@/assets/play-chooser/icon-crate.png";
-import iconLibraryCard from "@/assets/play-chooser/icon-library.webp";
-import iconWordsCard from "@/assets/play-chooser/icon-words.webp";
+import featuredQuick from "@/assets/play-chooser/featured-quick.webp";
+import featuredRandom from "@/assets/play-chooser/featured-random.webp";
+import featuredKing from "@/assets/play-chooser/featured-king.webp";
+import featuredBattle from "@/assets/play-chooser/featured-battle.webp";
+import featuredWords from "@/assets/play-chooser/featured-words.webp";
+import featuredLibrary from "@/assets/play-chooser/featured-library.webp";
+import featuredMyTrivias from "@/assets/play-chooser/featured-mytrivias.webp";
 import { getRandomGradient } from "@/config/roomGradients";
 
 /**
@@ -470,6 +470,23 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     setIsSearchingRandom(false);
   };
 
+  // The Random card starts the game itself. A random category is a choice
+  // with nothing to deliberate, so the roll, its preview and a second tap
+  // on Create were three steps to the same place; the card now deals the
+  // category and creates the room in one go. The effect by the Create
+  // handler presses Create for it once the state dealt here has landed —
+  // or, if the categories are still loading, once the roll below has run.
+  const randomAutoStart = useRef(false);
+
+  const startRandomGame = () => {
+    if (isCreating) return;
+    setGameChoice("random");
+    randomAutoStart.current = true;
+    if (categories.length === 0) return;
+    setSelectionMode("random");
+    setSelectedCategory(categories[Math.floor(Math.random() * categories.length)]);
+  };
+
   // The Random card is the default: the moment categories arrive (or the
   // card is re-picked after a clear) the dice roll runs, so Create is one
   // tap away without an extra choice.
@@ -582,16 +599,17 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     setQueuedRounds([]);
   };
 
-  // The reel's cards, so the picked one can scroll itself in. A card tapped
-  // at the edge of the strip stayed half off-screen with its tick hidden,
-  // which read as the tap not registering.
+  // The carousel's cards, so the picked one can scroll itself in. A card
+  // tapped while peeking at the edge stayed half off-screen with its tick
+  // hidden, which read as the tap not registering. "start" matches where
+  // the snap points are, so it lands exactly as a swipe would leave it.
   const cardRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
   useEffect(() => {
     if (!gameChoice) return;
     cardRefs.current[gameChoice]?.scrollIntoView({
       behavior: "smooth",
-      inline: "center",
+      inline: "start",
       // "nearest" vertically: centring would drag the whole form up too.
       block: "nearest",
     });
@@ -1037,6 +1055,290 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queuedRounds, showQueuePicker, isCreating]);
 
+  // What the picked card unfolds beneath itself: the random roll and
+  // its preview, the library's chosen category, which side of the arena,
+  // the chosen trivia. One element, rendered under whichever card is
+  // picked, so the detail sits next to the thing it belongs to. Empty
+  // for the modes that have nothing to add, and hidden when empty.
+  const pickedDetail = (
+    <div className="mt-3 shrink-0 space-y-3 empty:hidden">
+    {/* Which side of the arena you take — two big cards, the crest
+        above the name. A tap picks the side AND deals its crest a
+        fresh random icon; a tap on the crest itself opens the
+        picker to choose one deliberately. */}
+    {gameChoice === "battle" && (
+      <div>
+        <h2 className="text-[13.2px] font-medium text-muted-foreground mb-1.5">
+          {t("extra.pickYourSide")}
+        </h2>
+        <div className="grid grid-cols-2 gap-2">
+          {(["a", "b"] as const).map((side) => (
+            <button
+              key={side}
+              type="button"
+              onClick={() => {
+                setBattleTeam(side);
+                void rollTeamIcon(side);
+              }}
+              className={`flex flex-col items-center gap-2 rounded-2xl px-3 py-4 border-2 transition-colors ${
+                battleTeam === side
+                  ? "bg-background border-primary shadow-sm text-foreground"
+                  : "bg-muted border-transparent text-muted-foreground"
+              }`}
+            >
+              <span
+                role="button"
+                tabIndex={0}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setBattleTeam(side);
+                  setCrestPickerFor(side);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.stopPropagation();
+                    setCrestPickerFor(side);
+                  }
+                }}
+                className="relative"
+              >
+                <motion.img
+                  key={teamIcons[side] ?? "default"}
+                  initial={{ scale: 0.6, rotate: -12, opacity: 0 }}
+                  animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 420, damping: 20 }}
+                  src={teamIcons[side] ?? (side === "a" ? teamPenguinsIcon : teamFormulaIcon)}
+                  alt=""
+                  className="w-14 h-14 object-contain"
+                />
+                <span className="absolute -right-1.5 -bottom-1 flex w-5 h-5 items-center justify-center rounded-full bg-background shadow-sm border border-border/50">
+                  <Pencil className="w-2.5 h-2.5 text-muted-foreground" />
+                </span>
+              </span>
+              <span className="text-[14px] font-bold">
+                {side === "a" ? t("teamBattle.teamA") : t("teamBattle.teamB")}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+    )}
+
+    {/* Library preview — only once a category is picked; the card
+        above already says "Library", so no collapsed twin row. */}
+    {gameChoice === "library" && selectionMode === "library" && !!selectedCategory && (
+    <div className="rounded-2xl overflow-hidden">
+      <AnimatePresence mode="wait">
+        {selectionMode === "library" && selectedCategory ? (
+          // Expanded state - video preview inside the button area
+          <motion.div
+            key="library-preview"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="relative w-full h-0 pb-[calc(50%_-_10px)]"
+          >
+            {/* Video/Gradient Background */}
+            {selectedCategory.category_id === "__mixed__" ? (
+              // Special handling for mixed category - show mystery-box icon
+              <div 
+                className="absolute inset-0 pb-14 flex items-center justify-center"
+                style={{ background: "linear-gradient(135deg, #8B5CF6, #EC4899)" }}
+              >
+                <div className="opacity-40">
+                  <DynamicIcon slug="mystery-box" size={80} />
+                </div>
+              </div>
+            ) : (
+              // Its own icon on its own gradient, under a scrim: the
+              // info bar below is white text and white glyphs and has
+              // to stay readable. This used to play the category's
+              // video instead, which now runs only on the category's
+              // own page.
+              <>
+                <div
+                  className="absolute inset-0 pb-14 flex items-center justify-center"
+                  style={{ background: categoryGradient(selectedCategory.color) }}
+                >
+                  <CategoryArtwork
+                    categoryId={selectedCategory.category_id}
+                    iconSlug={selectedCategory.icon_slug}
+                    size={96}
+                  />
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+              </>
+            )}
+            
+            {/* Overlaid Info Bar at Bottom */}
+            <div className="absolute bottom-0 left-0 right-0 p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0 overflow-hidden">
+                  {selectedCategory.category_id === "__mixed__" ? (
+                    <DynamicIcon slug="mystery-box" size={24} />
+                  ) : (
+                    // The category's own icon. This was a stock
+                    // bookcase for every category alike, which said
+                    // "library" rather than which one was picked.
+                    <CategoryArtwork
+                      categoryId={selectedCategory.category_id}
+                      iconSlug={selectedCategory.icon_slug}
+                      size={26}
+                    />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-white truncate drop-shadow-lg">
+                    {selectedCategory.name}
+                  </p>
+                  <p className="text-xs text-white/80">
+                    {t("extra.selectedCategoryLabel")}
+                  </p>
+                </div>
+                {/* Add to queue */}
+                <button
+                  onClick={() => setShowQueuePicker(true)}
+                  className="p-2 shrink-0 bg-black/45 border border-white/30 backdrop-blur-sm hover:bg-black/60 rounded-lg transition-colors"
+                   title={t("extra.addToQueue")}
+                >
+                  <Plus className="w-5 h-5 text-white" />
+                </button>
+                {/* Clear button */}
+                <button 
+                  onClick={clearSelection}
+                  className="p-2 shrink-0 bg-black/45 border border-white/30 backdrop-blur-sm hover:bg-black/60 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5 text-white" />
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        ) : (
+          // Collapsed state - regular button
+          <motion.button
+            key="library-button"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => handleOptionClick("library")}
+            className={`relative w-full flex items-center gap-4 p-4 transition-all ${
+              selectionMode === "library" && !selectedCategory
+                ? "bg-gradient-to-r from-blue-500 to-cyan-600 text-white shadow-lg shadow-blue-500/25"
+                : "bg-muted/50 border border-border/50 text-foreground hover:bg-muted"
+            }`}
+          >
+            <div className="w-12 h-12 flex items-center justify-center shrink-0">
+              <img src={secretBookcase} alt="" className="w-8 h-8 object-contain" />
+            </div>
+            <div className="flex-1 text-left">
+              <p className={`font-semibold ${selectionMode === "library" && !selectedCategory ? "text-white" : "text-foreground"}`}>
+                {t("extra.libraryOption")}
+              </p>
+              <p className={`text-sm ${selectionMode === "library" && !selectedCategory ? "text-white/70" : "text-muted-foreground"}`}>
+                {t("extra.libraryDesc")}
+              </p>
+            </div>
+          </motion.button>
+        )}
+      </AnimatePresence>
+    </div>
+
+    )}
+
+    {/* My Trivia preview — only once a trivia is picked (see above) */}
+    {gameChoice === "mytrivias" && selectionMode === "my-trivias" && !!challengeTrivia && (
+    <div className="rounded-2xl overflow-hidden">
+      <AnimatePresence mode="wait">
+        {selectionMode === "my-trivias" && challengeTrivia ? (
+          <motion.div
+            key="my-trivia-selected"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="relative overflow-hidden rounded-2xl"
+          >
+            <div className="p-4 bg-gradient-to-r from-pink-500 to-rose-600">
+              <div className="flex items-center gap-3">
+                <div className="w-14 h-14 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                  <img src={stickerAlbum} alt="" className="w-8 h-8 object-contain" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-white truncate drop-shadow-lg">
+                    {challengeTrivia.title}
+                  </p>
+                  <p className="text-xs text-white/80">
+                    {challengeTrivia.type === "collection" ? t("extra.collectionLabel") : t("extra.triviaLabel")}
+                  </p>
+                </div>
+                <button 
+                  onClick={() => setShowMyTriviasModal(true)}
+                  className="p-2 shrink-0 bg-black/45 border border-white/30 backdrop-blur-sm hover:bg-black/60 rounded-lg transition-colors"
+                >
+                  <RefreshCw className="w-5 h-5 text-white" />
+                </button>
+                <button
+                  onClick={() => setShowQueuePicker(true)}
+                  className="p-2 shrink-0 bg-black/45 border border-white/30 backdrop-blur-sm hover:bg-black/60 rounded-lg transition-colors"
+                  title={t("extra.addToQueue")}
+                >
+                  <Plus className="w-5 h-5 text-white" />
+                </button>
+                <button 
+                  onClick={() => {
+                    setChallengeTrivia(null);
+                    setSelectionMode(null);
+                    setQueuedRounds([]);
+                  }}
+                  className="p-2 shrink-0 bg-black/45 border border-white/30 backdrop-blur-sm hover:bg-black/60 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5 text-white" />
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.button
+            key="my-trivia-button"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => handleOptionClick("my-trivias")}
+            className={`relative w-full flex items-center gap-4 p-4 rounded-2xl transition-all ${
+              selectionMode === "my-trivias" && !challengeTrivia
+                ? "bg-gradient-to-r from-pink-500 to-rose-600 text-white shadow-lg shadow-pink-500/25"
+                : "bg-muted/50 border border-border/50 text-foreground hover:bg-muted"
+            }`}
+          >
+            <div className="w-12 h-12 flex items-center justify-center shrink-0">
+              <img src={stickerAlbum} alt="" className="w-8 h-8 object-contain" />
+            </div>
+            <div className="flex-1 text-left">
+              <p className={`font-semibold ${selectionMode === "my-trivias" && !challengeTrivia ? "text-white" : "text-foreground"}`}>
+                {t("extra.myTriviaOption")}
+              </p>
+              <p className={`text-sm ${selectionMode === "my-trivias" && !challengeTrivia ? "text-white/70" : "text-muted-foreground"}`}>
+                {t("extra.myTriviaDesc")}
+              </p>
+            </div>
+          </motion.button>
+        )}
+      </AnimatePresence>
+    </div>
+    )}
+
+    </div>
+  );
+
+  // Random, dealt above → straight into the room, no Create tap.
+  useEffect(() => {
+    if (!randomAutoStart.current) return;
+    if (gameChoice !== "random") { randomAutoStart.current = false; return; }
+    if (!createEnabled || isCreating) return;
+    randomAutoStart.current = false;
+    void handleCreate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameChoice, createEnabled, isCreating]);
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -1098,441 +1400,94 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
 
       {/* Content */}
       <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
-        <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full px-4 py-3 space-y-3">
-        {/* What will you play? — the horizontal game reel (Figma 926-11729):
-            quick / Random / Versus King / Trivia Battle / Library / My Trivia. */}
-        <div>
-          <h2 className="text-[13.2px] font-medium text-muted-foreground mb-1.5">{t("extra.whatToPlay")}</h2>
+        <div className="mx-auto flex min-h-full w-full max-w-[700px] flex-col space-y-3 px-4 py-3 md:max-w-[520px]">
+        {/* What will you play? — a featured carousel, App Store style: one
+            poster-tall card per mode with its own artwork, the title and
+            blurb on a scrim at its foot, swiped through sideways and
+            snapping card by card. This was a strip of small tiles (Figma
+            926-11729) above a screen of empty air; the cards now take the
+            height the screen has, and give some back when the picked mode
+            unfolds its detail underneath — the random roll, the library
+            preview, which side of the arena, the chosen trivia. */}
+        <div className="flex min-h-0 flex-1 flex-col">
+          <h2 className="mb-1.5 shrink-0 text-[13.2px] font-medium text-muted-foreground">{t("extra.whatToPlay")}</h2>
 
-          <div className="-mx-4 px-4 overflow-x-auto scrollbar-hide">
-            <div className="flex gap-[17px] pt-1 pb-2 w-max">
-              {(
-                [
-                  { key: "quick", icon: iconButtonCard, title: t("extra.playQuickGame"), desc: t("extra.playQuickGameDesc") },
-                  { key: "random", icon: iconDiceCard, title: t("extra.randomOption"), desc: t("extra.randomDesc") },
-                  { key: "king", icon: iconKingCard, title: t("lobby.vkTitle"), desc: t("lobby.kingCardDesc") },
-                  { key: "battle", icon: iconCrateCard, title: t("teamBattle.title"), desc: t("gameTypes.teamBattleDesc") },
-                  { key: "words", icon: iconWordsCard, title: t("gameTypes.wordsTitle"), desc: t("gameTypes.wordsDesc") },
-                  { key: "library", icon: iconLibraryCard, title: t("extra.libraryOption"), desc: t("extra.libraryDesc") },
-                  { key: "mytrivias", icon: stickerAlbum, title: t("extra.myTriviaOption"), desc: t("extra.myTriviaDesc") },
-                ] as { key: GameChoice; icon: string; title: string; desc: string }[]
-              ).map((card) => {
-                const isPicked = gameChoice === card.key;
-                return (
-                  <motion.button
-                    key={card.key}
-                    ref={(el) => { cardRefs.current[card.key] = el; }}
-                    whileTap={{ scale: 0.96 }}
-                    transition={{ type: "spring", stiffness: 480, damping: 28 }}
-                    onClick={() => {
-                      setGameChoice(card.key);
-                      if (card.key === "random" && !isSearchingRandom) void selectRandomCategory();
-                      if (card.key === "library" && !(selectionMode === "library" && selectedCategory)) setShowCategoriesModal(true);
-                      if (card.key === "mytrivias" && !challengeTrivia) void handleOptionClick("my-trivias");
-                    }}
-                    className={`relative shrink-0 w-[200px] h-[210px] rounded-[24px] overflow-clip text-left flex flex-col pt-4 px-4 pb-[7px] bg-[rgba(243,244,246,0.5)] border border-solid transition-shadow ${
-                      isPicked
-                        ? "border-[#7126d5] shadow-[0px_4px_4px_0px_rgba(113,38,213,0.42)]"
-                        : "border-[rgba(211,211,211,0.5)]"
-                    }`}
-                  >
-                    <div className="flex-1 flex items-center justify-center">
-                      <img alt="" src={card.icon} className="w-[86px] h-[86px] object-contain" />
-                    </div>
-                    <p className="font-[Nunito] font-bold text-[16px] leading-[24px] text-[#0f1729] tracking-[-0.16px] whitespace-nowrap overflow-hidden text-ellipsis">
+          {/* The cards are the row's own items so they stretch to its
+              height: a percentage height would not resolve through the
+              min-height chain above, and left them 0px tall. */}
+          <div className="-mx-4 flex min-h-[340px] flex-1 snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto overflow-y-hidden px-4 pb-2 pt-1 scrollbar-hide">
+            {(
+              [
+                { key: "quick", art: featuredQuick, title: t("extra.playQuickGame"), desc: t("extra.playQuickGameDesc") },
+                { key: "random", art: featuredRandom, title: t("extra.randomOption"), desc: t("extra.randomDesc") },
+                { key: "king", art: featuredKing, title: t("lobby.vkTitle"), desc: t("lobby.kingCardDesc") },
+                { key: "battle", art: featuredBattle, title: t("teamBattle.title"), desc: t("gameTypes.teamBattleDesc") },
+                { key: "words", art: featuredWords, title: t("gameTypes.wordsTitle"), desc: t("gameTypes.wordsDesc") },
+                { key: "library", art: featuredLibrary, title: t("extra.libraryOption"), desc: t("extra.libraryDesc") },
+                { key: "mytrivias", art: featuredMyTrivias, title: t("extra.myTriviaOption"), desc: t("extra.myTriviaDesc") },
+              ] as { key: GameChoice; art: string; title: string; desc: string }[]
+            ).map((card) => {
+              const isPicked = gameChoice === card.key;
+              return (
+                <motion.button
+                  key={card.key}
+                  ref={(el) => { cardRefs.current[card.key] = el; }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ type: "spring", stiffness: 480, damping: 28 }}
+                  aria-pressed={isPicked}
+                  onClick={() => {
+                    if (card.key === "random") { startRandomGame(); return; }
+                    setGameChoice(card.key);
+                    if (card.key === "library" && !(selectionMode === "library" && selectedCategory)) setShowCategoriesModal(true);
+                    if (card.key === "mytrivias" && !challengeTrivia) void handleOptionClick("my-trivias");
+                  }}
+                  className={cn(
+                    "relative block w-[84%] max-w-[440px] shrink-0 snap-start rounded-[28px] overflow-clip text-left bg-[#e9d8ff] transition-shadow duration-200",
+                    isPicked
+                      ? "ring-[3px] ring-[#7126d5] shadow-[0px_12px_32px_0px_rgba(113,38,213,0.35)]"
+                      : "ring-1 ring-black/[0.06] shadow-[0px_8px_24px_0px_rgba(15,23,41,0.10)]",
+                  )}
+                >
+                  <img
+                    alt=""
+                    src={card.art}
+                    loading="lazy"
+                    decoding="async"
+                    className="absolute inset-0 h-full w-full object-cover"
+                  />
+                  {/* The artwork leaves its lower third pale on purpose;
+                      a lavender wash on top of that keeps the copy legible
+                      even where a prop strays into it. */}
+                  <div className="absolute inset-x-0 bottom-0 h-[55%] bg-gradient-to-t from-[#f3e6ff] via-[#f3e6ff]/80 to-transparent" />
+                  <div className="absolute inset-x-0 bottom-0 px-5 pb-5">
+                    <p className="font-[Nunito] font-extrabold text-[24px] leading-[28px] text-[#0f1729] tracking-[-0.3px]">
                       {card.title}
                     </p>
-                    <p className="font-[Nunito] text-[14px] leading-[20px] text-[#6b7280] tracking-[-0.16px] h-[40px] overflow-hidden line-clamp-2 mb-[6px]">
+                    <p className="font-[Nunito] text-[14px] leading-[20px] text-[#4b5563] tracking-[-0.16px] mt-1 line-clamp-2">
                       {card.desc}
                     </p>
-                    {isPicked && (
-                      <motion.div
-                        initial={{ scale: 0, rotate: -30 }}
-                        animate={{ scale: 1, rotate: 0 }}
-                        transition={{ type: "spring", stiffness: 480, damping: 20 }}
-                        className="absolute right-[10px] top-[14px] w-[30px] h-[30px] rounded-full bg-[rgba(113,38,213,0.08)] flex items-center justify-center"
-                      >
-                        <Check className="w-4 h-4 text-[#7126d5]" strokeWidth={3.5} />
-                      </motion.div>
-                    )}
-                  </motion.button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="space-y-3 mt-1">
-            {/* Which side of the arena you take — two big cards, the crest
-                above the name, both dealt a random crest on arrival. A tap
-                picks the side; a tap on the side already picked (or on the
-                crest itself) opens the picker to choose the icon yourself. */}
-            {gameChoice === "battle" && (
-              <div>
-                <h2 className="text-[13.2px] font-medium text-muted-foreground mb-1.5">
-                  {t("extra.pickYourSide")}
-                </h2>
-                <div className="grid grid-cols-2 gap-2">
-                  {(["a", "b"] as const).map((side) => (
-                    <button
-                      key={side}
-                      type="button"
-                      onClick={() => {
-                        if (battleTeam === side) setCrestPickerFor(side);
-                        else setBattleTeam(side);
-                      }}
-                      className={`flex flex-col items-center gap-2 rounded-2xl px-3 py-4 border-2 transition-colors ${
-                        battleTeam === side
-                          ? "bg-background border-primary shadow-sm text-foreground"
-                          : "bg-muted border-transparent text-muted-foreground"
-                      }`}
+                  </div>
+                  {isPicked && (
+                    <motion.div
+                      initial={{ scale: 0, rotate: -30 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      transition={{ type: "spring", stiffness: 480, damping: 20 }}
+                      className="absolute right-4 top-4 w-9 h-9 rounded-full bg-[#7126d5] shadow-[0px_4px_12px_0px_rgba(113,38,213,0.45)] flex items-center justify-center"
                     >
-                      {/* Only YOUR side is dressable: the pencil rides the
-                          picked card alone, and a tap anywhere on it opens
-                          the picker. The other card's tap just switches
-                          sides. */}
-                      <span className="relative">
-                        <motion.img
-                          key={teamIcons[side] ?? "default"}
-                          initial={{ scale: 0.6, rotate: -12, opacity: 0 }}
-                          animate={{ scale: 1, rotate: 0, opacity: 1 }}
-                          transition={{ type: "spring", stiffness: 420, damping: 20 }}
-                          src={teamIcons[side] ?? (side === "a" ? teamPenguinsIcon : teamFormulaIcon)}
-                          alt=""
-                          className="w-14 h-14 object-contain"
-                        />
-                        {battleTeam === side && (
-                          <span className="absolute -right-1.5 -bottom-1 flex w-5 h-5 items-center justify-center rounded-full bg-background shadow-sm border border-border/50">
-                            <Pencil className="w-2.5 h-2.5 text-muted-foreground" />
-                          </span>
-                        )}
-                      </span>
-                      <span className="text-[14px] font-bold">
-                        {side === "a" ? t("teamBattle.teamA") : t("teamBattle.teamB")}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Random Option - the roll status/preview under the Random card */}
-            {gameChoice === "random" && (
-            <div className="rounded-2xl overflow-hidden">
-              <AnimatePresence mode="wait">
-                {selectionMode === "random" && selectedCategory && !isSearchingRandom ? (
-                  // Expanded state - video preview inside the button area
-                  <motion.div
-                    key="random-preview"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="relative w-full h-0 pb-[calc(50%_-_10px)]"
-                  >
-                    {/* The category's icon on its gradient. This played the
-                        category's video where one existed; the video belongs
-                        on the category's own page, not behind a preview you
-                        look at for two seconds on the way to a room. */}
-                    <div className="absolute inset-0 pb-14 bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center">
-                      <CategoryArtwork
-                        categoryId={selectedCategory.category_id}
-                        iconSlug={selectedCategory.icon_slug}
-                        size={96}
-                      />
-                    </div>
-                    
-                    {/* Overlaid Info Bar at Bottom */}
-                    <div className="absolute bottom-0 left-0 right-0 p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0">
-                          <img src={storyDice} alt="" className="w-6 h-6 object-contain" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-white truncate drop-shadow-lg">
-                            {selectedCategory.name}
-                          </p>
-                          <p className="text-xs text-white/80">
-                            {t("extra.randomDesc")}
-                          </p>
-                        </div>
-                        {/* Re-roll button */}
-                        <button 
-                          onClick={selectRandomCategory}
-                          className="p-2 shrink-0 bg-black/45 border border-white/30 backdrop-blur-sm hover:bg-black/60 rounded-lg transition-colors"
-                          title={t("extra.anotherCategory")}
-                        >
-                          <RefreshCw className="w-5 h-5 text-white" />
-                        </button>
-                        {/* Add to queue */}
-                        <button
-                          onClick={() => setShowQueuePicker(true)}
-                          className="p-2 shrink-0 bg-black/45 border border-white/30 backdrop-blur-sm hover:bg-black/60 rounded-lg transition-colors"
-                           title={t("extra.addToQueue")}
-                        >
-                          <Plus className="w-5 h-5 text-white" />
-                        </button>
-                        {/* Clear button */}
-                        <button 
-                          onClick={clearSelection}
-                          className="p-2 shrink-0 bg-black/45 border border-white/30 backdrop-blur-sm hover:bg-black/60 rounded-lg transition-colors"
-                        >
-                          <X className="w-5 h-5 text-white" />
-                        </button>
-                      </div>
-                    </div>
-                  </motion.div>
-                ) : (
-                  // Collapsed state - regular button
-                  <motion.button
-                    key="random-button"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    onClick={() => !isSearchingRandom && handleOptionClick("random")}
-                    disabled={isSearchingRandom}
-                    className={`relative w-full flex items-center gap-4 p-4 transition-all overflow-hidden ${
-                      isSearchingRandom
-                        ? "bg-gradient-to-r from-purple-500 to-violet-600 text-white shadow-lg shadow-purple-500/25"
-                        : "bg-muted/50 border border-border/50 text-foreground hover:bg-muted"
-                    }`}
-                  >
-                    {/* Searching animation overlay */}
-                    {isSearchingRandom && (
-                      <motion.div 
-                        className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-violet-500/40 to-purple-500/20"
-                        animate={{ x: ["-100%", "100%"] }}
-                        transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
-                      />
-                    )}
-                    
-                    <div className="w-12 h-12 flex items-center justify-center shrink-0">
-                      <motion.div
-                        animate={isSearchingRandom ? { rotate: 360 } : { rotate: 0 }}
-                        transition={isSearchingRandom ? { duration: 0.5, repeat: Infinity, ease: "linear" } : {}}
-                      >
-                        <img src={storyDice} alt="" className="w-8 h-8 object-contain" />
-                      </motion.div>
-                    </div>
-                    <div className="flex-1 text-left relative z-10">
-                      <p className={`font-semibold ${isSearchingRandom ? "text-white" : "text-foreground"}`}>
-                        {isSearchingRandom ? t("extra.searchingCategory") : t("extra.randomOption")}
-                      </p>
-                      <p className={`text-sm ${isSearchingRandom ? "text-white/70" : "text-muted-foreground"}`}>
-                        {isSearchingRandom 
-                          ? (selectedCategory?.name || t("extra.choosingCategory")) 
-                          : t("extra.randomDesc")
-                        }
-                      </p>
-                    </div>
-                  </motion.button>
-                )}
-              </AnimatePresence>
-            </div>
-
-            )}
-
-            {/* Library preview — only once a category is picked; the card
-                above already says "Library", so no collapsed twin row. */}
-            {gameChoice === "library" && selectionMode === "library" && !!selectedCategory && (
-            <div className="rounded-2xl overflow-hidden">
-              <AnimatePresence mode="wait">
-                {selectionMode === "library" && selectedCategory ? (
-                  // Expanded state - video preview inside the button area
-                  <motion.div
-                    key="library-preview"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="relative w-full h-0 pb-[calc(50%_-_10px)]"
-                  >
-                    {/* Video/Gradient Background */}
-                    {selectedCategory.category_id === "__mixed__" ? (
-                      // Special handling for mixed category - show mystery-box icon
-                      <div 
-                        className="absolute inset-0 pb-14 flex items-center justify-center"
-                        style={{ background: "linear-gradient(135deg, #8B5CF6, #EC4899)" }}
-                      >
-                        <div className="opacity-40">
-                          <DynamicIcon slug="mystery-box" size={80} />
-                        </div>
-                      </div>
-                    ) : (
-                      // Its own icon on its own gradient, under a scrim: the
-                      // info bar below is white text and white glyphs and has
-                      // to stay readable. This used to play the category's
-                      // video instead, which now runs only on the category's
-                      // own page.
-                      <>
-                        <div
-                          className="absolute inset-0 pb-14 flex items-center justify-center"
-                          style={{ background: categoryGradient(selectedCategory.color) }}
-                        >
-                          <CategoryArtwork
-                            categoryId={selectedCategory.category_id}
-                            iconSlug={selectedCategory.icon_slug}
-                            size={96}
-                          />
-                        </div>
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                      </>
-                    )}
-                    
-                    {/* Overlaid Info Bar at Bottom */}
-                    <div className="absolute bottom-0 left-0 right-0 p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0 overflow-hidden">
-                          {selectedCategory.category_id === "__mixed__" ? (
-                            <DynamicIcon slug="mystery-box" size={24} />
-                          ) : (
-                            // The category's own icon. This was a stock
-                            // bookcase for every category alike, which said
-                            // "library" rather than which one was picked.
-                            <CategoryArtwork
-                              categoryId={selectedCategory.category_id}
-                              iconSlug={selectedCategory.icon_slug}
-                              size={26}
-                            />
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-white truncate drop-shadow-lg">
-                            {selectedCategory.name}
-                          </p>
-                          <p className="text-xs text-white/80">
-                            {t("extra.selectedCategoryLabel")}
-                          </p>
-                        </div>
-                        {/* Add to queue */}
-                        <button
-                          onClick={() => setShowQueuePicker(true)}
-                          className="p-2 shrink-0 bg-black/45 border border-white/30 backdrop-blur-sm hover:bg-black/60 rounded-lg transition-colors"
-                           title={t("extra.addToQueue")}
-                        >
-                          <Plus className="w-5 h-5 text-white" />
-                        </button>
-                        {/* Clear button */}
-                        <button 
-                          onClick={clearSelection}
-                          className="p-2 shrink-0 bg-black/45 border border-white/30 backdrop-blur-sm hover:bg-black/60 rounded-lg transition-colors"
-                        >
-                          <X className="w-5 h-5 text-white" />
-                        </button>
-                      </div>
-                    </div>
-                  </motion.div>
-                ) : (
-                  // Collapsed state - regular button
-                  <motion.button
-                    key="library-button"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    onClick={() => handleOptionClick("library")}
-                    className={`relative w-full flex items-center gap-4 p-4 transition-all ${
-                      selectionMode === "library" && !selectedCategory
-                        ? "bg-gradient-to-r from-blue-500 to-cyan-600 text-white shadow-lg shadow-blue-500/25"
-                        : "bg-muted/50 border border-border/50 text-foreground hover:bg-muted"
-                    }`}
-                  >
-                    <div className="w-12 h-12 flex items-center justify-center shrink-0">
-                      <img src={secretBookcase} alt="" className="w-8 h-8 object-contain" />
-                    </div>
-                    <div className="flex-1 text-left">
-                      <p className={`font-semibold ${selectionMode === "library" && !selectedCategory ? "text-white" : "text-foreground"}`}>
-                        {t("extra.libraryOption")}
-                      </p>
-                      <p className={`text-sm ${selectionMode === "library" && !selectedCategory ? "text-white/70" : "text-muted-foreground"}`}>
-                        {t("extra.libraryDesc")}
-                      </p>
-                    </div>
-                  </motion.button>
-                )}
-              </AnimatePresence>
-            </div>
-
-            )}
-
-            {/* My Trivia preview — only once a trivia is picked (see above) */}
-            {gameChoice === "mytrivias" && selectionMode === "my-trivias" && !!challengeTrivia && (
-            <div className="rounded-2xl overflow-hidden">
-              <AnimatePresence mode="wait">
-                {selectionMode === "my-trivias" && challengeTrivia ? (
-                  <motion.div
-                    key="my-trivia-selected"
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="relative overflow-hidden rounded-2xl"
-                  >
-                    <div className="p-4 bg-gradient-to-r from-pink-500 to-rose-600">
-                      <div className="flex items-center gap-3">
-                        <div className="w-14 h-14 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-                          <img src={stickerAlbum} alt="" className="w-8 h-8 object-contain" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-white truncate drop-shadow-lg">
-                            {challengeTrivia.title}
-                          </p>
-                          <p className="text-xs text-white/80">
-                            {challengeTrivia.type === "collection" ? t("extra.collectionLabel") : t("extra.triviaLabel")}
-                          </p>
-                        </div>
-                        <button 
-                          onClick={() => setShowMyTriviasModal(true)}
-                          className="p-2 shrink-0 bg-black/45 border border-white/30 backdrop-blur-sm hover:bg-black/60 rounded-lg transition-colors"
-                        >
-                          <RefreshCw className="w-5 h-5 text-white" />
-                        </button>
-                        <button
-                          onClick={() => setShowQueuePicker(true)}
-                          className="p-2 shrink-0 bg-black/45 border border-white/30 backdrop-blur-sm hover:bg-black/60 rounded-lg transition-colors"
-                          title={t("extra.addToQueue")}
-                        >
-                          <Plus className="w-5 h-5 text-white" />
-                        </button>
-                        <button 
-                          onClick={() => {
-                            setChallengeTrivia(null);
-                            setSelectionMode(null);
-                            setQueuedRounds([]);
-                          }}
-                          className="p-2 shrink-0 bg-black/45 border border-white/30 backdrop-blur-sm hover:bg-black/60 rounded-lg transition-colors"
-                        >
-                          <X className="w-5 h-5 text-white" />
-                        </button>
-                      </div>
-                    </div>
-                  </motion.div>
-                ) : (
-                  <motion.button
-                    key="my-trivia-button"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    onClick={() => handleOptionClick("my-trivias")}
-                    className={`relative w-full flex items-center gap-4 p-4 rounded-2xl transition-all ${
-                      selectionMode === "my-trivias" && !challengeTrivia
-                        ? "bg-gradient-to-r from-pink-500 to-rose-600 text-white shadow-lg shadow-pink-500/25"
-                        : "bg-muted/50 border border-border/50 text-foreground hover:bg-muted"
-                    }`}
-                  >
-                    <div className="w-12 h-12 flex items-center justify-center shrink-0">
-                      <img src={stickerAlbum} alt="" className="w-8 h-8 object-contain" />
-                    </div>
-                    <div className="flex-1 text-left">
-                      <p className={`font-semibold ${selectionMode === "my-trivias" && !challengeTrivia ? "text-white" : "text-foreground"}`}>
-                        {t("extra.myTriviaOption")}
-                      </p>
-                      <p className={`text-sm ${selectionMode === "my-trivias" && !challengeTrivia ? "text-white/70" : "text-muted-foreground"}`}>
-                        {t("extra.myTriviaDesc")}
-                      </p>
-                    </div>
-                  </motion.button>
-                )}
-              </AnimatePresence>
-            </div>
-            )}
-
+                      {card.key === "random" && (isCreating || isSearchingRandom) ? (
+                        <Loader2 className="w-[18px] h-[18px] text-white animate-spin" />
+                      ) : (
+                        <Check className="w-[18px] h-[18px] text-white" strokeWidth={3.5} />
+                      )}
+                    </motion.div>
+                  )}
+                </motion.button>
+              );
+            })}
+            <div aria-hidden className="w-px shrink-0" />
           </div>
+
+          {pickedDetail}
         </div>
 
         {/* Custom Trivia Preview */}
