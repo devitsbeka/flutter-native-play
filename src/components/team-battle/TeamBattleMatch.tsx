@@ -54,6 +54,15 @@ const DIFFICULTY_COLORS: Record<string, string> = {
   medium: "bg-amber-500",
   hard: "bg-destructive",
 };
+// The board tile's single price pill (Figma 1019:41214): the tier's colour
+// IS the difficulty and the number inside is the prize — green/yellow/red,
+// not a difficulty word beside a separate number. Dark ink on the light
+// tiers, white on the red, so the value reads on each.
+const DIFFICULTY_PILL: Record<string, string> = {
+  easy: "bg-[#7EDC7B] text-[#1D5423]",
+  medium: "bg-[#F1D45E] text-[#6E5410]",
+  hard: "bg-[#E68A8A] text-white",
+};
 // The 3D renders from the Figma frame (966:30083) — a rock on its patch of
 // grass, a paper roll, real scissors — used on the throw cards and every
 // reveal badge alike.
@@ -143,7 +152,7 @@ function ScoreHeader({ seconds, maxSeconds }: { seconds?: number; maxSeconds?: n
           <img
             alt=""
             src={crests[team] ?? undefined}
-            className="w-6 h-6 object-contain drop-shadow-sm shrink-0"
+            className="w-8 h-8 object-contain drop-shadow-sm shrink-0"
           />
         )}
         <span className="text-white/70 text-[11px] font-semibold uppercase tracking-wide">
@@ -465,23 +474,25 @@ function PhaseBoard() {
                   whileTap={isSpotlight && !played ? { scale: 0.96 } : undefined}
                   disabled={!isSpotlight || played}
                   onClick={() => void pickTile(tile.id)}
-                  className="relative rounded-2xl text-left"
-                  style={{ paddingBottom: 4, opacity: played ? 0.45 : 1 }}
+                  className="relative rounded-[20px] text-left"
+                  style={{ paddingBottom: 6, opacity: played ? 0.45 : 1 }}
                 >
+                  {/* The deeper slate lip under the card (Figma border-b-10):
+                      the tile reads as a raised key, not a flat rectangle. */}
                   <div
-                    className="absolute inset-0 rounded-2xl"
-                    style={{ background: "#CBD5E1", transform: "translateY(4px)" }}
+                    className="absolute inset-0 rounded-[20px]"
+                    style={{ background: "#CBD5E1", transform: "translateY(6px)" }}
                   />
                   <div
-                    className="relative rounded-2xl p-3 min-h-[120px] flex flex-col items-center justify-between gap-1 bg-white"
+                    className="relative rounded-[20px] p-3 min-h-[128px] flex flex-col items-center justify-center gap-2 bg-white"
                     style={{ boxShadow: "inset 0 2px 0 rgba(255,255,255,0.4)" }}
                   >
                     <CategoryArtwork
                       categoryId={cat?.category_id ?? ""}
                       iconSlug={cat?.icon_slug}
-                      size={44}
+                      size={64}
                     />
-                    <p className="text-[#2A2550] font-bold text-sm text-center leading-tight line-clamp-2">
+                    <p className="text-[#313740] font-bold text-[15px] text-center leading-tight line-clamp-2">
                       {tile.category_name}
                     </p>
                     {played ? (
@@ -507,16 +518,13 @@ function PhaseBoard() {
                         <span className="shrink-0">· +{tile.points_earned}</span>
                       </span>
                     ) : (
-                      <div className="flex items-center gap-1.5">
-                        <span
-                          className={`px-2 py-0.5 rounded-full text-white text-[10px] font-bold ${DIFFICULTY_COLORS[tile.difficulty]}`}
-                        >
-                          {t(`teamBattle.diff_${tile.difficulty}`)}
-                        </span>
-                        <span className="font-display text-lg font-black text-primary">
-                          {tile.price}
-                        </span>
-                      </div>
+                      /* One pill: its colour is the difficulty, its number is
+                         the prize (Figma 1019:41214) — no separate word. */
+                      <span
+                        className={`font-display text-lg font-black px-3.5 py-0.5 rounded-full leading-tight ${DIFFICULTY_PILL[tile.difficulty] ?? "bg-primary/10 text-primary"}`}
+                      >
+                        {tile.price}
+                      </span>
                     )}
                   </div>
                 </motion.button>
