@@ -88,6 +88,12 @@ export interface UniversalLobbyProps {
   onInvite?: () => void;
   /** Under the players list — results of a challenge, for instance. */
   playersExtra?: ReactNode;
+  /**
+   * The game's seat limits: how many it needs, how many it holds, how many
+   * are taken (pending invites hold a seat). Stated on the rules tab,
+   * counted under the players, and the invite line stands down when full.
+   */
+  capacity?: { min: number; max: number; taken: number; fullLabel: string };
   start: {
     label: string;
     onPress: () => void;
@@ -130,6 +136,7 @@ export function UniversalLobby({
   inviteFaces,
   onInvite,
   playersExtra,
+  capacity,
   start,
   footerExtra,
   initialTab = "rules",
@@ -337,6 +344,11 @@ export function UniversalLobby({
                   transition={{ duration: 0.18 }}
                   className="mt-[10px] flex flex-col gap-[15px] px-[3px]"
                 >
+                  {capacity && (
+                    <LobbyInfoRow label={labels.players}>
+                      {capacity.min === capacity.max ? capacity.min : `${capacity.min}–${capacity.max}`}
+                    </LobbyInfoRow>
+                  )}
                   {rules.map((row) => (
                     <div
                       key={row.key}
@@ -368,12 +380,17 @@ export function UniversalLobby({
                       {group.footer}
                     </div>
                   ))}
-                  {playersHint && (
-                    <p className="mt-[27px] text-center font-[Nunito] text-[16px] font-medium leading-[19.5px] tracking-[-0.16px] text-[#402666]">
-                      {playersHint}
+                  {capacity && (
+                    <p className="mt-[14px] text-center font-[Nunito] text-[13px] font-semibold leading-4 tracking-[-0.16px] text-[#402666]/60">
+                      {Math.min(capacity.taken, capacity.max)}/{capacity.max} {labels.players.toLowerCase()}
                     </p>
                   )}
-                  {onInvite && (
+                  {(playersHint || (capacity && capacity.taken >= capacity.max)) && (
+                    <p className="mt-[20px] text-center font-[Nunito] text-[16px] font-medium leading-[19.5px] tracking-[-0.16px] text-[#402666]">
+                      {capacity && capacity.taken >= capacity.max ? capacity.fullLabel : playersHint}
+                    </p>
+                  )}
+                  {onInvite && !(capacity && capacity.taken >= capacity.max) && (
                     <LobbyInviteRow className="mt-[35px]" faces={inviteFaces} label={labels.invite} onPress={onInvite} />
                   )}
                   {playersExtra}

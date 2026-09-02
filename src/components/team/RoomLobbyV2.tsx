@@ -806,6 +806,14 @@ export function RoomLobbyV2() {
       rules={lobbyRules}
       players={lobbyPlayers}
       playersHint={enoughPlayers ? null : t("extra.rlNeedsSecondPlayer")}
+      // The room's own cap (max_players), and one seat more than the host
+      // when the host will sit out of their own trivia.
+      capacity={{
+        min: willBeObserver ? 2 : 1,
+        max: currentRoom.max_players || 10,
+        taken: participants.length,
+        fullLabel: t("extra.mpRoomFull"),
+      }}
       inviteFaces={inviteFaces}
       onInvite={() => setShowInviteModal(true)}
       playersExtra={<ChallengeResultsSection roomId={currentRoom.id} />}

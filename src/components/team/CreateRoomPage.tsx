@@ -56,7 +56,7 @@ import featuredLibrary from "@/assets/play-chooser/featured-library.webp";
 import featuredMyTrivias from "@/assets/play-chooser/featured-mytrivias.webp";
 import playersIcon from "@/assets/play-chooser/players.svg";
 import { LOBBY_SCENES, rememberLobbyScene } from "@/utils/lobbyScene";
-import { UniversalLobby, LobbyInfoRow, type LobbyPlayer } from "@/components/lobby/UniversalLobby";
+import { UniversalLobby, type LobbyPlayer } from "@/components/lobby/UniversalLobby";
 import SpotlightSearch from "@/components/search/SpotlightSearch";
 import { MyTriviaLiveLogo } from "@/components/shared/MyTriviaLiveLogo";
 import { getRandomGradient } from "@/config/roomGradients";
@@ -1826,13 +1826,17 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
               // or with the one friend picked on the players tab.
               rules={[]}
               rulesExtra={
-                <>
-                  <LobbyInfoRow label={t("lobby.uPlayersTab")}>1–2</LobbyInfoRow>
-                  <p className="px-[6px] pt-[2px] font-[Nunito] text-[13px] leading-[18px] text-[#402666]/70">
-                    {t("extra.modeWordsDesc")}
-                  </p>
-                </>
+                <p className="px-[6px] pt-[2px] font-[Nunito] text-[13px] leading-[18px] text-[#402666]/70">
+                  {t("extra.modeWordsDesc")}
+                </p>
               }
+              // One board seats two: you and the one friend.
+              capacity={{
+                min: 1,
+                max: 2,
+                taken: 1 + Math.min(1, collectInvitees().length),
+                fullLabel: t("extra.mpRoomFull"),
+              }}
               players={[
                 {
                   id: user?.id ?? "me",
