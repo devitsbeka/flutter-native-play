@@ -625,6 +625,28 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   // the snap points are, so it lands exactly as a swipe would leave it.
   const { unreadCount } = useNotifications();
 
+  // The poster cards take the row's height and derive their width from
+  // the designed 393:686 ratio. CSS alone cannot say that here: the row's
+  // height comes from flex-grow inside a min-height column, which leaves
+  // it indefinite for percentage heights and for aspect-ratio transfer
+  // (both left the cards 0px wide or taller than the row, clipped by the
+  // footer). So the row measures itself and publishes --row-h, its content
+  // height, and the cards read it.
+  const rowRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = rowRef.current;
+    if (!el) return;
+    const publish = () => {
+      const cs = getComputedStyle(el);
+      const inner = el.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+      el.style.setProperty("--row-h", `${Math.max(0, inner)}px`);
+    };
+    publish();
+    const ro = new ResizeObserver(publish);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   const cardRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
   useEffect(() => {
@@ -1481,8 +1503,9 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
               sit in view without a scroll. The picked card kept its poster
               height and the side picker was two cut-off tops under it. */}
           <div
+            ref={rowRef}
             className={cn(
-              "-mx-4 mt-[10px] flex snap-x snap-mandatory scroll-px-4 items-start gap-3 overflow-x-auto overflow-y-hidden px-4 pb-2 pt-1 scrollbar-hide transition-[height] duration-300",
+              "-mx-4 mt-[10px] flex snap-x snap-mandatory scroll-px-4 items-stretch gap-3 overflow-x-auto overflow-y-hidden px-4 pb-2 pt-1 scrollbar-hide transition-[height] duration-300",
               gameChoice ? "h-[224px] min-h-0 flex-none md:h-[280px]" : "min-h-[340px] flex-1",
             )}
           >
@@ -1528,10 +1551,19 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                     // A phone shows one card and the edge of the next; from
                     // tablet up the cards take a fixed width so the wide
                     // column shows two, three or more of them at once.
-                    "group relative block w-[84%] max-w-[440px] shrink-0 snap-start overflow-clip rounded-[28px] bg-[#e9d8ff] text-left [container-type:inline-size] md:w-[320px]",
-                    // Nothing picked: the designed 393:686 poster, clamped to
-                    // the row on a short screen. Something picked: the banner.
-                    collapsed ? "h-full" : "aspect-[393/686] max-h-full",
+                    "group relative block shrink-0 snap-start overflow-clip rounded-[28px] bg-[#e9d8ff] text-left [container-type:inline-size]",
+                    // Nothing picked: the designed 393:686 poster. The row's
+                    // height is what the screen has, so the card takes that
+                    // height and derives its width from the ratio — never
+                    // taller than the row, so never clipped by the footer;
+                    // on a tall phone it is capped at 84% of the column and
+                    // grows a little taller than the ratio instead. A
+                    // width-driven height overflowed the row on every phone
+                    // and ran under the Create button.
+                    // Something picked: the banner, 84% wide.
+                    collapsed
+                      ? "h-full w-[84%] max-w-[440px] md:w-[320px]"
+                      : "h-[var(--row-h)] w-[calc(var(--row-h)*393/686)] max-w-[84%] md:max-w-[320px]",
                     isPicked
                       ? "animate-[mode-card-glow_2.6s_ease-in-out_infinite] motion-reduce:animate-none motion-reduce:shadow-[0px_0px_0px_3px_#7126d5,0px_12px_32px_0px_rgba(113,38,213,0.35)]"
                       : "shadow-[0px_0px_0px_1px_rgba(0,0,0,0.06),0px_8px_24px_0px_rgba(15,23,41,0.1)]",
