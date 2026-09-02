@@ -38,6 +38,9 @@ interface CompactNotificationCardProps {
   onDeclineFriend?: (friendshipId: string, notificationId: string) => void;
   onAcceptInvite?: (invitationId: string, notificationId: string) => void;
   onDeclineInvite?: (invitationId: string, notificationId: string) => void;
+  /** Somebody asking into a room you host: let them in, or not. */
+  onAcceptJoin?: (roomId: string, requesterId: string, notificationId: string) => void;
+  onDeclineJoin?: (roomId: string, requesterId: string, notificationId: string) => void;
   onDismiss?: (id: string) => void;
   actionLoading?: string | null;
   timeAgo: string;
@@ -53,6 +56,8 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
   onDeclineFriend,
   onAcceptInvite,
   onDeclineInvite,
+  onAcceptJoin,
+  onDeclineJoin,
   onDismiss,
   actionLoading,
   timeAgo,
@@ -75,6 +80,9 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
   const isFriendRequest = notification.type === 'friend_request';
   const isGameInvite = notification.type === 'challenge';
   const isRoomInvite = notification.type === 'room_invite';
+  // A knock on a room you host. The same yes/no the lobby's doorstep
+  // asks, here for a host who was not looking at the lobby.
+  const isJoinRequest = notification.type === 'room_join_request';
   const isGameStarted = notification.type === 'game_started';
   const isGameResult = notification.type === 'game_result';
   const isTriviaLikedOrSaved = ['trivia_liked', 'trivia_saved'].includes(notification.type);
@@ -83,7 +91,7 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
   const actionTaken = notification.data?.action_taken as 'accepted' | 'declined' | undefined;
   const hasActionTaken = !!actionTaken;
 
-  const hasDualActions = (isFriendRequest || isGameInvite) && !hasActionTaken;
+  const hasDualActions = (isFriendRequest || isGameInvite || isJoinRequest) && !hasActionTaken;
   const hasSingleAction = (isRoomInvite || isGameStarted || isGameResult || isTriviaLikedOrSaved) && !hasDualActions;
 
   const isLoading = actionLoading === notification.id;
@@ -139,7 +147,7 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
   const triviaCover = notification.data?.trivia_cover as string | undefined;
   const triviaIconSlug = notification.data?.trivia_icon_slug as string | undefined;
   
-  const hasRoomContext = isRoomInvite || isGameStarted || isGameInvite;
+  const hasRoomContext = isRoomInvite || isGameStarted || isGameInvite || isJoinRequest;
 
   // Determine avatar content based on notification type
   const avatarContent = useMemo(() => {
@@ -172,6 +180,9 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
     if (isFriendRequest && senderName) {
       return t("extra.notifFriendReq", { name: senderName });
     }
+    // The title is the asker's name; this says what they want. The room
+    // (and which game it is) follows in the context chip.
+    if (isJoinRequest) return t("extra.joinRequestBody");
     return null;
   };
   
@@ -230,6 +241,14 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
         return;
       }
       onAcceptInvite?.(invitationId, notification.id);
+    } else if (isJoinRequest) {
+      const roomId = notification.data?.room_id as string | undefined;
+      const requesterId = notification.data?.requester_id as string | undefined;
+      if (!roomId || !requesterId) {
+        console.error("[NotificationCard] Missing room_id/requester_id in notification data");
+        return;
+      }
+      onAcceptJoin?.(roomId, requesterId, notification.id);
     }
   };
 
@@ -272,6 +291,14 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
         return;
       }
       onDeclineInvite?.(invitationId, notification.id);
+    } else if (isJoinRequest) {
+      const roomId = notification.data?.room_id as string | undefined;
+      const requesterId = notification.data?.requester_id as string | undefined;
+      if (!roomId || !requesterId) {
+        console.error("[NotificationCard] Missing room_id/requester_id in notification data");
+        return;
+      }
+      onDeclineJoin?.(roomId, requesterId, notification.id);
     }
   };
 
@@ -493,7 +520,7 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
                   <span className="flex items-center gap-1">
                     <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
                   </span>
-                ) : isFriendRequest ? t("extra.notifAccept") : t("extra.notifJoin")}
+                ) : isFriendRequest || isJoinRequest ? t("extra.notifAccept") : t("extra.notifJoin")}
               </button>
               <button
                 type="button"
@@ -512,7 +539,7 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
             </div>
           )}
 
-          {hasActionTaken && isFriendRequest && (
+          {hasActionTaken && (isFriendRequest || isJoinRequest) && (
             <div className={cn(
               "mt-2 px-4 py-2 rounded-full text-xs font-semibold inline-flex items-center gap-1.5",
               actionTaken === 'accepted' 

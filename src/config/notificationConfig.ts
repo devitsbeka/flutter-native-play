@@ -58,6 +58,15 @@ export const NOTIFICATION_TYPE_CONFIG: Record<string, NotificationTypeConfig> = 
     label: 'მეგობრობის მოთხოვნა',
     labelEn: 'Friend Request',
   },
+  // Somebody asking into a room you host — a request to answer, like a
+  // friend request, so it wears the same face rather than the info badge.
+  room_join_request: {
+    icon: UserPlus,
+    color: 'text-violet-400',
+    bgColor: 'bg-violet-500/20',
+    label: 'შემოსვლის მოთხოვნა',
+    labelEn: 'Join Request',
+  },
   // Your own copy of a request you sent. Quieter than the one you receive:
   // it is a record, not something to act on.
   friend_request_sent: {

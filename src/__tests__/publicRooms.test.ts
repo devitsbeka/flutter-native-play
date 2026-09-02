@@ -233,7 +233,8 @@ describe("the public list", () => {
     expect(section).toMatch(/<AlertDialog open=\{removing !== null\}/);
     // A room with no round picked plays a mixed first round — not "not
     // chosen yet", which reads as a room that is not ready.
-    expect(section).toMatch(/\{category \|\| t\("game\.difficulty\.mixed"\)\}/);
+    expect(section).toMatch(/\{category \|\| t\("extra\.cpMixedCategory"\)\}/);
+    expect(section).toMatch(/slug=\{room\.first_category_icon \|\| "mystery-box"\}/);
     expect(section).not.toContain("roomNoCategoryYet");
     // Refiltering the tab starts the list at the top, not half under the
     // sticky stack.
@@ -370,6 +371,24 @@ describe("the create screen's carousel", () => {
     const page = read("src/components/team/CreateRoomPage.tsx");
     // Poster height with nothing picked; a banner once a mode is picked.
     expect(page).toMatch(/gameChoice \? "h-\[224px\] min-h-0 flex-none md:h-\[280px\]" : "min-h-\[340px\] flex-1"/);
+  });
+});
+
+describe("a knock answered from the activity list", () => {
+  it("the join-request notification offers accept and decline and answers through the RPC", () => {
+    const card = read("src/components/notifications/CompactNotificationCard.tsx");
+    expect(card).toMatch(/const isJoinRequest = notification\.type === 'room_join_request';/);
+    expect(card).toMatch(/hasDualActions = \(isFriendRequest \|\| isGameInvite \|\| isJoinRequest\)/);
+    expect(card).toMatch(/onAcceptJoin\?\.\(roomId, requesterId, notification\.id\)/);
+    expect(card).toMatch(/onDeclineJoin\?\.\(roomId, requesterId, notification\.id\)/);
+    const hook = read("src/hooks/useRoomJoinRequests.ts");
+    expect(hook).toMatch(/export async function answerJoinRequest\(/);
+    expect(hook).toMatch(/\.eq\("status", "pending"\)[^]*?supabase\.rpc\("respond_room_join"/);
+    for (const host of ["src/components/home/NotificationsPanel.tsx", "src/pages/Notifications.tsx"]) {
+      const src = read(host);
+      expect(src).toMatch(/onAcceptJoin=\{\(r, u, n\) => void handleJoinAnswer\(r, u, n, true\)\}/);
+      expect(src).toMatch(/onDeclineJoin=\{\(r, u, n\) => void handleJoinAnswer\(r, u, n, false\)\}/);
+    }
   });
 });
 

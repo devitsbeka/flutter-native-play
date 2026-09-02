@@ -12,6 +12,7 @@ import { useGameInvitations } from '@/hooks/useGameInvitations';
 import { useNavigate } from 'react-router-dom';
 import { routeForRoom, ROOM_KIND_COLUMNS } from "@/utils/roomRoutes";
 import { supabase } from '@/integrations/supabase/client';
+import { answerJoinRequest } from '@/hooks/useRoomJoinRequests';
 import { toast } from "@/lib/toast";
 import { CompactNotificationCard } from '@/components/notifications/CompactNotificationCard';
 import { NotificationDetailModal } from '@/components/notifications/NotificationDetailModal';
@@ -231,6 +232,43 @@ export function NotificationsPanel({ isOpen, onClose, defaultTab }: Notification
         navigate(routeForRoom(typed, roomCode));
       }
     } catch (error) {
+      toast.error(t("notificationsPanel.errorOccurred"));
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+
+  // A knock on a room I host, answered from the list. The request row is
+  // looked up from the room and the asker; "gone" means it was already
+  // answered somewhere else, and the card simply settles.
+  const handleJoinAnswer = async (
+    roomId: string,
+    requesterId: string,
+    notificationId: string,
+    approve: boolean,
+  ) => {
+    setActionLoading(notificationId);
+    try {
+      const outcome = await answerJoinRequest(roomId, requesterId, approve);
+      const { data: current } = await supabase
+        .from('notifications')
+        .select('data')
+        .eq('id', notificationId)
+        .single();
+      await supabase
+        .from('notifications')
+        .update({
+          read_at: new Date().toISOString(),
+          data: {
+            ...((current?.data as Record<string, unknown>) || {}),
+            action_taken: outcome === 'approved' ? 'accepted' : 'declined',
+          },
+        })
+        .eq('id', notificationId);
+      toast.success(outcome === 'approved' ? t("extra.notifAccepted") : t("extra.notifDeclined"));
+    } catch (error) {
+      console.error('[notifications] join answer failed', error);
       toast.error(t("notificationsPanel.errorOccurred"));
     } finally {
       setActionLoading(null);
@@ -464,6 +502,8 @@ export function NotificationsPanel({ isOpen, onClose, defaultTab }: Notification
                         onDeclineFriend={handleDeclineFriend}
                         onAcceptInvite={handleAcceptInvite}
                         onDeclineInvite={handleDeclineInvite}
+                        onAcceptJoin={(r, u, n) => void handleJoinAnswer(r, u, n, true)}
+                        onDeclineJoin={(r, u, n) => void handleJoinAnswer(r, u, n, false)}
                         onDismiss={deleteNotification}
                         actionLoading={actionLoading}
                         timeAgo={formatTimeAgo(new Date(notification.created_at), t)}

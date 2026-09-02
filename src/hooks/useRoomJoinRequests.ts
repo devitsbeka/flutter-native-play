@@ -21,6 +21,35 @@ export interface PendingJoinRequest {
   avatar_url: string | null;
 }
 
+/**
+ * Answer a knock from its NOTIFICATION rather than from the lobby.
+ *
+ * The notification carries the room and the asker, not the request row —
+ * so this looks the pending row up (the host can read their own rooms'
+ * requests) and answers it through respond_room_join. "gone" means there is
+ * nothing pending any more: answered from the lobby, withdrawn, or blocked.
+ */
+export async function answerJoinRequest(
+  roomId: string,
+  requesterId: string,
+  approve: boolean,
+): Promise<"approved" | "declined" | "gone"> {
+  const { data: req } = await supabase
+    .from("room_join_requests")
+    .select("id")
+    .eq("room_id", roomId)
+    .eq("user_id", requesterId)
+    .eq("status", "pending")
+    .maybeSingle();
+  if (!req) return "gone";
+  const { error } = await supabase.rpc("respond_room_join", {
+    p_request_id: req.id,
+    p_approve: approve,
+  });
+  if (error) throw error;
+  return approve ? "approved" : "declined";
+}
+
 export function useRoomJoinRequests(roomId: string | null | undefined, amHost: boolean) {
   const { user } = useAuth();
   const [pending, setPending] = useState<PendingJoinRequest[]>([]);

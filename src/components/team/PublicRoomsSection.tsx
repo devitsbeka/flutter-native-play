@@ -316,11 +316,10 @@ function PublicRoomCard({
         {/* Bottom: the first round on the left, the way in on the right */}
         <div className={`relative z-10 backdrop-blur-md border rounded-xl px-3 py-2.5 flex items-center justify-between gap-2 ${ink.pill}`}>
           <div className="flex items-center gap-2 min-w-0">
-            {room.first_category_icon ? (
-              <DynamicIcon slug={room.first_category_icon} className="w-5 h-5 shrink-0" />
-            ) : (
-              <Globe className={`w-4 h-4 shrink-0 ${ink.muted}`} />
-            )}
+            {/* A picked round wears its category's icon; an unpicked one
+                wears the library's mystery box — the same face the category
+                picker gives "mixed" — not a globe from nowhere. */}
+            <DynamicIcon slug={room.first_category_icon || "mystery-box"} className="w-5 h-5 shrink-0" />
             <div className="min-w-0">
               <p className={`text-[10px] font-semibold uppercase tracking-wide leading-none ${ink.faint}`}>
                 {t("extra.firstRoundLabel")}
@@ -329,7 +328,7 @@ function PublicRoomCard({
                 {/* No round picked yet means the first round is mixed —
                     say that, not "not chosen yet", which reads as a
                     room that is not ready. */}
-                {category || t("game.difficulty.mixed")}
+                {category || t("extra.cpMixedCategory")}
               </p>
             </div>
           </div>
