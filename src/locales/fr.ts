@@ -3029,7 +3029,7 @@ export const fr: KaTranslations = {
     gpTitle: "Choisir le fond",
     gpSubtitle: "Choisis les couleurs de ton salon",
     ripTitle: "Changer l'icône/le nom",
-    ripSearchPlaceholder: "Chercher une icône...",
+    ripSearchPlaceholder: "Choisis une icône...",
     ripRoomNamePlaceholder: "Nom du salon",
     ripEditHint: "Change le nom ou choisis une nouvelle icône",
     ripRecentlyUsed: "Utilisées récemment",

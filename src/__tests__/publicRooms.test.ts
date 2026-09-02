@@ -362,6 +362,20 @@ describe("the public list", () => {
     expect(section).toMatch(/min-h-\[216px\] aspect-\[1\.45\/1\] md:aspect-\[1\.15\/1\]/);
   });
 
+  it("filters by game too: battles are the arenas, rooms are everything else", () => {
+    const rooms = [
+      room({ id: "arena", game_type_key: "team_battle", host_user_id: "h1" }),
+      room({ id: "classic", game_type_key: null, host_user_id: "h2" }),
+      room({ id: "words", game_type_key: "words", game_mode: "words", host_user_id: "h3" }),
+    ];
+    expect(filterPublicRooms(rooms, "battles", "").map((r) => r.id)).toEqual(["arena"]);
+    expect(filterPublicRooms(rooms, "rooms", "").map((r) => r.id)).toEqual(["classic", "words"]);
+    // And the dropdown offers both, between the people-filters and "all".
+    const bar = read("src/components/team/UnifiedFiltersBar.tsx");
+    expect(bar).toMatch(/\{ value: "battles", labelKey: "teamBattle\.title" \}/);
+    expect(bar).toMatch(/\{ value: "rooms", labelKey: "extra\.filterRooms" \}/);
+  });
+
   it("a room with nobody online sinks to the very back", () => {
     // Owner's rule: we need ONLINE players in rooms to play — a couch whose
     // whole party closed the app never shows first, whatever its fill.

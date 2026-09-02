@@ -800,7 +800,9 @@ export type Database = {
           started_at: string | null
           status: Database["public"]["Enums"]["room_status"] | null
           team_a_icon: string | null
+          team_a_name: string | null
           team_b_icon: string | null
+          team_b_name: string | null
           total_questions: number | null
           tv_session_id: string | null
           used_question_ids: string[] | null
@@ -836,7 +838,9 @@ export type Database = {
           started_at?: string | null
           status?: Database["public"]["Enums"]["room_status"] | null
           team_a_icon?: string | null
+          team_a_name?: string | null
           team_b_icon?: string | null
+          team_b_name?: string | null
           total_questions?: number | null
           tv_session_id?: string | null
           used_question_ids?: string[] | null
@@ -872,7 +876,9 @@ export type Database = {
           started_at?: string | null
           status?: Database["public"]["Enums"]["room_status"] | null
           team_a_icon?: string | null
+          team_a_name?: string | null
           team_b_icon?: string | null
+          team_b_name?: string | null
           total_questions?: number | null
           tv_session_id?: string | null
           used_question_ids?: string[] | null
@@ -5423,6 +5429,10 @@ export type Database = {
       tb_start_match: {
         Args: { p_board: Json; p_room_id: string; p_turn_seconds?: number }
         Returns: string
+      }
+      tb_set_team_name: {
+        Args: { p_name: string; p_room_id: string; p_team: string }
+        Returns: undefined
       }
       tb_submit_answer: {
         Args: { p_answer: string; p_question_index: number; p_room_id: string }

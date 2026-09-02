@@ -41,6 +41,7 @@ import sceneArena from "@/assets/tb-lobby/scene-arena.webp";
 import iconBattleCrate from "@/assets/play-chooser/icon-crate.png";
 import crownIcon from "@/assets/crown-icon.png";
 import { dealtCrests, fetchCrestPool } from "@/utils/roomCrests";
+import { dealTeamNames } from "@/utils/teamNameGenerator";
 
 /**
  * /team-battle — the Team Battle flow (docs/GAME_TYPES_DESIGN.md §2), its own
@@ -121,6 +122,7 @@ function TBGate({ joining }: { joining: boolean }) {
       team?: TBTeam;
       teamSize?: number;
       teamIcons?: { a: string | null; b: string | null };
+      teamNames?: { a: string | null; b: string | null };
     } | null) ?? null;
   const publish = handoff?.isPublic ?? false;
   const side: TBTeam = handoff?.team === "b" ? "b" : "a";
@@ -130,11 +132,14 @@ function TBGate({ joining }: { joining: boolean }) {
   // dresses only the side the caller captains, and at creation the host
   // captains exactly one of the two.
   const teamIcons = handoff?.teamIcons;
+  // The sides' dealt names ride the same way; an arena reached without
+  // them (a shared link) is dealt a pair right here, in the app language.
+  const teamNamesRef = useRef(handoff?.teamNames ?? dealTeamNames(readAppLanguage()));
 
   useEffect(() => {
     if (joining || !user || attempted.current) return;
     attempted.current = true;
-    void createRoom(publish, side, teamSize, teamIcons).then((created) => {
+    void createRoom(publish, side, teamSize, teamIcons, teamNamesRef.current).then((created) => {
       if (!created) setFailed(true);
       // The room's code goes into the URL so a refresh rejoins this room
       // instead of minting a new one.
@@ -180,7 +185,7 @@ function TBGate({ joining }: { joining: boolean }) {
           onClick={() => {
             setFailed(false);
             attempted.current = false;
-            void createRoom(publish, side, teamSize, teamIcons).then((created) => {
+            void createRoom(publish, side, teamSize, teamIcons, teamNamesRef.current).then((created) => {
               if (!created) setFailed(true);
               else navigate(`/team-battle?code=${created.room_code}`, { replace: true });
             });
@@ -322,6 +327,24 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
     });
     if (error) toast.error(error.message);
   };
+
+  // The side's NAME goes the same road as its crest: through the
+  // captain-only RPC, never straight onto the room row.
+  const setTeamName = async (team: TBTeam, name: string) => {
+    if (!room || containsBlockedText(name)) return;
+    const { error } = await supabase.rpc("tb_set_team_name", {
+      p_room_id: room.id,
+      p_team: team,
+      p_name: name,
+    });
+    if (error) toast.error(error.message);
+  };
+
+  // What a side is CALLED: the captain's name for it, else the name the
+  // randomizer dealt at creation, else the old letter as a last resort.
+  const teamName = (team: TBTeam) =>
+    (team === "a" ? room?.team_a_name : room?.team_b_name) ??
+    (team === "a" ? t("teamBattle.teamA") : t("teamBattle.teamB"));
 
   const inviteToGame = async (entry: InviteEntry) => {
     if (!room) return;
@@ -803,8 +826,8 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
                   </span>
                 )}
               </motion.button>
-              <p className="font-[Nunito] font-black leading-[22px] text-[#0c172c] text-[18px] tracking-[-0.16px] whitespace-nowrap">
-                {isA ? t("teamBattle.teamA") : t("teamBattle.teamB")}
+              <p className="max-w-[150px] truncate font-[Nunito] font-black leading-[22px] text-[#0c172c] text-[18px] tracking-[-0.16px] whitespace-nowrap">
+                {teamName(team)}
               </p>
             </div>
           );
@@ -894,14 +917,16 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
       {crestFor && (
         <RoomIconPickerModal
           isOpen
-          iconOnly
+          autoName={false}
           onClose={() => setCrestFor(null)}
           currentIconUrl={(crestFor === "a" ? room?.team_a_icon : room?.team_b_icon) ?? null}
-          roomName={crestFor === "a" ? t("teamBattle.teamA") : t("teamBattle.teamB")}
-          onConfirm={(iconUrl) => {
+          roomName={teamName(crestFor)}
+          onConfirm={(iconUrl, newName) => {
             const team = crestFor;
+            const before = teamName(team);
             setCrestFor(null);
             void setTeamIcon(team, iconUrl);
+            if (newName && newName !== before) void setTeamName(team, newName);
           }}
         />
       )}
