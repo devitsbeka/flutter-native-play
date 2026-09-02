@@ -588,10 +588,14 @@ describe("the arena's two sides", () => {
     expect(battle).not.toMatch(/update\(\{ team_[ab]_icon/);
   });
 
-  it("the crests sit above the names, clear of the seats and the captains", () => {
+  it("the crests head their benches, beside the name and the captain chip", () => {
+    // Each side is a group of the universal lobby's players tab: its
+    // crest, its name and its captain chip make the heading, its rows sit
+    // under that, and its own invite line (own side only) closes it.
     const battle = read("src/pages/TeamBattlePage.tsx");
-    expect(battle).toMatch(/top-\[352px\] w-\[120px\] flex flex-col items-center/);
+    expect(battle).toMatch(/const benchTitle = \(team: TBTeam\)/);
     expect(battle).toMatch(/size-\[60px\] object-contain/);
+    expect(battle).toMatch(/if \(team !== myTeam \|\| taken >= perSide\) return null;/);
   });
 
   it("the host picks their side when they make the room", () => {

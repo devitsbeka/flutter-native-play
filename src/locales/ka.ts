@@ -1813,6 +1813,19 @@ export const ka = {
   // Lilac lobby screens (Figma 940:7474 Versus King / 938:6019 Team Battle)
   lobby: {
     vkTitle: "ვერსუს King",
+    // The universal lobby (Figma 1018:5815 / 1018:4416)
+    uGameRules: "თამაშის წესები",
+    uPlayersTab: "მოთამაშეები",
+    uQuestionsPerRound: "კითხვები რაუნდში",
+    uVisibility: "ხილვადობა",
+    uInviteHint: "მოიწვიე მეგობარი — თამაშს ორი მოთამაშე სჭირდება",
+    uSelectCategory: "აირჩიე კატეგორია",
+    uPlayOnTv: "TV-ზე თამაში",
+    uInvite: "მოწვევა",
+    uStartGame: "თამაშის დაწყება",
+    uYou: "შენ",
+    uTeamSize: "მოთამაშე გუნდში",
+    uRoundsShort: "{count}რ",
     invite: "მოწვევა",
     winnerTakes: "გამარჯვებული იღებს:",
     captainLabel: "კაპიტანი:",

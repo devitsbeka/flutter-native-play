@@ -223,22 +223,22 @@ describe("the room icon and name sheet", () => {
  */
 describe("the room title in the lobby header", () => {
   const lobby = read("src/components/team/RoomLobbyV2.tsx");
+  const universal = read("src/components/lobby/UniversalLobby.tsx");
 
-  it("centres itself on a phone too", () => {
-    expect(lobby).toMatch(/flex-\[2\] items-center justify-center/);
-    expect(lobby).not.toMatch(/md:flex-\[2\]/);
+  it("is the universal lobby's title, set over the blurred scene", () => {
+    // One lobby for every mode now (Figma 1018:5815): the classic room
+    // passes its name in rather than drawing a header of its own.
+    expect(lobby).toMatch(/roomName=\{roomName\}/);
+    expect(universal).toMatch(/font-hero text-\[52px\] capitalize leading-\[62px\]/);
   });
 
-  it("gives both sides an equal share, so the middle is the middle", () => {
-    // Centring within the leftover space puts the title ~18px off, because
-    // the actions cluster is wider than the back button. Measured at 768px
-    // and 1280px, the equal-share version lands exactly on centre.
-    const shares = (lobby.match(/flex shrink-0 flex-1 items-center/g) ?? []).length;
-    expect(shares, "the back button's wrapper and the actions cluster").toBe(2);
+  it("is the host's way in to rename, and a guest's plain title", () => {
+    expect(lobby).toMatch(/onRename=\{isHost \? \(\) => setShowIconPicker\(true\) : undefined\}/);
   });
 
   it("does not stretch the back button itself", () => {
-    // flex-1 on the button would give the arrow a very wide tinted box.
-    expect(lobby).toMatch(/<div className="flex shrink-0 flex-1 items-center">\s*<motion\.button\s*\n\s*onClick=\{handleExitRoom\}/);
+    // The back arrow is a 40px round button at the header's left, never a
+    // flex-1 wrapper that would give it a very wide tinted box.
+    expect(universal).toMatch(/onClick=\{onBack\}\s*\n\s*className="rounded-full p-2/);
   });
 });

@@ -240,31 +240,31 @@ describe("the room name in the lobby", () => {
     join(process.cwd(), "src/components/team/RoomLobbyV2.tsx"),
     "utf8"
   );
-
-  /** Everything above the scrolling content area. */
-  const header = lobby.slice(0, lobby.indexOf("{/* Scrollable content area"));
-  const scroller = lobby.slice(lobby.indexOf("{/* Scrollable content area"));
+  const universal = readFileSync(
+    join(process.cwd(), "src/components/lobby/UniversalLobby.tsx"),
+    "utf8"
+  );
 
   it("stays put while the players scroll", () => {
-    // The rendered heading specifically — `roomName` is also handed to the
-    // icon picker as a prop, further down the file and outside the scroller.
-    const heading = /<h2[^>]*>\s*\{roomName\}/;
-    expect(header, "the name row belongs to the header, which is shrink-0")
-      .toMatch(heading);
-    expect(scroller, "a heading left in the scroller would scroll away again")
-      .not.toMatch(heading);
+    // The universal lobby (Figma 1018:5815) keeps the name and the card in
+    // its own scroller under a header that is a plain shrink-0 row; the
+    // classic room only passes the name in.
+    expect(lobby).toMatch(/roomName=\{roomName\}/);
+    expect(universal).toMatch(/<motion\.header[\s\S]*?shrink-0/);
   });
 
-  it("keeps the host's rename and background controls with it", () => {
-    expect(header).toMatch(/onClick=\{\(\) => setShowIconPicker\(true\)\}/);
-    expect(header).toMatch(/onClick=\{\(\) => setShowGradientPicker\(true\)\}/);
+  it("keeps the host's rename control with it", () => {
+    // Tapping the name is the host's way to rename; the palette is gone —
+    // the background is the game's own scene now, not a picked gradient.
+    expect(lobby).toMatch(/onRename=\{isHost \? \(\) => setShowIconPicker\(true\) : undefined\}/);
+    expect(lobby).not.toMatch(/onClick=\{\(\) => setShowGradientPicker\(true\)\}/);
   });
 
   it("is not position:sticky", () => {
-    // The root cancels #root's safe-top with a negative margin, and iOS
-    // WebKit clamps sticky boxes that have one — which is what shoved this
-    // header down a full safe-top the last time. Being outside the scroller
-    // holds it in place for free.
+    // iOS WebKit clamps sticky boxes that carry a negative margin — the
+    // giant gap above the old header. A shrink-0 row outside the scroller
+    // holds still for free.
+    const header = universal.slice(universal.indexOf("<motion.header"), universal.indexOf("</motion.header>"));
     expect(header).not.toMatch(/className="[^"]*\bsticky\b/);
   });
 });

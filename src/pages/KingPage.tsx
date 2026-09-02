@@ -3,7 +3,7 @@ import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import type { Tables } from "@/integrations/supabase/types";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronLeft, Crown, Pencil } from "lucide-react";
+import { ChevronLeft, Crown } from "lucide-react";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { containsBlockedText } from "@/utils/contentFilter";
 import iconKingMascot from "@/assets/play-chooser/icon-king.webp";
@@ -23,20 +23,21 @@ import { toast } from "@/lib/toast";
 import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
 import { JoinRequestGate } from "@/components/team/JoinRequestGate";
 import { RoomIconPickerModal } from "@/components/team/RoomIconPickerModal";
+import { UniversalLobby, type LobbyPlayer } from "@/components/lobby/UniversalLobby";
+import { LOBBY_SCENES } from "@/utils/lobbyScene";
+import { useFriends } from "@/hooks/useFriends";
+import { useNotifications } from "@/hooks/useNotifications";
+import coinIconAsset from "@/assets/tb-lobby/coin.png";
 import {
   CaptainChip,
   CaptainInfoModal,
   AnimatedCoinPill,
   type InviteEntry,
-  LILAC_BG,
-  LilacHeader,
-  FitBox,
   PlusSeat,
   Seat,
   SeatMenu,
   StartButton,
 } from "@/components/lobby/LilacLobby";
-import sceneKing from "@/assets/vk-lobby/scene-king.webp";
 
 const CARD_SHADOW = "0px 2px 8px 0px rgba(102,51,153,0.06), 0px 8px 24px 0px rgba(102,51,153,0.12)";
 
@@ -208,17 +209,6 @@ interface TeamView {
  * judgment, and the payout. This page's whole job is the ritual — a minute
  * of thinking with nothing to tap, a short commit, and the explanation.
  */
-// Seat coordinates around the King's lounge, straight from the frame
-// (940:7477…943:21899) — filled slots first, in the design's own order.
-const KING_SEATS: [number, number][] = [
-  [137, 458], [75, 480], [49, 546], [61, 618], [127, 670],
-  [309, 458], [379, 480], [410, 546], [397, 618], [323, 668],
-];
-
-// The scene's edge fade (940:7551, applied twice in the frame).
-const KING_SCENE_FADE =
-  "url(\"data:image/svg+xml;utf8,<svg viewBox='0 0 435 780' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)' opacity='1'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(1.5933e-14 42.3 -23.59 1.991e-14 217.5 390)'><stop stop-color='rgba(213,186,255,0)' offset='0'/><stop stop-color='rgba(229,202,255,0.51)' offset='0.5'/><stop stop-color='rgba(245,217,255,1)' offset='0.97596'/></radialGradient></defs></svg>\")";
-
 export default function KingPage() {
   const navigate = useNavigate();
   const { t } = useLanguage();
@@ -227,7 +217,8 @@ export default function KingPage() {
   const [state, setState] = useState<KingState | null>(null);
   const [reveal, setReveal] = useState<KingState | null>(null);
   const [busy, setBusy] = useState(false);
-  const [helpOpen, setHelpOpen] = useState(false);
+  const { friends } = useFriends();
+  const { unreadCount } = useNotifications();
   // The pool for the player's language can be empty; a toast alone made the
   // start button look dead, so the intro card says it in place.
   const [noPool, setNoPool] = useState(false);
@@ -773,156 +764,116 @@ export default function KingPage() {
   // screen, strip scrolling edge to edge. Only the scene region (design
   // y160–841, re-based below) is scale-fitted into the flexible middle.
   if (stage === "intro") {
+    const isKingHost = kingRoom?.host_user_id === user?.id;
+    const humans = kingParts.filter((p) => !p.is_bot).length;
+    const couch: LobbyPlayer[] = [
+      ...kingParts.map((p) => ({
+        id: p.user_id,
+        name: p.nickname,
+        avatarUrl: p.avatar_url,
+        isHost: p.user_id === kingRoom?.host_user_id,
+        isYou: p.user_id === user?.id,
+        // A seated human opens their profile in place; the host's tap on
+        // somebody else is the seat menu.
+        onPress:
+          isKingHost && p.user_id !== user?.id
+            ? () => setSeatMenu(p)
+            : p.is_bot
+              ? undefined
+              : () => openProfile(p.user_id),
+      })),
+      ...kingPending.map((p) => ({
+        id: p.user_id,
+        name: p.nickname,
+        avatarUrl: p.avatar_url,
+        isHost: false,
+        isYou: false,
+        pending: true,
+        onPress: isKingHost ? () => setSeatMenu(p) : () => openProfile(p.user_id),
+      })),
+    ];
+    const inviteFaces = [...friends]
+      .filter((f) => f.status === "accepted")
+      .sort((a, b) => Number(!!b.isOnline) - Number(!!a.isOnline))
+      .slice(0, 3)
+      .map((f) => ({ url: f.avatarUrl, online: !!f.isOnline }));
+    const coins = 200 * Math.max(1, kingParts.length);
     return (
-      <div
-        className="h-[100dvh] w-full overflow-hidden safe-bleed flex flex-col"
-        style={{ background: LILAC_BG }}
-      >
-        {/* Somebody asking onto this couch, when the lounge was published */}
-        <JoinRequestGate roomId={kingRoom?.id} isHost={kingRoom?.host_user_id === user?.id} />
-
-        <LilacHeader
-          title={t("lobby.vkTitle")}
-          icon={iconKingMascot}
-          onBack={() => navigate(-1)}
-          onHelp={() => setHelpOpen((v) => !v)}
-        />
-
-
-        {/* Unclipped for the same reason as the arena — see TeamBattlePage.
-            The King's lounge is also drawn above this box (-133), and its
-            fade is applied twice, so the join was softer here but the room
-            name still sat on flat lilac rather than on the scene. */}
-        <div className="flex-1 min-h-0">
-          <FitBox width={500} height={728}>
-            {/* scene (940:7476) + its double edge fade (940:7551/7666) */}
-            <div className="absolute left-[32px] top-[-133px] w-[435px] h-[780px] pointer-events-none">
-              <img alt="" className="absolute inset-0 max-w-none object-cover size-full" src={sceneKing} />
-              <div className="absolute inset-0" style={{ backgroundImage: KING_SCENE_FADE }} />
-              <div className="absolute inset-0" style={{ backgroundImage: KING_SCENE_FADE }} />
-            </div>
-
-            {/* The team's name — AI-dealt on first open, host taps to
-                rename. It belongs to the couch below it rather than to the
-                header: up at the top of the scene it read as a second title
-                under the real one, so it now sits centred in the clear band
-                between the front seats and the captain row. */}
-            <div className="absolute left-[32px] top-[590px] w-[435px] flex justify-center">
-              <motion.button
-                whileTap={{ scale: 0.95, y: 2 }}
-                transition={{ type: "spring", stiffness: 520, damping: 28 }}
-                onClick={
-                  kingRoom?.host_user_id === user?.id ? () => setRenameOpen(true) : undefined
-                }
-                className="inline-flex items-center gap-2 max-w-[330px] h-[42px] px-4 rounded-[16px] bg-white/70 border border-[#e8e0f5] shadow-[0px_2.5px_0px_0px_#d8d0e8]"
-              >
-                {kingRoom?.room_icon && (
-                  <img alt="" src={kingRoom.room_icon} className="w-6 h-6 shrink-0 object-contain" />
-                )}
-                <span
-                  className="text-[19px] leading-[1.5] text-[#523b76] whitespace-nowrap overflow-hidden text-ellipsis"
-                  style={{ fontFamily: "'TASolivare', sans-serif" }}
-                >
-                  {kingRoom?.room_name || t("lobby.teamName")}
-                </span>
-                {kingRoom?.host_user_id === user?.id && (
-                  <Pencil className="w-3.5 h-3.5 shrink-0 text-[#523b76]/50" />
-                )}
-              </motion.button>
-            </div>
-
-            {/* Winner takes: (940:7510) + the coins pill (940:7560) */}
-            <p className="absolute left-[32px] top-[107px] w-[435px] font-[Nunito] font-medium leading-[24px] text-[#0c172c] text-[18px] text-center tracking-[-0.16px]">
+      <UniversalLobby
+        sceneArt={LOBBY_SCENES.king}
+        roomName={kingRoom?.room_name || t("lobby.teamName")}
+        onRename={isKingHost ? () => setRenameOpen(true) : undefined}
+        onBack={() => navigate(-1)}
+        unreadCount={unreadCount}
+        labels={{
+          rules: t("lobby.uGameRules"),
+          players: t("lobby.uPlayersTab"),
+          invite: t("lobby.uInvite"),
+          you: t("lobby.uYou"),
+          rounds: (count) => t("lobby.uRoundsShort", { count }),
+        }}
+        rules={[
+          {
+            // Versus King is friends-only: its lounge never publishes.
+            key: "visibility",
+            label: t("lobby.uVisibility"),
+            options: [
+              { value: "public", label: t("extra.roomPublic") },
+              { value: "private", label: t("extra.roomPrivate") },
+            ],
+            value: "private",
+          },
+        ]}
+        rulesExtra={
+          <div className="flex h-[84px] items-center justify-between rounded-[20px] border border-[rgba(156,100,181,0.5)] pl-[26px] pr-[20px]">
+            <span className="font-[Nunito] text-[16px] font-medium leading-[19.5px] tracking-[-0.16px] text-[#402666]">
               {t("lobby.winnerTakes")}
-            </p>
-            <AnimatedCoinPill left={174} top={139} width={152} value={200 * Math.max(1, kingParts.length)} />
-
-            {/* seats around the couch — participants first, then pending
-                invitees greyed until they accept, the rest open */}
-            <AnimatePresence>
-            {KING_SEATS.map(([left, top], i) => {
-              const active = kingParts[i];
-              const pending = !active ? kingPending[i - kingParts.length] : undefined;
-              const part = active ?? pending;
-              return part ? (
-                <Seat
-                  key={part.user_id}
-                  left={left}
-                  top={top - 160}
-                  avatarUrl={part.avatar_url}
-                  nickname={part.nickname}
-                  pending={!active}
-                  crown={!!active && part.user_id === kingRoom?.host_user_id}
-                  onLongPress={
-                    kingRoom?.host_user_id === user?.id && part.user_id !== user?.id
-                      ? () => setSeatMenu(part)
-                      : undefined
-                  }
-                  onClick={
-                    // Pending seat: the host manages it, everyone else sees
-                    // who was invited. A seated human opens their profile in
-                    // place — the lounge stays right underneath.
-                    !active
-                      ? kingRoom?.host_user_id === user?.id
-                        ? () => setSeatMenu(part)
-                        : () => openProfile(part.user_id)
-                      : part.is_bot
-                        ? undefined
-                        : () => openProfile(part.user_id)
-                  }
-                />
-              ) : (
-                <PlusSeat key={`plus-${i}`} left={left} top={top - 160} onClick={inviteFriends} />
-              );
-            })}
-            </AnimatePresence>
-
-            {/* Captain (940:7788 + 936:21188) — elected by the couch, the
-                host only until a vote says otherwise. Tapping the chip
-                opens the same vote sheet the arena has. */}
-            <p className="absolute left-[38px] top-[638px] font-[Nunito] font-medium leading-[24px] text-[#0c172c] text-[15px] tracking-[-0.16px]">
-              {t("lobby.captainLabel")}
-            </p>
-            <CaptainChip
-              left={38}
-              top={668}
-              avatarUrl={kingCaptain?.avatar_url ?? profile?.avatar_url}
-              name={kingCaptain?.nickname ?? profile?.nickname}
-              placeholder={t("lobby.chooseCaptain")}
-              onClick={() => setCaptainInfoOpen(true)}
-            />
-
-            {(helpOpen || noPool) && (
-              <div
-                className="absolute left-[32px] top-[20px] w-[435px] rounded-[24px] p-5 bg-white/90 border border-[#e8e0f5] z-10"
-                style={{ boxShadow: CARD_SHADOW }}
-                onClick={() => setHelpOpen(false)}
-              >
-                <p className="font-bold text-[#402666] mb-1">{t("king.introTitle")}</p>
-                <p className="text-sm text-[#402666]/60">{t("king.introBody")}</p>
-                {noPool && (
-                  <p className="text-sm font-medium text-amber-700 mt-3">{t("king.noQuestions")}</p>
-                )}
-              </div>
-            )}
-          </FitBox>
-        </div>
-
-        <StartButton
-          label={t("lobby.startGame")}
-          onClick={() => {
+            </span>
+            <span className="flex items-center gap-2 font-[Nunito] text-[18px] font-black leading-6 tracking-[-0.16px] text-[#402666]">
+              <img alt="" src={coinIconAsset} className="h-6 w-6 object-contain" />
+              {coins}
+            </span>
+          </div>
+        }
+        players={couch}
+        playersHint={humans < 2 ? t("lobby.uInviteHint") : null}
+        inviteFaces={inviteFaces}
+        onInvite={inviteFriends}
+        playersExtra={
+          <button
+            type="button"
+            onClick={() => setCaptainInfoOpen(true)}
+            className="mt-[16px] flex h-[56px] w-full items-center gap-3 rounded-[20px] border border-[rgba(156,100,181,0.5)] pl-[12px] pr-[15px] text-left"
+          >
+            <span className="block h-8 w-8 overflow-hidden rounded-full bg-[#e9d8ff] shadow-[0px_0px_0px_2px_rgba(148,163,184,0.75)]">
+              {(kingCaptain?.avatar_url ?? profile?.avatar_url) && (
+                <img alt="" src={kingCaptain?.avatar_url ?? profile?.avatar_url ?? undefined} className="h-full w-full object-cover" />
+              )}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block font-[Nunito] text-[12px] leading-4 text-[#402666]/60">{t("lobby.captainLabel")}</span>
+              <span className="block truncate font-[Nunito] text-[15px] font-bold leading-5 text-[#402666]">
+                {kingCaptain?.nickname ?? profile?.nickname ?? t("lobby.chooseCaptain")}
+              </span>
+            </span>
+          </button>
+        }
+        initialTab="players"
+        start={{
+          label: t("lobby.startGame"),
+          onPress: () => {
             // Two or more humans on the couch fight ONE King together; a
             // lone player keeps the personal duel.
-            if (kingParts.filter((p) => !p.is_bot).length > 1) teamStart();
+            if (humans > 1) teamStart();
             else startForEveryone();
-          }}
-          disabled={
-            busy ||
-            (kingParts.filter((p) => !p.is_bot).length > 1
-              ? kingRoom?.host_user_id !== user?.id
-              : !state)
-          }
-        />
+          },
+          disabled: busy || (humans > 1 ? !isKingHost : !state),
+          loading: busy,
+          caption: noPool ? t("king.noQuestions") : null,
+        }}
+      >
+        {/* Somebody asking onto this couch, when the lounge was published */}
+        <JoinRequestGate roomId={kingRoom?.id} isHost={isKingHost} />
 
         <CaptainInfoModal
           open={captainInfoOpen}
@@ -999,7 +950,7 @@ export default function KingPage() {
           />
         )}
 
-      </div>
+      </UniversalLobby>
     );
   }
 

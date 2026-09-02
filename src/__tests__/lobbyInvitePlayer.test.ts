@@ -177,8 +177,13 @@ describe("what the host's invite sends", () => {
       .toMatch(/throw error;/);
   });
 
-  it("is wired into the scoreboard", () => {
-    expect(lobby).toMatch(/onInvitePlayer=\{handleInvitePlayer\}/);
+  it("is wired into the lobby's player rows", () => {
+    // The universal lobby's rows carry the two nudges the scoreboard's
+    // paper-plane used to: "come and play" to a seated player, and the
+    // invitation again to a placeholder who never arrived. Host-side only.
+    expect(lobby).toMatch(/isHost && p\.user_id !== user\?\.id/);
+    expect(lobby).toMatch(/handleInvitePlayer\(p\.user_id\)/);
+    expect(lobby).toMatch(/handleResendInvitation\(p\.user_id\)/);
   });
 });
 

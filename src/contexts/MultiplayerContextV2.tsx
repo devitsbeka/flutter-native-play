@@ -277,6 +277,12 @@ export interface RoomParticipant {
   status?: "joined" | "ready" | "playing" | "finished" | "disconnected";
 }
 
+/** The lobby's questions-per-round pick; anything else means "not picked". */
+export const QUESTIONS_PER_ROUND = [5, 10, 20] as const;
+export function questionsPerRound(stored: number | null | undefined): number {
+  return stored && (QUESTIONS_PER_ROUND as readonly number[]).includes(stored) ? stored : 5;
+}
+
 export interface GameRoom {
   id: string;
   room_code: string;
@@ -1650,9 +1656,10 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     
     console.log('[startGame] State category:', state.currentRoom.category_id, '| Fresh category:', freshRoom.category_id, freshRoom.category_name);
     
-    // FIX: Always use fresh default for new games
-    // Don't rely on stale total_questions from previous round
-    const questionCount = 5;
+    // The lobby's "questions per round" (5 / 10 / 20) lives in
+    // total_questions. A trivia round overwrites it with the trivia's own
+    // length, so anything but those three is treated as no choice made.
+    const questionCount = questionsPerRound(freshRoom.total_questions);
     const usedIds = (freshRoom.used_question_ids as string[]) || [];
     
     // AUTO-DETECT observer mode if not explicitly provided
@@ -2418,9 +2425,8 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     
     console.log('[startNewRound] Fresh category:', freshRoom.category_id, freshRoom.category_name);
     
-    // FIX: Always use fresh default for new rounds
-    // Don't rely on stale total_questions from previous round
-    const questionCount = 5;
+    // The lobby's pick, as in startGame.
+    const questionCount = questionsPerRound(freshRoom.total_questions);
     
     // Determine if host should observe (only applies if current user is host)
     const currentUserIsHost = freshRoom.host_user_id === user.id;
@@ -2766,9 +2772,8 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     }
     
     const roomId = state.currentRoom.id;
-    // FIX: Use fresh default for new rounds from queue
-    // Don't read from stale state which may have old value from previous round
-    const questionCount = 5;
+    // The lobby's pick, as in startGame.
+    const questionCount = questionsPerRound(state.currentRoom.total_questions);
     
     // Fetch first queue item
     const { data: queueItems } = await supabase

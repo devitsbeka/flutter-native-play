@@ -1538,6 +1538,19 @@ export const pt: KaTranslations = {
   // Lilac lobby screens (Figma 940:7474 Versus King / 938:6019 Team Battle)
   lobby: {
     vkTitle: "Versus King",
+    // The universal lobby (Figma 1018:5815 / 1018:4416)
+    uGameRules: "Regras do jogo",
+    uPlayersTab: "Jogadores",
+    uQuestionsPerRound: "Perguntas por ronda",
+    uVisibility: "Visibilidade",
+    uInviteHint: "Convida um amigo — um jogo precisa de dois jogadores",
+    uSelectCategory: "Escolher categoria",
+    uPlayOnTv: "Jogar na TV",
+    uInvite: "Convidar",
+    uStartGame: "Começar jogo",
+    uYou: "Tu",
+    uTeamSize: "Jogadores por equipa",
+    uRoundsShort: "{count}r",
     invite: "Convidar",
     winnerTakes: "O vencedor leva:",
     captainLabel: "Capitão:",

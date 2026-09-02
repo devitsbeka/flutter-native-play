@@ -55,6 +55,8 @@ import featuredWords from "@/assets/play-chooser/featured-words.webp";
 import featuredLibrary from "@/assets/play-chooser/featured-library.webp";
 import featuredMyTrivias from "@/assets/play-chooser/featured-mytrivias.webp";
 import playersIcon from "@/assets/play-chooser/players.svg";
+import { LOBBY_SCENES, rememberLobbyScene } from "@/utils/lobbyScene";
+import { UniversalLobby, LobbyInfoRow, type LobbyPlayer } from "@/components/lobby/UniversalLobby";
 import SpotlightSearch from "@/components/search/SpotlightSearch";
 import { MyTriviaLiveLogo } from "@/components/shared/MyTriviaLiveLogo";
 import { getRandomGradient } from "@/config/roomGradients";
@@ -160,7 +162,7 @@ interface CreateRoomPageProps {
 }
 
 export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType, autoOpenPersonalTrivia, preSelectedCategory }: CreateRoomPageProps) {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { t } = useLanguage();
   const bubbleVideo = useResponsiveVideo("/videos/floating-blob.mp4");
   const navigate = useNavigate();
@@ -194,6 +196,12 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [selectedFriends, setSelectedFriends] = useState<Set<string>>(new Set());
+  // The two modes with no room of their own — the duel against a bot and
+  // the Words board — open the universal lobby over this screen before
+  // anything starts, so every card leads to the same place. Its Start is
+  // what presses Create.
+  const [preLobby, setPreLobby] = useState<"quick" | "words" | null>(null);
+  const [friendPickOpen, setFriendPickOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
   // Which game the room is for. A pre-selected category or a challenge lands
@@ -514,7 +522,12 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
 
   const startMode = (key: GameChoice) => {
     if (isCreating) return;
+    rememberLobbyScene(key);
     setGameChoice(key);
+    if (key === "quick" || key === "words") {
+      setPreLobby(key);
+      return;
+    }
     autoStart.current = true;
     if (key === "random") {
       if (categories.length === 0) return; // the roll below deals once they arrive
@@ -1781,6 +1794,160 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
 
       {/* End of frosted popup panel */}
       </div>
+
+      {/* The pre-room lobby (Figma 1018:5815) for the modes that have no
+          room until they start: it grows out of the tapped card like every
+          other lobby, seats you (and, for Words, the one friend you pick),
+          and its Start presses Create. */}
+      <AnimatePresence>
+        {preLobby && (
+          <motion.div
+            key="pre-lobby"
+            className="fixed inset-0 z-[60]"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <UniversalLobby
+              sceneArt={LOBBY_SCENES[preLobby]}
+              roomName={preLobby === "quick" ? t("extra.modeQuickTitle") : t("gameTypes.wordsTitle")}
+              onBack={() => setPreLobby(null)}
+              unreadCount={unreadCount}
+              labels={{
+                rules: t("lobby.uGameRules"),
+                players: t("lobby.uPlayersTab"),
+                invite: t("lobby.uInvite"),
+                you: t("lobby.uYou"),
+                rounds: (count) => t("lobby.uRoundsShort", { count }),
+              }}
+              // Neither mode publishes a room or picks a category or a TV
+              // here, so the rules tab states what the game is instead.
+              rules={[]}
+              rulesExtra={
+                <>
+                  <LobbyInfoRow label={t("lobby.uPlayersTab")}>{preLobby === "quick" ? "1" : "1–2"}</LobbyInfoRow>
+                  <p className="px-[6px] pt-[2px] font-[Nunito] text-[13px] leading-[18px] text-[#402666]/70">
+                    {preLobby === "quick" ? t("extra.modeQuickDesc") : t("extra.modeWordsDesc")}
+                  </p>
+                </>
+              }
+              players={[
+                {
+                  id: user?.id ?? "me",
+                  name: profile?.nickname || t("lobby.uYou"),
+                  avatarUrl: profile?.avatar_url ?? null,
+                  isHost: true,
+                  isYou: true,
+                },
+                // Words seats one friend; the first pick rides along and is
+                // invited the moment the board's room exists.
+                ...(preLobby === "words"
+                  ? collectInvitees()
+                      .slice(0, 1)
+                      .map<LobbyPlayer>((f) => ({
+                        id: f.id,
+                        name: f.nickname,
+                        avatarUrl: f.avatarUrl,
+                        isHost: false,
+                        isYou: false,
+                        pending: true,
+                        onPress: () => setFriendPickOpen(true),
+                      }))
+                  : []),
+              ]}
+              inviteFaces={acceptedFriends
+                .slice()
+                .sort((a, b) => Number(!!b.isOnline) - Number(!!a.isOnline))
+                .slice(0, 3)
+                .map((f) => ({ url: f.avatarUrl, online: !!f.isOnline }))}
+              // The duel is you against a bot: nobody to invite.
+              onInvite={preLobby === "words" ? () => setFriendPickOpen(true) : undefined}
+              initialTab="players"
+              start={{
+                label: t("lobby.startGame"),
+                onPress: () => void handleCreate(),
+                disabled: isCreating,
+                loading: isCreating,
+              }}
+            >
+              {/* Which friend to seat on the Words board: one, so a tap
+                  picks and closes. */}
+              <AnimatePresence>
+                {friendPickOpen && (
+                  <motion.div
+                    key="friend-pick"
+                    className="fixed inset-0 z-[130] flex items-end justify-center bg-[rgba(64,38,102,0.35)] backdrop-blur-[6px]"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={() => setFriendPickOpen(false)}
+                  >
+                    <motion.div
+                      initial={{ y: 40, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      exit={{ y: 40, opacity: 0 }}
+                      transition={{ type: "spring", stiffness: 420, damping: 32 }}
+                      className="flex max-h-[70dvh] w-full max-w-[520px] flex-col rounded-t-[28px] border-2 border-[rgba(255,255,255,0.6)] bg-[rgba(252,247,255,0.96)] px-4 pb-[calc(16px_+_var(--safe-bottom))] pt-3 shadow-[0px_-8px_24px_0px_rgba(102,51,153,0.18)]"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <span className="mx-auto mb-3 block h-1 w-10 rounded-full bg-[#402666]/20" />
+                      <p className="mb-2 px-2 font-[Nunito] text-[18px] font-bold leading-6 text-[#402666]">
+                        {t("lobby.inviteToGame")}
+                      </p>
+                      <div className="min-h-0 flex-1 overflow-y-auto">
+                        {acceptedFriends.length === 0 && (
+                          <p className="px-2 py-6 text-center font-[Nunito] text-[14px] text-[#402666]/60">
+                            {t("team.noFriendsYet")}
+                          </p>
+                        )}
+                        {acceptedFriends
+                          .slice()
+                          .sort((a, b) => Number(!!b.isOnline) - Number(!!a.isOnline))
+                          .map((f) => {
+                            const picked = selectedFriends.has(f.friendId);
+                            return (
+                              <button
+                                key={f.friendId}
+                                type="button"
+                                onClick={() => {
+                                  setSelectedFriends(picked ? new Set() : new Set([f.friendId]));
+                                  setFriendPickOpen(false);
+                                }}
+                                className="flex h-[60px] w-full items-center gap-3 rounded-[16px] px-2 text-left active:bg-[#ecdbf3]"
+                              >
+                                <span className="relative block h-11 w-11 shrink-0 overflow-hidden rounded-full bg-[#e9d8ff]">
+                                  {f.avatarUrl && <img alt="" src={f.avatarUrl} className="h-full w-full object-cover" />}
+                                </span>
+                                <span className="min-w-0 flex-1">
+                                  <span className="block truncate font-[Nunito] text-[15px] font-bold leading-5 text-[#402666]">
+                                    {f.nickname}
+                                  </span>
+                                  <span className="block font-[Nunito] text-[12px] leading-4 text-[#402666]/60">
+                                    {f.isOnline ? t("extra.onlineStatus") : t("extra.offlineStatus")}
+                                  </span>
+                                </span>
+                                <span
+                                  className={
+                                    picked
+                                      ? "flex h-7 w-7 items-center justify-center rounded-full bg-[#10b981] text-white"
+                                      : "h-7 w-7 rounded-full border-[1.5px] border-dashed border-[#10b981]"
+                                  }
+                                >
+                                  {picked && <Check className="h-4 w-4" strokeWidth={3} />}
+                                </span>
+                              </button>
+                            );
+                          })}
+                      </div>
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </UniversalLobby>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Deliberate crest choice — the same icon picker the lobby uses. */}
       {crestPickerFor && (
