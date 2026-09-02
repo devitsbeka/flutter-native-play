@@ -490,21 +490,26 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     setIsSearchingRandom(false);
   };
 
-  // The Random card starts the game itself. A random category is a choice
-  // with nothing to deliberate, so the roll, its preview and a second tap
-  // on Create were three steps to the same place; the card now deals the
-  // category and creates the room in one go. The effect by the Create
-  // handler presses Create for it once the state dealt here has landed —
-  // or, if the categories are still loading, once the roll below has run.
-  const randomAutoStart = useRef(false);
+  // A card starts its game itself. Picking a mode and then pressing Create
+  // were two taps to one place, with a half-height "picked" state between
+  // them that read as a page of its own; the tap now arms a start, and the
+  // effect by the Create handler presses Create the moment the mode is
+  // ready — at once for the lounges, the arena, Words and the duel; after
+  // the deal for Random; after the picker for the library and My Trivia.
+  const autoStart = useRef(false);
 
-  const startRandomGame = () => {
+  const startMode = (key: GameChoice) => {
     if (isCreating) return;
-    setGameChoice("random");
-    randomAutoStart.current = true;
-    if (categories.length === 0) return;
-    setSelectionMode("random");
-    setSelectedCategory(categories[Math.floor(Math.random() * categories.length)]);
+    setGameChoice(key);
+    autoStart.current = true;
+    if (key === "random") {
+      if (categories.length === 0) return; // the roll below deals once they arrive
+      setSelectionMode("random");
+      setSelectedCategory(categories[Math.floor(Math.random() * categories.length)]);
+      return;
+    }
+    if (key === "library" && !(selectionMode === "library" && selectedCategory)) setShowCategoriesModal(true);
+    if (key === "mytrivias" && !challengeTrivia) void handleOptionClick("my-trivias");
   };
 
   // The Random card is the default: the moment categories arrive (or the
@@ -1379,12 +1384,11 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     </div>
   );
 
-  // Random, dealt above → straight into the room, no Create tap.
+  // The tap above armed a start → press Create the moment the mode is ready.
   useEffect(() => {
-    if (!randomAutoStart.current) return;
-    if (gameChoice !== "random") { randomAutoStart.current = false; return; }
+    if (!autoStart.current) return;
     if (!createEnabled || isCreating) return;
-    randomAutoStart.current = false;
+    autoStart.current = false;
     void handleCreate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameChoice, createEnabled, isCreating]);
@@ -1504,10 +1508,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
               height and the side picker was two cut-off tops under it. */}
           <div
             ref={rowRef}
-            className={cn(
-              "-mx-4 mt-[10px] flex snap-x snap-mandatory scroll-px-4 items-stretch gap-3 overflow-x-auto overflow-y-hidden px-4 pb-2 pt-1 scrollbar-hide transition-[height] duration-300",
-              gameChoice ? "h-[224px] min-h-0 flex-none md:h-[280px]" : "min-h-[340px] flex-1",
-            )}
+            className="-mx-4 mt-[10px] flex min-h-[300px] flex-1 snap-x snap-mandatory scroll-px-4 items-start gap-3 overflow-x-auto overflow-y-hidden px-4 pb-2 pt-1 scrollbar-hide [container-type:inline-size]"
           >
             {(
               [
@@ -1524,8 +1525,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
               ] as { key: GameChoice; art: string; artTop: number; descW: number; players: string | null; title: string; desc: string }[]
             ).map((card, i) => {
               const isPicked = gameChoice === card.key;
-              const collapsed = gameChoice !== null;
-              const busy = card.key === "random" && (isCreating || isSearchingRandom);
+              const busy = isPicked && (isCreating || isSearchingRandom);
               return (
                 /* One card, to the Figma 1013:1406 pixel: the frame there is
                    393 × 686, so every inner measure is written in --u, one
@@ -1541,29 +1541,21 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                   whileTap={{ scale: 0.965 }}
                   transition={{ type: "spring", stiffness: 480, damping: 28 }}
                   aria-pressed={isPicked}
-                  onClick={() => {
-                    if (card.key === "random") { startRandomGame(); return; }
-                    setGameChoice(card.key);
-                    if (card.key === "library" && !(selectionMode === "library" && selectedCategory)) setShowCategoriesModal(true);
-                    if (card.key === "mytrivias" && !challengeTrivia) void handleOptionClick("my-trivias");
-                  }}
+                  onClick={() => startMode(card.key)}
                   className={cn(
                     // A phone shows one card and the edge of the next; from
                     // tablet up the cards take a fixed width so the wide
                     // column shows two, three or more of them at once.
                     "group relative isolate block shrink-0 snap-start overflow-clip rounded-[28px] bg-[#e9d8ff] text-left [container-type:inline-size]",
-                    // Nothing picked: the designed 393:686 poster. The row's
-                    // height is what the screen has, so the card takes that
-                    // height and derives its width from the ratio — never
-                    // taller than the row, so never clipped by the footer;
-                    // on a tall phone it is capped at 84% of the column and
-                    // grows a little taller than the ratio instead. A
-                    // width-driven height overflowed the row on every phone
-                    // and ran under the Create button.
-                    // Something picked: the banner, 84% wide.
-                    collapsed
-                      ? "h-full w-[84%] max-w-[440px] md:w-[320px]"
-                      : "h-[var(--row-h)] w-[calc(var(--row-h)*393/686)] max-w-[84%] md:max-w-[320px]",
+                    // The designed 393:686 poster at 84% of the column —
+                    // 146.6% of the row's width tall — or the row's height,
+                    // whichever is shorter. A short screen keeps the card's
+                    // width and loses height instead: the copy is placed at
+                    // a share of the height so it rides up with it, and the
+                    // scene's masked foot and the wash meet wherever that
+                    // leaves them. Never taller than the row, so never under
+                    // the Create button. From tablet up the card is 320px.
+                    "w-[84%] max-w-[440px] h-[min(146.6cqw,var(--row-h))] md:w-[320px] md:h-[min(558px,var(--row-h))]",
                     isPicked
                       ? "animate-[mode-card-glow_2.6s_ease-in-out_infinite] motion-reduce:animate-none motion-reduce:shadow-[0px_0px_0px_3px_#7126d5,0px_12px_32px_0px_rgba(113,38,213,0.35)]"
                       : "shadow-[0px_0px_0px_1px_rgba(0,0,0,0.06),0px_8px_24px_0px_rgba(15,23,41,0.1)]",
@@ -1582,11 +1574,8 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                       fades in, so the scene dissolves into the card rather
                       than ending on a line. */}
                   <div
-                    style={collapsed ? undefined : { top: `${card.artTop}%` }}
-                    className={cn(
-                      "absolute left-0 z-0 w-full overflow-hidden [-webkit-mask-image:linear-gradient(to_bottom,black_58%,transparent_100%)] [mask-image:linear-gradient(to_bottom,black_58%,transparent_100%)]",
-                      collapsed ? "top-0 h-full" : "aspect-[3/4]",
-                    )}
+                    style={{ top: `${card.artTop}%` }}
+                    className="absolute left-0 z-0 aspect-[3/4] w-full overflow-hidden [-webkit-mask-image:linear-gradient(to_bottom,black_50%,transparent_100%)] [mask-image:linear-gradient(to_bottom,black_50%,transparent_100%)]"
                   >
                     {/* The render, alive: a five-second seamless loop of the
                         same frame (locked camera, only the atmosphere moves),
@@ -1600,7 +1589,6 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                       ]}
                       still={card.art}
                       className="absolute inset-0 transition-transform duration-500 ease-out group-active:scale-[1.04]"
-                      videoClassName={collapsed ? "object-[50%_38%]" : ""}
                     />
                   </div>
                   {/* 1013:1408 — the lavender wash over the lower 55%. */}
@@ -1615,10 +1603,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                     </div>
                   )}
                   <div
-                    className={cn(
-                      "absolute left-[calc(39*var(--u))] right-[calc(20*var(--u))] z-20",
-                      collapsed ? "bottom-[calc(20*var(--u))]" : "top-[78.86%]",
-                    )}
+                    className="absolute left-[calc(39*var(--u))] right-[calc(20*var(--u))] top-[78.86%] z-20"
                   >
                     {/* The title runs to the card's edge: a Georgian or German
                         title is longer than the English the frame was set in. */}
@@ -1627,10 +1612,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                     </p>
                     <p
                       style={{ width: `calc(${card.descW} * var(--u))` }}
-                      className={cn(
-                        "mt-[calc(13*var(--u))] max-w-full font-[Nunito] text-[calc(18*var(--u))] leading-[calc(24*var(--u))] tracking-[-0.16px] text-[#4b5563]",
-                        collapsed ? "line-clamp-1" : "line-clamp-2",
-                      )}
+                      className="mt-[calc(13*var(--u))] line-clamp-2 max-w-full font-[Nunito] text-[calc(18*var(--u))] leading-[calc(24*var(--u))] tracking-[-0.16px] text-[#4b5563]"
                     >
                       {card.desc}
                     </p>

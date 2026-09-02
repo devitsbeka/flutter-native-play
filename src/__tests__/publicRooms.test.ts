@@ -408,10 +408,14 @@ describe("the public list", () => {
 });
 
 describe("the create screen's carousel", () => {
-  it("shrinks the cards once something is picked, so the pick's detail is in view", () => {
+  it("starts a mode on its tap, with no picked state between the card and the game", () => {
     const page = read("src/components/team/CreateRoomPage.tsx");
-    // Poster height with nothing picked; a banner once a mode is picked.
-    expect(page).toMatch(/gameChoice \? "h-\[224px\] min-h-0 flex-none md:h-\[280px\]" : "min-h-\[340px\] flex-1"/);
+    // A tap arms the start; the effect presses Create once the mode is ready.
+    expect(page).toMatch(/onClick=\{\(\) => startMode\(card\.key\)\}/);
+    expect(page).toMatch(/autoStart\.current = true/);
+    // The row never collapses to a banner: the posters keep their height.
+    expect(page).not.toMatch(/h-\[224px\]/);
+    expect(page).toMatch(/min-h-\[300px\] flex-1 snap-x/);
   });
 });
 
