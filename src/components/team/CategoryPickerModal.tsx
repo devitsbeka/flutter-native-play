@@ -349,7 +349,7 @@ export function CategoryPickerModal({
           {view === "main" && (
             /* The three sources as light cards with their 3D faces — the same
                art the online-game reel wears (Figma 926-11424). */
-            <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
+            <div className="grid grid-cols-2 gap-4 max-w-md mx-auto md:max-w-[1100px] md:grid-cols-4">
               {(
                 [
                   { key: "random", icon: iconDiceCard, title: t("extra.cpRandomTitle"), desc: t("extra.cpRandomDesc"), onTap: () => togglePick({ type: "random" }), picked: isPicked({ type: "random" }) },
@@ -384,7 +384,7 @@ export function CategoryPickerModal({
           )}
 
           {view === "library" && (
-            <div className="space-y-4 max-w-md mx-auto">
+            <div className="space-y-4 max-w-md mx-auto md:max-w-[1100px]">
               {/* Search */}
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -415,7 +415,10 @@ export function CategoryPickerModal({
                 </div>
               ) : (
                 <>
-                  <div className="grid grid-cols-2 gap-3">
+                  {/* Two across on a phone; from tablet up the wide column
+                      shows four or five, so the whole library is a glance
+                      rather than a scroll. */}
+                  <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-5">
                     {/* Mixed Category - First in grid */}
                     {(!search.trim() || t("extra.cpMixedCategory").toLowerCase().includes(search.toLowerCase())) && (
                       <motion.button

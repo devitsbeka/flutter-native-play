@@ -75,13 +75,16 @@ export function CreateRoomScreen({
       </motion.div>
 
       <div className="flex-1 overflow-y-auto px-4 pb-[calc(2rem_+_var(--safe-bottom))]">
-        <div className="max-w-xl mx-auto">
+        {/* Wide from tablet up: the cards sit in rows of two and four
+            instead of one narrow column with air on both sides. The button
+            below keeps its reading width. */}
+        <div className="max-w-xl mx-auto md:max-w-[1100px]">
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }} className="text-sm font-medium text-white/70 mb-3 flex items-center gap-2">
             <Zap className="w-4 h-4" />
             {t("extra.chooseWhatToPlay")}
           </motion.p>
 
-          <div className="space-y-2.5 mb-2.5">
+          <div className="grid grid-cols-1 gap-2.5 mb-2.5 md:grid-cols-2">
             {topOptions.map((option, index) => (
               <motion.button key={option.id} initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ delay: 0.2 + index * 0.05 }} whileTap={{ scale: 0.97 }} onClick={() => setSelectedType(option.id)} className={`relative p-3 rounded-2xl overflow-hidden text-left transition-all flex items-center gap-3 ${selectedType === option.id ? "ring-2 ring-white ring-offset-2 ring-offset-purple-600" : ""}`} style={{ background: selectedType === option.id ? "rgba(255, 255, 255, 0.25)" : "rgba(255, 255, 255, 0.12)", backdropFilter: "blur(12px)", border: "1px solid rgba(255, 255, 255, 0.2)" }}>
                 <div className="absolute inset-0 opacity-30" style={{ background: `radial-gradient(circle at top right, ${option.glowColor}, transparent 60%)` }} />
@@ -95,7 +98,7 @@ export function CreateRoomScreen({
             ))}
           </div>
 
-          <div className="grid grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-2 gap-2.5 md:grid-cols-4">
             {bottomOptions.map((option, index) => (
               <motion.button key={option.id} initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ delay: 0.3 + index * 0.05 }} whileTap={{ scale: 0.97 }} onClick={() => setSelectedType(option.id)} className={`relative p-4 rounded-2xl overflow-hidden text-left transition-all ${selectedType === option.id ? "ring-2 ring-white ring-offset-2 ring-offset-purple-600" : ""}`} style={{ background: selectedType === option.id ? "rgba(255, 255, 255, 0.25)" : "rgba(255, 255, 255, 0.12)", backdropFilter: "blur(12px)", border: "1px solid rgba(255, 255, 255, 0.2)" }}>
                 <div className="absolute inset-0 opacity-30" style={{ background: `radial-gradient(circle at top right, ${option.glowColor}, transparent 60%)` }} />
