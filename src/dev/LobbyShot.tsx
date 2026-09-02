@@ -106,6 +106,7 @@ export default function LobbyShot() {
         }
         players={[bench("a", [PEOPLE[0], PEOPLE[3]]), bench("b", [PEOPLE[1], PEOPLE[2]])]}
         playersHint={t("teamBattle.minTwoPerTeam")}
+        capacity={{ min: 4, max: 6, taken: 4, fullLabel: t("extra.mpRoomFull") }}
         inviteFaces={FACES}
         initialTab={tab}
         start={{ label: t("lobby.startGame"), onPress: noop, disabled: true }}
@@ -157,7 +158,8 @@ export default function LobbyShot() {
         visibility("private"),
       ]}
       players={PEOPLE}
-      playersHint={t("lobby.uInviteHint")}
+      playersHint={null}
+      capacity={{ min: 1, max: 10, taken: 4, fullLabel: t("extra.mpRoomFull") }}
       inviteFaces={FACES}
       onInvite={noop}
       initialTab={tab}

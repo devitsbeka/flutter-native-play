@@ -805,6 +805,15 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
       }
       players={benches}
       playersHint={!enoughPlayers ? t("teamBattle.minTwoPerTeam") : null}
+      // Two a side to start, up to the size the host set (2-2 … 5-5).
+      // Each bench's own invite line already stands down when that side
+      // is full, so the arena's count is for the rules tab and the tally.
+      capacity={{
+        min: 4,
+        max: perSide * 2,
+        taken: participants.length + pendingInvites.length,
+        fullLabel: t("extra.mpRoomFull"),
+      }}
       inviteFaces={inviteFaces}
       initialTab="players"
       start={

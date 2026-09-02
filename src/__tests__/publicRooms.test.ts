@@ -160,16 +160,22 @@ describe("the private tab and the lobby it opens", () => {
     expect(page).toMatch(/undefined,\s*\n\s*false,\s*\n\s*\);/);
   });
 
-  it("a game needs two people before it can start", () => {
+  it("a game needs somebody who can answer before it can start", () => {
     const lobby = read("src/components/team/RoomLobbyV2.tsx");
     // A pending invitation is a participant row too; counting it would arm
     // the button for somebody who has not arrived.
     expect(lobby).toMatch(/\(p\.status as string\) !== "invited"/);
-    expect(lobby).toMatch(/const enoughPlayers = seatedPlayers >= 2;/);
+    // A lone host can play a random or a library category (owner's rule:
+    // a mode that does not need a second player starts without one). The
+    // host of their OWN trivia sits out as observer, so that room needs one
+    // more seat before it can start — and the disabled button says why.
+    expect(lobby).toMatch(/const answeringPlayers = seatedPlayers - \(willBeObserver \? 1 : 0\);/);
+    expect(lobby).toMatch(/const enoughPlayers = answeringPlayers >= 1;/);
     expect(lobby).toMatch(/\(!needsCategorySelection && !enoughPlayers\)/);
-    // Picking a category stays open to a lone host — it is what gives the
-    // second player a reason to accept.
     expect(lobby).toMatch(/rlNeedsSecondPlayer/);
+    // And the Invite line opens the room's own invite sheet.
+    expect(lobby).toMatch(/onInvite=\{\(\) => setShowInviteModal\(true\)\}/);
+    expect(lobby).toMatch(/<InviteFriendsModal\s*\n\s*isOpen=\{showInviteModal\}/);
   });
 });
 

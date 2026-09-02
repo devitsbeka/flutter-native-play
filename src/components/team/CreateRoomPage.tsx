@@ -56,7 +56,7 @@ import featuredLibrary from "@/assets/play-chooser/featured-library.webp";
 import featuredMyTrivias from "@/assets/play-chooser/featured-mytrivias.webp";
 import playersIcon from "@/assets/play-chooser/players.svg";
 import { LOBBY_SCENES, rememberLobbyScene } from "@/utils/lobbyScene";
-import { UniversalLobby, LobbyInfoRow, type LobbyPlayer } from "@/components/lobby/UniversalLobby";
+import { UniversalLobby, type LobbyPlayer } from "@/components/lobby/UniversalLobby";
 import SpotlightSearch from "@/components/search/SpotlightSearch";
 import { MyTriviaLiveLogo } from "@/components/shared/MyTriviaLiveLogo";
 import { getRandomGradient } from "@/config/roomGradients";
@@ -196,11 +196,11 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [selectedFriends, setSelectedFriends] = useState<Set<string>>(new Set());
-  // The two modes with no room of their own — the duel against a bot and
-  // the Words board — open the universal lobby over this screen before
-  // anything starts, so every card leads to the same place. Its Start is
-  // what presses Create.
-  const [preLobby, setPreLobby] = useState<"quick" | "words" | null>(null);
+  // Words has no room until it starts, so it opens the universal lobby
+  // over this screen first — you and the one friend you pick — and its
+  // Start is what presses Create. The quick game goes straight to the VS
+  // spin (owner's call): no lobby for a duel against a bot.
+  const [preLobby, setPreLobby] = useState<"words" | null>(null);
   const [friendPickOpen, setFriendPickOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
@@ -524,7 +524,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     if (isCreating) return;
     rememberLobbyScene(key);
     setGameChoice(key);
-    if (key === "quick" || key === "words") {
+    if (key === "words") {
       setPreLobby(key);
       return;
     }
@@ -1810,8 +1810,8 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
             transition={{ duration: 0.2 }}
           >
             <UniversalLobby
-              sceneArt={LOBBY_SCENES[preLobby]}
-              roomName={preLobby === "quick" ? t("extra.modeQuickTitle") : t("gameTypes.wordsTitle")}
+              sceneArt={LOBBY_SCENES.words}
+              roomName={t("gameTypes.wordsTitle")}
               onBack={() => setPreLobby(null)}
               unreadCount={unreadCount}
               labels={{
@@ -1821,17 +1821,22 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                 you: t("lobby.uYou"),
                 rounds: (count) => t("lobby.uRoundsShort", { count }),
               }}
-              // Neither mode publishes a room or picks a category or a TV
-              // here, so the rules tab states what the game is instead.
+              // Words publishes no room and picks no category or TV, so
+              // the rules tab states what the game is: one board, alone
+              // or with the one friend picked on the players tab.
               rules={[]}
               rulesExtra={
-                <>
-                  <LobbyInfoRow label={t("lobby.uPlayersTab")}>{preLobby === "quick" ? "1" : "1–2"}</LobbyInfoRow>
-                  <p className="px-[6px] pt-[2px] font-[Nunito] text-[13px] leading-[18px] text-[#402666]/70">
-                    {preLobby === "quick" ? t("extra.modeQuickDesc") : t("extra.modeWordsDesc")}
-                  </p>
-                </>
+                <p className="px-[6px] pt-[2px] font-[Nunito] text-[13px] leading-[18px] text-[#402666]/70">
+                  {t("extra.modeWordsDesc")}
+                </p>
               }
+              // One board seats two: you and the one friend.
+              capacity={{
+                min: 1,
+                max: 2,
+                taken: 1 + Math.min(1, collectInvitees().length),
+                fullLabel: t("extra.mpRoomFull"),
+              }}
               players={[
                 {
                   id: user?.id ?? "me",
@@ -1842,27 +1847,24 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                 },
                 // Words seats one friend; the first pick rides along and is
                 // invited the moment the board's room exists.
-                ...(preLobby === "words"
-                  ? collectInvitees()
-                      .slice(0, 1)
-                      .map<LobbyPlayer>((f) => ({
-                        id: f.id,
-                        name: f.nickname,
-                        avatarUrl: f.avatarUrl,
-                        isHost: false,
-                        isYou: false,
-                        pending: true,
-                        onPress: () => setFriendPickOpen(true),
-                      }))
-                  : []),
+                ...collectInvitees()
+                  .slice(0, 1)
+                  .map<LobbyPlayer>((f) => ({
+                    id: f.id,
+                    name: f.nickname,
+                    avatarUrl: f.avatarUrl,
+                    isHost: false,
+                    isYou: false,
+                    pending: true,
+                    onPress: () => setFriendPickOpen(true),
+                  })),
               ]}
               inviteFaces={acceptedFriends
                 .slice()
                 .sort((a, b) => Number(!!b.isOnline) - Number(!!a.isOnline))
                 .slice(0, 3)
                 .map((f) => ({ url: f.avatarUrl, online: !!f.isOnline }))}
-              // The duel is you against a bot: nobody to invite.
-              onInvite={preLobby === "words" ? () => setFriendPickOpen(true) : undefined}
+              onInvite={() => setFriendPickOpen(true)}
               initialTab="players"
               start={{
                 label: t("lobby.startGame"),
