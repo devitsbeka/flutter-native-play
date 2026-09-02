@@ -4,6 +4,19 @@
 @import url("https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wdth,wght@62.5,600&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&display=swap");
 
+/* The hero display face for the create screen's mode cards (Figma
+   1013:1406). Self-hosted like TASolivare rather than fetched from Google
+   Fonts, so a game screen never shows its titles in a fallback while a
+   third-party request is in flight. Latin only: Georgian titles fall
+   through to TASolivare, the display face the app already speaks. */
+@font-face {
+  font-family: 'Slackey';
+  src: url('/fonts/Slackey-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 @font-face {
   font-family: 'TASolivare';
   src: url('/fonts/TASolivare-Bold.otf') format('opentype');
@@ -625,4 +638,16 @@
   *::after {
     animation-iteration-count: 1 !important;
   }
+}
+
+/* The create screen's mode cards (Figma 1013:1406): the picked one breathes
+   its glow, and each card's render drifts a touch at rest. Both stop under
+   prefers-reduced-motion at the call site. */
+@keyframes mode-card-glow {
+  0%, 100% { box-shadow: 0 0 0 3px #7126d5, 0 12px 32px rgba(113, 38, 213, 0.35); }
+  50% { box-shadow: 0 0 0 3px #8a4de8, 0 16px 44px rgba(113, 38, 213, 0.55); }
+}
+@keyframes mode-art-drift {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-1.2%); }
 }

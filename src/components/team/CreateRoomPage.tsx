@@ -1,10 +1,10 @@
 import { BackgroundVideo } from "@/components/shared/BackgroundVideo";
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, type CSSProperties } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { anyBlockedText, containsBlockedText } from "@/utils/contentFilter";
-import { Loader2, ArrowLeft, HelpCircle, X, RefreshCw, Play, Pencil, Gamepad2, Plus, Check, Globe, Lock } from "lucide-react";
+import { Loader2, ArrowLeft, Bell, X, RefreshCw, Play, Pencil, Gamepad2, Plus, Check, Globe, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -25,10 +25,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { CategoryArtwork } from "@/components/shared/CategoryArtwork";
 import { categoryGradient } from "@/utils/categoryGradient";
 import { useResponsiveVideo } from "@/hooks/useResponsiveVideo";
-import { createNotification } from "@/hooks/useNotifications";
+import { createNotification, useNotifications } from "@/hooks/useNotifications";
 // Room names are AI-generated via edge function during room creation
 import { TVPlayModal } from "@/components/team/TVPlayModal";
-import { HowItWorksModal } from "@/components/team/HowItWorksModal";
 import { CategorySelectorModal } from "@/components/team/CategorySelectorModal";
 import { CategoryPickerModal } from "@/components/team/CategoryPickerModal";
 import { CreateBlindTriviaModal } from "@/components/team/CreateBlindTriviaModal";
@@ -53,6 +52,9 @@ import featuredBattle from "@/assets/play-chooser/featured-battle.webp";
 import featuredWords from "@/assets/play-chooser/featured-words.webp";
 import featuredLibrary from "@/assets/play-chooser/featured-library.webp";
 import featuredMyTrivias from "@/assets/play-chooser/featured-mytrivias.webp";
+import playersIcon from "@/assets/play-chooser/players.svg";
+import SpotlightSearch from "@/components/search/SpotlightSearch";
+import { MyTriviaLiveLogo } from "@/components/shared/MyTriviaLiveLogo";
 import { getRandomGradient } from "@/config/roomGradients";
 
 /**
@@ -331,7 +333,6 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   const [editedName, setEditedName] = useState("");
   
   const [showTVModal, setShowTVModal] = useState(false);
-  const [showHowItWorksModal, setShowHowItWorksModal] = useState(false);
   const [showCategoriesModal, setShowCategoriesModal] = useState(false);
   const [showCreateTriviaModal, setShowCreateTriviaModal] = useState(false);
   const [showCreateCollectionModal, setShowCreateCollectionModal] = useState(false);
@@ -622,6 +623,8 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   // tapped while peeking at the edge stayed half off-screen with its tick
   // hidden, which read as the tap not registering. "start" matches where
   // the snap points are, so it lands exactly as a swipe would leave it.
+  const { unreadCount } = useNotifications();
+
   const cardRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
   useEffect(() => {
@@ -1400,28 +1403,53 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
           button never moves. */}
       <div className="relative flex h-full w-full flex-col overflow-hidden">
 
-      {/* Header - simplified */}
-      <div className="border-b border-border/30 shrink-0">
-        <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full flex items-center justify-between px-4 py-4">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={onClose}
-              className="w-10 h-10 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5 text-foreground" />
-            </button>
-            <h1 className="text-xl font-display text-foreground">{t("team.onlineGame")}</h1>
-          </div>
-          
-          {/* Help Button */}
-          <button
-            onClick={() => setShowHowItWorksModal(true)}
-            className="w-10 h-10 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
+      {/* Header — the home page's own (Figma 1013:1377): the wordmark centred
+          between a back arrow and the search + bell pair. The arrow goes home
+          rather than back to the rooms list this screen opened over: this is
+          the doorstep of a game, and leaving it means leaving. */}
+      <header className="relative z-20 shrink-0 border-b border-border/30 px-4 py-3">
+        <div className="mx-auto flex w-full max-w-[700px] items-center justify-between gap-3 md:max-w-[520px]">
+          <motion.button
+            type="button"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => navigate("/")}
+            className="rounded-full p-2 transition-colors hover:bg-white/30"
           >
-            <HelpCircle className="w-5 h-5 text-muted-foreground" />
-          </button>
+            <ArrowLeft className="h-6 w-6 text-gray-600" />
+          </motion.button>
+          <div className="flex min-w-0 flex-1 items-center justify-center">
+            <button type="button" onClick={() => navigate("/")} aria-label="MyTrivia" className="cursor-pointer">
+              <MyTriviaLiveLogo responsive />
+            </button>
+          </div>
+          <div className="flex items-center gap-1">
+            <SpotlightSearch variant="button" />
+            <motion.button
+              type="button"
+              className="relative flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-white/30"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => navigate("/notifications")}
+            >
+              <Bell className="h-5 w-5 text-gray-600" />
+              {unreadCount > 0 && (
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="absolute right-0.5 top-0.5 flex h-[16px] min-w-[16px] items-center justify-center rounded-full px-1"
+                  style={{
+                    background: "linear-gradient(180deg, #EF4444 0%, #DC2626 100%)",
+                    boxShadow: "0 2px 4px rgba(239, 68, 68, 0.5)",
+                  }}
+                >
+                  <span className="text-[9px] font-bold text-white">{unreadCount > 9 ? "9+" : unreadCount}</span>
+                </motion.div>
+              )}
+            </motion.button>
+          </div>
         </div>
-      </div>
+      </header>
 
       {/* Content */}
       <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
@@ -1440,7 +1468,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
             unfolds its detail underneath — the random roll, the library
             preview, which side of the arena, the chosen trivia. */}
         <div className="flex min-h-0 flex-1 flex-col">
-          <h2 className="mb-1.5 shrink-0 text-[13.2px] font-medium text-muted-foreground">{t("extra.whatToPlay")}</h2>
+          <h2 className="shrink-0 pb-[13px] pt-[7px] font-[Nunito] text-[24px] leading-[28px] tracking-[-0.3px] text-[#3a2260]">{t("extra.whatToPlay")}</h2>
 
           {/* The cards are the row's own items so they stretch to its
               height: a percentage height would not resolve through the
@@ -1454,27 +1482,40 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
               height and the side picker was two cut-off tops under it. */}
           <div
             className={cn(
-              "-mx-4 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto overflow-y-hidden px-4 pb-2 pt-1 scrollbar-hide transition-[height] duration-300",
+              "-mx-4 mt-[10px] flex snap-x snap-mandatory scroll-px-4 items-start gap-3 overflow-x-auto overflow-y-hidden px-4 pb-2 pt-1 scrollbar-hide transition-[height] duration-300",
               gameChoice ? "h-[224px] min-h-0 flex-none md:h-[280px]" : "min-h-[340px] flex-1",
             )}
           >
             {(
               [
-                { key: "quick", art: featuredQuick, title: t("extra.playQuickGame"), desc: t("extra.playQuickGameDesc") },
-                { key: "random", art: featuredRandom, title: t("extra.randomOption"), desc: t("extra.randomDesc") },
-                { key: "king", art: featuredKing, title: t("lobby.vkTitle"), desc: t("lobby.kingCardDesc") },
-                { key: "battle", art: featuredBattle, title: t("teamBattle.title"), desc: t("gameTypes.teamBattleDesc") },
-                { key: "words", art: featuredWords, title: t("gameTypes.wordsTitle"), desc: t("gameTypes.wordsDesc") },
-                { key: "library", art: featuredLibrary, title: t("extra.libraryOption"), desc: t("extra.libraryDesc") },
-                { key: "mytrivias", art: featuredMyTrivias, title: t("extra.myTriviaOption"), desc: t("extra.myTriviaDesc") },
-              ] as { key: GameChoice; art: string; title: string; desc: string }[]
-            ).map((card) => {
+                // artTop: where Figma parks each render, as a share of the
+                // card's height (1013:1407 and its siblings); descW: the
+                // blurb's box in 393rds, 273 for all but Words' longer line.
+                { key: "random", art: featuredRandom, artTop: 0.05, descW: 273, players: "1", title: t("extra.modeRandomTitle"), desc: t("extra.modeRandomDesc") },
+                { key: "quick", art: featuredQuick, artTop: -1.71, descW: 273, players: "1-10", title: t("extra.modeQuickTitle"), desc: t("extra.modeQuickDesc") },
+                { key: "king", art: featuredKing, artTop: 0, descW: 273, players: "1-10", title: t("extra.modeKingTitle"), desc: t("lobby.kingCardDesc") },
+                { key: "battle", art: featuredBattle, artTop: -4.56, descW: 273, players: "4-10", title: t("extra.modeBattleTitle"), desc: t("gameTypes.teamBattleDesc") },
+                { key: "words", art: featuredWords, artTop: 0.04, descW: 329, players: "1-2", title: t("gameTypes.wordsTitle"), desc: t("extra.modeWordsDesc") },
+                { key: "library", art: featuredLibrary, artTop: -2.86, descW: 273, players: null, title: t("extra.libraryOption"), desc: t("extra.libraryDesc") },
+                { key: "mytrivias", art: featuredMyTrivias, artTop: -0.02, descW: 273, players: null, title: t("extra.myTriviaOption"), desc: t("extra.myTriviaDesc") },
+              ] as { key: GameChoice; art: string; artTop: number; descW: number; players: string | null; title: string; desc: string }[]
+            ).map((card, i) => {
               const isPicked = gameChoice === card.key;
+              const collapsed = gameChoice !== null;
+              const busy = card.key === "random" && (isCreating || isSearchingRandom);
               return (
+                /* One card, to the Figma 1013:1406 pixel: the frame there is
+                   393 × 686, so every inner measure is written in --u, one
+                   393rd of whatever width the card actually gets. That keeps
+                   the 32px title, the 18px blurb, the pill and its 3.4px rim
+                   in the designed proportion on a phone and a tablet alike. */
                 <motion.button
                   key={card.key}
                   ref={(el) => { cardRefs.current[card.key] = el; }}
-                  whileTap={{ scale: 0.98 }}
+                  style={{ "--u": "calc(100cqw / 393)" } as CSSProperties}
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0, transition: { delay: 0.04 * i, type: "spring", stiffness: 380, damping: 32 } }}
+                  whileTap={{ scale: 0.965 }}
                   transition={{ type: "spring", stiffness: 480, damping: 28 }}
                   aria-pressed={isPicked}
                   onClick={() => {
@@ -1487,54 +1528,77 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                     // A phone shows one card and the edge of the next; from
                     // tablet up the cards take a fixed width so the wide
                     // column shows two, three or more of them at once.
-                    "relative block w-[84%] max-w-[440px] md:w-[320px] shrink-0 snap-start rounded-[28px] overflow-clip text-left bg-[#e9d8ff] transition-shadow duration-200",
+                    "group relative block w-[84%] max-w-[440px] shrink-0 snap-start overflow-clip rounded-[28px] bg-[#e9d8ff] text-left [container-type:inline-size] md:w-[320px]",
+                    // Nothing picked: the designed 393:686 poster, clamped to
+                    // the row on a short screen. Something picked: the banner.
+                    collapsed ? "h-full" : "aspect-[393/686] max-h-full",
                     isPicked
-                      ? "ring-[3px] ring-[#7126d5] shadow-[0px_12px_32px_0px_rgba(113,38,213,0.35)]"
-                      : "ring-1 ring-black/[0.06] shadow-[0px_8px_24px_0px_rgba(15,23,41,0.10)]",
+                      ? "animate-[mode-card-glow_2.6s_ease-in-out_infinite] motion-reduce:animate-none motion-reduce:shadow-[0px_0px_0px_3px_#7126d5,0px_12px_32px_0px_rgba(113,38,213,0.35)]"
+                      : "shadow-[0px_0px_0px_1px_rgba(0,0,0,0.06),0px_8px_24px_0px_rgba(15,23,41,0.1)]",
                   )}
                 >
-                  <img
-                    alt=""
-                    src={card.art}
-                    loading="lazy"
-                    decoding="async"
-                    className="absolute inset-0 h-full w-full object-cover"
-                  />
-                  {/* The artwork leaves its lower third pale on purpose;
-                      a lavender wash on top of that keeps the copy legible
-                      even where a prop strays into it. */}
-                  <div className="absolute inset-x-0 bottom-0 h-[55%] bg-gradient-to-t from-[#f3e6ff] via-[#f3e6ff]/80 to-transparent" />
-                  <div className="absolute inset-x-0 bottom-0 px-5 pb-5">
-                    <p
-                      className={cn(
-                        "font-[Nunito] font-extrabold text-[#0f1729] tracking-[-0.3px]",
-                        gameChoice ? "text-[20px] leading-[24px]" : "text-[24px] leading-[28px]",
-                      )}
-                    >
+                  {/* The render sits across the top 76.39% of the card in
+                      Figma — a 3:4 image at full width. It drifts a little
+                      at rest and swells under a held finger; the banner
+                      state shows its middle instead, where the subject is. */}
+                  <div
+                    style={collapsed ? undefined : { top: `${card.artTop}%` }}
+                    className={cn(
+                      "absolute left-0 w-full overflow-hidden",
+                      collapsed ? "top-0 h-full" : "aspect-[3/4]",
+                    )}
+                  >
+                    {/* The render, alive: a five-second seamless loop of the
+                        same frame (locked camera, only the atmosphere moves),
+                        over the still as its poster. The still is what shows
+                        under Reduce Motion, in Low Power Mode until a touch,
+                        and while the loop is still loading. */}
+                    <BackgroundVideo
+                      sources={[
+                        { src: `/videos/mode-${card.key}.webm`, type: "video/webm" },
+                        { src: `/videos/mode-${card.key}.mp4`, type: "video/mp4" },
+                      ]}
+                      still={card.art}
+                      className="absolute inset-0 transition-transform duration-500 ease-out group-active:scale-[1.04]"
+                      videoClassName={collapsed ? "object-[50%_38%]" : ""}
+                    />
+                  </div>
+                  {/* 1013:1408 — the lavender wash over the lower 55%. */}
+                  <div className="absolute inset-x-0 bottom-0 h-[55%] bg-[linear-gradient(to_top,#f3e6ff_0%,#f3e6ff_50%,rgba(243,230,255,0)_100%)]" />
+                  {/* How many play: the peach pill, top right. */}
+                  {card.players && (
+                    <div className="absolute right-[calc(12*var(--u))] top-[calc(12*var(--u))] flex items-center gap-[calc(7*var(--u))] rounded-bl-[calc(25.046*var(--u))] rounded-br-[calc(12.57*var(--u))] rounded-tl-[calc(25.05*var(--u))] rounded-tr-[calc(20*var(--u))] border-solid border-white/65 bg-gradient-to-b from-[#fff3ed] to-[#f5cdcd] px-[calc(16*var(--u))] py-[calc(1*var(--u))] shadow-[0px_2.277px_6.831px_0px_rgba(151,64,64,0.06),0px_2.277px_0px_0px_#d6c7c4] border-[length:calc(3.415*var(--u))]">
+                      <img alt="" src={playersIcon} className="h-[calc(22.75*var(--u))] w-[calc(17.333*var(--u))]" />
+                      <span className="font-hero bg-gradient-to-b from-[#522b28] to-[#99665f] bg-clip-text text-[calc(32*var(--u))] capitalize leading-[calc(48*var(--u))] tracking-[-0.16px] text-transparent whitespace-nowrap">
+                        {card.players}
+                      </span>
+                    </div>
+                  )}
+                  <div
+                    className={cn(
+                      "absolute left-[calc(39*var(--u))] right-[calc(20*var(--u))]",
+                      collapsed ? "bottom-[calc(20*var(--u))]" : "top-[78.86%]",
+                    )}
+                  >
+                    {/* The title runs to the card's edge: a Georgian or German
+                        title is longer than the English the frame was set in. */}
+                    <p className="font-hero overflow-hidden text-ellipsis whitespace-nowrap text-[calc(32*var(--u))] capitalize leading-[calc(48*var(--u))] tracking-[-0.16px] text-[#402666]">
                       {card.title}
                     </p>
                     <p
+                      style={{ width: `calc(${card.descW} * var(--u))` }}
                       className={cn(
-                        "font-[Nunito] text-[14px] leading-[20px] text-[#4b5563] tracking-[-0.16px] mt-1",
-                        gameChoice ? "line-clamp-1" : "line-clamp-2",
+                        "mt-[calc(13*var(--u))] max-w-full font-[Nunito] text-[calc(18*var(--u))] leading-[calc(24*var(--u))] tracking-[-0.16px] text-[#4b5563]",
+                        collapsed ? "line-clamp-1" : "line-clamp-2",
                       )}
                     >
                       {card.desc}
                     </p>
                   </div>
-                  {isPicked && (
-                    <motion.div
-                      initial={{ scale: 0, rotate: -30 }}
-                      animate={{ scale: 1, rotate: 0 }}
-                      transition={{ type: "spring", stiffness: 480, damping: 20 }}
-                      className="absolute right-4 top-4 w-9 h-9 rounded-full bg-[#7126d5] shadow-[0px_4px_12px_0px_rgba(113,38,213,0.45)] flex items-center justify-center"
-                    >
-                      {card.key === "random" && (isCreating || isSearchingRandom) ? (
-                        <Loader2 className="w-[18px] h-[18px] text-white animate-spin" />
-                      ) : (
-                        <Check className="w-[18px] h-[18px] text-white" strokeWidth={3.5} />
-                      )}
-                    </motion.div>
+                  {busy && (
+                    <div className="absolute left-[calc(12*var(--u))] top-[calc(12*var(--u))] flex h-9 w-9 items-center justify-center rounded-full bg-white/80 shadow-md">
+                      <Loader2 className="h-[18px] w-[18px] animate-spin text-[#7126d5]" />
+                    </div>
                   )}
                 </motion.button>
               );
@@ -1721,12 +1785,6 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
           setCollectionInitialSubject(subject);
           setShowCreateCollectionModal(true);
         }}
-      />
-
-      {/* How It Works Modal */}
-      <HowItWorksModal
-        isOpen={showHowItWorksModal}
-        onClose={() => setShowHowItWorksModal(false)}
       />
 
       {/* Create Collection Modal */}
