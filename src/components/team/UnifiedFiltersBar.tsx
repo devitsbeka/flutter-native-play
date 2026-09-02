@@ -212,10 +212,13 @@ export const privateFilterOptions: FilterOption<PrivateFilter>[] = [
 
 /** The Public tab: everything, or one kind of game. Versus King is absent
  * on purpose — its lounges are friends-only and never listed publicly. */
+// The owner's order: active, mine, my friends', everything. "All" is still
+// the default; it is last because it is the one you fall back to.
 export const publicRoomFilterOptions: FilterOption<PublicRoomsFilter>[] = [
+  { value: "active", labelKey: "extra.filterActive" },
+  { value: "my_rooms", labelKey: "extra.filterMyRooms" },
+  { value: "friends_rooms", labelKey: "extra.filterFriendsRooms" },
   { value: "all", labelKey: "extra.filterAll" },
-  { value: "classic", labelKey: "extra.tabRooms" },
-  { value: "team_battle", labelKey: "teamBattle.title" },
 ];
 
 // Pre-defined filter options for rooms
@@ -270,7 +273,7 @@ export type PrivateFilter =
   | "trivias"
   | "collections"
   | "personal";
-export type PublicRoomsFilter = "all" | "classic" | "king" | "team_battle";
+export type PublicRoomsFilter = "all" | "active" | "my_rooms" | "friends_rooms";
 export type MyTriviaFilter =
   | "all"
   | "private"

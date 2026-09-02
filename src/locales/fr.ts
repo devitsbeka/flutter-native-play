@@ -2120,6 +2120,7 @@ export const fr: KaTranslations = {
     filterMyRooms: "Mes salons",
     filterFriendsRooms: "D'amis",
     filterActive: "Actifs",
+    publicFilterEmpty: "Rien pour ce filtre — essaie « Toutes ».",
     filterCompleted: "Terminés",
     filterLabel: "Filtre",
     filterPrivate: "Privé",

@@ -2141,6 +2141,7 @@ export const es: KaTranslations = {
     filterMyRooms: "Mis salas",
     filterFriendsRooms: "De amigos",
     filterActive: "Activas",
+    publicFilterEmpty: "No hay nada con ese filtro: prueba «Todas».",
     filterCompleted: "Terminadas",
     filterLabel: "Filtro",
     filterPrivate: "Privado",

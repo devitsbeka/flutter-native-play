@@ -187,21 +187,49 @@ describe("the two tabs do not show the same room twice", () => {
 });
 
 describe("the public list", () => {
-  it("filters by game and searches name, category and host", () => {
+  it("filters by who is in a room, not by game, and searches name, category and host", () => {
     const rooms = [
-      room({ id: "a", game_type_key: "king", room_name: "Kings couch" }),
-      room({ id: "b", game_type_key: "team_battle", room_name: "Arena" }),
-      room({ id: "c", game_type_key: null, room_name: "Plain" }),
+      room({ id: "a", game_type_key: "king", room_name: "Kings couch", host_user_id: "me" }),
+      room({ id: "b", game_type_key: "team_battle", room_name: "Arena", host_user_id: "pal" }),
+      room({ id: "c", game_type_key: null, room_name: "Plain", host_user_id: "me", my_state: "host" }),
+      room({ id: "d", game_type_key: null, room_name: "Ghost town", host_user_id: "far" }),
     ];
+    const ctx = {
+      seatedByRoom: new Map([
+        ["b", ["pal", "buddy"]],
+        ["c", ["me"]],
+        ["d", ["far", "gone"]],
+      ]),
+      onlineIds: new Set(["me", "buddy"]),
+      friendIds: new Set(["pal"]),
+    };
     // Versus King is friends-only: a king room never reaches the public
     // list, whatever filter is asked for — even one an older build
     // managed to publish.
-    expect(filterPublicRooms(rooms, "king", "")).toEqual([]);
-    expect(filterPublicRooms(rooms, "classic", "").map((r) => r.id)).toEqual(["c"]);
-    expect(filterPublicRooms(rooms, "all", "").map((r) => r.id)).toEqual(["b", "c"]);
-    expect(filterPublicRooms(rooms, "all", "arena").map((r) => r.id)).toEqual(["b"]);
+    expect(filterPublicRooms(rooms, "all", "", ctx).map((r) => r.id)).toEqual(["b", "c", "d"]);
+    // Active: somebody seated (the host counts) is in the app right now.
+    // The arena's host is away but a player on it is here; the ghost town's
+    // whole couch has left.
+    expect(filterPublicRooms(rooms, "active", "", ctx).map((r) => r.id)).toEqual(["b", "c"]);
+    // Mine: the rooms I created, as on the Private tab.
+    expect(filterPublicRooms(rooms, "my_rooms", "", ctx).map((r) => r.id)).toEqual(["c"]);
+    // My friends': hosted by a friend.
+    expect(filterPublicRooms(rooms, "friends_rooms", "", ctx).map((r) => r.id)).toEqual(["b"]);
+    expect(filterPublicRooms(rooms, "all", "arena", ctx).map((r) => r.id)).toEqual(["b"]);
     // The category is the thing people are shopping for on this tab.
-    expect(filterPublicRooms(rooms, "all", "history").length).toBe(2);
+    expect(filterPublicRooms(rooms, "all", "history", ctx).length).toBe(3);
+  });
+
+  it("offers active, mine, friends' and all — in that order, and no game chips", () => {
+    const bar = read("src/components/team/UnifiedFiltersBar.tsx");
+    expect(bar).toMatch(
+      /publicRoomFilterOptions[^]*?\{ value: "active"[^]*?\{ value: "my_rooms"[^]*?\{ value: "friends_rooms"[^]*?\{ value: "all"/,
+    );
+    expect(bar).toMatch(/PublicRoomsFilter = "all" \| "active" \| "my_rooms" \| "friends_rooms"/);
+    const section = read("src/components/team/PublicRoomsSection.tsx");
+    // Presence goes through the function, never the owner-only table.
+    expect(section).toMatch(/onlineUserIds\(everyone\)/);
+    expect(section).not.toMatch(/from\("user_presence"\)/);
   });
 
   it("orders mine first, then my friends' rooms, then the rest newest first", () => {

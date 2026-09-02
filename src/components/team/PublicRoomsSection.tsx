@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useFriends } from "@/contexts/FriendsContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { onlineUserIds } from "@/utils/presence";
 import { motion } from "framer-motion";
 import { Globe, Loader2, Users, Clock } from "lucide-react";
 import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
@@ -238,37 +240,76 @@ export function PublicRoomsSection({
   const { data, isLoading, refetch } = usePublicRooms();
   const [busyId, setBusyId] = useState<string | null>(null);
 
-  // Mine first, then my friends' rooms, then everyone else's — each group
-  // newest first.
+  const { user } = useAuth();
   const { friends } = useFriends();
   const friendIds = useMemo(() => new Set(friends.map((f) => f.friendId)), [friends]);
-  const rooms = sortPublicRooms(filterPublicRooms(data ?? [], filter, searchQuery), friendIds);
 
-  // The joined faces for each listed room. The public_rooms RPC carries only
-  // the host and a count; the card wants to show WHO is on the couch, so the
-  // seated participants ride in on one grouped query for the visible rooms.
-  const roomIds = rooms.map((r) => r.id);
-  const { data: playersByRoom } = useQuery({
-    queryKey: ["public-room-players", roomIds],
-    enabled: roomIds.length > 0,
+  // Who is on each couch. The public_rooms RPC carries only the host and a
+  // count; the card wants to show WHO joined, and the Active filter wants
+  // to know whether any of them is still here — so the seated participants
+  // of every listed room ride in on one grouped query, hosts included.
+  const allIds = useMemo(() => (data ?? []).map((r) => r.id), [data]);
+  const { data: seating } = useQuery({
+    queryKey: ["public-room-players", allIds],
+    enabled: allIds.length > 0,
     staleTime: 10_000,
     refetchInterval: 25_000,
-    queryFn: async (): Promise<Map<string, CardPlayer[]>> => {
+    queryFn: async (): Promise<{
+      faces: Map<string, CardPlayer[]>;
+      seated: Map<string, string[]>;
+    }> => {
       const { data: rows } = await supabase
         .from("room_participants")
         .select("room_id, user_id, nickname, avatar_url, is_host, status")
-        .in("room_id", roomIds)
+        .in("room_id", allIds)
         .in("status", ["joined", "ready", "playing"]);
-      const map = new Map<string, CardPlayer[]>();
+      const faces = new Map<string, CardPlayer[]>();
+      const seated = new Map<string, string[]>();
       (rows ?? []).forEach((p) => {
+        seated.set(p.room_id, [...(seated.get(p.room_id) ?? []), p.user_id]);
         if (p.is_host) return;
-        const arr = map.get(p.room_id) ?? [];
+        const arr = faces.get(p.room_id) ?? [];
         arr.push({ user_id: p.user_id, nickname: p.nickname, avatar_url: p.avatar_url });
-        map.set(p.room_id, arr);
+        faces.set(p.room_id, arr);
       });
-      return map;
+      return { faces, seated };
     },
   });
+
+  // Who, of everyone seated anywhere on this list, is in the app right now.
+  // Through presence_for_users (utils/presence): the presence table itself
+  // is owner-only, and would answer "you, and nobody else".
+  const everyone = useMemo(() => {
+    const ids = new Set<string>((data ?? []).map((r) => r.host_user_id));
+    seating?.seated.forEach((people) => people.forEach((id) => ids.add(id)));
+    return [...ids].sort();
+  }, [data, seating]);
+  const { data: online } = useQuery({
+    queryKey: ["public-room-presence", everyone],
+    enabled: everyone.length > 0,
+    staleTime: 10_000,
+    refetchInterval: 25_000,
+    queryFn: () => onlineUserIds(everyone),
+  });
+  const onlineIds = useMemo(() => {
+    // The viewer is online by definition — they are looking at this list —
+    // so their own room counts as active without waiting for a heartbeat.
+    const ids = new Set(online ?? []);
+    if (user) ids.add(user.id);
+    return ids;
+  }, [online, user]);
+
+  // Mine first, then my friends' rooms, then everyone else's — each group
+  // newest first.
+  const rooms = sortPublicRooms(
+    filterPublicRooms(data ?? [], filter, searchQuery, {
+      seatedByRoom: seating?.seated ?? new Map(),
+      onlineIds,
+      friendIds,
+    }),
+    friendIds,
+  );
+  const playersByRoom = seating?.faces;
 
   const ask = async (room: PublicRoom) => {
     if (busyId) return;
@@ -298,6 +339,19 @@ export function PublicRoomsSection({
         {[0, 1, 2].map((i) => (
           <div key={i} className="w-full h-[172px] rounded-2xl bg-muted animate-pulse" />
         ))}
+      </div>
+    );
+  }
+
+  // Rooms exist but none pass the filter (or the search): say that, not
+  // "nobody has published a room yet", which would be a lie with a list
+  // one tap away.
+  if (rooms.length === 0 && (data ?? []).length > 0) {
+    return (
+      <div className="px-6 py-14 text-center">
+        <p className="text-sm text-muted-foreground max-w-[260px] mx-auto">
+          {t("extra.publicFilterEmpty")}
+        </p>
       </div>
     );
   }
