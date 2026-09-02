@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type MutableRefObject } from "react";
+import { useEffect, useMemo, useRef, useState, type MutableRefObject } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, Pencil } from "lucide-react";
@@ -403,16 +403,43 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
     }
   };
 
-  // Nobody is dealt onto a side any more: a player who arrives without a
-  // team (an approved join request, a code, a challenge invite with no seat
-  // picked) CLAIMS one — tapping a + seat on the side they want is the
-  // choice. Until they choose they are listed as picking below the rounds
-  // caption, and the start gate already waits for everyone to have a team.
+  // Seats are ASSIGNED, never chosen: the host picked their side on the
+  // create screen, so an approved join lands opposite the host the moment
+  // the seat appears — nobody stands in the lobby deciding. The context
+  // deals the seat on entry; these two effects catch the player who was
+  // ALREADY in the lobby when the host accepted them (their row arrives
+  // teamless over realtime): their own device sits them down, and the
+  // host's device sweeps up anyone whose client never did.
   const iAmSeated = participants.some((p) => p.user_id === user?.id);
-  const iAmClaiming = iAmSeated && !myTeam;
-  const othersClaiming = participants.filter(
-    (p) => !p.team && !p.is_bot && p.status !== "invited" && p.user_id !== user?.id,
-  );
+  const myTeamlessSeat = iAmSeated && !myTeam;
+  const perSide = Math.max(2, Math.min(5, Math.floor((room?.max_players ?? 10) / 2)));
+  const oppositeBench = useMemo((): TBTeam | null => {
+    const hostTeam = (participants.find((p) => p.is_host)?.team as TBTeam | null) ?? null;
+    if (!hostTeam) return null;
+    const count = (side: TBTeam) => participants.filter((p) => p.team === side).length;
+    const opp: TBTeam = hostTeam === "a" ? "b" : "a";
+    if (count(opp) < perSide) return opp;
+    if (count(hostTeam) < perSide) return hostTeam;
+    return null;
+  }, [participants, perSide]);
+  const autoSeatRef = useRef(false);
+  useEffect(() => {
+    if (!myTeamlessSeat || room?.status !== "waiting" || autoSeatRef.current) return;
+    if (!oppositeBench) return;
+    autoSeatRef.current = true;
+    void setTeam(oppositeBench);
+  }, [myTeamlessSeat, room?.status, oppositeBench, setTeam]);
+  const sweptRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    if (!isHost || room?.status !== "waiting" || !oppositeBench) return;
+    participants
+      .filter((p) => !p.team && !p.is_bot && p.status !== "invited" && p.user_id !== user?.id)
+      .forEach((p) => {
+        if (sweptRef.current.has(p.user_id)) return;
+        sweptRef.current.add(p.user_id);
+        void manageSeat(p.user_id, oppositeBench === "a" ? "move_a" : "move_b");
+      });
+  }, [isHost, room?.status, oppositeBench, participants, user?.id, manageSeat]);
 
   // The crest RPC trusts only the ELECTED captain (is_captain), while the
   // chip happily shows the first human as a fallback — a pencil that always
@@ -434,14 +461,9 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
     });
   }, [isHost, room?.status, participants, setCaptain]);
 
-  // A + seat is two things. To a player without a team it is THE seat —
-  // tapping it claims that side. To a seated player it invites a friend
-  // onto that team: the invite page opens remembering the side.
+  // A + seat invites a friend onto that team: the invite page opens
+  // remembering the side. It only ever shows on your own bench.
   const seatAction = (team: TBTeam) => {
-    if (iAmClaiming) {
-      void setTeam(team);
-      return;
-    }
     inviteTeamRef.current = team;
     setInviteOpen(true);
   };
@@ -521,7 +543,6 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
     // Only the seats this match is set for. The arena drew all five a side
     // whatever the room's size, so a 2v2 opened with eight empty podiums
     // and no way to tell it apart from a 5v5 nobody had joined yet.
-    const perSide = Math.max(2, Math.min(5, Math.floor((room?.max_players ?? 10) / 2)));
     const all: [number, number][] = [...slots, podium].slice(0, perSide);
     return (
       <AnimatePresence>
@@ -555,11 +576,11 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
               }}
             />
           ) : (
-            // An open seat is only ACTIONABLE on your own side (or anywhere
-            // while you are still claiming one): you invite into your team,
-            // never onto the bench across the arena — that side just shows
-            // a stroke-only circle in its colour so its free places read.
-            iAmClaiming || team === myTeam ? (
+            // An open seat is only ACTIONABLE on your own side: you invite
+            // into your team, never onto the bench across the arena — that
+            // side just shows a stroke-only circle in its colour so its
+            // free places read.
+            team === myTeam ? (
               <PlusSeat
                 key={`plus-${team}-${i}`}
                 left={left}
@@ -659,27 +680,12 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
         <p className="pt-[2px] font-[Nunito] font-normal leading-[20px] text-[#0c172c]/70 text-[13px] text-center tracking-[-0.16px]">
           {t("lobby.autoRounds")}
         </p>
-        {/* Claiming: my own next move, or who the room is waiting on. */}
-        {iAmClaiming ? (
-          <motion.p
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="pt-[6px] font-[Nunito] font-bold leading-[20px] text-[#7126d5] text-[14px] text-center tracking-[-0.16px]"
-          >
-            {t("lobby.claimSeatHint")}
-          </motion.p>
-        ) : othersClaiming.length > 0 ? (
+        {/* Seats are dealt automatically, so the only thing worth saying
+            here is what the room is still short of. */}
+        {!enoughPlayers && (
           <p className="pt-[6px] font-[Nunito] font-semibold leading-[20px] text-[#523b76]/70 text-[13px] text-center tracking-[-0.16px]">
-            {t("lobby.pickingTeam", {
-              name: othersClaiming.map((p) => p.nickname).join(", "),
-            })}
+            {t("teamBattle.minTwoPerTeam")}
           </p>
-        ) : (
-          !enoughPlayers && (
-            <p className="pt-[6px] font-[Nunito] font-semibold leading-[20px] text-[#523b76]/70 text-[13px] text-center tracking-[-0.16px]">
-              {t("teamBattle.minTwoPerTeam")}
-            </p>
-          )
         )}
       </div>
 
