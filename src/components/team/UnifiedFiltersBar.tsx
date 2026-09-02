@@ -218,6 +218,9 @@ export const publicRoomFilterOptions: FilterOption<PublicRoomsFilter>[] = [
   { value: "active", labelKey: "extra.filterActive" },
   { value: "my_rooms", labelKey: "extra.filterMyRooms" },
   { value: "friends_rooms", labelKey: "extra.filterFriendsRooms" },
+  // By game (owner's ask): the Battle arenas, and the ordinary rooms.
+  { value: "battles", labelKey: "teamBattle.title" },
+  { value: "rooms", labelKey: "extra.filterRooms" },
   { value: "all", labelKey: "extra.filterAll" },
 ];
 
@@ -273,7 +276,7 @@ export type PrivateFilter =
   | "trivias"
   | "collections"
   | "personal";
-export type PublicRoomsFilter = "all" | "active" | "my_rooms" | "friends_rooms";
+export type PublicRoomsFilter = "all" | "active" | "my_rooms" | "friends_rooms" | "battles" | "rooms";
 export type MyTriviaFilter =
   | "all"
   | "private"

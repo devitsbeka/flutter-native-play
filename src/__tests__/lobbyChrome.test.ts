@@ -91,6 +91,33 @@ describe("the lounges invite through the invite page", () => {
     expect(service).toMatch(/skipImagePreload\s*\n?\s*\? ordered\.slice\(0, count\)/);
   });
 
+  it("a side has a NAME, dealt plural and renamed only by its captain", () => {
+    // "Team A" told nobody anything: the randomizer deals plural names
+    // (owner's rule) written with the room row, the lobby shows them, and
+    // the crest picker's name field renames through the captain-only RPC —
+    // with the AI room-namer silenced so it never fights the captain.
+    const sql = read("supabase/migrations/20260929100000_team_names.sql");
+    expect(sql).toMatch(/ADD COLUMN IF NOT EXISTS team_a_name text/);
+    expect(sql).toMatch(/only that team''s captain names it/);
+    expect(sql).toMatch(/REVOKE ALL ON FUNCTION public\.tb_set_team_name\(uuid, text, text\) FROM PUBLIC, anon;/);
+    const gen = read("src/utils/teamNameGenerator.ts");
+    expect(gen).toMatch(/პინგვინები/);
+    expect(gen).toMatch(/არწივთა კლანი/);
+    expect(gen).toMatch(/მებრძოლთა გუნდი/);
+    expect(battle).toMatch(/const teamName = \(team: TBTeam\)/);
+    expect(battle).toMatch(/supabase\.rpc\("tb_set_team_name"/);
+    expect(battle).toMatch(/autoName=\{false\}/);
+    const context = read("src/contexts/TeamBattleContext.tsx");
+    // The name columns ride the room insert only once the migration is
+    // live — an insert naming an unknown column writes nothing at all, so
+    // the spread is probe-gated like is_public (roomVisibility.ts).
+    expect(context).toMatch(/\.\.\.\(await teamNameFields\(teamNames\)\)/);
+    const gate = read("src/utils/roomVisibility.ts");
+    expect(gate).toMatch(/select\("team_a_name"\)\.limit\(1\)/);
+    const match = read("src/components/team-battle/TeamBattleMatch.tsx");
+    expect(match).toMatch(/room\?\.team_a_name : room\?\.team_b_name/);
+  });
+
   it("a tile ships at most the 30 questions the server accepts", () => {
     // tb_start_match validates 5..30 per tile (20260921210000); the fetch's
     // 40 is headroom for the seen-filter, not a tile size — sending it raw
@@ -179,8 +206,8 @@ describe("the host's side is the side they chose", () => {
     // lobby opened on the stock crests.
     expect(ctx).toMatch(/\.\.\.\(teamIcons\?\.a \? \{ team_a_icon: teamIcons\.a \} : \{\}\)/);
     expect(ctx).toMatch(/\.\.\.\(teamIcons\?\.b \? \{ team_b_icon: teamIcons\.b \} : \{\}\)/);
-    expect(battle).toMatch(/createRoom\(publish, side, teamSize, teamIcons\)/g);
-    expect(battle.match(/createRoom\(publish, side, teamSize, teamIcons\)/g)?.length).toBe(2);
+    expect(battle).toMatch(/createRoom\(publish, side, teamSize, teamIcons, teamNamesRef\.current\)/g);
+    expect(battle.match(/createRoom\(publish, side, teamSize, teamIcons, teamNamesRef\.current\)/g)?.length).toBe(2);
     expect(battle).not.toMatch(/applyCrests/);
   });
 

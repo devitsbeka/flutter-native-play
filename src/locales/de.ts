@@ -3053,7 +3053,7 @@ export const de: KaTranslations = {
     gpTitle: "Hintergrund wählen",
     gpSubtitle: "Wähle deine Raumfarben",
     ripTitle: "Icon/Name ändern",
-    ripSearchPlaceholder: "Icon suchen...",
+    ripSearchPlaceholder: "Wähle ein Icon...",
     ripRoomNamePlaceholder: "Raumname",
     ripEditHint: "Ändere den Namen oder wähle ein neues Icon",
     ripRecentlyUsed: "Zuletzt verwendet",

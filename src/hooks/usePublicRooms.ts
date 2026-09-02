@@ -42,7 +42,14 @@ export interface PublicRoom {
  * active (somebody in it is in the app right now), my rooms, my friends'
  * rooms, all. Not by game: which game a card plays is written on it.
  */
-export type PublicRoomFilter = "all" | "active" | "my_rooms" | "friends_rooms";
+export type PublicRoomFilter =
+  | "all"
+  | "active"
+  | "my_rooms"
+  | "friends_rooms"
+  // By game (owner's ask): the Battle arenas, and the ordinary rooms.
+  | "battles"
+  | "rooms";
 
 /** What the filters need to know beyond the room row itself. */
 export interface PublicRoomContext {
@@ -217,6 +224,10 @@ export function filterPublicRooms(
     // merely sit in is somebody else's.
     if (filter === "my_rooms" && room.my_state !== "host") return false;
     if (filter === "friends_rooms" && !ctx?.friendIds.has(room.host_user_id)) return false;
+    // By game: "battles" is the Trivia Battle arenas; "rooms" is everything
+    // that is not one — the classic rooms and the Words lounges.
+    if (filter === "battles" && room.game_type_key !== "team_battle") return false;
+    if (filter === "rooms" && room.game_type_key === "team_battle") return false;
     // "Active" is a room with a live person in it: the host or anyone seated
     // whose heartbeat is inside the online window. A room whose whole couch
     // has closed the app is a room you will wait in alone.

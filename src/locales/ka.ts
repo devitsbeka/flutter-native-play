@@ -3508,7 +3508,7 @@ export const ka = {
     gpSubtitle: "აირჩიე შენი ოთახის ფერები",
     // Room icon picker
     ripTitle: "შეცვალე აიკონი/სახელი",
-    ripSearchPlaceholder: "მოძებნე აიკონი...",
+    ripSearchPlaceholder: "შეარჩიე აიკონი...",
     ripRoomNamePlaceholder: "ოთახის სახელი",
     ripEditHint: "შეცვალე სახელი ან აირჩიე ახალი აიკონი",
     ripRecentlyUsed: "ბოლოს გამოყენებული",

@@ -3503,7 +3503,7 @@ export const en: KaTranslations = {
     gpSubtitle: "Choose your room colors",
     // Room icon picker
     ripTitle: "Change Icon/Name",
-    ripSearchPlaceholder: "Search icon...",
+    ripSearchPlaceholder: "Pick an icon...",
     ripRoomNamePlaceholder: "Room name",
     ripEditHint: "Change name or choose a new icon",
     ripRecentlyUsed: "Recently used",

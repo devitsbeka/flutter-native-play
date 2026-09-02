@@ -3069,7 +3069,7 @@ export const it: KaTranslations = {
     gpTitle: "Scegli Sfondo",
     gpSubtitle: "Scegli i colori della tua stanza",
     ripTitle: "Cambia Icona/Nome",
-    ripSearchPlaceholder: "Cerca icona...",
+    ripSearchPlaceholder: "Scegli un'icona...",
     ripRoomNamePlaceholder: "Nome stanza",
     ripEditHint: "Cambia nome o scegli una nuova icona",
     ripRecentlyUsed: "Usati di recente",
