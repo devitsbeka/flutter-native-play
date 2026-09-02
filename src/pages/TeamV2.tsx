@@ -117,15 +117,27 @@ function TeamContentV2() {
 
   // Auto-open PersonalTrivia from navigation state
   const [autoOpenPersonalTrivia, setAutoOpenPersonalTrivia] = useState(false);
-  
+
+  // Sent here to create a room (the play button, a mission, the drawer):
+  // the create screen is on the very first paint. The context flag that
+  // keeps it open is set by the effect below, one render later — and that
+  // one render showed the rooms list for a flash before the screen slid
+  // over it. This remembers the arrival until the flag catches up.
+  const arrivedToCreate = useRef<boolean>(
+    Boolean(location.state?.openCreateRoom || location.state?.openPersonalTrivia),
+  );
+  const createOpen = showCreateModal || arrivedToCreate.current;
+
   useEffect(() => {
     if (location.state?.openPersonalTrivia) {
       setAutoOpenPersonalTrivia(true);
       setShowCreateModal(true);
+      arrivedToCreate.current = false;
       navigate(location.pathname, { replace: true, state: {} });
     }
     if (location.state?.openCreateRoom) {
       setShowCreateModal(true);
+      arrivedToCreate.current = false;
       navigate(location.pathname, { replace: true, state: {} });
     }
     if (location.state?.openTV) {
@@ -1000,7 +1012,7 @@ function TeamContentV2() {
     showCreateCollectionModal || 
     showPersonalTriviaModal ||
     showCreateRoomScreen ||
-    showCreateModal ||
+    createOpen ||
     showTeamMenu ||
     showBlindTriviaModal ||
     showCreateTypeModal;
@@ -1296,7 +1308,7 @@ function TeamContentV2() {
             onSelectLibrary={() => gatedCreateRoomAndNavigate()}
           />
         )}
-        {showCreateModal && (
+        {createOpen && (
         <CreateRoomPage 
             onClose={() => {
               setShowCreateModal(false);
