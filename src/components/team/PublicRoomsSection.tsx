@@ -15,7 +15,7 @@ import { useFriends } from "@/contexts/FriendsContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { onlineUserIds } from "@/utils/presence";
 import { motion } from "framer-motion";
-import { Globe, Loader2, Users, Clock, Trash2, LogOut } from "lucide-react";
+import { Globe, Loader2, Users, Clock, Trash2, LogOut, X } from "lucide-react";
 import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
 import { GradientBackground, ROOM_GRADIENT_PRESETS } from "@/components/ui/noisy-gradient-backgrounds";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
@@ -86,8 +86,10 @@ function PublicRoomCard({
   room,
   players,
   crests,
+  online,
   index,
   onAsk,
+  onWithdraw,
   onRemove,
   busy,
 }: {
@@ -95,8 +97,12 @@ function PublicRoomCard({
   players: CardPlayer[];
   /** A Battle room's two team crests — its real face on the card. */
   crests?: { a: string | null; b: string | null };
+  /** Who, of everyone on this list, is in the app right now. */
+  online: ReadonlySet<string>;
   index: number;
   onAsk: (room: PublicRoom) => void;
+  /** Take back a pending ask — one game at a time, so waiting is undoable. */
+  onWithdraw: (room: PublicRoom) => void;
   /** Delete it (the host) or leave it (a seated guest). */
   onRemove: (room: PublicRoom) => void;
   busy: boolean;
@@ -111,6 +117,10 @@ function PublicRoomCard({
   const seats = roomSeats(room);
   const inside = room.my_state === "host" || room.my_state === "joined";
   const waiting = room.my_state === "pending";
+  // The room is LIVE when somebody in it is in the app right now — that is
+  // what the green dot on the join button means, so a room whose whole
+  // couch has closed the app doesn't wear one.
+  const live = online.has(room.host_user_id) || players.some((p) => online.has(p.user_id));
   const category = room.first_category_name ? localizeCategory(room.first_category_name) : null;
   // A Trivia Battle card is a picture of where it happens: the arena from
   // its lobby, empty, seats waiting — not one of the gradients every other
@@ -130,7 +140,7 @@ function PublicRoomCard({
       className="relative rounded-2xl overflow-hidden shadow-lg"
       onClick={() => (inside ? enter() : onAsk(room))}
     >
-      <div className="relative p-3 min-h-[172px] flex flex-col rounded-2xl overflow-hidden">
+      <div className="relative p-3 min-h-[216px] flex flex-col rounded-2xl overflow-hidden">
         {scene ? (
           <>
             {/* The arena, dimmed to a backdrop: the pale lilac scene at
@@ -182,30 +192,6 @@ function PublicRoomCard({
                 {room.host_nickname || t("extra.friendFallback")}
               </span>
             </button>
-            {/* Who already joined, right next to the host — a filling room
-                shows its faces, not just a count. */}
-            {players.length > 0 && (
-              <span className="flex items-center shrink-0">
-                {players.slice(0, 3).map((p, i) => (
-                  <span
-                    key={p.user_id}
-                    className={`relative block w-6 h-6 rounded-full overflow-hidden border-2 shrink-0 ${ink.ring} ${i > 0 ? "-ml-2" : ""}`}
-                  >
-                    <SafeAvatarImage
-                      avatarUrl={p.avatar_url}
-                      fallback={p.nickname || "?"}
-                      className="w-full h-full object-cover"
-                      containerClassName="w-full h-full"
-                    />
-                  </span>
-                ))}
-                {players.length > 3 && (
-                  <span className={`-ml-2 w-6 h-6 rounded-full border-2 flex items-center justify-center text-[9px] font-bold shrink-0 ${ink.ring} ${ink.more}`}>
-                    +{players.length - 3}
-                  </span>
-                )}
-              </span>
-            )}
           </div>
 
           {/* Seats. The lounges are what this is for — their card is
@@ -287,6 +273,46 @@ function PublicRoomCard({
           </div>
         )}
 
+        {/* Every seat the room has, so the reader sees at a glance which
+            couch is one player short of starting: claimed seats wear their
+            faces (host first, crowned by the chip above), each with a green
+            dot when that person is in the app right now; open seats are
+            dashed outlines waiting to be filled. */}
+        {seats != null && seats > 0 && (
+          <div className="relative z-10 flex items-center gap-1 pb-2 flex-wrap">
+            {Array.from({ length: Math.min(seats, 10) }, (_, i) => {
+              const person: CardPlayer | undefined =
+                i === 0
+                  ? {
+                      user_id: room.host_user_id,
+                      nickname: room.host_nickname,
+                      avatar_url: room.host_avatar_url,
+                    }
+                  : players[i - 1];
+              return person ? (
+                <span key={person.user_id} className="relative shrink-0">
+                  <span className={`block w-7 h-7 rounded-full overflow-hidden border-2 ${ink.ring}`}>
+                    <SafeAvatarImage
+                      avatarUrl={person.avatar_url}
+                      fallback={person.nickname || "?"}
+                      className="w-full h-full object-cover"
+                      containerClassName="w-full h-full"
+                    />
+                  </span>
+                  {online.has(person.user_id) && (
+                    <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#2E1065]/70" />
+                  )}
+                </span>
+              ) : (
+                <span
+                  key={`open-${i}`}
+                  className="w-7 h-7 rounded-full border-2 border-dashed border-white/40 bg-white/10 shrink-0"
+                />
+              );
+            })}
+          </div>
+        )}
+
         {/* Bottom: the first round on the left, the way in on the right */}
         <div className={`relative z-10 backdrop-blur-md border rounded-xl px-3 py-2.5 flex items-center justify-between gap-2 ${ink.pill}`}>
           <div className="flex items-center gap-2 min-w-0">
@@ -308,31 +334,53 @@ function PublicRoomCard({
             </div>
           </div>
 
-          <motion.button
-            type="button"
-            whileTap={{ scale: 0.96 }}
-            disabled={busy || waiting}
-            onClick={(e) => {
-              e.stopPropagation();
-              if (inside) enter();
-              else onAsk(room);
-            }}
-            className="flex items-center gap-1.5 shrink-0 rounded-lg bg-white/70 backdrop-blur-md px-3 py-1.5 text-sm font-extrabold text-[#2E1065] shadow-md disabled:opacity-60"
-          >
-            {busy ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : waiting ? (
-              <>
-                <Clock className="w-3.5 h-3.5" />
-                {t("extra.joinWaitingHost")}
-              </>
-            ) : (
-              <>
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                {t("extra.roomJoinLive")}
-              </>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <motion.button
+              type="button"
+              whileTap={{ scale: 0.96 }}
+              disabled={busy || waiting}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (inside) enter();
+                else onAsk(room);
+              }}
+              className="flex items-center gap-1.5 shrink-0 rounded-lg bg-white/70 backdrop-blur-md px-3 py-1.5 text-sm font-extrabold text-[#2E1065] shadow-md disabled:opacity-60"
+            >
+              {busy ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : waiting ? (
+                <>
+                  <Clock className="w-3.5 h-3.5" />
+                  {t("extra.joinWaitingHost")}
+                </>
+              ) : (
+                <>
+                  {/* The dot means LIVE — somebody in that room is in the
+                      app right now — so a sleeping room's button carries
+                      no dot rather than a lie. */}
+                  {live && (
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)]" />
+                  )}
+                  {t("extra.roomJoinLive")}
+                </>
+              )}
+            </motion.button>
+            {/* Waiting is undoable: one game at a time means the ask must
+                be withdrawable to knock on another door. */}
+            {waiting && !busy && (
+              <button
+                type="button"
+                aria-label={t("extra.withdrawJoin")}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onWithdraw(room);
+                }}
+                className={`w-8 h-8 rounded-lg backdrop-blur-md border flex items-center justify-center active:scale-95 transition-transform ${ink.pill} ${ink.text}`}
+              >
+                <X className="w-4 h-4" />
+              </button>
             )}
-          </motion.button>
+          </div>
         </div>
       </div>
     </motion.div>
@@ -454,8 +502,10 @@ export function PublicRoomsSection({
     return ids;
   }, [online, user]);
 
-  // Mine first, then my friends' rooms, then everyone else's — each group
-  // newest first.
+  // The room I'm waiting on first, then mine, then my friends' rooms, then
+  // everyone else's — and within each group the room closest to filling
+  // first, so the couch one player short of starting is the first thing
+  // a scroller sees.
   const rooms = sortPublicRooms(
     filterPublicRooms(data ?? [], filter, searchQuery, {
       seatedByRoom: seating?.seated ?? new Map(),
@@ -516,6 +566,18 @@ export function PublicRoomsSection({
     if (busyId) return;
     setBusyId(room.id);
     try {
+      // One game at a time: asking here takes back any ask still waiting
+      // on another door. (RLS only lets the asker delete their own
+      // PENDING rows — see 20260926100000 — so an answered request keeps
+      // its answer.)
+      if (user && (data ?? []).some((r) => r.my_state === "pending" && r.id !== room.id)) {
+        await supabase
+          .from("room_join_requests")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("status", "pending")
+          .neq("room_id", room.id);
+      }
       const { data: outcome, error } = await supabase.rpc("request_room_join", {
         p_room_id: room.id,
       });
@@ -534,11 +596,33 @@ export function PublicRoomsSection({
     }
   };
 
+  // Take back a pending ask. Until the 20260926100000 policy is applied
+  // the delete matches no row (RLS, silently) — the card just keeps
+  // waiting, which is also what a failed withdraw should look like.
+  const withdraw = async (room: PublicRoom) => {
+    if (!user || busyId) return;
+    setBusyId(room.id);
+    try {
+      const { error } = await supabase
+        .from("room_join_requests")
+        .delete()
+        .eq("room_id", room.id)
+        .eq("user_id", user.id)
+        .eq("status", "pending");
+      if (error) throw error;
+      await queryClient.invalidateQueries({ queryKey: PUBLIC_ROOMS_KEY });
+    } catch (e) {
+      console.error("[publicRooms] withdraw failed", e);
+    } finally {
+      setBusyId(null);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-3 px-4 pt-3">
         {[0, 1, 2].map((i) => (
-          <div key={i} className="w-full h-[172px] rounded-2xl bg-muted animate-pulse" />
+          <div key={i} className="w-full h-[216px] rounded-2xl bg-muted animate-pulse" />
         ))}
       </div>
     );
@@ -581,8 +665,10 @@ export function PublicRoomsSection({
           room={room}
           players={playersByRoom?.get(room.id) ?? []}
           crests={seating?.crests.get(room.id)}
+          online={onlineIds}
           index={i}
           onAsk={(r) => void ask(r)}
+          onWithdraw={(r) => void withdraw(r)}
           onRemove={setRemoving}
           busy={busyId === room.id}
         />

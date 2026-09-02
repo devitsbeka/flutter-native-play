@@ -7,6 +7,13 @@ import { anyBlockedText, containsBlockedText } from "@/utils/contentFilter";
 import { Loader2, ArrowLeft, HelpCircle, X, RefreshCw, Play, Pencil, Gamepad2, Plus, Check, Globe, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { generateRoomIdentity } from "@/utils/roomNameGenerator";
 import { roomVisibilityFields } from "@/utils/roomVisibility";
 import { localizeCategoryNames } from "@/utils/localizeCategories";
@@ -301,13 +308,27 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   /**
    * How many a side the arena is set for: 2-2 through 5-5.
    *
-   * The arena always laid out five seats per team whatever the match was
-   * actually going to be, so a 2v2 opened with eight empty podiums and no
-   * way to say "this is a 2v2". It caps the room (max_players) and the
-   * seats the lobby draws. Five is the default because that is what every
-   * arena was before this, so nothing shrinks unless somebody asks.
+   * It caps the room (max_players) and the seats the lobby draws. The
+   * default is 2-2 — the smallest game that can start — unless this
+   * device picked something else last time: the choice is remembered
+   * per device (owner's ask), and a cleared store just means 2-2 again.
    */
-  const [battleTeamSize, setBattleTeamSize] = useState(5);
+  const [battleTeamSize, setBattleTeamSizeState] = useState(() => {
+    try {
+      const saved = Number(localStorage.getItem("mt.battleTeamSize"));
+      return saved >= 2 && saved <= 5 ? saved : 2;
+    } catch {
+      return 2;
+    }
+  });
+  const setBattleTeamSize = (n: number) => {
+    setBattleTeamSizeState(n);
+    try {
+      localStorage.setItem("mt.battleTeamSize", String(n));
+    } catch {
+      // A per-device nicety only — nothing to do when storage is blocked.
+    }
+  };
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState("");
   
@@ -1561,54 +1582,55 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       {/* Footer - Normal Button */}
       <div className="border-t border-border/30 shrink-0">
         <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full px-4 py-4">
-        {/* Published or private — a real ON/OFF switch (owner's ask: no
-            tabs), immediately above the sizing row and the button. The
-            label and icon flip with the state, and the line underneath
-            says what publishing actually means. */}
+        {/* Published-or-private and the match size share ONE row (owner's
+            ask: not two) so the footer stays short and the team pickers
+            above never scroll out of reach. The switch flips its label and
+            icon; the size is a dropdown reading 2-2 through 5-5. The line
+            underneath still says what publishing actually means. */}
         {canPublish && (
           <div className="mb-3">
-            <div className="flex items-center justify-between gap-2 rounded-2xl bg-muted px-3.5 py-2.5">
-              <span className="flex items-center gap-1.5 min-w-0 text-[13px] font-semibold text-foreground">
-                {isPublic ? (
-                  <Globe className="w-3.5 h-3.5 text-primary shrink-0" />
-                ) : (
-                  <Lock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                )}
-                <span className="truncate">
-                  {isPublic ? t("extra.roomPublic") : t("extra.roomPrivate")}
-                </span>
-              </span>
-              <Switch checked={isPublic} onCheckedChange={setIsPublic} />
-            </div>
-            <p className="mt-1 px-1 text-[11.5px] leading-snug text-muted-foreground">
-              {isPublic ? t("extra.roomPublicHint") : t("extra.roomPrivateHint")}
-            </p>
-          </div>
-        )}
-
-        {/* How big the match is — under the switch (owner's ask), above the
-            button. The two sides are equal by the server's own rule. */}
-        {gameChoice === "battle" && (
-          <div className="mb-3">
-            <h2 className="text-[13.2px] font-medium text-muted-foreground mb-1.5">
-              {t("extra.playersPerTeam")}
-            </h2>
-            <div className="flex items-center gap-1 p-1 rounded-2xl bg-muted">
-              {[2, 3, 4, 5].map((size) => (
-                <button
-                  key={size}
-                  type="button"
-                  onClick={() => setBattleTeamSize(size)}
-                  className={`flex-1 rounded-xl px-2 py-2 text-[13px] font-bold tabular-nums transition-colors ${
-                    battleTeamSize === size
-                      ? "bg-background text-foreground shadow-sm"
-                      : "text-muted-foreground"
-                  }`}
+            <div className="flex items-stretch gap-2">
+              {canPublish && (
+                <div className="flex flex-1 items-center justify-between gap-2 rounded-2xl bg-muted px-3.5 py-2.5 min-w-0">
+                  <span className="flex items-center gap-1.5 min-w-0 text-[13px] font-semibold text-foreground">
+                    {isPublic ? (
+                      <Globe className="w-3.5 h-3.5 text-primary shrink-0" />
+                    ) : (
+                      <Lock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                    )}
+                    <span className="truncate">
+                      {isPublic ? t("extra.roomPublic") : t("extra.roomPrivate")}
+                    </span>
+                  </span>
+                  <Switch checked={isPublic} onCheckedChange={setIsPublic} />
+                </div>
+              )}
+              {gameChoice === "battle" && (
+                <Select
+                  value={String(battleTeamSize)}
+                  onValueChange={(v) => setBattleTeamSize(Number(v))}
                 >
-                  {size}-{size}
-                </button>
-              ))}
+                  <SelectTrigger
+                    aria-label={t("extra.playersPerTeam")}
+                    className="w-[108px] shrink-0 h-auto rounded-2xl border-0 bg-muted px-3.5 py-2.5 text-[13px] font-bold tabular-nums"
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[2, 3, 4, 5].map((size) => (
+                      <SelectItem key={size} value={String(size)} className="tabular-nums font-semibold">
+                        {size}-{size}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
+            {canPublish && (
+              <p className="mt-1 px-1 text-[11.5px] leading-snug text-muted-foreground">
+                {isPublic ? t("extra.roomPublicHint") : t("extra.roomPrivateHint")}
+              </p>
+            )}
           </div>
         )}
 

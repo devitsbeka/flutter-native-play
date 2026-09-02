@@ -122,15 +122,19 @@ describe("a room is private unless somebody published it", () => {
 });
 
 describe("the arena is sized before it is opened", () => {
-  it("the host picks 2-2 through 5-5, under the switch", () => {
+  it("the host picks 2-2 through 5-5 from a dropdown beside the switch", () => {
     const create = read("src/components/team/CreateRoomPage.tsx");
-    expect(create).toMatch(/const \[battleTeamSize, setBattleTeamSize\] = useState\(5\)/);
+    // 2-2 is the default — the smallest game that can start — and the last
+    // pick is remembered per device (owner's ask).
+    expect(create).toMatch(/localStorage\.getItem\("mt\.battleTeamSize"\)/);
+    expect(create).toMatch(/return saved >= 2 && saved <= 5 \? saved : 2;/);
+    expect(create).toMatch(/localStorage\.setItem\("mt\.battleTeamSize", String\(n\)\)/);
+    // ONE row, not two (owner's ask): the visibility switch and the size
+    // dropdown sit side by side above the button, keeping the footer short
+    // so the team pickers above never scroll out of reach.
+    expect(create).toMatch(/<div className="flex items-stretch gap-2">/);
+    expect(create).toMatch(/onValueChange=\{\(v\) => setBattleTeamSize\(Number\(v\)\)\}/);
     expect(create).toMatch(/\[2, 3, 4, 5\]\.map\(\(size\) =>/);
-    // The toggle sits ABOVE the sizing row (owner's ask), both above the
-    // button.
-    expect(create.indexOf("extra.roomPublicHint")).toBeLessThan(
-      create.indexOf("extra.playersPerTeam"),
-    );
     expect(create).toMatch(/teamSize: gameChoice === "battle" \? battleTeamSize : undefined/);
   });
 
@@ -259,6 +263,27 @@ describe("the public list", () => {
     expect(section).toMatch(/const h = seed\(r\.id\);/);
   });
 
+  it("a card shows every seat, marks the live ones, and a wait can be taken back", () => {
+    const section = read("src/components/team/PublicRoomsSection.tsx");
+    // The full couch: a placeholder for every open seat, a face (with an
+    // online dot) on every claimed one — so "one player short" is visible
+    // at a glance.
+    expect(section).toMatch(/Array\.from\(\{ length: Math\.min\(seats, 10\) \}/);
+    expect(section).toMatch(/border-dashed border-white\/40/);
+    expect(section).toMatch(/online\.has\(person\.user_id\)/);
+    // The join button's green dot means somebody in the room is in the app
+    // right now — a sleeping room's button carries none.
+    expect(section).toMatch(/const live = online\.has\(room\.host_user_id\) \|\| players\.some/);
+    expect(section).toMatch(/\{live && \(/);
+    // One game at a time: a pending ask is withdrawable from the card, and
+    // asking at another door takes the old ask back first.
+    expect(section).toMatch(/onWithdraw\(room\)/);
+    expect(section).toMatch(/\.neq\("room_id", room\.id\)/);
+    const sql = read("supabase/migrations/20260926100000_withdraw_join_request.sql");
+    expect(sql).toMatch(/FOR DELETE/);
+    expect(sql).toMatch(/user_id = auth\.uid\(\) AND status = 'pending'/);
+  });
+
   it("offers active, mine, friends' and all — in that order, and no game chips", () => {
     const bar = read("src/components/team/UnifiedFiltersBar.tsx");
     expect(bar).toMatch(
@@ -271,20 +296,39 @@ describe("the public list", () => {
     expect(section).not.toMatch(/from\("user_presence"\)/);
   });
 
-  it("orders mine first, then my friends' rooms, then the rest newest first", () => {
+  it("orders the room I'm waiting on first, then mine, then friends', then the rest", () => {
     const rooms = [
       room({ id: "old-stranger", host_user_id: "s1", created_at: "2026-01-01T00:00:00Z" }),
       room({ id: "new-stranger", host_user_id: "s2", created_at: "2026-06-01T00:00:00Z" }),
       room({ id: "friends", host_user_id: "f1", created_at: "2026-02-01T00:00:00Z" }),
       room({ id: "mine", host_user_id: "me", my_state: "host", created_at: "2026-01-15T00:00:00Z" }),
       room({ id: "im-in", host_user_id: "s3", my_state: "joined", created_at: "2026-03-01T00:00:00Z" }),
+      // One game at a time: the ask I'm waiting on IS what I'm doing.
+      room({ id: "waiting-on", host_user_id: "s4", my_state: "pending", created_at: "2026-01-02T00:00:00Z" }),
     ];
     expect(sortPublicRooms(rooms, new Set(["f1"])).map((r) => r.id)).toEqual([
+      "waiting-on",
       "im-in", // rooms I sit in count as mine, newest of the two
       "mine",
       "friends",
       "new-stranger",
       "old-stranger",
+    ]);
+  });
+
+  it("within a group, the couch closest to starting comes first", () => {
+    const rooms = [
+      room({ id: "empty", host_user_id: "s1", game_type_key: "team_battle", max_players: 10, player_count: 2, created_at: "2026-06-01T00:00:00Z" }),
+      room({ id: "one-short", host_user_id: "s2", game_type_key: "team_battle", max_players: 10, player_count: 9, created_at: "2026-01-01T00:00:00Z" }),
+      // Nothing to join: a full couch goes to the back, not the front.
+      room({ id: "full", host_user_id: "s3", game_type_key: "team_battle", max_players: 10, player_count: 10, created_at: "2026-06-02T00:00:00Z" }),
+      room({ id: "no-cap", host_user_id: "s4", created_at: "2026-06-03T00:00:00Z" }),
+    ];
+    expect(sortPublicRooms(rooms, new Set()).map((r) => r.id)).toEqual([
+      "one-short",
+      "empty",
+      "no-cap",
+      "full",
     ]);
   });
 

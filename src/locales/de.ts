@@ -2090,6 +2090,7 @@ export const de: KaTranslations = {
     firstRoundLabel: "Erste Runde",
     roomNoCategoryYet: "Noch keine Kategorie gewählt",
     joinWaitingHost: "Wartet",
+    withdrawJoin: "Zurückziehen",
     joinAsked: "Anfrage gesendet — warte auf den Host",
     joinAskFailed: "Anfrage konnte nicht gesendet werden",
     publicEmptyTitle: "Noch keine öffentlichen Räume",

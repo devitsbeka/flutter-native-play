@@ -2086,6 +2086,7 @@ export const fr: KaTranslations = {
     firstRoundLabel: "Premier tour",
     roomNoCategoryYet: "Aucune catégorie choisie",
     joinWaitingHost: "En attente",
+    withdrawJoin: "Retirer",
     joinAsked: "Demande envoyée — en attente de l'hôte",
     joinAskFailed: "Impossible d'envoyer la demande",
     publicEmptyTitle: "Aucune salle publique",

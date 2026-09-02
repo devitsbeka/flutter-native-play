@@ -399,7 +399,18 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
           | undefined;
         const perSide = Math.max(2, Math.min(5, Math.floor((row.max_players ?? 10) / 2)));
         const onSide = (side: TBTeam) => (seated ?? []).filter((p) => p.team === side).length;
-        if (user.id === row.host_user_id || (hostTeam !== "a" && hostTeam !== "b")) return null;
+        // A returning HOST anchors the benches again: they take the
+        // emptier side (A on a tie) rather than coming back seatless — a
+        // teamless host had no + seats, no way to invite, and a Start
+        // that could never go.
+        if (user.id === row.host_user_id) {
+          const a = onSide("a");
+          const b = onSide("b");
+          if (a <= b && a < perSide) return "a";
+          if (b < perSide) return "b";
+          return a < perSide ? "a" : null;
+        }
+        if (hostTeam !== "a" && hostTeam !== "b") return null;
         const opposite: TBTeam = hostTeam === "a" ? "b" : "a";
         if (onSide(opposite) < perSide) return opposite;
         if (onSide(hostTeam) < perSide) return hostTeam;
