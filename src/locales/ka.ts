@@ -1749,6 +1749,7 @@ export const ka = {
   // MyTrivia King (docs/GAME_TYPES_DESIGN.md §3)
   king: {
     title: "MyTrivia King",
+    vsTitle: "Trivia King VS",
     you: "შენ",
     king: "King",
     firstTo6: "6 ქულამდე",

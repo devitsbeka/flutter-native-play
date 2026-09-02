@@ -8,6 +8,8 @@ import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { containsBlockedText } from "@/utils/contentFilter";
 import iconKingMascot from "@/assets/play-chooser/icon-king.webp";
 import crownIconAsset from "@/assets/crown-icon.png";
+import iconAnswerCorrect from "@/assets/answer-correct-3d.png";
+import iconAnswerWrong from "@/assets/answer-wrong-3d.png";
 import { resolveAvatarUrl } from "@/utils/avatarUtils";
 import { supabase } from "@/integrations/supabase/client";
 import { roomVisibilityFields } from "@/utils/roomVisibility";
@@ -20,6 +22,7 @@ import { readAppLanguage } from "@/utils/appLanguage";
 import { toast } from "@/lib/toast";
 import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
 import { JoinRequestGate } from "@/components/team/JoinRequestGate";
+import { RoomIconPickerModal } from "@/components/team/RoomIconPickerModal";
 import {
   CaptainChip,
   CaptainInfoModal,
@@ -117,6 +120,36 @@ function DuelScoreRow({
       <span className="text-white/70 text-xs">{ruleLabel}</span>
       {chip(kingLabel, kingScore, "#7BA3F0", "#5F8BE0", "#3565C9")}
     </div>
+  );
+}
+
+/**
+ * The duel is billed like a fight card: "Trivia King VS <the team>", with
+ * the team's icon when the host has dressed one (owner's direction). A
+ * lounge that hasn't been named yet falls back to the plain game title.
+ */
+function DuelTitle({
+  t,
+  teamName,
+  teamIcon,
+}: {
+  t: (k: string) => string;
+  teamName?: string | null;
+  teamIcon?: string | null;
+}) {
+  return (
+    <h1 className="font-display text-xl font-bold text-white flex items-center gap-2 min-w-0">
+      <img alt="" src={iconKingMascot} className="w-8 h-8 object-contain shrink-0" />
+      {teamName ? (
+        <>
+          <span className="shrink-0 whitespace-nowrap">{t("king.vsTitle")}</span>
+          {teamIcon && <img alt="" src={teamIcon} className="w-7 h-7 object-contain shrink-0" />}
+          <span className="truncate min-w-0">{teamName}</span>
+        </>
+      ) : (
+        <span className="truncate">{t("king.title")}</span>
+      )}
+    </h1>
   );
 }
 
@@ -324,7 +357,6 @@ export default function KingPage() {
   const location = useLocation();
   const [kingRoom, setKingRoom] = useState<Tables<"game_rooms"> | null>(null);
   const [renameOpen, setRenameOpen] = useState(false);
-  const [nameDraft, setNameDraft] = useState("");
   const nameAttempted = useRef(false);
   const [kingParts, setKingParts] = useState<Tables<"room_participants">[]>([]);
   const [kingPending, setKingPending] = useState<Tables<"room_participants">[]>([]);
@@ -430,17 +462,24 @@ export default function KingPage() {
       });
   }, [kingRoom, user?.id]);
 
-  const saveTeamName = async () => {
-    const name = nameDraft.trim();
+  // The host dresses the team: an icon and a name in one sheet (the same
+  // picker the classic create screen uses, with the AI namer silenced so it
+  // never fights what the host typed). Both land on the room row and ride
+  // realtime to everyone on the couch — and into the duel's header.
+  const saveTeamLook = async (iconUrl: string, newName: string) => {
+    const name = newName.trim();
     if (!kingRoom || !name) return;
     if (containsBlockedText(name)) {
       toast.error(t("extra.textNotAllowed"));
       return;
     }
     setRenameOpen(false);
-    const { error } = await supabase.from("game_rooms").update({ room_name: name }).eq("id", kingRoom.id);
+    const { error } = await supabase
+      .from("game_rooms")
+      .update({ room_name: name, room_icon: iconUrl })
+      .eq("id", kingRoom.id);
     if (error) toast.error(error.message);
-    else setKingRoom((prev) => (prev ? { ...prev, room_name: name } : prev));
+    else setKingRoom((prev) => (prev ? { ...prev, room_name: name, room_icon: iconUrl } : prev));
   };
 
   const refreshKingParts = useCallback(async () => {
@@ -702,6 +741,8 @@ export default function KingPage() {
         parts={kingParts}
         meId={user?.id ?? ""}
         isHost={kingRoom?.host_user_id === user?.id}
+        teamName={kingRoom?.room_name}
+        teamIcon={kingRoom?.room_icon}
         onOptions={teamOptions}
         onSuggest={teamSuggest}
         onCommit={teamCommit}
@@ -771,15 +812,13 @@ export default function KingPage() {
                 whileTap={{ scale: 0.95, y: 2 }}
                 transition={{ type: "spring", stiffness: 520, damping: 28 }}
                 onClick={
-                  kingRoom?.host_user_id === user?.id
-                    ? () => {
-                        setNameDraft(kingRoom?.room_name ?? "");
-                        setRenameOpen(true);
-                      }
-                    : undefined
+                  kingRoom?.host_user_id === user?.id ? () => setRenameOpen(true) : undefined
                 }
                 className="inline-flex items-center gap-2 max-w-[330px] h-[42px] px-4 rounded-[16px] bg-white/70 border border-[#e8e0f5] shadow-[0px_2.5px_0px_0px_#d8d0e8]"
               >
+                {kingRoom?.room_icon && (
+                  <img alt="" src={kingRoom.room_icon} className="w-6 h-6 shrink-0 object-contain" />
+                )}
                 <span
                   className="text-[19px] leading-[1.5] text-[#523b76] whitespace-nowrap overflow-hidden text-ellipsis"
                   style={{ fontFamily: "'TASolivare', sans-serif" }}
@@ -948,45 +987,16 @@ export default function KingPage() {
           }
         />
 
-        {/* host renames the team — small white sheet over the lilac wash */}
-        {renameOpen && (
-          <div
-            className="fixed inset-0 z-[130] flex items-center justify-center px-8 backdrop-blur-[10px] bg-[rgba(245,217,255,0.6)]"
-            onClick={() => setRenameOpen(false)}
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 14 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ type: "spring", stiffness: 420, damping: 28 }}
-              className="w-full max-w-[320px] rounded-[24px] bg-white/95 border border-[#e8e0f5] p-5 flex flex-col gap-3 shadow-[0px_8px_24px_0px_rgba(102,51,153,0.18)]"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <p className="text-[19px] text-[#523b76] text-center" style={{ fontFamily: "'TASolivare', sans-serif" }}>
-                {t("lobby.teamName")}
-              </p>
-              <input
-                value={nameDraft}
-                onChange={(e) => setNameDraft(e.target.value)}
-                maxLength={40}
-                autoFocus
-                className="w-full h-[46px] rounded-[16px] border border-[#e8e0f5] bg-[#f8f5ff] px-4 font-[Nunito] font-semibold text-[15px] text-[#402666] outline-none focus:border-[#b99ce2]"
-              />
-              <motion.button
-                whileTap={{ scale: 0.97 }}
-                onClick={() => void saveTeamName()}
-                disabled={!nameDraft.trim()}
-                className="w-full h-[46px] rounded-[16px] bg-[#8858d5] text-white font-[Nunito] font-bold text-[15px] disabled:opacity-50"
-              >
-                {t("common.save")}
-              </motion.button>
-              <button
-                onClick={() => setRenameOpen(false)}
-                className="font-[Nunito] text-sm font-semibold text-[#523b76]/50"
-              >
-                {t("common.cancel")}
-              </button>
-            </motion.div>
-          </div>
+        {/* host dresses the team — icon and name in the shared picker */}
+        {renameOpen && kingRoom && (
+          <RoomIconPickerModal
+            isOpen
+            autoName={false}
+            currentIconUrl={kingRoom.room_icon}
+            roomName={kingRoom.room_name ?? ""}
+            onClose={() => setRenameOpen(false)}
+            onConfirm={(iconUrl, newName) => void saveTeamLook(iconUrl, newName)}
+          />
         )}
 
       </div>
@@ -1005,9 +1015,7 @@ export default function KingPage() {
           >
             <ChevronLeft className="w-6 h-6" />
           </button>
-          <h1 className="font-display text-xl font-bold text-white flex items-center gap-2">
-            <img alt="" src={iconKingMascot} className="w-8 h-8 object-contain" /> {t("king.title")}
-          </h1>
+          <DuelTitle t={t} teamName={kingRoom?.room_name} teamIcon={kingRoom?.room_icon} />
         </div>
 
         {state && (
@@ -1035,7 +1043,7 @@ export default function KingPage() {
                 <DynamicIcon
                   slug={state.question.icon_slug ?? undefined}
                   seedText={state.question.question_text}
-                  size={52}
+                  size={68}
                 />
               </div>
               <p className={`font-bold text-[#402666] ${qTextSize(state.question.question_text)}`}>
@@ -1060,7 +1068,7 @@ export default function KingPage() {
                 <DynamicIcon
                   slug={state.question.icon_slug ?? undefined}
                   seedText={state.question.question_text}
-                  size={36}
+                  size={47}
                   className="shrink-0"
                 />
                 <p
@@ -1112,20 +1120,25 @@ export default function KingPage() {
               style={{ background: "rgba(252,247,255,0.95)", boxShadow: CARD_SHADOW }}
             >
               {/* On a miss, what was sent (or that time ran out) shows red
-                  above the truth — same read as the co-op reveal. */}
+                  above the truth — same read as the co-op reveal. The rows
+                  wear the 3D cross and check (owner's pick), and the type
+                  runs a size up: the old xs/sm read as fine print. */}
               {!reveal.correct && (
                 <>
-                  <p className="text-xs text-[#402666]/40 mb-1">{t("king.yourPickLabel")}</p>
-                  <p className="font-bold text-red-500 mb-3">{myPick ?? t("king.nothingLocked")}</p>
+                  <p className="text-sm font-semibold text-[#402666]/60 mb-1.5">{t("king.yourPickLabel")}</p>
+                  <p className="flex items-start gap-2 text-lg font-bold text-red-500 mb-4">
+                    <img alt="" src={iconAnswerWrong} className="w-6 h-6 mt-0.5 shrink-0 object-contain" />
+                    <span className="min-w-0">{myPick ?? t("king.nothingLocked")}</span>
+                  </p>
                 </>
               )}
-              <p className="text-xs text-[#402666]/40 mb-1">{t("king.answerLabel")}</p>
-              <p className={`font-bold mb-3 ${reveal.correct ? "text-emerald-600" : "text-[#402666]"}`}>
-                {reveal.correct ? "✓ " : ""}
-                {reveal.correct_answer}
+              <p className="text-sm font-semibold text-[#402666]/60 mb-1.5">{t("king.answerLabel")}</p>
+              <p className={`flex items-start gap-2 text-lg font-bold mb-4 ${reveal.correct ? "text-emerald-600" : "text-[#402666]"}`}>
+                <img alt="" src={iconAnswerCorrect} className="w-6 h-6 mt-0.5 shrink-0 object-contain" />
+                <span className="min-w-0">{reveal.correct_answer}</span>
               </p>
-              <p className="text-xs text-[#402666]/40 mb-1">{t("king.logicLabel")}</p>
-              <p className="text-sm text-[#402666]/80 leading-relaxed">{reveal.explanation}</p>
+              <p className="text-sm font-semibold text-[#402666]/60 mb-1.5">{t("king.logicLabel")}</p>
+              <p className="text-base text-[#402666]/90 leading-relaxed">{reveal.explanation}</p>
             </div>
           </div>
         )}
@@ -1204,6 +1217,8 @@ function KingTeamDuel({
   parts,
   meId,
   isHost,
+  teamName,
+  teamIcon,
   onOptions,
   onSuggest,
   onCommit,
@@ -1216,6 +1231,8 @@ function KingTeamDuel({
   parts: Tables<"room_participants">[];
   meId: string;
   isHost: boolean;
+  teamName?: string | null;
+  teamIcon?: string | null;
   onOptions: () => void;
   onSuggest: (answer: string) => void;
   onCommit: (answer: string) => void;
@@ -1268,9 +1285,7 @@ function KingTeamDuel({
           >
             <ChevronLeft className="w-6 h-6" />
           </button>
-          <h1 className="font-display text-xl font-bold text-white flex items-center gap-2 min-w-0">
-            <img alt="" src={iconKingMascot} className="w-8 h-8 object-contain shrink-0" /> {t("king.title")}
-          </h1>
+          <DuelTitle t={t} teamName={teamName} teamIcon={teamIcon} />
           {captain && (
             <span className="ml-auto flex items-center gap-1.5 bg-white/90 rounded-full pl-2 pr-3 py-1 shrink-0">
               <span className="relative w-6 h-6">
@@ -1309,7 +1324,7 @@ function KingTeamDuel({
                 <DynamicIcon
                   slug={view.question.icon_slug ?? undefined}
                   seedText={view.question.question_text}
-                  size={52}
+                  size={68}
                 />
               </div>
               <p className={`font-bold text-[#402666] ${qTextSize(view.question.question_text)}`}>
@@ -1333,7 +1348,7 @@ function KingTeamDuel({
                 <DynamicIcon
                   slug={view.question.icon_slug ?? undefined}
                   seedText={view.question.question_text}
-                  size={36}
+                  size={47}
                   className="shrink-0"
                 />
                 <p
@@ -1421,21 +1436,22 @@ function KingTeamDuel({
                   shows red above the green answer; on a timeout it says so. */}
               {!view.last_result.correct && (
                 <>
-                  <p className="text-xs text-[#402666]/40 mb-1">{t("king.teamPickedLabel")}</p>
-                  <p className="font-bold text-red-500 mb-3">
-                    {view.last_result.chosen ?? t("king.nothingLocked")}
+                  <p className="text-sm font-semibold text-[#402666]/60 mb-1.5">{t("king.teamPickedLabel")}</p>
+                  <p className="flex items-start gap-2 text-lg font-bold text-red-500 mb-4">
+                    <img alt="" src={iconAnswerWrong} className="w-6 h-6 mt-0.5 shrink-0 object-contain" />
+                    <span className="min-w-0">{view.last_result.chosen ?? t("king.nothingLocked")}</span>
                   </p>
                 </>
               )}
-              <p className="text-xs text-[#402666]/40 mb-1">{t("king.answerLabel")}</p>
-              <p className={`font-bold mb-3 ${view.last_result.correct ? "text-emerald-600" : "text-[#402666]"}`}>
-                {view.last_result.correct ? "✓ " : ""}
-                {view.last_result.correct_answer}
+              <p className="text-sm font-semibold text-[#402666]/60 mb-1.5">{t("king.answerLabel")}</p>
+              <p className={`flex items-start gap-2 text-lg font-bold mb-4 ${view.last_result.correct ? "text-emerald-600" : "text-[#402666]"}`}>
+                <img alt="" src={iconAnswerCorrect} className="w-6 h-6 mt-0.5 shrink-0 object-contain" />
+                <span className="min-w-0">{view.last_result.correct_answer}</span>
               </p>
               {view.last_result.explanation && (
                 <>
-                  <p className="text-xs text-[#402666]/40 mb-1">{t("king.logicLabel")}</p>
-                  <p className="text-sm text-[#402666]/80 leading-relaxed">
+                  <p className="text-sm font-semibold text-[#402666]/60 mb-1.5">{t("king.logicLabel")}</p>
+                  <p className="text-base text-[#402666]/90 leading-relaxed">
                     {view.last_result.explanation}
                   </p>
                 </>
