@@ -53,8 +53,14 @@ describe("the lounges invite through the invite page", () => {
     // realtime: their own device sits them on the host's opposite bench,
     // and the host's device sweeps up anyone whose client never did.
     expect(battle).toMatch(/const oppositeBench = useMemo/);
-    expect(battle).toMatch(/autoSeatRef\.current = true;\s*\n\s*void setTeam\(oppositeBench\)/);
+    expect(battle).toMatch(/const target = isHost \? hostBench : oppositeBench;/);
+    expect(battle).toMatch(/autoSeatRef\.current = true;\s*\n\s*void setTeam\(target\)/);
     expect(battle).toMatch(/sweptRef\.current\.add\(p\.user_id\);\s*\n\s*void manageSeat\(p\.user_id/);
+    // A returning host is dealt a bench at the door too, not just in the
+    // lobby: the context's assignSeat no longer skips the host.
+    const context = read("src/contexts/TeamBattleContext.tsx");
+    expect(context).toMatch(/if \(user\.id === row\.host_user_id\) \{\s*\n\s*const a = onSide\("a"\);/);
+    expect(context).not.toMatch(/user\.id === row\.host_user_id \|\| \(hostTeam !== "a"/);
   });
 });
 
