@@ -14,6 +14,11 @@ const NO_PARTICLES_PAGES = ["/", "/discover", "/game", "/leaderboards", "/power-
 // Pages where the white radial mask should be hidden (they have their own solid background)
 const NO_RADIAL_MASK_PAGES = ["/game", "/power-ups"];
 
+// Pages where the radial mask is hidden on phones only. The leaderboard shows
+// its own artwork from md up, but on a phone it wants exactly the shop's
+// backdrop — the blob video and wash with no white vignette on top.
+const NO_RADIAL_MASK_MOBILE_PAGES = ["/leaderboards"];
+
 // White sparkle particle with glow effect - using CSS animation for better performance
 const SparkleParticle = ({ delay, x, size, duration }: { delay: number; x: number; size: number; duration: number }) => (
   <motion.div
@@ -82,6 +87,7 @@ export const GlobalSplineBackground = memo(function GlobalSplineBackground() {
   
   // Check if radial mask should be hidden (game/category pages have their own backgrounds)
   const shouldHideRadialMask = NO_RADIAL_MASK_PAGES.some(page => location.pathname.startsWith(page));
+  const shouldHideRadialMaskOnMobile = NO_RADIAL_MASK_MOBILE_PAGES.some(page => location.pathname.startsWith(page));
   
   // Reduce particle count on mobile for performance
   const sparkleCount = isMobile ? 8 : 16;
@@ -145,7 +151,7 @@ export const GlobalSplineBackground = memo(function GlobalSplineBackground() {
       {/* White radial mask - transparent center, white edges - hidden on game/category pages */}
       {!shouldHideRadialMask && (
         <div 
-          className="fixed inset-0 pointer-events-none"
+          className={`fixed inset-0 pointer-events-none${shouldHideRadialMaskOnMobile ? " hidden md:block" : ""}`}
           style={{
             background: "radial-gradient(ellipse 80% 70% at 50% 50%, transparent 0%, transparent 50%, rgba(255,255,255,0.15) 65%, rgba(255,255,255,0.35) 80%, rgba(255,255,255,0.7) 100%)",
             zIndex: 1,
