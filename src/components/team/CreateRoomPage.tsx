@@ -1551,7 +1551,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                     // A phone shows one card and the edge of the next; from
                     // tablet up the cards take a fixed width so the wide
                     // column shows two, three or more of them at once.
-                    "group relative block shrink-0 snap-start overflow-clip rounded-[28px] bg-[#e9d8ff] text-left [container-type:inline-size]",
+                    "group relative isolate block shrink-0 snap-start overflow-clip rounded-[28px] bg-[#e9d8ff] text-left [container-type:inline-size]",
                     // Nothing picked: the designed 393:686 poster. The row's
                     // height is what the screen has, so the card takes that
                     // height and derives its width from the ratio — never
@@ -1573,10 +1573,18 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                       Figma — a 3:4 image at full width. It drifts a little
                       at rest and swells under a held finger; the banner
                       state shows its middle instead, where the subject is. */}
+                  {/* The scene sits at z-0 under everything else in the card,
+                      said explicitly: iOS composites a playing <video> above
+                      its siblings unless the siblings have a z-index of their
+                      own, which put the loop over the wash and the pill and
+                      left a hard edge where the loop stopped. The mask fades
+                      the loop's own foot out over the same stretch the wash
+                      fades in, so the scene dissolves into the card rather
+                      than ending on a line. */}
                   <div
                     style={collapsed ? undefined : { top: `${card.artTop}%` }}
                     className={cn(
-                      "absolute left-0 w-full overflow-hidden",
+                      "absolute left-0 z-0 w-full overflow-hidden [-webkit-mask-image:linear-gradient(to_bottom,black_58%,transparent_100%)] [mask-image:linear-gradient(to_bottom,black_58%,transparent_100%)]",
                       collapsed ? "top-0 h-full" : "aspect-[3/4]",
                     )}
                   >
@@ -1596,10 +1604,10 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                     />
                   </div>
                   {/* 1013:1408 — the lavender wash over the lower 55%. */}
-                  <div className="absolute inset-x-0 bottom-0 h-[55%] bg-[linear-gradient(to_top,#f3e6ff_0%,#f3e6ff_50%,rgba(243,230,255,0)_100%)]" />
+                  <div className="absolute inset-x-0 bottom-0 z-10 h-[55%] bg-[linear-gradient(to_top,#f3e6ff_0%,#f3e6ff_50%,rgba(243,230,255,0)_100%)]" />
                   {/* How many play: the peach pill, top right. */}
                   {card.players && (
-                    <div className="absolute right-[calc(12*var(--u))] top-[calc(12*var(--u))] flex items-center gap-[calc(7*var(--u))] rounded-bl-[calc(25.046*var(--u))] rounded-br-[calc(12.57*var(--u))] rounded-tl-[calc(25.05*var(--u))] rounded-tr-[calc(20*var(--u))] border-solid border-white/65 bg-gradient-to-b from-[#fff3ed] to-[#f5cdcd] px-[calc(16*var(--u))] py-[calc(1*var(--u))] shadow-[0px_2.277px_6.831px_0px_rgba(151,64,64,0.06),0px_2.277px_0px_0px_#d6c7c4] border-[length:calc(3.415*var(--u))]">
+                    <div className="absolute right-[calc(12*var(--u))] top-[calc(12*var(--u))] z-20 flex items-center gap-[calc(7*var(--u))] rounded-bl-[calc(25.046*var(--u))] rounded-br-[calc(12.57*var(--u))] rounded-tl-[calc(25.05*var(--u))] rounded-tr-[calc(20*var(--u))] border-solid border-white/65 bg-gradient-to-b from-[#fff3ed] to-[#f5cdcd] px-[calc(16*var(--u))] py-[calc(1*var(--u))] shadow-[0px_2.277px_6.831px_0px_rgba(151,64,64,0.06),0px_2.277px_0px_0px_#d6c7c4] border-[length:calc(3.415*var(--u))]">
                       <img alt="" src={playersIcon} className="h-[calc(22.75*var(--u))] w-[calc(17.333*var(--u))]" />
                       <span className="font-hero bg-gradient-to-b from-[#522b28] to-[#99665f] bg-clip-text text-[calc(32*var(--u))] capitalize leading-[calc(48*var(--u))] tracking-[-0.16px] text-transparent whitespace-nowrap">
                         {card.players}
@@ -1608,7 +1616,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                   )}
                   <div
                     className={cn(
-                      "absolute left-[calc(39*var(--u))] right-[calc(20*var(--u))]",
+                      "absolute left-[calc(39*var(--u))] right-[calc(20*var(--u))] z-20",
                       collapsed ? "bottom-[calc(20*var(--u))]" : "top-[78.86%]",
                     )}
                   >
@@ -1628,7 +1636,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                     </p>
                   </div>
                   {busy && (
-                    <div className="absolute left-[calc(12*var(--u))] top-[calc(12*var(--u))] flex h-9 w-9 items-center justify-center rounded-full bg-white/80 shadow-md">
+                    <div className="absolute left-[calc(12*var(--u))] top-[calc(12*var(--u))] z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white/80 shadow-md">
                       <Loader2 className="h-[18px] w-[18px] animate-spin text-[#7126d5]" />
                     </div>
                   )}
