@@ -376,6 +376,15 @@ function TeamContentV2() {
     document.getElementById("team-main-content")?.scrollTo({ top: 0 });
     window.scrollTo({ top: 0 });
   }, [exploreFilter, exploreSort, roomsFilter, sortFilter]);
+  // The same for the Public and Private tabs' own filters and searches: a
+  // narrower list under the old offset put its first card half under the
+  // sticky stack.
+  useEffect(() => {
+    document.getElementById("main-scroll-container")?.scrollTo({ top: 0 });
+    document.getElementById("team-main-content")?.scrollTo({ top: 0 });
+    window.scrollTo({ top: 0 });
+  }, [publicFilter, publicSearchQuery, privateFilter, privateSearchQuery]);
+
   const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
   const [personalTriviaDraftId, setPersonalTriviaDraftId] = useState<string | null>(null);
   const [showTeamMenu, setShowTeamMenu] = useState(false);

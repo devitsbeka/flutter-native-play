@@ -220,6 +220,23 @@ describe("the public list", () => {
     expect(filterPublicRooms(rooms, "all", "history", ctx).length).toBe(3);
   });
 
+  it("a card offers the way out to the people who are in, and calls an unpicked round mixed", () => {
+    const section = read("src/components/team/PublicRoomsSection.tsx");
+    // The host deletes, a seated guest leaves; both through a confirm.
+    expect(section).toMatch(/\{inside && \([^]*?room\.my_state === "host" \? \([^]*?<Trash2[^]*?<LogOut/);
+    expect(section).toMatch(/from\("game_rooms"\)\s*\.delete\(\)/);
+    expect(section).toMatch(/from\("room_participants"\)\s*\.delete\(\)[^]*?\.eq\("user_id", user\.id\)/);
+    expect(section).toMatch(/<AlertDialog open=\{removing !== null\}/);
+    // A room with no round picked plays a mixed first round — not "not
+    // chosen yet", which reads as a room that is not ready.
+    expect(section).toMatch(/\{category \|\| t\("game\.difficulty\.mixed"\)\}/);
+    expect(section).not.toContain("roomNoCategoryYet");
+    // Refiltering the tab starts the list at the top, not half under the
+    // sticky stack.
+    const page = read("src/pages/TeamV2.tsx");
+    expect(page).toMatch(/\}, \[publicFilter, publicSearchQuery, privateFilter, privateSearchQuery\]\);/);
+  });
+
   it("offers active, mine, friends' and all — in that order, and no game chips", () => {
     const bar = read("src/components/team/UnifiedFiltersBar.tsx");
     expect(bar).toMatch(
@@ -273,8 +290,10 @@ describe("the public list", () => {
     expect(section).toMatch(/supabase\.rpc\("request_room_join"/);
     // Never a direct seat write: the policy would refuse it anyway, and a
     // refusal the UI does not expect reads as a broken button. (Reading the
-    // seated faces for the card is fine — the write is the promise.)
-    expect(section).not.toMatch(/from\("room_participants"\)\s*\n?\s*\.(insert|update|upsert|delete)/);
+    // seated faces for the card is fine — the write is the promise. So is
+    // deleting your OWN row: that is leaving, and "Users can leave rooms"
+    // allows exactly that.)
+    expect(section).not.toMatch(/from\("room_participants"\)\s*\n?\s*\.(insert|update|upsert)/);
     // Only the answer 'joined' walks in — everything else waits.
     expect(section).toMatch(/if \(outcome === "joined"\)/);
   });

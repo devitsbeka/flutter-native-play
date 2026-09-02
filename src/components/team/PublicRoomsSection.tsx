@@ -1,11 +1,21 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useFriends } from "@/contexts/FriendsContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { onlineUserIds } from "@/utils/presence";
 import { motion } from "framer-motion";
-import { Globe, Loader2, Users, Clock } from "lucide-react";
+import { Globe, Loader2, Users, Clock, Trash2, LogOut } from "lucide-react";
 import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
 import { GradientBackground, ROOM_GRADIENT_PRESETS } from "@/components/ui/noisy-gradient-backgrounds";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
@@ -16,6 +26,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast";
 import {
   filterPublicRooms,
+  PUBLIC_ROOMS_KEY,
   publicRoomPath,
   roomSeats,
   sortPublicRooms,
@@ -56,12 +67,15 @@ function PublicRoomCard({
   players,
   index,
   onAsk,
+  onRemove,
   busy,
 }: {
   room: PublicRoom;
   players: CardPlayer[];
   index: number;
   onAsk: (room: PublicRoom) => void;
+  /** Delete it (the host) or leave it (a seated guest). */
+  onRemove: (room: PublicRoom) => void;
   busy: boolean;
 }) {
   const { t } = useLanguage();
@@ -146,11 +160,33 @@ function PublicRoomCard({
           {/* Seats. The lounges are what this is for — their card is
               "is there room on that couch" — so they always show the pair;
               a classic room without a cap just counts heads. */}
-          <div className="flex items-center gap-1 shrink-0 rounded-full bg-white/15 backdrop-blur-md border border-white/20 px-2.5 py-1">
-            <Users className="w-3.5 h-3.5 text-white" />
-            <span className="text-white text-xs font-bold">
-              {seats ? `${room.player_count}/${seats}` : room.player_count}
-            </span>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <div className="flex items-center gap-1 rounded-full bg-white/15 backdrop-blur-md border border-white/20 px-2.5 py-1">
+              <Users className="w-3.5 h-3.5 text-white" />
+              <span className="text-white text-xs font-bold">
+                {seats ? `${room.player_count}/${seats}` : room.player_count}
+              </span>
+            </div>
+            {/* The way OUT, for the people who are in: the host deletes
+                the room, a seated guest leaves it. Nobody else has anything
+                to remove, so nobody else sees a button. */}
+            {inside && (
+              <button
+                type="button"
+                aria-label={room.my_state === "host" ? t("extra.rlDeleteRoom") : t("extra.rlLeaveRoom")}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRemove(room);
+                }}
+                className="w-7 h-7 rounded-full bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center text-white active:scale-95 transition-transform"
+              >
+                {room.my_state === "host" ? (
+                  <Trash2 className="w-3.5 h-3.5" />
+                ) : (
+                  <LogOut className="w-3.5 h-3.5" />
+                )}
+              </button>
+            )}
           </div>
         </div>
 
@@ -192,7 +228,10 @@ function PublicRoomCard({
                 {t("extra.firstRoundLabel")}
               </p>
               <p className="text-white text-sm font-semibold truncate leading-tight">
-                {category || t("extra.roomNoCategoryYet")}
+                {/* No round picked yet means the first round is mixed —
+                    say that, not "not chosen yet", which reads as a
+                    room that is not ready. */}
+                {category || t("game.difficulty.mixed")}
               </p>
             </div>
           </div>
@@ -238,7 +277,10 @@ export function PublicRoomsSection({
   const { t } = useLanguage();
   const navigate = useNavigate();
   const { data, isLoading, refetch } = usePublicRooms();
+  const queryClient = useQueryClient();
   const [busyId, setBusyId] = useState<string | null>(null);
+  // The room whose delete/leave is being confirmed, if any.
+  const [removing, setRemoving] = useState<PublicRoom | null>(null);
 
   const { user } = useAuth();
   const { friends } = useFriends();
@@ -311,6 +353,52 @@ export function PublicRoomsSection({
   );
   const playersByRoom = seating?.faces;
 
+  // The same two exits the Private tab offers. Only the host may DELETE a
+  // room (RLS matches no row for anybody else, with no error — so the
+  // returned rows are the proof); a guest leaves by dropping their own
+  // participant row, which also wipes their approval (the trigger in
+  // 20260923100000), so coming back means knocking again.
+  const confirmRemove = async () => {
+    const room = removing;
+    if (!room || !user) return;
+    setRemoving(null);
+    setBusyId(room.id);
+    try {
+      if (room.my_state === "host") {
+        const { data: deleted, error } = await supabase
+          .from("game_rooms")
+          .delete()
+          .eq("id", room.id)
+          .select("id");
+        if (error) throw error;
+        if (!deleted || deleted.length === 0) {
+          toast.error(t("extra.roomDeleteHostOnly"));
+          return;
+        }
+        toast.success(t("extra.roomDeleted"));
+      } else {
+        const { data: left, error } = await supabase
+          .from("room_participants")
+          .delete()
+          .eq("room_id", room.id)
+          .eq("user_id", user.id)
+          .select("id");
+        if (error) throw error;
+        if (!left || left.length === 0) {
+          toast.error(t("extra.roomDeleteFailed"));
+          return;
+        }
+        toast.success(t("extra.roomLeft"));
+      }
+      await queryClient.invalidateQueries({ queryKey: PUBLIC_ROOMS_KEY });
+    } catch (e) {
+      console.error("[publicRooms] remove failed", e);
+      toast.error(t("extra.roomDeleteFailed"));
+    } finally {
+      setBusyId(null);
+    }
+  };
+
   const ask = async (room: PublicRoom) => {
     if (busyId) return;
     setBusyId(room.id);
@@ -379,9 +467,34 @@ export function PublicRoomsSection({
           players={playersByRoom?.get(room.id) ?? []}
           index={i}
           onAsk={(r) => void ask(r)}
+          onRemove={setRemoving}
           busy={busyId === room.id}
         />
       ))}
+
+      <AlertDialog open={removing !== null} onOpenChange={(open) => !open && setRemoving(null)}>
+        <AlertDialogContent className="bg-card border-border rounded-3xl max-w-sm">
+          <AlertDialogHeader className="text-center">
+            <AlertDialogTitle>
+              {removing?.my_state === "host" ? t("extra.rlDeleteRoom") : t("extra.rlLeaveRoom")}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {removing?.my_state === "host"
+                ? t("extra.rlDeleteRoomConfirm")
+                : t("extra.rlLeaveRoomConfirm")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row gap-3">
+            <AlertDialogCancel className="flex-1 mt-0">{t("extra.rlCancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => void confirmRemove()}
+              className="flex-1 bg-destructive hover:bg-destructive/90"
+            >
+              {removing?.my_state === "host" ? t("extra.rlDelete") : t("extra.rlLeaveRoom")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
