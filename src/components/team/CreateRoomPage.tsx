@@ -6,6 +6,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { anyBlockedText, containsBlockedText } from "@/utils/contentFilter";
 import { Loader2, ArrowLeft, HelpCircle, X, RefreshCw, Play, Pencil, Gamepad2, Plus, Check, Globe, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { Switch } from "@/components/ui/switch";
 import { generateRoomIdentity } from "@/utils/roomNameGenerator";
 import { roomVisibilityFields } from "@/utils/roomVisibility";
 import { localizeCategoryNames } from "@/utils/localizeCategories";
@@ -248,6 +249,41 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
    * dragging their own avatar across the arena.
    */
   const [battleTeam, setBattleTeam] = useState<"a" | "b">("a");
+  /**
+   * The two crests-to-be. null = the classic default art. Tapping a team
+   * card picks that side AND deals it a new random icon from the library;
+   * tapping the icon itself opens the picker to choose one deliberately.
+   * They ride to the arena in router state and become the room's
+   * team_a_icon / team_b_icon (tb_set_team_icon) once it exists.
+   */
+  const [teamIcons, setTeamIcons] = useState<{ a: string | null; b: string | null }>({
+    a: null,
+    b: null,
+  });
+  const [crestPickerFor, setCrestPickerFor] = useState<"a" | "b" | null>(null);
+  const crestPoolRef = useRef<string[]>([]);
+  const rollTeamIcon = async (side: "a" | "b") => {
+    if (crestPoolRef.current.length === 0) {
+      const { data } = await supabase
+        .from("icon_library")
+        .select("icon_url")
+        .not("icon_url", "is", null)
+        .limit(80);
+      crestPoolRef.current = (data ?? [])
+        .map((r) => r.icon_url as string)
+        .filter(Boolean);
+    }
+    const pool = crestPoolRef.current;
+    if (pool.length === 0) return;
+    setTeamIcons((prev) => {
+      let next = prev[side];
+      // A reroll that lands on the same icon reads as a dead tap.
+      for (let tries = 0; tries < 5 && next === prev[side]; tries++) {
+        next = pool[Math.floor(Math.random() * pool.length)];
+      }
+      return { ...prev, [side]: next };
+    });
+  };
 
   /**
    * How many a side the arena is set for: 2-2 through 5-5.
@@ -734,12 +770,15 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     if (gameChoice === "king" || gameChoice === "battle") {
       const invite = collectInvitees();
       onClose();
+      // Versus King is friends-only: its lounge never publishes, whatever
+      // the switch said before the game type was picked.
       navigate(gameChoice === "king" ? "/king" : "/team-battle", {
         state: {
           invite,
           isPublic: publishRoom,
           team: gameChoice === "battle" ? battleTeam : undefined,
           teamSize: gameChoice === "battle" ? battleTeamSize : undefined,
+          teamIcons: gameChoice === "battle" ? teamIcons : undefined,
         },
       });
       return;
@@ -1010,32 +1049,62 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   // for the modes that have nothing to add, and hidden when empty.
   const pickedDetail = (
     <div className="mt-3 shrink-0 space-y-3 empty:hidden">
-    {/* Which side of the arena you take. Two buttons rather than a
-        dropdown: there are exactly two, and the whole choice is
-        which of them you tap. */}
+    {/* Which side of the arena you take — two big cards, the crest
+        above the name. A tap picks the side AND deals its crest a
+        fresh random icon; a tap on the crest itself opens the
+        picker to choose one deliberately. */}
     {gameChoice === "battle" && (
       <div>
         <h2 className="text-[13.2px] font-medium text-muted-foreground mb-1.5">
           {t("extra.pickYourSide")}
         </h2>
-        <div className="flex items-center gap-1 p-1 rounded-2xl bg-muted">
+        <div className="grid grid-cols-2 gap-2">
           {(["a", "b"] as const).map((side) => (
             <button
               key={side}
               type="button"
-              onClick={() => setBattleTeam(side)}
-              className={`flex-1 flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-[13px] font-semibold transition-colors ${
+              onClick={() => {
+                setBattleTeam(side);
+                void rollTeamIcon(side);
+              }}
+              className={`flex flex-col items-center gap-2 rounded-2xl px-3 py-4 border-2 transition-colors ${
                 battleTeam === side
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground"
+                  ? "bg-background border-primary shadow-sm text-foreground"
+                  : "bg-muted border-transparent text-muted-foreground"
               }`}
             >
-              <img
-                src={side === "a" ? teamPenguinsIcon : teamFormulaIcon}
-                alt=""
-                className="w-6 h-6 object-contain"
-              />
-              {side === "a" ? t("teamBattle.teamA") : t("teamBattle.teamB")}
+              <span
+                role="button"
+                tabIndex={0}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setBattleTeam(side);
+                  setCrestPickerFor(side);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.stopPropagation();
+                    setCrestPickerFor(side);
+                  }
+                }}
+                className="relative"
+              >
+                <motion.img
+                  key={teamIcons[side] ?? "default"}
+                  initial={{ scale: 0.6, rotate: -12, opacity: 0 }}
+                  animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 420, damping: 20 }}
+                  src={teamIcons[side] ?? (side === "a" ? teamPenguinsIcon : teamFormulaIcon)}
+                  alt=""
+                  className="w-14 h-14 object-contain"
+                />
+                <span className="absolute -right-1.5 -bottom-1 flex w-5 h-5 items-center justify-center rounded-full bg-background shadow-sm border border-border/50">
+                  <Pencil className="w-2.5 h-2.5 text-muted-foreground" />
+                </span>
+              </span>
+              <span className="text-[14px] font-bold">
+                {side === "a" ? t("teamBattle.teamA") : t("teamBattle.teamB")}
+              </span>
             </button>
           ))}
         </div>
@@ -1469,9 +1538,33 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       {/* Footer - Normal Button */}
       <div className="border-t border-border/30 shrink-0">
         <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full px-4 py-4">
-        {/* How big the match is, above the switch and the button both — it
-            is the first thing about an arena that a host actually decides,
-            and the two sides are equal by the server's own rule. */}
+        {/* Published or private — a real ON/OFF switch (owner's ask: no
+            tabs), immediately above the sizing row and the button. The
+            label and icon flip with the state, and the line underneath
+            says what publishing actually means. */}
+        {canPublish && (
+          <div className="mb-3">
+            <div className="flex items-center justify-between gap-2 rounded-2xl bg-muted px-3.5 py-2.5">
+              <span className="flex items-center gap-1.5 min-w-0 text-[13px] font-semibold text-foreground">
+                {isPublic ? (
+                  <Globe className="w-3.5 h-3.5 text-primary shrink-0" />
+                ) : (
+                  <Lock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                )}
+                <span className="truncate">
+                  {isPublic ? t("extra.roomPublic") : t("extra.roomPrivate")}
+                </span>
+              </span>
+              <Switch checked={isPublic} onCheckedChange={setIsPublic} />
+            </div>
+            <p className="mt-1 px-1 text-[11.5px] leading-snug text-muted-foreground">
+              {isPublic ? t("extra.roomPublicHint") : t("extra.roomPrivateHint")}
+            </p>
+          </div>
+        )}
+
+        {/* How big the match is — under the switch (owner's ask), above the
+            button. The two sides are equal by the server's own rule. */}
         {gameChoice === "battle" && (
           <div className="mb-3">
             <h2 className="text-[13.2px] font-medium text-muted-foreground mb-1.5">
@@ -1496,41 +1589,6 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
           </div>
         )}
 
-        {/* Published or private, immediately above the button that acts on
-            it. It used to sit at the top under the room's name, three
-            scrolls away from the decision it modifies and on screen for
-            three choices that cannot be published at all. Two labelled
-            halves rather than a bare switch: "public" alone does not say
-            whether it means anyone can watch, walk in, or find it, and the
-            line under the pair answers that where somebody is deciding. */}
-        {canPublish && (
-          <div className="mb-3">
-            <div className="flex items-center gap-1 p-1 rounded-2xl bg-muted">
-              {([
-                { on: true, icon: Globe, label: t("extra.roomPublic") },
-                { on: false, icon: Lock, label: t("extra.roomPrivate") },
-              ] as const).map(({ on, icon: Icon, label }) => (
-                <button
-                  key={String(on)}
-                  type="button"
-                  onClick={() => setIsPublic(on)}
-                  className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-[13px] font-semibold transition-colors ${
-                    isPublic === on
-                      ? "bg-background text-foreground shadow-sm"
-                      : "text-muted-foreground"
-                  }`}
-                >
-                  <Icon className="w-3.5 h-3.5" />
-                  {label}
-                </button>
-              ))}
-            </div>
-            <p className="mt-1 px-1 text-[11.5px] leading-snug text-muted-foreground">
-              {isPublic ? t("extra.roomPublicHint") : t("extra.roomPrivateHint")}
-            </p>
-          </div>
-        )}
-
         <ChunkyButton
           onClick={handleCreate}
           disabled={loading || isCreating || !createEnabled}
@@ -1550,6 +1608,22 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
 
       {/* End of frosted popup panel */}
       </div>
+
+      {/* Deliberate crest choice — the same icon picker the lobby uses. */}
+      {crestPickerFor && (
+        <RoomIconPickerModal
+          isOpen
+          iconOnly
+          onClose={() => setCrestPickerFor(null)}
+          currentIconUrl={teamIcons[crestPickerFor]}
+          roomName={crestPickerFor === "a" ? t("teamBattle.teamA") : t("teamBattle.teamB")}
+          onConfirm={(iconUrl) => {
+            const side = crestPickerFor;
+            setCrestPickerFor(null);
+            setTeamIcons((prev) => ({ ...prev, [side]: iconUrl }));
+          }}
+        />
+      )}
 
       {/* TV Play Modal */}
       <TVPlayModal

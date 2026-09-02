@@ -4773,6 +4773,7 @@ export type Database = {
           total_answers: number
         }[]
       }
+      block_room_join: { Args: { p_request_id: string }; Returns: string }
       buy_extra_plays: {
         Args: { p_games: number; p_source: string }
         Returns: Json
@@ -4805,10 +4806,6 @@ export type Database = {
         Returns: boolean
       }
       consume_free_play: { Args: never; Returns: Json }
-      block_room_join: {
-        Args: { p_request_id: string }
-        Returns: string
-      }
       credit_gameplay_reward: {
         Args: {
           p_coins?: number
@@ -5249,32 +5246,6 @@ export type Database = {
         Args: { p_expires_at: string; p_platform: string; p_tier: string }
         Returns: boolean
       }
-      question_translation_progress: {
-        Args: never
-        Returns: {
-          language: string
-          source_total: number
-          translated: number
-        }[]
-      }
-      reset_room_participants: {
-        Args: { p_room_id: string; p_status?: string }
-        Returns: undefined
-      }
-      reset_tv_session_scores: { Args: { p_session_id: string }; Returns: Json }
-      resolve_referral_code: { Args: { p_code: string }; Returns: Json }
-      revoke_pro_seat: { Args: { p_holder_id: string }; Returns: Json }
-      room_players: {
-        Args: { p_room_code: string }
-        Returns: {
-          animated_avatar_url: string
-          avatar_url: string
-          country_code: string
-          is_host: boolean
-          nickname: string
-          user_id: string
-        }[]
-      }
       public_rooms: {
         Args: { p_limit?: number }
         Returns: {
@@ -5297,13 +5268,36 @@ export type Database = {
           status: string
         }[]
       }
-      request_room_join: {
-        Args: { p_room_id: string }
-        Returns: string
+      question_translation_progress: {
+        Args: never
+        Returns: {
+          language: string
+          source_total: number
+          translated: number
+        }[]
       }
+      request_room_join: { Args: { p_room_id: string }; Returns: string }
+      reset_room_participants: {
+        Args: { p_room_id: string; p_status?: string }
+        Returns: undefined
+      }
+      reset_tv_session_scores: { Args: { p_session_id: string }; Returns: Json }
+      resolve_referral_code: { Args: { p_code: string }; Returns: Json }
       respond_room_join: {
         Args: { p_approve: boolean; p_request_id: string; p_team?: string }
         Returns: string
+      }
+      revoke_pro_seat: { Args: { p_holder_id: string }; Returns: Json }
+      room_players: {
+        Args: { p_room_code: string }
+        Returns: {
+          animated_avatar_url: string
+          avatar_url: string
+          country_code: string
+          is_host: boolean
+          nickname: string
+          user_id: string
+        }[]
       }
       room_preview: {
         Args: { p_room_code: string }
@@ -5421,11 +5415,11 @@ export type Database = {
         Args: { p_room_id: string; p_user_id: string }
         Returns: undefined
       }
-      tb_settle: { Args: { p_room_id: string }; Returns: Json }
       tb_set_team_icon: {
         Args: { p_icon: string; p_room_id: string; p_team: string }
         Returns: undefined
       }
+      tb_settle: { Args: { p_room_id: string }; Returns: Json }
       tb_start_match: {
         Args: { p_board: Json; p_room_id: string; p_turn_seconds?: number }
         Returns: string

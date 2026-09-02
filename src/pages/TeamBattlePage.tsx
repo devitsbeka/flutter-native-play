@@ -23,7 +23,6 @@ import { useGameInvitations } from "@/hooks/useGameInvitations";
 import {
   AnimatedCoinPill,
   CaptainInfoModal,
-  FriendPeek,
   type InviteEntry,
   LILAC_BG,
   LilacHeader,
@@ -116,10 +115,32 @@ function TBGate({ joining }: { joining: boolean }) {
   // shared link, the play chooser — is private, like every other room
   // created without an opinion.
   const handoff =
-    (location.state as { isPublic?: boolean; team?: TBTeam; teamSize?: number } | null) ?? null;
+    (location.state as {
+      isPublic?: boolean;
+      team?: TBTeam;
+      teamSize?: number;
+      teamIcons?: { a: string | null; b: string | null };
+    } | null) ?? null;
   const publish = handoff?.isPublic ?? false;
   const side: TBTeam = handoff?.team === "b" ? "b" : "a";
   const teamSize = handoff?.teamSize ?? 5;
+  // Crests dealt (or picked) on the create screen. Written through the RPC
+  // once the room exists — the host may dress a captainless side, and at
+  // creation both sides are exactly that. Fire-and-forget: a failed crest
+  // is a cosmetic loss, not a blocked room.
+  const applyCrests = (roomId: string) => {
+    const icons = handoff?.teamIcons;
+    if (!icons) return;
+    (["a", "b"] as const).forEach((team) => {
+      const icon = icons[team];
+      if (!icon) return;
+      void supabase
+        .rpc("tb_set_team_icon", { p_room_id: roomId, p_team: team, p_icon: icon })
+        .then(({ error }) => {
+          if (error) console.error("[TB] crest apply failed", error);
+        });
+    });
+  };
 
   useEffect(() => {
     if (joining || !user || attempted.current) return;
@@ -128,8 +149,12 @@ function TBGate({ joining }: { joining: boolean }) {
       if (!created) setFailed(true);
       // The room's code goes into the URL so a refresh rejoins this room
       // instead of minting a new one.
-      else navigate(`/team-battle?code=${created.room_code}`, { replace: true });
+      else {
+        applyCrests(created.id);
+        navigate(`/team-battle?code=${created.room_code}`, { replace: true });
+      }
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [joining, user, createRoom, navigate, publish, side, teamSize]);
 
   return (
@@ -171,7 +196,10 @@ function TBGate({ joining }: { joining: boolean }) {
             attempted.current = false;
             void createRoom(publish, side, teamSize).then((created) => {
               if (!created) setFailed(true);
-              else navigate(`/team-battle?code=${created.room_code}`, { replace: true });
+              else {
+                applyCrests(created.id);
+                navigate(`/team-battle?code=${created.room_code}`, { replace: true });
+              }
             });
           }}
         >
@@ -218,7 +246,6 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
   const { openProfile } = usePlayerProfile();
   const [inviteOpen, setInviteOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
-  const [peek, setPeek] = useState<InviteEntry | null>(null);
   const [invitedIds, setInvitedIds] = useState<Set<string>>(new Set());
   const [captainInfo, setCaptainInfo] = useState<TBTeam | null>(null);
   // Which side's crest is being picked, if any.
@@ -359,10 +386,45 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
     }
   };
 
-  // A + seat invites a friend onto that team — no AI players here, these
-  // lounges are for people. The invite modal opens with the team remembered
-  // so an accepted friend lands on the right side.
+  // Nobody is dealt onto a side any more: a player who arrives without a
+  // team (an approved join request, a code, a challenge invite with no seat
+  // picked) CLAIMS one — tapping a + seat on the side they want is the
+  // choice. Until they choose they are listed as picking below the rounds
+  // caption, and the start gate already waits for everyone to have a team.
+  const iAmSeated = participants.some((p) => p.user_id === user?.id);
+  const iAmClaiming = iAmSeated && !myTeam;
+  const othersClaiming = participants.filter(
+    (p) => !p.team && !p.is_bot && p.status !== "invited" && p.user_id !== user?.id,
+  );
+
+  // The crest RPC trusts only the ELECTED captain (is_captain), while the
+  // chip happily shows the first human as a fallback — a pencil that always
+  // failed. The host's device makes the fallback real: a captainless side
+  // with humans gets its first human named via tb_set_captain (the vote can
+  // re-elect any time); all-bot sides keep their slot-reel roll.
+  const namedRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    if (!isHost || room?.status !== "waiting") return;
+    (["a", "b"] as TBTeam[]).forEach((side) => {
+      const members = participants.filter((p) => p.team === side);
+      if (members.length === 0 || members.some((p) => p.is_captain)) return;
+      const first = members.find((p) => !p.is_bot);
+      if (!first) return;
+      const key = `${side}:${first.user_id}`;
+      if (namedRef.current.has(key)) return;
+      namedRef.current.add(key);
+      void setCaptain(first.user_id);
+    });
+  }, [isHost, room?.status, participants, setCaptain]);
+
+  // A + seat is two things. To a player without a team it is THE seat —
+  // tapping it claims that side. To a seated player it invites a friend
+  // onto that team: the invite page opens remembering the side.
   const seatAction = (team: TBTeam) => {
+    if (iAmClaiming) {
+      void setTeam(team);
+      return;
+    }
     inviteTeamRef.current = team;
     setInviteOpen(true);
   };
@@ -561,7 +623,6 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
         onHelp={() => setHelpOpen((v) => !v)}
       />
 
-
       <div className="w-full max-w-[468px] mx-auto shrink-0 border-t border-[#523b76]/[0.08]" />
 
       {/* The match length, stated rather than picked: rounds follow the
@@ -573,6 +634,24 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
         <p className="pt-[2px] font-[Nunito] font-normal leading-[20px] text-[#0c172c]/70 text-[13px] text-center tracking-[-0.16px]">
           {t("lobby.autoRounds")}
         </p>
+        {/* Claiming: my own next move, or who the room is waiting on. */}
+        {iAmClaiming ? (
+          <motion.p
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="pt-[6px] font-[Nunito] font-bold leading-[20px] text-[#7126d5] text-[14px] text-center tracking-[-0.16px]"
+          >
+            {t("lobby.claimSeatHint")}
+          </motion.p>
+        ) : (
+          othersClaiming.length > 0 && (
+            <p className="pt-[6px] font-[Nunito] font-semibold leading-[20px] text-[#523b76]/70 text-[13px] text-center tracking-[-0.16px]">
+              {t("lobby.pickingTeam", {
+                name: othersClaiming.map((p) => p.nickname).join(", "),
+              })}
+            </p>
+          )
+        )}
       </div>
 
       {/* Not clipped: the arena scene is drawn 139 design-units above this
@@ -614,7 +693,10 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
           const icon = (isA ? room?.team_a_icon : room?.team_b_icon)
             ?? (isA ? teamPenguins : teamFormula);
           const mine = isA ? captainA : captainB;
-          const canDress = isHost || (!!user && mine?.user_id === user.id);
+          // Only the side's captain dresses its crest — the host gets no
+          // say over the other team (and their own side only while they
+          // wear its armband). An empty side has nobody to ask.
+          const canDress = !!user && mine?.user_id === user.id;
           return (
             <div
               key={team}
@@ -735,9 +817,21 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
       <CaptainInfoModal
         open={captainInfo !== null}
         onClose={() => setCaptainInfo(null)}
-        title={t("lobby.captainInfoTitle")}
+        title={
+          myTeam === captainInfo
+            ? t("lobby.chooseCaptainTitle")
+            : t("lobby.captainInfoTitle")
+        }
         body={t("lobby.captainInfoBody")}
-        chooseLabel={myTeam === captainInfo ? t("lobby.chooseCaptain") : undefined}
+        pickLabel={t("lobby.votePick")}
+        icon={
+          captainInfo === "a"
+            ? room?.team_a_icon ?? teamPenguins
+            : room?.team_b_icon ?? teamFormula
+        }
+        myVoteUserId={
+          participants.find((p) => p.user_id === user?.id)?.captain_vote ?? null
+        }
         members={
           captainInfo
             ? teamOf(captainInfo).map((p) => ({
@@ -758,17 +852,6 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
         onChoose={myTeam === captainInfo ? (userId) => void voteCaptain(userId) : undefined}
       />
 
-      <FriendPeek
-        friend={peek}
-        onClose={() => setPeek(null)}
-        actionLabel={t("lobby.inviteToGame")}
-        invitedLabel={t("lobby.invitedState")}
-        invited={
-          !!peek &&
-          (invitedIds.has(peek.id) || participants.some((p) => p.user_id === peek.id))
-        }
-        onAction={() => peek && void inviteToGame(peek)}
-      />
     </div>
   );
 }

@@ -673,31 +673,65 @@ function TeamContentV2() {
   };
 
   // Handle challenge context from URL - maps all types from ChallengeTypeModal
+  const instantChallengeRef = useRef(false);
   useEffect(() => {
     const challengeUserId = searchParams.get("challenge");
     const rawChallengeType = searchParams.get("type") as ChallengeType;
-    
+
     if (challengeUserId && rawChallengeType && user) {
-      // Map specialized types to internal categories:
-      // - "create-room" -> "create" (standard room creation)
-      // - "trivia" / "collection" -> "my-trivias" (open trivia picker)
-      const mappedType = rawChallengeType === "create-room" ? "create" 
-        : (rawChallengeType === "trivia" || rawChallengeType === "collection") ? "my-trivias"
-        : rawChallengeType as "random" | "library" | "my-trivias" | "create";
-      
+      // Clear URL params to prevent re-triggering
+      searchParams.delete("challenge");
+      searchParams.delete("type");
+      setSearchParams(searchParams, { replace: true });
+
+      // The profile's (and player search's) Challenge button: no picker
+      // screens — the room IS the challenge. Create it, seat the challenged
+      // player as invited (their row's trigger notifies them, the game
+      // invitation carries the push), and land the host straight in the
+      // lobby, where the rounds' categories and more friends are added.
+      if (rawChallengeType === "create-room") {
+        if (instantChallengeRef.current) return;
+        instantChallengeRef.current = true;
+        void (async () => {
+          try {
+            const room = await createRoom();
+            if (!room) return;
+            const { data: target } = await supabase
+              .from("profiles")
+              .select("nickname, avatar_url, country_code")
+              .eq("user_id", challengeUserId)
+              .maybeSingle();
+            await addInvitedParticipant(
+              room.id,
+              challengeUserId,
+              target?.nickname || "?",
+              target?.avatar_url ?? null,
+              target?.country_code ?? null,
+            );
+            await sendInvitation(challengeUserId, room.id);
+            navigate(`/team?room=${room.room_code}`);
+          } finally {
+            instantChallengeRef.current = false;
+          }
+        })();
+        return;
+      }
+
+      // Map the remaining specialized types to internal categories:
+      // "trivia" / "collection" -> "my-trivias" (open trivia picker)
+      const mappedType =
+        rawChallengeType === "trivia" || rawChallengeType === "collection"
+          ? "my-trivias"
+          : (rawChallengeType as "random" | "library" | "my-trivias" | "create");
+
       // Store challenge context and open create modal
       setChallengeContext({
         targetUserId: challengeUserId,
         challengeType: mappedType,
       });
       setShowCreateModal(true);
-      
-      // Clear URL params to prevent re-triggering
-      searchParams.delete("challenge");
-      searchParams.delete("type");
-      setSearchParams(searchParams, { replace: true });
     }
-  }, [searchParams, user, setSearchParams, setShowCreateModal]);
+  }, [searchParams, user, setSearchParams, setShowCreateModal, createRoom, addInvitedParticipant, sendInvitation, navigate]);
 
   // Handle playTrivia and playCollection from URL (from PlayerProfileModal)
   useEffect(() => {
