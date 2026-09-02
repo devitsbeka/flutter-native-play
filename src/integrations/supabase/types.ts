@@ -5432,6 +5432,14 @@ export type Database = {
         Args: { p_room_id: string; p_throw: string }
         Returns: undefined
       }
+      tb_finish_stale: {
+        Args: { p_room_id: string }
+        Returns: boolean
+      }
+      tb_leave_match: {
+        Args: { p_room_id: string }
+        Returns: undefined
+      }
       tb_submit_super: {
         Args: { p_answer: string; p_question_index: number; p_room_id: string }
         Returns: Json

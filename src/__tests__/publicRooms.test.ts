@@ -358,6 +358,44 @@ describe("the public list", () => {
     expect(section).toMatch(/min-h-\[216px\] aspect-\[1\.45\/1\] md:aspect-\[1\.15\/1\]/);
   });
 
+  it("a room with nobody online sinks to the very back", () => {
+    // Owner's rule: we need ONLINE players in rooms to play — a couch whose
+    // whole party closed the app never shows first, whatever its fill.
+    const rooms = [
+      room({ id: "dead-full", host_user_id: "ghost", game_type_key: "team_battle", max_players: 4, player_count: 3, created_at: "2026-06-09T00:00:00Z" }),
+      room({ id: "alive", host_user_id: "here", created_at: "2026-01-01T00:00:00Z" }),
+    ];
+    const ctx = {
+      seatedByRoom: new Map([
+        ["dead-full", ["ghost", "g2", "g3"]],
+        ["alive", ["here"]],
+      ]),
+      onlineIds: new Set(["here"]),
+      friendIds: new Set<string>(),
+    };
+    expect(sortPublicRooms(rooms, new Set(), ctx).map((r) => r.id)).toEqual([
+      "alive",
+      "dead-full",
+    ]);
+  });
+
+  it("a stale playing battle is reported so the server can end it", () => {
+    const section = read("src/components/team/PublicRoomsSection.tsx");
+    expect(section).toMatch(/sweptStaleRef\.current\.add\(r\.id\);/);
+    expect(section).toMatch(/supabase\.rpc\("tb_finish_stale", \{ p_room_id: r\.id \}\)/);
+    // The server re-checks the silence itself and takes the fee rules with
+    // it: leaving a RUNNING match costs 200 coins, capped at the balance.
+    const sql = read("supabase/migrations/20260928100000_tb_leave_and_stale.sql");
+    expect(sql).toMatch(/GREATEST\(COALESCE\(v_coins, 0\) - 200, 0\)/);
+    expect(sql).toMatch(/interval '5 minutes'/);
+    expect(sql).toMatch(/REVOKE ALL ON FUNCTION public\.tb_leave_match\(uuid\) FROM PUBLIC, anon;/);
+    expect(sql).toMatch(/REVOKE ALL ON FUNCTION public\.tb_finish_stale\(uuid\) FROM PUBLIC, anon;/);
+    // And the match screen's back arrow charges only through the confirm.
+    const match = read("src/components/team-battle/TeamBattleMatch.tsx");
+    expect(match).toMatch(/inLiveMatch \? setConfirmLeave\(true\) : navigate\("\/"\)/);
+    expect(match).toMatch(/teamBattle\.leaveMatchConfirm/);
+  });
+
   it("within a group, the couch closest to starting comes first", () => {
     const rooms = [
       room({ id: "empty", host_user_id: "s1", game_type_key: "team_battle", max_players: 10, player_count: 2, created_at: "2026-06-01T00:00:00Z" }),

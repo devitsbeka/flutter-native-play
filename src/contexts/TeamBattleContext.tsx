@@ -74,6 +74,11 @@ interface TeamBattleContextValue {
   joinRoom: (code: string) => Promise<boolean>;
   enterRoom: (roomId: string) => Promise<boolean>;
   leaveRoom: () => Promise<void>;
+  /** Walk out of a RUNNING match. The server charges the 200-coin
+      desertion fee (capped at the balance), frees the seat, collapses a
+      deserted spotlight's deadline, and ends a game whose side emptied.
+      The lobby's leaveRoom stays free, as it always was. */
+  leaveMatch: () => Promise<boolean>;
   setTeam: (team: TBTeam) => Promise<void>;
   addBot: (team: TBTeam) => Promise<void>;
   setCaptain: (userId: string) => Promise<void>;
@@ -581,6 +586,30 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
     void enterRoomRow(room);
   }, [participants, pendingInvites, room, user, enterRoomRow]);
 
+  const leaveMatch = useCallback(async (): Promise<boolean> => {
+    const roomId = roomIdRef.current;
+    if (!roomId || !user) return false;
+    // The reseat watcher must not read the server's delete of our row as
+    // "my seat vanished" and sit us straight back into the match we paid
+    // to leave.
+    leavingRef.current = true;
+    try {
+      const { error } = await supabase.rpc("tb_leave_match", { p_room_id: roomId });
+      if (error) {
+        console.error("[TB] leaveMatch failed", error);
+        return false;
+      }
+      setRoom(null);
+      setParticipants([]);
+      setPendingInvites([]);
+      setTiles([]);
+      setState(null);
+      return true;
+    } finally {
+      leavingRef.current = false;
+    }
+  }, [user]);
+
   const setTeam = useCallback(
     async (team: TBTeam) => {
       const roomId = roomIdRef.current;
@@ -948,6 +977,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
       joinRoom,
       enterRoom,
       leaveRoom,
+      leaveMatch,
       setTeam,
       addBot,
       removeBot,
@@ -968,7 +998,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
       settle,
     }),
     [room, participants, pendingInvites, tiles, state, loading, isHost, myTeam, isSpotlight,
-     createRoom, joinRoom, enterRoom, leaveRoom, setTeam, addBot, removeBot,
+     createRoom, joinRoom, enterRoom, leaveRoom, leaveMatch, setTeam, addBot, removeBot,
      setCaptain, voteCaptain, manageSeat, startMatch, startError, submitRps, pickTile, submitAnswer,
      turnPicks, sendPick, playedBy, voteSuper, submitSuper, advance, settle],
   );
