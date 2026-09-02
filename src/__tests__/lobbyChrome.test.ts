@@ -62,6 +62,22 @@ describe("the lounges invite through the invite page", () => {
     expect(context).toMatch(/if \(user\.id === row\.host_user_id\) \{\s*\n\s*const a = onSide\("a"\);/);
     expect(context).not.toMatch(/user\.id === row\.host_user_id \|\| \(hostTeam !== "a"/);
   });
+
+  it("the couch reconciles with the database, and a ghost sits back down", () => {
+    // A backgrounded webview misses realtime deletes: the lobby then drew a
+    // player whose row was gone, while the public card truthfully said one.
+    // A slow poll plus focus/visibility refetches heal the stale couch, and
+    // a player whose own row vanished from a waiting room re-enters through
+    // the same assigned-seat door — guarded so leaveRoom's own delete never
+    // reseats the leaver.
+    const context = read("src/contexts/TeamBattleContext.tsx");
+    expect(context).toMatch(/window\.setInterval\(refresh, 20_000\)/);
+    expect(context).toMatch(/window\.addEventListener\("focus", refresh\)/);
+    expect(context).toMatch(/document\.addEventListener\("visibilitychange", refresh\)/);
+    expect(context).toMatch(/leavingRef\.current \|\| seatsLoadedRef\.current !== room\.id/);
+    expect(context).toMatch(/reseatAtRef\.current = Date\.now\(\);\s*\n\s*void enterRoomRow\(room\)/);
+    expect(context).toMatch(/leavingRef\.current = true;/);
+  });
 });
 
 describe("the room's name sits above the captain row", () => {

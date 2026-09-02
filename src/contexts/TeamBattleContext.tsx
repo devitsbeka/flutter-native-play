@@ -165,6 +165,11 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
   const myTeam = (me?.team as TBTeam | null) ?? null;
   const isSpotlight = !!state && !!user && state.active_player === user.id;
 
+  // Which room's seats have actually been read at least once, and whether a
+  // leave is mid-flight (its DELETE must not read as "my seat vanished").
+  const seatsLoadedRef = useRef<string | null>(null);
+  const leavingRef = useRef(false);
+
   const fetchParticipants = useCallback(async (roomId: string) => {
     // While a seat operation is in flight, a realtime-triggered refetch can
     // read the row the host just optimistically removed (the server delete
@@ -203,6 +208,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
       );
       setParticipants(dressed.filter((p) => p.status !== "invited"));
       setPendingInvites(dressed.filter((p) => p.status === "invited"));
+      seatsLoadedRef.current = roomId;
     }
   }, []);
 
@@ -291,7 +297,20 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
     liveChannelRef.current = liveCh;
     channelsRef.current = [stateCh, boardCh, partCh, roomCh, liveCh];
 
+    // Realtime is the fast path, not the only path: a backgrounded webview
+    // (split view, app switch) drops the socket and misses events, and the
+    // lobby then shows seats the database no longer has — the ghost player
+    // whose row was deleted under them. A slow poll plus a refetch on
+    // focus/visibility reconciles the couch with the truth.
+    const refresh = () => void fetchParticipants(roomId);
+    const iv = window.setInterval(refresh, 20_000);
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+
     return () => {
+      window.clearInterval(iv);
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
       liveChannelRef.current = null;
       cleanupChannels();
     };
@@ -524,16 +543,43 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
   );
 
   const leaveRoom = useCallback(async () => {
-    const roomId = roomIdRef.current;
-    if (roomId && user) {
-      await supabase.from("room_participants").delete().eq("room_id", roomId).eq("user_id", user.id);
+    // The reseat watcher below must not read this delete as "my seat
+    // vanished" and put the row straight back.
+    leavingRef.current = true;
+    try {
+      const roomId = roomIdRef.current;
+      if (roomId && user) {
+        await supabase.from("room_participants").delete().eq("room_id", roomId).eq("user_id", user.id);
+      }
+      setRoom(null);
+      setParticipants([]);
+      setPendingInvites([]);
+      setTiles([]);
+      setState(null);
+    } finally {
+      leavingRef.current = false;
     }
-    setRoom(null);
-    setParticipants([]);
-    setPendingInvites([]);
-    setTiles([]);
-    setState(null);
   }, [user]);
+
+  // The seat you can SEE must be a seat you HAVE. A device that missed the
+  // realtime delete (or whose insert was undone elsewhere) keeps drawing its
+  // player on the couch while the database — and every OTHER player's list
+  // card — says one player. When a reconciling fetch shows my own row gone
+  // from a waiting room I still believe I'm in, sit back down through the
+  // same door as entry (assigned seat, host flag kept). Throttled, and
+  // silent while a leave is mid-flight.
+  const reseatAtRef = useRef(0);
+  useEffect(() => {
+    if (!user || !room || room.status !== "waiting") return;
+    if (leavingRef.current || seatsLoadedRef.current !== room.id) return;
+    const present =
+      participants.some((p) => p.user_id === user.id) ||
+      pendingInvites.some((p) => p.user_id === user.id);
+    if (present) return;
+    if (Date.now() - reseatAtRef.current < 10_000) return;
+    reseatAtRef.current = Date.now();
+    void enterRoomRow(room);
+  }, [participants, pendingInvites, room, user, enterRoomRow]);
 
   const setTeam = useCallback(
     async (team: TBTeam) => {
