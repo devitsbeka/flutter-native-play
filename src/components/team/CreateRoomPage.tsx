@@ -287,9 +287,11 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     const pool = crestPoolRef.current;
     if (pool.length === 0) return;
     setTeamIcons((prev) => {
+      const other = prev[side === "a" ? "b" : "a"];
       let next = prev[side];
-      // A reroll that lands on the same icon reads as a dead tap.
-      for (let tries = 0; tries < 5 && next === prev[side]; tries++) {
+      // A deal that repeats this side's icon reads as a dead tap, and two
+      // sides wearing the same crest reads as one team.
+      for (let tries = 0; tries < 8 && (next === prev[side] || next === other); tries++) {
         next = pool[Math.floor(Math.random() * pool.length)];
       }
       return { ...prev, [side]: next };
@@ -1184,22 +1186,11 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                           : "bg-muted border-transparent text-muted-foreground"
                       }`}
                     >
-                      <span
-                        role="button"
-                        tabIndex={0}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setBattleTeam(side);
-                          setCrestPickerFor(side);
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.stopPropagation();
-                            setCrestPickerFor(side);
-                          }
-                        }}
-                        className="relative"
-                      >
+                      {/* Only YOUR side is dressable: the pencil rides the
+                          picked card alone, and a tap anywhere on it opens
+                          the picker. The other card's tap just switches
+                          sides. */}
+                      <span className="relative">
                         <motion.img
                           key={teamIcons[side] ?? "default"}
                           initial={{ scale: 0.6, rotate: -12, opacity: 0 }}
@@ -1209,9 +1200,11 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                           alt=""
                           className="w-14 h-14 object-contain"
                         />
-                        <span className="absolute -right-1.5 -bottom-1 flex w-5 h-5 items-center justify-center rounded-full bg-background shadow-sm border border-border/50">
-                          <Pencil className="w-2.5 h-2.5 text-muted-foreground" />
-                        </span>
+                        {battleTeam === side && (
+                          <span className="absolute -right-1.5 -bottom-1 flex w-5 h-5 items-center justify-center rounded-full bg-background shadow-sm border border-border/50">
+                            <Pencil className="w-2.5 h-2.5 text-muted-foreground" />
+                          </span>
+                        )}
                       </span>
                       <span className="text-[14px] font-bold">
                         {side === "a" ? t("teamBattle.teamA") : t("teamBattle.teamB")}
