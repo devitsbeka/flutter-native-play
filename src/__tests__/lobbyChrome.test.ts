@@ -126,3 +126,26 @@ describe("the couch elects its captain, like the arena", () => {
     expect(king).not.toMatch(/name=\{\(kingParts\.find\(\(p\) => p\.is_host\)/);
   });
 });
+
+describe("the host's side is the side they chose", () => {
+  const battle = read("src/pages/TeamBattlePage.tsx");
+  const ctx = read("src/contexts/TeamBattleContext.tsx");
+
+  it("the crests picked on the create screen are written with the room row", () => {
+    // Not through tb_set_team_icon after the fact: since 20260925100000 that
+    // RPC dresses only the side the caller captains, and at creation the
+    // host captains one side — the other side's pick was refused and the
+    // lobby opened on the stock crests.
+    expect(ctx).toMatch(/\.\.\.\(teamIcons\?\.a \? \{ team_a_icon: teamIcons\.a \} : \{\}\)/);
+    expect(ctx).toMatch(/\.\.\.\(teamIcons\?\.b \? \{ team_b_icon: teamIcons\.b \} : \{\}\)/);
+    expect(battle).toMatch(/createRoom\(publish, side, teamSize, teamIcons\)/g);
+    expect(battle.match(/createRoom\(publish, side, teamSize, teamIcons\)/g)?.length).toBe(2);
+    expect(battle).not.toMatch(/applyCrests/);
+  });
+
+  it("the host cannot move their own seat — no menu entry, no drag", () => {
+    expect(battle).toMatch(/if \(isHost && p\.user_id !== user\?\.id\) \{/);
+    expect(battle).toMatch(/draggable=\{isHost && entry\.p\.user_id !== user\?\.id\}/);
+    expect(battle).toMatch(/if \(!toOther \|\| !isHost \|\| entry\.p\.user_id === user\?\.id\) return;/);
+  });
+});

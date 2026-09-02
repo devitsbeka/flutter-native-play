@@ -53,7 +53,7 @@ describe("a room is private unless somebody published it", () => {
   it("every room-creating helper defaults to private", () => {
     expect(read("src/contexts/MultiplayerContextV2.tsx")).toMatch(/isPublic = false,/);
     expect(read("src/contexts/TeamBattleContext.tsx")).toMatch(
-      /createRoom = useCallback\(async \(isPublic = false, team: TBTeam = "a", teamSize = 5\)/,
+      /createRoom = useCallback\(async \(\s*isPublic = false,\s*team: TBTeam = "a",\s*teamSize = 5,/,
     );
     // The Battle lounge makes its own room after a navigation, so the
     // switch travels in router state and falls back to private without it.

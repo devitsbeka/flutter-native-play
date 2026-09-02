@@ -126,35 +126,20 @@ function TBGate({ joining }: { joining: boolean }) {
   const publish = handoff?.isPublic ?? false;
   const side: TBTeam = handoff?.team === "b" ? "b" : "a";
   const teamSize = handoff?.teamSize ?? 5;
-  // Crests dealt (or picked) on the create screen. Written through the RPC
-  // once the room exists — the host may dress a captainless side, and at
-  // creation both sides are exactly that. Fire-and-forget: a failed crest
-  // is a cosmetic loss, not a blocked room.
-  const applyCrests = (roomId: string) => {
-    const icons = handoff?.teamIcons;
-    if (!icons) return;
-    (["a", "b"] as const).forEach((team) => {
-      const icon = icons[team];
-      if (!icon) return;
-      void supabase
-        .rpc("tb_set_team_icon", { p_room_id: roomId, p_team: team, p_icon: icon })
-        .then(({ error }) => {
-          if (error) console.error("[TB] crest apply failed", error);
-        });
-    });
-  };
+  // Crests dealt (or picked) on the create screen ride into createRoom and
+  // are written with the room row itself. Not through tb_set_team_icon: that
+  // dresses only the side the caller captains, and at creation the host
+  // captains exactly one of the two.
+  const teamIcons = handoff?.teamIcons;
 
   useEffect(() => {
     if (joining || !user || attempted.current) return;
     attempted.current = true;
-    void createRoom(publish, side, teamSize).then((created) => {
+    void createRoom(publish, side, teamSize, teamIcons).then((created) => {
       if (!created) setFailed(true);
       // The room's code goes into the URL so a refresh rejoins this room
       // instead of minting a new one.
-      else {
-        applyCrests(created.id);
-        navigate(`/team-battle?code=${created.room_code}`, { replace: true });
-      }
+      else navigate(`/team-battle?code=${created.room_code}`, { replace: true });
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [joining, user, createRoom, navigate, publish, side, teamSize]);
@@ -196,12 +181,9 @@ function TBGate({ joining }: { joining: boolean }) {
           onClick={() => {
             setFailed(false);
             attempted.current = false;
-            void createRoom(publish, side, teamSize).then((created) => {
+            void createRoom(publish, side, teamSize, teamIcons).then((created) => {
               if (!created) setFailed(true);
-              else {
-                applyCrests(created.id);
-                navigate(`/team-battle?code=${created.room_code}`, { replace: true });
-              }
+              else navigate(`/team-battle?code=${created.room_code}`, { replace: true });
             });
           }}
         >
@@ -488,7 +470,10 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
 
   const seatMenuActions = (p: TBParticipant): SeatMenuAction[] => {
     const actions: SeatMenuAction[] = [];
-    if (isHost) {
+    // The host rearranges everyone BUT themselves: the side they chose on
+    // the create screen is the side they play — the owner's rule — so
+    // their own seat offers no move, and no drag either (below).
+    if (isHost && p.user_id !== user?.id) {
       if (p.team !== "a")
         actions.push({
           label: t("lobby.moveTo", { team: t("teamBattle.teamA") }),
@@ -499,8 +484,7 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
           label: t("lobby.moveTo", { team: t("teamBattle.teamB") }),
           onPress: () => void manageSeat(p.user_id, "move_b"),
         });
-      if (p.user_id !== user?.id)
-        actions.push({
+      actions.push({
           label: t("lobby.removeSeat"),
           destructive: true,
           onPress: () => void manageSeat(p.user_id, "remove"),
@@ -579,10 +563,10 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
               // invitee sits with their inviter, a join request sits
               // opposite the host), so players don't wander benches; the
               // host can still rearrange anyone, pending invites included.
-              draggable={isHost}
+              draggable={isHost && entry.p.user_id !== user?.id}
               onDragMoved={(dx) => {
                 const toOther = team === "a" ? dx > 70 : dx < -70;
-                if (!toOther || !isHost) return;
+                if (!toOther || !isHost || entry.p.user_id === user?.id) return;
                 const target: TBTeam = team === "a" ? "b" : "a";
                 void manageSeat(entry.p.user_id, target === "a" ? "move_a" : "move_b");
               }}

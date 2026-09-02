@@ -64,7 +64,13 @@ interface TeamBattleContextValue {
   isHost: boolean;
   myTeam: TBTeam | null;
   isSpotlight: boolean;
-  createRoom: (isPublic?: boolean, team?: TBTeam, teamSize?: number) => Promise<TBRoom | null>;
+  createRoom: (
+    isPublic?: boolean,
+    team?: TBTeam,
+    teamSize?: number,
+    /** The crests dealt or picked on the create screen, written with the room. */
+    teamIcons?: { a: string | null; b: string | null },
+  ) => Promise<TBRoom | null>;
   joinRoom: (code: string) => Promise<boolean>;
   enterRoom: (roomId: string) => Promise<boolean>;
   leaveRoom: () => Promise<void>;
@@ -311,7 +317,12 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
     void liveChannelRef.current?.send({ type: "broadcast", event: "pick", payload: pick });
   }, []);
 
-  const createRoom = useCallback(async (isPublic = false, team: TBTeam = "a", teamSize = 5): Promise<TBRoom | null> => {
+  const createRoom = useCallback(async (
+    isPublic = false,
+    team: TBTeam = "a",
+    teamSize = 5,
+    teamIcons?: { a: string | null; b: string | null },
+  ): Promise<TBRoom | null> => {
     if (!user || !profile) {
       toast.error(tStandalone("extra.mpAuthRequired"));
       return null;
@@ -332,6 +343,14 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
             min_players: 2,
             // Two equal sides, as the host set them on the create screen.
             max_players: 2 * Math.max(2, Math.min(5, Math.round(teamSize))),
+            // Both crests, written WITH the room. They used to be applied
+            // afterwards through tb_set_team_icon, which since 20260925100000
+            // lets a player dress only the side they captain — so the host's
+            // pick for the OTHER side was refused, and the lobby opened on
+            // the stock crests whatever had been chosen. The room row is the
+            // host's own insert; that is the one moment both sides are theirs.
+            ...(teamIcons?.a ? { team_a_icon: teamIcons.a } : {}),
+            ...(teamIcons?.b ? { team_b_icon: teamIcons.b } : {}),
             ...(await roomVisibilityFields(isPublic)),
             background_gradient: getRandomGradient(),
             last_activity_at: new Date().toISOString(),
