@@ -892,8 +892,9 @@ export default function KingPage() {
             isCaptain: p.user_id === kingCaptain?.user_id,
             // Live tally: how many humans on the couch back this member
             votes: kingParts.filter((voter) => !voter.is_bot && voter.captain_vote === p.user_id).length,
-            // Only humans can wear the armband
-            selectable: !p.is_bot,
+            // Only humans can wear the armband — and nobody votes for
+            // themselves (owner's rule), so your own face carries no pill.
+            selectable: !p.is_bot && p.user_id !== user?.id,
           }))}
           onChoose={meSeated ? (userId) => void voteKingCaptain(userId) : undefined}
         />

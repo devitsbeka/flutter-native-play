@@ -83,6 +83,10 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
   // A knock on a room you host. The same yes/no the lobby's doorstep
   // asks, here for a host who was not looking at the lobby.
   const isJoinRequest = notification.type === 'room_join_request';
+  // The host's answer to an ask — tapping it enters the room (approved) or
+  // just reads (declined).
+  const isJoinAnswer =
+    notification.type === 'room_join_approved' || notification.type === 'room_join_declined';
   const isGameStarted = notification.type === 'game_started';
   const isGameResult = notification.type === 'game_result';
   const isTriviaLikedOrSaved = ['trivia_liked', 'trivia_saved'].includes(notification.type);
@@ -147,7 +151,7 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
   const triviaCover = notification.data?.trivia_cover as string | undefined;
   const triviaIconSlug = notification.data?.trivia_icon_slug as string | undefined;
   
-  const hasRoomContext = isRoomInvite || isGameStarted || isGameInvite || isJoinRequest;
+  const hasRoomContext = isRoomInvite || isGameStarted || isGameInvite || isJoinRequest || isJoinAnswer;
 
   // Determine avatar content based on notification type
   const avatarContent = useMemo(() => {
@@ -160,7 +164,7 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
       }
     }
     
-    if (isRoomInvite || isGameStarted || isGameInvite || isRoomPing) {
+    if (isRoomInvite || isGameStarted || isGameInvite || isRoomPing || isJoinAnswer) {
       if (roomIcon) {
         return { type: 'image' as const, src: roomIcon };
       }
@@ -183,6 +187,10 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
     // The title is the asker's name; this says what they want. The room
     // (and which game it is) follows in the context chip.
     if (isJoinRequest) return t("extra.joinRequestBody");
+    // The answer to your ask: the title says which way it went, this says
+    // what to do about it. (The stored title/message is a bare room code.)
+    if (notification.type === 'room_join_approved') return t("extra.joinApprovedBody");
+    if (notification.type === 'room_join_declined') return t("extra.joinDeclinedBody");
     return null;
   };
   

@@ -954,10 +954,13 @@ export function StartButton({
   label,
   onClick,
   disabled,
+  loading,
 }: {
   label: string;
   onClick: () => void;
   disabled?: boolean;
+  /** Board prep takes real seconds — the press must visibly be working. */
+  loading?: boolean;
 }) {
   return (
     <div className="w-full max-w-[500px] mx-auto shrink-0 px-[24px] pt-[12px] pb-[16px]">
@@ -991,7 +994,11 @@ export function StartButton({
           }}
         />
         <div className="relative flex gap-[8px] h-full items-center justify-center">
-          <img alt="" className="block size-[20px]" src={iconPlay} />
+          {loading ? (
+            <span className="block size-[20px] rounded-full border-[3px] border-white/40 border-t-white animate-spin" />
+          ) : (
+            <img alt="" className="block size-[20px]" src={iconPlay} />
+          )}
           <p className="font-[Nunito] font-semibold leading-[28px] text-[18px] text-center text-white tracking-[-0.16px] whitespace-nowrap">
             {label}
           </p>

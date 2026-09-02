@@ -854,6 +854,7 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
             label={loading ? t("teamBattle.starting") : t("lobby.startGame")}
             onClick={start}
             disabled={!teamsEqual || !enoughPlayers || loading}
+            loading={loading}
           />
         </>
       ) : (
@@ -902,7 +903,7 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
         open={captainInfo !== null}
         onClose={() => setCaptainInfo(null)}
         title={
-          myTeam === captainInfo
+          perSide >= 3 && myTeam === captainInfo
             ? t("lobby.chooseCaptainTitle")
             : t("lobby.captainInfoTitle")
         }
@@ -928,12 +929,21 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
                 votes: teamOf(captainInfo).filter(
                   (voter) => !voter.is_bot && voter.captain_vote === p.user_id,
                 ).length,
-                // Only humans can wear the armband; only teammates vote
-                selectable: !p.is_bot,
+                // Only humans can wear the armband; only teammates vote —
+                // and never for THEMSELVES (owner's rule), so your own
+                // face carries no pick pill.
+                selectable: !p.is_bot && p.user_id !== user?.id,
               }))
             : []
         }
-        onChoose={myTeam === captainInfo ? (userId) => void voteCaptain(userId) : undefined}
+        // Captains are VOTED only in the bigger arenas: in a 2-2 a vote
+        // between two people is a staring contest, so the modal is
+        // information only there (owner's rule — voting starts at 3-3).
+        onChoose={
+          perSide >= 3 && myTeam === captainInfo
+            ? (userId) => void voteCaptain(userId)
+            : undefined
+        }
       />
 
     </div>

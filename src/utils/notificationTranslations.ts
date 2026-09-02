@@ -63,6 +63,11 @@ export function translateNotificationTitle(
     'trivia_liked': 'extra.likedYourTrivia',
     'trivia_saved': 'extra.savedYourTrivia',
     'room_ping': 'extra.pingHostNotifTitle',
+    // The stored title is the room's name-or-code (a bare "N3UAUD" for a
+    // Battle room, which has no name) — say what happened instead; the
+    // card's room chip carries which room.
+    'room_join_approved': 'extra.joinApprovedTitle',
+    'room_join_declined': 'extra.joinDeclinedTitle',
   };
 
   // A completed mission's row carries the title in the language the app was
