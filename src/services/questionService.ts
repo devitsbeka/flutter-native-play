@@ -842,14 +842,19 @@ async function getSingleCategoryVSQuestions(
     excludeIds = [];
   }
   
-  // Query all questions from specific category, filter client-side
+  // Query questions from the specific category, filter client-side.
+  // CAPPED: this used to pull the WHOLE category (every column, every
+  // row) — and Team Battle fires ~21 of these in parallel to build a
+  // board, which on a phone connection was megabytes and a spinner that
+  // never ended. 500 rows is plenty for any count this mode asks for.
   const { data: allCatQuestions } = await supabase
     .from('questions')
     .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug, image_url, video_url, audio_url')
     .eq('is_active', true)
     .eq('in_production', true)
     .eq('language', language)
-    .eq('category_id', categoryUuid);
+    .eq('category_id', categoryUuid)
+    .limit(500);
   
   // Client-side exclusion
   const excludeSet = new Set(excludeIds);
@@ -867,7 +872,8 @@ async function getSingleCategoryVSQuestions(
       .eq('is_active', true)
       .eq('in_production', true)
       .eq('language', language)
-      .eq('category_id', categoryUuid);
+      .eq('category_id', categoryUuid)
+      .limit(500);
     
     questions = resetQuestions || [];
   }
@@ -891,7 +897,8 @@ async function getSingleCategoryVSQuestions(
       .eq('is_active', true)
       .eq('in_production', true)
       .eq('language', language)
-      .eq('category_id', categoryUuid);
+      .eq('category_id', categoryUuid)
+      .limit(500);
     
     rawQuestions = (retryQuestions || []) as RawQuestion[];
     validQuestions = rawQuestions

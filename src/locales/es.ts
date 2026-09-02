@@ -1437,6 +1437,7 @@ export const es: KaTranslations = {
     matchInProgress: "Ya hay una partida en curso — únete a la siguiente",
     notEnoughQuestions: "Aún no hay suficientes preguntas en tu idioma",
     startFailed: "No se pudo iniciar la partida",
+    startTimeout: "La carga de preguntas tardó demasiado: revisa tu conexión e inténtalo de nuevo",
     minTwoPerTeam: "Se necesitan al menos 2 jugadores por equipo para empezar",
     rpsTitle: "Piedra · Papel · Tijera",
     rpsSubtitle: "El equipo ganador elige primero",

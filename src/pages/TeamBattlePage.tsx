@@ -678,7 +678,7 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
 
   return (
     <div
-      className="h-[100dvh] w-full overflow-hidden safe-bleed flex flex-col"
+      className="h-[100dvh] w-full overflow-y-auto overflow-x-hidden safe-bleed flex flex-col"
       style={{ background: LILAC_BG }}
     >
       {/* Somebody asking into this arena, when it was published */}

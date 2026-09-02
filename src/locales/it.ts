@@ -1430,6 +1430,7 @@ export const it: KaTranslations = {
     matchInProgress: "Una partita è già in corso — unisciti alla prossima",
     notEnoughQuestions: "Non ci sono ancora abbastanza domande nella tua lingua",
     startFailed: "Impossibile avviare la partita",
+    startTimeout: "Il caricamento delle domande ha impiegato troppo — controlla la connessione e riprova",
     minTwoPerTeam: "Servono almeno 2 giocatori per squadra per iniziare",
     rpsTitle: "Sasso · Carta · Forbici",
     rpsSubtitle: "La squadra vincente sceglie per prima",
