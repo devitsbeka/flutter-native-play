@@ -44,8 +44,6 @@ import { useIconLibrary } from "@/hooks/useIconLibrary";
 import iconCollections from "@/assets/icon-collections.png";
 import secretBookcase from "@/assets/secret-bookcase.png";
 import triviaBuzzer from "@/assets/trivia-buzzer-3.png";
-import teamPenguinsIcon from "@/assets/tb-lobby/team-penguins.png";
-import teamFormulaIcon from "@/assets/tb-lobby/team-formula.png";
 import iconGroupOfPeople from "@/assets/group-of-people.png";
 import stickerAlbum from "@/assets/sticker-album.png";
 import featuredQuick from "@/assets/play-chooser/featured-quick.webp";
@@ -1123,15 +1121,21 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                 }}
                 className="relative"
               >
-                <motion.img
-                  key={teamIcons[side] ?? "default"}
-                  initial={{ scale: 0.6, rotate: -12, opacity: 0 }}
-                  animate={{ scale: 1, rotate: 0, opacity: 1 }}
-                  transition={{ type: "spring", stiffness: 420, damping: 20 }}
-                  src={teamIcons[side] ?? (side === "a" ? teamPenguinsIcon : teamFormulaIcon)}
-                  alt=""
-                  className="w-14 h-14 object-contain"
-                />
+                {teamIcons[side] ? (
+                  <motion.img
+                    key={teamIcons[side]}
+                    initial={{ scale: 0.6, rotate: -12, opacity: 0 }}
+                    animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                    transition={{ type: "spring", stiffness: 420, damping: 20 }}
+                    src={teamIcons[side]!}
+                    alt=""
+                    className="w-14 h-14 object-contain"
+                  />
+                ) : (
+                  // The random deal is a round-trip away: a quiet slot while
+                  // it lands, never the stock hat-and-car pair.
+                  <span className="block w-14 h-14 rounded-full bg-muted border-2 border-dashed border-border" />
+                )}
                 <span className="absolute -right-1.5 -bottom-1 flex w-5 h-5 items-center justify-center rounded-full bg-background shadow-sm border border-border/50">
                   <Pencil className="w-2.5 h-2.5 text-muted-foreground" />
                 </span>
