@@ -1746,6 +1746,7 @@ export const en: KaTranslations = {
   // MyTrivia King (docs/GAME_TYPES_DESIGN.md §3)
   king: {
     title: "MyTrivia King",
+    vsTitle: "Trivia King VS",
     you: "You",
     king: "The King",
     firstTo6: "first to 6",

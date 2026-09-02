@@ -1479,6 +1479,7 @@ export const es: KaTranslations = {
   },
   king: {
     title: "MyTrivia King",
+    vsTitle: "Trivia King VS",
     you: "Tú",
     king: "El Rey",
     firstTo6: "el primero a 6",

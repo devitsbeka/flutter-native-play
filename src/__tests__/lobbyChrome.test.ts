@@ -228,6 +228,21 @@ describe("the King's duel keeps its one action at the bottom", () => {
     expect(footers.length).toBe(5);
     expect(king).not.toMatch(/<p className="text-sm text-white\/70 text-center -mt-2">\{t\("king\.thinkHint"\)\}<\/p>\s*<button/);
   });
+
+  it("the duel is billed Trivia King VS the team, and the reveal is readable", () => {
+    // The header is a fight card — "Trivia King VS <team>" with the team's
+    // icon — and the host dresses the team (icon + name) through the shared
+    // picker with the AI namer off. The reveal's rows wear the 3D verdict
+    // icons and stepped-up type: the old xs/40% labels read as fine print
+    // on the owner's device.
+    expect(king).toMatch(/king\.vsTitle/);
+    expect(king).toMatch(/answer-correct-3d\.png/);
+    expect(king).toMatch(/answer-wrong-3d\.png/);
+    expect(king).toMatch(/<RoomIconPickerModal[^]*?autoName=\{false\}/);
+    expect(king).toMatch(/size=\{68\}/);
+    expect(king).toMatch(/size=\{47\}/);
+    expect(king).not.toMatch(/text-xs text-\[#402666\]\/40/);
+  });
 });
 
 describe("the match wears the sides' crests", () => {

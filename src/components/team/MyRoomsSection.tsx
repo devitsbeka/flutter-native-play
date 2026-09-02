@@ -2,11 +2,12 @@ import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
 import { AnimatePresence, motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
-import { Plus, Users, Tv, Airplay, Cast, UserPlus, Trash2, MoreHorizontal, MonitorPlay, Play } from "lucide-react";
+import { Plus, Users, Tv, Airplay, Cast, UserPlus, Trash2, LogOut, MonitorPlay, Play } from "lucide-react";
 import { useMyRooms, MyRoom, RoomFilter, isActiveTVSession } from "@/hooks/useMyRooms";
 import iconKingLounge from "@/assets/play-chooser/icon-king.webp";
 import iconBattleLounge from "@/assets/play-chooser/icon-crate.png";
 import iconWordsLounge from "@/assets/play-chooser/icon-words.webp";
+import iconPartyLounge from "@/assets/group-of-people.png";
 import { roomKind, routeForRoom } from "@/utils/roomRoutes";
 import { roomCardAction } from "@/utils/roomCardAction";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
@@ -38,12 +39,6 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { useLocalizedCategoryName } from "@/utils/categoryDisplayName";
 
 interface MyRoomsSectionProps {
@@ -489,7 +484,9 @@ function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = false, i
         ? { icon: iconBattleLounge, label: t("teamBattle.title") }
         : kind === "words"
           ? { icon: iconWordsLounge, label: t("words.title") }
-          : null;
+          // The classic party room is a game too: it wears My Trivia Party's
+          // face when the host never picked an icon of their own.
+          : { icon: iconPartyLounge, label: t("extra.myTriviaPartyLabel") };
   const displayName = room.room_name || lounge?.label || t("extra.gameRoomLabel");
   // How long ago the room was made — the thing that tells two similar rooms
   // apart in a list of them.
@@ -698,7 +695,7 @@ function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = false, i
                       "new" read the same on every card; the dot carries that
                       state instead — green when someone is there, amber when
                       the room is empty. */}
-                  <span className="inline-flex items-center gap-1.5 whitespace-nowrap px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
+                  <span className="inline-flex items-center gap-1.5 whitespace-nowrap px-2.5 py-1 rounded-full bg-black/25 backdrop-blur-sm text-white font-bold text-xs">
                     <span
                       className={`w-1.5 h-1.5 shrink-0 rounded-full animate-pulse ${
                         someoneInRoom || allPlayersOnline ? "bg-green-400" : "bg-amber-400"
@@ -707,36 +704,32 @@ function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = false, i
                     {createdAgo || t("extra.roomStatusWaiting")}
                   </span>
                   
-                  {/* 3-dot menu (tablet/desktop only) */}
-                  {!isMobile && (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                        <button className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/30 transition-colors">
-                          <MoreHorizontal className="w-4 h-4 text-white" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="bg-card border-border">
-                        <DropdownMenuItem 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setShowDeleteConfirm(true);
-                          }}
-                          className="text-destructive focus:text-destructive focus:bg-destructive/10"
-                        >
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          {room.is_host ? t("extra.rlDelete") : t("extra.rlLeaveRoom")}
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )}
+                  {/* The way out, in the open on every device — the same
+                      trash (host) / log-out (guest) the public tab wears.
+                      It used to hide in a desktop-only 3-dot menu. */}
+                  <button
+                    type="button"
+                    aria-label={room.is_host ? t("extra.rlDeleteRoom") : t("extra.rlLeaveRoom")}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowDeleteConfirm(true);
+                    }}
+                    className="w-8 h-8 rounded-full bg-black/25 backdrop-blur-sm flex items-center justify-center hover:bg-black/35 active:scale-95 transition"
+                  >
+                    {room.is_host ? (
+                      <Trash2 className="w-4 h-4 text-white" />
+                    ) : (
+                      <LogOut className="w-4 h-4 text-white" />
+                    )}
+                  </button>
                 </div>
               </div>
               
               {/* Bottom left - Room name with icon and category */}
               <div className="flex items-center gap-2.5 mb-1">
-                {(lounge || room.room_icon) && (
+                {(room.room_icon || lounge) && (
                   <img
-                    src={lounge?.icon ?? room.room_icon!}
+                    src={room.room_icon ?? lounge?.icon}
                     alt=""
                     className="w-10 h-10 object-contain drop-shadow-lg"
                   />
@@ -842,7 +835,9 @@ function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, isJoining = fals
         ? { icon: iconBattleLounge, label: t("teamBattle.title") }
         : kind === "words"
           ? { icon: iconWordsLounge, label: t("words.title") }
-          : null;
+          // The classic party room is a game too: it wears My Trivia Party's
+          // face when the host never picked an icon of their own.
+          : { icon: iconPartyLounge, label: t("extra.myTriviaPartyLabel") };
   const displayName = room.room_name || lounge?.label || t("extra.gameRoomLabel");
   // How long ago the room was made — the thing that tells two similar rooms
   // apart in a list of them.
@@ -1004,7 +999,7 @@ function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, isJoining = fals
                 {/* The badge is always the age. "Waiting", "online" and "new"
                     read the same on every card; the dot carries that state
                     instead — green when someone is there, amber when empty. */}
-                <span className="inline-flex items-center gap-1.5 whitespace-nowrap px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
+                <span className="inline-flex items-center gap-1.5 whitespace-nowrap px-2.5 py-1 rounded-full bg-black/25 backdrop-blur-sm text-white font-bold text-xs">
                   <span
                     className={`w-1.5 h-1.5 shrink-0 rounded-full animate-pulse ${
                       someoneInRoom || allPlayersOnline ? "bg-green-400" : "bg-amber-400"
@@ -1021,42 +1016,38 @@ function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, isJoining = fals
                   way in; the count is a fact about the room, and it reads as
                   one beside the room's age. */}
               <div className="flex items-center gap-2">
-                <div className="flex flex-shrink-0 items-center gap-1.5 rounded-full bg-white/20 backdrop-blur-sm px-2.5 py-1">
+                <div className="flex flex-shrink-0 items-center gap-1.5 rounded-full bg-black/25 backdrop-blur-sm px-2.5 py-1">
                   <Users className="w-3.5 h-3.5 text-white" />
                   <span className="text-white font-bold text-xs">{displayPlayerCount}</span>
                 </div>
 
-              {/* 3-dot menu (tablet/desktop only) */}
-              {!isMobile && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                    <button className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/30 transition-colors">
-                      <MoreHorizontal className="w-4 h-4 text-white" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="bg-card border-border">
-                    <DropdownMenuItem 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowDeleteConfirm(true);
-                      }}
-                      className="text-destructive focus:text-destructive focus:bg-destructive/10"
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      {room.is_host ? t("extra.rlDelete") : t("extra.rlLeaveRoom")}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
+              {/* The way out, in the open on every device — the same
+                  trash (host) / log-out (guest) the public tab wears.
+                  It used to hide in a desktop-only 3-dot menu. */}
+              <button
+                type="button"
+                aria-label={room.is_host ? t("extra.rlDeleteRoom") : t("extra.rlLeaveRoom")}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowDeleteConfirm(true);
+                }}
+                className="w-8 h-8 rounded-full bg-black/25 backdrop-blur-sm flex items-center justify-center hover:bg-black/35 active:scale-95 transition"
+              >
+                {room.is_host ? (
+                  <Trash2 className="w-4 h-4 text-white" />
+                ) : (
+                  <LogOut className="w-4 h-4 text-white" />
+                )}
+              </button>
               </div>
             </div>
             
             {/* Middle: Icon + Title + Category + Time */}
             <div className="relative z-10 flex-1 flex flex-col justify-center py-3">
               <div className="flex items-center gap-3">
-                {(lounge || room.room_icon) && (
+                {(room.room_icon || lounge) && (
                   <img
-                    src={lounge?.icon ?? room.room_icon!}
+                    src={room.room_icon ?? lounge?.icon}
                     alt=""
                     className="w-14 h-14 md:w-16 md:h-16 object-contain drop-shadow-lg flex-shrink-0"
                   />

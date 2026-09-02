@@ -68,7 +68,9 @@ const INK = {
     text: "text-white",
     muted: "text-white/70",
     faint: "text-white/60",
-    pill: "bg-white/15 border-white/20",
+    // A dark scrim, not a white one: white/15 with white type on it
+    // disappeared over the light gradients (owner's screenshot).
+    pill: "bg-black/25 border-white/25",
     ring: "border-white/60",
     more: "bg-white/30 text-white",
   },
