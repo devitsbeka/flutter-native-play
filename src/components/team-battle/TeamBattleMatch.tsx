@@ -7,6 +7,16 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCategories } from "@/hooks/useCategories";
 import { useServerDeadline } from "@/hooks/useServerDeadline";
 import { QuizQuestionCard } from "@/components/ui/quiz-question-card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { QuizAnswerButton, type QuizAnswerState } from "@/components/ui/quiz-answer-button";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { TimerBadge } from "@/components/game/TimerBadge";
@@ -80,8 +90,24 @@ function useTileCategory(tile: TBTile | undefined) {
 function ScoreHeader({ seconds, maxSeconds }: { seconds?: number; maxSeconds?: number }) {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const { state, myTeam } = useTeamBattle();
+  const { state, myTeam, room, leaveMatch } = useTeamBattle();
+  const [confirmLeave, setConfirmLeave] = useState(false);
+  const [leaving, setLeaving] = useState(false);
   if (!state) return null;
+  // While the match RUNS, the back arrow is a real exit with a real price:
+  // the 200-coin desertion fee (owner's rule), behind a confirm. Once the
+  // game is done — or the room already moved on — walking away is free.
+  const inLiveMatch = room?.status === "playing" && state.phase !== "done";
+  const confirmAndLeave = async () => {
+    setLeaving(true);
+    const ok = await leaveMatch();
+    if (ok) {
+      navigate("/");
+    } else {
+      setLeaving(false);
+      setConfirmLeave(false);
+    }
+  };
   const side = (team: TBTeam) => (
     <div className={`flex flex-col ${team === "a" ? "items-start" : "items-end"}`}>
       <span className="text-white/70 text-[11px] font-semibold uppercase tracking-wide">
@@ -101,16 +127,39 @@ function ScoreHeader({ seconds, maxSeconds }: { seconds?: number; maxSeconds?: n
   return (
     <div className="flex items-center justify-between px-4 pt-3 pb-1 flex-shrink-0">
       <div className="flex items-center gap-2.5">
-        {/* The way out. Leaving only closes THIS screen — the match runs on
-            the server and the lounge card in the rooms list walks back in. */}
+        {/* The way out. Mid-match it costs the desertion fee behind a
+            confirm; after the game it just closes this screen. */}
         <button
           type="button"
-          onClick={() => navigate("/")}
+          onClick={() => (inLiveMatch ? setConfirmLeave(true) : navigate("/"))}
           aria-label={t("common.back")}
           className="w-9 h-9 -ml-1 shrink-0 rounded-full bg-white/15 flex items-center justify-center active:scale-95 transition-transform"
         >
           <ChevronLeft className="w-5 h-5 text-white" />
         </button>
+        <AlertDialog open={confirmLeave} onOpenChange={(open) => !leaving && setConfirmLeave(open)}>
+          <AlertDialogContent className="bg-card border-border rounded-3xl max-w-sm">
+            <AlertDialogHeader className="text-center">
+              <AlertDialogTitle>{t("teamBattle.leaveMatchTitle")}</AlertDialogTitle>
+              <AlertDialogDescription>{t("teamBattle.leaveMatchBody")}</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="flex-row gap-3">
+              <AlertDialogCancel disabled={leaving} className="flex-1 mt-0">
+                {t("extra.rlCancel")}
+              </AlertDialogCancel>
+              <AlertDialogAction
+                disabled={leaving}
+                onClick={(e) => {
+                  e.preventDefault();
+                  void confirmAndLeave();
+                }}
+                className="flex-1 bg-destructive hover:bg-destructive/90"
+              >
+                {t("teamBattle.leaveMatchConfirm")}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
         {side("a")}
       </div>
       {typeof seconds === "number" ? (

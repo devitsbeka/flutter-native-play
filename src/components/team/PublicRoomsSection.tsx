@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -592,15 +592,39 @@ export function PublicRoomsSection({
   // everyone else's — and within each group the room closest to filling
   // first, so the couch one player short of starting is the first thing
   // a scroller sees.
-  const rooms = sortPublicRooms(
-    filterPublicRooms(data ?? [], filter, searchQuery, {
-      seatedByRoom: seating?.seated ?? new Map(),
-      onlineIds,
-      friendIds,
-    }),
+  const roomsCtx = {
+    seatedByRoom: seating?.seated ?? new Map<string, string[]>(),
+    onlineIds,
     friendIds,
+  };
+  const rooms = sortPublicRooms(
+    filterPublicRooms(data ?? [], filter, searchQuery, roomsCtx),
+    friendIds,
+    roomsCtx,
   );
   const playersByRoom = seating?.faces;
+
+  // A match nobody is playing ends itself: a listed 'playing' battle whose
+  // whole couch is offline gets reported to tb_finish_stale — the server
+  // re-checks the silence itself (a deadline unanswered for minutes) and
+  // closes the room, which drops it off this tab. Once per room per visit;
+  // a database without the migration just answers with an error, quietly.
+  const sweptStaleRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    (data ?? []).forEach((r) => {
+      if (r.status !== "playing" || r.game_type_key !== "team_battle") return;
+      const seated = seating?.seated.get(r.id) ?? [];
+      const people = seated.includes(r.host_user_id) ? seated : [r.host_user_id, ...seated];
+      if (people.some((id) => onlineIds.has(id))) return;
+      if (sweptStaleRef.current.has(r.id)) return;
+      sweptStaleRef.current.add(r.id);
+      void supabase.rpc("tb_finish_stale", { p_room_id: r.id }).then(({ data: closed, error }) => {
+        if (!error && closed) {
+          void queryClient.invalidateQueries({ queryKey: PUBLIC_ROOMS_KEY });
+        }
+      });
+    });
+  }, [data, seating, onlineIds, queryClient]);
 
   // The same two exits the Private tab offers. Only the host may DELETE a
   // room (RLS matches no row for anybody else, with no error — so the
