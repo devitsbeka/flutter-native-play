@@ -19,6 +19,7 @@ import { join } from "node:path";
 import { filterPublicRooms, publicRoomPath, roomSeats, sortPublicRooms, type PublicRoom } from "@/hooks/usePublicRooms";
 
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
+const INK_DARK_TEXT = /dark: \{\s*text: "text-\[#2E1065\]"/;
 
 const room = (over: Partial<PublicRoom> = {}): PublicRoom => ({
   id: "r1",
@@ -235,6 +236,18 @@ describe("the public list", () => {
     // sticky stack.
     const page = read("src/pages/TeamV2.tsx");
     expect(page).toMatch(/\}, \[publicFilter, publicSearchQuery, privateFilter, privateSearchQuery\]\);/);
+  });
+
+  it("a Trivia Battle card is its arena, written in dark ink", () => {
+    const section = read("src/components/team/PublicRoomsSection.tsx");
+    expect(section).toMatch(/import sceneArena from "@\/assets\/tb-lobby\/scene-arena\.webp"/);
+    expect(section).toMatch(/const scene = room\.game_type_key === "team_battle" \? sceneArena : null;/);
+    expect(section).toMatch(/const ink = scene \? INK\.dark : INK\.light;/);
+    // No hard-coded white outside the ink table: every colour on the card
+    // comes from the surface it sits on.
+    const afterInk = section.slice(section.indexOf("} as const;"));
+    expect(afterInk).not.toMatch(/text-white/);
+    expect(INK_DARK_TEXT.test(section)).toBe(true);
   });
 
   it("offers active, mine, friends' and all — in that order, and no game chips", () => {

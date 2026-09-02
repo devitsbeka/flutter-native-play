@@ -38,6 +38,7 @@ import iconKingLounge from "@/assets/play-chooser/icon-king.webp";
 import iconBattleLounge from "@/assets/play-chooser/icon-crate.png";
 import iconWordsLounge from "@/assets/play-chooser/icon-words.webp";
 import crownIcon from "@/assets/crown-icon.png";
+import sceneArena from "@/assets/tb-lobby/scene-arena.webp";
 
 /**
  * The Public tab: rooms anyone can find, and ask to be let into.
@@ -54,6 +55,31 @@ const LOUNGES: Record<string, { icon: string; labelKey: string }> = {
   team_battle: { icon: iconBattleLounge, labelKey: "teamBattle.title" },
   words: { icon: iconWordsLounge, labelKey: "words.title" },
 };
+
+/**
+ * Ink for the two surfaces a card can sit on. The gradient cards are deep
+ * and saturated, where white reads; the arena scene is pale lilac, where
+ * white vanishes — so a scene card writes in the brand's dark purple and
+ * its frosted pills go white rather than smoked.
+ */
+const INK = {
+  light: {
+    text: "text-white",
+    muted: "text-white/70",
+    faint: "text-white/60",
+    pill: "bg-white/15 border-white/20",
+    ring: "border-white/60",
+    more: "bg-white/30 text-white",
+  },
+  dark: {
+    text: "text-[#2E1065]",
+    muted: "text-[#2E1065]/75",
+    faint: "text-[#2E1065]/60",
+    pill: "bg-white/55 border-white/70",
+    ring: "border-white/90",
+    more: "bg-white/70 text-[#2E1065]",
+  },
+} as const;
 
 /** A joined (non-host) face on the card, so a filling room shows its people. */
 interface CardPlayer {
@@ -89,6 +115,11 @@ function PublicRoomCard({
   const inside = room.my_state === "host" || room.my_state === "joined";
   const waiting = room.my_state === "pending";
   const category = room.first_category_name ? localizeCategory(room.first_category_name) : null;
+  // A Trivia Battle card is a picture of where it happens: the arena from
+  // its lobby, empty, seats waiting — not one of the gradients every other
+  // room wears.
+  const scene = room.game_type_key === "team_battle" ? sceneArena : null;
+  const ink = scene ? INK.dark : INK.light;
 
   const enter = () => navigate(publicRoomPath(room));
 
@@ -100,13 +131,25 @@ function PublicRoomCard({
       className="relative rounded-2xl overflow-hidden shadow-lg"
       onClick={() => (inside ? enter() : onAsk(room))}
     >
-      <GradientBackground
-        colors={gradient.colors}
-        gradientSize="125% 125%"
-        gradientOrigin="bottom-middle"
-        enableNoise={false}
-        className="relative p-3 min-h-[172px] flex flex-col rounded-2xl"
-      >
+      <div className="relative p-3 min-h-[172px] flex flex-col rounded-2xl overflow-hidden">
+        {scene ? (
+          <img
+            alt=""
+            src={scene}
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ objectPosition: "50% 42%" }}
+          />
+        ) : (
+          <div className="absolute inset-0">
+            <GradientBackground
+              colors={gradient.colors}
+              gradientSize="125% 125%"
+              gradientOrigin="bottom-middle"
+              enableNoise={false}
+              className="w-full h-full"
+            />
+          </div>
+        )}
         {/* Top: who runs it, who already joined, and how full it is */}
         <div className="relative z-10 flex items-start justify-between gap-2">
           <div className="flex items-center gap-1.5 min-w-0">
@@ -116,7 +159,7 @@ function PublicRoomCard({
                 e.stopPropagation();
                 openProfile(room.host_user_id);
               }}
-              className="flex items-center gap-2 min-w-0 rounded-full bg-white/15 backdrop-blur-md border border-white/20 pl-1 pr-2.5 py-1"
+              className={`flex items-center gap-2 min-w-0 rounded-full backdrop-blur-md border pl-1 pr-2.5 py-1 ${ink.pill}`}
             >
               <div className="relative w-6 h-6 rounded-full overflow-hidden shrink-0">
                 <SafeAvatarImage
@@ -127,7 +170,7 @@ function PublicRoomCard({
                 />
               </div>
               <img src={crownIcon} alt="" className="w-3 h-3 object-contain shrink-0" />
-              <span className="text-white text-xs font-semibold truncate max-w-[104px]">
+              <span className={`text-xs font-semibold truncate max-w-[104px] ${ink.text}`}>
                 {room.host_nickname || t("extra.friendFallback")}
               </span>
             </button>
@@ -138,7 +181,7 @@ function PublicRoomCard({
                 {players.slice(0, 3).map((p, i) => (
                   <span
                     key={p.user_id}
-                    className={`relative block w-6 h-6 rounded-full overflow-hidden border-2 border-white/60 shrink-0 ${i > 0 ? "-ml-2" : ""}`}
+                    className={`relative block w-6 h-6 rounded-full overflow-hidden border-2 shrink-0 ${ink.ring} ${i > 0 ? "-ml-2" : ""}`}
                   >
                     <SafeAvatarImage
                       avatarUrl={p.avatar_url}
@@ -149,7 +192,7 @@ function PublicRoomCard({
                   </span>
                 ))}
                 {players.length > 3 && (
-                  <span className="-ml-2 w-6 h-6 rounded-full bg-white/30 border-2 border-white/60 flex items-center justify-center text-[9px] font-bold text-white shrink-0">
+                  <span className={`-ml-2 w-6 h-6 rounded-full border-2 flex items-center justify-center text-[9px] font-bold shrink-0 ${ink.ring} ${ink.more}`}>
                     +{players.length - 3}
                   </span>
                 )}
@@ -161,9 +204,9 @@ function PublicRoomCard({
               "is there room on that couch" — so they always show the pair;
               a classic room without a cap just counts heads. */}
           <div className="flex items-center gap-1.5 shrink-0">
-            <div className="flex items-center gap-1 rounded-full bg-white/15 backdrop-blur-md border border-white/20 px-2.5 py-1">
-              <Users className="w-3.5 h-3.5 text-white" />
-              <span className="text-white text-xs font-bold">
+            <div className={`flex items-center gap-1 rounded-full backdrop-blur-md border px-2.5 py-1 ${ink.pill}`}>
+              <Users className={`w-3.5 h-3.5 ${ink.text}`} />
+              <span className={`text-xs font-bold ${ink.text}`}>
                 {seats ? `${room.player_count}/${seats}` : room.player_count}
               </span>
             </div>
@@ -178,7 +221,7 @@ function PublicRoomCard({
                   e.stopPropagation();
                   onRemove(room);
                 }}
-                className="w-7 h-7 rounded-full bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center text-white active:scale-95 transition-transform"
+                className={`w-7 h-7 rounded-full backdrop-blur-md border flex items-center justify-center active:scale-95 transition-transform ${ink.pill} ${ink.text}`}
               >
                 {room.my_state === "host" ? (
                   <Trash2 className="w-3.5 h-3.5" />
@@ -204,11 +247,11 @@ function PublicRoomCard({
               nobody chose over the one thing a player is scanning for. The
               classic rooms keep their own name, which somebody did choose. */}
           <div className="min-w-0 flex-1">
-            <h3 className="font-display text-white text-lg leading-tight line-clamp-2 drop-shadow-md">
+            <h3 className={`font-display text-lg leading-tight line-clamp-2 ${scene ? "" : "drop-shadow-md"} ${ink.text}`}>
               {lounge ? t(lounge.labelKey) : room.room_name || t("extra.gameRoomDefault")}
             </h3>
             {!lounge && (
-              <p className="text-white/70 text-sm truncate mt-0.5">
+              <p className={`text-sm truncate mt-0.5 ${ink.muted}`}>
                 {t("extra.publicRoomLabel")}
               </p>
             )}
@@ -216,18 +259,18 @@ function PublicRoomCard({
         </div>
 
         {/* Bottom: the first round on the left, the way in on the right */}
-        <div className="relative z-10 bg-white/15 backdrop-blur-md border border-white/20 rounded-xl px-3 py-2.5 flex items-center justify-between gap-2">
+        <div className={`relative z-10 backdrop-blur-md border rounded-xl px-3 py-2.5 flex items-center justify-between gap-2 ${ink.pill}`}>
           <div className="flex items-center gap-2 min-w-0">
             {room.first_category_icon ? (
               <DynamicIcon slug={room.first_category_icon} className="w-5 h-5 shrink-0" />
             ) : (
-              <Globe className="w-4 h-4 text-white/80 shrink-0" />
+              <Globe className={`w-4 h-4 shrink-0 ${ink.muted}`} />
             )}
             <div className="min-w-0">
-              <p className="text-white/60 text-[10px] font-semibold uppercase tracking-wide leading-none">
+              <p className={`text-[10px] font-semibold uppercase tracking-wide leading-none ${ink.faint}`}>
                 {t("extra.firstRoundLabel")}
               </p>
-              <p className="text-white text-sm font-semibold truncate leading-tight">
+              <p className={`text-sm font-semibold truncate leading-tight ${ink.text}`}>
                 {/* No round picked yet means the first round is mixed —
                     say that, not "not chosen yet", which reads as a
                     room that is not ready. */}
@@ -262,7 +305,7 @@ function PublicRoomCard({
             )}
           </motion.button>
         </div>
-      </GradientBackground>
+      </div>
     </motion.div>
   );
 }
