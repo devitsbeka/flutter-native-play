@@ -83,7 +83,14 @@ const AlertDialogCancel = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <AlertDialogPrimitive.Cancel
     ref={ref}
-    className={cn(buttonVariants({ variant: "outline" }), "mt-2 sm:mt-0", className)}
+    // The outline variant's accent (orange) hover reads as a warning color
+    // here — and Radix autofocuses Cancel, so on the device the button sits
+    // in that state looking alarmed. Brand purple instead, in every state.
+    className={cn(
+      buttonVariants({ variant: "outline" }),
+      "mt-2 sm:mt-0 hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground active:bg-primary/90 active:text-primary-foreground",
+      className,
+    )}
     {...props}
   />
 ));

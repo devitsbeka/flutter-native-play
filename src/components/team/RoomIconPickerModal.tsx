@@ -63,6 +63,15 @@ interface RoomIconPickerModalProps {
    * control that matters. roomName is then just the heading.
    */
   iconOnly?: boolean;
+  /**
+   * Keep the name field but silence the AI namer.
+   *
+   * A team's rename is the captain typing the name they want — an edge
+   * call rewriting the field on every icon tap would fight them, and a
+   * team name is not a room name anyway. Default true (rooms keep the
+   * namer exactly as before).
+   */
+  autoName?: boolean;
 }
 
 /**
@@ -94,6 +103,7 @@ export function RoomIconPickerModal({
   roomName,
   onConfirm,
   iconOnly = false,
+  autoName = true,
 }: RoomIconPickerModalProps) {
   const { t, language } = useLanguage();
   const ICON_CATEGORIES = ICON_CATEGORIES_DATA.map(c => ({ ...c, label: t(`extra.${c.key}`) }));
@@ -325,7 +335,7 @@ export function RoomIconPickerModal({
     
     // Only auto-generate name if user hasn't manually edited it — and never
     // in icon-only mode, where there is no name to generate.
-    if (!iconOnly && !hasManuallyEditedName.current) {
+    if (!iconOnly && autoName && !hasManuallyEditedName.current) {
       await generateNameForIcon(icon.slug);
     }
   };

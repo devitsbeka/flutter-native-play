@@ -18,7 +18,7 @@ import React, {
   useState,
 } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { roomVisibilityFields } from "@/utils/roomVisibility";
+import { roomVisibilityFields, teamNameFields } from "@/utils/roomVisibility";
 import type { Json, Tables } from "@/integrations/supabase/types";
 import { useAuth } from "./AuthContext";
 import { toast } from "@/lib/toast";
@@ -70,6 +70,8 @@ interface TeamBattleContextValue {
     teamSize?: number,
     /** The crests dealt or picked on the create screen, written with the room. */
     teamIcons?: { a: string | null; b: string | null },
+    /** The sides' names, dealt by the randomizer (plural — owner's rule). */
+    teamNames?: { a: string | null; b: string | null },
   ) => Promise<TBRoom | null>;
   joinRoom: (code: string) => Promise<boolean>;
   enterRoom: (roomId: string) => Promise<boolean>;
@@ -346,6 +348,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
     team: TBTeam = "a",
     teamSize = 5,
     teamIcons?: { a: string | null; b: string | null },
+    teamNames?: { a: string | null; b: string | null },
   ): Promise<TBRoom | null> => {
     if (!user || !profile) {
       toast.error(tStandalone("extra.mpAuthRequired"));
@@ -374,6 +377,12 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
             // the stock crests whatever had been chosen. The room row is the
             // host's own insert; that is the one moment both sides are theirs.
             ...(teamIcons?.a ? { team_a_icon: teamIcons.a } : {}),
+            // The sides' names, dealt by the randomizer (plural, the
+            // owner's rule) — written with the room like the crests; the
+            // captain renames later through tb_set_team_name. Gated like
+            // is_public: the columns land by hand-pasted migration, and an
+            // insert naming a column PostgREST doesn't know writes nothing.
+            ...(await teamNameFields(teamNames)),
             ...(teamIcons?.b ? { team_b_icon: teamIcons.b } : {}),
             ...(await roomVisibilityFields(isPublic)),
             background_gradient: getRandomGradient(),

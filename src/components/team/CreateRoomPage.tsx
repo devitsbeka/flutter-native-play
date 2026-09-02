@@ -19,6 +19,7 @@ import { roomVisibilityFields } from "@/utils/roomVisibility";
 import { localizeCategoryNames } from "@/utils/localizeCategories";
 import { filterCategoriesForLanguage } from "@/utils/languageCategoryFilter";
 import { readAppLanguage } from "@/utils/appLanguage";
+import { dealTeamNames } from "@/utils/teamNameGenerator";
 import { useFriends } from "@/hooks/useFriends";
 import { useGameInvitations } from "@/hooks/useGameInvitations";
 import { useAuth } from "@/contexts/AuthContext";
@@ -273,6 +274,13 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     b: null,
   });
   const [crestPickerFor, setCrestPickerFor] = useState<"a" | "b" | null>(null);
+  // The sides' NAMES, dealt with the crests (plural, the owner's rule —
+  // "Team A" told nobody anything). They ride the same handoff and are
+  // written with the room row; the captain renames later in the lobby.
+  const [teamNames, setTeamNames] = useState<{ a: string | null; b: string | null }>({
+    a: null,
+    b: null,
+  });
   // The cards never open on the same stock hat and race car: the moment
   // Battle is picked, both sides get dealt a random crest from the library
   // (once — a re-visit keeps what was dealt or chosen).
@@ -282,6 +290,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     crestsDealtRef.current = true;
     void rollTeamIcon("a");
     void rollTeamIcon("b");
+    setTeamNames(dealTeamNames(readAppLanguage()));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameChoice]);
   const crestPoolRef = useRef<string[]>([]);
@@ -846,6 +855,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
           team: gameChoice === "battle" ? battleTeam : undefined,
           teamSize: gameChoice === "battle" ? battleTeamSize : undefined,
           teamIcons: gameChoice === "battle" ? teamIcons : undefined,
+          teamNames: gameChoice === "battle" ? teamNames : undefined,
         },
       });
       return;
@@ -1176,7 +1186,8 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                 </span>
               </span>
               <span className="text-[14px] font-bold">
-                {side === "a" ? t("teamBattle.teamA") : t("teamBattle.teamB")}
+                {(side === "a" ? teamNames.a : teamNames.b) ??
+                  (side === "a" ? t("teamBattle.teamA") : t("teamBattle.teamB"))}
               </span>
             </button>
           ))}

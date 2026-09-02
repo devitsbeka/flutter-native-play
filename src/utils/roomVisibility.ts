@@ -50,7 +50,46 @@ export async function roomVisibilityFields(
   return (await gameRoomsHasIsPublic()) ? { is_public: isPublic } : {};
 }
 
+/**
+ * Same story, next migration: `team_a_name` / `team_b_name` ride along on the
+ * room insert, and until 20260929100000_team_names.sql is pasted the columns
+ * do not exist. One probe per session; before the migration the room is
+ * simply created without names and the lobby falls back to "გუნდი A"/"B".
+ */
+let namesProbe: Promise<boolean> | null = null;
+
+function gameRoomsHasTeamNames(): Promise<boolean> {
+  if (!namesProbe) {
+    namesProbe = (async () => {
+      try {
+        const { error } = await supabase.from("game_rooms").select("team_a_name").limit(1);
+        return !error;
+      } catch {
+        return false;
+      }
+    })();
+  }
+  return namesProbe;
+}
+
+/**
+ * The dealt team names' half of a game_rooms insert, or nothing at all when
+ * the columns are not there yet. Spread it into the insert like
+ * `roomVisibilityFields`.
+ */
+export async function teamNameFields(
+  names?: { a?: string; b?: string },
+): Promise<{ team_a_name?: string; team_b_name?: string }> {
+  if (!names?.a && !names?.b) return {};
+  if (!(await gameRoomsHasTeamNames())) return {};
+  return {
+    ...(names.a ? { team_a_name: names.a } : {}),
+    ...(names.b ? { team_b_name: names.b } : {}),
+  };
+}
+
 /** Test seam: forget what was probed. */
 export function resetRoomVisibilityProbe(): void {
   probe = null;
+  namesProbe = null;
 }

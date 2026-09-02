@@ -81,8 +81,15 @@ function GestureIcon({ g, size = 20 }: { g?: string | null; size?: number }) {
   );
 }
 
-const teamLabel = (t: (k: string) => string, team: TBTeam | null | undefined) =>
-  team === "a" ? t("teamBattle.teamA") : t("teamBattle.teamB");
+// A side's real name (dealt at creation, renamed by its captain), falling
+// back to the old letters for rooms made before names existed.
+const teamLabel = (
+  t: (k: string) => string,
+  team: TBTeam | null | undefined,
+  room?: { team_a_name?: string | null; team_b_name?: string | null } | null,
+) =>
+  (team === "a" ? room?.team_a_name : room?.team_b_name) ??
+  (team === "a" ? t("teamBattle.teamA") : t("teamBattle.teamB"));
 
 /** Category slug + icon for a tile, resolved from the tile's category uuid. */
 function useTileCategory(tile: TBTile | undefined) {
@@ -140,7 +147,7 @@ function ScoreHeader({ seconds, maxSeconds }: { seconds?: number; maxSeconds?: n
           />
         )}
         <span className="text-white/70 text-[11px] font-semibold uppercase tracking-wide">
-          {teamLabel(t, team)}
+          {teamLabel(t, team, room)}
           {myTeam === team ? ` · ${t("teamBattle.you")}` : ""}
         </span>
       </span>
@@ -261,7 +268,7 @@ interface RpsReveal {
 function PhaseRps() {
   const { t } = useLanguage();
   const { user } = useAuth();
-  const { state, participants, submitRps, advance } = useTeamBattle();
+  const { state, participants, room, submitRps, advance } = useTeamBattle();
   const [thrown, setThrown] = useState<TBGesture | null>(null);
   const secondsLeft = useServerDeadline(state?.deadline, advance);
 
@@ -317,7 +324,7 @@ function PhaseRps() {
             )}
             {(["a", "b"] as TBTeam[]).map((team) => (
               <div key={team} className="flex items-center gap-2">
-                <span className="text-[11px] text-white/60 w-16 shrink-0">{teamLabel(t, team)}</span>
+                <span className="text-[11px] text-white/60 w-16 shrink-0">{teamLabel(t, team, room)}</span>
                 <div className="flex flex-wrap gap-2">
                   {captainsOf(team).map((p) => {
                     const live = throws[p.user_id];
@@ -406,7 +413,7 @@ function PhaseRps() {
 
 function PhaseBoard() {
   const { t } = useLanguage();
-  const { state, tiles, participants, isSpotlight, pickTile, playedBy, advance } = useTeamBattle();
+  const { state, tiles, participants, room, isSpotlight, pickTile, playedBy, advance } = useTeamBattle();
   const { categories } = useCategories();
   const secondsLeft = useServerDeadline(state?.deadline, advance);
   const picker = participants.find((p) => p.user_id === state?.active_player);
@@ -438,7 +445,7 @@ function PhaseBoard() {
           <div className="px-4 pb-2 flex-shrink-0">
             <div className="rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-center text-sm font-medium text-white flex items-center justify-center gap-1.5 flex-wrap">
               <GestureIcon g={rpsLast.team_a} size={22} /> vs <GestureIcon g={rpsLast.team_b} size={22} /> —{" "}
-              {t("teamBattle.rpsWonBanner", { team: teamLabel(t, (rpsLast.winner ?? null) as TBTeam) })}
+              {t("teamBattle.rpsWonBanner", { team: teamLabel(t, (rpsLast.winner ?? null) as TBTeam, room) })}
             </div>
           </div>
         )}
@@ -495,7 +502,7 @@ function PhaseBoard() {
                             <span className="truncate max-w-[64px]">{playedPlayer.nickname}</span>
                           </>
                         ) : (
-                          teamLabel(t, tile.claimed_by_team as TBTeam)
+                          teamLabel(t, tile.claimed_by_team as TBTeam, room)
                         )}
                         <span className="shrink-0">· +{tile.points_earned}</span>
                       </span>
@@ -990,7 +997,7 @@ function PhaseSuperRound() {
 
 function PhaseDone({ onDismiss }: { onDismiss?: () => void }) {
   const { t } = useLanguage();
-  const { state, myTeam, settle } = useTeamBattle();
+  const { state, myTeam, room, settle } = useTeamBattle();
 
   // Idempotent server claim: pays out once and resets the room to waiting.
   // The page keeps rendering this screen until dismissed (TeamBattlePage's
@@ -1038,7 +1045,7 @@ function PhaseDone({ onDismiss }: { onDismiss?: () => void }) {
         <div className="flex items-center gap-6">
           {(["a", "b"] as TBTeam[]).map((team) => (
             <div key={team} className="flex flex-col items-center">
-              <span className="text-white/70 text-xs font-semibold">{teamLabel(t, team)}</span>
+              <span className="text-white/70 text-xs font-semibold">{teamLabel(t, team, room)}</span>
               <span className="font-display text-4xl font-black text-white drop-shadow-sm">
                 {team === "a" ? state?.team_a_score ?? 0 : state?.team_b_score ?? 0}
               </span>
