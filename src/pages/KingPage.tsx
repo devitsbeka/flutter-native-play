@@ -836,7 +836,15 @@ export default function KingPage() {
           </div>
         }
         players={couch}
-        playersHint={humans < 2 ? t("lobby.uInviteHint") : null}
+        playersHint={null}
+        // The couch: one to ten humans against the King (the room row's
+        // 11 counts the King's own seat).
+        capacity={{
+          min: 1,
+          max: Math.max(1, (kingRoom?.max_players ?? 11) - 1),
+          taken: humans + kingPending.length,
+          fullLabel: t("extra.mpRoomFull"),
+        }}
         inviteFaces={inviteFaces}
         onInvite={inviteFriends}
         playersExtra={

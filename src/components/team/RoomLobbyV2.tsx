@@ -696,7 +696,12 @@ export function RoomLobbyV2() {
    * for a second person to accept.
    */
   const seatedPlayers = participants.filter((p) => (p.status as string) !== "invited").length;
-  const enoughPlayers = seatedPlayers >= 2;
+  // A round needs somebody who can ANSWER. The host plays a random or a
+  // library category, so a lone host can start — a solo round is a real
+  // game — but a host who knows their own trivia's answers sits out
+  // (willBeObserver), and then the room needs one more seat filled.
+  const answeringPlayers = seatedPlayers - (willBeObserver ? 1 : 0);
+  const enoughPlayers = answeringPlayers >= 1;
   const canStartGame = participants.length >= 1;
   const roomGradient = getGradientById(currentRoom?.background_gradient);
   const roomName = currentRoom.room_name || t("extra.gameRoomDefault");
@@ -753,14 +758,17 @@ export function RoomLobbyV2() {
       .eq("id", currentRoom.id);
   };
   const isPublicRoom = Boolean((currentRoom as { is_public?: boolean }).is_public);
+  // A My Trivia room plays the quiz as written — its own question count —
+  // so the questions-per-round choice is a library/random room's alone.
+  const playsUserTrivia = !!currentRoom.user_trivia_id && !currentRoom.category_id;
   const lobbyRules: LobbyRuleRow[] = [
-    {
+    ...(playsUserTrivia ? [] : [{
       key: "questions",
       label: t("lobby.uQuestionsPerRound"),
       options: QUESTIONS_PER_ROUND.map((n) => ({ value: String(n), label: String(n) })),
       value: String(questionsPerRound(currentRoom.total_questions)),
-      onChange: isHost ? (v) => void setQuestions(v) : undefined,
-    },
+      onChange: isHost ? (v: string) => void setQuestions(v) : undefined,
+    } satisfies LobbyRuleRow]),
     {
       key: "visibility",
       label: t("lobby.uVisibility"),
@@ -797,11 +805,19 @@ export function RoomLobbyV2() {
       }}
       rules={lobbyRules}
       players={lobbyPlayers}
-      playersHint={enoughPlayers ? null : t("lobby.uInviteHint")}
+      playersHint={enoughPlayers ? null : t("extra.rlNeedsSecondPlayer")}
+      // The room's own cap (max_players), and one seat more than the host
+      // when the host will sit out of their own trivia.
+      capacity={{
+        min: willBeObserver ? 2 : 1,
+        max: currentRoom.max_players || 10,
+        taken: participants.length,
+        fullLabel: t("extra.mpRoomFull"),
+      }}
       inviteFaces={inviteFaces}
       onInvite={() => setShowInviteModal(true)}
       playersExtra={<ChallengeResultsSection roomId={currentRoom.id} />}
-      initialTab={needsCategorySelection || !enoughPlayers ? "players" : "rules"}
+      initialTab={needsCategorySelection ? "players" : "rules"}
       start={
         isHost
           ? {
@@ -831,6 +847,16 @@ export function RoomLobbyV2() {
     >
       {/* Somebody asking to come into a published room, above everything. */}
       <JoinRequestGate roomId={currentRoom.id} isHost={isHost} />
+
+      {/* The Invite line: the room's own invite sheet — friends, the link,
+          the share sheet — whose picks are seated as invited. */}
+      <InviteFriendsModal
+        isOpen={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+        inviteLink={getShareLink(currentRoom.room_code)}
+        roomId={currentRoom.id}
+        roomCode={currentRoom.room_code}
+      />
 
       {/* Play on TV: the pairing code entry, as a sheet over the lobby. */}
       <AnimatePresence>
