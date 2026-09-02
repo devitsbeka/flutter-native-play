@@ -258,10 +258,28 @@ describe("the public list", () => {
     // Crest — centered title — crest, and a captainless side is dealt a
     // per-room crest from the library rather than the same stock pair.
     expect(section).toMatch(
-      /crests\?\.a \?\? teamPenguins[^]*?flex-1 min-w-0 text-center font-display[^]*?crests\?\.b \?\? teamFormula/,
+      /crests\?\.a \?[^]*?flex-1 min-w-0 text-center font-display[^]*?crests\?\.b \?/,
     );
-    expect(section).toMatch(/from\("icon_library"\)/);
-    expect(section).toMatch(/const h = seed\(r\.id\);/);
+    // The stock hat-and-car pair is gone everywhere (owner's rule: a side
+    // wears what its captain set or a per-room random deal, never stock) —
+    // the shared, ordered pool lives in utils/roomCrests so the card and
+    // the lobby deal the same pair.
+    expect(section).toMatch(/fetchCrestPool\(\)/);
+    expect(section).toMatch(/dealtCrests\(r\.id, pool/);
+    for (const file of [
+      "src/components/team/PublicRoomsSection.tsx",
+      "src/pages/TeamBattlePage.tsx",
+      "src/components/team/CreateRoomPage.tsx",
+    ]) {
+      expect(read(file), file).not.toMatch(/team-penguins\.png|team-formula\.png/);
+    }
+    const crestUtil = read("src/utils/roomCrests.ts");
+    expect(crestUtil).toMatch(/\.order\("icon_url"\)/);
+    const lobby = read("src/pages/TeamBattlePage.tsx");
+    expect(lobby).toMatch(/dealtCrests\(room\?\.id \?\? "", crestPool/);
+    // The side's captain persists their own side's deal, so every surface
+    // reads the same pair from the room row itself.
+    expect(lobby).toMatch(/dressedRef\.current\.add\(key\);\s*\n\s*void supabase\.rpc\("tb_set_team_icon"/);
   });
 
   it("a card shows every seat, marks the live ones, and a wait can be taken back", () => {
