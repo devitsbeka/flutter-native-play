@@ -1400,7 +1400,12 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
 
       {/* Content */}
       <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
-        <div className="mx-auto flex min-h-full w-full max-w-[700px] flex-col space-y-3 px-4 py-3 md:max-w-[520px]">
+        {/* The column is WIDE from tablet up — the carousel is the point of
+            this screen, and at 520px it showed one card and a sliver, with
+            six more hiding off the edge. The detail that unfolds under the
+            picked card, the trivia preview, the header and the footer keep
+            the 520px reading width. */}
+        <div className="mx-auto flex min-h-full w-full max-w-[700px] flex-col space-y-3 px-4 py-3 md:max-w-[1100px]">
         {/* What will you play? — a featured carousel, App Store style: one
             poster-tall card per mode with its own artwork, the title and
             blurb on a scrim at its foot, swiped through sideways and
@@ -1442,7 +1447,10 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                     if (card.key === "mytrivias" && !challengeTrivia) void handleOptionClick("my-trivias");
                   }}
                   className={cn(
-                    "relative block w-[84%] max-w-[440px] shrink-0 snap-start rounded-[28px] overflow-clip text-left bg-[#e9d8ff] transition-shadow duration-200",
+                    // A phone shows one card and the edge of the next; from
+                    // tablet up the cards take a fixed width so the wide
+                    // column shows two, three or more of them at once.
+                    "relative block w-[84%] max-w-[440px] md:w-[320px] shrink-0 snap-start rounded-[28px] overflow-clip text-left bg-[#e9d8ff] transition-shadow duration-200",
                     isPicked
                       ? "ring-[3px] ring-[#7126d5] shadow-[0px_12px_32px_0px_rgba(113,38,213,0.35)]"
                       : "ring-1 ring-black/[0.06] shadow-[0px_8px_24px_0px_rgba(15,23,41,0.10)]",
@@ -1487,10 +1495,11 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
             <div aria-hidden className="w-px shrink-0" />
           </div>
 
-          {pickedDetail}
+          <div className="w-full md:mx-auto md:max-w-[520px]">{pickedDetail}</div>
         </div>
 
         {/* Custom Trivia Preview */}
+        <div className="w-full md:mx-auto md:max-w-[520px]">
         <AnimatePresence>
           {selectionMode === "create" && customTriviaQuestions && (
             <motion.div
@@ -1545,6 +1554,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
             </motion.div>
           )}
         </AnimatePresence>
+        </div>
         </div>
       </div>
 
