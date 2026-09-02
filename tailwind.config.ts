@@ -152,6 +152,12 @@ export default {
           'Arial',
           'sans-serif'
         ],
+        hero: [
+          'Slackey',
+          'TASolivare',
+          'Nunito',
+          'sans-serif'
+        ],
         display: [
           'TASolivare',
           'Nunito',
