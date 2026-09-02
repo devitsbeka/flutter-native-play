@@ -422,13 +422,25 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
     if (count(hostTeam) < perSide) return hostTeam;
     return null;
   }, [participants, perSide]);
+  // Where a teamless HOST sits: the emptier bench (A on a tie). A host can
+  // arrive teamless — they left, and the re-insert predates the dealt-seat
+  // fix — and a teamless host had no + seats, no invites, no Start.
+  const hostBench = useMemo((): TBTeam | null => {
+    const count = (side: TBTeam) => participants.filter((p) => p.team === side).length;
+    const a = count("a");
+    const b = count("b");
+    if (a <= b && a < perSide) return "a";
+    if (b < perSide) return "b";
+    return a < perSide ? "a" : null;
+  }, [participants, perSide]);
   const autoSeatRef = useRef(false);
   useEffect(() => {
     if (!myTeamlessSeat || room?.status !== "waiting" || autoSeatRef.current) return;
-    if (!oppositeBench) return;
+    const target = isHost ? hostBench : oppositeBench;
+    if (!target) return;
     autoSeatRef.current = true;
-    void setTeam(oppositeBench);
-  }, [myTeamlessSeat, room?.status, oppositeBench, setTeam]);
+    void setTeam(target);
+  }, [myTeamlessSeat, room?.status, isHost, hostBench, oppositeBench, setTeam]);
   const sweptRef = useRef<Set<string>>(new Set());
   useEffect(() => {
     if (!isHost || room?.status !== "waiting" || !oppositeBench) return;
