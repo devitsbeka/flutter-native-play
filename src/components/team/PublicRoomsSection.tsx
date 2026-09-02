@@ -36,8 +36,7 @@ import {
 } from "@/hooks/usePublicRooms";
 import iconKingLounge from "@/assets/play-chooser/icon-king.webp";
 import iconBattleLounge from "@/assets/play-chooser/icon-crate.png";
-import teamPenguins from "@/assets/tb-lobby/team-penguins.png";
-import teamFormula from "@/assets/tb-lobby/team-formula.png";
+import { dealtCrests, fetchCrestPool } from "@/utils/roomCrests";
 import iconWordsLounge from "@/assets/play-chooser/icon-words.webp";
 import crownIcon from "@/assets/crown-icon.png";
 import sceneArena from "@/assets/tb-lobby/scene-arena.webp";
@@ -248,19 +247,27 @@ function PublicRoomCard({
           // title centered between them. The crests are what the captains
           // dressed — or the pair the room was dealt when nobody has yet.
           <div className="relative z-10 flex-1 flex items-center justify-between gap-2 py-3">
-            <img
-              src={crests?.a ?? teamPenguins}
-              alt=""
-              className="w-12 h-12 object-contain drop-shadow-lg -rotate-6 shrink-0"
-            />
+            {crests?.a ? (
+              <img
+                src={crests.a}
+                alt=""
+                className="w-12 h-12 object-contain drop-shadow-lg -rotate-6 shrink-0"
+              />
+            ) : (
+              <span className="w-12 h-12 rounded-full bg-white/10 border border-white/20 shrink-0" />
+            )}
             <h3 className={`flex-1 min-w-0 text-center font-display text-lg leading-tight line-clamp-2 drop-shadow-md ${ink.text}`}>
               {lounge ? t(lounge.labelKey) : room.room_name || t("extra.gameRoomDefault")}
             </h3>
-            <img
-              src={crests?.b ?? teamFormula}
-              alt=""
-              className="w-12 h-12 object-contain drop-shadow-lg rotate-6 shrink-0"
-            />
+            {crests?.b ? (
+              <img
+                src={crests.b}
+                alt=""
+                className="w-12 h-12 object-contain drop-shadow-lg rotate-6 shrink-0"
+              />
+            ) : (
+              <span className="w-12 h-12 rounded-full bg-white/10 border border-white/20 shrink-0" />
+            )}
           </div>
         ) : (
           <div className="relative z-10 flex-1 flex items-center gap-3 py-3">
@@ -435,7 +442,7 @@ export function PublicRoomsSection({
       seated: Map<string, string[]>;
       crests: Map<string, { a: string | null; b: string | null }>;
     }> => {
-      const [{ data: rows }, { data: crestRows }, { data: iconRows }] = await Promise.all([
+      const [{ data: rows }, { data: crestRows }, pool] = await Promise.all([
         supabase
           .from("room_participants")
           .select("room_id, user_id, nickname, avatar_url, is_host, status")
@@ -447,14 +454,10 @@ export function PublicRoomsSection({
           .from("game_rooms")
           .select("id, team_a_icon, team_b_icon")
           .in("id", allIds),
-        // The pool a captainless room draws its face from: without it every
-        // undressed room wore the same hat-and-car pair, and the list read
-        // as one room repeated.
-        supabase
-          .from("icon_library")
-          .select("icon_url")
-          .not("icon_url", "is", null)
-          .limit(80),
+        // The shared, ordered pool a captainless room draws its face from
+        // (utils/roomCrests): the lobby deals from the same deck with the
+        // same seed, so the card and the arena wear the same pair.
+        fetchCrestPool(),
       ]);
       const faces = new Map<string, CardPlayer[]>();
       const seated = new Map<string, string[]>();
@@ -468,26 +471,12 @@ export function PublicRoomsSection({
       // What the captains set wins; a side nobody dressed gets dealt a crest
       // from the library — seeded by the room id, so each room keeps ITS
       // random pair across refreshes instead of reshuffling every poll.
-      const pool = (iconRows ?? []).map((r) => r.icon_url as string).filter(Boolean);
-      const seed = (s: string) => {
-        let h = 0;
-        for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
-        return h;
-      };
       const crests = new Map<string, { a: string | null; b: string | null }>();
       (crestRows ?? []).forEach((r) => {
-        let a = r.team_a_icon ?? null;
-        let b = r.team_b_icon ?? null;
-        if (pool.length > 1) {
-          const h = seed(r.id);
-          if (!a) a = pool[h % pool.length];
-          if (!b) {
-            let j = (h + 7) % pool.length;
-            if (pool[j] === a) j = (j + 1) % pool.length;
-            b = pool[j];
-          }
-        }
-        crests.set(r.id, { a, b });
+        crests.set(
+          r.id,
+          dealtCrests(r.id, pool, { a: r.team_a_icon ?? null, b: r.team_b_icon ?? null }),
+        );
       });
       return { faces, seated, crests };
     },

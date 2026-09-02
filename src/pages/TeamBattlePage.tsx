@@ -40,8 +40,7 @@ import { toast } from "@/lib/toast";
 import sceneArena from "@/assets/tb-lobby/scene-arena.webp";
 import iconBattleCrate from "@/assets/play-chooser/icon-crate.png";
 import crownIcon from "@/assets/crown-icon.png";
-import teamPenguins from "@/assets/tb-lobby/team-penguins.png";
-import teamFormula from "@/assets/tb-lobby/team-formula.png";
+import { dealtCrests, fetchCrestPool } from "@/utils/roomCrests";
 
 /**
  * /team-battle — the Team Battle flow (docs/GAME_TYPES_DESIGN.md §2), its own
@@ -234,6 +233,22 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
   const [captainInfo, setCaptainInfo] = useState<TBTeam | null>(null);
   // Which side's crest is being picked, if any.
   const [crestFor, setCrestFor] = useState<TBTeam | null>(null);
+  // What a crestless side wears: a per-room RANDOM pair from the icon
+  // library — never the stock hat-and-car again (owner's rule: random, or
+  // what a captain set). Deterministic (seeded by room id over an ordered
+  // pool), so every device and the public card deal the same pair.
+  const [crestPool, setCrestPool] = useState<readonly string[]>([]);
+  useEffect(() => {
+    void fetchCrestPool().then(setCrestPool);
+  }, []);
+  const dealt = useMemo(
+    () =>
+      dealtCrests(room?.id ?? "", crestPool, {
+        a: room?.team_a_icon ?? null,
+        b: room?.team_b_icon ?? null,
+      }),
+    [room?.id, room?.team_a_icon, room?.team_b_icon, crestPool],
+  );
   const [rollFace, setRollFace] = useState<{ [k in TBTeam]?: TBParticipant }>({});
   const rollTimers = useRef<{ [k in TBTeam]?: number }>({});
   const [params, setParams] = useSearchParams();
@@ -600,6 +615,26 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
   const captainA = captainOf(teamA);
   const captainB = captainOf(teamB);
 
+  // A dealt crest becomes the ROOM's crest the moment somebody may write
+  // it: each side's captain persists their own side's deal (the RPC is
+  // captain-only), so later visitors and every surface read the same pair
+  // from the row itself. An empty side keeps its dealt crest client-side
+  // until someone sits there to own it.
+  const dressedRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    if (!user || !room || room.status !== "waiting") return;
+    (["a", "b"] as const).forEach((side) => {
+      const current = side === "a" ? room.team_a_icon : room.team_b_icon;
+      const deal = side === "a" ? dealt.a : dealt.b;
+      const captain = side === "a" ? captainA : captainB;
+      if (current || !deal || captain?.user_id !== user.id) return;
+      const key = `${room.id}:${side}`;
+      if (dressedRef.current.has(key)) return;
+      dressedRef.current.add(key);
+      void supabase.rpc("tb_set_team_icon", { p_room_id: room.id, p_team: side, p_icon: deal });
+    });
+  }, [user, room, dealt, captainA, captainB]);
+
   // An all-AI team can't elect anyone — the host's device rolls the crown
   // like a slot reel: the chip flips through the bots' faces, lands on one,
   // and commits it with tb_set_captain. A sentinel (-1) marks a team already
@@ -725,8 +760,7 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
             room's name used to be. */}
         {(["a", "b"] as const).map((team) => {
           const isA = team === "a";
-          const icon = (isA ? room?.team_a_icon : room?.team_b_icon)
-            ?? (isA ? teamPenguins : teamFormula);
+          const icon = isA ? dealt.a : dealt.b;
           const mine = isA ? captainA : captainB;
           // Only the side's captain dresses its crest — the host gets no
           // say over the other team (and their own side only while they
@@ -744,11 +778,17 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
                 onClick={canDress ? () => setCrestFor(team) : undefined}
                 className="relative"
               >
-                <img
-                  alt=""
-                  className="size-[60px] object-contain drop-shadow-[0_4px_10px_rgba(88,50,160,0.22)]"
-                  src={icon}
-                />
+                {icon ? (
+                  <img
+                    alt=""
+                    className="size-[60px] object-contain drop-shadow-[0_4px_10px_rgba(88,50,160,0.22)]"
+                    src={icon}
+                  />
+                ) : (
+                  // The pool hasn't landed yet (or is empty): a quiet slot,
+                  // never the stock pair.
+                  <span className="block size-[60px] rounded-full bg-white/40 border-2 border-dashed border-[#b9a5e6]" />
+                )}
                 {canDress && (
                   <span className="absolute -right-1 -bottom-1 flex size-[20px] items-center justify-center rounded-full bg-white shadow-[0px_2px_4px_rgba(0,0,0,0.18)]">
                     <Pencil className="w-3 h-3 text-[#523b76]" />
@@ -871,8 +911,8 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
         pickLabel={t("lobby.votePick")}
         icon={
           captainInfo === "a"
-            ? room?.team_a_icon ?? teamPenguins
-            : room?.team_b_icon ?? teamFormula
+            ? dealt.a ?? undefined
+            : dealt.b ?? undefined
         }
         myVoteUserId={
           participants.find((p) => p.user_id === user?.id)?.captain_vote ?? null
