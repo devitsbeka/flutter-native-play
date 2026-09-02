@@ -23,6 +23,8 @@ import {
 } from "@/hooks/usePublicRooms";
 import iconKingLounge from "@/assets/play-chooser/icon-king.webp";
 import iconBattleLounge from "@/assets/play-chooser/icon-crate.png";
+import teamPenguins from "@/assets/tb-lobby/team-penguins.png";
+import teamFormula from "@/assets/tb-lobby/team-formula.png";
 import iconWordsLounge from "@/assets/play-chooser/icon-words.webp";
 import crownIcon from "@/assets/crown-icon.png";
 
@@ -52,12 +54,15 @@ interface CardPlayer {
 function PublicRoomCard({
   room,
   players,
+  crests,
   index,
   onAsk,
   busy,
 }: {
   room: PublicRoom;
   players: CardPlayer[];
+  /** A Battle room's two team crests — its real face on the card. */
+  crests?: { a: string | null; b: string | null };
   index: number;
   onAsk: (room: PublicRoom) => void;
   busy: boolean;
@@ -154,12 +159,29 @@ function PublicRoomCard({
 
         {/* Middle: the room, and the round it plays first */}
         <div className="relative z-10 flex-1 flex items-center gap-3 py-3">
-          {(lounge || room.room_icon) && (
-            <img
-              src={lounge?.icon ?? room.room_icon!}
-              alt=""
-              className="w-14 h-14 object-contain drop-shadow-lg shrink-0"
-            />
+          {room.game_type_key === "team_battle" ? (
+            // The two crests ARE the arena's face — the sides the captains
+            // dressed, tilted toward each other like the matchup they are.
+            <span className="flex items-center shrink-0 -space-x-3">
+              <img
+                src={crests?.a ?? teamPenguins}
+                alt=""
+                className="w-12 h-12 object-contain drop-shadow-lg -rotate-6"
+              />
+              <img
+                src={crests?.b ?? teamFormula}
+                alt=""
+                className="w-12 h-12 object-contain drop-shadow-lg rotate-6"
+              />
+            </span>
+          ) : (
+            (lounge || room.room_icon) && (
+              <img
+                src={lounge?.icon ?? room.room_icon!}
+                alt=""
+                className="w-14 h-14 object-contain drop-shadow-lg shrink-0"
+              />
+            )
           )}
           {/* A lounge IS its game: an arena called "Search Trail" with
               "Trivia Battle" in small type under it advertised a name
@@ -248,27 +270,43 @@ export function PublicRoomsSection({
   // the host and a count; the card wants to show WHO is on the couch, so the
   // seated participants ride in on one grouped query for the visible rooms.
   const roomIds = rooms.map((r) => r.id);
-  const { data: playersByRoom } = useQuery({
+  const { data: cardExtras } = useQuery({
     queryKey: ["public-room-players", roomIds],
     enabled: roomIds.length > 0,
     staleTime: 10_000,
     refetchInterval: 25_000,
-    queryFn: async (): Promise<Map<string, CardPlayer[]>> => {
-      const { data: rows } = await supabase
-        .from("room_participants")
-        .select("room_id, user_id, nickname, avatar_url, is_host, status")
-        .in("room_id", roomIds)
-        .in("status", ["joined", "ready", "playing"]);
-      const map = new Map<string, CardPlayer[]>();
+    queryFn: async (): Promise<{
+      players: Map<string, CardPlayer[]>;
+      crests: Map<string, { a: string | null; b: string | null }>;
+    }> => {
+      const [{ data: rows }, { data: crestRows }] = await Promise.all([
+        supabase
+          .from("room_participants")
+          .select("room_id, user_id, nickname, avatar_url, is_host, status")
+          .in("room_id", roomIds)
+          .in("status", ["joined", "ready", "playing"]),
+        // A Battle room's face is its two crests — the RPC doesn't carry
+        // them, so they ride in on the same refresh.
+        supabase
+          .from("game_rooms")
+          .select("id, team_a_icon, team_b_icon")
+          .in("id", roomIds),
+      ]);
+      const players = new Map<string, CardPlayer[]>();
       (rows ?? []).forEach((p) => {
         if (p.is_host) return;
-        const arr = map.get(p.room_id) ?? [];
+        const arr = players.get(p.room_id) ?? [];
         arr.push({ user_id: p.user_id, nickname: p.nickname, avatar_url: p.avatar_url });
-        map.set(p.room_id, arr);
+        players.set(p.room_id, arr);
       });
-      return map;
+      const crests = new Map<string, { a: string | null; b: string | null }>();
+      (crestRows ?? []).forEach((r) => {
+        crests.set(r.id, { a: r.team_a_icon ?? null, b: r.team_b_icon ?? null });
+      });
+      return { players, crests };
     },
   });
+  const playersByRoom = cardExtras?.players;
 
   const ask = async (room: PublicRoom) => {
     if (busyId) return;
@@ -323,6 +361,7 @@ export function PublicRoomsSection({
           key={room.id}
           room={room}
           players={playersByRoom?.get(room.id) ?? []}
+          crests={cardExtras?.crests.get(room.id)}
           index={i}
           onAsk={(r) => void ask(r)}
           busy={busyId === room.id}

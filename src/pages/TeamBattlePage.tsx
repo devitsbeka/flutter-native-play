@@ -345,7 +345,13 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
       nickname: entry.nickname,
       avatar_url: entry.avatarUrl,
       is_host: false,
-      ...(inviteTeamRef.current ? { team: inviteTeamRef.current } : {}),
+      // An invitee sits with whoever invited them: the + seat's side when
+      // one asked, otherwise the inviter's own team.
+      ...(inviteTeamRef.current
+        ? { team: inviteTeamRef.current }
+        : myTeam
+          ? { team: myTeam }
+          : {}),
     });
     if (error) {
       console.error("[TB] invite failed", error);
@@ -382,7 +388,9 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
   // park every teamless invite on that seat's team — the modal sends them
   // as a batch now, not one per opening.
   const assignPendingTeam = async () => {
-    const team = inviteTeamRef.current;
+    // Modal invites without a + seat's side still belong with their
+    // inviter — park every teamless invite on the inviter's team.
+    const team = inviteTeamRef.current ?? myTeam;
     if (!team || !room) return;
     const { data } = await supabase
       .from("room_participants")
@@ -463,12 +471,10 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
           destructive: true,
           onPress: () => void manageSeat(p.user_id, "remove"),
         });
-    } else if (p.user_id === user?.id) {
-      actions.push({
-        label: t("lobby.switchTeam"),
-        onPress: () => void setTeam(p.team === "a" ? "b" : "a"),
-      });
     }
+    // No self-service side switching: seats are ASSIGNED — an invitee sits
+    // with whoever invited them, a join request sits opposite the host —
+    // and only the host rearranges the benches.
     return actions;
   };
 
@@ -536,20 +542,16 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
               }
               onClick={() => seatTap(entry.p, entry.pending)}
               onLongPress={() => seatHold(entry.p, entry.pending)}
-              // Hold-and-drag reseats: the host drags anyone (pending
-              // invites and bots too), a player drags themselves. A pull
-              // far enough toward the other side of the arena moves them —
-              // the seat snaps back and the roster update reseats for real.
-              draggable={isHost || (!entry.pending && entry.p.user_id === user?.id)}
+              // Hold-and-drag reseats — HOST ONLY. Seats are assigned (an
+              // invitee sits with their inviter, a join request sits
+              // opposite the host), so players don't wander benches; the
+              // host can still rearrange anyone, pending invites included.
+              draggable={isHost}
               onDragMoved={(dx) => {
                 const toOther = team === "a" ? dx > 70 : dx < -70;
-                if (!toOther) return;
+                if (!toOther || !isHost) return;
                 const target: TBTeam = team === "a" ? "b" : "a";
-                if (!entry.pending && entry.p.user_id === user?.id) {
-                  void setTeam(target);
-                } else if (isHost) {
-                  void manageSeat(entry.p.user_id, target === "a" ? "move_a" : "move_b");
-                }
+                void manageSeat(entry.p.user_id, target === "a" ? "move_a" : "move_b");
               }}
             />
           ) : (

@@ -382,15 +382,41 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
         .eq("room_id", row.id)
         .eq("user_id", user.id)
         .maybeSingle();
+      // Seats are ASSIGNED, never wandered into: an invitee keeps the side
+      // their inviter put them on, and anyone who arrives without one — an
+      // approved join request (respond_room_join writes a teamless row), a
+      // teamless invite — is seated OPPOSITE the host, falling back to the
+      // host's side only when that bench is full.
+      const assignSeat = async (): Promise<TBTeam | null> => {
+        const { data: seated } = await supabase
+          .from("room_participants")
+          .select("user_id, team")
+          .eq("room_id", row.id)
+          .in("status", ["joined", "ready", "playing", "invited"]);
+        const hostTeam = (seated ?? []).find((p) => p.user_id === row.host_user_id)?.team as
+          | TBTeam
+          | null
+          | undefined;
+        const perSide = Math.max(2, Math.min(5, Math.floor((row.max_players ?? 10) / 2)));
+        const onSide = (side: TBTeam) => (seated ?? []).filter((p) => p.team === side).length;
+        if (user.id === row.host_user_id || (hostTeam !== "a" && hostTeam !== "b")) return null;
+        const opposite: TBTeam = hostTeam === "a" ? "b" : "a";
+        if (onSide(opposite) < perSide) return opposite;
+        if (onSide(hostTeam) < perSide) return hostTeam;
+        return null;
+      };
       // An invite-modal invitee arrives holding an "invited" row — accepting
       // means flipping it to joined, or they stay invisible in the lobby.
-      // A team is NOT dealt: an invite from a + seat already carries its
-      // side, and everyone else (approved join requests included) claims
-      // one in the lobby by tapping the + seat they want.
-      if (existing && existing.status === "invited") {
+      // A joined row with no team (an approval the guest never claimed) gets
+      // repaired the same way.
+      if (existing && (existing.status === "invited" || !existing.team)) {
+        const dealt = existing.team ? null : await assignSeat();
         await supabase
           .from("room_participants")
-          .update({ status: "joined" })
+          .update({
+            ...(existing.status === "invited" ? { status: "joined" } : {}),
+            ...(dealt ? { team: dealt } : {}),
+          })
           .eq("id", existing.id);
       }
       if (!existing) {
@@ -409,30 +435,12 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
           toast.error(tStandalone("teamBattle.roomFull"));
           return false;
         }
-        // A joiner sits down as the host's OPPONENT: whatever side the host
-        // picked, the newcomer lands across the arena from it (falling back
-        // to the host's own side only when the opposing bench is full, and
-        // to a teamless claim when the host has no side yet). A returning
-        // HOST keeps their flag — leaving deletes the row, and the Public
-        // card's request short-circuits with "joined" for the host without
-        // re-seating them, so this insert is how they get their seat back.
-        const { data: seated } = await supabase
-          .from("room_participants")
-          .select("user_id, team")
-          .eq("room_id", row.id)
-          .in("status", ["joined", "ready", "playing", "invited"]);
-        const hostTeam = (seated ?? []).find((p) => p.user_id === row.host_user_id)?.team as
-          | TBTeam
-          | null
-          | undefined;
-        const perSide = Math.max(2, Math.min(5, Math.floor((row.max_players ?? 10) / 2)));
-        const onSide = (side: TBTeam) => (seated ?? []).filter((p) => p.team === side).length;
-        let team: TBTeam | null = null;
-        if (user.id !== row.host_user_id && (hostTeam === "a" || hostTeam === "b")) {
-          const opposite: TBTeam = hostTeam === "a" ? "b" : "a";
-          if (onSide(opposite) < perSide) team = opposite;
-          else if (onSide(hostTeam) < perSide) team = hostTeam;
-        }
+        // A fresh joiner sits down as the host's OPPONENT (assignSeat). A
+        // returning HOST keeps their flag — leaving deletes the row, and
+        // the Public card's request short-circuits with "joined" for the
+        // host without re-seating them, so this insert is how they get
+        // their seat back.
+        const team = await assignSeat();
         const { error } = await supabase.from("room_participants").insert({
           room_id: row.id,
           user_id: user.id,
