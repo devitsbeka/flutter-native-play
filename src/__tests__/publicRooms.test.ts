@@ -630,3 +630,37 @@ describe("the host's doorstep", () => {
     expect(modal).toMatch(/<TabsTrigger value="trophies"/);
   });
 });
+
+describe("the cards read on every gradient, and every card shows its way out", () => {
+  it("labels sit on a dark scrim, not white-on-white", () => {
+    // White/15 pills with white type on them disappeared over the light
+    // gradients — the owner's screenshot of "21 საათის წინ" was a white
+    // whisper on pale orange.
+    const pub = read("src/components/team/PublicRoomsSection.tsx");
+    expect(pub).toMatch(/pill: "bg-black\/25 border-white\/25"/);
+    const mine = read("src/components/team/MyRoomsSection.tsx");
+    expect(mine).toMatch(/bg-black\/25 backdrop-blur-sm text-white font-bold text-xs/);
+    expect(mine).not.toMatch(/bg-white\/20 backdrop-blur-sm text-white font-bold/);
+  });
+
+  it("the private tab wears the public tab's trash and log-out, on every device", () => {
+    // The way out used to hide in a desktop-only 3-dot menu; mobile had
+    // only the swipe, which nobody discovers.
+    const mine = read("src/components/team/MyRoomsSection.tsx");
+    expect(mine).not.toMatch(/MoreHorizontal/);
+    expect(mine).not.toMatch(/DropdownMenu/);
+    expect(mine).toMatch(/<LogOut className="w-4 h-4 text-white" \/>/);
+    const trashButtons = mine.match(/setShowDeleteConfirm\(true\);\s*\n\s*\}\}\s*\n\s*className="w-8 h-8 rounded-full bg-black\/25/g) ?? [];
+    expect(trashButtons.length).toBe(2);
+  });
+
+  it("a classic party room wears My Trivia Party's icon, unless the host picked one", () => {
+    const mine = read("src/components/team/MyRoomsSection.tsx");
+    expect(mine).toMatch(/iconPartyLounge, label: t\("extra\.myTriviaPartyLabel"\)/);
+    // What the host picked wins over the game's stock face — the King
+    // couch's dressed icon shows on its card too.
+    expect(mine).toMatch(/room\.room_icon \?\? lounge\?\.icon/);
+    const pub = read("src/components/team/PublicRoomsSection.tsx");
+    expect(pub).toMatch(/lounge\?\.icon \?\? room\.room_icon|room\.room_icon \?\? lounge\?\.icon/);
+  });
+});
