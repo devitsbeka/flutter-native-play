@@ -67,6 +67,22 @@ export const NOTIFICATION_TYPE_CONFIG: Record<string, NotificationTypeConfig> = 
     label: 'შემოსვლის მოთხოვნა',
     labelEn: 'Join Request',
   },
+  // The host's answer to your ask. Without these two the answer rendered
+  // as the generic info badge over a bare room code.
+  room_join_approved: {
+    icon: UserCheck,
+    color: 'text-green-400',
+    bgColor: 'bg-green-500/20',
+    label: 'მოთხოვნა მიღებულია',
+    labelEn: 'Request Accepted',
+  },
+  room_join_declined: {
+    icon: UserPlus,
+    color: 'text-slate-400',
+    bgColor: 'bg-slate-500/20',
+    label: 'მოთხოვნა უარყოფილია',
+    labelEn: 'Request Declined',
+  },
   // Your own copy of a request you sent. Quieter than the one you receive:
   // it is a record, not something to act on.
   friend_request_sent: {
