@@ -252,4 +252,17 @@ describe("the match wears the sides' crests", () => {
     expect(match).toMatch(/dealtCrests\(room\?\.id \?\? "", crestPool, \{\s*a: room\?\.team_a_icon \?\? null,\s*b: room\?\.team_b_icon \?\? null,/);
     expect(match).toMatch(/src=\{crests\[team\] \?\? undefined\}/);
   });
+
+  it("a board tile carries one price pill coloured by difficulty (Figma 1019:41173)", () => {
+    // The tile shows a single pill whose colour IS the difficulty and whose
+    // number is the prize — not a difficulty word beside a separate number.
+    const match = read("src/components/team-battle/TeamBattleMatch.tsx");
+    expect(match).toMatch(/const DIFFICULTY_PILL: Record<string, string> = \{/);
+    expect(match).toMatch(/easy: "bg-\[#7EDC7B\] text-\[#1D5423\]"/);
+    expect(match).toMatch(/\$\{DIFFICULTY_PILL\[tile\.difficulty\] \?\? "bg-primary\/10 text-primary"\}`}\s*\n\s*>\s*\n\s*\{tile\.price\}/);
+    // The bigger icon (Figma 67px leaf) and no more twin difficulty-word +
+    // price row on the board tile.
+    expect(match).toMatch(/iconSlug=\{cat\?\.icon_slug\}\s*\n\s*size=\{64\}/);
+    expect(match).not.toMatch(/text-white text-\[10px\] font-bold \$\{DIFFICULTY_COLORS\[tile\.difficulty\]\}/);
+  });
 });
