@@ -171,48 +171,28 @@ export function UniversalLobby({
         <img alt="" src={bgBlob1} className="absolute inset-0 h-full w-full object-cover" />
         <img alt="" src={bgBlob2} className="absolute inset-0 h-full w-full object-cover" />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(249,219,255,0.5)_0%,rgba(249,219,255,0.3)_45%,rgba(249,219,255,0.5)_100%)]" />
-        {/* The card grows into the screen: it arrives sharp, at the size and
-            corner radius it had in the carousel, swells to fill the top of
-            the screen and dissolves into its own blur. */}
+        {/* The scene: the tapped card's render, blurred to a haze. It fades
+            in already blurred — the sharp-to-blur crossfade it used to open
+            with read as a screen of its own flashing before the lobby. */}
         <motion.div
           className="absolute inset-x-0 bottom-0 top-[-54px] overflow-hidden"
-          // The frame (1018:6748) stops the scene at 667 of its 946: on a
-          // phone that edge landed across the card as a hard line. The haze
-          // runs to the bottom of the screen instead (owner's call), where
-          // the card and the footer sit over it anyway.
-          style={{ transformOrigin: "50% 42%" }}
-          initial={reduceMotion ? false : { scale: 0.72, borderRadius: 28 }}
-          animate={{ scale: 1, borderRadius: 0 }}
-          transition={{ type: "spring", stiffness: 150, damping: 26 }}
+          style={{ transformOrigin: "50% 42%", filter: "blur(37px)" }}
+          initial={reduceMotion ? false : { opacity: 0, scale: 1.06 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
         >
-          <motion.img
+          <img
             alt=""
             src={sceneArt}
-            className="absolute inset-0 h-full w-full object-cover"
-            initial={reduceMotion ? { opacity: 0 } : { opacity: 1 }}
-            animate={{ opacity: 0 }}
-            transition={{ duration: 0.55, delay: 0.12, ease: "easeOut" }}
+            className="absolute left-[-3.17%] top-0 h-[106.3%] w-[106.35%] max-w-none object-cover"
           />
-          <motion.div
+          <div
             className="absolute inset-0"
-            style={{ filter: "blur(37px)" }}
-            initial={reduceMotion ? { opacity: 1 } : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.08, ease: "easeOut" }}
-          >
-            <img
-              alt=""
-              src={sceneArt}
-              className="absolute left-[-3.17%] top-0 h-[106.3%] w-[106.35%] max-w-none object-cover"
-            />
-            <div
-              className="absolute inset-0"
-              style={{
-                backgroundImage:
-                  "linear-gradient(90deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.4) 100%), linear-gradient(180deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 24.438%), linear-gradient(180deg, rgba(216,178,232,0.7) 0%, rgba(216,199,237,0) 35.822%)",
-              }}
-            />
-          </motion.div>
+            style={{
+              backgroundImage:
+                "linear-gradient(90deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.4) 100%), linear-gradient(180deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 24.438%), linear-gradient(180deg, rgba(216,178,232,0.7) 0%, rgba(216,199,237,0) 35.822%)",
+            }}
+          />
         </motion.div>
       </div>
 
