@@ -1703,6 +1703,7 @@ export const en: KaTranslations = {
     matchInProgress: "A match is already running — join the next one",
     notEnoughQuestions: "Not enough questions in your language yet",
     startFailed: "Couldn\'t start the match",
+    startTimeout: "Loading questions took too long — check your connection and try again",
     minTwoPerTeam: "You need at least 2 players on each team to start",
     rpsTitle: "Rock · Paper · Scissors",
     rpsSubtitle: "The winning team picks first",

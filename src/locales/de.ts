@@ -1427,6 +1427,7 @@ export const de: KaTranslations = {
     matchInProgress: "Ein Match läuft bereits — steig beim nächsten ein",
     notEnoughQuestions: "Noch nicht genug Fragen in deiner Sprache",
     startFailed: "Das Match konnte nicht gestartet werden",
+    startTimeout: "Das Laden der Fragen hat zu lange gedauert — prüfe deine Verbindung und versuche es erneut",
     minTwoPerTeam: "Zum Start braucht jedes Team mindestens 2 Spieler",
     rpsTitle: "Stein · Papier · Schere",
     rpsSubtitle: "Das Gewinnerteam wählt zuerst",

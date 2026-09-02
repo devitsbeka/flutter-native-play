@@ -706,6 +706,29 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
       }
       setLoading(true);
       try {
+        // A stalled connection has no timeout of its own, so "preparing the
+        // board" could spin forever. The whole build shares one 45-second
+        // budget; blowing it throws into the catch below, which prints the
+        // red line the host can actually act on.
+        const buildStart = Date.now();
+        const withDeadline = async <T,>(p: Promise<T>): Promise<T> => {
+          const left = 45_000 - (Date.now() - buildStart);
+          if (left <= 0) throw new Error(tStandalone("teamBattle.startTimeout"));
+          let timer: number | undefined;
+          try {
+            return await Promise.race([
+              p,
+              new Promise<never>((_, reject) => {
+                timer = window.setTimeout(
+                  () => reject(new Error(tStandalone("teamBattle.startTimeout"))),
+                  left,
+                );
+              }),
+            ]);
+          } finally {
+            if (timer !== undefined) window.clearTimeout(timer);
+          }
+        };
         const teamSize = participants.filter((p) => p.team === "a").length;
         // Two rounds per seated player (teams are equal by the server's own
         // rule, so 4 per team-size). Even by construction, within the
@@ -734,8 +757,8 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
         // a 10-tile board serialized was a 10-30s "Preparing…" stall on
         // mobile. Only tiles whose category came back short in the player's
         // language fall back to walking the pool sequentially.
-        const fetched = await Promise.all(
-          Array.from({ length: difficulties.length + 1 }, () => fetchFor(nextCat())),
+        const fetched = await withDeadline(
+          Promise.all(Array.from({ length: difficulties.length + 1 }, () => fetchFor(nextCat()))),
         );
 
         const fill = async (initial: (typeof fetched)[number]) => {
@@ -748,7 +771,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
 
         const tiles: Json[] = [];
         for (let i = 0; i < difficulties.length; i++) {
-          const filled = await fill(fetched[i]);
+          const filled = await withDeadline(fill(fetched[i]));
           if (!filled) {
             setStartError(tStandalone("teamBattle.notEnoughQuestions"));
             toast.error(tStandalone("teamBattle.notEnoughQuestions"));
@@ -762,7 +785,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
           } as unknown as Json);
         }
 
-        const superFilled = await fill(fetched[difficulties.length]);
+        const superFilled = await withDeadline(fill(fetched[difficulties.length]));
         if (!superFilled) {
           setStartError(tStandalone("teamBattle.notEnoughQuestions"));
           toast.error(tStandalone("teamBattle.notEnoughQuestions"));
