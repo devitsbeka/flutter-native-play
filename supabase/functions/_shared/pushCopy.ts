@@ -37,7 +37,8 @@ export type PushKind =
   | "friend_request"
   | "friend_accept"
   | "challenge_beaten"
-  | "room_ping";
+  | "room_ping"
+  | "team_poke";
 
 export const PUSH_LANGUAGES = ["ka", "en", "de", "es", "fr", "it", "pt"] as const;
 
@@ -63,6 +64,8 @@ export const PUSH_META: Record<PushKind, { icon: string; route: string }> = {
   challenge_beaten: { icon: `${SITE}/push/sword.png`, route: "/" },
   // route is built by the caller: /team?join={room_code}
   room_ping: { icon: `${SITE}/push/bell.png`, route: "/team" },
+  // route is built by the caller: /team-battle?code={room_code}
+  team_poke: { icon: `${SITE}/push/bell.png`, route: "/team-battle" },
 };
 
 export const PUSH_COPY: Record<PushKind, Record<string, PushMessage>> = {
@@ -200,6 +203,15 @@ export const PUSH_COPY: Record<PushKind, Record<string, PushMessage>> = {
     fr: { title: "{name} t'appelle", body: "Les joueurs attendent dans {room} — reviens et lance la partie." },
     it: { title: "{name} ti sta chiamando", body: "I giocatori aspettano in {room} — torna e avvia la partita." },
     pt: { title: "{name} está chamando você", body: "Os jogadores esperam em {room} — volte e comece o jogo." },
+  },
+  team_poke: {
+    ka: { title: "{name} გეძახის — დრო მიდის!", body: "შენი სვლაა Trivia Battle-ში და გუნდი ქულებს კარგავს. დაბრუნდი და უპასუხე." },
+    en: { title: "{name} is calling you — the clock is running!", body: "It is your turn in Trivia Battle and your team is losing points. Come back and answer." },
+    de: { title: "{name} ruft dich — die Uhr läuft!", body: "Du bist im Trivia Battle dran und dein Team verliert Punkte. Komm zurück und antworte." },
+    es: { title: "{name} te llama — ¡el tiempo corre!", body: "Es tu turno en Trivia Battle y tu equipo está perdiendo puntos. Vuelve y responde." },
+    fr: { title: "{name} t'appelle — le chrono tourne !", body: "C'est ton tour dans Trivia Battle et ton équipe perd des points. Reviens répondre." },
+    it: { title: "{name} ti chiama — il tempo scorre!", body: "È il tuo turno in Trivia Battle e la tua squadra sta perdendo punti. Torna e rispondi." },
+    pt: { title: "{name} está a chamar-te — o tempo corre!", body: "É a tua vez no Trivia Battle e a tua equipa está a perder pontos. Volta e responde." },
   },
   challenge_beaten: {
     ka: { title: "შენი რეკორდი მოხსნეს", body: "{name} შენს ქულას აჯობა — დაიბრუნე პირველობა." },

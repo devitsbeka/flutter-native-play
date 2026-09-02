@@ -2660,6 +2660,33 @@ export type Database = {
         }
         Relationships: []
       }
+      room_reactions: {
+        Row: {
+          created_at: string
+          from_user_id: string
+          icon: string
+          id: string
+          room_id: string
+          to_user_id: string
+        }
+        Insert: {
+          created_at?: string
+          from_user_id: string
+          icon: string
+          id?: string
+          room_id: string
+          to_user_id: string
+        }
+        Update: {
+          created_at?: string
+          from_user_id?: string
+          icon?: string
+          id?: string
+          room_id?: string
+          to_user_id?: string
+        }
+        Relationships: []
+      }
       room_participants: {
         Row: {
           avatar_url: string | null

@@ -337,8 +337,15 @@ export default function Notifications() {
       }
       case 'challenge':
       case 'room_ping':
+        // The room decides its page (routeForRoom): a poke from the
+        // arena opens the arena, not the classic hub.
         if (data?.room_code) {
-          navigate(`/team?join=${data.room_code}`);
+          navigate(
+            routeForRoom(
+              { game_type_key: data.game_type_key as string | undefined, game_mode: data.game_mode as string | undefined },
+              String(data.room_code),
+            ),
+          );
         } else {
           navigate('/team');
         }

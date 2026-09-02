@@ -198,6 +198,65 @@ Deno.serve(async (req: Request) => {
       person = { name: String(params.name), avatarUrl: caller?.avatar_url };
       route = `/team?join=${encodeURIComponent(room.room_code)}`;
       detail = "";
+    } else if (kind === "team_poke") {
+      // A teammate calling the player on the spot in a Trivia Battle: the
+      // clock is running, the spotlight is not answering, and the team is
+      // losing the points. Caller must be seated in the room; the recipient
+      // is whoever the match row says is on the spot; the route is the
+      // arena. One poke per player per 30s, whoever asks.
+      if (!roomId || typeof roomId !== "string") {
+        return json({ error: "roomId is required" }, 400);
+      }
+      const callerId = await readCaller();
+      if (!callerId) return json({ error: "Authorization required" }, 401);
+
+      const { data: room } = await supabase
+        .from("game_rooms")
+        .select("id, room_code, game_type_key, status")
+        .eq("id", roomId)
+        .maybeSingle();
+      if (!room) return json({ error: "Room not found" }, 404);
+      if (room.game_type_key !== "team_battle") return json({ error: "Not an arena" }, 400);
+
+      const { data: membership } = await supabase
+        .from("room_participants")
+        .select("id")
+        .eq("room_id", room.id)
+        .eq("user_id", callerId)
+        .maybeSingle();
+      if (!membership) return json({ error: "Not in this room" }, 403);
+
+      const { data: match } = await supabase
+        .from("team_battle_state")
+        .select("active_player, phase")
+        .eq("room_id", room.id)
+        .maybeSingle();
+      const spotlight = match?.active_player as string | null | undefined;
+      if (!spotlight || match?.phase !== "rapid_fire") return json({ sent: 0, skipped: "no_spotlight" });
+      if (spotlight === callerId) return json({ sent: 0, skipped: "own_turn" });
+
+      const { data: recentPoke } = await supabase
+        .from("push_log")
+        .select("id")
+        .eq("user_id", spotlight)
+        .eq("kind", "team_poke")
+        .gt("created_at", new Date(Date.now() - 30_000).toISOString())
+        .limit(1)
+        .maybeSingle();
+      if (recentPoke) return json({ sent: 0, skipped: "throttled" });
+
+      const { data: caller } = await supabase
+        .from("profiles")
+        .select("nickname, avatar_url")
+        .eq("user_id", callerId)
+        .maybeSingle();
+
+      recipientId = spotlight;
+      pushKind = "team_poke";
+      params = { name: caller?.nickname?.trim() || "Someone" };
+      person = { name: String(params.name), avatarUrl: caller?.avatar_url };
+      route = `/team-battle?code=${encodeURIComponent(room.room_code)}`;
+      detail = "";
     } else {
       return json({ error: "Unknown kind" }, 400);
     }

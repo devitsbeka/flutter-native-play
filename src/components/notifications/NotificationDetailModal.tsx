@@ -6,6 +6,7 @@ import { Notification } from "@/hooks/useNotifications";
 import { getMissionIcon, type MissionIconKey } from "@/hooks/useMissions";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { translateNotificationTitle, translateNotificationMessage } from "@/utils/notificationTranslations";
+import { routeForRoom } from "@/utils/roomRoutes";
 
 import coinIcon from "@/assets/icons/icon-coin.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
@@ -105,6 +106,13 @@ export function NotificationDetailModal({ notification, onClose }: NotificationD
     notification?.type === "room_ping" && typeof data.room_code === "string"
       ? (data.room_code as string)
       : null;
+  // The room decides its page: a poke from the arena opens the arena.
+  const pingRoute = pingRoomCode
+    ? routeForRoom(
+        { game_type_key: data.game_type_key as string | undefined, game_mode: data.game_mode as string | undefined },
+        pingRoomCode,
+      )
+    : null;
 
   return (
     <AnimatePresence mode="wait">
@@ -195,7 +203,7 @@ export function NotificationDetailModal({ notification, onClose }: NotificationD
             <SunsetButton
               onClick={() => {
                 onClose();
-                if (pingRoomCode) navigate(`/team?join=${encodeURIComponent(pingRoomCode)}`);
+                if (pingRoute) navigate(pingRoute);
               }}
               className="mt-6"
             >

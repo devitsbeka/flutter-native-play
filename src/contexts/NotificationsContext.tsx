@@ -2,6 +2,7 @@ import { createContext, useState, useEffect, useCallback, useMemo, ReactNode } f
 import { useNavigate } from 'react-router-dom';
 import { toast } from "@/lib/toast";
 import { supabase } from '@/integrations/supabase/client';
+import { routeForRoom } from '@/utils/roomRoutes';
 import { useAuth } from '@/hooks/useAuth';
 import { useSound } from '@/contexts/SoundContext';
 import { translateNotificationTitle } from '@/utils/notificationTranslations';
@@ -123,15 +124,24 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
           // A room ping is a call to action right now — surface it as a
           // clickable popup that drops the host straight into the room
           if (newNotification.type === 'room_ping') {
-            const roomCode = (newNotification.data as Record<string, unknown>)?.room_code as string | undefined;
+            const data = (newNotification.data ?? {}) as Record<string, unknown>;
+            const roomCode = data.room_code as string | undefined;
+            // The room decides its page: a poke from the arena opens the
+            // arena, a ping from a classic lobby opens that lobby.
+            const target = roomCode
+              ? routeForRoom(
+                  { game_type_key: data.game_type_key as string | undefined, game_mode: data.game_mode as string | undefined },
+                  roomCode,
+                )
+              : null;
             toast(
               translateNotificationTitle('room_ping', newNotification.title, newNotification.data),
               {
                 duration: 10000,
-                action: roomCode
+                action: target
                   ? {
                       label: tStandalone('extra.pingHostOpenRoom'),
-                      onClick: () => navigate(`/team?join=${roomCode}`),
+                      onClick: () => navigate(target),
                     }
                   : undefined,
               }

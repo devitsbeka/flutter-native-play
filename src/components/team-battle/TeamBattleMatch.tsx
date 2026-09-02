@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Bot, ChevronLeft, Star } from "lucide-react";
+import { BellRing, Bot, ChevronLeft, Star } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCategories } from "@/hooks/useCategories";
@@ -38,6 +38,11 @@ import {
   type TBTile,
 } from "@/contexts/TeamBattleContext";
 import { dealtCrests, fetchCrestPool } from "@/utils/roomCrests";
+import { createNotification } from "@/hooks/useNotifications";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/lib/toast";
+import { useIncomingReactions } from "@/hooks/useRoomReactions";
+import { ReactionBar, ReactionInbox } from "@/components/team-battle/ReactionBar";
 
 // The app's chunky-3D language (see QuizAnswerButton/QuizTrueFalseButton):
 // a solid depth layer behind a face, on the periwinkle game background.
@@ -198,24 +203,49 @@ function ScoreHeader({ seconds, maxSeconds }: { seconds?: number; maxSeconds?: n
 }
 
 export function TeamBattleMatch({ onResultDismiss }: { onResultDismiss?: () => void }) {
-  const { state } = useTeamBattle();
+  const { state, room, participants } = useTeamBattle();
+  const { user } = useAuth();
+  // Icons sent to me during my turn, held until the turn is over: the
+  // inbox lives here, above the phases, so it survives the phase switch
+  // that is exactly when it gets read.
+  const inbox = useIncomingReactions(room?.id, user?.id);
+  const senders = useMemo(
+    () => new Map(participants.map((p) => [p.user_id, { nickname: p.nickname, avatar_url: p.avatar_url }])),
+    [participants],
+  );
   if (!state) return null;
-  switch (state.phase) {
-    case "rps":
-      return <PhaseRps />;
-    case "board":
-      return <PhaseBoard />;
-    case "rapid_fire":
-      return <PhaseRapidFire />;
-    case "super_vote":
-      return <PhaseSuperVote />;
-    case "super_round":
-      return <PhaseSuperRound />;
-    case "done":
-      return <PhaseDone onDismiss={onResultDismiss} />;
-    default:
-      return null;
-  }
+  const onSpot = state.phase === "rapid_fire" && state.active_player === user?.id;
+  const strip = !onSpot && inbox.items.length > 0 && (
+    <div className="fixed inset-x-0 z-30 flex justify-center pointer-events-none" style={{ top: "calc(var(--safe-top) + 4.5rem)" }}>
+      <div className="w-full max-w-[520px] pointer-events-auto">
+        <ReactionInbox items={inbox.items} senders={senders} onDismiss={inbox.dismiss} />
+      </div>
+    </div>
+  );
+  const phase = (() => {
+    switch (state.phase) {
+      case "rps":
+        return <PhaseRps />;
+      case "board":
+        return <PhaseBoard />;
+      case "rapid_fire":
+        return <PhaseRapidFire />;
+      case "super_vote":
+        return <PhaseSuperVote />;
+      case "super_round":
+        return <PhaseSuperRound />;
+      case "done":
+        return <PhaseDone onDismiss={onResultDismiss} />;
+      default:
+        return null;
+    }
+  })();
+  return (
+    <>
+      {phase}
+      {strip}
+    </>
+  );
 }
 
 /** The recorded hand of an opener round (rps.last, 20260921190000). */
@@ -556,7 +586,8 @@ function TurnQuestionCard({
 
 function PhaseRapidFire() {
   const { t } = useLanguage();
-  const { state, tiles, participants, isSpotlight, submitAnswer, turnPicks, sendPick, advance } =
+  const { user, profile } = useAuth();
+  const { state, room, tiles, participants, isSpotlight, myTeam, submitAnswer, turnPicks, sendPick, advance } =
     useTeamBattle();
   const secondsLeft = useServerDeadline(state?.deadline, advance);
   const [choice, setChoice] = useState<{ option: string; correct: boolean } | null>(null);
@@ -567,6 +598,36 @@ function PhaseRapidFire() {
   const player = participants.find((p) => p.user_id === state?.active_player);
   const isBotTurn = !!player?.is_bot;
   const turnSeconds = isBotTurn ? 8 : state?.turn_seconds ?? 40;
+
+  // A teammate who is not answering while the clock runs is losing the
+  // team's points. Their teammates can call them: an in-app popup (the
+  // realtime insert plays the sound and shows it), and a push for a player
+  // away from the app. Cooldown stops the spam; the server throttles too.
+  const canPoke = !isSpotlight && !isBotTurn && !!player && !!myTeam && player.team === myTeam;
+  const [pokeCooldown, setPokeCooldown] = useState(false);
+  const poke = async () => {
+    if (!room || !player || !user || pokeCooldown) return;
+    setPokeCooldown(true);
+    window.setTimeout(() => setPokeCooldown(false), 30_000);
+    const name = profile?.nickname || "";
+    await createNotification(
+      player.user_id,
+      "room_ping",
+      t("teamBattle.pokeNotifTitle", { name: name || "…" }),
+      tile?.category_name ?? undefined,
+      {
+        kind: "team_poke",
+        room_id: room.id,
+        room_code: room.room_code,
+        game_type_key: "team_battle",
+        sender_nickname: name,
+      },
+    );
+    supabase.functions
+      .invoke("send-social-push", { body: { kind: "team_poke", roomId: room.id } })
+      .catch(() => {});
+    toast.success(t("teamBattle.pokeSent"));
+  };
 
   // The bot's turn is pre-rolled server-side; the showcase window animates it
   // so the room watches answers land instead of a frozen counter.
@@ -664,6 +725,18 @@ function PhaseRapidFire() {
               <span className="text-white/60 font-normal"> · {tile.category_name}</span>
             </p>
           </div>
+          {canPoke && (
+            <button
+              type="button"
+              onClick={() => void poke()}
+              disabled={pokeCooldown}
+              aria-label={t("teamBattle.poke")}
+              className="shrink-0 flex items-center gap-1 rounded-full bg-amber-400 text-[#402666] px-3 py-1.5 text-xs font-bold shadow-md active:scale-95 transition-transform disabled:opacity-40"
+            >
+              <BellRing className="w-3.5 h-3.5" />
+              {t("teamBattle.poke")}
+            </button>
+          )}
           {/* Not "n / 12" any more: the turn is a fixed three minutes and
               the count is open-ended, so the pill totals the run so far. */}
           <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full shrink-0">
@@ -725,6 +798,12 @@ function PhaseRapidFire() {
             </p>
           )}
         </div>
+        {/* Everyone watching can send the player on the spot an icon —
+            a cheer from their side, a jab from the other. It waits in
+            their inbox until the turn is over. */}
+        {!isSpotlight && !isBotTurn && room && player && (
+          <ReactionBar roomId={room.id} toUserId={player.user_id} />
+        )}
       </div>
     </div>
   );
