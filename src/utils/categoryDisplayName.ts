@@ -19,13 +19,18 @@ import { readAppLanguage } from "@/utils/appLanguage";
  */
 
 type NameMap = Map<string, string>;
+/** Both lookups off the same two queries: name → viewer-language name, and name → icon slug. */
+interface CategoryMaps {
+  names: NameMap;
+  icons: Map<string, string>;
+}
 
-let cached: { lang: string; map: NameMap } | null = null;
-let inflight: { lang: string; promise: Promise<NameMap> } | null = null;
+let cached: { lang: string; map: CategoryMaps } | null = null;
+let inflight: { lang: string; promise: Promise<CategoryMaps> } | null = null;
 
-async function buildMap(lang: string): Promise<NameMap> {
+async function buildMap(lang: string): Promise<CategoryMaps> {
   const [catsRes, transRes] = await Promise.all([
-    supabase.from("categories").select("id, name"),
+    supabase.from("categories").select("id, name, icon_slug"),
     supabase.from("category_translations").select("category_id, language, name"),
   ]);
   const cats = catsRes.data ?? [];
@@ -40,20 +45,30 @@ async function buildMap(lang: string): Promise<NameMap> {
     }
   }
 
-  // Any known name, in any language → the viewer-language name.
+  // Any known name, in any language → the viewer-language name, and → the
+  // category's icon. Rooms denormalize the NAME of their first round and
+  // nothing else, so the icon has to be found the same way the translation
+  // is: from whatever language the host stored it in.
   const map: NameMap = new Map();
+  const icons = new Map<string, string>();
+  const iconOf = new Map<string, string>();
+  for (const c of cats) if (c.icon_slug) iconOf.set(c.id, c.icon_slug);
   for (const c of cats) {
     const out = target.get(c.id);
     if (out) map.set(c.name, out);
+    const icon = iconOf.get(c.id);
+    if (icon) icons.set(c.name, icon);
   }
   for (const t of trans) {
     const out = target.get(t.category_id);
     if (out) map.set(t.name, out);
+    const icon = iconOf.get(t.category_id);
+    if (icon) icons.set(t.name, icon);
   }
-  return map;
+  return { names: map, icons };
 }
 
-function loadMap(lang: string): Promise<NameMap> {
+function loadMap(lang: string): Promise<CategoryMaps> {
   if (cached && cached.lang === lang) return Promise.resolve(cached.map);
   if (inflight && inflight.lang === lang) return inflight.promise;
   const promise = buildMap(lang)
@@ -61,9 +76,43 @@ function loadMap(lang: string): Promise<NameMap> {
       cached = { lang, map };
       return map;
     })
-    .catch(() => new Map<string, string>());
+    .catch(() => ({ names: new Map<string, string>(), icons: new Map<string, string>() }));
   inflight = { lang, promise };
   return promise;
+}
+
+/**
+ * Returns a resolver: `(storedName) => the category's icon slug`, or
+ * undefined for a name that is not a library category (or before the map
+ * loads). The Public tab's cards use it: the listing carries the first
+ * round's icon only when it came from the queue, and a room whose own
+ * category IS the first round has a name and no icon.
+ */
+export function useCategoryIconByName(): (
+  stored: string | null | undefined,
+) => string | undefined {
+  const lang = readAppLanguage();
+  const [maps, setMaps] = useState<CategoryMaps | null>(
+    cached && cached.lang === lang ? cached.map : null,
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    void loadMap(lang).then((m) => {
+      if (!cancelled) setMaps(m);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [lang]);
+
+  return useCallback(
+    (stored: string | null | undefined) => {
+      if (!stored) return undefined;
+      return maps?.icons.get(stored);
+    },
+    [maps],
+  );
 }
 
 /**
@@ -76,13 +125,13 @@ export function useLocalizedCategoryName(): (
 ) => string | undefined {
   const lang = readAppLanguage();
   const [map, setMap] = useState<NameMap | null>(
-    cached && cached.lang === lang ? cached.map : null,
+    cached && cached.lang === lang ? cached.map.names : null,
   );
 
   useEffect(() => {
     let cancelled = false;
     void loadMap(lang).then((m) => {
-      if (!cancelled) setMap(m);
+      if (!cancelled) setMap(m.names);
     });
     return () => {
       cancelled = true;

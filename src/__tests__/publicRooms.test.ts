@@ -238,7 +238,15 @@ describe("the public list", () => {
     // A room with no round picked plays a mixed first round — not "not
     // chosen yet", which reads as a room that is not ready.
     expect(section).toMatch(/\{category \|\| t\("extra\.cpMixedCategory"\)\}/);
-    expect(section).toMatch(/slug=\{room\.first_category_icon \|\| "mystery-box"\}/);
+    // A picked round wears ITS category's icon: from the listing when the
+    // round was queued, else looked up from the stored name in whatever
+    // language the host wrote it; only a mixed round wears the box.
+    expect(section).toMatch(/room\.first_category_icon \|\| iconForCategory\(room\.first_category_name\) \|\| "mystery-box"/);
+    expect(section).toMatch(/const MIXED_LABELS = new Set\(\[[^]*?"Mixed", "სხვადასხვა"/);
+    expect(section).toMatch(/slug=\{categoryIcon\}/);
+    const names = read("src/utils/categoryDisplayName.ts");
+    expect(names).toMatch(/export function useCategoryIconByName\(/);
+    expect(names).toMatch(/select\("id, name, icon_slug"\)/);
     expect(section).not.toContain("roomNoCategoryYet");
     // Refiltering the tab starts the list at the top, not half under the
     // sticky stack.

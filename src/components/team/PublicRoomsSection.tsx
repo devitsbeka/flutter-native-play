@@ -21,7 +21,7 @@ import { GradientBackground, ROOM_GRADIENT_PRESETS } from "@/components/ui/noisy
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
-import { useLocalizedCategoryName } from "@/utils/categoryDisplayName";
+import { useCategoryIconByName, useLocalizedCategoryName } from "@/utils/categoryDisplayName";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast";
 import {
@@ -76,6 +76,16 @@ const INK = {
   },
 } as const;
 
+/**
+ * The mixed pseudo-category as every picker in every language stores it.
+ * A room's first round is denormalized as a NAME, so "Mixed" written by an
+ * English host has to read as mixed for a Georgian viewer, and wear the
+ * box rather than be looked up as a category called "Mixed".
+ */
+const MIXED_LABELS = new Set([
+  "__mixed__", "Mixed", "სხვადასხვა", "შერეული", "Gemischt", "Mixto", "Mixte", "Misto",
+]);
+
 /** A joined (non-host) face on the card, so a filling room shows its people. */
 interface CardPlayer {
   user_id: string;
@@ -115,6 +125,7 @@ function PublicRoomCard({
   const navigate = useNavigate();
   const { openProfile } = usePlayerProfile();
   const localizeCategory = useLocalizedCategoryName();
+  const iconForCategory = useCategoryIconByName();
 
   const lounge = room.game_type_key ? LOUNGES[room.game_type_key] : undefined;
   const gradient = ROOM_GRADIENT_PRESETS[index % ROOM_GRADIENT_PRESETS.length];
@@ -125,7 +136,17 @@ function PublicRoomCard({
   // what the green dot on the join button means, so a room whose whole
   // couch has closed the app doesn't wear one.
   const live = online.has(room.host_user_id) || players.some((p) => online.has(p.user_id));
-  const category = room.first_category_name ? localizeCategory(room.first_category_name) : null;
+  // The first round: its category's own icon and name, in the viewer's
+  // language — or "mixed", whichever language the host's picker stored it
+  // in. The listing carries an icon only for a queued round; a room whose
+  // own category is the round carries the name alone, so the icon is
+  // looked up from the name (categoryDisplayName), the same way the
+  // translation is.
+  const mixed = !room.first_category_name || MIXED_LABELS.has(room.first_category_name);
+  const category = mixed ? null : localizeCategory(room.first_category_name);
+  const categoryIcon = mixed
+    ? "mystery-box"
+    : room.first_category_icon || iconForCategory(room.first_category_name) || "mystery-box";
   // A Trivia Battle card is a picture of where it happens: the arena from
   // its lobby, empty, seats waiting — not one of the gradients every other
   // room wears.
@@ -345,7 +366,7 @@ function PublicRoomCard({
             {/* A picked round wears its category's icon; an unpicked one
                 wears the library's mystery box — the same face the category
                 picker gives "mixed" — not a globe from nowhere. */}
-            <DynamicIcon slug={room.first_category_icon || "mystery-box"} className="w-5 h-5 shrink-0" />
+            <DynamicIcon slug={categoryIcon} className="w-5 h-5 shrink-0" />
             <div className="min-w-0">
               <p className={`text-[10px] font-semibold uppercase tracking-wide leading-none ${ink.faint}`}>
                 {t("extra.firstRoundLabel")}
