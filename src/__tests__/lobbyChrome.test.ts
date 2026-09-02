@@ -90,6 +90,19 @@ describe("the lounges invite through the invite page", () => {
     const service = read("src/services/questionService.ts");
     expect(service).toMatch(/skipImagePreload\s*\n?\s*\? ordered\.slice\(0, count\)/);
   });
+
+  it("a tile ships at most the 30 questions the server accepts", () => {
+    // tb_start_match validates 5..30 per tile (20260921210000); the fetch's
+    // 40 is headroom for the seen-filter, not a tile size — sending it raw
+    // was refused with "Tile 0 needs 5..30 questions, has 40".
+    const context = read("src/contexts/TeamBattleContext.tsx");
+    expect(context).toMatch(/asQuestions\(filled\.res\.questions\.slice\(0, 30\)\)/);
+    expect(context).toMatch(/asQuestions\(superRes\.questions\.slice\(0, 30\)\)/);
+    // And the guest's "waiting for the host" line sits at the TOP, under
+    // the rounds caption, where a short window can't hide it.
+    const battle = read("src/pages/TeamBattlePage.tsx");
+    expect(battle).toMatch(/: !isHost \? \(\s*\n\s*<p[^]*?teamBattle\.waitingHost/);
+  });
 });
 
 describe("the room's name sits above the captain row", () => {

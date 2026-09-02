@@ -712,13 +712,21 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
         <p className="pt-[2px] font-[Nunito] font-normal leading-[20px] text-[#0c172c]/70 text-[13px] text-center tracking-[-0.16px]">
           {t("lobby.autoRounds")}
         </p>
-        {/* Seats are dealt automatically, so the only thing worth saying
-            here is what the room is still short of. */}
-        {!enoughPlayers && (
+        {/* Seats are dealt automatically, so what's worth saying here is
+            what the room is short of — or, for a guest, that the host holds
+            the Start. Said HERE, at the top, because the bottom of this
+            page can sit below the fold on a window whose 100dvh disagrees
+            with reality (split view), and a waiting line nobody can see
+            reads as a frozen lobby. */}
+        {!enoughPlayers ? (
           <p className="pt-[6px] font-[Nunito] font-semibold leading-[20px] text-[#523b76]/70 text-[13px] text-center tracking-[-0.16px]">
             {t("teamBattle.minTwoPerTeam")}
           </p>
-        )}
+        ) : !isHost ? (
+          <p className="pt-[6px] font-[Nunito] font-semibold leading-[20px] text-[#523b76]/70 text-[13px] text-center tracking-[-0.16px]">
+            {t("teamBattle.waitingHost")}
+          </p>
+        ) : null}
       </div>
 
       {/* Not clipped: the arena scene is drawn 139 design-units above this
@@ -858,11 +866,9 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
             loading={loading}
           />
         </>
-      ) : (
-        <p className="w-full max-w-[500px] mx-auto shrink-0 px-[24px] pt-[14px] pb-[20px] text-center font-[Nunito] font-semibold text-[15px] text-[#523b76]/70">
-          {t("teamBattle.waitingHost")}
-        </p>
-      )}
+      ) : null}
+      {/* The guest's waiting line moved UP under the rounds caption — the
+          bottom of this page can sit below the fold in split view. */}
 
       {room && (
         <InviteFriendsModal
