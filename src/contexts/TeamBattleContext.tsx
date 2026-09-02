@@ -750,7 +750,17 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
         // the turn early, as before).
         const fetchFor = async (cat: { uuid: string; name: string }) => ({
           cat,
-          res: await getQuestions({ mode: "vs", categoryUuid: cat.uuid, categoryName: cat.name, count: 40 }),
+          // skipImagePreload: a whole board's worth of image checks in one
+          // burst is what gets the edge proxy throttled by Wikimedia —
+          // dropping good questions and looping this build. The match shows
+          // one question at a time; its images load fine one at a time.
+          res: await getQuestions({
+            mode: "vs",
+            categoryUuid: cat.uuid,
+            categoryName: cat.name,
+            count: 40,
+            skipImagePreload: true,
+          }),
         });
 
         // One fetch per tile plus the super round, all in flight at once —
@@ -781,7 +791,11 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
             category_id: filled.cat.uuid,
             category_name: filled.cat.name,
             difficulty: difficulties[i],
-            questions: asQuestions(filled.res.questions) as unknown as Json,
+            // The server validates 5..30 questions per tile (20260921210000)
+            // — a 40-question fetch is headroom for the seen-filter, not a
+            // tile size. Sending it raw was refused: 'Tile 0 needs 5..30
+            // questions, has 40'.
+            questions: asQuestions(filled.res.questions.slice(0, 30)) as unknown as Json,
           } as unknown as Json);
         }
 
@@ -792,13 +806,14 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
           return false;
         }
         const superRes = superFilled.res;
+        const board = {
+          tiles,
+          super_questions: asQuestions(superRes.questions.slice(0, 30)) as unknown as Json,
+        } as unknown as Json;
 
         const { error } = await supabase.rpc("tb_start_match", {
           p_room_id: roomId,
-          p_board: {
-            tiles,
-            super_questions: asQuestions(superRes.questions) as unknown as Json,
-          } as unknown as Json,
+          p_board: board,
           // Two minutes on the clock, as many questions as they can
           // answer (the 20260924100000 migration allows up to 180). On a
           // database that still clamps at 90 the RPC refuses — retried once
@@ -809,10 +824,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
         if (error && /between 20 and 90/.test(error.message ?? "")) {
           const retry = await supabase.rpc("tb_start_match", {
             p_room_id: roomId,
-            p_board: {
-              tiles,
-              super_questions: asQuestions(superRes.questions) as unknown as Json,
-            } as unknown as Json,
+            p_board: board,
             p_turn_seconds: 90,
           });
           if (!retry.error) return true;
