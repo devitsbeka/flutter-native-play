@@ -597,13 +597,16 @@ function TeamContentV2() {
       if (attemptedJoinCodeRef.current === joinCode) return;
       attemptedJoinCodeRef.current = joinCode;
       (async () => {
-        await leaveRoomPermanently();
-        await enterRoom(joinCode);
-        const next = new URLSearchParams(searchParams);
-        next.delete("join");
-        next.delete("room");
-        next.delete("tv");
-        setSearchParams(next, { replace: true });
+        try {
+          await leaveRoomPermanently();
+          await enterRoom(joinCode);
+        } finally {
+          const next = new URLSearchParams(searchParams);
+          next.delete("join");
+          next.delete("room");
+          next.delete("tv");
+          setSearchParams(next, { replace: true });
+        }
       })();
       return;
     }
@@ -627,11 +630,14 @@ function TeamContentV2() {
       if (attemptedJoinCodeRef.current === joinCode) return;
       attemptedJoinCodeRef.current = joinCode;
       (async () => {
-        await enterRoom(joinCode);
-        const next = new URLSearchParams(searchParams);
-        next.delete("join");
-        next.delete("tv");
-        setSearchParams(next, { replace: true });
+        try {
+          await enterRoom(joinCode);
+        } finally {
+          const next = new URLSearchParams(searchParams);
+          next.delete("join");
+          next.delete("tv");
+          setSearchParams(next, { replace: true });
+        }
       })();
     } else if (!pendingGuestJoinCode && !guestSignInBlocked) {
       // Guest: auto-join with anonymous sign-in (no modal). Once it has been
@@ -934,6 +940,17 @@ function TeamContentV2() {
   // Show lobby if in room (with guard for currentRoom)
   if (phase === "lobby" && currentRoom) {
     return <RoomLobbyV2 />;
+  }
+
+  // A room being joined by its code — the create screen hands a room it
+  // inserted itself to /team?join=CODE — took two round-trips to resolve,
+  // and the rooms list rendered underneath for all of them: a screen that
+  // flashed before the lobby. Hold the lobby's wash instead; the join
+  // effect strips the param whether or not the room opens.
+  const joiningByCode =
+    !!(searchParams.get("join") || searchParams.get("room")) && phase === "idle" && !!user;
+  if (joiningByCode) {
+    return <div className="h-[100dvh] w-full safe-bleed" style={{ background: "#f5d9ff" }} />;
   }
 
   // Show loading when phase is set but room isn't ready yet
