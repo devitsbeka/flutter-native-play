@@ -304,13 +304,14 @@ export default function Leaderboards() {
             On md+ the artwork scales like the homepage scene: width-driven,
             bottom-anchored 16:9 box whose mask-faded top melts into the light
             page background (whole map visible on squarer screens, top crops on
-            ultrawide via the container's overflow-hidden). Phones keep the
-            full-screen cover crop — a width-driven strip would be too short
-            there. */}
+            ultrawide via the container's overflow-hidden). Phones do not get
+            the artwork at all: they show the same backdrop as the shop, the
+            app-wide GlobalSplineBackground (blob video under a lavender wash,
+            no radial mask), which is already painting under this page. */}
         <img
           src={bgLeaderGlobal}
           alt=""
-          className="absolute inset-0 w-full h-full object-cover object-[center_30%] md:top-auto md:h-auto md:aspect-video md:object-[center_bottom] md:[mask-image:linear-gradient(to_bottom,transparent_0,black_200px)] pointer-events-none select-none"
+          className="hidden md:block absolute inset-0 w-full h-full object-cover object-[center_30%] md:top-auto md:h-auto md:aspect-video md:object-[center_bottom] md:[mask-image:linear-gradient(to_bottom,transparent_0,black_200px)] pointer-events-none select-none"
           draggable={false}
         />
 
