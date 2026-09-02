@@ -658,8 +658,9 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
         icon={iconBattleCrate}
         onBack={() => {
           // Navigate away first so the gate never re-creates a room the
-          // instant this one clears.
-          navigate("/");
+          // instant this one clears. Back is the online-game page the
+          // arena was opened from — not the home screen.
+          navigate("/team");
           void leaveRoom();
         }}
         onHelp={() => setHelpOpen((v) => !v)}

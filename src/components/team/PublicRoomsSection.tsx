@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -15,7 +15,7 @@ import { useFriends } from "@/contexts/FriendsContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { onlineUserIds } from "@/utils/presence";
 import { motion } from "framer-motion";
-import { Globe, Loader2, Users, Clock, Trash2, LogOut, X } from "lucide-react";
+import { Globe, Loader2, Users, Clock, Trash2, LogOut, X, UserPlus } from "lucide-react";
 import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
 import { GradientBackground, ROOM_GRADIENT_PRESETS } from "@/components/ui/noisy-gradient-backgrounds";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
@@ -87,6 +87,7 @@ function PublicRoomCard({
   players,
   crests,
   online,
+  knocks = 0,
   index,
   onAsk,
   onWithdraw,
@@ -99,6 +100,8 @@ function PublicRoomCard({
   crests?: { a: string | null; b: string | null };
   /** Who, of everyone on this list, is in the app right now. */
   online: ReadonlySet<string>;
+  /** People knocking on this room — the host's, and only the host sees it. */
+  knocks?: number;
   index: number;
   onAsk: (room: PublicRoom) => void;
   /** Take back a pending ask — one game at a time, so waiting is undoable. */
@@ -198,6 +201,18 @@ function PublicRoomCard({
               "is there room on that couch" — so they always show the pair;
               a classic room without a cap just counts heads. */}
           <div className="flex items-center gap-1.5 shrink-0">
+            {/* Somebody is knocking. The host sees it on the card, and a
+                tap opens the room, where the doorstep asks accept / decline
+                / block — the same modal as arriving in the lobby. */}
+            {room.my_state === "host" && knocks > 0 && (
+              <span
+                aria-label={t("extra.joinRequestBody")}
+                className="flex items-center gap-1 rounded-full bg-[#7126d5] px-2.5 py-1 shadow-[0px_4px_12px_0px_rgba(113,38,213,0.45)] animate-pulse"
+              >
+                <UserPlus className="w-3.5 h-3.5 text-white" />
+                <span className="text-xs font-bold text-white">{knocks}</span>
+              </span>
+            )}
             <div className={`flex items-center gap-1 rounded-full backdrop-blur-md border px-2.5 py-1 ${ink.pill}`}>
               <Users className={`w-3.5 h-3.5 ${ink.text}`} />
               <span className={`text-xs font-bold ${ink.text}`}>
@@ -501,6 +516,48 @@ export function PublicRoomsSection({
     return ids;
   }, [online, user]);
 
+  // Who is knocking on the rooms I host. The table's policy shows a host
+  // their own rooms' requests and nobody else's, so the query is simply
+  // "everything pending" and the answer is already mine. Realtime on the
+  // same table (the policy filters the stream too) keeps the badge honest
+  // between polls.
+  const hostedIds = useMemo(
+    () => (data ?? []).filter((r) => r.my_state === "host").map((r) => r.id),
+    [data],
+  );
+  const { data: knocksByRoom } = useQuery({
+    queryKey: ["public-room-knocks", hostedIds],
+    enabled: hostedIds.length > 0,
+    staleTime: 10_000,
+    refetchInterval: 25_000,
+    queryFn: async (): Promise<Map<string, number>> => {
+      const { data: rows } = await supabase
+        .from("room_join_requests")
+        .select("room_id")
+        .in("room_id", hostedIds)
+        .eq("status", "pending");
+      const map = new Map<string, number>();
+      (rows ?? []).forEach((r) => map.set(r.room_id, (map.get(r.room_id) ?? 0) + 1));
+      return map;
+    },
+  });
+  useEffect(() => {
+    if (hostedIds.length === 0) return;
+    const channel = supabase
+      .channel("public-room-knocks")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "room_join_requests" },
+        () => {
+          void queryClient.invalidateQueries({ queryKey: ["public-room-knocks"] });
+        },
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [hostedIds.length, queryClient]);
+
   // The room I'm waiting on first, then mine, then my friends' rooms, then
   // everyone else's — and within each group the room closest to filling
   // first, so the couch one player short of starting is the first thing
@@ -665,6 +722,7 @@ export function PublicRoomsSection({
           players={playersByRoom?.get(room.id) ?? []}
           crests={seating?.crests.get(room.id)}
           online={onlineIds}
+          knocks={knocksByRoom?.get(room.id) ?? 0}
           index={i}
           onAsk={(r) => void ask(r)}
           onWithdraw={(r) => void withdraw(r)}

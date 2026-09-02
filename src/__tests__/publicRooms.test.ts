@@ -392,6 +392,21 @@ describe("a knock answered from the activity list", () => {
   });
 });
 
+describe("a knock shows on the host's card, and back leads to the online-game page", () => {
+  it("the host's card carries a knock count read from pending requests", () => {
+    const section = read("src/components/team/PublicRoomsSection.tsx");
+    expect(section).toMatch(/from\("room_join_requests"\)[^]*?\.eq\("status", "pending"\)/);
+    expect(section).toMatch(/room\.my_state === "host" && knocks > 0 && \(/);
+    expect(section).toMatch(/knocks=\{knocksByRoom\?\.get\(room\.id\) \?\? 0\}/);
+  });
+
+  it("the arena's back button returns to /team, not home", () => {
+    const battle = read("src/pages/TeamBattlePage.tsx");
+    expect(battle).toMatch(/onBack=\{\(\) => \{[^]*?navigate\("\/team"\);[^]*?void leaveRoom\(\);/);
+    expect(battle).not.toMatch(/onBack=\{\(\) => \{[^]*?navigate\("\/"\);/);
+  });
+});
+
 describe("the doorstep names a side", () => {
   it("asks 'with me or against me' in the arena only", () => {
     const gate = read("src/components/team/JoinRequestGate.tsx");
