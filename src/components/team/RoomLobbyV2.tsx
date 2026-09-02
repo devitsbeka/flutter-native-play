@@ -758,14 +758,17 @@ export function RoomLobbyV2() {
       .eq("id", currentRoom.id);
   };
   const isPublicRoom = Boolean((currentRoom as { is_public?: boolean }).is_public);
+  // A My Trivia room plays the quiz as written — its own question count —
+  // so the questions-per-round choice is a library/random room's alone.
+  const playsUserTrivia = !!currentRoom.user_trivia_id && !currentRoom.category_id;
   const lobbyRules: LobbyRuleRow[] = [
-    {
+    ...(playsUserTrivia ? [] : [{
       key: "questions",
       label: t("lobby.uQuestionsPerRound"),
       options: QUESTIONS_PER_ROUND.map((n) => ({ value: String(n), label: String(n) })),
       value: String(questionsPerRound(currentRoom.total_questions)),
-      onChange: isHost ? (v) => void setQuestions(v) : undefined,
-    },
+      onChange: isHost ? (v: string) => void setQuestions(v) : undefined,
+    } satisfies LobbyRuleRow]),
     {
       key: "visibility",
       label: t("lobby.uVisibility"),

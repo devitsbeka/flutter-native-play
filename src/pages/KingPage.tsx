@@ -836,7 +836,7 @@ export default function KingPage() {
           </div>
         }
         players={couch}
-        playersHint={humans < 2 ? t("lobby.uInviteHint") : null}
+        playersHint={null}
         inviteFaces={inviteFaces}
         onInvite={inviteFriends}
         playersExtra={

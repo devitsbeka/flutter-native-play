@@ -57,6 +57,8 @@ import featuredMyTrivias from "@/assets/play-chooser/featured-mytrivias.webp";
 import playersIcon from "@/assets/play-chooser/players.svg";
 import { LOBBY_SCENES, rememberLobbyScene } from "@/utils/lobbyScene";
 import { UniversalLobby, LobbyInfoRow, type LobbyPlayer } from "@/components/lobby/UniversalLobby";
+import { REWARDS } from "@/config/rewardConfig";
+import coinIconAsset from "@/assets/tb-lobby/coin.png";
 import SpotlightSearch from "@/components/search/SpotlightSearch";
 import { MyTriviaLiveLogo } from "@/components/shared/MyTriviaLiveLogo";
 import { getRandomGradient } from "@/config/roomGradients";
@@ -1825,12 +1827,32 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
               // here, so the rules tab states what the game is instead.
               rules={[]}
               rulesExtra={
-                <>
-                  <LobbyInfoRow label={t("lobby.uPlayersTab")}>{preLobby === "quick" ? "1" : "1–2"}</LobbyInfoRow>
-                  <p className="px-[6px] pt-[2px] font-[Nunito] text-[13px] leading-[18px] text-[#402666]/70">
-                    {preLobby === "quick" ? t("extra.modeQuickDesc") : t("extra.modeWordsDesc")}
-                  </p>
-                </>
+                preLobby === "quick" ? (
+                  // The duel's rules are fixed by the game: you against a
+                  // bot, six questions, the stake every match is played
+                  // for (rewardConfig — settle_quick_game pays it back
+                  // doubled on a win).
+                  <>
+                    <LobbyInfoRow label={t("lobby.uPlayersTab")}>1</LobbyInfoRow>
+                    <LobbyInfoRow label={t("extra.totalQuestionsLabel")}>6</LobbyInfoRow>
+                    <LobbyInfoRow label={t("game.stake")}>
+                      <img alt="" src={coinIconAsset} className="h-6 w-6 object-contain" />
+                      {REWARDS.GAME_STAKE}
+                    </LobbyInfoRow>
+                    <p className="px-[6px] pt-[2px] font-[Nunito] text-[13px] leading-[18px] text-[#402666]/70">
+                      {t("extra.modeQuickDesc")}
+                    </p>
+                  </>
+                ) : (
+                  // Words: one board, alone or with the one friend picked
+                  // on the players tab.
+                  <>
+                    <LobbyInfoRow label={t("lobby.uPlayersTab")}>1–2</LobbyInfoRow>
+                    <p className="px-[6px] pt-[2px] font-[Nunito] text-[13px] leading-[18px] text-[#402666]/70">
+                      {t("extra.modeWordsDesc")}
+                    </p>
+                  </>
+                )
               }
               players={[
                 {
