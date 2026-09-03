@@ -349,8 +349,15 @@ export function UniversalLobby({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -6 }}
                   transition={{ duration: 0.18 }}
-                  className="mt-[16px] flex flex-col px-[3px]"
+                  className="mt-[16px] flex flex-col gap-[16px] px-[3px]"
                 >
+                  {/* The gap is on the outer column, not just inside a group.
+                      Each bench spaces its own rows at 10px and the column had
+                      no gap at all, so on a two-bench mode the arena's second
+                      side began immediately under the first one's footer —
+                      its title sitting hard against the row above it, with
+                      nothing to read as a break between the teams. One rhythm
+                      between groups, the rows' own inside them. */}
                   {groups.map((group) => (
                     <div key={group.key} className="flex flex-col gap-[10px]">
                       {group.title}
