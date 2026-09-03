@@ -43,6 +43,7 @@ import {
 import { UniversalLobby, type LobbyPlayer, type LobbyRuleRow } from "@/components/lobby/UniversalLobby";
 import { classicLobbyScene } from "@/utils/lobbyScene";
 import { roomVisibilityFields } from "@/utils/roomVisibility";
+import { dealtRoomIcon, fetchCrestPool } from "@/utils/roomCrests";
 import { useFriends } from "@/hooks/useFriends";
 import {
   AlertDialog,
@@ -76,6 +77,11 @@ export function RoomLobbyV2() {
   } = useMultiplayerV2();
   
   const [showIconPicker, setShowIconPicker] = useState(false);
+  // The ordered icon deck a faceless room is dealt from — see roomFace below.
+  const [iconPool, setIconPool] = useState<readonly string[]>([]);
+  useEffect(() => {
+    void fetchCrestPool().then(setIconPool);
+  }, []);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
   const [isTVModeEnabled, setIsTVModeEnabled] = useState(() => searchParams.get("tvMode") === "true");
@@ -513,7 +519,9 @@ export function RoomLobbyV2() {
 
   // handleStartTVMode removed - now using toggle with handleTVModeToggle
 
-  const handleUpdateRoomIconAndName = async (iconUrl: string, newName: string) => {
+  // iconUrl is null when the sheet was opened to rename and nothing new was
+  // picked — the room keeps whatever it wore.
+  const handleUpdateRoomIconAndName = async (iconUrl: string | null, newName: string) => {
     if (!currentRoom) return;
 
     // Room names are shown to every participant and ride push notifications.
@@ -525,9 +533,9 @@ export function RoomLobbyV2() {
     try {
       await supabase
         .from("game_rooms")
-        .update({ 
-          room_icon: iconUrl,
-          room_name: newName.trim() 
+        .update({
+          ...(iconUrl ? { room_icon: iconUrl } : {}),
+          room_name: newName.trim(),
         })
         .eq("id", currentRoom.id);
       
@@ -758,6 +766,18 @@ export function RoomLobbyV2() {
       .eq("id", currentRoom.id);
   };
   const isPublicRoom = Boolean((currentRoom as { is_public?: boolean }).is_public);
+
+  /**
+   * The room's face, beside its name.
+   *
+   * A room the host has never dressed gets the same per-room random icon the
+   * public card and the search strip already deal it — seeded by the room id
+   * off one ordered pool, so it is the SAME face everywhere rather than a
+   * different one per screen. Tapping it opens the sheet that sets both the
+   * icon and the name. (The pool itself is fetched up with the other hooks;
+   * everything from here down runs after an early return.)
+   */
+  const roomFace = currentRoom.room_icon ?? dealtRoomIcon(currentRoom.id, iconPool);
   // A My Trivia room plays the quiz as written — its own question count —
   // so the questions-per-round choice is a library/random room's alone.
   const playsUserTrivia = !!currentRoom.user_trivia_id && !currentRoom.category_id;
@@ -785,6 +805,7 @@ export function RoomLobbyV2() {
     <UniversalLobby
       sceneArt={classicLobbyScene(currentRoom)}
       roomName={roomName}
+      icon={roomFace}
       onRename={isHost ? () => setShowIconPicker(true) : undefined}
       onBack={handleExitRoom}
       unreadCount={unreadCount}
@@ -1013,7 +1034,9 @@ export function RoomLobbyV2() {
       <RoomIconPickerModal
         isOpen={showIconPicker}
         onClose={() => setShowIconPicker(false)}
-        currentIconUrl={currentRoom?.room_icon || null}
+        // Open on what the lobby is showing — the dealt face when the host
+        // has not set one — so a rename does not silently clear the icon.
+        currentIconUrl={roomFace}
         roomName={roomName}
         onConfirm={handleUpdateRoomIconAndName}
       />

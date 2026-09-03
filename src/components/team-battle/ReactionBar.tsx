@@ -87,7 +87,7 @@ export function ReactionBar({ roomId, toUserId }: { roomId: string; toUserId: st
           roomName={t("teamBattle.sendIcon")}
           onConfirm={(iconUrl) => {
             setPickerOpen(false);
-            void send(iconUrl);
+            if (iconUrl) void send(iconUrl);
           }}
         />
       )}

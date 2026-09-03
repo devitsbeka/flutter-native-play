@@ -28,8 +28,8 @@ describe("Most Likely To stays out of the public library", () => {
     expect(read("src/components/team/GameResultsScreenV2.tsx")).toMatch(/allowParty=\{!currentRoom\?\.is_public\}/);
     const create = read("src/components/team/CreateRoomPage.tsx");
     expect(create.match(/allowParty=\{!publishRoom\}/g)?.length).toBe(2);
-    // And picking it takes the public switch away: the room stays private.
-    expect(create).toMatch(/const canPublish =\s*\n\s*\(gameChoice === "random" \|\| gameChoice === "library" \|\| gameChoice === "battle"\) && !partyPicked;/);
+    // And picking it takes the room off the Public tab: it stays private.
+    expect(create).toMatch(/const canPublish =\s*\n\s*\(gameChoice === "guess" \|\| gameChoice === "library" \|\| gameChoice === "battle"\) && !partyPicked;/);
   });
 
   it("Discover, the public library, never lists it", () => {

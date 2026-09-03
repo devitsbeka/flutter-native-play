@@ -456,7 +456,8 @@ export default function KingPage() {
   // picker the classic create screen uses, with the AI namer silenced so it
   // never fights what the host typed). Both land on the room row and ride
   // realtime to everyone on the couch — and into the duel's header.
-  const saveTeamLook = async (iconUrl: string, newName: string) => {
+  // No icon picked and none to keep: the rename still lands.
+  const saveTeamLook = async (iconUrl: string | null, newName: string) => {
     const name = newName.trim();
     if (!kingRoom || !name) return;
     if (containsBlockedText(name)) {
@@ -466,10 +467,13 @@ export default function KingPage() {
     setRenameOpen(false);
     const { error } = await supabase
       .from("game_rooms")
-      .update({ room_name: name, room_icon: iconUrl })
+      .update({ room_name: name, ...(iconUrl ? { room_icon: iconUrl } : {}) })
       .eq("id", kingRoom.id);
     if (error) toast.error(error.message);
-    else setKingRoom((prev) => (prev ? { ...prev, room_name: name, room_icon: iconUrl } : prev));
+    else
+      setKingRoom((prev) =>
+        prev ? { ...prev, room_name: name, room_icon: iconUrl ?? prev.room_icon } : prev,
+      );
   };
 
   const refreshKingParts = useCallback(async () => {
@@ -801,6 +805,10 @@ export default function KingPage() {
       <UniversalLobby
         sceneArt={LOBBY_SCENES.king}
         roomName={kingRoom?.room_name || t("lobby.teamName")}
+        // The crowned mascot is what Versus King looks like. A host who has
+        // picked a face of their own gets theirs — what the sheet sets is
+        // what the lobby shows, or the pick was theatre.
+        icon={kingRoom?.room_icon || iconKingMascot}
         onRename={isKingHost ? () => setRenameOpen(true) : undefined}
         onBack={() => navigate(-1)}
         unreadCount={unreadCount}
@@ -811,18 +819,12 @@ export default function KingPage() {
           you: t("lobby.uYou"),
           rounds: (count) => t("lobby.uRoundsShort", { count }),
         }}
-        rules={[
-          {
-            // Versus King is friends-only: its lounge never publishes.
-            key: "visibility",
-            label: t("lobby.uVisibility"),
-            options: [
-              { value: "public", label: t("extra.roomPublic") },
-              { value: "private", label: t("extra.roomPrivate") },
-            ],
-            value: "private",
-          },
-        ]}
+        // No visibility row. Versus King is friends-only by decision, so the
+        // row could only ever read "private" with the other half greyed
+        // beside it — a control that looks like a choice, is not one, and
+        // invites the tap that proves it. What the room does not offer, the
+        // lobby does not draw.
+        rules={[]}
         rulesExtra={
           <div className="flex h-[84px] items-center justify-between rounded-[20px] border border-[rgba(156,100,181,0.5)] pl-[26px] pr-[20px]">
             <span className="font-[Nunito] text-[16px] font-medium leading-[19.5px] tracking-[-0.16px] text-[#402666]">

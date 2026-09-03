@@ -81,6 +81,18 @@ interface TeamBattleContextValue {
       deserted spotlight's deadline, and ends a game whose side emptied.
       The lobby's leaveRoom stays free, as it always was. */
   leaveMatch: () => Promise<boolean>;
+  /**
+   * Re-read the room row now.
+   *
+   * The row arrives by realtime, which is the right default and is not a
+   * guarantee: a dropped socket, a backgrounded webview, a table missing
+   * from the publication all end the same way — the write landed and the
+   * screen still shows the old value, which reads as the edit having failed.
+   * The writes a player makes about their own room (a crest, a side's name)
+   * call this straight after, so what they just did is on screen whether the
+   * socket delivered it or not.
+   */
+  refreshRoom: () => Promise<void>;
   setTeam: (team: TBTeam) => Promise<void>;
   addBot: (team: TBTeam) => Promise<void>;
   setCaptain: (userId: string) => Promise<void>;
@@ -525,6 +537,13 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
     },
     [user, profile],
   );
+
+  const refreshRoom = useCallback(async () => {
+    const id = roomIdRef.current;
+    if (!id) return;
+    const { data } = await supabase.from("game_rooms").select("*").eq("id", id).maybeSingle();
+    if (data) setRoom(data as TBRoom);
+  }, []);
 
   const joinRoom = useCallback(
     async (code: string): Promise<boolean> => {
@@ -987,6 +1006,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
       enterRoom,
       leaveRoom,
       leaveMatch,
+      refreshRoom,
       setTeam,
       addBot,
       removeBot,
@@ -1007,7 +1027,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
       settle,
     }),
     [room, participants, pendingInvites, tiles, state, loading, isHost, myTeam, isSpotlight,
-     createRoom, joinRoom, enterRoom, leaveRoom, leaveMatch, setTeam, addBot, removeBot,
+     createRoom, joinRoom, enterRoom, leaveRoom, leaveMatch, refreshRoom, setTeam, addBot, removeBot,
      setCaptain, voteCaptain, manageSeat, startMatch, startError, submitRps, pickTile, submitAnswer,
      turnPicks, sendPick, playedBy, voteSuper, submitSuper, advance, settle],
   );

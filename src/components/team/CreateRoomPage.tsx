@@ -30,6 +30,7 @@ import { createNotification, useNotifications } from "@/hooks/useNotifications";
 // Room names are AI-generated via edge function during room creation
 import { TVPlayModal } from "@/components/team/TVPlayModal";
 import { isPartyCategory } from "@/config/partyCategories";
+import { POPULAR_IMAGE_CATEGORY_IDS } from "@/config/popularImageCategories";
 import { CategorySelectorModal } from "@/components/team/CategorySelectorModal";
 import { CategoryPickerModal } from "@/components/team/CategoryPickerModal";
 import { CreateBlindTriviaModal } from "@/components/team/CreateBlindTriviaModal";
@@ -48,7 +49,11 @@ import triviaBuzzer from "@/assets/trivia-buzzer-3.png";
 import iconGroupOfPeople from "@/assets/group-of-people.png";
 import stickerAlbum from "@/assets/sticker-album.png";
 import featuredQuick from "@/assets/play-chooser/featured-quick.webp";
-import featuredRandom from "@/assets/play-chooser/featured-random.webp";
+// The Guess card's scene. The file is still called "random" — it is the
+// mascot under a shower of question marks, which is what a guessing game
+// looks like; the mode it was drawn for is gone and the art outlived it.
+import featuredGuess from "@/assets/play-chooser/featured-random.webp";
+import iconWordsBoard from "@/assets/play-chooser/icon-words.webp";
 import featuredKing from "@/assets/play-chooser/featured-king.webp";
 import featuredBattle from "@/assets/play-chooser/featured-battle.webp";
 import featuredWords from "@/assets/play-chooser/featured-words.webp";
@@ -125,7 +130,7 @@ type SelectionMode = "random" | "library" | "create" | "my-trivias" | null;
  * My Trivia — as cards of their own (the old "classic friends room" card that
  * hid all three sources behind one more tap is gone).
  */
-type GameChoice = "quick" | "random" | "king" | "battle" | "words" | "library" | "mytrivias";
+type GameChoice = "quick" | "guess" | "king" | "battle" | "words" | "library" | "mytrivias";
 
 /** A person to seat as "invited" — a friend, or a member of a picked room. */
 type InvitePerson = {
@@ -251,8 +256,13 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
    * It starts published because a room nobody can find is the thing this
    * screen was worst at: the only way to fill one was to already know who
    * you wanted in it.
+   *
+   * Not a switch any more, and not because the choice went away — it moved.
+   * The lobby has the same control, on the screen where the room exists;
+   * asking on the way in as well meant answering the same question twice
+   * before there was anything to be public ABOUT.
    */
-  const [isPublic, setIsPublic] = useState(true);
+  const isPublic = true;
 
   /**
    * Which of the six can go on the Public tab at all.
@@ -270,7 +280,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   // public switch off the screen; the room stays private.
   const partyPicked = isPartyCategory(selectedCategory?.category_id ?? selectedCategory?.id);
   const canPublish =
-    (gameChoice === "random" || gameChoice === "library" || gameChoice === "battle") && !partyPicked;
+    (gameChoice === "guess" || gameChoice === "library" || gameChoice === "battle") && !partyPicked;
   const publishRoom = canPublish && isPublic;
 
   /**
@@ -540,25 +550,18 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       setPreLobby(key);
       return;
     }
-    autoStart.current = true;
-    if (key === "random") {
-      if (categories.length === 0) return; // the roll below deals once they arrive
-      setSelectionMode("random");
-      setSelectedCategory(categories[Math.floor(Math.random() * categories.length)]);
+    if (key === "guess") {
+      // The one card that asks a question back. Which picture game — the
+      // logos, the flags, the cities — is the whole choice, so the card
+      // unfolds them rather than starting something on its own.
+      setSelectionMode(null);
+      setSelectedCategory(null);
       return;
     }
+    autoStart.current = true;
     if (key === "library" && !(selectionMode === "library" && selectedCategory)) setShowCategoriesModal(true);
     if (key === "mytrivias" && !challengeTrivia) void handleOptionClick("my-trivias");
   };
-
-  // The Random card is the default: the moment categories arrive (or the
-  // card is re-picked after a clear) the dice roll runs, so Create is one
-  // tap away without an extra choice.
-  useEffect(() => {
-    if (gameChoice !== "random" || loadingCategories || categories.length === 0) return;
-    if (selectedCategory || isSearchingRandom) return;
-    void selectRandomCategory();
-  }, [gameChoice, loadingCategories, categories, selectedCategory, isSearchingRandom]);
 
   const handleLibraryCategorySelect = (category: { id: string; category_id: string; name: string; icon?: string; icon_slug?: string | null; color: string; image_url?: string | null; total_levels: number }) => {
     // Use the category directly from the modal - it already has category_id
@@ -774,9 +777,10 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       ? false
       : gameChoice === "quick" || gameChoice === "king" || gameChoice === "battle" || gameChoice === "words"
         ? true
-        : gameChoice === "random"
-          ? selectionMode === "random" && !!selectedCategory && !isSearchingRandom
-          : hasValidSelection;
+        : // Guess picks a category like the library does — it is the same
+          // room, opened on one of the picture games. The roll a "random"
+          // entry point runs is not a settled choice until it stops.
+          hasValidSelection && !isSearchingRandom;
 
   // Handle blind trivia creation - questions are hidden from creator
   // IMPORTANT: This now persists the trivia to user_quiz_posts so it appears in "My Trivia"
@@ -1149,8 +1153,68 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   // the chosen trivia. One element, rendered under whichever card is
   // picked, so the detail sits next to the thing it belongs to. Empty
   // for the modes that have nothing to add, and hidden when empty.
+  /**
+   * The picture games, in the order the library shows them.
+   *
+   * Read off the live category list rather than the six ids in
+   * popularImageCategories: one of them (guess_movie) has no row in the
+   * database, and a tile that opens a category nobody can play is worse
+   * than a tile that is not there.
+   */
+  const guessCategories = useMemo(
+    () =>
+      (POPULAR_IMAGE_CATEGORY_IDS as readonly string[])
+        .map((id) => categories.find((c) => c.category_id === id))
+        .filter((c): c is Category => !!c),
+    [categories],
+  );
+
   const pickedDetail = (
     <div className="mt-3 shrink-0 space-y-3 empty:hidden">
+    {/* Which picture game. The Guess card is the only one that asks a
+        question back instead of starting something, so the answer unfolds
+        directly under it: each tile is the category's own 3D art over its
+        name, and the tap creates the room the way a library pick does. */}
+    {gameChoice === "guess" && (
+      <div>
+        <h2 className="mb-1.5 text-[13.2px] font-medium text-muted-foreground">
+          {t("extra.guessPickTitle")}
+        </h2>
+        {guessCategories.length === 0 ? (
+          <div className="flex h-[92px] items-center justify-center rounded-2xl bg-muted">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 gap-2">
+            {guessCategories.map((cat) => {
+              const picked = selectedCategory?.category_id === cat.category_id;
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedCategory(cat);
+                    setSelectionMode("library");
+                    autoStart.current = true;
+                  }}
+                  className={cn(
+                    "flex flex-col items-center gap-1.5 rounded-2xl border-2 px-2 py-3 transition-colors",
+                    picked
+                      ? "border-primary bg-background text-foreground shadow-sm"
+                      : "border-transparent bg-muted text-muted-foreground",
+                  )}
+                >
+                  <CategoryArtwork categoryId={cat.category_id} iconSlug={cat.icon_slug} size={44} />
+                  <span className="line-clamp-2 text-center text-[11.5px] font-bold leading-tight">
+                    {cat.name}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    )}
     {/* Which side of the arena you take — two big cards, the crest
         above the name. A tap picks the side AND deals its crest a
         fresh random icon; a tap on the crest itself opens the
@@ -1556,7 +1620,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                 // artTop: where Figma parks each render, as a share of the
                 // card's height (1013:1407 and its siblings); descW: the
                 // blurb's box in 393rds, 273 for all but Words' longer line.
-                { key: "random", art: featuredRandom, artTop: 0.05, descW: 273, players: "1", title: t("extra.modeRandomTitle"), desc: t("extra.modeRandomDesc") },
+                { key: "guess", art: featuredGuess, artTop: 0.05, descW: 273, players: "1-10", title: t("extra.modeGuessTitle"), desc: t("extra.modeGuessDesc") },
                 { key: "quick", art: featuredQuick, artTop: -1.71, descW: 273, players: "1-10", title: t("extra.modeQuickTitle"), desc: t("extra.modeQuickDesc") },
                 { key: "king", art: featuredKing, artTop: 0, descW: 273, players: "1-10", title: t("extra.modeKingTitle"), desc: t("lobby.kingCardDesc") },
                 { key: "battle", art: featuredBattle, artTop: -4.56, descW: 273, players: "4-10", title: t("extra.modeBattleTitle"), desc: t("gameTypes.teamBattleDesc") },
@@ -1566,7 +1630,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
               ] as { key: GameChoice; art: string; artTop: number; descW: number; players: string | null; title: string; desc: string }[]
             ).map((card, i) => {
               const isPicked = gameChoice === card.key;
-              const busy = isPicked && (isCreating || isSearchingRandom);
+              const busy = isPicked && isCreating;
               return (
                 /* One card, to the Figma 1013:1406 pixel: the frame there is
                    393 × 686, so every inner measure is written in --u, one
@@ -1741,55 +1805,35 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       {/* Footer - Normal Button */}
       <div className="border-t border-border/30 shrink-0">
         <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full px-4 py-4">
-        {/* Published-or-private and the match size share ONE row (owner's
-            ask: not two) so the footer stays short and the team pickers
-            above never scroll out of reach. The switch flips its label and
-            icon; the size is a dropdown reading 2-2 through 5-5. The line
-            underneath still says what publishing actually means. */}
-        {canPublish && (
-          <div className="mb-3">
-            <div className="flex items-stretch gap-2">
-              {canPublish && (
-                <div className="flex flex-1 items-center justify-between gap-2 rounded-2xl bg-muted px-3.5 py-2.5 min-w-0">
-                  <span className="flex items-center gap-1.5 min-w-0 text-[13px] font-semibold text-foreground">
-                    {isPublic ? (
-                      <Globe className="w-3.5 h-3.5 text-primary shrink-0" />
-                    ) : (
-                      <Lock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                    )}
-                    <span className="truncate">
-                      {isPublic ? t("extra.roomPublic") : t("extra.roomPrivate")}
-                    </span>
-                  </span>
-                  <Switch checked={isPublic} onCheckedChange={setIsPublic} />
-                </div>
-              )}
-              {gameChoice === "battle" && (
-                <Select
-                  value={String(battleTeamSize)}
-                  onValueChange={(v) => setBattleTeamSize(Number(v))}
-                >
-                  <SelectTrigger
-                    aria-label={t("extra.playersPerTeam")}
-                    className="w-[108px] shrink-0 h-auto rounded-2xl border-0 bg-muted px-3.5 py-2.5 text-[13px] font-bold tabular-nums"
-                  >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[2, 3, 4, 5].map((size) => (
-                      <SelectItem key={size} value={String(size)} className="tabular-nums font-semibold">
-                        {size}-{size}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            </div>
-            {canPublish && (
-              <p className="mt-1 px-1 text-[11.5px] leading-snug text-muted-foreground">
-                {isPublic ? t("extra.roomPublicHint") : t("extra.roomPrivateHint")}
-              </p>
-            )}
+        {/* How many a side holds — 2-2 through 5-5.
+
+            The published-or-private switch used to share this row. It is
+            gone: the lobby asks the same question, on the screen where the
+            room actually exists and where the answer can still be changed,
+            and being asked it twice on the way in made the create screen
+            look like it wanted a decision it did not need yet. A room that
+            can publish now opens published, and the lobby is where that is
+            reconsidered. */}
+        {gameChoice === "battle" && (
+          <div className="mb-3 flex items-stretch justify-end">
+            <Select
+              value={String(battleTeamSize)}
+              onValueChange={(v) => setBattleTeamSize(Number(v))}
+            >
+              <SelectTrigger
+                aria-label={t("extra.playersPerTeam")}
+                className="w-[108px] shrink-0 h-auto rounded-2xl border-0 bg-muted px-3.5 py-2.5 text-[13px] font-bold tabular-nums"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {[2, 3, 4, 5].map((size) => (
+                  <SelectItem key={size} value={String(size)} className="tabular-nums font-semibold">
+                    {size}-{size}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         )}
 
@@ -1841,6 +1885,9 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
             <UniversalLobby
               sceneArt={LOBBY_SCENES.words}
               roomName={t("gameTypes.wordsTitle")}
+              // The board's own sign, like the arena's crate and the King's
+              // crown: every lobby says which game it is above the card.
+              icon={iconWordsBoard}
               onBack={() => setPreLobby(null)}
               unreadCount={unreadCount}
               labels={{
