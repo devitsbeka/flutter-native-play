@@ -18,6 +18,7 @@ import React, {
   useState,
 } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { turnSecondsFor } from "@/utils/turnLength";
 import { roomVisibilityFields, teamNameFields } from "@/utils/roomVisibility";
 import type { Json, Tables } from "@/integrations/supabase/types";
 import { useAuth } from "./AuthContext";
@@ -48,6 +49,15 @@ export type TBTile = Tables<"team_battle_board">;
 export type TBState = Tables<"team_battle_state">;
 
 /** One answered rapid-fire question, broadcast live so the room spectates. */
+/** A call to the player on the spot, over the live channel. */
+export interface TBPoke {
+  /** Who is being called — everyone hears the broadcast, one person is it. */
+  to: string;
+  from: string;
+  /** Stamped on arrival, so a second call re-triggers the label. */
+  at: number;
+}
+
 export interface TBPick {
   index: number;
   option: string;
@@ -100,7 +110,14 @@ interface TeamBattleContextValue {
   manageSeat: (userId: string, action: "remove" | "move_a" | "move_b") => Promise<void>;
   removeBot: (botId: string) => Promise<void>;
   startMatch: (
-    categories: { uuid: string; name: string }[],
+    /**
+     * The pool the board is dealt from. `slug` is the category_id, and it is
+     * here for one reason: how long a turn runs. A picture round is read at
+     * a glance and answered or not; a classic question is read, considered
+     * and worked out. Same clock for both meant the guessing board sat there
+     * with a minute left on it.
+     */
+    categories: { uuid: string; name: string; slug?: string | null }[],
     preferredTiles?: number,
   ) => Promise<boolean>;
   /** Why the last start attempt failed — the lobby shows it, since toasts
@@ -111,6 +128,19 @@ interface TeamBattleContextValue {
   submitAnswer: (questionIndex: number, answer: string) => Promise<{ correct: boolean } | null>;
   turnPicks: TBPick[];
   sendPick: (pick: TBPick) => void;
+  /**
+   * The last "answer!" a teammate sent the player on the spot.
+   *
+   * The poke also writes a notification and fires a push, which is what
+   * reaches somebody who has the app in the background. Neither shows the
+   * player anything while they are staring at the question: the app's
+   * toasts are delivery-suppressed (see lib/toast), so all that arrived
+   * mid-turn was the sound. This rides the spectation channel the picks
+   * already use — instant, no round trip — and the match draws a label
+   * from it for three seconds.
+   */
+  lastPoke: TBPoke | null;
+  sendPoke: (toUserId: string, fromNickname: string) => void;
   playedBy: Record<string, string>;
   voteSuper: (candidate: string) => Promise<void>;
   submitSuper: (questionIndex: number, answer: string) => Promise<{ correct: boolean } | null>;
@@ -177,6 +207,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
   // stored), and which player played each claimed tile (learned from state
   // updates as the match runs).
   const [turnPicks, setTurnPicks] = useState<TBPick[]>([]);
+  const [lastPoke, setLastPoke] = useState<TBPoke | null>(null);
   const [playedBy, setPlayedBy] = useState<Record<string, string>>({});
 
   const me = participants.find((p) => p.user_id === user?.id) ?? null;
@@ -312,6 +343,14 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
           prev.some((p) => p.index === pick.index) ? prev : [...prev, pick],
         );
       })
+      // Everyone in the room hears it; the match decides whether it is for
+      // them. Filtering here would need the user in this effect's deps, and
+      // re-subscribing the whole feed on a sign-in is a worse trade.
+      .on("broadcast", { event: "poke" }, ({ payload }) => {
+        const p = payload as { to?: string; from?: string };
+        if (!p?.to) return;
+        setLastPoke({ to: p.to, from: p.from ?? "", at: Date.now() });
+      })
       .subscribe();
     liveChannelRef.current = liveCh;
     channelsRef.current = [stateCh, boardCh, partCh, roomCh, liveCh];
@@ -353,6 +392,14 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
 
   const sendPick = useCallback((pick: TBPick) => {
     void liveChannelRef.current?.send({ type: "broadcast", event: "pick", payload: pick });
+  }, []);
+
+  const sendPoke = useCallback((toUserId: string, fromNickname: string) => {
+    void liveChannelRef.current?.send({
+      type: "broadcast",
+      event: "poke",
+      payload: { to: toUserId, from: fromNickname },
+    });
   }, []);
 
   const createRoom = useCallback(async (
@@ -751,7 +798,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
   // question pipeline and hands it over; the server prices and validates it.
   const startMatch = useCallback(
     async (
-      categories: { uuid: string; name: string }[],
+      categories: { uuid: string; name: string; slug?: string | null }[],
       preferredTiles?: number,
     ): Promise<boolean> => {
       const roomId = roomIdRef.current;
@@ -871,25 +918,14 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
         const { error } = await supabase.rpc("tb_start_match", {
           p_room_id: roomId,
           p_board: board,
-          // Two minutes on the clock, as many questions as they can
-          // answer (the 20260924100000 migration allows up to 180). On a
-          // database that still clamps at 90 the RPC refuses — retried once
-          // at the old maximum so a match can still start before the
-          // migration lands.
-          p_turn_seconds: 120,
+          // How long a turn runs, by what the board is made of. Two minutes
+          // for everything was a long silence on a picture board, where the
+          // answer is known or it is not — see turnSecondsFor. Both values
+          // are inside the 20..90 every version of the RPC accepts, so
+          // there is no start that has to be retried at a lower number any
+          // more.
+          p_turn_seconds: turnSecondsFor(categories),
         });
-        if (error && /between 20 and 90/.test(error.message ?? "")) {
-          const retry = await supabase.rpc("tb_start_match", {
-            p_room_id: roomId,
-            p_board: board,
-            p_turn_seconds: 90,
-          });
-          if (!retry.error) return true;
-          console.error("[TB] start failed", retry.error);
-          setStartError(retry.error.message);
-          toast.error(retry.error.message);
-          return false;
-        }
         if (error) {
           console.error("[TB] start failed", error);
           setStartError(error.message);
@@ -1020,6 +1056,8 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
       submitAnswer,
       turnPicks,
       sendPick,
+      lastPoke,
+      sendPoke,
       playedBy,
       voteSuper,
       submitSuper,
@@ -1029,7 +1067,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
     [room, participants, pendingInvites, tiles, state, loading, isHost, myTeam, isSpotlight,
      createRoom, joinRoom, enterRoom, leaveRoom, leaveMatch, refreshRoom, setTeam, addBot, removeBot,
      setCaptain, voteCaptain, manageSeat, startMatch, startError, submitRps, pickTile, submitAnswer,
-     turnPicks, sendPick, playedBy, voteSuper, submitSuper, advance, settle],
+     turnPicks, sendPick, lastPoke, sendPoke, playedBy, voteSuper, submitSuper, advance, settle],
   );
 
   return <TeamBattleContext.Provider value={value}>{children}</TeamBattleContext.Provider>;

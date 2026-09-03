@@ -1,7 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { routeForRoom } from "@/utils/roomRoutes";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
 import { useNotificationModal } from "@/hooks/useNotificationModal";
@@ -23,6 +21,9 @@ export interface GameInvitation {
   room?: {
     room_code: string;
     category_name: string | null;
+    /** What kind of room it is, so a yes opens the right page. */
+    game_type_key?: string | null;
+    game_mode?: string | null;
   };
 }
 
@@ -30,7 +31,6 @@ export function useGameInvitations() {
   const { user } = useAuth();
   const { playSound } = useSound();
   const { notify } = useNotificationModal();
-  const navigate = useNavigate();
   const [pendingInvitations, setPendingInvitations] = useState<GameInvitation[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -47,7 +47,7 @@ export function useGameInvitations() {
         .from("game_invitations")
         .select(`
           *,
-          room:game_rooms(room_code, category_name)
+          room:game_rooms(room_code, category_name, game_type_key, game_mode)
         `)
         .eq("receiver_id", user.id)
         .eq("status", "pending")
@@ -291,8 +291,8 @@ export function useGameInvitations() {
             .eq("user_id", newInvitation.sender_id)
             .single();
 
-          // Fetch room info — its kind too, so the popup's button can open
-          // the right page (routeForRoom): the arena, the couch, the board.
+          // Fetch room info — its kind too, so a yes opens the right page
+          // (routeForRoom): the arena, the couch, the board.
           const { data: room } = await supabase
             .from("game_rooms")
             .select("room_code, category_name, game_type_key, game_mode")
@@ -306,36 +306,14 @@ export function useGameInvitations() {
           };
 
           setPendingInvitations((prev) => [invitationWithData, ...prev]);
-          
+
           // Play invitation sound
           playSound("game-invitation");
-          
-          // The popup is the invitation: it answers here. Join accepts and
-          // walks into the room; Decline answers no. It used to be a card
-          // with an X and nothing else — an invitation you could only
-          // dismiss, with the real buttons two screens away.
-          const invitationId = newInvitation.id;
-          notify.info(
-            tStandalone("extra.friendInvitesYouGame", { name: profile?.nickname || tStandalone("extra.friendFallback") }),
-            {
-              icon: "🎮",
-              actionButton: {
-                label: tStandalone("extra.notifJoin"),
-                onClick: () => {
-                  void (async () => {
-                    const code = await acceptInvitation(invitationId);
-                    if (code) navigate(routeForRoom(room, code));
-                  })();
-                },
-              },
-              secondaryButton: {
-                label: tStandalone("extra.notifDecline"),
-                onClick: () => {
-                  void declineInvitation(invitationId);
-                },
-              },
-            },
-          );
+
+          // The card itself is GlobalGameInviteGate's: it watches this list
+          // and shows whatever arrives on the same modal the host's doorstep
+          // uses. Raising a second, differently-drawn popup from here is
+          // what made one question look like two.
         }
       )
       .on(
@@ -360,7 +338,7 @@ export function useGameInvitations() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, fetchInvitations, notify, playSound, acceptInvitation, declineInvitation, navigate]);
+  }, [user, fetchInvitations, playSound]);
 
   return {
     pendingInvitations,

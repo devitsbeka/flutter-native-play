@@ -38,6 +38,7 @@ import { Navigate, useParams } from "react-router-dom";
 import { isLegalLanguage } from "@/utils/legalLanguage";
 import { OfflineBanner } from "./components/shared/OfflineBanner";
 import { GlobalJoinRequestGate } from "@/components/team/JoinRequestGate";
+import { GlobalGameInviteGate } from "@/components/team/GameInviteGate";
 import { Toaster } from "sonner";
 import { useFreshBuildGuard } from "@/hooks/useFreshBuildGuard";
 
@@ -250,6 +251,9 @@ const App = () => (
                 a host reading Discover still answers, and a yes walks them
                 into the room. */}
             <GlobalJoinRequestGate />
+            {/* And the same card the other way round: a friend inviting this
+                player into their room. */}
+            <GlobalGameInviteGate />
             
             {/* Global persistent background with particles */}
             <GlobalSplineBackground />

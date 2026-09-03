@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { BellRing, Bot, ChevronLeft, Star } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { BellRing, Bot, Check, ChevronLeft, Star, UserPlus } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useFriends } from "@/hooks/useFriends";
 import { useCategories } from "@/hooks/useCategories";
 import { useServerDeadline } from "@/hooks/useServerDeadline";
 import { QuizQuestionCard } from "@/components/ui/quiz-question-card";
@@ -33,6 +34,7 @@ import {
   tileQuestions,
   useTeamBattle,
   type TBGesture,
+  type TBParticipant,
   type TBQuestion,
   type TBTeam,
   type TBTile,
@@ -602,8 +604,10 @@ function TurnQuestionCard({
 function PhaseRapidFire() {
   const { t } = useLanguage();
   const { user, profile } = useAuth();
-  const { state, room, tiles, participants, isSpotlight, myTeam, submitAnswer, turnPicks, sendPick, advance } =
-    useTeamBattle();
+  const {
+    state, room, tiles, participants, isSpotlight, myTeam, submitAnswer,
+    turnPicks, sendPick, lastPoke, sendPoke, advance,
+  } = useTeamBattle();
   const secondsLeft = useServerDeadline(state?.deadline, advance);
   const [choice, setChoice] = useState<{ option: string; correct: boolean } | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -641,8 +645,28 @@ function PhaseRapidFire() {
     supabase.functions
       .invoke("send-social-push", { body: { kind: "team_poke", roomId: room.id } })
       .catch(() => {});
+    // The one that actually reaches somebody staring at the question. The
+    // notification above plays their sound and the push finds them if they
+    // have left the app; neither draws anything on the screen they are
+    // looking at, because the app's toasts are delivery-suppressed.
+    sendPoke(player.user_id, name);
     toast.success(t("teamBattle.pokeSent"));
   };
+
+  /**
+   * "Pick an answer!" — three seconds, and only for the player being called.
+   *
+   * Placed in the gap the question card already leaves above itself, so it
+   * covers neither the question nor the answers; a call that hides the thing
+   * it is telling you to answer is worse than no call at all.
+   */
+  const [called, setCalled] = useState(false);
+  useEffect(() => {
+    if (!lastPoke || !user || lastPoke.to !== user.id) return;
+    setCalled(true);
+    const timer = window.setTimeout(() => setCalled(false), 3000);
+    return () => window.clearTimeout(timer);
+  }, [lastPoke, user]);
 
   // The bot's turn is pre-rolled server-side; the showcase window animates it
   // so the room watches answers land instead of a frozen counter.
@@ -781,7 +805,22 @@ function PhaseRapidFire() {
           </div>
         )}
 
-        <div className="px-4 pt-8 flex-shrink-0">
+        <div className="relative px-4 pt-8 flex-shrink-0">
+          <AnimatePresence>
+            {called && (
+              <motion.div
+                key="call"
+                initial={{ opacity: 0, y: -6, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ type: "spring", stiffness: 480, damping: 26 }}
+                className="pointer-events-none absolute left-1/2 top-0.5 z-30 flex -translate-x-1/2 items-center gap-1.5 whitespace-nowrap rounded-full bg-amber-400 px-3 py-1 text-xs font-black uppercase tracking-wide text-[#402666] shadow-lg"
+              >
+                <BellRing className="h-3.5 w-3.5" />
+                {t("teamBattle.callOut")}
+              </motion.div>
+            )}
+          </AnimatePresence>
           <TurnQuestionCard
             tile={tile}
             question={question}
@@ -1003,9 +1042,65 @@ function PhaseSuperRound() {
   );
 }
 
+/** One teammate/opponent row on the done screen, with a + friend button
+    for anyone not already a friend (owner's ask). */
+function DonePlayerRow({
+  person,
+  isFriend,
+}: {
+  person: TBParticipant;
+  isFriend: boolean;
+}) {
+  const { t } = useLanguage();
+  const { sendFriendRequest } = useFriends();
+  // Toasts are suppressed app-wide, so the button carries its own state:
+  // it flips to a check the moment the request is sent.
+  const [requested, setRequested] = useState(false);
+  const [sending, setSending] = useState(false);
+  const add = async () => {
+    if (sending || requested) return;
+    setSending(true);
+    const ok = await sendFriendRequest(person.user_id);
+    setSending(false);
+    if (ok) setRequested(true);
+  };
+  return (
+    <div className="flex items-center gap-2.5 py-1.5">
+      <SmartAvatar avatarUrl={person.avatar_url} fallback={person.nickname} size="sm" />
+      <span className="flex-1 min-w-0 truncate text-white font-semibold text-sm">
+        {person.nickname}
+      </span>
+      {!isFriend && (
+        <button
+          type="button"
+          onClick={add}
+          disabled={sending || requested}
+          className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold transition-colors ${
+            requested ? "bg-white/20 text-white/70" : "bg-white text-[#6D28D9] active:scale-95"
+          }`}
+        >
+          {requested ? (
+            <>
+              <Check className="w-3.5 h-3.5" />
+              {t("teamBattle.friendRequested")}
+            </>
+          ) : (
+            <>
+              <UserPlus className="w-3.5 h-3.5" />
+              {t("teamBattle.addFriend")}
+            </>
+          )}
+        </button>
+      )}
+    </div>
+  );
+}
+
 function PhaseDone({ onDismiss }: { onDismiss?: () => void }) {
   const { t } = useLanguage();
-  const { state, myTeam, room, settle } = useTeamBattle();
+  const { user } = useAuth();
+  const { state, myTeam, room, participants, settle } = useTeamBattle();
+  const { friends } = useFriends();
 
   // Idempotent server claim: pays out once and resets the room to waiting.
   // The page keeps rendering this screen until dismissed (TeamBattlePage's
@@ -1013,6 +1108,28 @@ function PhaseDone({ onDismiss }: { onDismiss?: () => void }) {
   useEffect(() => {
     void settle();
   }, [settle]);
+
+  // The sides' crests, the lobby's deal — same source as the score header,
+  // so the verdict wears the faces the match wore.
+  const [crestPool, setCrestPool] = useState<string[]>([]);
+  useEffect(() => {
+    void fetchCrestPool().then(setCrestPool);
+  }, []);
+  const crests = useMemo(
+    () =>
+      dealtCrests(room?.id ?? "", crestPool, {
+        a: room?.team_a_icon ?? null,
+        b: room?.team_b_icon ?? null,
+      }),
+    [room?.id, room?.team_a_icon, room?.team_b_icon, crestPool],
+  );
+
+  const friendIds = useMemo(() => new Set(friends.map((f) => f.friendId)), [friends]);
+  // Who I actually played with: every human but me, in seating order.
+  const others = useMemo(
+    () => participants.filter((p) => !p.is_bot && p.user_id !== user?.id),
+    [participants, user?.id],
+  );
 
   const won = state?.winner_team === myTeam;
   return (
@@ -1050,17 +1167,39 @@ function PhaseDone({ onDismiss }: { onDismiss?: () => void }) {
         >
           {won ? t("teamBattle.youWon") : t("teamBattle.youLost")}
         </motion.h1>
-        <div className="flex items-center gap-6">
+        {/* Each side wears its crest, name and score — the faces the match
+            wore, so the verdict names who won. */}
+        <div className="flex items-start justify-center gap-8">
           {(["a", "b"] as TBTeam[]).map((team) => (
-            <div key={team} className="flex flex-col items-center">
-              <span className="text-white/70 text-xs font-semibold">{teamLabel(t, team, room)}</span>
+            <div key={team} className="flex flex-col items-center gap-1 max-w-[130px]">
+              {crests[team] && (
+                <img
+                  src={crests[team] ?? undefined}
+                  alt=""
+                  className="w-10 h-10 object-contain drop-shadow-sm"
+                />
+              )}
+              <span className="text-white/70 text-xs font-semibold text-center truncate max-w-full">
+                {teamLabel(t, team, room)}
+              </span>
               <span className="font-display text-4xl font-black text-white drop-shadow-sm">
                 {team === "a" ? state?.team_a_score ?? 0 : state?.team_b_score ?? 0}
               </span>
             </div>
           ))}
         </div>
-        <div className="w-full max-w-xs mt-4">
+        {/* Who I played with — add anyone who is not a friend yet. */}
+        {others.length > 0 && (
+          <div className="w-full max-w-xs bg-white/10 rounded-2xl px-3 py-2 max-h-[38vh] overflow-y-auto">
+            <p className="text-white/60 text-[11px] font-bold uppercase tracking-wide px-1 pb-1">
+              {t("teamBattle.playedWith")}
+            </p>
+            {others.map((p) => (
+              <DonePlayerRow key={p.user_id} person={p} isFriend={friendIds.has(p.user_id)} />
+            ))}
+          </div>
+        )}
+        <div className="w-full max-w-xs mt-2">
           <ChunkyButton variant="white" size="lg" className="w-full" onClick={onDismiss}>
             {t("common.continue")}
           </ChunkyButton>

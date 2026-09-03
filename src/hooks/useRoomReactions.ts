@@ -47,6 +47,10 @@ export async function sendReaction(roomId: string, toUserId: string, icon: strin
     .from("room_reactions")
     .insert({ room_id: roomId, to_user_id: toUserId, icon, from_user_id: (await supabase.auth.getUser()).data.user?.id ?? "" });
   if (error) {
+    // Worth naming the common one: until 20260927100000 is applied the table
+    // does not exist, PostgREST answers PGRST205, and every tap does nothing
+    // at all with nothing on screen to say why. The bar reads the false and
+    // shows a line — toasts are delivery-suppressed app-wide.
     console.error("[reactions] send failed", error);
     return false;
   }

@@ -7,6 +7,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { turnSecondsFor } from "@/utils/turnLength";
 
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 const match = read("src/components/team-battle/TeamBattleMatch.tsx");
@@ -18,6 +19,25 @@ describe("the poke", () => {
     expect(match).toMatch(/createNotification\(\s*player\.user_id,\s*"room_ping",/);
     expect(match).toMatch(/kind: "team_poke",[^]*?game_type_key: "team_battle"/);
     expect(match).toMatch(/invoke\("send-social-push", \{ body: \{ kind: "team_poke", roomId: room\.id \} \}\)/);
+    // And the one that reaches somebody who is looking at the question: the
+    // notification and the push are both for a player who is away.
+    expect(match).toMatch(/sendPoke\(player\.user_id, name\);/);
+  });
+
+  it("the called player sees a label, for three seconds, over nothing that matters", () => {
+    // The app's toasts are delivery-suppressed (lib/toast), so before this
+    // the only thing that arrived mid-turn was the notification sound.
+    const ctx = read("src/contexts/TeamBattleContext.tsx");
+    expect(ctx).toMatch(/\.on\("broadcast", \{ event: "poke" \}/);
+    expect(ctx).toMatch(/const sendPoke = useCallback\(\(toUserId: string, fromNickname: string\)/);
+    // Only the player being called, and a fresh call re-triggers it.
+    expect(match).toMatch(/if \(!lastPoke \|\| !user \|\| lastPoke\.to !== user\.id\) return;/);
+    expect(match).toMatch(/setTimeout\(\(\) => setCalled\(false\), 3000\)/);
+    // In the gap the question card already leaves above itself, and out of
+    // the way of taps: a call that hides what it is telling you to answer is
+    // worse than no call.
+    expect(match).toMatch(/pointer-events-none absolute left-1\/2 top-0\.5 z-30/);
+    expect(match).toMatch(/t\("teamBattle\.callOut"\)/);
   });
 
   it("the push server knows the kind, routes it to the arena, and copies it in seven languages", () => {
@@ -59,6 +79,16 @@ describe("the icons", () => {
     expect(hook).toMatch(/filter: `to_user_id=eq\.\$\{meId\}`/);
   });
 
+  it("a send that fails says so", () => {
+    // Until 20260927100000 is applied the table does not exist and every tap
+    // did nothing at all, with nothing on screen to say why — and the toast
+    // that would have said it is suppressed app-wide.
+    const bar = read("src/components/team-battle/ReactionBar.tsx");
+    expect(bar).toMatch(/setFailed\(true\);/);
+    expect(bar).toMatch(/setTimeout\(\(\) => setFailed\(false\), 4000\)/);
+    expect(bar).toMatch(/failed \? t\("teamBattle\.iconSendFailed"\) : t\("teamBattle\.sendIcon"\)/);
+  });
+
   it("the table is guarded by seat and wired into CI", () => {
     const mig = read("supabase/migrations/20260927100000_room_reactions.sql");
     expect(mig).toMatch(/from_user_id = auth\.uid\(\)[^]*?from_user_id <> to_user_id/);
@@ -70,12 +100,75 @@ describe("the icons", () => {
 
 describe("the invitation popup", () => {
   it("answers on the spot: Join accepts and opens the room, Decline says no", () => {
+    const gate = read("src/components/team/GameInviteGate.tsx");
+    expect(gate).toMatch(/const code = await acceptInvitation\(next\.id\);\s*if \(code\) navigate\(routeForRoom\(next\.room, code\)\);/);
+    expect(gate).toMatch(/acceptLabel=\{t\("extra\.notifJoin"\)\}/);
+    expect(gate).toMatch(/declineLabel=\{t\("extra\.notifDecline"\)\}/);
+    expect(gate).toMatch(/onDecline=\{\(\) => next && void declineInvitation\(next\.id\)\}/);
+    // The room's kind has to travel with the invitation for routeForRoom to
+    // open the arena rather than the classic lobby.
     const hook = read("src/hooks/useGameInvitations.ts");
     expect(hook).toMatch(/select\("room_code, category_name, game_type_key, game_mode"\)/);
-    expect(hook).toMatch(/actionButton: \{\s*label: tStandalone\("extra\.notifJoin"\)/);
-    expect(hook).toMatch(/const code = await acceptInvitation\(invitationId\);\s*if \(code\) navigate\(routeForRoom\(room, code\)\);/);
-    expect(hook).toMatch(/secondaryButton: \{\s*label: tStandalone\("extra\.notifDecline"\)/);
-    // The modal holds while a button is offered (no auto-dismiss timer).
-    expect(read("src/components/ui/notification-modal.tsx")).toMatch(/if \(actionButton\) return;/);
+    expect(hook).toMatch(/room:game_rooms\(room_code, category_name, game_type_key, game_mode\)/);
+  });
+
+  it("is the doorstep's card, not a second one", () => {
+    // A friend inviting you and a stranger knocking are the same question
+    // with the roles swapped; they were drawn as two different popups.
+    for (const f of [
+      "src/components/team/GameInviteGate.tsx",
+      "src/components/team/JoinRequestGate.tsx",
+    ]) {
+      expect(read(f)).toMatch(/<PersonAskModal\b/);
+    }
+    // Only the words differ.
+    expect(read("src/components/team/GameInviteGate.tsx")).toMatch(/body=\{t\("extra\.inviteModalBody"\)\}/);
+    for (const lang of ["ka", "en", "de", "es", "fr", "it", "pt"]) {
+      expect(read(`src/locales/${lang}.ts`)).toMatch(/inviteModalBody: "/);
+    }
+    // And the hook no longer raises one of its own beside it.
+    expect(read("src/hooks/useGameInvitations.ts")).not.toMatch(/friendInvitesYouGame/);
+  });
+
+  it("is mounted once, app-wide, beside the doorstep", () => {
+    expect(read("src/App.tsx")).toMatch(/<GlobalGameInviteGate \/>/);
+  });
+
+  it("leaves invitations that were already waiting to the notifications list", () => {
+    // Otherwise every launch opens a modal over the home screen for an
+    // invitation the player has already seen, until it expires.
+    const gate = read("src/components/team/GameInviteGate.tsx");
+    expect(gate).toMatch(/alreadyWaiting\.current = new Set\(pendingInvitations\.map\(\(inv\) => inv\.id\)\)/);
+    expect(gate).toMatch(/pendingInvitations\.filter\(\(inv\) => !seen\.has\(inv\.id\)\)/);
+  });
+});
+
+describe("a turn is as long as its questions need", () => {
+  it("a picture board runs a minute, everything else ninety seconds", () => {
+    const pics = [{ slug: "guess_logo" }, { slug: "guess_city" }];
+    expect(turnSecondsFor(pics)).toBe(60);
+    expect(turnSecondsFor([{ slug: "guess_flag" }])).toBe(60);
+
+    expect(turnSecondsFor([{ slug: "animals" }])).toBe(90);
+    // A mixed board takes the longer clock: the slowest question on it is
+    // what the turn has to accommodate.
+    expect(turnSecondsFor([{ slug: "guess_logo" }, { slug: "animals" }])).toBe(90);
+    // And anything that arrives without a slug is not assumed to be quick.
+    expect(turnSecondsFor([{ slug: "guess_logo" }, {}])).toBe(90);
+    expect(turnSecondsFor([])).toBe(90);
+  });
+
+  it("both values are inside the range every version of the RPC accepts", () => {
+    // 20..90 in 20260917100000 and 20260921210000, 20..180 after
+    // 20260924100000 — so no start has to be retried at a lower number.
+    for (const n of [60, 90]) {
+      expect(n).toBeGreaterThanOrEqual(20);
+      expect(n).toBeLessThanOrEqual(90);
+    }
+    const ctx = read("src/contexts/TeamBattleContext.tsx");
+    expect(ctx).toMatch(/p_turn_seconds: turnSecondsFor\(categories\)/);
+    expect(ctx).not.toMatch(/between 20 and 90/);
+    // The slug is what tells them apart, and it has to survive the trip.
+    expect(read("src/pages/TeamBattlePage.tsx")).toMatch(/slug: c\.category_id/);
   });
 });
