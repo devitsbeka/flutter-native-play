@@ -1,0 +1,216 @@
+import { useEffect, useState } from "react";
+import { AnimatePresence, motion, Reorder, useDragControls } from "framer-motion";
+import { GripVertical, Plus, X } from "lucide-react";
+import { DynamicIcon } from "@/components/shared/DynamicIcon";
+import { useLanguage } from "@/contexts/LanguageContext";
+import type { QueueItem } from "@/hooks/useRoomCategoryQueue";
+
+/**
+ * The rounds a room will play, in the order it will play them.
+ *
+ * Picking more than one category has been possible for a while — the picker
+ * takes several at once and `room_category_queue` holds them in `position`
+ * order, one row per round, consumed as each round finishes. What there was no
+ * way to do was *look* at that list. The lobby's category chip showed the
+ * room's single `category_name`, so three queued topics read as one, and
+ * `reorderQueue` and `removeFromQueue` existed on the hook without anything
+ * ever calling them.
+ *
+ * So this is the queue made visible: a round number against each topic, drag
+ * to change which plays when, and a way to drop one or add more.
+ *
+ * ## Committed on release, not on every frame
+ *
+ * `Reorder` fires continuously while a row is under the finger, and each
+ * change is a write per row. The local list follows the drag; the database
+ * hears about it once, when the row is dropped.
+ *
+ * A guest sees the same list and cannot move it — the order is the host's, the
+ * same as every other rule in the lobby.
+ */
+
+interface RoundOrderModalProps {
+  open: boolean;
+  onClose: () => void;
+  items: QueueItem[];
+  /** The host orders the rounds; everyone else reads them. */
+  canEdit: boolean;
+  onReorder: (next: QueueItem[]) => void | Promise<unknown>;
+  onRemove: (id: string) => void | Promise<unknown>;
+  /** Opens the picker, which already takes more than one at a time. */
+  onAdd: () => void;
+}
+
+export function RoundOrderModal({
+  open,
+  onClose,
+  items,
+  canEdit,
+  onReorder,
+  onRemove,
+  onAdd,
+}: RoundOrderModalProps) {
+  const { t } = useLanguage();
+  const [order, setOrder] = useState<QueueItem[]>(items);
+  const [dragging, setDragging] = useState(false);
+
+  // Follow the room while nobody is dragging. Adopting a realtime update
+  // mid-drag would pull the row out from under the finger.
+  useEffect(() => {
+    if (!dragging) setOrder(items);
+  }, [items, dragging]);
+
+  if (!open) return null;
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 safe-screen z-[120] flex flex-col bg-background"
+      >
+        {/* The same lilac wash the picker wears, so the two read as one place. */}
+        <div
+          aria-hidden
+          className="absolute inset-0 -z-10 pointer-events-none"
+          style={{
+            background:
+              "linear-gradient(180deg, rgba(249,219,255,0.55) 0%, rgba(249,219,255,0.3) 45%, rgba(249,219,255,0.55) 100%)",
+          }}
+        />
+
+        <div className="flex items-center justify-between p-4">
+          <div className="w-10" />
+          <h2 className="text-lg font-display text-primary">{t("lobby.uRoundsTitle")}</h2>
+          <motion.button
+            type="button"
+            onClick={onClose}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-muted transition-colors hover:bg-muted/80"
+          >
+            <X className="h-5 w-5 text-foreground" />
+          </motion.button>
+        </div>
+
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
+          <div className="mx-auto w-full max-w-[520px]">
+            <p className="mb-3 text-center text-sm text-muted-foreground">
+              {canEdit ? t("lobby.uRoundsHint") : t("lobby.uRoundsHintGuest")}
+            </p>
+
+            <Reorder.Group
+              axis="y"
+              values={order}
+              onReorder={canEdit ? setOrder : () => {}}
+              className="flex flex-col gap-2"
+            >
+              {order.map((item, index) => (
+                <RoundRow
+                  key={item.id}
+                  item={item}
+                  index={index}
+                  canEdit={canEdit}
+                  onDragStart={() => setDragging(true)}
+                  onDragEnd={() => {
+                    setDragging(false);
+                    void onReorder(order);
+                  }}
+                  onRemove={() => void onRemove(item.id)}
+                  roundLabel={t("lobby.uRoundLabel", { count: index + 1 })}
+                />
+              ))}
+            </Reorder.Group>
+
+            {canEdit && (
+              <motion.button
+                type="button"
+                onClick={onAdd}
+                whileTap={{ scale: 0.98 }}
+                className="mt-3 flex min-h-[56px] w-full items-center justify-center gap-2 rounded-xl border border-dashed border-primary/50 text-[15px] font-semibold text-primary"
+              >
+                <Plus className="h-5 w-5" />
+                {t("lobby.uAddRounds")}
+              </motion.button>
+            )}
+          </div>
+        </div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
+/**
+ * One round. The whole row is the handle on a phone — a 20px grip is a target
+ * most thumbs miss — so the drag is started from the row and the grip is there
+ * to say that it can be.
+ */
+function RoundRow({
+  item,
+  index,
+  canEdit,
+  onDragStart,
+  onDragEnd,
+  onRemove,
+  roundLabel,
+}: {
+  item: QueueItem;
+  index: number;
+  canEdit: boolean;
+  onDragStart: () => void;
+  onDragEnd: () => void;
+  onRemove: () => void;
+  roundLabel: string;
+}) {
+  const controls = useDragControls();
+
+  return (
+    <Reorder.Item
+      value={item}
+      dragListener={false}
+      dragControls={controls}
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
+      whileDrag={{ scale: 1.02, boxShadow: "0 12px 28px rgba(102,51,153,0.18)" }}
+      className="flex min-h-[64px] items-center gap-3 rounded-xl border border-border/50 bg-white/70 p-3"
+      onPointerDown={(e) => {
+        if (canEdit) controls.start(e);
+      }}
+      style={{ touchAction: canEdit ? "none" : undefined }}
+    >
+      <span className="w-6 shrink-0 text-center font-[Nunito] text-[13px] font-bold text-muted-foreground">
+        {index + 1}
+      </span>
+
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-primary/10">
+        {item.icon_slug ? (
+          <DynamicIcon slug={item.icon_slug} size={22} />
+        ) : (
+          <DynamicIcon slug="mystery-box" size={22} />
+        )}
+      </span>
+
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-[15px] font-semibold text-foreground">
+          {item.category_name}
+        </span>
+        <span className="block text-xs text-muted-foreground">{roundLabel}</span>
+      </span>
+
+      {canEdit && (
+        <>
+          <button
+            type="button"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={onRemove}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted"
+          >
+            <X className="h-[18px] w-[18px]" />
+          </button>
+          <GripVertical className="h-5 w-5 shrink-0 text-muted-foreground/60" />
+        </>
+      )}
+    </Reorder.Item>
+  );
+}

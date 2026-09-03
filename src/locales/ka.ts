@@ -1847,6 +1847,13 @@ export const ka = {
     uVisibility: "ხილვადობა",
     uInviteHint: "მოიწვიე მეგობარი — თამაშს ორი მოთამაშე სჭირდება",
     uSelectCategory: "აირჩიე კატეგორია",
+    // რაუნდების რიგი — თითო კატეგორია თითო რაუნდზე, თამაშის თანმიმდევრობით.
+    uCategoriesCount: "{count} კატეგორია",
+    uRoundsTitle: "რაუნდები",
+    uRoundsHint: "გადაათრიე თემა, რომ შეცვალო რომელ რაუნდზე ითამაშება.",
+    uRoundsHintGuest: "რაუნდების თანმიმდევრობას ჰოსტი განსაზღვრავს.",
+    uRoundLabel: "რაუნდი {count}",
+    uAddRounds: "კატეგორიების დამატება",
     uPlayOnTv: "TV-ზე თამაში",
     uInvite: "მოწვევა",
     uStartGame: "თამაშის დაწყება",
