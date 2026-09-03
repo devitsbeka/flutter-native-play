@@ -5,6 +5,23 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { ReportBlockSheet } from "@/components/social/ReportBlockSheet";
 import { cn } from "@/lib/utils";
 
+/**
+ * One row, one style — see the note on the component.
+ *
+ * Sized to be tapped, not to be read: a 56px row is the height a thumb can
+ * land on without aiming, and each one is its own rounded target inside the
+ * menu's padding rather than a full-bleed strip butted against its neighbours,
+ * so a near miss lands on a row instead of between two. The icon sits in the
+ * same rounded tile the rest of the app puts icons in, which is what gives the
+ * row its weight — the previous version was a 14px glyph and 13px of padding,
+ * and it read as a web menu dropped into a game.
+ */
+const ROW =
+  "flex w-full items-center gap-3 rounded-2xl px-2.5 py-2 text-left text-[15px] font-semibold " +
+  "text-foreground min-h-[56px] transition-transform active:scale-[0.98] hover:bg-muted/70";
+const ROW_TILE = "flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-muted";
+const ROW_ICON = "h-5 w-5 text-foreground/70";
+
 interface PlayerOverflowMenuProps {
   /** The author of the content this menu hangs off. */
   userId: string;
@@ -18,7 +35,20 @@ interface PlayerOverflowMenuProps {
 }
 
 /**
- * The three dots on someone else's content: report, block, cancel.
+ * The three dots on someone else's content: report, block, remove.
+ *
+ * The rows are one style, not three. Block and Remove were `text-destructive`
+ * on a `destructive/10` hover and Report carried an amber flag, so a menu of
+ * three items was drawn in three colours — two of them shouting. None of these
+ * is destructive in the sense that word is reserved for: nothing is deleted,
+ * and every one of them opens a sheet that asks again. They read as ordinary
+ * menu items now, at a size a thumb can actually land on, and the icons are
+ * the same weight and tone as each other.
+ *
+ * There is no Cancel row. The menu already closes on a tap anywhere outside
+ * it (see the pointerdown effect below), which is how every other menu on the
+ * platform is dismissed; a row that only undoes opening the menu spent a
+ * quarter of it saying nothing.
  *
  * One component because two cards need it — the flat feed card on a phone and
  * the creator card on tablet and desktop — and only the phone one had it, so
@@ -72,17 +102,17 @@ export function PlayerOverflowMenu({
           setOpen((v) => !v);
         }}
         className={cn(
-          "p-1.5 rounded-full text-muted-foreground hover:bg-muted active:scale-95 transition",
+          "p-2 rounded-full text-muted-foreground hover:bg-muted active:scale-95 transition",
           triggerClassName,
         )}
       >
-        <MoreVertical className="w-4 h-4" />
+        <MoreVertical className="w-5 h-5" />
       </button>
 
       {open && (
         <div
           onClick={(e) => e.stopPropagation()}
-          className="absolute right-0 top-full z-50 mt-1 w-44 overflow-hidden rounded-2xl border border-border/60 bg-popover shadow-lg"
+          className="absolute right-0 top-full z-50 mt-2 w-[248px] space-y-0.5 overflow-hidden rounded-[22px] border border-border/60 bg-popover p-1.5 shadow-xl"
         >
           <button
             type="button"
@@ -90,9 +120,9 @@ export function PlayerOverflowMenu({
               setOpen(false);
               setView("reasons");
             }}
-            className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm font-medium text-foreground hover:bg-muted"
+            className={ROW}
           >
-            <Flag className="h-4 w-4 shrink-0 text-amber-500" />
+            <span className={ROW_TILE}><Flag className={ROW_ICON} /></span>
             {t("moderation.report")}
           </button>
           <button
@@ -101,9 +131,9 @@ export function PlayerOverflowMenu({
               setOpen(false);
               setView("confirmBlock");
             }}
-            className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm font-medium text-destructive hover:bg-destructive/10"
+            className={ROW}
           >
-            <Ban className="h-4 w-4 shrink-0" />
+            <span className={ROW_TILE}><Ban className={ROW_ICON} /></span>
             {t("moderation.block")}
           </button>
           {onRemoveFriend && (
@@ -113,19 +143,12 @@ export function PlayerOverflowMenu({
                 setOpen(false);
                 onRemoveFriend();
               }}
-              className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm font-medium text-destructive hover:bg-destructive/10"
+              className={ROW}
             >
-              <UserMinus className="h-4 w-4 shrink-0" />
+              <span className={ROW_TILE}><UserMinus className={ROW_ICON} /></span>
               {t("extra.removeMenuItem")}
             </button>
           )}
-          <button
-            type="button"
-            onClick={() => setOpen(false)}
-            className="w-full border-t border-border/60 px-3.5 py-2.5 text-center text-sm font-semibold text-muted-foreground hover:bg-muted"
-          >
-            {t("common.cancel")}
-          </button>
         </div>
       )}
 
