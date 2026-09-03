@@ -93,22 +93,23 @@ export function MobileSceneBackground({
 }: MobileSceneBackgroundProps) {
   if (!sceneUrl && !showDefaultScene) return null;
 
-  // Fitted to the width, never to the height.
+  // Each scene gets the width its own aspect needs. They are not the same
+  // picture and cannot take the same box.
   //
-  // This was `size-full object-cover`, which fits the artwork to whichever
-  // edge is proportionally longer. The scene is a 1536x2752 portrait — a
-  // 0.558 aspect, the same as the frame's own 500x896 box — so on a phone of
-  // exactly that shape `cover` is the design's crop and looks correct. Every
-  // taller phone is where it falls apart: cover then scales to fill the
-  // height, and the artwork is blown up and cropped left and right. On a
-  // 0.46-aspect handset that is roughly a 20% enlargement of a picture whose
-  // subject is already centred and close, which is why it read as zoomed in
-  // and out of proportion with everything around it.
+  // The full-bleed rewrite gave both `size-full object-cover`, which fits to
+  // whichever edge is proportionally longer — on any phone taller than the
+  // frame's 0.558 that means filling the height, blowing the art up and
+  // cropping it. Fitting both to the screen width instead fixed that for the
+  // portrait scene and broke the default one: the Trivia King loop is 16:9, so
+  // at 100vw it is only 0.56 screens tall and sat as a shallow strip along the
+  // bottom with the page empty above it.
   //
-  // Width is the honest constraint here: the artwork is authored to span the
-  // screen, so it spans it, and the height follows from the aspect instead of
-  // being forced. Anchored to the bottom, above the nav, as it was.
-  const box = "absolute left-0 w-full max-w-none";
+  // The frame's own measures, which is what this looked like when it was
+  // right: the generated portrait spans 154.94vw from -22.06vw, and the 16:9
+  // loop 227.2vw from -47.8vw — far wider than the screen precisely so that a
+  // landscape clip is tall enough to fill the space above the nav. Both are
+  // anchored to the bottom and fade out at the top into the page's wash.
+  const portraitBox = "absolute left-[-22.06vw] w-[154.94vw] max-w-none";
   const style: React.CSSProperties = { bottom: NAV_H, ...SCENE_TOP_FADE };
 
   return (
@@ -130,24 +131,34 @@ export function MobileSceneBackground({
             src={sceneVideoUrl}
             still={sceneUrl}
             layout="intrinsic"
-            className={box}
+            className={portraitBox}
             style={style}
           />
         ) : (
-          <img src={sceneUrl} alt="" draggable={false} className={box} style={style} />
+          <img src={sceneUrl} alt="" draggable={false} className={portraitBox} style={style} />
         )
       ) : (
         // The default scene is the Trivia King idle loop, not a still of it.
-        // The full-bleed rewrite dropped the video and rendered `homeScene`
-        // on its own, so the character simply stopped moving; `heroScene` is
-        // the exported frame that holds until playback starts.
-        <BackgroundVideo
-          src={defaultVideoSrc}
-          still={heroScene}
-          layout="intrinsic"
-          className={box}
+        // The full-bleed rewrite dropped the video and rendered the home-scene
+        // artwork on its own, so the character simply stopped moving;
+        // `heroScene` is the exported frame that holds until playback starts.
+        <div
+          className="absolute left-[-47.8vw] w-[227.2vw] aspect-video"
           style={style}
-        />
+        >
+          <BackgroundVideo
+            src={defaultVideoSrc}
+            still={heroScene}
+            className="absolute inset-0 size-full"
+          />
+          {/* The loop's own foot, dissolved into the page so the clip does not
+              end on a visible edge above the nav. */}
+          <div
+            aria-hidden
+            className="absolute inset-0"
+            style={{ background: "linear-gradient(to bottom, rgba(246,222,255,0) 55.7%, #f6deff 88.4%)" }}
+          />
+        </div>
       )}
       <div aria-hidden className="absolute inset-0" style={{ backgroundImage: SCENE_WASH }} />
     </motion.div>
