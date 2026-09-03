@@ -1836,6 +1836,13 @@ export const en: KaTranslations = {
     uVisibility: "Visibility",
     uInviteHint: "Invite a friend — a game needs two players",
     uSelectCategory: "Select Category",
+    // The rounds queue — one category per round, in the order they play.
+    uCategoriesCount: "{count} categories",
+    uRoundsTitle: "Rounds",
+    uRoundsHint: "Drag a topic to change which round it plays in.",
+    uRoundsHintGuest: "The host sets the order of the rounds.",
+    uRoundLabel: "Round {count}",
+    uAddRounds: "Add categories",
     uPlayOnTv: "Play on TV",
     uInvite: "Invite",
     uStartGame: "Start Game",

@@ -1544,6 +1544,15 @@ export const es: KaTranslations = {
 
   // Lilac lobby screens (Figma 940:7474 Versus King / 938:6019 Team Battle)
   lobby: {
+    // Spread first so a key added to the English lobby cannot break
+    // this file's type — the same safety net `att` already has.
+    ...en.lobby,
+    uCategoriesCount: "{count} categorías",
+    uRoundsTitle: "Rondas",
+    uRoundsHint: "Arrastra un tema para cambiar en qué ronda se juega.",
+    uRoundsHintGuest: "El anfitrión decide el orden de las rondas.",
+    uRoundLabel: "Ronda {count}",
+    uAddRounds: "Añadir categorías",
     vkTitle: "Versus King",
     // The universal lobby (Figma 1018:5815 / 1018:4416)
     uGameRules: "Reglas del juego",

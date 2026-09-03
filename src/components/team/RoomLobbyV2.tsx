@@ -41,6 +41,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { UniversalLobby, type LobbyPlayer, type LobbyRuleRow } from "@/components/lobby/UniversalLobby";
+import { RoundOrderModal } from "@/components/team/RoundOrderModal";
 import { classicLobbyScene } from "@/utils/lobbyScene";
 import { roomVisibilityFields } from "@/utils/roomVisibility";
 import { dealtRoomIcon, fetchCrestPool } from "@/utils/roomCrests";
@@ -213,6 +214,11 @@ export function RoomLobbyV2() {
 
   const { matches } = useRoomMatchHistory(currentRoom?.id || null);
   const { queue, addToQueue, removeFromQueue, reorderQueue } = useRoomCategoryQueue(currentRoom?.id || null);
+  // The queue, made visible. More than one category has always been queueable
+  // — the picker takes several at once and each becomes a round — but the chip
+  // showed the room's single category_name, so three queued topics read as
+  // one, and reorderQueue/removeFromQueue were never called by anything.
+  const [showRoundOrder, setShowRoundOrder] = useState(false);
 
   // Play sound when new participant joins
   useEffect(() => {
@@ -810,11 +816,27 @@ export function RoomLobbyV2() {
       onBack={handleExitRoom}
       unreadCount={unreadCount}
       category={{
+        // One queued topic still reads as itself; several read as how many,
+        // because no chip can carry three names and the count is the thing
+        // worth knowing at a glance.
         label:
-          (justReturnedFromResults && !madeNewSelection && queue.length === 0)
-            ? t("lobby.uSelectCategory")
-            : currentRoom.category_name || t("lobby.uSelectCategory"),
-        onPress: isHost ? () => { setStartAfterPick(false); setShowCategoryPicker(true); } : undefined,
+          queue.length > 1
+            ? t("lobby.uCategoriesCount", { count: queue.length })
+            : queue.length === 1
+              ? queue[0].category_name || t("lobby.uSelectCategory")
+              : (justReturnedFromResults && !madeNewSelection)
+                ? t("lobby.uSelectCategory")
+                : currentRoom.category_name || t("lobby.uSelectCategory"),
+        // With rounds queued the chip opens them — the order is the thing you
+        // came to change. With none it opens the picker, as it always did.
+        // A guest can read the order but not set it, so the chip still opens
+        // for them once there is something to read.
+        onPress:
+          queue.length > 1
+            ? () => setShowRoundOrder(true)
+            : isHost
+              ? () => { setStartAfterPick(false); setShowCategoryPicker(true); }
+              : undefined,
       }}
       tv={isHost ? { label: t("lobby.uPlayOnTv"), onPress: () => setIsTVModeEnabled(true) } : undefined}
       labels={{
@@ -1039,6 +1061,21 @@ export function RoomLobbyV2() {
         currentIconUrl={roomFace}
         roomName={roomName}
         onConfirm={handleUpdateRoomIconAndName}
+      />
+
+      {/* The rounds, in the order they play. */}
+      <RoundOrderModal
+        open={showRoundOrder}
+        onClose={() => setShowRoundOrder(false)}
+        items={queue}
+        canEdit={isHost}
+        onReorder={reorderQueue}
+        onRemove={removeFromQueue}
+        onAdd={() => {
+          setShowRoundOrder(false);
+          setStartAfterPick(false);
+          setShowCategoryPicker(true);
+        }}
       />
 
       {/* Category Picker Modal */}
