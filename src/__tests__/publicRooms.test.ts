@@ -373,8 +373,9 @@ describe("the public list", () => {
     expect(section).toMatch(/event: "UPDATE",\s*schema: "public",\s*table: "room_join_requests",\s*filter: `user_id=eq\.\$\{user\.id\}`/);
     expect(section).toMatch(/row\.status !== "approved"[^]*?walkedInRef\.add\(row\.id\)/);
     expect(section).toMatch(/navigate\(publicRoomPath\(target\)\)/);
-    // 15% shorter than the private tab's shape, the ratio carrying it.
-    expect(section).toMatch(/min-h-\[184px\] aspect-\[1\.7\/1\] md:aspect-\[1\.35\/1\]/);
+    // Mobile is ~10% taller than the first pass (owner's ask — the strip
+    // read too small on a phone); desktop keeps its ratio.
+    expect(section).toMatch(/min-h-\[202px\] aspect-\[1\.55\/1\] md:aspect-\[1\.35\/1\]/);
   });
 
   it("filters by game too: battles are the arenas, rooms are everything else", () => {
