@@ -1766,6 +1766,9 @@ export const ka = {
     championsPlaying: "ჩემპიონები ფიქრობენ…",
     youWon: "შენმა გუნდმა მოიგო!",
     youLost: "შენმა გუნდმა წააგო",
+    playedWith: "ვისთან ითამაშე",
+    addFriend: "დამატება",
+    friendRequested: "გაიგზავნა",
     finalScore: "საბოლოო ანგარიში {a} : {b}",
   },
 

@@ -1480,6 +1480,9 @@ export const pt: KaTranslations = {
     championsPlaying: "Os campeões estão pensando…",
     youWon: "Sua equipe venceu!",
     youLost: "Sua equipe perdeu",
+    playedWith: "Jogou com",
+    addFriend: "Adicionar",
+    friendRequested: "Enviado",
     finalScore: "Placar final {a} : {b}",
   },
   king: {
