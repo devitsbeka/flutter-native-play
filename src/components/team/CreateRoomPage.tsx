@@ -1631,8 +1631,14 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                       </span>
                     </div>
                   )}
+                  {/* 10 design-px above the frame's own 78.86%: a title and a
+                      blurb that wraps to two lines — which several languages
+                      do where the English is one — used to sit on the card's
+                      bottom edge. Written in --u so it stays 10px at the
+                      designed width and scales with the card like every other
+                      measure here. */}
                   <div
-                    className="absolute left-[calc(39*var(--u))] right-[calc(20*var(--u))] top-[78.86%] z-20"
+                    className="absolute left-[calc(39*var(--u))] right-[calc(20*var(--u))] top-[calc(78.86%_-_10*var(--u))] z-20"
                   >
                     {/* The title runs to the card's edge: a Georgian or German
                         title is longer than the English the frame was set in. */}
