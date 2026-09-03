@@ -294,6 +294,51 @@ function TeamContentV2() {
   // sidebar can sit exactly below it.
   const headerRef = useRef<HTMLDivElement | null>(null);
   const [headerHeight, setHeaderHeight] = useState(64);
+  /**
+   * The title and the friends reel ride the scroll; the tabs and filter stay.
+   *
+   * Both rows were pinned, so a third of the screen was chrome no matter how
+   * far down the list you were. Only the controls earn that space: the tabs
+   * and the filter are what you reach for while scanning rooms, and the page's
+   * own name is not. So the header retracts on the way down and comes back the
+   * moment you scroll up — where you are heading is the thing that decides.
+   *
+   * Both rows move by transform rather than by changing the sticky `top`,
+   * which cannot be animated: the header slides out by its own height and the
+   * tab row, pinned at that height, is carried the same distance so it lands
+   * flush against the top. Transforms do not touch layout, so the list behind
+   * them never reflows while it animates.
+   */
+  const [headerCollapsed, setHeaderCollapsed] = useState(false);
+  useEffect(() => {
+    const scroller = document.getElementById("main-scroll-container");
+    if (!scroller) return;
+    let last = scroller.scrollTop;
+    let frame = 0;
+    const onScroll = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        const y = scroller.scrollTop;
+        const delta = y - last;
+        // Small movements accumulate rather than toggling: a few pixels of
+        // rubber-banding or a thumb resting on the glass should not flip it.
+        if (Math.abs(delta) < 6) return;
+        last = y;
+        // Above the fold the header always belongs on screen, whichever way
+        // the last gesture went.
+        if (y <= headerHeight) setHeaderCollapsed(false);
+        else setHeaderCollapsed(delta > 0);
+      });
+    };
+    scroller.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      scroller.removeEventListener("scroll", onScroll);
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, [headerHeight]);
+  const chromeShift = headerCollapsed ? `translateY(-${headerHeight}px)` : "translateY(0)";
+  const CHROME_EASE = "transform 320ms cubic-bezier(0.22, 0.61, 0.36, 1)";
   useEffect(() => {
     const el = headerRef.current;
     if (!el) return;
@@ -1047,7 +1092,11 @@ function TeamContentV2() {
       {/* Full-width header - spans above the right sidebar too, icons on the
           right like every other page header; the friends reel rides the same
           row on md+ so it sits as high as possible */}
-      <div ref={headerRef} className="sticky top-0 z-30 bg-background/95 backdrop-blur-md border-b border-border/30">
+      <div
+        ref={headerRef}
+        className="sticky top-0 z-30 bg-background/95 backdrop-blur-md border-b border-border/30 will-change-transform"
+        style={{ transform: chromeShift, transition: CHROME_EASE }}
+      >
         {/* The same header as every other page: the page's name on the left,
             no back arrow, actions on the right. It replaces a row that led
             with the wordmark on mobile and the title only on lg+, so the
@@ -1074,7 +1123,10 @@ function TeamContentV2() {
         {/* Main Content Area */}
         <div id="team-main-content" className="flex-1 flex flex-col pb-[calc(var(--bottom-nav-height)_+_var(--safe-bottom)_+_1rem)] lg:pb-0 bg-background min-w-0">
           {/* STICKY: Tabs - sits below the page header */}
-          <div className="sticky z-20 bg-background/95 backdrop-blur-md w-full max-w-full" style={{ top: headerHeight }}>
+          <div
+            className="sticky z-20 bg-background/95 backdrop-blur-md w-full max-w-full will-change-transform"
+            style={{ top: headerHeight, transform: chromeShift, transition: CHROME_EASE }}
+          >
               {/* Unified Tab Bar - compact left-aligned tabs on md+, with the
                   create button pinned to the right edge of the same row;
                   mobile keeps full-width equal tabs (create stays in the
