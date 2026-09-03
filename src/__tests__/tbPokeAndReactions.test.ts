@@ -67,34 +67,67 @@ describe("the poke", () => {
 });
 
 describe("the icons", () => {
-  it("spectators send the spotlight an icon; the inbox reads it back after the turn", () => {
-    expect(match).toMatch(/<ReactionBar roomId=\{room\.id\} toUserId=\{player\.user_id\} \/>/);
-    expect(match).toMatch(/const onSpot = state\.phase === "rapid_fire" && state\.active_player === user\?\.id;/);
-    expect(match).toMatch(/!onSpot && inbox\.items\.length > 0/);
-    const bar = read("src/components/team-battle/ReactionBar.tsx");
-    expect(bar).toMatch(/<RoomIconPickerModal[^]*?iconOnly/);
-    expect(bar).toMatch(/rememberRecentIcon\(icon\)/);
+  it("they travel on the match's own channel, not through a table", () => {
+    // There WAS a table, `room_reactions`, with row-level rules about who
+    // may send to whom. It never existed anywhere it mattered: migrations
+    // here land by hand, one paste at a time, and until that paste happens
+    // PostgREST answers every insert with "relation does not exist" — so
+    // the feature shipped and every icon anyone tapped did nothing at all.
+    //
+    // A reaction is read once, by one person, minutes after it is sent, and
+    // then never again. That is a message, and the match already has a
+    // message channel.
+    const ctx = read("src/contexts/TeamBattleContext.tsx");
+    expect(ctx).toMatch(/\.on\("broadcast", \{ event: "reaction" \}/);
+    expect(ctx).toMatch(/const sendReaction = useCallback\(/);
+    expect(ctx).toMatch(/event: "reaction",/);
+    // A fresh game forgets the last one's.
+    expect(ctx).toMatch(/setReactions\(\[\]\);/);
+
+    // Code, not prose — the module's header explains the table it replaced.
     const hook = read("src/hooks/useRoomReactions.ts");
-    expect(hook).toMatch(/\.from\("room_reactions"\)\s*\.insert\(/);
-    expect(hook).toMatch(/filter: `to_user_id=eq\.\$\{meId\}`/);
+    expect(hook).not.toMatch(/from "@\/integrations\/supabase/);
+    expect(hook).not.toMatch(/\.from\("room_reactions"\)/);
+    // And nothing anywhere still reaches for the table.
+    expect(read("src/integrations/supabase/types.ts")).not.toMatch(/room_reactions/);
+    expect(read(".github/workflows/pr-checks.yml")).not.toMatch(/room-reactions/);
   });
 
-  it("a send that fails says so", () => {
-    // Until 20260927100000 is applied the table does not exist and every tap
-    // did nothing at all, with nothing on screen to say why — and the toast
-    // that would have said it is suppressed app-wide.
+  it("the row is dealt fresh each game, with what you have sent at the front", () => {
+    // It used to be read out of localStorage — "recently used", forever —
+    // so the same six icons greeted the same player every match they ever
+    // played.
     const bar = read("src/components/team-battle/ReactionBar.tsx");
-    expect(bar).toMatch(/setFailed\(true\);/);
-    expect(bar).toMatch(/setTimeout\(\(\) => setFailed\(false\), 4000\)/);
-    expect(bar).toMatch(/failed \? t\("teamBattle\.iconSendFailed"\) : t\("teamBattle\.sendIcon"\)/);
+    expect(bar).toMatch(/function dealIcons\(pool: readonly string\[\], count: number\)/);
+    expect(bar).toMatch(/const row = \[\.\.\.sent, \.\.\.dealt\.filter\(\(d\) => !sent\.includes\(d\)\)\]/);
+    const hook = read("src/hooks/useRoomReactions.ts");
+    expect(hook).not.toMatch(/localStorage\.(get|set)Item/);
+    expect(hook).toMatch(/export function useSentIcons\(\)/);
   });
 
-  it("the table is guarded by seat and wired into CI", () => {
-    const mig = read("supabase/migrations/20260927100000_room_reactions.sql");
-    expect(mig).toMatch(/from_user_id = auth\.uid\(\)[^]*?from_user_id <> to_user_id/);
-    expect(mig).toMatch(/ALTER PUBLICATION supabase_realtime ADD TABLE public\.room_reactions/);
-    expect(read(".github/workflows/pr-checks.yml")).toMatch(/14-room-reactions\.sql/);
-    expect(read("src/integrations/supabase/types.ts")).toMatch(/room_reactions: \{/);
+  it("the button says send, because the pick leaves the screen", () => {
+    const picker = read("src/components/team/RoomIconPickerModal.tsx");
+    expect(picker).toMatch(/confirmLabel\?: string;/);
+    expect(picker).toMatch(/\{confirmLabel \?\? t\("extra\.ripSelect"\)\}/);
+    expect(read("src/components/team-battle/ReactionBar.tsx")).toMatch(
+      /confirmLabel=\{t\("teamBattle\.sendIconAction"\)\}/,
+    );
+    for (const lang of ["en", "ka", "de", "es", "fr", "it", "pt"]) {
+      expect(read(`src/locales/${lang}.ts`), lang).toMatch(/sendIconAction: "/);
+    }
+  });
+
+  it("the inbox reads one at a time, and says who sent it", () => {
+    // A wrapped row of six was a pile of stickers with no sender attached to
+    // any of them. One card, one face, one name; closing it brings the next.
+    expect(match).toMatch(/<ReactionBar toUserId=\{player\.user_id\} \/>/);
+    expect(match).toMatch(/const onSpot = state\.phase === "rapid_fire" && state\.active_player === user\?\.id;/);
+    expect(match).toMatch(/!onSpot && inbox\.next/);
+    const bar = read("src/components/team-battle/ReactionBar.tsx");
+    expect(bar).toMatch(/<SmartAvatar avatarUrl=\{who\?\.avatar_url \?\? null\}/);
+    expect(bar).toMatch(/remaining > 1 &&/);
+    const hook = read("src/hooks/useRoomReactions.ts");
+    expect(hook).toMatch(/next: items\[0\] \?\? null/);
   });
 });
 

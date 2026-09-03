@@ -1728,6 +1728,7 @@ export const en: KaTranslations = {
     pokeSent: "Called them",
     pokeNotifTitle: "{name} is calling you — the clock is running!",
     sendIcon: "Send an icon",
+    sendIconAction: "Send",
     callOut: "Pick an answer!",
     iconSendFailed: "Couldn't send",
     iconsForYou: "Sent to you",

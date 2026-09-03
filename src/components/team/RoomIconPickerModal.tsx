@@ -83,6 +83,13 @@ interface RoomIconPickerModalProps {
    * seat count, and 12 is what fits there without truncating.
    */
   nameMaxLength?: number;
+  /**
+   * What the green button says. "Select" is right when the sheet sets
+   * something that then stays set — a room's icon, a team's crest. It is
+   * wrong when the pick leaves the screen the moment it is pressed: sending
+   * an icon to a teammate is a send, and the button should say so.
+   */
+  confirmLabel?: string;
 }
 
 /**
@@ -116,6 +123,7 @@ export function RoomIconPickerModal({
   iconOnly = false,
   autoName = true,
   nameMaxLength = 35,
+  confirmLabel,
 }: RoomIconPickerModalProps) {
   const { t, language } = useLanguage();
   const ICON_CATEGORIES = ICON_CATEGORIES_DATA.map(c => ({ ...c, label: t(`extra.${c.key}`) }));
@@ -695,7 +703,7 @@ export function RoomIconPickerModal({
                 variant="success"
               >
                 <Check className="w-5 h-5 mr-2" />
-                {t("extra.ripSelect")}
+                {confirmLabel ?? t("extra.ripSelect")}
               </ChunkyButton>
             </div>
           </div>

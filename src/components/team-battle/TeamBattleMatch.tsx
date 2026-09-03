@@ -221,22 +221,27 @@ function ScoreHeader({ seconds, maxSeconds }: { seconds?: number; maxSeconds?: n
 }
 
 export function TeamBattleMatch({ onResultDismiss }: { onResultDismiss?: () => void }) {
-  const { state, room, participants } = useTeamBattle();
+  const { state, participants, reactions } = useTeamBattle();
   const { user } = useAuth();
   // Icons sent to me during my turn, held until the turn is over: the
   // inbox lives here, above the phases, so it survives the phase switch
   // that is exactly when it gets read.
-  const inbox = useIncomingReactions(room?.id, user?.id);
+  const inbox = useIncomingReactions(reactions, user?.id);
   const senders = useMemo(
     () => new Map(participants.map((p) => [p.user_id, { nickname: p.nickname, avatar_url: p.avatar_url }])),
     [participants],
   );
   if (!state) return null;
   const onSpot = state.phase === "rapid_fire" && state.active_player === user?.id;
-  const strip = !onSpot && inbox.items.length > 0 && (
+  const strip = !onSpot && inbox.next && (
     <div className="fixed inset-x-0 z-30 flex justify-center pointer-events-none" style={{ top: "calc(var(--safe-top) + 4.5rem)" }}>
       <div className="w-full max-w-[520px] pointer-events-auto">
-        <ReactionInbox items={inbox.items} senders={senders} onDismiss={inbox.dismiss} />
+        <ReactionInbox
+          next={inbox.next}
+          remaining={inbox.remaining}
+          senders={senders}
+          onDismiss={inbox.dismiss}
+        />
       </div>
     </div>
   );
@@ -856,7 +861,7 @@ function PhaseRapidFire() {
             a cheer from their side, a jab from the other. It waits in
             their inbox until the turn is over. */}
         {!isSpotlight && !isBotTurn && room && player && (
-          <ReactionBar roomId={room.id} toUserId={player.user_id} />
+          <ReactionBar toUserId={player.user_id} />
         )}
       </div>
     </div>
