@@ -312,10 +312,10 @@ describe("the public list", () => {
     // right now — a sleeping room's button carries none.
     expect(section).toMatch(/const live = online\.has\(room\.host_user_id\) \|\| players\.some/);
     expect(section).toMatch(/\{live && \(/);
-    // One game at a time: a pending ask is withdrawable from the card, and
-    // asking at another door takes the old ask back first.
+    // One door at a time: a pending ask is withdrawable from the card, and
+    // until it is, no other room's join can be pressed (see "one door at a
+    // time" below — the old silent take-back moved the ask on a mis-tap).
     expect(section).toMatch(/onWithdraw\(room\)/);
-    expect(section).toMatch(/\.neq\("room_id", room\.id\)/);
     const sql = read("supabase/migrations/20260926100000_withdraw_join_request.sql");
     expect(sql).toMatch(/FOR DELETE/);
     expect(sql).toMatch(/user_id = auth\.uid\(\) AND status = 'pending'/);
@@ -353,7 +353,7 @@ describe("the public list", () => {
     ]);
   });
 
-  it("a full room I'm in comes before everything — it is ready to play", () => {
+  it("the room I asked to join is first, then a full room I'm in", () => {
     const rooms = [
       room({ id: "friends-full", host_user_id: "f1", game_type_key: "team_battle", max_players: 4, player_count: 4, created_at: "2026-06-05T00:00:00Z" }),
       room({ id: "waiting-on", host_user_id: "s4", my_state: "pending", created_at: "2026-06-04T00:00:00Z" }),
@@ -361,8 +361,8 @@ describe("the public list", () => {
       room({ id: "im-in-full", host_user_id: "s2", my_state: "joined", game_type_key: "team_battle", max_players: 4, player_count: 4, created_at: "2026-06-01T00:00:00Z" }),
     ];
     expect(sortPublicRooms(rooms, new Set(["f1"])).map((r) => r.id)).toEqual([
-      "im-in-full",
       "waiting-on",
+      "im-in-full",
       "mine-empty",
       "friends-full",
     ]);
@@ -520,6 +520,38 @@ describe("a knock shows on the host's card, and back leads to the online-game pa
     const battle = read("src/pages/TeamBattlePage.tsx");
     expect(battle).toMatch(/onBack=\{\(\) => \{[^]*?navigate\("\/team"\);[^]*?void leaveRoom\(\);/);
     expect(battle).not.toMatch(/onBack=\{\(\) => \{[^]*?navigate\("\/"\);/);
+  });
+});
+
+describe("one door at a time", () => {
+  it("an ask waiting elsewhere blocks every other join until it is withdrawn", () => {
+    const section = read("src/components/team/PublicRoomsSection.tsx");
+    expect(section).toMatch(/const waitingRoomId = \(data \?\? \[\]\)\.find\(\(r\) => r\.my_state === "pending"\)\?\.id \?\? null;/);
+    expect(section).toMatch(/blocked=\{!!waitingRoomId && waitingRoomId !== room\.id\}/);
+    expect(section).toMatch(/disabled=\{busy \|\| waiting \|\| blocked\}/);
+    // And the ask itself refuses, so the card body's tap explains why
+    // instead of silently moving the ask to another room.
+    expect(section).toMatch(/toast\.error\(t\("extra\.joinOneAtATime"\)\);\s*return;/);
+    expect(section).not.toMatch(/\.eq\("status", "pending"\)\s*\.neq\("room_id", room\.id\)/);
+    for (const lang of ["ka", "en", "de", "es", "fr", "it", "pt"]) {
+      expect(read(`src/locales/${lang}.ts`)).toMatch(/joinOneAtATime: "/);
+    }
+  });
+
+  it("the ask I am waiting on is the first card, even if its couch went quiet", () => {
+    const rooms = [
+      room({ id: "alive-stranger", host_user_id: "here", created_at: "2026-06-01T00:00:00Z" }),
+      room({ id: "waiting-on", host_user_id: "ghost", my_state: "pending", created_at: "2026-01-01T00:00:00Z" }),
+    ];
+    const ctx = {
+      seatedByRoom: new Map([["waiting-on", ["ghost"]], ["alive-stranger", ["here"]]]),
+      onlineIds: new Set(["here"]),
+      friendIds: new Set<string>(),
+    };
+    expect(sortPublicRooms(rooms, new Set(), ctx).map((r) => r.id)).toEqual([
+      "waiting-on",
+      "alive-stranger",
+    ]);
   });
 });
 

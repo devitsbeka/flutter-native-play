@@ -2453,6 +2453,7 @@ export const ka = {
     roomNoCategoryYet: "კატეგორია ჯერ არ არის არჩეული",
     joinWaitingHost: "ველოდებით",
     withdrawJoin: "გაუქმება",
+    joinOneAtATime: "ჯერ გააუქმე მიმდინარე მოთხოვნა",
     joinApprovedTitle: "მოთხოვნა მიღებულია",
     joinDeclinedTitle: "მოთხოვნა უარყოფილია",
     joinApprovedBody: "ჰოსტმა შეგიშვა — შედი ოთახში",

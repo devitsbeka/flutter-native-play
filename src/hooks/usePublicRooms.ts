@@ -151,14 +151,15 @@ export function roomSeats(room: Pick<PublicRoom, "game_type_key" | "max_players"
  * The Public tab's order — the owner's priorities: get people into a game
  * quickly, and lose no room.
  *
- * First, a room I'm in whose every seat is taken: it is ready to play and
- * I am one of the players, so nothing on this tab matters more. Then the
- * room I'm WAITING on (one game at a time — that ask is the thing I'm
- * doing), then my other rooms (hosted, and ones I sit in), then my
- * friends' rooms, then everyone else's. Within each group, the room
- * closest to filling comes first — a couch needing one more player starts
- * sooner than one waiting on eight — with full rooms (nothing to join) and
- * un-capped rooms after, newest first as the tie-break.
+ * The room I ASKED to join is the first card, always: I am waiting on that
+ * host's answer, it is the one thing I am doing on this tab, and the way
+ * to take it back rides on that card. Then a room I'm in whose every seat
+ * is taken (ready to play), my other rooms, my friends' rooms, everyone
+ * else's — and a room whose whole couch has closed the app goes to the
+ * very back whoever owns it. Within each group the room closest to filling
+ * comes first: a couch needing one more player starts sooner than one
+ * waiting on eight, with full rooms and un-capped rooms after, newest
+ * first as the tie-break.
  */
 export function sortPublicRooms(
   rooms: PublicRoom[],
@@ -181,11 +182,13 @@ export function sortPublicRooms(
     return !people.some((id) => ctx.onlineIds.has(id));
   };
   const tier = (r: PublicRoom) =>
-    dead(r)
-      ? 9
-      : mine(r) && full(r)
-        ? 0
-        : r.my_state === "pending"
+    // Checked before `dead`: my own ask stays the first card even if the
+    // room's couch stepped away while I was waiting on the answer.
+    r.my_state === "pending"
+      ? 0
+      : dead(r)
+        ? 9
+        : mine(r) && full(r)
           ? 1
           : mine(r)
             ? 2

@@ -2119,6 +2119,7 @@ export const fr: KaTranslations = {
     roomNoCategoryYet: "Aucune catégorie choisie",
     joinWaitingHost: "En attente",
     withdrawJoin: "Retirer",
+    joinOneAtATime: "Annule d'abord ta demande en attente",
     joinApprovedTitle: "Demande acceptée",
     joinDeclinedTitle: "Demande refusée",
     joinApprovedBody: "L'hôte t'a accepté — touche pour entrer",

@@ -98,6 +98,7 @@ function PublicRoomCard({
   players,
   crests,
   online,
+  blocked = false,
   knocks = 0,
   index,
   onAsk,
@@ -111,6 +112,11 @@ function PublicRoomCard({
   crests?: { a: string | null; b: string | null };
   /** Who, of everyone on this list, is in the app right now. */
   online: ReadonlySet<string>;
+  /**
+   * An ask on ANOTHER room is still waiting: this one's join is off until
+   * that one is withdrawn. One door at a time.
+   */
+  blocked?: boolean;
   /** People knocking on this room — the host's, and only the host sees it. */
   knocks?: number;
   index: number;
@@ -164,6 +170,7 @@ function PublicRoomCard({
       animate={{ opacity: 1, y: 0 }}
       className="relative rounded-2xl overflow-hidden shadow-lg"
       onClick={() => (inside ? enter() : onAsk(room))}
+      aria-disabled={blocked || undefined}
     >
       {/* The private tab's card proportions (MyRoomsSection): the same
           shape on both tabs, and taller than the strip this used to be. */}
@@ -387,7 +394,7 @@ function PublicRoomCard({
             <motion.button
               type="button"
               whileTap={{ scale: 0.96 }}
-              disabled={busy || waiting}
+              disabled={busy || waiting || blocked}
               onClick={(e) => {
                 e.stopPropagation();
                 if (inside) enter();
@@ -698,21 +705,22 @@ export function PublicRoomsSection({
     }
   };
 
+  // The one room I am waiting on, if any: the sort puts it first and every
+  // other card's join is off until it is withdrawn.
+  const waitingRoomId = (data ?? []).find((r) => r.my_state === "pending")?.id ?? null;
+
   const ask = async (room: PublicRoom) => {
     if (busyId) return;
     setBusyId(room.id);
     try {
-      // One game at a time: asking here takes back any ask still waiting
-      // on another door. (RLS only lets the asker delete their own
-      // PENDING rows — see 20260926100000 — so an answered request keeps
-      // its answer.)
-      if (user && (data ?? []).some((r) => r.my_state === "pending" && r.id !== room.id)) {
-        await supabase
-          .from("room_join_requests")
-          .delete()
-          .eq("user_id", user.id)
-          .eq("status", "pending")
-          .neq("room_id", room.id);
+      // One door at a time, and the player closes it themselves: an ask
+      // already waiting on another room has to be withdrawn (the X on its
+      // card, which the sort keeps at the top) before knocking here. It
+      // used to be taken back silently, which meant a mis-tap moved the
+      // player's ask off the room they were actually waiting for.
+      if ((data ?? []).some((r) => r.my_state === "pending" && r.id !== room.id)) {
+        toast.error(t("extra.joinOneAtATime"));
+        return;
       }
       const { data: outcome, error } = await supabase.rpc("request_room_join", {
         p_room_id: room.id,
@@ -804,6 +812,7 @@ export function PublicRoomsSection({
           online={onlineIds}
           knocks={knocksByRoom?.get(room.id) ?? 0}
           index={i}
+          blocked={!!waitingRoomId && waitingRoomId !== room.id}
           onAsk={(r) => void ask(r)}
           onWithdraw={(r) => void withdraw(r)}
           onRemove={setRemoving}

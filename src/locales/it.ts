@@ -2132,6 +2132,7 @@ export const it: KaTranslations = {
     roomNoCategoryYet: "Nessuna categoria scelta",
     joinWaitingHost: "In attesa",
     withdrawJoin: "Ritira",
+    joinOneAtATime: "Annulla prima la richiesta in attesa",
     joinApprovedTitle: "Richiesta accettata",
     joinDeclinedTitle: "Richiesta rifiutata",
     joinApprovedBody: "L'host ti ha fatto entrare — tocca per entrare",
