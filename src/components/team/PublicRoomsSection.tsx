@@ -182,7 +182,7 @@ function PublicRoomCard({
       {/* 15% shorter than the private tab's proportions (owner's call): the
           height is set by the aspect ratio, so the ratio grows by 1/0.85 and
           the floor comes down with it. */}
-      <div className="relative p-3 min-h-[184px] aspect-[1.7/1] md:aspect-[1.35/1] flex flex-col rounded-2xl overflow-hidden">
+      <div className="relative p-3 min-h-[202px] aspect-[1.55/1] md:aspect-[1.35/1] flex flex-col rounded-2xl overflow-hidden">
         {scene ? (
           <>
             {/* The arena, dimmed to a backdrop: the pale lilac scene at
@@ -385,8 +385,8 @@ function PublicRoomCard({
                 caption above it was noise (owner's call) — a picked round
                 wears its category's icon, an unpicked one the library's
                 mystery box, the same face the picker gives "mixed". */}
-            <DynamicIcon slug={categoryIcon} className="w-6 h-6 shrink-0" />
-            <p className={`text-sm font-semibold truncate leading-tight ${ink.text}`}>
+            <DynamicIcon slug={categoryIcon} className="w-[26px] h-[26px] shrink-0" />
+            <p className={`text-[15px] font-semibold truncate leading-tight ${ink.text}`}>
               {category || t("extra.cpMixedCategory")}
             </p>
           </div>
