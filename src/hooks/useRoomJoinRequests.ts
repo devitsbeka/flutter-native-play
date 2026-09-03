@@ -12,6 +12,108 @@ import { useAuth } from "@/contexts/AuthContext";
  * the table has no client write policy at all, which is what stops an asker
  * approving themselves.
  */
+/**
+ * Every knock on every room I host, wherever I am in the app.
+ *
+ * The read is simply "all pending requests": the table's policy already
+ * scopes a host to their own rooms' rows, so what comes back IS mine. Each
+ * one carries the room it is for — the code and the game — so answering
+ * yes can walk the host into that room from wherever they were standing.
+ */
+export interface HostJoinRequest extends PendingJoinRequest {
+  room_code: string | null;
+  game_type_key: string | null;
+  game_mode: string | null;
+  /** The arena only: which side the host is on, for the "with me" picker. */
+  host_team: "a" | "b" | null;
+}
+
+export function useHostJoinRequests() {
+  const { user } = useAuth();
+  const [pending, setPending] = useState<HostJoinRequest[]>([]);
+
+  const load = useCallback(async () => {
+    if (!user) {
+      setPending([]);
+      return;
+    }
+    const { data, error } = await supabase
+      .from("room_join_requests")
+      .select("id, room_id, user_id, created_at")
+      .eq("status", "pending")
+      .order("created_at", { ascending: true });
+    if (error || !data || data.length === 0) {
+      setPending([]);
+      return;
+    }
+    const roomIds = [...new Set(data.map((r) => r.room_id))];
+    const [{ data: profiles }, { data: rooms }, { data: mySeats }] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("user_id, nickname, avatar_url")
+        .in("user_id", data.map((r) => r.user_id)),
+      supabase
+        .from("game_rooms")
+        .select("id, room_code, game_type_key, game_mode, host_user_id")
+        .in("id", roomIds),
+      supabase
+        .from("room_participants")
+        .select("room_id, team")
+        .eq("user_id", user.id)
+        .in("room_id", roomIds),
+    ]);
+    // Belt for the policy's braces: only rooms this player actually hosts.
+    const roomById = new Map((rooms ?? []).filter((r) => r.host_user_id === user.id).map((r) => [r.id, r]));
+    const byId = new Map((profiles ?? []).map((p) => [p.user_id, p]));
+    const teamByRoom = new Map((mySeats ?? []).map((s) => [s.room_id, s.team]));
+    setPending(
+      data
+        .filter((r) => roomById.has(r.room_id))
+        .map((r) => {
+          const room = roomById.get(r.room_id)!;
+          const team = teamByRoom.get(r.room_id);
+          return {
+            id: r.id,
+            room_id: r.room_id,
+            user_id: r.user_id,
+            created_at: r.created_at,
+            nickname: byId.get(r.user_id)?.nickname ?? "Player",
+            avatar_url: byId.get(r.user_id)?.avatar_url ?? null,
+            room_code: room.room_code,
+            game_type_key: room.game_type_key,
+            game_mode: room.game_mode,
+            host_team: room.game_type_key === "team_battle" && (team === "a" || team === "b") ? team : null,
+          };
+        }),
+    );
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) {
+      setPending([]);
+      return;
+    }
+    void load();
+    // No room filter: a host may be watching several doors at once, and
+    // the policy is what decides which rows reach this device.
+    const channel = supabase
+      .channel(`join-requests-host-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "room_join_requests" },
+        () => {
+          void load();
+        },
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [user, load]);
+
+  return { pending, reload: load };
+}
+
 export interface PendingJoinRequest {
   id: string;
   room_id: string;
@@ -33,6 +135,8 @@ export async function answerJoinRequest(
   roomId: string,
   requesterId: string,
   approve: boolean,
+  /** The arena only: which side an approved player lands on. */
+  team?: "a" | "b",
 ): Promise<"approved" | "declined" | "gone"> {
   const { data: req } = await supabase
     .from("room_join_requests")
@@ -45,9 +149,20 @@ export async function answerJoinRequest(
   const { error } = await supabase.rpc("respond_room_join", {
     p_request_id: req.id,
     p_approve: approve,
+    ...(approve && team ? { p_team: team } : {}),
   });
   if (error) throw error;
   return approve ? "approved" : "declined";
+}
+
+/** Shut the door for good, from anywhere — see block_room_join. */
+export async function blockJoinRequest(requestId: string): Promise<boolean> {
+  const { error } = await supabase.rpc("block_room_join", { p_request_id: requestId });
+  if (error) {
+    console.error("[joinRequests] block failed", error);
+    return false;
+  }
+  return true;
 }
 
 export function useRoomJoinRequests(roomId: string | null | undefined, amHost: boolean) {

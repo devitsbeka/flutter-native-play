@@ -846,7 +846,8 @@ export function RoomLobbyV2() {
       }
     >
       {/* Somebody asking to come into a published room, above everything. */}
-      <JoinRequestGate roomId={currentRoom.id} isHost={isHost} />
+      {/* The doorstep is app-wide now (GlobalJoinRequestGate in App): a
+          host is rarely sitting in the lobby when somebody knocks. */}
 
       {/* The Invite line: the room's own invite sheet — friends, the link,
           the share sheet — whose picks are seated as invited. */}

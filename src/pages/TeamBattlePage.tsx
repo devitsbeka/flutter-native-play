@@ -13,7 +13,6 @@ import { containsBlockedText } from "@/utils/contentFilter";
 import { readAppLanguage } from "@/utils/appLanguage";
 import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
 import { RoomIconPickerModal } from "@/components/team/RoomIconPickerModal";
-import { JoinRequestGate } from "@/components/team/JoinRequestGate";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
@@ -842,11 +841,8 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
       }
     >
       {/* Somebody asking into this arena, when it was published */}
-      <JoinRequestGate
-        roomId={room?.id}
-        isHost={isHost}
-        hostTeam={(participants.find((p) => p.is_host)?.team as TBTeam | null) ?? undefined}
-      />
+      {/* The doorstep is app-wide now (GlobalJoinRequestGate in App), and
+          it reads the host's own side for the "with me" picker itself. */}
 
       {room && (
         <InviteFriendsModal

@@ -555,6 +555,41 @@ describe("one door at a time", () => {
   });
 });
 
+describe("the doorstep follows the host around the app", () => {
+  it("is mounted once app-wide, and the lobbies no longer own it", () => {
+    expect(read("src/App.tsx")).toMatch(/<GlobalJoinRequestGate \/>/);
+    for (const f of [
+      "src/components/team/RoomLobbyV2.tsx",
+      "src/pages/TeamBattlePage.tsx",
+      "src/pages/KingPage.tsx",
+    ]) {
+      expect(read(f)).not.toMatch(/<JoinRequestGate/);
+    }
+  });
+
+  it("watches every room the host owns and walks them in on a yes", () => {
+    const hook = read("src/hooks/useRoomJoinRequests.ts");
+    expect(hook).toMatch(/export function useHostJoinRequests\(/);
+    // No room filter on the read: the table's policy is what scopes it.
+    expect(hook).toMatch(/\.eq\("status", "pending"\)\s*\.order\("created_at"/);
+    expect(hook).toMatch(/host_user_id === user\.id/);
+    const gate = read("src/components/team/JoinRequestGate.tsx");
+    expect(gate).toMatch(/export function GlobalJoinRequestGate\(/);
+    expect(gate).toMatch(/if \(!approve \|\| outcome === "gone" \|\| !next\.room_code\) return;/);
+    expect(gate).toMatch(/navigate\(routeForRoom\(/);
+    // Already looking at that room? Then a yes changes nothing but the seat.
+    expect(gate).toMatch(/here\.toUpperCase\(\)\.includes\(next\.room_code\.toUpperCase\(\)\)/);
+  });
+
+  it("a room I host says Enter; somebody else's says it is a request", () => {
+    const section = read("src/components/team/PublicRoomsSection.tsx");
+    expect(section).toMatch(/inside \? t\("extra\.roomEnter"\) : t\("extra\.roomJoinLive"\)/);
+    for (const lang of ["ka", "en", "de", "es", "fr", "it", "pt"]) {
+      expect(read(`src/locales/${lang}.ts`)).toMatch(/roomEnter: "/);
+    }
+  });
+});
+
 describe("the doorstep names a side", () => {
   it("asks 'with me or against me' in the arena only", () => {
     const gate = read("src/components/team/JoinRequestGate.tsx");
@@ -572,13 +607,15 @@ describe("the doorstep names a side", () => {
     expect(read("src/hooks/useRoomJoinRequests.ts")).toMatch(/\.\.\.\(approve && team \? \{ p_team: team \} : \{\}\)/);
   });
 
-  it("the arena passes the host's side; the other lobbies pass nothing", () => {
-    expect(read("src/pages/TeamBattlePage.tsx")).toMatch(
-      /hostTeam=\{\(participants\.find\(\(p\) => p\.is_host\)\?\.team as TBTeam \| null\) \?\? undefined\}/,
+  it("the side is read from the host's own seat, and only for an arena", () => {
+    // The doorstep is app-wide now, so it finds the host's side itself
+    // rather than each lobby handing it down: the arena's request carries
+    // a team, the couch's and the classic room's carry null.
+    const hook = read("src/hooks/useRoomJoinRequests.ts");
+    expect(hook).toMatch(/room\.game_type_key === "team_battle" && \(team === "a" \|\| team === "b"\) \? team : null/);
+    expect(read("src/components/team/JoinRequestGate.tsx")).toMatch(
+      /hostTeam=\{next\?\.host_team \?\? undefined\}/,
     );
-    for (const file of ["src/components/team/RoomLobbyV2.tsx", "src/pages/KingPage.tsx"]) {
-      expect(read(file), file).not.toMatch(/hostTeam=/);
-    }
   });
 
   it("the RPC drops both signatures before recreating, so it re-runs clean", () => {
@@ -655,14 +692,10 @@ describe("the arena's two sides", () => {
 });
 
 describe("the host's doorstep", () => {
-  it("is mounted in every lobby that can host a published room", () => {
-    for (const file of [
-      "src/components/team/RoomLobbyV2.tsx",
-      "src/pages/KingPage.tsx",
-      "src/pages/TeamBattlePage.tsx",
-    ]) {
-      expect(read(file), file).toMatch(/<JoinRequestGate\s/);
-    }
+  it("is mounted once, app-wide, rather than per lobby", () => {
+    // A host is rarely sitting in the lobby when somebody knocks — see
+    // "the doorstep follows the host around the app".
+    expect(read("src/App.tsx")).toMatch(/<GlobalJoinRequestGate \/>/);
   });
 
   it("answers through the RPC, never by writing the request row", () => {

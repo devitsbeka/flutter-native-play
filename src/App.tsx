@@ -37,6 +37,7 @@ import { PageSkeleton } from "@/components/PageSkeleton";
 import { Navigate, useParams } from "react-router-dom";
 import { isLegalLanguage } from "@/utils/legalLanguage";
 import { OfflineBanner } from "./components/shared/OfflineBanner";
+import { GlobalJoinRequestGate } from "@/components/team/JoinRequestGate";
 import { Toaster } from "sonner";
 import { useFreshBuildGuard } from "@/hooks/useFreshBuildGuard";
 
@@ -242,6 +243,12 @@ const App = () => (
 
             {/* Offline detection banner */}
             <OfflineBanner />
+
+            {/* Somebody knocking on a room this player hosts, wherever they
+                are in the app: the same doorstep the lobby used to own, so
+                a host reading Discover still answers, and a yes walks them
+                into the room. */}
+            <GlobalJoinRequestGate />
             
             {/* Global persistent background with particles */}
             <GlobalSplineBackground />

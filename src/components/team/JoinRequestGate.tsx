@@ -4,7 +4,14 @@ import { Ban, Check, X, UserRound } from "lucide-react";
 import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
-import { useRoomJoinRequests } from "@/hooks/useRoomJoinRequests";
+import { useNavigate } from "react-router-dom";
+import { routeForRoom } from "@/utils/roomRoutes";
+import {
+  answerJoinRequest,
+  blockJoinRequest,
+  useHostJoinRequests,
+  useRoomJoinRequests,
+} from "@/hooks/useRoomJoinRequests";
 
 /**
  * The door of a published room.
@@ -38,13 +45,79 @@ export function JoinRequestGate({
    */
   hostTeam?: "a" | "b";
 }) {
+  const { pending, respond, block } = useRoomJoinRequests(roomId, isHost);
+  const next = pending[0];
+  return (
+    <JoinRequestModal
+      next={next}
+      more={pending.length - 1}
+      hostTeam={hostTeam}
+      onAccept={(team) => next && void respond(next.id, true, team)}
+      onDecline={() => next && void respond(next.id, false)}
+      onBlock={() => next && void block(next.id)}
+    />
+  );
+}
+
+/**
+ * The same doorstep, anywhere in the app.
+ *
+ * A host is rarely sitting in the lobby when somebody knocks — they are on
+ * the home screen, in Discover, halfway through their own game. This is
+ * mounted once, app-wide: it watches every room they host, shows the same
+ * modal, and a YES walks them into the room the asker just joined. A no or
+ * a block leaves them exactly where they were.
+ */
+export function GlobalJoinRequestGate() {
+  const navigate = useNavigate();
+  const { pending, reload } = useHostJoinRequests();
+  const next = pending[0];
+
+  const answer = async (approve: boolean, team?: "a" | "b") => {
+    if (!next) return;
+    const outcome = await answerJoinRequest(next.room_id, next.user_id, approve, team);
+    void reload();
+    if (!approve || outcome === "gone" || !next.room_code) return;
+    // Into the room — unless this is the room already on screen, whose URL
+    // carries its code whatever shape that page's route takes.
+    const here = `${window.location.pathname}${window.location.search}`;
+    if (here.toUpperCase().includes(next.room_code.toUpperCase())) return;
+    navigate(routeForRoom({ game_type_key: next.game_type_key, game_mode: next.game_mode }, next.room_code));
+  };
+
+  return (
+    <JoinRequestModal
+      next={next}
+      more={pending.length - 1}
+      hostTeam={next?.host_team ?? undefined}
+      onAccept={(team) => void answer(true, team)}
+      onDecline={() => void answer(false)}
+      onBlock={() => {
+        if (!next) return;
+        void blockJoinRequest(next.id).then(() => reload());
+      }}
+    />
+  );
+}
+
+function JoinRequestModal({
+  next,
+  more,
+  hostTeam,
+  onAccept,
+  onDecline,
+  onBlock,
+}: {
+  next: { id: string; user_id: string; nickname: string; avatar_url: string | null } | undefined;
+  more: number;
+  hostTeam?: "a" | "b";
+  onAccept: (team?: "a" | "b") => void;
+  onDecline: () => void;
+  onBlock: () => void;
+}) {
   const { t } = useLanguage();
   const { openProfile } = usePlayerProfile();
-  const { pending, respond, block } = useRoomJoinRequests(roomId, isHost);
-
-  const next = pending[0];
   const otherTeam: "a" | "b" | undefined = hostTeam ? (hostTeam === "a" ? "b" : "a") : undefined;
-
   // Opponent by default: a stranger asking into an arena is most often the
   // other side's missing player, and the host is one tap from the other
   // answer. Reset per request so a choice made for one asker does not
@@ -133,7 +206,7 @@ export function JoinRequestGate({
             <div className="mt-5 flex gap-2">
               <button
                 type="button"
-                onClick={() => void respond(next.id, false)}
+                onClick={onDecline}
                 className="flex-1 flex items-center justify-center gap-1.5 rounded-2xl border border-border bg-muted/60 py-3 font-bold text-foreground active:scale-[0.98] transition-transform"
               >
                 <X className="w-4 h-4" />
@@ -141,7 +214,7 @@ export function JoinRequestGate({
               </button>
               <button
                 type="button"
-                onClick={() => void respond(next.id, true, team)}
+                onClick={() => onAccept(team)}
                 className="flex-1 flex items-center justify-center gap-1.5 rounded-2xl bg-primary py-3 font-bold text-primary-foreground shadow-md active:scale-[0.98] transition-transform"
               >
                 <Check className="w-4 h-4" />
@@ -157,16 +230,16 @@ export function JoinRequestGate({
                 knocking — the room leaves their Public tab altogether. */}
             <button
               type="button"
-              onClick={() => void block(next.id)}
+              onClick={onBlock}
               className="mt-3 w-full flex items-center justify-center gap-1.5 py-2 text-xs font-semibold text-destructive/80 active:scale-[0.98] transition-transform"
             >
               <Ban className="w-3.5 h-3.5" />
               {t("extra.joinRequestBlock")}
             </button>
 
-            {pending.length > 1 && (
+            {more > 0 && (
               <p className="mt-1 text-center text-xs text-muted-foreground">
-                {t("extra.joinRequestMore", { count: pending.length - 1 })}
+                {t("extra.joinRequestMore", { count: more })}
               </p>
             )}
           </motion.div>

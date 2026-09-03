@@ -21,7 +21,6 @@ import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import { readAppLanguage } from "@/utils/appLanguage";
 import { toast } from "@/lib/toast";
 import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
-import { JoinRequestGate } from "@/components/team/JoinRequestGate";
 import { RoomIconPickerModal } from "@/components/team/RoomIconPickerModal";
 import { UniversalLobby, type LobbyPlayer } from "@/components/lobby/UniversalLobby";
 import { LOBBY_SCENES } from "@/utils/lobbyScene";
@@ -881,7 +880,7 @@ export default function KingPage() {
         }}
       >
         {/* Somebody asking onto this couch, when the lounge was published */}
-        <JoinRequestGate roomId={kingRoom?.id} isHost={isKingHost} />
+        {/* The doorstep is app-wide now — GlobalJoinRequestGate in App. */}
 
         <CaptainInfoModal
           open={captainInfoOpen}
