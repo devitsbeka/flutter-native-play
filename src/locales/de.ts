@@ -2959,6 +2959,7 @@ export const de: KaTranslations = {
     inviteSendFailed: "Einladung konnte nicht gesendet werden",
     inviteAcceptFailed: "Einladung konnte nicht angenommen werden",
     friendInvitesYouGame: "{name} lädt dich zum Spielen ein!",
+    inviteModalBody: "Lädt dich zu einem Spiel ein",
     playerFallback: "Spieler",
     friendFallback: "Freund",
     hoursShort: "{h}Std",

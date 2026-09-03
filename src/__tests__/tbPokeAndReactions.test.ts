@@ -100,13 +100,46 @@ describe("the icons", () => {
 
 describe("the invitation popup", () => {
   it("answers on the spot: Join accepts and opens the room, Decline says no", () => {
+    const gate = read("src/components/team/GameInviteGate.tsx");
+    expect(gate).toMatch(/const code = await acceptInvitation\(next\.id\);\s*if \(code\) navigate\(routeForRoom\(next\.room, code\)\);/);
+    expect(gate).toMatch(/acceptLabel=\{t\("extra\.notifJoin"\)\}/);
+    expect(gate).toMatch(/declineLabel=\{t\("extra\.notifDecline"\)\}/);
+    expect(gate).toMatch(/onDecline=\{\(\) => next && void declineInvitation\(next\.id\)\}/);
+    // The room's kind has to travel with the invitation for routeForRoom to
+    // open the arena rather than the classic lobby.
     const hook = read("src/hooks/useGameInvitations.ts");
     expect(hook).toMatch(/select\("room_code, category_name, game_type_key, game_mode"\)/);
-    expect(hook).toMatch(/actionButton: \{\s*label: tStandalone\("extra\.notifJoin"\)/);
-    expect(hook).toMatch(/const code = await acceptInvitation\(invitationId\);\s*if \(code\) navigate\(routeForRoom\(room, code\)\);/);
-    expect(hook).toMatch(/secondaryButton: \{\s*label: tStandalone\("extra\.notifDecline"\)/);
-    // The modal holds while a button is offered (no auto-dismiss timer).
-    expect(read("src/components/ui/notification-modal.tsx")).toMatch(/if \(actionButton\) return;/);
+    expect(hook).toMatch(/room:game_rooms\(room_code, category_name, game_type_key, game_mode\)/);
+  });
+
+  it("is the doorstep's card, not a second one", () => {
+    // A friend inviting you and a stranger knocking are the same question
+    // with the roles swapped; they were drawn as two different popups.
+    for (const f of [
+      "src/components/team/GameInviteGate.tsx",
+      "src/components/team/JoinRequestGate.tsx",
+    ]) {
+      expect(read(f)).toMatch(/<PersonAskModal\b/);
+    }
+    // Only the words differ.
+    expect(read("src/components/team/GameInviteGate.tsx")).toMatch(/body=\{t\("extra\.inviteModalBody"\)\}/);
+    for (const lang of ["ka", "en", "de", "es", "fr", "it", "pt"]) {
+      expect(read(`src/locales/${lang}.ts`)).toMatch(/inviteModalBody: "/);
+    }
+    // And the hook no longer raises one of its own beside it.
+    expect(read("src/hooks/useGameInvitations.ts")).not.toMatch(/friendInvitesYouGame/);
+  });
+
+  it("is mounted once, app-wide, beside the doorstep", () => {
+    expect(read("src/App.tsx")).toMatch(/<GlobalGameInviteGate \/>/);
+  });
+
+  it("leaves invitations that were already waiting to the notifications list", () => {
+    // Otherwise every launch opens a modal over the home screen for an
+    // invitation the player has already seen, until it expires.
+    const gate = read("src/components/team/GameInviteGate.tsx");
+    expect(gate).toMatch(/alreadyWaiting\.current = new Set\(pendingInvitations\.map\(\(inv\) => inv\.id\)\)/);
+    expect(gate).toMatch(/pendingInvitations\.filter\(\(inv\) => !seen\.has\(inv\.id\)\)/);
   });
 });
 

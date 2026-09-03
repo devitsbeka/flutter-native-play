@@ -1,4 +1,3 @@
-import { useNavigate } from "react-router-dom";
 import { MultiplayerProviderV2 } from "@/contexts/MultiplayerContextV2";
 import { CreateRoomPage } from "@/components/team/CreateRoomPage";
 
@@ -28,17 +27,30 @@ import { CreateRoomPage } from "@/components/team/CreateRoomPage";
  * for.
  */
 export default function CreateRoom() {
-  const navigate = useNavigate();
-
   return (
     <MultiplayerProviderV2>
       <CreateRoomPage
         // This screen IS the destination here, so it never fades in over
         // whatever happened to be behind it.
         enterInstantly
-        // Back to wherever they came from — the home screen, a mission, the
-        // drawer — rather than to a hub they were never on.
-        onClose={() => navigate(-1)}
+        // Deliberately nothing.
+        //
+        // `onClose` does not mean "dismiss me". Every one of its six call
+        // sites in CreateRoomPage is immediately followed by that method's own
+        // `navigate(...)` — to /game, /king, /team-battle, /words or
+        // /team?join= — so it means "I am about to leave", and inside the
+        // rooms hub its job was to take the overlay down before the route
+        // changed underneath it. Leaving the screen for real is the header's
+        // back arrow, which calls `navigate("/")` itself and never comes
+        // through here.
+        //
+        // Wiring it to `navigate(-1)` therefore fired a history pop and a push
+        // in the same tick, and the pop settled last: every game mode bounced
+        // straight back to where it started, which looked like the card doing
+        // nothing at all. On a route of its own there is no overlay to take
+        // down — the navigation that follows unmounts this page — so the
+        // correct amount of work here is none.
+        onClose={() => {}}
       />
     </MultiplayerProviderV2>
   );
