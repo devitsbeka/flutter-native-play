@@ -332,7 +332,7 @@ export default function Index() {
     navigate(location.pathname, { replace: true, state: {} });
     if (user) {
       setShowMissionsModal(false);
-      navigate("/team", { state: { openCreateRoom: true } });
+      navigate("/create-room");
     }
   }, [location.state, location.pathname, navigate, user]);
 
@@ -521,7 +521,7 @@ export default function Index() {
   // since rooms need an account anyway.
   const handlePlayClick = useCallback(() => {
     if (user) {
-      navigate("/team", { state: { openCreateRoom: true } });
+      navigate("/create-room");
     } else {
       void startQuickGame();
     }

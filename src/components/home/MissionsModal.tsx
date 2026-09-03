@@ -83,10 +83,10 @@ function missionDestination(missionId: string): { to: string; state?: Record<str
     case "category_cuisine":
       return { to: "/category/georgian_cuisine" };
     case "invite_to_play":
-      return { to: "/team", state: { openCreateRoom: true } };
+      return { to: "/create-room" };
     case "play_friend":
     case "weekly_friend_games":
-      return { to: "/team", state: { openCreateRoom: true } };
+      return { to: "/create-room" };
     case "play_tv":
       return { to: "/team", state: { openTV: true } };
     default:

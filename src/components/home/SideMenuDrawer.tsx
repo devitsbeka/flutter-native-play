@@ -94,7 +94,7 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
             onSelectCreateRoom={() => {
               setIsTeamMenuOpen(false);
               onClose();
-              navigate('/team', { state: { openCreateRoom: true } });
+              navigate('/create-room');
             }}
             onSelectTrivia={() => {
               setIsTeamMenuOpen(false);

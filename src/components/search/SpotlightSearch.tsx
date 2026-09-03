@@ -238,7 +238,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
     
     switch (cmd.action) {
       case "create-room":
-        navigate("/team", { state: { openCreateRoom: true } });
+        navigate("/create-room");
         break;
       case "navigate":
         if (cmd.path) {

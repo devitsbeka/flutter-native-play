@@ -48,7 +48,7 @@ export const GAME_TYPES: GameTypeDescriptor[] = [
     badge: null,
     sortOrder: 10,
     supportsMatchmaking: true,
-    launch: (navigate) => navigate("/team", { state: { openCreateRoom: true } }),
+    launch: (navigate) => navigate("/create-room"),
   },
   {
     key: "tv_show",
