@@ -190,7 +190,7 @@ export function UniversalLobby({
             className="absolute inset-0"
             style={{
               backgroundImage:
-                "linear-gradient(90deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.4) 100%), linear-gradient(180deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 24.438%), linear-gradient(180deg, rgba(216,178,232,0.7) 0%, rgba(216,199,237,0) 35.822%)",
+                "linear-gradient(90deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.55) 100%), linear-gradient(180deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 24.438%), linear-gradient(180deg, rgba(216,178,232,0.7) 0%, rgba(216,199,237,0) 35.822%)",
             }}
           />
         </motion.div>
@@ -237,25 +237,10 @@ export function UniversalLobby({
           {(category || tv) && (
             <motion.div {...arrive(0.24)} className="mt-[9px] flex h-[52px] shrink-0 items-start gap-2 pl-[9px] pr-[3px]">
               {category && (
-                <Chip
-                  icon={chipQuestion}
-                  iconSize={60}
-                  tint="from-[rgba(255,215,208,0.6)]"
-                  labelShift={13}
-                  label={category.label}
-                  onPress={category.onPress}
-                />
+                <Chip icon={chipQuestion} label={category.label} onPress={category.onPress} />
               )}
               {tv && (
-                <Chip
-                  icon={chipTv}
-                  iconSize={56}
-                  tint="from-[rgba(215,196,160,0.6)]"
-                  labelShift={17}
-                  label={tv.label}
-                  onPress={tv.onPress}
-                  iconShadow
-                />
+                <Chip icon={chipTv} label={tv.label} onPress={tv.onPress} iconShadow />
               )}
             </motion.div>
           )}
@@ -535,21 +520,26 @@ function RoomTitle({ name }: { name: string }) {
   );
 }
 
-/** One of the two chips over the scene (1018:6824 / 1018:6820). */
+/**
+ * One of the two chips over the scene — the category, and Play on TV.
+ *
+ * They wear the rule row's own box now: `rounded-[20px]` and RULE_BORDER over
+ * the same translucent surface as the card below them. They used to be their
+ * own thing entirely — an asymmetric `24/24/24/54` radius, a 2px white border,
+ * a per-chip gradient tint, and a 60px icon hung outside the box on negative
+ * offsets with the label nudged back by a hand-tuned `labelShift` to clear it.
+ * Two buttons drawn to a different specification than everything under them,
+ * and each one to its own. One box, one border, one type ramp; the icon sits
+ * inside it at the size the row can hold.
+ */
 function Chip({
   icon,
-  iconSize,
   iconShadow,
-  tint,
-  labelShift,
   label,
   onPress,
 }: {
   icon: string;
-  iconSize: number;
   iconShadow?: boolean;
-  tint: string;
-  labelShift: number;
   label: string;
   onPress?: () => void;
 }) {
@@ -560,30 +550,18 @@ function Chip({
       whileTap={onPress ? { scale: 0.96 } : undefined}
       onClick={onPress}
       className={cn(
-        "relative h-[52px] min-w-0 flex-1 rounded-[24px_24px_24px_54px] border-2 border-[rgba(255,255,255,0.6)] bg-gradient-to-b to-[rgba(252,247,255,0.6)] text-left",
-        tint,
-        CARD_SHADOW,
+        "relative flex h-[52px] min-w-0 flex-1 items-center gap-2 rounded-[20px] bg-[rgba(252,247,255,0.6)] px-3 text-left",
+        RULE_BORDER,
       )}
     >
       <img
         alt=""
         src={icon}
-        style={{
-          width: iconSize,
-          height: iconSize,
-          left: -9,
-          top: 5,
-          filter: iconShadow ? "drop-shadow(4px -4px 0 rgba(0,0,0,0.15))" : undefined,
-        }}
-        className="pointer-events-none absolute z-10 object-contain"
+        style={{ filter: iconShadow ? "drop-shadow(2px -2px 0 rgba(0,0,0,0.12))" : undefined }}
+        className="pointer-events-none h-8 w-8 shrink-0 object-contain"
       />
-      <span
-        className="absolute inset-0 flex items-center justify-center pl-[48px] pr-3"
-        style={{ paddingLeft: 48 + labelShift }}
-      >
-        <span className="truncate bg-gradient-to-b from-[#583e19] to-[#2e2c2a] bg-clip-text font-[Nunito] text-[16.16px] font-black leading-[25.13px] tracking-[-0.146px] text-transparent">
-          {label}
-        </span>
+      <span className="min-w-0 flex-1 truncate font-[Nunito] text-[16px] font-medium leading-[19.5px] tracking-[-0.16px] text-[#402666]">
+        {label}
       </span>
     </Tag>
   );

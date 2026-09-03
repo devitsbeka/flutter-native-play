@@ -1821,7 +1821,18 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         {preLobby && (
           <motion.div
             key="pre-lobby"
-            className="fixed inset-0 z-[60]"
+            // `safe-screen`, so the lobby inside behaves as it does anywhere
+            // else. UniversalLobby is a page: it wears `safe-bleed`, which
+            // cancels #root's safe-area padding with a negative margin and
+            // re-adds it as its own, so its background reaches the true edges
+            // while its contents stay clear of the bar. A `fixed` layer never
+            // receives #root's padding (see the note on #root in index.css),
+            // so inside this wrapper that cancellation had nothing to cancel:
+            // the contents rode up under the status bar, and the box finished
+            // `--safe-top + --safe-bottom` short of the bottom, uncovering the
+            // page behind it as a clipped strip below Start. Padding the
+            // wrapper restores the contract the lobby is written against.
+            className="fixed inset-0 z-[60] safe-screen"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
