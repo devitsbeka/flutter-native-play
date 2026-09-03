@@ -2,37 +2,71 @@ import { Capacitor } from "@capacitor/core";
 import { trackingService, type TrackingStatus } from "@/services/trackingService";
 
 /**
- * When the App Tracking Transparency prompt gets shown, and what precedes it.
+ * When the App Tracking Transparency prompt is shown, and what precedes it.
  *
- * The prompt used to fire from `adService.initialize()`, which runs in a bare
- * effect in `useAds` — so the system dialog appeared the instant any screen
- * mounting that hook loaded, before the player had seen the game or had any
- * idea what was being asked. A cold ATT prompt is denied by most people who
- * see it, and it can only ever be asked once: iOS remembers the answer, and
- * `requestTrackingAuthorization` returns the stored result forever after.
+ * ## Why this is now a launch concern
  *
- * So the order here is: the player reaches a moment where tracking is
- * actually relevant (they are about to watch an ad), a screen explains what
- * the choice means, and only then does the system prompt appear.
+ * The prompt used to be reachable only from `adService` — from
+ * `showRewardedAdWithPreload()` and `showInterstitial()`. Ads in this app are
+ * strictly opt-in (see `useAds`), so reaching either meant signing in,
+ * exhausting the free plays, finding the "watch ad" button, pressing it, and
+ * then accepting a pre-prompt. App Review did none of that and rejected build
+ * 34 under guideline 2.1: the prompt was, from outside, simply not there.
  *
- * This module owns the "has it been asked" state and the pre-prompt handoff.
- * The React side lives in `TrackingConsentGate`.
+ * Three further things could each suppress it on their own:
+ *
+ *   - the VIP bypass in both ad paths returned *before* the consent call, so
+ *     a PRO or admin review account could not reach the prompt at all;
+ *   - declining the pre-prompt wrote `mytrivia_att_asked` to localStorage and
+ *     deliberately never showed the system dialog — one tap and the prompt was
+ *     gone for the life of the install;
+ *   - ATT rode on the AdMob plugin's dynamic import (see `trackingService`).
+ *
+ * So the ordering rule has changed. It is no longer "ask at the first ad"; it
+ * is **ask once the app is up and the player can see what they are answering
+ * about**, which `NativeBridge` triggers after the first route has painted.
+ * The ad paths still call `ensureTrackingConsent()`, but only as a backstop.
+ *
+ * ## Why there is no "Not now"
+ *
+ * There used to be, and it wrote a permanent flag. The honest place for a
+ * refusal is Apple's own dialog, which offers exactly that in
+ * "Ask App Not to Track" — and unlike a private flag, iOS lets the player
+ * revisit it in Settings. The explanation screen's single action leads to the
+ * system dialog; nothing here records a decision iOS has not recorded.
+ *
+ * Anything short of an explicit yes leaves ads non-personalised, so a player
+ * who ignores the screen loses nothing but relevance.
  */
-
-const ASKED_KEY = "mytrivia_att_asked";
 
 type Listener = (open: boolean) => void;
 
 let listeners: Listener[] = [];
-let pendingResolve: ((proceed: boolean) => void) | null = null;
 let isOpen = false;
+
+/** Resolves when the player has acknowledged the explanation screen. */
+let acknowledge: (() => void) | null = null;
+
+/** One request at a time — two dialogs cannot be shown, and the loser would hang. */
+let inFlight: Promise<TrackingStatus> | null = null;
+
+/**
+ * How long to wait for the explanation screen before going straight to iOS.
+ *
+ * A safety valve, not a timeout anyone should hit. If `TrackingConsentGate`
+ * is unmounted, crashed, or covered, the store requirement still has to be
+ * met — showing the system dialog without the pre-prompt is a worse
+ * conversion rate and a perfectly compliant app. Never showing it is a
+ * rejection.
+ */
+const PRE_PROMPT_DEADLINE_MS = 8000;
 
 function setOpen(open: boolean) {
   isOpen = open;
   for (const listener of listeners) listener(open);
 }
 
-/** Subscribe the pre-prompt UI to open/close. Returns an unsubscribe. */
+/** Subscribe the explanation screen to open/close. Returns an unsubscribe. */
 export function subscribeToPrePrompt(listener: Listener): () => void {
   listeners.push(listener);
   listener(isOpen);
@@ -41,63 +75,94 @@ export function subscribeToPrePrompt(listener: Listener): () => void {
   };
 }
 
-/** Called by the pre-prompt when the player answers it. */
-export function answerPrePrompt(proceed: boolean) {
+/** Called by the explanation screen when the player is ready to continue. */
+export function acknowledgePrePrompt() {
+  const resolve = acknowledge;
+  acknowledge = null;
   setOpen(false);
-  pendingResolve?.(proceed);
-  pendingResolve = null;
+  resolve?.();
 }
 
-function markAsked() {
-  try {
-    localStorage.setItem(ASKED_KEY, "1");
-  } catch {
-    /* storage unavailable — worst case the pre-prompt shows twice */
-  }
+function isIosNative(): boolean {
+  return Capacitor.isNativePlatform() && Capacitor.getPlatform() === "ios";
 }
 
-function hasAsked(): boolean {
+function showPrePrompt(): Promise<void> {
+  return new Promise<void>((resolve) => {
+    let settled = false;
+    const settle = () => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      resolve();
+    };
+
+    acknowledge = settle;
+
+    const timer = setTimeout(() => {
+      // Give up on the screen, not on the prompt.
+      if (acknowledge === settle) acknowledge = null;
+      setOpen(false);
+      settle();
+    }, PRE_PROMPT_DEADLINE_MS);
+
+    setOpen(true);
+  });
+}
+
+/**
+ * Ask for tracking consent if iOS has no answer on file.
+ *
+ * Safe to call repeatedly and from anywhere: it returns immediately on the
+ * web, on Android, and once iOS has decided. Concurrent callers share one
+ * in-flight request rather than queueing a second dialog.
+ */
+export async function ensureTrackingConsent(): Promise<TrackingStatus> {
+  if (!isIosNative()) return "unavailable";
+  if (inFlight) return inFlight;
+
+  inFlight = (async () => {
+    await trackingService.initialize();
+    const status = await trackingService.checkStatus();
+
+    // Already answered, or the device cannot be asked.
+    if (status !== "notDetermined") return status;
+
+    await showPrePrompt();
+
+    try {
+      return await trackingService.requestAuthorization();
+    } finally {
+      // The screen is dismissed on acknowledgement, but a native failure must
+      // not leave it on top of the app.
+      setOpen(false);
+    }
+  })();
+
   try {
-    return localStorage.getItem(ASKED_KEY) === "1";
-  } catch {
-    return false;
+    return await inFlight;
+  } finally {
+    inFlight = null;
   }
 }
 
 /**
- * Ask for tracking consent if it has not been decided yet.
+ * The launch-time entry point, called by `NativeBridge` once the first route
+ * has painted and the splash screen is down.
  *
- * Safe to call repeatedly and from anywhere: it returns immediately on the
- * web, on Android, and once iOS has an answer on file. Resolves to the
- * resulting status so callers can decide about personalisation.
- *
- * Declining the pre-prompt deliberately does **not** show the system dialog.
- * Burning the one chance iOS gives us on a player who has already said no is
- * worse than leaving it undetermined — this way they can be asked again later.
+ * Distinct from `ensureTrackingConsent()` only in intent: this is the call
+ * that satisfies the store requirement, and it is deliberately not tied to
+ * ads, sign-in, VIP status, or any feature a reviewer might not reach.
+ * Failure is swallowed — a launch must never be blocked by it — and an
+ * undetermined status is simply retried on the next launch.
  */
-export async function ensureTrackingConsent(): Promise<TrackingStatus> {
-  if (!Capacitor.isNativePlatform() || Capacitor.getPlatform() !== "ios") {
-    return "unavailable";
+export async function primeTrackingConsent(): Promise<void> {
+  if (!isIosNative()) return;
+  try {
+    await ensureTrackingConsent();
+  } catch {
+    /* retried next launch */
   }
-
-  await trackingService.initialize();
-  const status = await trackingService.checkStatus();
-
-  // Already answered, or the device does not support the prompt.
-  if (status !== "notDetermined") return status;
-
-  if (hasAsked()) return status;
-
-  const proceed = await new Promise<boolean>((resolve) => {
-    pendingResolve = resolve;
-    setOpen(true);
-  });
-
-  markAsked();
-
-  if (!proceed) return "notDetermined";
-
-  return trackingService.requestAuthorization();
 }
 
 /** The decided status, without prompting. */
@@ -113,8 +178,6 @@ export function currentTrackingStatus(): TrackingStatus {
  * adService instead.
  */
 export function personalizedAdsAllowed(): boolean {
-  if (!Capacitor.isNativePlatform() || Capacitor.getPlatform() !== "ios") {
-    return true;
-  }
+  if (!isIosNative()) return true;
   return trackingService.getStatus() === "authorized";
 }

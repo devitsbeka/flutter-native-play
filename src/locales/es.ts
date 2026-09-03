@@ -545,10 +545,15 @@ export const es: KaTranslations = {
   att: {
     ...en.att,
     title: "Ayuda a mantener MyTrivia gratis",
-    body: "Verás anuncios de todos modos. Permitir el rastreo hace que sean relevantes para ti en lugar de aleatorios.",
-    reassurance: "Tus respuestas y puntuaciones nunca se comparten.",
+    body: "Verás anuncios de todos modos. Permitir el rastreo solo hace que sean relevantes para ti.",
+    pointRelevantTitle: "Anuncios que valen la pena",
+    pointRelevantBody: "Juegos y quizzes que podrían gustarte de verdad, en vez de ruido aleatorio.",
+    pointFreeTitle: "Mantiene el juego gratis",
+    pointFreeBody: "Los anuncios relevantes rinden más, y eso paga las preguntas nuevas cada semana.",
+    pointPrivateTitle: "Tus respuestas son tuyas",
+    pointPrivateBody: "Tus puntuaciones, respuestas y amigos nunca se comparten con anunciantes.",
     continue: "Continuar",
-    notNow: "Ahora no",
+    footnote: "A continuación, iOS te pedirá permiso. Puedes cambiar tu respuesta cuando quieras en Ajustes.",
   },
   moderation: {
     ...en.moderation,

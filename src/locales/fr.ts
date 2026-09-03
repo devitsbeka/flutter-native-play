@@ -536,10 +536,15 @@ export const fr: KaTranslations = {
   att: {
     ...en.att,
     title: "Aide MyTrivia à rester gratuit",
-    body: "Tu verras des pubs de toute façon. Autoriser le suivi les rend pertinentes pour toi au lieu d'aléatoires.",
-    reassurance: "Tes réponses et tes scores ne sont jamais partagés.",
+    body: "Tu verras des pubs de toute façon. Autoriser le suivi les rend simplement pertinentes pour toi.",
+    pointRelevantTitle: "Des pubs qui valent le coup",
+    pointRelevantBody: "Des jeux et des quiz qui pourraient vraiment te plaire, plutôt que du hasard.",
+    pointFreeTitle: "Garde le jeu gratuit",
+    pointFreeBody: "Les pubs pertinentes rapportent plus, et c'est ce qui paie les nouvelles questions chaque semaine.",
+    pointPrivateTitle: "Tes réponses restent les tiennes",
+    pointPrivateBody: "Tes scores, tes réponses et tes amis ne sont jamais partagés avec les annonceurs.",
     continue: "Continuer",
-    notNow: "Pas maintenant",
+    footnote: "iOS va maintenant te demander ton autorisation. Tu peux changer d'avis à tout moment dans Réglages.",
   },
   moderation: {
     ...en.moderation,

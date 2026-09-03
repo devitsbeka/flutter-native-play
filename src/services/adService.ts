@@ -145,6 +145,12 @@ class AdService {
     return {
       testingDevices: [],
       initializeForTesting: false,
+      // The plugin defaults this to true and would present the ATT dialog
+      // itself, bare, at whatever moment the ad SDK happens to start — racing
+      // the explanation screen and, on a cold start, beating it. Consent is
+      // owned by trackingConsent.ts and asked for at launch; AdMob only reads
+      // the answer.
+      requestTrackingAuthorization: false,
       ...(safety.tagForUnderAgeOfConsent !== undefined && {
         tagForUnderAgeOfConsent: safety.tagForUnderAgeOfConsent,
       }),
@@ -215,8 +221,9 @@ class AdService {
           // ad service happens in a bare effect in useAds, so requesting ATT
           // at this point put the system dialog in front of the player the
           // instant any screen mounting that hook loaded — before they had
-          // seen the game. The prompt now belongs to ensureTrackingConsent(),
-          // which runs a context screen first, immediately before an ad.
+          // seen the game. The prompt belongs to trackingConsent.ts, which
+          // asks at launch behind an explanation screen; all this needs is
+          // the answer, to decide personalisation.
           await trackingService.initialize();
 
           await this.AdMob.initialize(this.initOptions());
@@ -409,6 +416,15 @@ class AdService {
       await this.initialize();
     }
 
+    // Backstop for the launch-time prompt in NativeBridge, and deliberately
+    // above the VIP bypass rather than below it.
+    //
+    // It used to sit after the early return, so a PRO or admin account never
+    // reached ATT by any path in the app — including the demo account handed
+    // to App Review. Resolves instantly once iOS has an answer and on every
+    // non-iOS platform, so the cost of asking here is nil.
+    await ensureTrackingConsent();
+
     // VIP users skip ads and get rewards automatically
     if (this.isVipUser) {
       callbacks?.onAdShowed?.();
@@ -416,11 +432,6 @@ class AdService {
       callbacks?.onAdDismissed?.();
       return true;
     }
-
-    // The one moment where tracking is actually relevant to the player: they
-    // have chosen to watch an ad. Resolves instantly once ATT has an answer,
-    // and on every non-iOS platform.
-    await ensureTrackingConsent();
 
     // Load and show in one call
     if (!this.isAdLoaded) {
@@ -509,10 +520,11 @@ class AdService {
       await this.initialize();
     }
 
+    // Above the VIP bypass, for the same reason as in the rewarded path.
+    await ensureTrackingConsent();
+
     if (this.isVipUser) return false;
     if (!this.isNative || !this.AdMob || !this.InterstitialAdPluginEvents) return false;
-
-    await ensureTrackingConsent();
 
     if (!this.isInterstitialLoaded) {
       const loaded = await this.prepareInterstitial();

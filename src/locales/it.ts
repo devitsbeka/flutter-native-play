@@ -541,10 +541,15 @@ export const it: KaTranslations = {
   att: {
     ...en.att,
     title: "Aiuta MyTrivia a restare gratis",
-    body: "Vedrai comunque le pubblicità. Consentire il tracciamento le rende pertinenti per te invece che casuali.",
-    reassurance: "Le tue risposte e i tuoi punteggi non vengono mai condivisi.",
+    body: "Vedrai comunque le pubblicità. Consentire il tracciamento le rende semplicemente pertinenti per te.",
+    pointRelevantTitle: "Pubblicità che ha senso",
+    pointRelevantBody: "Giochi e quiz che potrebbero piacerti davvero, invece di roba a caso.",
+    pointFreeTitle: "Mantiene il gioco gratis",
+    pointFreeBody: "Le pubblicità pertinenti rendono di più, ed è così che paghiamo nuove domande ogni settimana.",
+    pointPrivateTitle: "Le tue risposte restano tue",
+    pointPrivateBody: "Punteggi, risposte e amici non vengono mai condivisi con gli inserzionisti.",
     continue: "Continua",
-    notNow: "Non ora",
+    footnote: "Ora iOS ti chiederà il permesso. Puoi cambiare idea quando vuoi in Impostazioni.",
   },
   moderation: {
     ...en.moderation,

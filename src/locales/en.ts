@@ -658,10 +658,15 @@ export const en: KaTranslations = {
   // ==========================================
   att: {
     title: "Help keep MyTrivia free",
-    body: "You'll see ads either way. Allowing tracking means they're relevant to you instead of random.",
-    reassurance: "Your quiz answers and scores are never shared.",
+    body: "You'll see ads either way. Allowing tracking just makes them relevant to you.",
+    pointRelevantTitle: "Ads worth seeing",
+    pointRelevantBody: "Games and quizzes you might actually like, instead of random noise.",
+    pointFreeTitle: "Keeps the game free",
+    pointFreeBody: "Relevant ads earn more, and that is what pays for new questions every week.",
+    pointPrivateTitle: "Your answers stay yours",
+    pointPrivateBody: "Scores, answers and friends are never shared with advertisers.",
     continue: "Continue",
-    notNow: "Not now",
+    footnote: "iOS will ask for your permission next. You can change your answer any time in Settings.",
   },
 
   // ==========================================

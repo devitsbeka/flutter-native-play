@@ -80,6 +80,21 @@ pre-prompt ordering, report/block, account deletion, restore, IAP-only payments
 on device, SKAdNetwork, the bundle guard — and what follows was the last few
 percent rather than a rebuild.
 
+> **Superseded on the ATT point (build 34, guideline 2.1).** The "pre-prompt
+> ordering" praised above is the thing that got rejected. Deferring the prompt
+> to the first ad is excellent for opt-in rates and fatal for review: ads here
+> are strictly opt-in, so App Review never reached one and reported the prompt
+> as missing. Three further suppressors compounded it — the VIP early-return
+> sat *above* the consent call, "Not now" wrote a permanent localStorage flag
+> that skipped the system dialog for the life of the install, and ATT rode on
+> the AdMob plugin's dynamic import.
+>
+> ATT is now asked at launch from `NativeBridge`, through a dedicated
+> `AppTrackingPlugin.swift` that waits for the app to be active, behind a
+> full-screen explanation whose single action leads to Apple's own dialog.
+> `src/__tests__/trackingConsent.test.ts` locks in each of the four fixes.
+> Do not "improve" this by moving the prompt back behind a feature.
+
 ---
 
 ## Resolution log

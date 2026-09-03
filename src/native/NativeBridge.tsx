@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { configureDeepLinks, hideSplashScreen } from "@/native/nativeShell";
 import { TrackingConsentGate } from "@/native/TrackingConsentGate";
+import { primeTrackingConsent } from "@/native/trackingConsent";
 
 /**
  * The native shell's foothold inside the router.
@@ -30,7 +31,24 @@ export function NativeBridge() {
     // yet drawn, which flashes white on exactly the slower devices the splash
     // is there to cover.
     const raf = requestAnimationFrame(() => {
-      requestAnimationFrame(() => { hideSplashScreen(); });
+      requestAnimationFrame(() => {
+        hideSplashScreen();
+
+        // Ask about tracking here, and nowhere earlier.
+        //
+        // This is the call App Review has to be able to find. It used to
+        // happen only inside adService, behind an opt-in "watch ad" button
+        // that a reviewer never pressed, and build 34 was rejected for a
+        // prompt that could not be located. Nothing about it is conditional
+        // on sign-in, VIP status, or ads now — it runs on every cold start
+        // until iOS has an answer on file.
+        //
+        // After the splash rather than before: iOS only presents the ATT
+        // dialog while the app is active, and the native side waits for that
+        // anyway. Doing it here also means the explanation screen appears
+        // over a drawn app rather than a white webview.
+        void primeTrackingConsent();
+      });
     });
 
     return () => {
@@ -40,8 +58,8 @@ export function NativeBridge() {
     };
   }, [navigate]);
 
-  // The ATT context screen. Invisible until something asks for consent, so it
-  // costs nothing to keep mounted at the root — and it has to be mounted
-  // before the first ad can trigger it.
+  // The ATT explanation screen. Invisible until consent is asked for, and
+  // mounted here so it is already subscribed when the effect above primes it
+  // — child effects run before the parent's, so the ordering holds.
   return <TrackingConsentGate />;
 }
