@@ -36,7 +36,8 @@ import {
 } from "@/hooks/usePublicRooms";
 import iconKingLounge from "@/assets/play-chooser/icon-king.webp";
 import iconBattleLounge from "@/assets/play-chooser/icon-crate.png";
-import { dealtCrests, fetchCrestPool } from "@/utils/roomCrests";
+import { dealtCrests, dealtRoomIcon, fetchCrestPool } from "@/utils/roomCrests";
+import { useRoomIconPool } from "@/hooks/useRoomIconPool";
 import iconWordsLounge from "@/assets/play-chooser/icon-words.webp";
 import crownIcon from "@/assets/crown-icon.png";
 import sceneArena from "@/assets/tb-lobby/scene-arena.webp";
@@ -134,6 +135,10 @@ function PublicRoomCard({
   const iconForCategory = useCategoryIconByName();
 
   const lounge = room.game_type_key ? LOUNGES[room.game_type_key] : undefined;
+  // The card's face: the host's icon, else the game's lounge icon, else a
+  // random one dealt from the shared pool by room id — no room shows bare.
+  const iconPool = useRoomIconPool();
+  const roomFace = room.room_icon ?? lounge?.icon ?? dealtRoomIcon(room.id, iconPool);
   const gradient = ROOM_GRADIENT_PRESETS[index % ROOM_GRADIENT_PRESETS.length];
   const seats = roomSeats(room);
   const inside = room.my_state === "host" || room.my_state === "joined";
@@ -306,9 +311,12 @@ function PublicRoomCard({
           </div>
         ) : (
           <div className="relative z-10 flex-1 flex items-center gap-3 py-3">
-            {(lounge || room.room_icon) && (
+            {/* Every room wears a face: the host's icon, else the game's,
+                else a random one dealt from the shared pool by room id
+                (owner's rule) — no room shows up bare. */}
+            {roomFace && (
               <img
-                src={lounge?.icon ?? room.room_icon!}
+                src={roomFace}
                 alt=""
                 className="w-14 h-14 object-contain drop-shadow-lg shrink-0"
               />
@@ -323,7 +331,7 @@ function PublicRoomCard({
               </h3>
               {!lounge && (
                 <p className={`text-sm truncate mt-0.5 ${ink.muted}`}>
-                  {t("extra.publicRoomLabel")}
+                  {t("extra.gameRoomLabel")}
                 </p>
               )}
             </div>
@@ -373,21 +381,14 @@ function PublicRoomCard({
         {/* Bottom: the first round on the left, the way in on the right */}
         <div className={`relative z-10 backdrop-blur-md border rounded-xl px-3 py-2.5 flex items-center justify-between gap-2 ${ink.pill}`}>
           <div className="flex items-center gap-2 min-w-0">
-            {/* A picked round wears its category's icon; an unpicked one
-                wears the library's mystery box — the same face the category
-                picker gives "mixed" — not a globe from nowhere. */}
-            <DynamicIcon slug={categoryIcon} className="w-5 h-5 shrink-0" />
-            <div className="min-w-0">
-              <p className={`text-[10px] font-semibold uppercase tracking-wide leading-none ${ink.faint}`}>
-                {t("extra.firstRoundLabel")}
-              </p>
-              <p className={`text-sm font-semibold truncate leading-tight ${ink.text}`}>
-                {/* No round picked yet means the first round is mixed —
-                    say that, not "not chosen yet", which reads as a
-                    room that is not ready. */}
-                {category || t("extra.cpMixedCategory")}
-              </p>
-            </div>
+            {/* Just the category: its icon and its name. The "FIRST ROUND"
+                caption above it was noise (owner's call) — a picked round
+                wears its category's icon, an unpicked one the library's
+                mystery box, the same face the picker gives "mixed". */}
+            <DynamicIcon slug={categoryIcon} className="w-6 h-6 shrink-0" />
+            <p className={`text-sm font-semibold truncate leading-tight ${ink.text}`}>
+              {category || t("extra.cpMixedCategory")}
+            </p>
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0">

@@ -748,3 +748,23 @@ describe("the cards read on every gradient, and every card shows its way out", (
     expect(pub).toMatch(/lounge\?\.icon \?\? room\.room_icon|room\.room_icon \?\? lounge\?\.icon/);
   });
 });
+
+describe("every room wears a face, and the card leads with its category", () => {
+  it("a room without an icon is dealt one from the shared pool, everywhere", () => {
+    // The search strip and the public card both fall back to a room-id
+    // seeded pick off the same pool — never a blank gamepad.
+    const crests = read("src/utils/roomCrests.ts");
+    expect(crests).toMatch(/export function dealtRoomIcon\(roomId: string, pool: readonly string\[\]\)/);
+    const mini = read("src/components/search/SearchMiniCards.tsx");
+    expect(mini).toMatch(/room\.room_icon \|\| room\.cover_image \|\| dealtRoomIcon\(room\.id, pool\)/);
+    const pub = read("src/components/team/PublicRoomsSection.tsx");
+    expect(pub).toMatch(/room\.room_icon \?\? lounge\?\.icon \?\? dealtRoomIcon\(room\.id, iconPool\)/);
+  });
+
+  it("the public card says სათამაშო ოთახი and drops the FIRST ROUND caption", () => {
+    const pub = read("src/components/team/PublicRoomsSection.tsx");
+    expect(pub).toMatch(/t\("extra\.gameRoomLabel"\)/);
+    expect(pub).not.toMatch(/extra\.firstRoundLabel/);
+    expect(pub).not.toMatch(/extra\.publicRoomLabel/);
+  });
+});

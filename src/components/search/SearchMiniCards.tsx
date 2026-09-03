@@ -6,6 +6,8 @@ import { ResolvedAvatarImage } from "@/components/ui/resolved-avatar-image";
 import type { Friend } from "@/hooks/useFriends";
 import type { MyRoom } from "@/hooks/useMyRooms";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useRoomIconPool } from "@/hooks/useRoomIconPool";
+import { dealtRoomIcon } from "@/utils/roomCrests";
 
 // Friend Mini Card
 interface FriendMiniCardProps {
@@ -47,8 +49,11 @@ interface RoomMiniCardProps {
 
 export function RoomMiniCard({ room, onClick, isParty }: RoomMiniCardProps) {
   const participantCount = room.participants?.length || 0;
-  const iconUrl = room.room_icon || room.cover_image;
-  
+  // Every room wears a face: the host's icon, else a random one dealt from
+  // the shared pool by room id (owner's rule) — never a blank gamepad.
+  const pool = useRoomIconPool();
+  const iconUrl = room.room_icon || room.cover_image || dealtRoomIcon(room.id, pool);
+
   return (
     <motion.button
       onClick={onClick}

@@ -29,6 +29,17 @@ const seed = (s: string) => {
   return h;
 };
 
+/**
+ * A single face for any room that never set one — seeded by the room id off
+ * the same ordered pool, so a room keeps ITS random icon across refreshes and
+ * surfaces (the search strip, the public card) instead of a blank gamepad.
+ * The host's `room_icon` always wins; this only fills the gap.
+ */
+export function dealtRoomIcon(roomId: string, pool: readonly string[]): string | null {
+  if (pool.length === 0) return null;
+  return pool[seed(roomId) % pool.length];
+}
+
 /** What the captains set, with a per-room dealt pair filling the gaps. */
 export function dealtCrests(
   roomId: string,
