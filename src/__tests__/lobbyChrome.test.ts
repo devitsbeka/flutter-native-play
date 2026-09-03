@@ -268,6 +268,21 @@ describe("the match wears the sides' crests", () => {
     expect(match).toMatch(/iconSlug=\{cat\?\.icon_slug\}\s*\n\s*size=\{64\}/);
     expect(match).not.toMatch(/text-white text-\[10px\] font-bold \$\{DIFFICULTY_COLORS\[tile\.difficulty\]\}/);
   });
+
+  it("the done screen wears the crests, names the roster, and offers + friend", () => {
+    // Owner's ask: the verdict shows each side's crest + name, lists who you
+    // played with, and a non-friend gets an add button (existing friendships
+    // flow — no new SQL).
+    const match = read("src/components/team-battle/TeamBattleMatch.tsx");
+    expect(match).toMatch(/function DonePlayerRow\(/);
+    expect(match).toMatch(/sendFriendRequest\(person\.user_id\)/);
+    expect(match).toMatch(/participants\.filter\(\(p\) => !p\.is_bot && p\.user_id !== user\?\.id\)/);
+    expect(match).toMatch(/friendIds\.has\(p\.user_id\)/);
+    expect(match).toMatch(/teamBattle\.playedWith/);
+    // The done screen draws the crest for each side, not just the name.
+    const done = match.slice(match.indexOf("function PhaseDone"));
+    expect(done).toMatch(/src=\{crests\[team\] \?\? undefined\}/);
+  });
 });
 
 describe("every lobby says which game it is", () => {
