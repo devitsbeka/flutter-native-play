@@ -2109,7 +2109,7 @@ export const de: KaTranslations = {
     roomStatusNew: "Neu",
     roomStatusCompleted: "Beendet",
     roomStatusWaiting: "Wartend",
-    roomJoinLive: "Anfragen",
+    roomJoinLive: "Beitreten",
     roomEnter: "Betreten",
     // Public rooms: the two tabs, the switch that publishes a room, and
     // the doorstep the host answers at.
