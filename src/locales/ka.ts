@@ -2439,7 +2439,7 @@ export const ka = {
     roomStatusNew: "ახალი",
     roomStatusCompleted: "დასრულდა",
     roomStatusWaiting: "მოლოდინი",
-    roomJoinLive: "მოთხოვნა",
+    roomJoinLive: "შეუერთდი",
     roomEnter: "შესვლა",
     // Public rooms: the two tabs, the switch that publishes a room, and
     // the doorstep the host answers at.
