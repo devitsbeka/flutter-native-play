@@ -52,6 +52,17 @@
     <link rel="manifest" href="/manifest.json" />
     <meta name="screen-orientation" content="portrait" />
 
+    <!-- The icon catalogue, 1.3 MB of it, which every screen with a category
+         on it needs before it can draw a single icon. Without this the
+         request does not start until the route's JS has loaded, parsed and
+         mounted a component — so the first thing a player sees is a screen of
+         blank cards for as long as the download takes. Preloading starts it
+         with the HTML instead, alongside the bundle rather than behind it.
+         No crossorigin attribute: it is a same-origin fetch() with the
+         default credentials, and a preload that disagrees warms a cache entry
+         the real request then ignores — two downloads instead of none. -->
+    <link rel="preload" as="fetch" type="application/json" href="/data/icon-index-slim.json" />
+
     <!-- Google Sans Font with Georgian support -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

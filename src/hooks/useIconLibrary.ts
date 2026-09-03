@@ -217,7 +217,13 @@ export async function loadIconIndex(): Promise<IconItem[]> {
       iconCache = data.items || [];
       return iconCache;
     } catch (error) {
+      // Drop the cached promise so the next component that mounts asks
+      // again. It used to be kept, which meant one failed fetch — a phone
+      // that lost signal for the second this file was requested — left an
+      // empty catalogue behind for the life of the page, and every icon in
+      // the app stayed a blank square until a reload.
       console.error('[IconLibrary] Load failed:', error);
+      cachePromise = null;
       return [];
     }
   })();
@@ -303,30 +309,48 @@ function scoreMatch(icon: IconItem, keywords: string[], category?: string): numb
 let dbIconsCache: Record<string, string> | null = null;
 let dbIconsPromise: Promise<Record<string, string>> | null = null;
 
+/**
+ * The overlay on top of the shipped catalogue: icons uploaded since the JSON
+ * in `public/data` was generated, and any whose URL has been re-pointed
+ * since.
+ *
+ * Newest first, because PostgREST caps a response at 1000 rows and the table
+ * holds ~9000 — the comment here used to say "no limit ... for complete
+ * coverage" and got the oldest thousand, which are precisely the ones the
+ * shipped file already has. Nothing waits on this: it refines what is drawn,
+ * it does not decide whether anything is drawn.
+ */
 async function loadDbIcons(): Promise<Record<string, string>> {
   if (dbIconsCache) return dbIconsCache;
   if (dbIconsPromise) return dbIconsPromise;
 
   dbIconsPromise = (async () => {
-    // Load ALL icons from database (no limit) for complete coverage
-    const { data, error } = await supabase
-      .from('icon_library')
-      .select('slug, icon_url');
-    
-    if (error) {
-      console.error('[IconLibrary] DB fetch error:', error);
+    try {
+      const { data, error } = await supabase
+        .from('icon_library')
+        .select('slug, icon_url')
+        .order('created_at', { ascending: false })
+        .limit(1000);
+
+      if (error) throw error;
+
       dbIconsCache = {};
+      (data || []).forEach((icon) => {
+        if (icon.slug && icon.icon_url) {
+          dbIconsCache![icon.slug] = icon.icon_url;
+        }
+      });
+      console.info(`[IconLibrary] Loaded ${Object.keys(dbIconsCache).length} icons from database`);
       return dbIconsCache;
+    } catch (error) {
+      // A thrown fetch (offline, a dropped connection) used to leave a
+      // REJECTED promise in dbIconsPromise, which every later caller then
+      // received — and nothing awaiting it had a catch. Answer with an empty
+      // overlay and forget the attempt, so the next mount can try again.
+      console.error('[IconLibrary] DB fetch error:', error);
+      dbIconsPromise = null;
+      return {};
     }
-    
-    dbIconsCache = {};
-    (data || []).forEach((icon) => {
-      if (icon.slug && icon.icon_url) {
-        dbIconsCache![icon.slug] = icon.icon_url;
-      }
-    });
-    console.info(`[IconLibrary] Loaded ${Object.keys(dbIconsCache).length} icons from database`);
-    return dbIconsCache;
   })();
 
   return dbIconsPromise;
@@ -354,7 +378,7 @@ export function useIconLibrary() {
 
   // Load database icons using module-level cache
   useEffect(() => {
-    loadDbIcons().then(icons => {
+    void loadDbIcons().then(icons => {
       setDbIcons(icons);
       setDbLoaded(true);
     });
@@ -363,7 +387,7 @@ export function useIconLibrary() {
     const handleRefresh = () => {
       setDbLoaded(false);
       refreshDbIconsCache();
-      loadDbIcons().then(icons => {
+      void loadDbIcons().then(icons => {
         setDbIcons(icons);
         setDbLoaded(true);
       });
@@ -446,14 +470,22 @@ export function useIconLibrary() {
   }, [findIcon]);
 
   const getIconBySlug = useCallback((slug: string): string | null => {
-    // First check database icons (recently uploaded)
-    if (dbIcons[slug]) {
-      return dbIcons[slug];
-    }
-    
-    // Fall back to local JSON
+    // The shipped index answers first, and the database overlay only covers
+    // what it does not have.
+    //
+    // It used to be the other way round, which was invisible while nothing
+    // drew until the overlay had arrived. Now that it does not wait, the
+    // order matters: ~120 of the rows the overlay carries are icons the
+    // shipped file already has, at the same path with a `?t=<upload>` cache
+    // buster on the end. Consulting them first meant every one of those icons
+    // resolved once at the plain URL, drew, and then swapped to a URL that
+    // differs only in its query string — a second download of the same bytes
+    // and a visible blink, on every page with icons on it.
     const icon = iconIndex.find(i => i.slug === slug);
-    return icon ? getIconUrl(icon.file_name) : null;
+    if (icon) return getIconUrl(icon.file_name);
+
+    // Uploaded since the file was generated.
+    return dbIcons[slug] ?? null;
   }, [iconIndex, dbIcons]);
 
   // Direct database lookup for icons not in cache (async)
@@ -549,7 +581,20 @@ export function useIconLibrary() {
     fetchIconBySlug,
     getIconForCategory,
     getRandomIconForCategory,
-    isLoaded: !isLoading && iconIndex.length > 0 && dbLoaded,
+    /**
+     * Ready to draw — which is the shipped catalogue arriving, and nothing
+     * else.
+     *
+     * This used to also wait on `dbLoaded`, the whole-table read above, so
+     * every icon in the app stood behind a REST round trip that 69 of the 71
+     * categories do not need: their slug is in the file already. On a slow
+     * connection that was a screen of blank cards for as long as the query
+     * took, and if the query failed it was a screen of blank cards for good.
+     * The overlay still lands — `getIconBySlug` reads it and the memo above
+     * re-runs — it just no longer holds the page hostage.
+     */
+    isLoaded: !isLoading && iconIndex.length > 0,
+    dbLoaded,
     iconCount: iconIndex.length,
   };
 }

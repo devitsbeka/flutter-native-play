@@ -50,15 +50,26 @@ describe("category icon coverage", () => {
     expect(unresolved).toEqual([]);
   });
 
-  it("falls back to the map when the database names an icon the index lacks", () => {
-    // Both of these have an icon_slug missing from the shipped index (the
-    // files do exist in storage, so they can still resolve on the async
-    // lookup — but not necessarily within the life of a three-second screen).
-    // They are why the candidates are a list rather than a preference.
+  it("names every category's own icon in the shipped index, not just a stand-in", () => {
+    // These two were the exceptions: their icon_slug existed in storage and
+    // in icon_library, but not in the file the client ships, so they resolved
+    // only on the per-card database lookup — a round trip that may or may not
+    // land inside the life of a three-second screen, and on Discover simply
+    // left two blank cards. The rows are in the index now.
+    //
+    // Anything with an icon_slug should be findable without asking the
+    // network. A category that fails here is not broken, it is slow and
+    // occasionally blank, which is harder to see.
+    const viaLookupOnly = CATEGORIES.filter(
+      (row) => row.icon_slug && !LIBRARY.has(row.icon_slug),
+    ).map((row) => `${row.category_id} (icon_slug=${row.icon_slug})`);
+
+    expect(viaLookupOnly).toEqual([]);
+
+    // The map fallback still has to be there for the ones that name nothing.
     for (const id of ["archaeology", "economics"]) {
       const row = CATEGORIES.find((c) => c.category_id === id);
       expect(row, `${id} missing from fixture`).toBeDefined();
-      expect(LIBRARY.has(row!.icon_slug!)).toBe(false);
       expect(slugCandidates(row!).some((s) => LIBRARY.has(s))).toBe(true);
     }
   });
