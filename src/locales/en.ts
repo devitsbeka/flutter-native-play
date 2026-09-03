@@ -1762,6 +1762,9 @@ export const en: KaTranslations = {
     championsPlaying: "The champions are thinking…",
     youWon: "Your team won!",
     youLost: "Your team lost",
+    playedWith: "Played with",
+    addFriend: "Add friend",
+    friendRequested: "Sent",
     finalScore: "Final score {a} : {b}",
   },
   // MyTrivia King (docs/GAME_TYPES_DESIGN.md §3)
