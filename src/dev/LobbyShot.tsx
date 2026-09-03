@@ -139,7 +139,7 @@ export default function LobbyShot() {
   // classic
   return (
     <UniversalLobby
-      sceneArt={LOBBY_SCENES.random}
+      sceneArt={LOBBY_SCENES.guess}
       roomName="Midnight Owls"
       onRename={noop}
       onBack={noop}

@@ -86,14 +86,20 @@ describe("a room is private unless somebody published it", () => {
     expect(read("src/hooks/usePublicRooms.ts")).toMatch(/PGRST202/);
   });
 
-  it("only offers the switch for what can actually be published", () => {
+  it("publishes what can be published, and asks nobody on the way in", () => {
     const create = read("src/components/team/CreateRoomPage.tsx");
-    expect(create).toContain("const [isPublic, setIsPublic] = useState(true)");
+    // The create screen used to carry the switch too. It was the same
+    // question the lobby asks, one screen earlier, before there was a room
+    // to be public about — so it is asked once now, where the room exists
+    // and the answer can still be changed.
+    expect(create).toContain("const isPublic = true;");
+    expect(create).not.toMatch(/setIsPublic/);
+    expect(create).not.toMatch(/extra\.roomPublicHint/);
     // Three of the six can go on the Public tab. The quick game has no room
     // to list, the King's couch is a private duel, and My Trivia is your own
-    // quiz — those are created private, with no switch shown.
+    // quiz — those are created private whatever else happens.
     expect(create).toMatch(
-      /const canPublish =\s*\n?\s*\(gameChoice === "random" \|\| gameChoice === "library" \|\| gameChoice === "battle"\) && !partyPicked;/,
+      /const canPublish =\s*\n?\s*\(gameChoice === "guess" \|\| gameChoice === "library" \|\| gameChoice === "battle"\) && !partyPicked;/,
     );
     expect(create).toMatch(/const publishRoom = canPublish && isPublic;/);
     // Every write goes through the guarded value, never the raw switch —
@@ -109,30 +115,32 @@ describe("a room is private unless somebody published it", () => {
     expect(create).toMatch(/isPublic: publishRoom/);
   });
 
-  it("the switch sits with the button that acts on it", () => {
-    const create = read("src/components/team/CreateRoomPage.tsx");
-    // Above the CTA, not at the top under the room's name — three scrolls
-    // from the decision it modifies.
-    const togglePos = create.indexOf("extra.roomPublicHint");
-    const ctaPos = create.indexOf("extra.createBtn");
-    expect(togglePos).toBeGreaterThan(-1);
-    expect(togglePos).toBeLessThan(ctaPos);
-    expect(create.indexOf("extra.whatToPlay")).toBeLessThan(togglePos);
+  it("the switch lives in the lobby, on every room that can publish", () => {
+    // Wherever a room can be listed, the host finds the same segmented row
+    // on the rules tab. This is the only place the question is asked.
+    for (const file of [
+      "src/components/team/RoomLobbyV2.tsx",
+      "src/pages/TeamBattlePage.tsx",
+    ]) {
+      const src = read(file);
+      expect(src, file).toMatch(/roomVisibilityFields\(value === "public"\)/);
+      expect(src, file).toMatch(/value: "public", label: t\("extra\.roomPublic"\)/);
+    }
   });
 });
 
 describe("the arena is sized before it is opened", () => {
-  it("the host picks 2-2 through 5-5 from a dropdown beside the switch", () => {
+  it("the host picks 2-2 through 5-5 from a dropdown above the button", () => {
     const create = read("src/components/team/CreateRoomPage.tsx");
     // 2-2 is the default — the smallest game that can start — and the last
     // pick is remembered per device (owner's ask).
     expect(create).toMatch(/localStorage\.getItem\("mt\.battleTeamSize"\)/);
     expect(create).toMatch(/return saved >= 2 && saved <= 5 \? saved : 2;/);
     expect(create).toMatch(/localStorage\.setItem\("mt\.battleTeamSize", String\(n\)\)/);
-    // ONE row, not two (owner's ask): the visibility switch and the size
-    // dropdown sit side by side above the button, keeping the footer short
-    // so the team pickers above never scroll out of reach.
-    expect(create).toMatch(/<div className="flex items-stretch gap-2">/);
+    // The size dropdown is the whole footer row now — the visibility switch
+    // that used to share it moved to the lobby. Still one short row above
+    // the button, so the team pickers never scroll out of reach.
+    expect(create).toMatch(/<div className="mb-3 flex items-stretch justify-end">/);
     expect(create).toMatch(/onValueChange=\{\(v\) => setBattleTeamSize\(Number\(v\)\)\}/);
     expect(create).toMatch(/\[2, 3, 4, 5\]\.map\(\(size\) =>/);
     expect(create).toMatch(/teamSize: gameChoice === "battle" \? battleTeamSize : undefined/);

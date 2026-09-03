@@ -1,4 +1,6 @@
-import featuredRandom from "@/assets/play-chooser/featured-random.webp";
+// The Guess scene, under the filename the retired Random card left behind:
+// the mascot in a shower of question marks.
+import featuredGuess from "@/assets/play-chooser/featured-random.webp";
 import featuredQuick from "@/assets/play-chooser/featured-quick.webp";
 import featuredKing from "@/assets/play-chooser/featured-king.webp";
 import featuredBattle from "@/assets/play-chooser/featured-battle.webp";
@@ -12,12 +14,12 @@ import featuredMyTrivias from "@/assets/play-chooser/featured-mytrivias.webp";
  * room reached any other way (a link, the rooms list, a refresh) is read
  * off what it plays.
  */
-export type LobbySceneKey = "random" | "quick" | "king" | "battle" | "words" | "library" | "mytrivias";
+export type LobbySceneKey = "guess" | "quick" | "king" | "battle" | "words" | "library" | "mytrivias";
 
 const KEY = "mt.lobbyScene";
 
 export const LOBBY_SCENES: Record<LobbySceneKey, string> = {
-  random: featuredRandom,
+  guess: featuredGuess,
   quick: featuredQuick,
   king: featuredKing,
   battle: featuredBattle,
@@ -46,8 +48,8 @@ function remembered(): LobbySceneKey | null {
 /** The scene for a classic room: the remembered tap, else what it plays. */
 export function classicLobbyScene(room: { user_trivia_id?: string | null; category_id?: string | null }): string {
   const key = remembered();
-  if (key === "random" || key === "library" || key === "mytrivias") return LOBBY_SCENES[key];
+  if (key === "guess" || key === "library" || key === "mytrivias") return LOBBY_SCENES[key];
   if (room.user_trivia_id) return featuredMyTrivias;
   if (room.category_id) return featuredLibrary;
-  return featuredRandom;
+  return featuredGuess;
 }

@@ -53,7 +53,12 @@ interface RoomIconPickerModalProps {
   onClose: () => void;
   currentIconUrl: string | null;
   roomName: string;
-  onConfirm: (iconUrl: string, newName: string) => void;
+  /**
+   * What to save. The icon is null when nothing new was picked and the room
+   * had none to begin with — a rename on its own is a perfectly good reason
+   * to open this sheet, and the caller simply skips the icon write.
+   */
+  onConfirm: (iconUrl: string | null, newName: string) => void;
   /**
    * Pick an icon and nothing else.
    *
@@ -72,6 +77,12 @@ interface RoomIconPickerModalProps {
    * namer exactly as before).
    */
   autoName?: boolean;
+  /**
+   * How long the name may be. Rooms keep the old 35; a team's name is
+   * written across a bench heading beside a crest, a captain chip and a
+   * seat count, and 12 is what fits there without truncating.
+   */
+  nameMaxLength?: number;
 }
 
 /**
@@ -104,6 +115,7 @@ export function RoomIconPickerModal({
   onConfirm,
   iconOnly = false,
   autoName = true,
+  nameMaxLength = 35,
 }: RoomIconPickerModalProps) {
   const { t, language } = useLanguage();
   const ICON_CATEGORIES = ICON_CATEGORIES_DATA.map(c => ({ ...c, label: t(`extra.${c.key}`) }));
@@ -283,19 +295,33 @@ export function RoomIconPickerModal({
     };
   }, [searchQuery, searchIcons]);
 
-  // Load icons when modal opens and reset state
+  /**
+   * Load the icons and take the starting values — once per opening.
+   *
+   * This used to run whenever `currentIconUrl` or `roomName` changed, which
+   * reads as "when the caller passes something new" and is in fact "whenever
+   * the row underneath moves". In the battle lobby both are read live off
+   * `game_rooms`, and the captain's own device writes the dealt crest to
+   * that row on arrival — so a realtime update mid-edit reset the icon the
+   * captain had just tapped and retyped over the name they were typing.
+   */
+  const openedRef = useRef(false);
   useEffect(() => {
-    if (isOpen) {
-      fetchRandomIcons();
-      loadRecentIcons();
-      fetchCategoryIcons(null); // Load "all" category
-      setSelectedIcon(currentIconUrl);
-      setEditableName(roomName);
-      setSearchQuery("");
-      setSearchResults([]);
-      setSelectedCategory("all");
-      hasManuallyEditedName.current = false; // Reset on open
+    if (!isOpen) {
+      openedRef.current = false;
+      return;
     }
+    if (openedRef.current) return;
+    openedRef.current = true;
+    fetchRandomIcons();
+    loadRecentIcons();
+    fetchCategoryIcons(null); // Load "all" category
+    setSelectedIcon(currentIconUrl);
+    setEditableName(roomName);
+    setSearchQuery("");
+    setSearchResults([]);
+    setSelectedCategory("all");
+    hasManuallyEditedName.current = false; // Reset on open
   }, [isOpen, fetchRandomIcons, loadRecentIcons, fetchCategoryIcons, currentIconUrl, roomName]);
 
   // Auto-select room name text when modal opens
@@ -340,11 +366,26 @@ export function RoomIconPickerModal({
     }
   };
 
+  /**
+   * What this sheet will save: whatever was tapped, else whatever the room
+   * already wears.
+   */
+  const iconToSave = selectedIcon ?? currentIconUrl;
+  /**
+   * Is there anything to save at all?
+   *
+   * The button used to require `selectedIcon`, so a room with no icon of its
+   * own — every battle side before its captain's device writes the dealt
+   * crest to the row — had a dead green button no matter what was typed into
+   * the name field. Renaming a team was simply not possible without also
+   * picking a new crest, which is not what the sheet says it does.
+   */
+  const canConfirm = iconOnly ? !!iconToSave : !!iconToSave || !!editableName.trim();
+
   const handleConfirmClick = () => {
-    if (selectedIcon && (iconOnly || editableName.trim())) {
-      onConfirm(selectedIcon, editableName.trim());
-      onClose();
-    }
+    if (!canConfirm || isGeneratingName) return;
+    onConfirm(iconToSave, editableName.trim());
+    onClose();
   };
 
   const clearSearch = () => {
@@ -444,7 +485,7 @@ export function RoomIconPickerModal({
                       setEditableName(e.target.value);
                       hasManuallyEditedName.current = true;
                     }}
-                    maxLength={35}
+                    maxLength={nameMaxLength}
                     className="text-base font-semibold pr-8 bg-background h-12"
                     placeholder={t("extra.ripRoomNamePlaceholder")}
                     disabled={isGeneratingName}
@@ -649,7 +690,7 @@ export function RoomIconPickerModal({
             <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full">
               <ChunkyButton
                 onClick={handleConfirmClick}
-                disabled={!selectedIcon || !editableName.trim() || isGeneratingName}
+                disabled={!canConfirm || isGeneratingName}
                 className="w-full"
                 variant="success"
               >

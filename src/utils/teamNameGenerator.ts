@@ -8,6 +8,17 @@
  * the crest picker afterwards (tb_set_team_name, captain-only).
  */
 
+/**
+ * How long a captain's own name for their side may be.
+ *
+ * The owner's number. It is a cap on what can be TYPED, not on the dealt
+ * pool below — a bench heading carries the name beside a crest, a captain
+ * chip and a seat count, and a rename that fills that row is a rename that
+ * truncates. The database's own limit stays 40 as a backstop
+ * (tb_set_team_name); this is the one a player meets.
+ */
+export const TEAM_NAME_MAX = 12;
+
 const POOLS: Record<string, readonly string[]> = {
   ka: [
     "პინგვინები",

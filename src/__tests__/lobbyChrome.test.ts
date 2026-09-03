@@ -269,3 +269,56 @@ describe("the match wears the sides' crests", () => {
     expect(match).not.toMatch(/text-white text-\[10px\] font-bold \$\{DIFFICULTY_COLORS\[tile\.difficulty\]\}/);
   });
 });
+
+describe("every lobby says which game it is", () => {
+  const universal = read("src/components/lobby/UniversalLobby.tsx");
+
+  it("the title carries an icon beside it", () => {
+    // A lobby used to open on a name and nothing else, so all three kinds
+    // of room looked identical above the card — the same haze, the same
+    // Slackey heading — and which game you had walked into was something
+    // you worked out from the rows underneath.
+    expect(universal).toMatch(/icon\?: string \| null;/);
+    expect(universal).toMatch(/<RoomTitle name=\{roomName\} icon=\{icon\} editable \/>/);
+    expect(universal).toMatch(/<RoomTitle name=\{roomName\} icon=\{icon\} \/>/);
+  });
+
+  it("the King wears the crowned mascot and the arena its crate", () => {
+    expect(king).toMatch(/icon=\{kingRoom\?\.room_icon \|\| iconKingMascot\}/);
+    expect(battle).toMatch(/icon=\{iconBattleCrate\}/);
+  });
+
+  it("an ordinary room wears the same face it wears everywhere else", () => {
+    // Not a second random icon drawn for this screen: the per-room deal the
+    // public card and the search strip already use, seeded off the room id,
+    // so a room looks like itself wherever it turns up.
+    expect(room).toMatch(/const roomFace = currentRoom\.room_icon \?\? dealtRoomIcon\(currentRoom\.id, iconPool\)/);
+    expect(room).toMatch(/icon=\{roomFace\}/);
+    // And the sheet opens on it, so a rename cannot silently clear the icon.
+    expect(room).toMatch(/currentIconUrl=\{roomFace\}/);
+  });
+
+  it("the pencil marks the face a host may change, and only that one", () => {
+    // The arena's sign is fixed — what the SIDES wear is the choosable part
+    // — so it passes no onRename and gets no pencil.
+    expect(battle).not.toMatch(/onRename=/);
+    expect(room).toMatch(/onRename=\{isHost \? \(\) => setShowIconPicker\(true\) : undefined\}/);
+  });
+});
+
+describe("a rule with one answer is not a rule", () => {
+  it("Versus King draws no visibility row", () => {
+    // Its lounge is friends-only by decision, so the row could only ever
+    // read "private" with the other half greyed beside it — a control that
+    // looks like a choice, is not one, and invites the tap that proves it.
+    expect(king).toMatch(/rules=\{\[\]\}/);
+    expect(king).not.toMatch(/key: "visibility"/);
+  });
+
+  it("the rooms that can publish keep theirs, and it acts", () => {
+    for (const [name, src] of [["classic", room], ["battle", battle]] as const) {
+      expect(src, name).toMatch(/key: "visibility"/);
+      expect(src, name).toMatch(/onChange: isHost \?/);
+    }
+  });
+});

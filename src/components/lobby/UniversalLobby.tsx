@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { ArrowLeft, Bell, Loader2, Play, Plus } from "lucide-react";
+import { ArrowLeft, Bell, Loader2, Pencil, Play, Plus } from "lucide-react";
 import SpotlightSearch from "@/components/search/SpotlightSearch";
 import { cn } from "@/lib/utils";
 import bgBlob1 from "@/assets/tb-lobby/bg-blob-1.jpg";
@@ -59,6 +59,17 @@ export interface UniversalLobbyProps {
   /** The tapped card's render — becomes the blurred scene behind the title. */
   sceneArt: string;
   roomName: string;
+  /**
+   * The face of the room, beside its name.
+   *
+   * A lobby used to open on a name and nothing else, so the three kinds of
+   * room looked identical above the card — the same lilac haze, the same
+   * Slackey heading — and what game you had walked into was something you
+   * worked out from the rows underneath. Each kind brings its own: the
+   * King's crowned mascot, the arena's crate, and for an ordinary room the
+   * icon it actually wears, which is the host's to change.
+   */
+  icon?: string | null;
   /** The host renames by tapping the name; a guest gets the name alone. */
   onRename?: () => void;
   onBack: () => void;
@@ -123,6 +134,7 @@ function isGrouped(players: LobbyPlayer[] | LobbyPlayerGroup[]): players is Lobb
 export function UniversalLobby({
   sceneArt,
   roomName,
+  icon,
   onRename,
   onBack,
   unreadCount = 0,
@@ -247,7 +259,11 @@ export function UniversalLobby({
 
           <div className="min-h-[36px] flex-1" />
 
-          {/* The room's name (1018:6828): Slackey, 52 on 62, two lines. */}
+          {/* The room's name (1018:6828): Slackey, 52 on 62, two lines, with
+              the room's own face beside it. The icon rides INSIDE the rename
+              button rather than next to it, because on a room that has one to
+              change they are one control: tapping either opens the sheet that
+              sets both. */}
           <motion.div {...arrive(0.3)} className="shrink-0 pl-[9px]">
             {onRename ? (
               <motion.button
@@ -256,11 +272,11 @@ export function UniversalLobby({
                 onClick={onRename}
                 className="block w-full max-w-[456px] text-left"
               >
-                <RoomTitle name={roomName} />
+                <RoomTitle name={roomName} icon={icon} editable />
               </motion.button>
             ) : (
               <div className="max-w-[456px]">
-                <RoomTitle name={roomName} />
+                <RoomTitle name={roomName} icon={icon} />
               </div>
             )}
           </motion.div>
@@ -512,11 +528,39 @@ export function LobbyInfoRow({
   );
 }
 
-function RoomTitle({ name }: { name: string }) {
-  return (
-    <h1 className="font-hero text-[52px] capitalize leading-[62px] tracking-[-0.16px] text-[#402666] [overflow-wrap:anywhere]">
+function RoomTitle({
+  name,
+  icon,
+  editable = false,
+}: {
+  name: string;
+  icon?: string | null;
+  editable?: boolean;
+}) {
+  const heading = (
+    <h1 className="min-w-0 flex-1 font-hero text-[52px] capitalize leading-[62px] tracking-[-0.16px] text-[#402666] [overflow-wrap:anywhere]">
       {name}
     </h1>
+  );
+  if (!icon) return heading;
+  return (
+    <div className="flex items-center gap-3">
+      <span className="relative shrink-0">
+        <img
+          alt=""
+          src={icon}
+          className="size-[68px] object-contain drop-shadow-[0_4px_10px_rgba(88,50,160,0.22)]"
+        />
+        {/* The pencil says the icon is the host's to change; a guest, and a
+            room whose face is fixed by the game it plays, get the art alone. */}
+        {editable && (
+          <span className="absolute -bottom-0.5 -right-0.5 flex size-[22px] items-center justify-center rounded-full bg-white shadow-[0px_2px_4px_rgba(0,0,0,0.18)]">
+            <Pencil className="h-3 w-3 text-[#523b76]" />
+          </span>
+        )}
+      </span>
+      {heading}
+    </div>
   );
 }
 

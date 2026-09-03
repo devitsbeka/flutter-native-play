@@ -37,7 +37,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast";
 import { dealtCrests, fetchCrestPool } from "@/utils/roomCrests";
-import { dealTeamNames } from "@/utils/teamNameGenerator";
+import { dealTeamNames, TEAM_NAME_MAX } from "@/utils/teamNameGenerator";
 
 /**
  * /team-battle — the Team Battle flow (docs/GAME_TYPES_DESIGN.md §2), its own
@@ -205,7 +205,7 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
   const { user } = useAuth();
   const navigate = useNavigate();
   const {
-    room, participants, pendingInvites, isHost, myTeam, setTeam,
+    room, participants, pendingInvites, isHost, myTeam, setTeam, refreshRoom,
     setCaptain, voteCaptain, manageSeat, startMatch, startError, leaveRoom, loading, state, settle,
   } = useTeamBattle();
   const { categories } = useCategories();
@@ -233,6 +233,9 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
       }),
     [room?.id, room?.team_a_icon, room?.team_b_icon, crestPool],
   );
+  /** What the side is wearing right now, dealt or chosen — what the picker
+      should open on, rather than an empty slot next to a filled bench. */
+  const dealtFor = (team: TBTeam) => (team === "a" ? dealt.a : dealt.b) ?? null;
   const [rollFace, setRollFace] = useState<{ [k in TBTeam]?: TBParticipant }>({});
   const rollTimers = useRef<{ [k in TBTeam]?: number }>({});
   const [params, setParams] = useSearchParams();
@@ -304,19 +307,32 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
       p_team: team,
       p_icon: iconUrl,
     });
-    if (error) toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    await refreshRoom();
   };
 
   // The side's NAME goes the same road as its crest: through the
   // captain-only RPC, never straight onto the room row.
   const setTeamName = async (team: TBTeam, name: string) => {
-    if (!room || containsBlockedText(name)) return;
+    if (!room) return;
+    if (containsBlockedText(name)) {
+      // Silence here read as "the rename didn't work". Say why.
+      toast.error(t("extra.textNotAllowed"));
+      return;
+    }
     const { error } = await supabase.rpc("tb_set_team_name", {
       p_room_id: room.id,
       p_team: team,
-      p_name: name,
+      p_name: name.slice(0, TEAM_NAME_MAX),
     });
-    if (error) toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    await refreshRoom();
   };
 
   // What a side is CALLED: the captain's name for it, else the name the
@@ -756,6 +772,10 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
       // The arena has no name of its own (see above): it is called
       // Trivia Battle, and the two SIDES carry the identity.
       roomName={t("teamBattle.title")}
+      // The arena's own sign. The battle's room has no face to change —
+      // what the sides wear is the part worth choosing, and that is on the
+      // benches — so this one is fixed and carries no pencil.
+      icon={iconBattleCrate}
       onBack={() => {
         // Navigate away first so the gate never re-creates a room the
         // instant this one clears. Back is the online-game page the
@@ -869,13 +889,18 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
           isOpen
           autoName={false}
           onClose={() => setCrestFor(null)}
-          currentIconUrl={(crestFor === "a" ? room?.team_a_icon : room?.team_b_icon) ?? null}
+          currentIconUrl={(crestFor === "a" ? room?.team_a_icon : room?.team_b_icon) ?? dealtFor(crestFor)}
           roomName={teamName(crestFor)}
+          nameMaxLength={TEAM_NAME_MAX}
           onConfirm={(iconUrl, newName) => {
             const team = crestFor;
             const before = teamName(team);
             setCrestFor(null);
-            void setTeamIcon(team, iconUrl);
+            // Either half of this sheet may be the reason it was opened: a
+            // side with no crest of its own on the row (the deal is still
+            // client-side) hands back a null icon, and the rename is the
+            // whole edit.
+            if (iconUrl) void setTeamIcon(team, iconUrl);
             if (newName && newName !== before) void setTeamName(team, newName);
           }}
         />
