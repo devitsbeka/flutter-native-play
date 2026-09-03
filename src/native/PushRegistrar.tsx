@@ -1,20 +1,21 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Capacitor } from "@capacitor/core";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { PushConsentGate } from "@/native/PushConsentGate";
 import { ensureTrackingConsent } from "@/native/trackingConsent";
 import { useAuth } from "@/hooks/useAuth";
 
 /**
  * Mounts push registration for the lifetime of the app, and asks a new player
- * for permission once.
+ * for permission once — after explaining what is being asked.
  *
- * Renders nothing. It exists because `usePushNotifications` is a hook, and a
- * hook nobody calls does nothing at all — which is precisely the bug it was
- * written to fix. The FCM sender had been reading an empty `push_tokens`
- * table because no client ever registered; adding the hook without mounting
- * it left the table exactly as empty.
+ * It exists because `usePushNotifications` is a hook, and a hook nobody calls
+ * does nothing at all — which is precisely the bug it was written to fix. The
+ * FCM sender had been reading an empty `push_tokens` table because no client
+ * ever registered; adding the hook without mounting it left the table exactly
+ * as empty.
  *
- * On a launch where permission is still unasked, it prompts. Two guards on
+ * On a launch where permission is still unasked, it prompts. Three guards on
  * that, because iOS shows the system dialog **once for the lifetime of the
  * install** — a player who dismisses it can never be asked again from inside
  * the app, and the Settings toggle can then only send them to iOS Settings.
@@ -24,12 +25,27 @@ import { useAuth } from "@/hooks/useAuth";
  *     cannot yet be notified about anything.
  *  2. Once per install — but recorded only once iOS has actually been asked.
  *     See below; writing it first is what broke this.
+ *  3. Tracking first, if tracking is being asked about on this launch. Two
+ *     system sheets must not stack: the second arrives over the first and is
+ *     dismissed on reflex, which on iOS is permanent.
  *
  * The short delay is not cosmetic. A permission sheet over a still-painting
  * first screen reads as an interruption by something the player has not seen
- * yet, and gets dismissed on reflex — which on iOS is permanent.
+ * yet, and gets dismissed on reflex.
  *
- * ## Why the flag moved, and why the callback is a ref
+ * ## Why there is a screen in front of it
+ *
+ * The system dialog used to go up cold, over the home screen. "MyTrivia Would
+ * Like to Send You Notifications" describes the mechanism and not the offer,
+ * and the answer is permanent, so it was the most expensive tap in the app to
+ * leave unexplained. `PushConsentGate` says what would actually be sent and
+ * then hands over to Apple — the same shape the tracking prompt already had.
+ *
+ * The flag is written when that hand-over happens, not when the screen opens:
+ * a player who never reaches the system dialog is asked again next launch,
+ * which is the failure this should have.
+ *
+ * ## Why the callback is a ref
  *
  * The delay used to be armed by an effect that depended on `requestPermission`,
  * and the "already asked" flag was written *before* the timer, deliberately, so
@@ -44,11 +60,6 @@ import { useAuth } from "@/hooks/useAuth";
  * persisted, then suppressed every future launch: build 35 shipped with iOS
  * still reporting `notDetermined`, and the only way to reach the dialog was
  * the Settings row.
- *
- * So the callback is held in a ref and kept out of the dependency list — the
- * timer survives an auth refresh — and the flag is written after the request
- * resolves. A cancelled timer now simply asks again next launch, which is the
- * failure this should have.
  */
 
 const ASKED_KEY = "push:prompted";
@@ -58,6 +69,7 @@ export function PushRegistrar() {
   const { permission, requestPermission } = usePushNotifications();
   const { user } = useAuth();
   const asked = useRef(false);
+  const [explaining, setExplaining] = useState(false);
 
   // Latest callback without depending on its identity. The effect below arms a
   // timer; re-running it on a new function reference cancels that timer, and
@@ -83,30 +95,40 @@ export function PushRegistrar() {
     }
     asked.current = true;
 
+    let cancelled = false;
     const timer = setTimeout(() => {
       void (async () => {
-        try {
-          // Never stack two system dialogs. On iOS the launch-time ATT flow
-          // may still be on screen, and a permission sheet arriving over it is
-          // dismissed on reflex. Resolves immediately once tracking is decided,
-          // and on every non-iOS target.
-          await ensureTrackingConsent();
-          await requestRef.current();
-        } finally {
-          // Recorded here, not before the timer: the flag means "iOS has been
-          // asked", and until this line it has not been.
-          try {
-            localStorage.setItem(ASKED_KEY, "1");
-          } catch {
-            /* private mode; the in-memory guard still holds for this session */
-          }
-        }
+        // Resolves immediately once tracking is decided, and on every non-iOS
+        // target. When the launch-time ATT flow is still on screen, this waits
+        // for it rather than opening a second screen behind it.
+        await ensureTrackingConsent();
+        if (!cancelled) setExplaining(true);
       })();
     }, ASK_DELAY_MS);
 
-    return () => clearTimeout(timer);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
     // `requestPermission` is deliberately absent — see the note above.
   }, [user?.id, permission]);
 
-  return null;
+  const handleContinue = useCallback(() => {
+    setExplaining(false);
+    void (async () => {
+      try {
+        await requestRef.current();
+      } finally {
+        // Recorded here, not when the screen opened: the flag means "iOS has
+        // been asked", and until this line it has not been.
+        try {
+          localStorage.setItem(ASKED_KEY, "1");
+        } catch {
+          /* private mode; the in-memory guard still holds for this session */
+        }
+      }
+    })();
+  }, []);
+
+  return <PushConsentGate open={explaining} onContinue={handleContinue} />;
 }

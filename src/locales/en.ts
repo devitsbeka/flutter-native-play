@@ -670,6 +670,22 @@ export const en: KaTranslations = {
   },
 
   // ==========================================
+  // Push notification pre-prompt
+  // ==========================================
+  pushConsent: {
+    title: "Don't miss your turn",
+    body: "We only send you things you are actually part of. Nothing else.",
+    pointTurnTitle: "When it's your move",
+    pointTurnBody: "Someone challenges you, or a match you're in is waiting on your answer.",
+    pointFriendsTitle: "Friend requests",
+    pointFriendsBody: "Someone you know wants to play — you'll know without checking.",
+    pointRewardsTitle: "Results and rewards",
+    pointRewardsBody: "Where you finished on the leaderboard, and what you earned for it.",
+    continue: "Continue",
+    footnote: "iOS will ask for your permission next. You can change your answer any time in Settings.",
+  },
+
+  // ==========================================
   // Content moderation
   // ==========================================
   moderation: {

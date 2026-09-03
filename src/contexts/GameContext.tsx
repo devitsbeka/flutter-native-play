@@ -3,6 +3,7 @@ import { FakeOpponent, generateFakeOpponent } from "@/data/opponents";
 import { TriviaQuestion, useTrivia, calculateScore } from "@/hooks/useTrivia";
 import { FIRST_ANSWER_BONUS } from "@/utils/scoring";
 import { preloadQuestionIcons } from "@/hooks/useAIIcon";
+import { warmQuestionImages } from "@/utils/questionImage";
 import { missionTracker } from "@/services/missionTracker";
 import posthog from "posthog-js";
 import { readAppLanguage } from "@/utils/appLanguage";
@@ -316,6 +317,15 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       preloadQuestionIcons(
         questions.map(q => ({ question: q.question, category: q.categoryId || q.category }))
       );
+
+      // And the pictures, which nothing warmed at all. The first image
+      // question was the only one that failed: it started from cold on screen
+      // and had to beat the card's five-second deadline through a fresh TLS
+      // handshake and an edge miss, while every later question inherited the
+      // open connection and the warm edge. Waiting is bounded inside — a
+      // couple of hundred milliseconds on the VS screen nobody notices, and a
+      // dead image cannot hold up the match.
+      await warmQuestionImages(questions.map(q => q.imageUrl));
       
       setSelectedCategoryId(categoryId);
       
