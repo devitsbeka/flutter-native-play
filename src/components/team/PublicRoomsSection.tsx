@@ -167,7 +167,10 @@ function PublicRoomCard({
     >
       {/* The private tab's card proportions (MyRoomsSection): the same
           shape on both tabs, and taller than the strip this used to be. */}
-      <div className="relative p-3 min-h-[216px] aspect-[1.45/1] md:aspect-[1.15/1] flex flex-col rounded-2xl overflow-hidden">
+      {/* 15% shorter than the private tab's proportions (owner's call): the
+          height is set by the aspect ratio, so the ratio grows by 1/0.85 and
+          the floor comes down with it. */}
+      <div className="relative p-3 min-h-[184px] aspect-[1.7/1] md:aspect-[1.35/1] flex flex-col rounded-2xl overflow-hidden">
         {scene ? (
           <>
             {/* The arena, dimmed to a backdrop: the pale lilac scene at
@@ -276,10 +279,10 @@ function PublicRoomCard({
               <img
                 src={crests.a}
                 alt=""
-                className="w-12 h-12 object-contain drop-shadow-lg -rotate-6 shrink-0"
+                className="w-[53px] h-[53px] object-contain drop-shadow-lg -rotate-6 shrink-0"
               />
             ) : (
-              <span className="w-12 h-12 rounded-full bg-white/10 border border-white/20 shrink-0" />
+              <span className="w-[53px] h-[53px] rounded-full bg-white/10 border border-white/20 shrink-0" />
             )}
             <h3 className={`flex-1 min-w-0 text-center font-display text-lg leading-tight line-clamp-2 drop-shadow-md ${ink.text}`}>
               {lounge ? t(lounge.labelKey) : room.room_name || t("extra.gameRoomDefault")}
@@ -288,10 +291,10 @@ function PublicRoomCard({
               <img
                 src={crests.b}
                 alt=""
-                className="w-12 h-12 object-contain drop-shadow-lg rotate-6 shrink-0"
+                className="w-[53px] h-[53px] object-contain drop-shadow-lg rotate-6 shrink-0"
               />
             ) : (
-              <span className="w-12 h-12 rounded-full bg-white/10 border border-white/20 shrink-0" />
+              <span className="w-[53px] h-[53px] rounded-full bg-white/10 border border-white/20 shrink-0" />
             )}
           </div>
         ) : (
