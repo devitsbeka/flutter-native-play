@@ -159,9 +159,21 @@ interface CreateRoomPageProps {
     image_url?: string | null;
     total_levels: number;
   } | null;
+  /**
+   * Skip the fade-in and paint opaque on the first frame.
+   *
+   * This screen is a `fixed inset-0` overlay that covers the page completely
+   * — but it entered from `opacity: 0`, so for the length of the fade the
+   * page underneath showed through it. That is fine when it is opened from
+   * inside the rooms hub, where the cross-fade is the transition. It is wrong
+   * when the play chooser sends someone straight here: the hub is not a
+   * screen they asked for, and watching it resolve into the create screen
+   * reads as the app landing somewhere else first and then correcting itself.
+   */
+  enterInstantly?: boolean;
 }
 
-export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType, autoOpenPersonalTrivia, preSelectedCategory }: CreateRoomPageProps) {
+export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType, autoOpenPersonalTrivia, preSelectedCategory, enterInstantly = false }: CreateRoomPageProps) {
   const { user, profile } = useAuth();
   const { t } = useLanguage();
   const bubbleVideo = useResponsiveVideo("/videos/floating-blob.mp4");
@@ -1424,7 +1436,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
+      initial={{ opacity: enterInstantly ? 1 : 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 bg-background flex flex-col overflow-hidden pt-[var(--safe-top)] pb-[var(--safe-bottom)]"

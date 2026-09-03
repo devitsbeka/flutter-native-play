@@ -127,6 +127,14 @@ function TeamContentV2() {
     Boolean(location.state?.openCreateRoom || location.state?.openPersonalTrivia),
   );
   const createOpen = showCreateModal || arrivedToCreate.current;
+  // Rendering it on the first paint was only half of it. The create screen is
+  // a full-bleed opaque overlay, but it entered from `opacity: 0` — so for the
+  // length of that fade the rooms hub behind it was what you actually saw, and
+  // the play chooser looked like it had landed on the wrong page and then
+  // corrected itself. Arriving here to create means this screen IS the
+  // destination, so it paints opaque immediately. Cleared on close, so opening
+  // it again from inside the hub still cross-fades.
+  const enteredOnCreate = useRef<boolean>(arrivedToCreate.current);
 
   useEffect(() => {
     if (location.state?.openPersonalTrivia) {
@@ -1327,7 +1335,9 @@ function TeamContentV2() {
         )}
         {createOpen && (
         <CreateRoomPage 
+            enterInstantly={enteredOnCreate.current}
             onClose={() => {
+              enteredOnCreate.current = false;
               setShowCreateModal(false);
               setChallengeContext(null);
               setAutoOpenPersonalTrivia(false);

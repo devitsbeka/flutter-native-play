@@ -7,12 +7,12 @@ import myTriviaLogo from "@/assets/mytrivia-logo.svg";
 import guestGeoMap from "@/assets/figma-home/guest-geo-map.webp";
 import coinChunky from "@/assets/figma-home/coin-chunky.png";
 import gemChunky from "@/assets/figma-home/gem-chunky.png";
-import homeScene from "@/assets/figma-home/home-scene.webp";
 import dailyRewardBag from "@/assets/figma-home/daily-reward-bag.png";
 import streakFire from "@/assets/figma-home/streak-fire.png";
 import flagGeRound from "@/assets/figma-home/flag-ge-round.svg";
 import { getCountryFlag } from "@/data/opponents";
 import { BackgroundVideo } from "@/components/shared/BackgroundVideo";
+import heroScene from "@/assets/figma-landing/hero-scene.png";
 
 // Figma: Hom — the mobile home states, all drawn on a 500x946 frame:
 //   632:296  Logged out / guest
@@ -49,6 +49,22 @@ const NAV_H = "calc(var(--bottom-nav-height) + var(--safe-bottom))";
 // which start at z-20.
 const SCENE_Z = "z-[4]";
 
+// The scene is anchored to the bottom and does not reach the top of the
+// screen, so its top edge would otherwise cut straight across the animated
+// blob wash behind it. Front-loaded ramp: near-solid within the top 16%, with
+// only the last sliver of alpha spread far enough down to hide the tone seam
+// between the artwork's sky and the page.
+//
+// Inline rather than a Tailwind arbitrary property: that ships `mask-image`
+// alone, which iOS below 15.4 ignores outright — and an ignored mask is
+// precisely the hard top edge this is here to prevent.
+const SCENE_TOP_FADE: React.CSSProperties = {
+  maskImage:
+    "linear-gradient(to bottom, transparent 0, rgba(0,0,0,0.92) 16%, black 55%)",
+  WebkitMaskImage:
+    "linear-gradient(to bottom, transparent 0, rgba(0,0,0,0.92) 16%, black 55%)",
+};
+
 // Figma 991:1239. The artwork starts at the very top of the frame and runs
 // 896 of its 946px, the last 50 disappearing behind the nav; the header and
 // the friends reel sit directly on it. Two washes lie over it: a white one
@@ -63,49 +79,74 @@ interface MobileSceneBackgroundProps {
   sceneUrl: string | null;
   /** Matching idle-loop video for the generated scene. */
   sceneVideoUrl: string | null;
-  /** Fall back to the frame's own Trivia King artwork. */
+  /** Fall back to the shared Trivia King loop. */
   showDefaultScene: boolean;
+  /** The Trivia King idle loop, played when there is no generated scene. */
+  defaultVideoSrc: string;
 }
 
-// The frame's artwork is a 1536x2752 portrait, the same 0.558 aspect as its
-// 500x896 box, so `cover` from the top is the frame's own crop on a phone
-// whose content area is that shape — and on a taller one it grows to fill
-// rather than leave a strip of bare wash above the nav. A generated scene is
-// 16:9 and keeps its centre column, where the subject stands.
 export function MobileSceneBackground({
   sceneUrl,
   sceneVideoUrl,
   showDefaultScene,
+  defaultVideoSrc,
 }: MobileSceneBackgroundProps) {
   if (!sceneUrl && !showDefaultScene) return null;
+
+  // Fitted to the width, never to the height.
+  //
+  // This was `size-full object-cover`, which fits the artwork to whichever
+  // edge is proportionally longer. The scene is a 1536x2752 portrait — a
+  // 0.558 aspect, the same as the frame's own 500x896 box — so on a phone of
+  // exactly that shape `cover` is the design's crop and looks correct. Every
+  // taller phone is where it falls apart: cover then scales to fill the
+  // height, and the artwork is blown up and cropped left and right. On a
+  // 0.46-aspect handset that is roughly a 20% enlargement of a picture whose
+  // subject is already centred and close, which is why it read as zoomed in
+  // and out of proportion with everything around it.
+  //
+  // Width is the honest constraint here: the artwork is authored to span the
+  // screen, so it spans it, and the height follows from the aspect instead of
+  // being forced. Anchored to the bottom, above the nav, as it was.
+  const box = "absolute left-0 w-full max-w-none";
+  const style: React.CSSProperties = { bottom: NAV_H, ...SCENE_TOP_FADE };
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
-      className={`md:hidden absolute inset-0 ${SCENE_Z} select-none pointer-events-none overflow-hidden bg-[#f9dbff]`}
+      className={`md:hidden absolute inset-0 ${SCENE_Z} select-none pointer-events-none overflow-hidden`}
     >
       {sceneUrl ? (
         sceneVideoUrl ? (
           // BackgroundVideo, not <video autoplay>: Low Power Mode paints a
           // play glyph over a suspended autoplay video and CSS cannot hide
           // it. The still renders until playback truly starts.
-          <BackgroundVideo src={sceneVideoUrl} still={sceneUrl} className="absolute inset-0" />
-        ) : (
-          <img
-            src={sceneUrl}
-            alt=""
-            draggable={false}
-            className="absolute inset-0 size-full max-w-none object-cover"
+          //
+          // `intrinsic` so the wrapper takes its height from the video rather
+          // than from the box — the same width-led sizing as the still.
+          <BackgroundVideo
+            src={sceneVideoUrl}
+            still={sceneUrl}
+            layout="intrinsic"
+            className={box}
+            style={style}
           />
+        ) : (
+          <img src={sceneUrl} alt="" draggable={false} className={box} style={style} />
         )
       ) : (
-        <img
-          src={homeScene}
-          alt=""
-          draggable={false}
-          className="absolute inset-0 size-full max-w-none object-cover object-top"
+        // The default scene is the Trivia King idle loop, not a still of it.
+        // The full-bleed rewrite dropped the video and rendered `homeScene`
+        // on its own, so the character simply stopped moving; `heroScene` is
+        // the exported frame that holds until playback starts.
+        <BackgroundVideo
+          src={defaultVideoSrc}
+          still={heroScene}
+          layout="intrinsic"
+          className={box}
+          style={style}
         />
       )}
       <div aria-hidden className="absolute inset-0" style={{ backgroundImage: SCENE_WASH }} />

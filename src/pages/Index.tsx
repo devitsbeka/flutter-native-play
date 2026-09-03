@@ -913,6 +913,7 @@ export default function Index() {
             sceneUrl={sceneUrl}
             sceneVideoUrl={sceneVideoUrl}
             showDefaultScene={showDefaultScene}
+            defaultVideoSrc={DEFAULT_SCENE_VIDEO}
           />
         )}
         {/* Personalized scene (or the default Trivia King loop) as the
