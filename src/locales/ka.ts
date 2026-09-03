@@ -3410,6 +3410,7 @@ export const ka = {
     inviteSendFailed: "მოწვევა ვერ გაიგზავნა",
     inviteAcceptFailed: "მოწვევის მიღება ვერ მოხერხდა",
     friendInvitesYouGame: "{name} გიწვევს თამაშში!",
+    inviteModalBody: "გიწვევს თამაშში!",
     playerFallback: "მოთამაშე",
     friendFallback: "მეგობარი",
     hoursShort: "{h}სთ",
