@@ -42,17 +42,31 @@ export function ReactionBar({ roomId, toUserId }: { roomId: string; toUserId: st
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // A send that failed used to be indistinguishable from one that worked:
+  // the icon flew, nothing arrived, and nothing said so. The caption says it
+  // instead, for a few seconds.
+  const [failed, setFailed] = useState(false);
   const send = async (icon: string) => {
     setFlying(icon);
     window.setTimeout(() => setFlying((f) => (f === icon ? null : f)), 700);
     const ok = await sendReaction(roomId, toUserId, icon);
-    if (ok) setRecent(rememberRecentIcon(icon));
+    if (ok) {
+      setRecent(rememberRecentIcon(icon));
+      setFailed(false);
+      return;
+    }
+    setFailed(true);
+    window.setTimeout(() => setFailed(false), 4000);
   };
 
   return (
     <div className="flex-shrink-0 px-4 pb-[calc(0.5rem_+_var(--safe-bottom))] pt-1">
-      <p className="text-center text-white/60 text-[11px] font-semibold uppercase tracking-wide mb-1.5">
-        {t("teamBattle.sendIcon")}
+      <p
+        className={`text-center text-[11px] font-semibold uppercase tracking-wide mb-1.5 ${
+          failed ? "text-red-300" : "text-white/60"
+        }`}
+      >
+        {failed ? t("teamBattle.iconSendFailed") : t("teamBattle.sendIcon")}
       </p>
       <div className="flex items-center justify-center gap-2">
         {recent.slice(0, RECENT_ICONS_MAX).map((icon) => (

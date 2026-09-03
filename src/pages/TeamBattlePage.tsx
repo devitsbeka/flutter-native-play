@@ -277,7 +277,12 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
     const usable = excludePartyCategories(categories).filter(
       (c) => c.tier === "free" || c.tier === "standard",
     );
-    void startMatch(usable.map((c) => ({ uuid: c.uuid, name: c.name })), rounds);
+    // The slug rides along so the board can set its own clock: a picture
+    // board runs a minute a turn, everything else ninety seconds.
+    void startMatch(
+      usable.map((c) => ({ uuid: c.uuid, name: c.name, slug: c.category_id })),
+      rounds,
+    );
   };
 
   // The team the last-pressed + seat belonged to: peek invites carry it

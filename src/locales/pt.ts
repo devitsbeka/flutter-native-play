@@ -1444,6 +1444,8 @@ export const pt: KaTranslations = {
     pokeSent: "Chamado",
     pokeNotifTitle: "{name} está a chamar-te — o tempo corre!",
     sendIcon: "Enviar um ícone",
+    callOut: "Escolhe uma resposta!",
+    iconSendFailed: "Não enviado",
     iconsForYou: "Para ti",
     startTimeout: "O carregamento das perguntas demorou demais — verifique sua conexão e tente novamente",
     leaveMatchTitle: "Sair da partida?",

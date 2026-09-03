@@ -1730,6 +1730,8 @@ export const ka = {
     pokeSent: "დაუძახე — გაიგზავნა",
     pokeNotifTitle: "{name} გეძახის — დრო მიდის!",
     sendIcon: "გაუგზავნე იკონი",
+    callOut: "აირჩიე პასუხი!",
+    iconSendFailed: "ვერ გაიგზავნა",
     iconsForYou: "შენთვის გამოგზავნილი",
     startTimeout: "კითხვების ჩატვირთვა გაჭიანურდა — შეამოწმე ინტერნეტი და სცადე თავიდან",
     leaveMatchTitle: "ტოვებ თამაშს?",

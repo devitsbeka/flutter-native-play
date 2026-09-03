@@ -1728,6 +1728,8 @@ export const en: KaTranslations = {
     pokeSent: "Called them",
     pokeNotifTitle: "{name} is calling you — the clock is running!",
     sendIcon: "Send an icon",
+    callOut: "Pick an answer!",
+    iconSendFailed: "Couldn't send",
     iconsForYou: "Sent to you",
     startTimeout: "Loading questions took too long — check your connection and try again",
     leaveMatchTitle: "Leave the match?",

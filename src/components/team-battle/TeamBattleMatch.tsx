@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { BellRing, Bot, ChevronLeft, Star } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -602,8 +602,10 @@ function TurnQuestionCard({
 function PhaseRapidFire() {
   const { t } = useLanguage();
   const { user, profile } = useAuth();
-  const { state, room, tiles, participants, isSpotlight, myTeam, submitAnswer, turnPicks, sendPick, advance } =
-    useTeamBattle();
+  const {
+    state, room, tiles, participants, isSpotlight, myTeam, submitAnswer,
+    turnPicks, sendPick, lastPoke, sendPoke, advance,
+  } = useTeamBattle();
   const secondsLeft = useServerDeadline(state?.deadline, advance);
   const [choice, setChoice] = useState<{ option: string; correct: boolean } | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -641,8 +643,28 @@ function PhaseRapidFire() {
     supabase.functions
       .invoke("send-social-push", { body: { kind: "team_poke", roomId: room.id } })
       .catch(() => {});
+    // The one that actually reaches somebody staring at the question. The
+    // notification above plays their sound and the push finds them if they
+    // have left the app; neither draws anything on the screen they are
+    // looking at, because the app's toasts are delivery-suppressed.
+    sendPoke(player.user_id, name);
     toast.success(t("teamBattle.pokeSent"));
   };
+
+  /**
+   * "Pick an answer!" — three seconds, and only for the player being called.
+   *
+   * Placed in the gap the question card already leaves above itself, so it
+   * covers neither the question nor the answers; a call that hides the thing
+   * it is telling you to answer is worse than no call at all.
+   */
+  const [called, setCalled] = useState(false);
+  useEffect(() => {
+    if (!lastPoke || !user || lastPoke.to !== user.id) return;
+    setCalled(true);
+    const timer = window.setTimeout(() => setCalled(false), 3000);
+    return () => window.clearTimeout(timer);
+  }, [lastPoke, user]);
 
   // The bot's turn is pre-rolled server-side; the showcase window animates it
   // so the room watches answers land instead of a frozen counter.
@@ -781,7 +803,22 @@ function PhaseRapidFire() {
           </div>
         )}
 
-        <div className="px-4 pt-8 flex-shrink-0">
+        <div className="relative px-4 pt-8 flex-shrink-0">
+          <AnimatePresence>
+            {called && (
+              <motion.div
+                key="call"
+                initial={{ opacity: 0, y: -6, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ type: "spring", stiffness: 480, damping: 26 }}
+                className="pointer-events-none absolute left-1/2 top-0.5 z-30 flex -translate-x-1/2 items-center gap-1.5 whitespace-nowrap rounded-full bg-amber-400 px-3 py-1 text-xs font-black uppercase tracking-wide text-[#402666] shadow-lg"
+              >
+                <BellRing className="h-3.5 w-3.5" />
+                {t("teamBattle.callOut")}
+              </motion.div>
+            )}
+          </AnimatePresence>
           <TurnQuestionCard
             tile={tile}
             question={question}
