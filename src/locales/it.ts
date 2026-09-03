@@ -2972,6 +2972,7 @@ export const it: KaTranslations = {
     inviteSendFailed: "Invio invito fallito",
     inviteAcceptFailed: "Accettazione invito fallita",
     friendInvitesYouGame: "{name} ti invita a giocare!",
+    inviteModalBody: "Ti invita a una partita",
     playerFallback: "Giocatore",
     friendFallback: "Amico",
     giftAlt: "Regalo",
