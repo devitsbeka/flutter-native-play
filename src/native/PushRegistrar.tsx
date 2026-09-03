@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Capacitor } from "@capacitor/core";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { ensureTrackingConsent } from "@/native/trackingConsent";
 import { useAuth } from "@/hooks/useAuth";
 
 /**
@@ -21,14 +22,33 @@ import { useAuth } from "@/hooks/useAuth";
  *  1. Signed in first. An invitation notification is addressed to an account,
  *     so asking before there is one spends the single dialog on a device that
  *     cannot yet be notified about anything.
- *  2. Once per install, recorded before the call rather than after. The flag
- *     is what stops a re-render, a sign-out and back in, or a second mount
- *     from re-entering; it is written first so a rejected promise cannot
- *     leave it unset and re-ask on the next launch.
+ *  2. Once per install — but recorded only once iOS has actually been asked.
+ *     See below; writing it first is what broke this.
  *
  * The short delay is not cosmetic. A permission sheet over a still-painting
  * first screen reads as an interruption by something the player has not seen
  * yet, and gets dismissed on reflex — which on iOS is permanent.
+ *
+ * ## Why the flag moved, and why the callback is a ref
+ *
+ * The delay used to be armed by an effect that depended on `requestPermission`,
+ * and the "already asked" flag was written *before* the timer, deliberately, so
+ * a rejected promise could not leave it unset.
+ *
+ * Both halves of that were wrong together. `requestPermission` is rebuilt
+ * whenever `user` changes identity, and `AuthContext` hands out a fresh `User`
+ * object from both `onAuthStateChange` and `getSession()` — twice, within the
+ * first second of launch. Each new identity re-ran this effect; the cleanup
+ * cleared the pending timer, and the re-run returned early at the `asked`
+ * guard, so nothing re-armed it. The prompt never fired. The flag, already
+ * persisted, then suppressed every future launch: build 35 shipped with iOS
+ * still reporting `notDetermined`, and the only way to reach the dialog was
+ * the Settings row.
+ *
+ * So the callback is held in a ref and kept out of the dependency list — the
+ * timer survives an auth refresh — and the flag is written after the request
+ * resolves. A cancelled timer now simply asks again next launch, which is the
+ * failure this should have.
  */
 
 const ASKED_KEY = "push:prompted";
@@ -38,6 +58,14 @@ export function PushRegistrar() {
   const { permission, requestPermission } = usePushNotifications();
   const { user } = useAuth();
   const asked = useRef(false);
+
+  // Latest callback without depending on its identity. The effect below arms a
+  // timer; re-running it on a new function reference cancels that timer, and
+  // the guard inside stops it being armed a second time.
+  const requestRef = useRef(requestPermission);
+  useEffect(() => {
+    requestRef.current = requestPermission;
+  }, [requestPermission]);
 
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
@@ -49,7 +77,6 @@ export function PushRegistrar() {
 
     try {
       if (localStorage.getItem(ASKED_KEY)) return;
-      localStorage.setItem(ASKED_KEY, "1");
     } catch {
       // Private mode or a full store. Falling through means this player may
       // be asked again on a later launch, which is better than never asking.
@@ -57,11 +84,29 @@ export function PushRegistrar() {
     asked.current = true;
 
     const timer = setTimeout(() => {
-      void requestPermission();
+      void (async () => {
+        try {
+          // Never stack two system dialogs. On iOS the launch-time ATT flow
+          // may still be on screen, and a permission sheet arriving over it is
+          // dismissed on reflex. Resolves immediately once tracking is decided,
+          // and on every non-iOS target.
+          await ensureTrackingConsent();
+          await requestRef.current();
+        } finally {
+          // Recorded here, not before the timer: the flag means "iOS has been
+          // asked", and until this line it has not been.
+          try {
+            localStorage.setItem(ASKED_KEY, "1");
+          } catch {
+            /* private mode; the in-memory guard still holds for this session */
+          }
+        }
+      })();
     }, ASK_DELAY_MS);
 
     return () => clearTimeout(timer);
-  }, [user?.id, permission, requestPermission]);
+    // `requestPermission` is deliberately absent — see the note above.
+  }, [user?.id, permission]);
 
   return null;
 }

@@ -73,14 +73,27 @@ class TrackingService {
       return this.status;
     }
 
+    let status: TrackingStatus;
     try {
       const result = await AppTracking.getStatus();
-      this.status = normalize(result?.status);
+      status = normalize(result?.status);
     } catch {
-      // The native plugin is not in this binary. Ask the ad SDK instead.
-      this.status = await this.admobStatus();
+      status = "unavailable";
     }
 
+    // On a real iOS device "unavailable" is not an answer, it is the absence
+    // of one — and a *resolved* call can carry it. When the bridge has no
+    // plugin by that name, `registerPlugin` serves the web implementation
+    // instead of throwing (see `createPluginMethod` in @capacitor/core), and
+    // the web implementation answers "unavailable". That is indistinguishable
+    // here from success, which is how an unregistered `AppTrackingPlugin`
+    // silently suppressed the prompt on every build up to 35.
+    //
+    // So the ad SDK is consulted on the value, not on the exception. The
+    // `catch` alone never ran.
+    if (status === "unavailable") status = await this.admobStatus();
+
+    this.status = status;
     return this.status;
   }
 
@@ -96,14 +109,20 @@ class TrackingService {
       return this.status;
     }
 
+    let status: TrackingStatus;
     try {
       const result = await AppTracking.request();
-      this.status = normalize(result?.status);
-      return this.status;
+      status = normalize(result?.status);
     } catch {
-      this.status = await this.admobRequest();
-      return this.status;
+      status = "unavailable";
     }
+
+    // Same reasoning as `checkStatus`: a resolved "unavailable" means nothing
+    // asked iOS anything, so the request has to be made again by the other path.
+    if (status === "unavailable") status = await this.admobRequest();
+
+    this.status = status;
+    return this.status;
   }
 
   getStatus(): TrackingStatus {
