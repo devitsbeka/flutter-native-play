@@ -55,3 +55,14 @@ describe("finishing a round", () => {
     ).toBe(false);
   });
 });
+
+describe("the results screen names its room", () => {
+  const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
+  const results = read("src/components/team/GameResultsScreenV2.tsx");
+
+  it("the header shows the room's icon and name (owner's ask)", () => {
+    // A result read out of context should still say which room it is.
+    expect(results).toMatch(/currentRoom\?\.room_icon \?\? \(currentRoom \? dealtRoomIcon\(currentRoom\.id, roomIconPool\)/);
+    expect(results).toMatch(/currentRoom\?\.room_name \|\| t\("extra\.gameRoomLabel"\)/);
+  });
+});

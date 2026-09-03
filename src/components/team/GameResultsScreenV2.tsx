@@ -31,6 +31,8 @@ import { calculateMultiplayerPayout } from "@/utils/multiplayerPayout";
 import { isGuestAccount } from "@/utils/guestAccount";
 import { AuthRequiredModal } from "@/components/shared/AuthRequiredModal";
 import { useLocalizedCategoryName } from "@/utils/categoryDisplayName";
+import { useRoomIconPool } from "@/hooks/useRoomIconPool";
+import { dealtRoomIcon } from "@/utils/roomCrests";
 
 // Games whose results were already counted on this device. Module-level (not a
 // ref) because the results screen can remount for the SAME game (results ->
@@ -110,6 +112,10 @@ export function GameResultsScreenV2() {
   // The category this game was played in, resolved to its own slug and
   // icon_slug. See where it is drawn below for why both are needed.
   const resultsCategory = useCategoryIdentity(currentRoom?.category_id);
+  // Whose room this is — so a results screen names its room. The host's icon,
+  // else a random one dealt from the shared pool by room id (owner's rule).
+  const roomIconPool = useRoomIconPool();
+  const roomFace = currentRoom?.room_icon ?? (currentRoom ? dealtRoomIcon(currentRoom.id, roomIconPool) : null);
   const { share, sharing } = useChallengeShare();
 
   const [isStartingRematch, setIsStartingRematch] = useState(false);
@@ -505,14 +511,23 @@ export function GameResultsScreenV2() {
         box is exactly the viewport and the gradient covers the status bar. */}
     <div className="h-[100dvh] w-full overflow-hidden safe-bleed bg-gradient-to-b from-[#7C6AE5] to-[#9B89F5]">
       <div className="w-full h-full flex flex-col max-w-[700px] mx-auto">
-      {/* Back Button Header */}
+      {/* Back Button Header — with the room it belongs to centred, so a
+          result read out of context still names its room. */}
       <div className="flex items-center px-4 pt-3 pb-0 flex-shrink-0">
         <button
           onClick={handleBackToRoom}
-          className="flex items-center justify-center w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm text-white"
+          className="flex items-center justify-center w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm text-white shrink-0"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
+        <div className="flex-1 flex items-center justify-center gap-2 min-w-0 -ml-10">
+          {roomFace && (
+            <img src={roomFace} alt="" className="w-6 h-6 object-contain shrink-0 drop-shadow-sm" />
+          )}
+          <span className="text-white font-semibold truncate max-w-[220px]">
+            {currentRoom?.room_name || t("extra.gameRoomLabel")}
+          </span>
+        </div>
       </div>
 
       {/* Top Section: Icon + Result */}
