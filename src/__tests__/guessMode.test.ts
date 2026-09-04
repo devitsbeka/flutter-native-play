@@ -97,7 +97,8 @@ describe("Guess replaced Random on the create screen", () => {
     // The code the room GOT, not the one that was planned — createRoom falls
     // back to a fresh code on a collision.
     expect(create).toMatch(/walkInCode = room\?\.room_code \?\? null;/);
-    expect(create).toMatch(/if \(walkInCode\) \{\s*\n\s*onClose\(\);\s*\n\s*navigate\(`\/team\?join=\$\{walkInCode\}`\);/);
+    expect(create).toMatch(/if \(walkInCode\) \{\s*\n\s*onClose\(\);/);
+    expect(create).toMatch(/navigate\(`\/team\?join=\$\{walkInCode\}/);
     // And it goes last, so the invitations are sent before the screen leaves.
     const walkIn = create.indexOf("if (walkInCode) {");
     const invites = create.indexOf("await sendInvitation(challengeUserId, room.id);");
@@ -126,6 +127,30 @@ describe("Guess replaced Random on the create screen", () => {
     expect(create).toMatch(/rowObserver\.current = ro;/);
     // The old shape, which could not survive the row being remounted.
     expect(create).not.toMatch(/const el = rowRef\.current;/);
+  });
+
+  it("a picked tile starts the round, it does not stop at a lobby", () => {
+    // Which picture game IS the whole choice, so a one-seat lobby with a
+    // Start button asks a question that was already answered. Only Guess
+    // does this: every other way into a room still stops at the lobby,
+    // where there is a category to pick or people to wait for.
+    expect(create).toMatch(/const autostart = gameChoice === "guess" \? "&autostart=1" : "";/);
+    expect(create).toMatch(/navigate\(`\/team\?join=\$\{walkInCode\}\$\{autostart\}`\);/);
+
+    const lobby = read("src/components/team/RoomLobbyV2.tsx");
+    // The lobby presses its OWN Start. Doing it from the create screen would
+    // call startGame a tick after createRoom set state.currentRoom, and
+    // startGame reads that off its own closure — it would see null and
+    // return without a word.
+    expect(lobby).toMatch(/if \(searchParams\.get\("autostart"\) !== "1"\) return;/);
+    expect(lobby).toMatch(/void handleStartGame\(\);/);
+    // Spent on use, so a refresh does not start a second round.
+    expect(lobby).toMatch(/next\.delete\("autostart"\);/);
+    expect(lobby).toMatch(/const autoStartedRef = useRef\(false\);/);
+    // Above `if (!currentRoom) return null`, or it is a conditional hook.
+    expect(lobby.indexOf("const autoStartedRef")).toBeLessThan(
+      lobby.indexOf("if (!currentRoom) return null;"),
+    );
   });
 
   it("the tiles are the picture games the database actually has", () => {
