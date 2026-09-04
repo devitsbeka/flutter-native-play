@@ -11,6 +11,13 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import {
+  CAPTAIN_VOTE_GRACE_MS,
+  CAPTAIN_VOTE_MS,
+  captainIsVoted,
+  captainVoteIsOpen,
+  captainVoteSecondsLeft,
+} from "@/utils/captainVote";
 
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 const page = read("src/pages/TeamBattlePage.tsx");
@@ -35,7 +42,7 @@ describe("nothing about captains until the benches are full", () => {
 describe("who gets the armband", () => {
   it("voted from three a side; rolled at 2-2", () => {
     // A vote between two people is a staring contest.
-    expect(page).toMatch(/const votes = perSide >= 3;/);
+    expect(page).toMatch(/const votes = captainIsVoted\(perSide\);/);
     expect(page).toMatch(/const pick = humans\[Math\.floor\(Math\.random\(\) \* humans\.length\)\];/);
     expect(page).toMatch(/void setCaptain\(pick\.user_id\)/);
     // The host's device is the only writer, so the two benches get one
@@ -46,8 +53,9 @@ describe("who gets the armband", () => {
   });
 
   it("ten seconds to vote, and five before it opens itself", () => {
-    expect(page).toMatch(/const CAPTAIN_VOTE_MS = 10_000;/);
-    expect(page).toMatch(/const CAPTAIN_VOTE_GRACE_MS = 5_000;/);
+    expect(CAPTAIN_VOTE_MS).toBe(10_000);
+    expect(CAPTAIN_VOTE_GRACE_MS).toBe(5_000);
+    expect(page).toMatch(/}, CAPTAIN_VOTE_GRACE_MS\);/);
     // Only the host broadcasts, so the window opens once however many
     // devices are watching.
     expect(page).toMatch(/if \(!isHost \|\| !bothFull \|\| !votes \|\| openedRef\.current\) return;/);
@@ -69,9 +77,8 @@ describe("who gets the armband", () => {
     // Stamped on arrival, not on send: the opener's clock is not this
     // device's. self:true means the opener gets its own message back.
     expect(context).toMatch(/\{ config: \{ broadcast: \{ self: true \} \} \}/);
-    expect(page).toMatch(
-      /captainVoteAt == null \? 0 : CAPTAIN_VOTE_MS - \(voteNow - captainVoteAt\)/,
-    );
+    expect(page).toMatch(/const voting = captainVoteIsOpen\(captainVoteAt, voteNow\);/);
+    expect(page).toMatch(/const voteSecondsLeft = captainVoteSecondsLeft\(captainVoteAt, voteNow\);/);
   });
 });
 
@@ -101,5 +108,42 @@ describe("being told", () => {
       expect(locale, lang).toMatch(/youAreCaptain: "../);
       expect(locale, lang).toMatch(/captainVoteOpen: "[^"]*\{n\}/);
     }
+  });
+});
+
+describe("the window, run rather than read", () => {
+  const t = 1_000_000;
+
+  it("2-2 rolls, 3-3 and up votes", () => {
+    expect(captainIsVoted(2)).toBe(false);
+    expect(captainIsVoted(3)).toBe(true);
+    expect(captainIsVoted(5)).toBe(true);
+  });
+
+  it("is shut until somebody opens it", () => {
+    expect(captainVoteIsOpen(null, t)).toBe(false);
+    expect(captainVoteSecondsLeft(null, t)).toBe(0);
+  });
+
+  it("runs ten seconds from the message this device heard", () => {
+    expect(captainVoteIsOpen(t, t)).toBe(true);
+    expect(captainVoteSecondsLeft(t, t)).toBe(10);
+    expect(captainVoteSecondsLeft(t, t + 1_000)).toBe(9);
+    expect(captainVoteSecondsLeft(t, t + 9_500)).toBe(1);
+  });
+
+  it("and the number never reads 0 while the sheet is still up", () => {
+    // Rounded up: 200ms left is "1". They have to disappear together.
+    expect(captainVoteIsOpen(t, t + 9_800)).toBe(true);
+    expect(captainVoteSecondsLeft(t, t + 9_800)).toBe(1);
+    expect(captainVoteIsOpen(t, t + 10_000)).toBe(false);
+    expect(captainVoteSecondsLeft(t, t + 10_000)).toBe(0);
+    expect(captainVoteSecondsLeft(t, t + 60_000)).toBe(0);
+  });
+
+  it("a clock that ran backwards does not reopen it", () => {
+    // A device whose clock jumped is stamped on arrival, but be explicit.
+    expect(captainVoteSecondsLeft(t, t - 5_000)).toBe(CAPTAIN_VOTE_MS / 1000 + 5);
+    expect(captainVoteIsOpen(t, t - 5_000)).toBe(true);
   });
 });

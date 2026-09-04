@@ -742,4 +742,122 @@ BEGIN
   DELETE FROM public.currency_grants WHERE user_id IN (v_alice, v_bob, v_out);
 END $$;
 
+-- ── a 3-3 arena electing its captains ─────────────────────────────────────
+--
+-- The armband is voted from three a side up (below that the host's device
+-- rolls one), and the lobby now opens a ten-second window for it. The window
+-- is the client's; WHO WINS is this function's, and that is what is executed
+-- here: plurality inside one bench, the other bench untouched, a changed
+-- vote re-tallying, ties going to the earliest joiner, and every caller who
+-- should not be voting refused.
+
+CREATE OR REPLACE FUNCTION pg_temp.captain_of(p_room uuid, p_team text)
+RETURNS text LANGUAGE sql AS $$
+  SELECT nickname FROM public.room_participants
+   WHERE room_id = p_room AND team = p_team AND is_captain LIMIT 1;
+$$;
+
+CREATE OR REPLACE FUNCTION pg_temp.captain_count(p_room uuid, p_team text)
+RETURNS bigint LANGUAGE sql AS $$
+  SELECT count(*) FROM public.room_participants
+   WHERE room_id = p_room AND team = p_team AND is_captain;
+$$;
+
+DO $$
+DECLARE
+  a1 uuid := 'cc000000-0000-0000-0000-0000000000a1';
+  a2 uuid := 'cc000000-0000-0000-0000-0000000000a2';
+  a3 uuid := 'cc000000-0000-0000-0000-0000000000a3';
+  b1 uuid := 'cc000000-0000-0000-0000-0000000000b1';
+  b2 uuid := 'cc000000-0000-0000-0000-0000000000b2';
+  b3 uuid := 'cc000000-0000-0000-0000-0000000000b3';
+  bot uuid := 'cc000000-0000-0000-0000-0000000000ff';
+  outsider uuid := 'cc000000-0000-0000-0000-0000000000e0';
+  room uuid;
+  t0 timestamptz := now() - interval '10 minutes';
+BEGIN
+  INSERT INTO auth.users (id, email) VALUES
+    (a1,'a1@cv.test'),(a2,'a2@cv.test'),(a3,'a3@cv.test'),
+    (b1,'b1@cv.test'),(b2,'b2@cv.test'),(b3,'b3@cv.test'),
+    (bot,'bot@cv.test'),(outsider,'out@cv.test')
+  ON CONFLICT (id) DO NOTHING;
+  INSERT INTO public.profiles (user_id, nickname) VALUES
+    (a1,'A1'),(a2,'A2'),(a3,'A3'),(b1,'B1'),(b2,'B2'),(b3,'B3'),(bot,'Bot'),(outsider,'Outsider')
+  ON CONFLICT (user_id) DO UPDATE SET nickname = EXCLUDED.nickname;
+
+  INSERT INTO public.game_rooms (room_code, host_user_id, status, game_type_key, max_players)
+  VALUES ('CAP3V3', a1, 'waiting', 'team_battle', 6) RETURNING id INTO room;
+
+  -- Joined in a known order, so the tie-break is predictable.
+  INSERT INTO public.room_participants (room_id, user_id, nickname, is_host, status, team, joined_at, is_bot) VALUES
+    (room, a1, 'A1', true,  'joined', 'a', t0 + interval '1 min', false),
+    (room, a2, 'A2', false, 'joined', 'a', t0 + interval '2 min', false),
+    (room, a3, 'A3', false, 'joined', 'a', t0 + interval '3 min', false),
+    (room, b1, 'B1', false, 'joined', 'b', t0 + interval '4 min', false),
+    (room, b2, 'B2', false, 'joined', 'b', t0 + interval '5 min', false),
+    (room, b3, 'B3', false, 'joined', 'b', t0 + interval '6 min', false),
+    (room, bot,'Bot',false, 'joined', 'b', t0 + interval '7 min', true);
+
+  RAISE NOTICE '--- a 3-3 room, nobody elected yet';
+  PERFORM pg_temp.must_equal(pg_temp.captain_count(room,'a'), 0::bigint, 'team A starts with no captain');
+  PERFORM pg_temp.must_equal(pg_temp.captain_count(room,'b'), 0::bigint, 'team B starts with no captain');
+
+  RAISE NOTICE '--- one vote elects';
+  PERFORM pg_temp.as_user(a1);
+  PERFORM public.tb_vote_captain(room, a2);
+  PERFORM pg_temp.must_equal(pg_temp.captain_of(room,'a'), 'A2', 'A1''s vote makes A2 captain');
+  PERFORM pg_temp.must_equal(pg_temp.captain_count(room,'a'), 1::bigint, 'exactly one captain on A');
+  PERFORM pg_temp.must_equal(pg_temp.captain_count(room,'b'), 0::bigint, 'and B is untouched by A''s vote');
+
+  RAISE NOTICE '--- plurality: two beats one';
+  PERFORM pg_temp.as_user(a2);
+  PERFORM public.tb_vote_captain(room, a3);   -- A3: 1
+  PERFORM pg_temp.as_user(a3);
+  PERFORM public.tb_vote_captain(room, a3);   -- A3: 2 (self-vote reaches the server)
+  PERFORM pg_temp.must_equal(pg_temp.captain_of(room,'a'), 'A3', 'two votes take the armband from one');
+
+  RAISE NOTICE '--- changing your mind re-tallies';
+  PERFORM pg_temp.as_user(a3);
+  PERFORM public.tb_vote_captain(room, a2);   -- A3: 1 (a2), A2: 1 (a1) + 1 (a3) = 2
+  PERFORM pg_temp.must_equal(pg_temp.captain_of(room,'a'), 'A2', 'a changed vote moves the armband back');
+  PERFORM pg_temp.must_equal(pg_temp.captain_count(room,'a'), 1::bigint, 'still exactly one captain on A');
+
+  RAISE NOTICE '--- the other bench elects independently';
+  PERFORM pg_temp.as_user(b2);
+  PERFORM public.tb_vote_captain(room, b3);
+  PERFORM pg_temp.must_equal(pg_temp.captain_of(room,'b'), 'B3', 'B elects its own');
+  PERFORM pg_temp.must_equal(pg_temp.captain_of(room,'a'), 'A2', 'without disturbing A''s');
+
+  RAISE NOTICE '--- what is refused';
+  PERFORM pg_temp.as_user(a1);
+  PERFORM pg_temp.must_fail(format('SELECT public.tb_vote_captain(%L,%L)', room, b1),
+    'cannot vote for the other team');
+  PERFORM pg_temp.as_user(b1);
+  PERFORM pg_temp.must_fail(format('SELECT public.tb_vote_captain(%L,%L)', room, bot),
+    'cannot make a bot captain');
+  PERFORM pg_temp.as_user(outsider);
+  PERFORM pg_temp.must_fail(format('SELECT public.tb_vote_captain(%L,%L)', room, a2),
+    'a stranger cannot vote');
+  PERFORM pg_temp.as_user(NULL);
+  PERFORM pg_temp.must_fail(format('SELECT public.tb_vote_captain(%L,%L)', room, a2),
+    'a signed-out caller cannot vote');
+
+  RAISE NOTICE '--- ties go to the earliest joiner, and stay there';
+  -- Clear A and give A1 and A3 one vote each: A1 joined first.
+  UPDATE public.room_participants SET captain_vote = NULL WHERE room_id = room AND team = 'a';
+  PERFORM pg_temp.as_user(a2);
+  PERFORM public.tb_vote_captain(room, a1);   -- A1: 1
+  PERFORM pg_temp.as_user(a1);
+  PERFORM public.tb_vote_captain(room, a3);   -- A3: 1  → tie
+  PERFORM pg_temp.must_equal(pg_temp.captain_of(room,'a'), 'A1', 'a 1-1 tie goes to the earliest joiner');
+  PERFORM pg_temp.must_equal(pg_temp.captain_count(room,'a'), 1::bigint, 'a tie still elects exactly one');
+
+  RAISE NOTICE '--- once the match is running, the vote is closed';
+  UPDATE public.game_rooms SET status = 'playing' WHERE id = room;
+  PERFORM pg_temp.as_user(a3);
+  PERFORM pg_temp.must_fail(format('SELECT public.tb_vote_captain(%L,%L)', room, a3),
+    'no votes once the match has started');
+  PERFORM pg_temp.as_user(NULL);
+END $$;
+
 \echo 'ok: team battle plays, ties, and pays by the rules'

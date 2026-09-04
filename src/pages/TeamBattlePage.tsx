@@ -4,6 +4,12 @@ import { motion } from "framer-motion";
 import { ChevronLeft, Pencil } from "lucide-react";
 import { UniversalLobby, LobbyInfoRow, type LobbyPlayer, type LobbyPlayerGroup } from "@/components/lobby/UniversalLobby";
 import { YoureCaptainModal } from "@/components/team-battle/YoureCaptainModal";
+import {
+  CAPTAIN_VOTE_GRACE_MS,
+  captainIsVoted,
+  captainVoteIsOpen,
+  captainVoteSecondsLeft,
+} from "@/utils/captainVote";
 import { LOBBY_SCENES } from "@/utils/lobbyScene";
 import { roomVisibilityFields } from "@/utils/roomVisibility";
 import { useFriends } from "@/hooks/useFriends";
@@ -48,15 +54,6 @@ import { dealTeamNames, TEAM_NAME_MAX } from "@/utils/teamNameGenerator";
  * game screens' periwinkle; the lobby wears the room's jewel gradient like
  * RoomLobbyV2 does.
  */
-/** How long the room has to vote for a captain, once the window opens. */
-const CAPTAIN_VOTE_MS = 10_000;
-/**
- * How long the host has to open it themselves before it opens anyway.
- *
- * Long enough to be a choice, short enough that a host who has put their
- * phone down does not hold a full room.
- */
-const CAPTAIN_VOTE_GRACE_MS = 5_000;
 
 export default function TeamBattlePage() {
   return (
@@ -856,7 +853,7 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
    * and the winner is simply told (owner's rule).
    */
   const bothFull = teamA.length >= perSide && teamB.length >= perSide;
-  const votes = perSide >= 3;
+  const votes = captainIsVoted(perSide);
   // Ticks only while the window is open — a second's resolution is all a
   // ten-second clock needs, and nothing re-renders once it has closed.
   const [voteNow, setVoteNow] = useState(() => Date.now());
@@ -865,10 +862,8 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
     const iv = window.setInterval(() => setVoteNow(Date.now()), 250);
     return () => window.clearInterval(iv);
   }, [captainVoteAt]);
-  const voteMsLeft =
-    captainVoteAt == null ? 0 : CAPTAIN_VOTE_MS - (voteNow - captainVoteAt);
-  const voting = voteMsLeft > 0;
-  const voteSecondsLeft = Math.ceil(voteMsLeft / 1000);
+  const voting = captainVoteIsOpen(captainVoteAt, voteNow);
+  const voteSecondsLeft = captainVoteSecondsLeft(captainVoteAt, voteNow);
 
   /**
    * Nobody has to press anything.
