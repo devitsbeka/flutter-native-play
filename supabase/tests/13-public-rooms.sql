@@ -242,49 +242,6 @@ BEGIN
   PERFORM pg_temp.as_user(NULL);
 END $$;
 
--- ── an open room seats the knocker at once (the new default) ───────────────
-
-DO $$
-DECLARE
-  v_host  uuid := 'bc000000-0000-0000-0000-0000000000a1';
-  v_guest uuid := 'bc000000-0000-0000-0000-0000000000a2';
-  v_open  uuid;
-  v_out   text;
-BEGIN
-  INSERT INTO auth.users (id, email) VALUES
-    (v_host, 'openhost@pub.test'), (v_guest, 'openguest@pub.test')
-  ON CONFLICT (id) DO NOTHING;
-  INSERT INTO public.profiles (user_id, nickname) VALUES
-    (v_host, 'OpenHost'), (v_guest, 'OpenGuest')
-  ON CONFLICT (user_id) DO UPDATE SET nickname = EXCLUDED.nickname;
-
-  -- No requires_approval given: the column defaults off, so the room is open
-  -- and the knock is answered by seating, not by a pending ask.
-  INSERT INTO public.game_rooms (room_code, host_user_id, room_name, status, is_public)
-  VALUES ('PUBOPN', v_host, 'The open one', 'waiting', true)
-  RETURNING id INTO v_open;
-  INSERT INTO public.room_participants (room_id, user_id, nickname, is_host, status)
-  VALUES (v_open, v_host, 'OpenHost', true, 'joined');
-
-  PERFORM pg_temp.must_equal(
-    (SELECT requires_approval FROM public.game_rooms WHERE id = v_open)::text,
-    'false', 'a public room is open by default');
-
-  SET LOCAL ROLE authenticated;
-  PERFORM pg_temp.as_user(v_guest);
-  v_out := public.request_room_join(v_open);
-  PERFORM pg_temp.must_equal(v_out, 'joined', 'an open room seats the knocker at once');
-  PERFORM pg_temp.must_equal(
-    (SELECT count(*) FROM public.room_participants WHERE room_id = v_open AND user_id = v_guest),
-    1::bigint, 'the open-room knocker is seated');
-  PERFORM pg_temp.must_equal(
-    (SELECT count(*) FROM public.room_join_requests WHERE room_id = v_open AND user_id = v_guest),
-    0::bigint, 'an open room leaves no pending ask behind');
-
-  RESET ROLE;
-  PERFORM pg_temp.as_user(NULL);
-END $$;
-
 -- ── a block sticks, and leaving spends the yes ─────────────────────────────
 
 DO $$
@@ -449,8 +406,10 @@ BEGIN
     (v_host, 'Host5'), (v_asker, 'Asker5')
   ON CONFLICT (user_id) DO UPDATE SET nickname = EXCLUDED.nickname;
 
-  INSERT INTO public.game_rooms (room_code, host_user_id, status, is_public, game_type_key)
-  VALUES ('ARENA2', v_host, 'waiting', true, 'team_battle') RETURNING id INTO v_room;
+  -- Approval-required so the ask files a request the host then answers onto a
+  -- team (a public room is open by default, which would seat with no request).
+  INSERT INTO public.game_rooms (room_code, host_user_id, status, is_public, requires_approval, game_type_key)
+  VALUES ('ARENA2', v_host, 'waiting', true, true, 'team_battle') RETURNING id INTO v_room;
   INSERT INTO public.room_participants (room_id, user_id, nickname, is_host, status, team)
   VALUES (v_room, v_host, 'Host5', true, 'joined', 'a');
 
@@ -488,8 +447,10 @@ BEGIN
     (v_host, 'Host2'), (v_asked, 'Asked')
   ON CONFLICT (user_id) DO UPDATE SET nickname = EXCLUDED.nickname;
 
-  INSERT INTO public.game_rooms (room_code, host_user_id, status, is_public)
-  VALUES ('PUBIN2', v_host, 'waiting', true) RETURNING id INTO v_room;
+  -- Approval-required, so the invite (not the open door) is what walks the
+  -- asked player straight in — which is the branch this block exercises.
+  INSERT INTO public.game_rooms (room_code, host_user_id, status, is_public, requires_approval)
+  VALUES ('PUBIN2', v_host, 'waiting', true, true) RETURNING id INTO v_room;
   INSERT INTO public.room_participants (room_id, user_id, nickname, is_host, status)
   VALUES (v_room, v_host, 'Host2', true, 'joined');
 
@@ -528,8 +489,10 @@ BEGIN
     (v_host, 'Host3'), (v_one, 'One'), (v_two, 'Two')
   ON CONFLICT (user_id) DO UPDATE SET nickname = EXCLUDED.nickname;
 
-  INSERT INTO public.game_rooms (room_code, host_user_id, status, is_public)
-  VALUES ('PUBWD1', v_host, 'waiting', true) RETURNING id INTO v_room;
+  -- Approval-required, so the two asks land as pending rows to withdraw
+  -- (an open room would seat them and file nothing to take back).
+  INSERT INTO public.game_rooms (room_code, host_user_id, status, is_public, requires_approval)
+  VALUES ('PUBWD1', v_host, 'waiting', true, true) RETURNING id INTO v_room;
   INSERT INTO public.room_participants (room_id, user_id, nickname, is_host, status)
   VALUES (v_room, v_host, 'Host3', true, 'joined');
 
