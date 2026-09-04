@@ -21,7 +21,7 @@ import { siteUrl } from "@/config/site";
 import { inviteLinkPath } from "@/utils/inviteLink";
 import { useRoomMatchHistory } from "@/hooks/useRoomMatchHistory";
 import { useRoomCategoryQueue } from "@/hooks/useRoomCategoryQueue";
-import { useLocalizedCategoryName } from "@/utils/categoryDisplayName";
+import { useCategoryIconByName, useLocalizedCategoryName } from "@/utils/categoryDisplayName";
 import { Input } from "@/components/ui/input";
 import { RoomScoreboard } from "./RoomScoreboard";
 import { TVSetupInline } from "./TVSetupInline";
@@ -221,6 +221,7 @@ export function RoomLobbyV2() {
   // one, and reorderQueue/removeFromQueue were never called by anything.
   const [showRoundOrder, setShowRoundOrder] = useState(false);
   const localizeQueueCategory = useLocalizedCategoryName();
+  const iconForCategoryName = useCategoryIconByName();
 
   // Play sound when new participant joins
   useEffect(() => {
@@ -835,33 +836,44 @@ export function RoomLobbyV2() {
       onBack={handleExitRoom}
       unreadCount={unreadCount}
       onBell={() => navigate("/notifications")}
-      category={{
-        // One queued topic still reads as itself; several read as how many,
-        // because no chip can carry three names and the count is the thing
-        // worth knowing at a glance.
-        label:
-          (justReturnedFromResults && !madeNewSelection && queue.length === 0)
-            ? t("lobby.uSelectCategory")
-            : currentRoom.category_name || t("lobby.uSelectCategory"),
-        onPress: isHost ? () => { setStartAfterPick(false); setShowCategoryPicker(true); } : undefined,
-        // The + queues another round; the queue scrolls under the chip, with
-        // the total rounds counted below it. Tapping the queue opens the
-        // round-order sheet (reorder / remove), for host and guest alike.
-        onAdd: isHost ? () => { setStartAfterPick(false); setShowCategoryPicker(true); } : undefined,
-        queue: queue.map((q) => ({
-          id: q.id,
-          name: q.source_type === "random"
-            ? t("extra.cpRandomTitle")
-            : localizeQueueCategory(q.category_name) || t("extra.categoryType"),
-          iconSlug: q.icon_slug,
-        })),
-        onQueuePress: queue.length > 0 ? () => setShowRoundOrder(true) : undefined,
-        roundsLabel: (() => {
-          const hasCurrent = !!(currentRoom.category_id || currentRoom.user_trivia_id);
-          const rounds = (hasCurrent ? 1 : 0) + queue.length;
-          return rounds > 1 ? t("lobby.uRoundsSelected", { count: rounds }) : undefined;
-        })(),
-      }}
+      category={(() => {
+        // Just the FIRST round on the chip, with its category's own icon and
+        // a "(+N)" when more are queued (owner's ask). The first round is the
+        // room's own category if it has one, else the head of the queue.
+        const hasCurrent = !!(currentRoom.category_id || currentRoom.user_trivia_id);
+        const firstQueue = queue[0];
+        const rounds = (hasCurrent ? 1 : 0) + queue.length;
+        const extra = rounds - 1;
+        const freshStart = justReturnedFromResults && !madeNewSelection && queue.length === 0 && !hasCurrent;
+        const firstName = hasCurrent
+          ? currentRoom.category_name
+          : firstQueue
+            ? (firstQueue.source_type === "random"
+                ? t("extra.cpRandomTitle")
+                : localizeQueueCategory(firstQueue.category_name) || t("extra.categoryType"))
+            : null;
+        const firstIconSlug = hasCurrent
+          ? (iconForCategoryName(currentRoom.category_name) || getCategoryIconSlug(currentRoom.category_id ?? "") || undefined)
+          : (firstQueue?.icon_slug ?? undefined);
+        return {
+          label:
+            freshStart || !firstName
+              ? t("lobby.uSelectCategory")
+              : extra > 0
+                ? `${firstName} (+${extra})`
+                : firstName,
+          iconSlug: freshStart ? undefined : (firstIconSlug ?? undefined),
+          // Tapping opens the round list when there is more than one; a single
+          // round opens the picker to change it. The + always queues another.
+          onPress:
+            rounds > 1
+              ? () => setShowRoundOrder(true)
+              : isHost
+                ? () => { setStartAfterPick(false); setShowCategoryPicker(true); }
+                : undefined,
+          onAdd: isHost ? () => { setStartAfterPick(false); setShowCategoryPicker(true); } : undefined,
+        };
+      })()}
       tv={isHost ? { label: t("lobby.uPlayOnTv"), onPress: () => setIsTVModeEnabled(true) } : undefined}
       labels={{
         rules: t("lobby.uGameRules"),

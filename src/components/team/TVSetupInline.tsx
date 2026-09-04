@@ -349,7 +349,10 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
       transition={{ duration: 0.3, ease: "easeInOut" }}
       className="w-full max-w-md mx-auto overflow-hidden"
     >
-      <div className="p-4 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20">
+      {/* This panel sits inside the lobby's light sheet, so its ink is the
+          lobby's dark purple — white type here was invisible (owner's
+          screenshot). */}
+      <div className="p-4 rounded-2xl bg-white/50 border border-[#e8e0f5]">
         <AnimatePresence mode="wait">
           {isConnected ? (
             <motion.div
@@ -366,7 +369,7 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
               >
                 <Check className="w-6 h-6 text-white" />
               </motion.div>
-              <p className="text-white font-semibold">{t('extra.tvConnected')}</p>
+              <p className="text-[#402666] font-semibold">{t('extra.tvConnected')}</p>
             </motion.div>
           ) : (
             <motion.div
@@ -377,18 +380,18 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
             >
               {/* Instructions */}
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center flex-shrink-0">
-                  <Globe className="w-5 h-5 text-white/80" />
+                <div className="w-10 h-10 rounded-xl bg-[#402666]/10 flex items-center justify-center flex-shrink-0">
+                  <Globe className="w-5 h-5 text-[#523b76]" />
                 </div>
                 <div>
-                  <p className="text-white text-sm font-medium">{t('extra.tvOpenOnTV')}</p>
-                  <p className="text-purple-300 font-bold">mytrivia.io/tv</p>
+                  <p className="text-[#402666] text-sm font-medium">{t('extra.tvOpenOnTV')}</p>
+                  <p className="text-[#7C3AED] font-bold">mytrivia.io/tv</p>
                 </div>
               </div>
 
               {/* Code input */}
               <div className="mb-4">
-                <p className="text-white/70 text-sm mb-2 text-center">{t('extra.tvEnterCode')}</p>
+                <p className="text-[#402666]/70 text-sm mb-2 text-center">{t('extra.tvEnterCode')}</p>
                 <div className="flex justify-center">
                   <InputOTP
                     ref={codeInputRef}
@@ -401,10 +404,10 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
                     autoComplete="one-time-code"
                   >
                     <InputOTPGroup>
-                      <InputOTPSlot index={0} className="w-12 h-14 text-xl bg-white/10 border-white/30 text-white" />
-                      <InputOTPSlot index={1} className="w-12 h-14 text-xl bg-white/10 border-white/30 text-white" />
-                      <InputOTPSlot index={2} className="w-12 h-14 text-xl bg-white/10 border-white/30 text-white" />
-                      <InputOTPSlot index={3} className="w-12 h-14 text-xl bg-white/10 border-white/30 text-white" />
+                      <InputOTPSlot index={0} className="w-12 h-14 text-xl bg-white border-[#c9b2ed] text-[#402666]" />
+                      <InputOTPSlot index={1} className="w-12 h-14 text-xl bg-white border-[#c9b2ed] text-[#402666]" />
+                      <InputOTPSlot index={2} className="w-12 h-14 text-xl bg-white border-[#c9b2ed] text-[#402666]" />
+                      <InputOTPSlot index={3} className="w-12 h-14 text-xl bg-white border-[#c9b2ed] text-[#402666]" />
                     </InputOTPGroup>
                   </InputOTP>
                 </div>
