@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 
 /**
- * Icons sent between players during a match.
+ * Reactions sent between players during a match.
  *
  * ## Why there is no table behind this
  *
@@ -23,7 +23,12 @@ import { useCallback, useMemo, useRef, useState } from "react";
  * in front of the question it was sent about.
  *
  * The transport lives in TeamBattleContext (`sendReaction` / `reactions`);
- * this module is the recipient's side of it and the strip's memory.
+ * this module is the recipient's side of it.
+ *
+ * `icon` holds one of the six reaction keys (see
+ * `src/components/team-battle/reactions.ts`). There is nothing per-device to
+ * remember any more: the sender's row was a most-recently-used list back
+ * when the six were dealt out of the icon library.
  */
 export interface RoomReaction {
   /** Local id — the sender's clock plus their id, unique enough to dedupe. */
@@ -31,24 +36,6 @@ export interface RoomReaction {
   from_user_id: string;
   to_user_id: string;
   icon: string;
-}
-
-export const RECENT_ICONS_MAX = 6;
-
-/**
- * The icons this player has sent in THIS game, newest first.
- *
- * Deliberately not persisted. The row used to be read out of localStorage,
- * so the same six icons greeted the same player every match forever; the
- * owner's rule is a fresh random deal each game, with whatever you have
- * actually used this game moving to the front of it.
- */
-export function useSentIcons() {
-  const [sent, setSent] = useState<string[]>([]);
-  const remember = useCallback((icon: string) => {
-    setSent((prev) => [icon, ...prev.filter((x) => x !== icon)].slice(0, RECENT_ICONS_MAX));
-  }, []);
-  return { sent, remember };
 }
 
 /**
