@@ -958,7 +958,14 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
         const superRes = superFilled.res;
         const board = {
           tiles,
-          super_questions: asQuestions(superRes.questions.slice(0, 30)) as unknown as Json,
+          // Exactly five. The super round is a buzzer race to three
+          // (tb_advance_super ends it at score 3, or when the questions run
+          // out), so anything past the fifth question can only be asked in a
+          // game nobody has won by then — and thirty of them turned the
+          // decider into a second match. Five is also the server's own
+          // minimum, so this is the smallest board it will accept and needs
+          // no migration.
+          super_questions: asQuestions(superRes.questions.slice(0, 5)) as unknown as Json,
         } as unknown as Json;
 
         const { error } = await supabase.rpc("tb_start_match", {

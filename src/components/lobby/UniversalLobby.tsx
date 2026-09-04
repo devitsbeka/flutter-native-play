@@ -811,26 +811,37 @@ function RoomTitle({
   // under it at 43.656 on 51.36, capped at two lines.
   //
   // These two spent a while side by side, at 34px, to buy back the row an
-  // icon above a 52px heading was costing on a short screen. The design
+  // emblem above a big heading was costing on a short screen. The design
   // answers that differently: the name IS the screen above the card, so it
   // gets the size back, and the slack it needs comes out of the empty lilac
   // that used to sit under the card rather than out of the heading.
   //
   // The pencil rides on the emblem's shoulder — one control, whichever half
-  // is tapped, opening the sheet that sets both the name and the face.
+  // is tapped, opening the sheet that sets both the name and the face. It is
+  // never a child of the h1: that clamps to two lines with overflow-hidden,
+  // which clipped the chip's round edge and its shadow.
+  const chip = (
+    <span className="flex size-[22px] shrink-0 items-center justify-center rounded-full bg-white drop-shadow-[0px_2px_2px_rgba(0,0,0,0.18)]">
+      <Pencil className="size-3 text-[#523b76]" />
+    </span>
+  );
   const heading = (
     <h1 className="w-[321px] max-w-full text-center font-hero text-[43.656px] capitalize leading-[51.36px] tracking-[-0.2054px] text-[#402666] [overflow-wrap:anywhere] line-clamp-2">
       {name}
-      {/* A room with no emblem has nowhere to hang the pencil, so it rides
-          the name instead — the same chip, on the only half there is. */}
-      {!icon && editable && (
-        <span className="ml-1.5 inline-flex size-[22px] shrink-0 translate-y-[10px] items-center justify-center rounded-full bg-white drop-shadow-[0px_2px_2px_rgba(0,0,0,0.18)]">
-          <Pencil className="size-3 text-[#523b76]" />
-        </span>
-      )}
     </h1>
   );
-  if (!icon) return heading;
+  // A room with no emblem has no shoulder to hang the pencil on, so it goes
+  // beside the name — still its own flex child, outside the clamp.
+  if (!icon) {
+    return editable ? (
+      <div className="flex w-full items-center justify-center gap-2">
+        {heading}
+        {chip}
+      </div>
+    ) : (
+      heading
+    );
+  }
   return (
     <>
       <span className="relative mb-[15px] block size-[91px] shrink-0">
@@ -839,11 +850,7 @@ function RoomTitle({
           src={icon}
           className="size-full object-contain drop-shadow-[0_4px_10px_rgba(88,50,160,0.22)]"
         />
-        {editable && (
-          <span className="absolute left-[65px] top-[4px] flex size-[22px] items-center justify-center rounded-full bg-white drop-shadow-[0px_2px_2px_rgba(0,0,0,0.18)]">
-            <Pencil className="size-3 text-[#523b76]" />
-          </span>
-        )}
+        {editable && <span className="absolute left-[65px] top-[4px]">{chip}</span>}
       </span>
       {heading}
     </>

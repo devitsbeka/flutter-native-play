@@ -160,11 +160,32 @@ describe("the icons", () => {
     expect(bar).toMatch(/<SmartAvatar\s*\n?\s*avatarUrl=\{who\?\.avatar_url \?\? null\}/);
   });
 
-  it("the row holds its height, so a clap does not move the question", () => {
+  it("they sit at the end of the turn's own row, not in a band of their own", () => {
+    // A row of its own held 46px of empty purple whenever nobody was
+    // reacting, and pushed the question and its answers down the screen to
+    // hold it.
     const bar = read("src/components/team-battle/ReactionBar.tsx");
-    expect(bar).toMatch(/h-\[46px\] flex-shrink-0 items-center justify-center/);
-    // A burst from a full room must not fill the screen either.
-    expect(bar).toMatch(/items\.slice\(-5\)/);
+    expect(bar).toMatch(/h-\[34px\] min-w-0 flex-shrink items-center justify-end/);
+    // Three, not five: this row already carries a name and a Call button.
+    expect(bar).toMatch(/items\.slice\(-3\)/);
+    // And it is where the ✓/✗ tally used to be, which moved above the card.
+    expect(match).toMatch(/<ReactionPops items=\{pops\} senders=\{senders\} \/>\s*\n\s*<\/div>/);
+  });
+
+  it("the tally moved above the question card, hard right", () => {
+    // The band the category's artwork floats in was empty air on the other
+    // side of the picture; nothing moves to make room for it there.
+    expect(match).toMatch(
+      /pointer-events-none absolute right-4 top-1 z-20 flex items-center gap-2 rounded-full/,
+    );
+    expect(match).toMatch(/✓ \{turnPicks\.filter\(\(p\) => p\.correct\)\.length\}/);
+  });
+
+  it("a side reads crest, then name over score", () => {
+    // The name and the score were stacked with the crest beside only the
+    // name, so the number sat under a blank.
+    expect(match).toMatch(/flex items-center gap-2 \$\{team === "a" \? "" : "flex-row-reverse"\}/);
+    expect(match).toMatch(/text-\[26px\] font-black leading-none text-white/);
   });
 });
 

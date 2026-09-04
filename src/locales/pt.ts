@@ -5,6 +5,7 @@ import { en } from './en';
 export const pt: KaTranslations = {
   ...en,
   common: {
+    backToTop: "Voltar ao topo",
     ...en.common,
     processing: "Processando...",
     play: "Jogar",

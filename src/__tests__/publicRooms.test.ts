@@ -316,11 +316,12 @@ describe("the public list", () => {
     // The seats a card DRAWS are the effective ones — never fewer than the
     // heads counted — so a room over its own cap doesn't hide a player.
     expect(section).toMatch(/const effectiveSeats = seats != null \? Math\.max\(seats, room\.player_count\) : null;/);
-    expect(section).toMatch(/Array\.from\(\{ length: Math\.min\(effectiveSeats, 10\) \}/);
+    // A Battle room draws its full (small, fixed) seat count; every other
+    // room draws only the seats that are taken — no ten empty chairs for a
+    // classic cap-10 room (owner's ask).
+    expect(section).toMatch(/isBattle\s*\n?\s*\? Math\.min\(effectiveSeats, 10\)\s*\n?\s*: Math\.min\(room\.player_count, 10\)/);
+    expect(section).toMatch(/Array\.from\(\{ length: seatsToDraw \}/);
     expect(section).toMatch(/\$\{room\.player_count\}\/\$\{effectiveSeats\}/);
-    // The player-count cap can never be set below who is already in the room.
-    const lobby = read("src/components/team/RoomLobbyV2.tsx");
-    expect(lobby).toMatch(/const floor = Math\.max\(2, participants\.length\);/);
     // Every card's button is the mint "play" button (Figma 1058:325): a
     // #81f0c3 face with a #2bc889 bottom lip and dark-purple type. It used
     // to be mint only on a "ready" room and a white pill with a green dot

@@ -148,29 +148,33 @@ function ScoreHeader({ seconds, maxSeconds }: { seconds?: number; maxSeconds?: n
       setConfirmLeave(false);
     }
   };
+  // A side, in one line: the crest, then its name with the score under it.
+  // The name and the score used to be stacked with the crest beside only the
+  // name, so the number sat under a blank and the whole block was two rows
+  // tall for two words and a digit.
   const side = (team: TBTeam) => (
-    <div className={`flex flex-col ${team === "a" ? "items-start" : "items-end"}`}>
-      <span className={`flex items-center gap-1.5 ${team === "a" ? "" : "flex-row-reverse"}`}>
-        {crests[team] && (
-          <img
-            alt=""
-            src={crests[team] ?? undefined}
-            className="w-8 h-8 object-contain drop-shadow-sm shrink-0"
-          />
-        )}
-        <span className="text-white/70 text-[11px] font-semibold uppercase tracking-wide">
+    <div className={`flex items-center gap-2 ${team === "a" ? "" : "flex-row-reverse"}`}>
+      {crests[team] && (
+        <img
+          alt=""
+          src={crests[team] ?? undefined}
+          className="w-9 h-9 object-contain drop-shadow-sm shrink-0"
+        />
+      )}
+      <div className={`flex flex-col ${team === "a" ? "items-start" : "items-end"}`}>
+        <span className="text-white/70 text-[11px] font-semibold uppercase tracking-wide leading-tight">
           {teamLabel(t, team, room)}
           {myTeam === team ? ` · ${t("teamBattle.you")}` : ""}
         </span>
-      </span>
-      <motion.span
-        key={team === "a" ? state.team_a_score : state.team_b_score}
-        initial={{ scale: 1.25 }}
-        animate={{ scale: 1 }}
-        className="font-display text-3xl font-black text-white drop-shadow-sm"
-      >
-        {team === "a" ? state.team_a_score : state.team_b_score}
-      </motion.span>
+        <motion.span
+          key={team === "a" ? state.team_a_score : state.team_b_score}
+          initial={{ scale: 1.25 }}
+          animate={{ scale: 1 }}
+          className="font-display text-[26px] font-black leading-none text-white drop-shadow-sm"
+        >
+          {team === "a" ? state.team_a_score : state.team_b_score}
+        </motion.span>
+      </div>
     </div>
   );
   return (
@@ -807,24 +811,12 @@ function PhaseRapidFire() {
               {t("teamBattle.poke")}
             </button>
           )}
-          {/* Not "n / 12" any more: the turn is a fixed three minutes and
-              the count is open-ended, so the pill totals the run so far. */}
-          <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full shrink-0">
-            <span className="text-emerald-300 font-bold text-sm">
-              ✓ {turnPicks.filter((p) => p.correct).length}
-            </span>
-            <span className="text-red-300 font-bold text-sm">
-              ✗ {turnPicks.filter((p) => !p.correct).length}
-            </span>
-          </div>
+          {/* Where the ✓/✗ tally used to be: the reactions in the air, under
+              the face of whoever is playing. The tally moved above the
+              question card — it is a running score, read between questions,
+              and this end of this row is where the room's noise belongs. */}
+          <ReactionPops items={pops} senders={senders} />
         </div>
-
-        {/* Reactions land here, under the face of whoever is playing: the
-            spotlight sees what is being sent them WHILE they play, and so
-            does everyone else. It holds its height whether or not anything
-            is in the air, so the question does not hop down the screen
-            every time somebody claps. */}
-        <ReactionPops items={pops} senders={senders} />
 
         {/* the turn's running tally — a green/red dot per answered question,
             so everyone reads the turn at a glance (only the freshest twelve:
@@ -844,6 +836,18 @@ function PhaseRapidFire() {
         )}
 
         <div className="relative px-4 pt-8 flex-shrink-0">
+          {/* The turn's running tally, in the band the category's artwork
+              already floats in: level with it, at the right edge, over the
+              card's difficulty chip. Nothing moves to make room for it —
+              that band was empty air on the other side of the picture. */}
+          <div className="pointer-events-none absolute right-4 top-1 z-20 flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5">
+            <span className="text-emerald-300 font-bold text-sm">
+              ✓ {turnPicks.filter((p) => p.correct).length}
+            </span>
+            <span className="text-red-300 font-bold text-sm">
+              ✗ {turnPicks.filter((p) => !p.correct).length}
+            </span>
+          </div>
           <TurnQuestionCard
             tile={tile}
             question={question}
@@ -1026,7 +1030,17 @@ function PhaseSuperRound() {
             >
               {t("teamBattle.superRoundTitle")}
             </h1>
-            <span className="text-white/60 text-[11px]">{t("teamBattle.firstTo3")}</span>
+            {/* First to three, out of five at the most — the count is the
+                only thing that says how much rope is left when both
+                champions keep missing. Digits, so it needs no locale. */}
+            <span className="text-white/60 text-[11px]">
+              {t("teamBattle.firstTo3")}
+              {questions.length > 0 && (
+                <span className="ml-1.5 text-white/45">
+                  {Math.min(index + 1, questions.length)}/{questions.length}
+                </span>
+              )}
+            </span>
             <TimerBadge seconds={secondsLeft} maxSeconds={15} compact />
           </div>
           {champSide(sup.champion_b, sup.score_b)}

@@ -252,18 +252,15 @@ describe("the classic lobby's create controls (owner's asks)", () => {
   const lobby = read("src/components/team/RoomLobbyV2.tsx");
   const universal = read("src/components/lobby/UniversalLobby.tsx");
 
-  it("the host picks the player count 2–10 from a dropdown", () => {
-    // The options run from the current head count (min 2) up to 10 — you
-    // cannot cap a room below the people already in it.
-    expect(lobby).toMatch(/Math\.max\(2, participants\.length\) \+ i/);
-    expect(lobby).toMatch(/variant: "dropdown" as const/);
-    expect(lobby).toMatch(/void setMaxPlayers\(v\)/);
-    expect(lobby).toMatch(/max_players: n/);
-    // The dropdown variant renders a real <select>. The static "1–10" line
-    // it used to stand down for is gone entirely: how full the room is is
-    // said under the room's own name (Figma 1059:532), and saying it again
-    // as a row two inches below was saying it twice.
-    expect(universal).toMatch(/function RuleDropdown/);
+  it("a classic room has NO player-count picker — the cap is 10, host starts whenever", () => {
+    // Owner's ask: the classic room dropped the players picker entirely.
+    expect(lobby).not.toMatch(/key: "players"/);
+    expect(lobby).not.toMatch(/setMaxPlayers/);
+    expect(lobby).toMatch(/No player-count picker on a classic room/);
+    // And with it went the static "Players 1–10" line the lobby drew when no
+    // picker was present: how full the room is is said under the room's own
+    // name (Figma 1059:532), and saying it again as a row two inches below
+    // was saying it twice.
     expect(universal).not.toMatch(/rules\.some\(\(r\) => r\.key === "players"\)/);
   });
 
@@ -307,11 +304,16 @@ describe("the classic lobby's create controls (owner's asks)", () => {
     // Figma 1059:532 puts it back on the emblem — top-right, on the
     // shoulder, not in the old bottom-right corner and not floating beside
     // a name it has to push around to sit next to.
-    expect(universal).toMatch(/absolute left-\[65px\] top-\[4px\] flex size-\[22px\]/);
+    expect(universal).toMatch(/absolute left-\[65px\] top-\[4px\]/);
+    // Wherever it hangs, it is never a child of the clamped h1: that clips
+    // with overflow-hidden, which ate the round chip and its shadow.
+    expect(universal).toMatch(/It is\s*\n\s*\/\/ never a child of the h1/);
+    expect(universal).not.toMatch(/\{name\}\s*\n\s*\{[^}]*[Pp]encil/);
     expect(universal).not.toMatch(/absolute -bottom-0\.5 -right-0\.5[^]*<Pencil/);
-    // A room with no emblem still gets one, on the name — and that is the
-    // only other place it may appear.
-    expect((universal.match(/<Pencil className="size-3/g) ?? []).length).toBe(2);
+    // One chip, built once: a room with no emblem hangs the same one beside
+    // its name, so the two cannot drift into two different pencils.
+    expect((universal.match(/<Pencil className="size-3/g) ?? []).length).toBe(1);
+    expect(universal).toMatch(/const chip = \(/);
   });
 
   it("the TV setup panel is dark ink on the lobby's light sheet, not white", () => {

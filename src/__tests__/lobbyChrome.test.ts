@@ -126,7 +126,9 @@ describe("the lounges invite through the invite page", () => {
     // was refused with "Tile 0 needs 5..30 questions, has 40".
     const context = read("src/contexts/TeamBattleContext.tsx");
     expect(context).toMatch(/asQuestions\(filled\.res\.questions\.slice\(0, 30\)\)/);
-    expect(context).toMatch(/asQuestions\(superRes\.questions\.slice\(0, 30\)\)/);
+    // The super round is not a tile: it is a race to three and ships five,
+    // the server's own floor. See superRoundLength.test.ts.
+    expect(context).toMatch(/asQuestions\(superRes\.questions\.slice\(0, 5\)\)/);
     // And the guest's "waiting for the host" line is the caption of the
     // universal lobby's Start footer, which is pinned to the bottom of a
     // fixed-height screen — never below a fold.

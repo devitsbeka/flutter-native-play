@@ -7,6 +7,7 @@ export const en: KaTranslations = {
   // Common
   // ==========================================
   common: {
+    backToTop: "Back to top",
     processing: "Processing...",
     play: "Play",
     back: "Back",
