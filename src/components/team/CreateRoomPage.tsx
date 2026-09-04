@@ -1161,7 +1161,13 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       // Last, so the invitations above are sent before this screen goes.
       if (walkInCode) {
         onClose();
-        navigate(`/team?join=${walkInCode}`);
+        // A Guess tile is "play this", not "make me a room": which picture
+        // game IS the choice, so the lobby presses its own Start on arrival
+        // rather than showing a one-seat room a button it already has the
+        // answer for. Every other way in still stops at the lobby, where
+        // there is a category to pick or people to wait for.
+        const autostart = gameChoice === "guess" ? "&autostart=1" : "";
+        navigate(`/team?join=${walkInCode}${autostart}`);
       }
     } catch (error) {
       console.error("Error creating room:", error);
