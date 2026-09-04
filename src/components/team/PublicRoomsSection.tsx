@@ -147,6 +147,19 @@ function PublicRoomCard({
   // what the green dot on the join button means, so a room whose whole
   // couch has closed the app doesn't wear one.
   const live = online.has(room.host_user_id) || players.some((p) => online.has(p.user_id));
+  /**
+   * Ready: my room, every seat taken, and every one of those people in the
+   * app right now.
+   *
+   * "Enter" is true of any room I belong to and says nothing about whether
+   * walking in is worth it. This one is the room that can start the moment
+   * I arrive — nobody to wait for, nobody to wake — so it says so, and the
+   * button goes green rather than wearing a green dot on white.
+   */
+  const full = seats != null && room.player_count >= seats;
+  const everyoneHere =
+    online.has(room.host_user_id) && players.every((p) => online.has(p.user_id));
+  const ready = inside && full && everyoneHere;
   // The first round: its category's own icon and name, in the viewer's
   // language — or "mixed", whichever language the host's picker stored it
   // in. The listing carries an icon only for a queued round; a room whose
@@ -286,7 +299,12 @@ function PublicRoomCard({
           // The matchup frames its own name: one crest on each wing, the
           // title centered between them. The crests are what the captains
           // dressed — or the pair the room was dealt when nobody has yet.
-          <div className="relative z-10 flex-1 flex items-center justify-between gap-2 py-3">
+          //
+          // Centred as one group, not pinned to the card's two edges. At
+          // justify-between the crests sat in the corners with a lake of
+          // empty purple between them and the name — three things on one
+          // line that did not read as one thing.
+          <div className="relative z-10 flex-1 flex items-center justify-center gap-3 py-3">
             {crests?.a ? (
               <img
                 src={crests.a}
@@ -296,7 +314,7 @@ function PublicRoomCard({
             ) : (
               <span className="w-[53px] h-[53px] rounded-full bg-white/10 border border-white/20 shrink-0" />
             )}
-            <h3 className={`flex-1 min-w-0 text-center font-display text-lg leading-tight line-clamp-2 drop-shadow-md ${ink.text}`}>
+            <h3 className={`min-w-0 max-w-[58%] text-center font-display text-lg leading-tight line-clamp-2 drop-shadow-md ${ink.text}`}>
               {lounge ? t(lounge.labelKey) : room.room_name || t("extra.gameRoomDefault")}
             </h3>
             {crests?.b ? (
@@ -401,7 +419,11 @@ function PublicRoomCard({
                 if (inside) enter();
                 else onAsk(room);
               }}
-              className="flex items-center gap-1.5 shrink-0 rounded-lg bg-white/70 backdrop-blur-md px-3 py-1.5 text-sm font-extrabold text-[#2E1065] shadow-md disabled:opacity-60"
+              className={`flex items-center gap-1.5 shrink-0 rounded-lg backdrop-blur-md px-3 py-1.5 text-sm font-extrabold shadow-md disabled:opacity-60 ${
+                ready
+                  ? "bg-emerald-400 text-[#0b3b2c] shadow-[0_0_16px_rgba(16,185,129,0.55)]"
+                  : "bg-white/70 text-[#2E1065]"
+              }`}
             >
               {busy ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -415,14 +437,20 @@ function PublicRoomCard({
                   {/* The dot means LIVE — somebody in that room is in the
                       app right now — so a sleeping room's button carries
                       no dot rather than a lie. */}
-                  {live && (
+                  {live && !ready && (
                     <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)]" />
                   )}
                   {/* My own room is a door I walk through; somebody
                       else's is a request I send, and the label says
                       which — "Join" on a room I host read as if the
-                      host had to ask themselves in. */}
-                  {inside ? t("extra.roomEnter") : t("extra.roomJoinLive")}
+                      host had to ask themselves in. And a full room
+                      whose people are all here is not a door, it is a
+                      game waiting on me. */}
+                  {ready
+                    ? t("extra.roomReady")
+                    : inside
+                      ? t("extra.roomEnter")
+                      : t("extra.roomJoinLive")}
                 </>
               )}
             </motion.button>

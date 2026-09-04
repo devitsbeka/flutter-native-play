@@ -858,18 +858,30 @@ export default function KingPage() {
         inviteFaces={inviteFaces}
         onInvite={inviteFriends}
         initialTab="players"
-        start={{
-          label: t("lobby.startGame"),
-          onPress: () => {
-            // Two or more humans on the couch fight ONE King together; a
-            // lone player keeps the personal duel.
-            if (humans > 1) teamStart();
-            else startForEveryone();
-          },
-          disabled: busy || (humans > 1 ? !isKingHost : !state),
-          loading: busy,
-          caption: noPool ? t("king.noQuestions") : null,
-        }}
+        start={
+          // On a shared couch only the host starts it. A guest used to get
+          // the same big button, greyed and unexplained; they get the line
+          // instead, like the arena's guests.
+          humans > 1 && !isKingHost
+            ? {
+                label: "",
+                onPress: () => undefined,
+                captionOnly: true,
+                caption: noPool ? t("king.noQuestions") : t("teamBattle.waitingHost"),
+              }
+            : {
+                label: t("lobby.startGame"),
+                onPress: () => {
+                  // Two or more humans on the couch fight ONE King together;
+                  // a lone player keeps the personal duel.
+                  if (humans > 1) teamStart();
+                  else startForEveryone();
+                },
+                disabled: busy || !state,
+                loading: busy,
+                caption: noPool ? t("king.noQuestions") : null,
+              }
+        }
       >
         {/* Somebody asking onto this couch, when the lounge was published */}
         {/* The doorstep is app-wide now — GlobalJoinRequestGate in App. */}

@@ -181,6 +181,14 @@ export interface UniversalLobbyProps {
     /** The reason a disabled button is disabled. */
     caption?: string | null;
     icon?: ReactNode;
+    /**
+     * Draw the caption alone.
+     *
+     * A guest's footer used to be a dead Start button with "waiting for the
+     * host" underneath it — the room's one big call to action, greyed, in
+     * front of somebody it will never be for. The line is the whole message.
+     */
+    captionOnly?: boolean;
   };
   /** Above the start button — an error the host must read, for instance. */
   footerExtra?: ReactNode;
@@ -399,13 +407,13 @@ export function UniversalLobby({
               button rather than next to it, because on a room that has one to
               change they are one control: tapping either opens the sheet that
               sets both. */}
-          <motion.div {...arrive(0.3)} className="shrink-0 pl-[9px]">
+          <motion.div {...arrive(0.3)} className="flex shrink-0 flex-col items-center">
             {onRename ? (
               <motion.button
                 type="button"
                 whileTap={{ scale: 0.98 }}
                 onClick={onRename}
-                className="block w-full max-w-[456px] text-left"
+                className="block max-w-[456px]"
               >
                 <RoomTitle name={roomName} icon={icon} editable />
               </motion.button>
@@ -413,6 +421,16 @@ export function UniversalLobby({
               <div className="max-w-[456px]">
                 <RoomTitle name={roomName} icon={icon} />
               </div>
+            )}
+            {/* How full the room is, right under its name.
+                It used to sit at the foot of the players tab, below every
+                bench and the hint — the one number that says whether this
+                room can start, three scrolls from the room's own name and
+                invisible on the rules tab entirely. */}
+            {capacity && (
+              <p className="mt-1 font-[Nunito] text-[13px] font-semibold leading-4 tracking-[-0.16px] text-[#402666]/60">
+                {Math.min(capacity.taken, capacity.max)}/{capacity.max} {labels.players.toLowerCase()}
+              </p>
             )}
           </motion.div>
 
@@ -569,13 +587,8 @@ export function UniversalLobby({
                       </div>
                     ))
                   )}
-                  {capacity && (
-                    <p className="mt-[14px] text-center font-[Nunito] text-[13px] font-semibold leading-4 tracking-[-0.16px] text-[#402666]/60">
-                      {Math.min(capacity.taken, capacity.max)}/{capacity.max} {labels.players.toLowerCase()}
-                    </p>
-                  )}
                   {(playersHint || (capacity && capacity.taken >= capacity.max)) && (
-                    <p className="mt-[20px] text-center font-[Nunito] text-[16px] font-medium leading-[19.5px] tracking-[-0.16px] text-[#402666]">
+                    <p className="mt-[20px] text-center font-[Nunito] text-[14px] font-medium leading-[18px] tracking-[-0.16px] text-[#402666]">
                       {capacity && capacity.taken >= capacity.max ? capacity.fullLabel : playersHint}
                     </p>
                   )}
@@ -597,6 +610,7 @@ export function UniversalLobby({
       >
         <div className="mx-auto w-full max-w-[700px] md:max-w-[520px]">
           {footerExtra}
+          {!start.captionOnly && (
           <motion.button
             type="button"
             whileTap={start.disabled ? undefined : { scale: 0.98 }}
@@ -620,8 +634,9 @@ export function UniversalLobby({
               {start.label}
             </span>
           </motion.button>
+          )}
           {start.caption && (
-            <p className="mt-2 text-center font-[Nunito] text-[13px] font-medium leading-[18px] text-[#402666]/70">
+            <p className="text-center font-[Nunito] text-[15px] font-semibold leading-[20px] text-[#402666]/70 [&:not(:first-child)]:mt-2">
               {start.caption}
             </p>
           )}

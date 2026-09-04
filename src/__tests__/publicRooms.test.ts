@@ -284,7 +284,7 @@ describe("the public list", () => {
     // Crest — centered title — crest, and a captainless side is dealt a
     // per-room crest from the library rather than the same stock pair.
     expect(section).toMatch(
-      /crests\?\.a \?[^]*?flex-1 min-w-0 text-center font-display[^]*?crests\?\.b \?/,
+      /crests\?\.a \?[^]*?text-center font-display[^]*?crests\?\.b \?/,
     );
     // The stock hat-and-car pair is gone everywhere (owner's rule: a side
     // wears what its captain set or a per-room random deal, never stock) —
@@ -319,7 +319,9 @@ describe("the public list", () => {
     // The join button's green dot means somebody in the room is in the app
     // right now — a sleeping room's button carries none.
     expect(section).toMatch(/const live = online\.has\(room\.host_user_id\) \|\| players\.some/);
-    expect(section).toMatch(/\{live && \(/);
+    // The dot means LIVE, and it stands down on a Ready card, which is
+    // green all over and says so in words.
+    expect(section).toMatch(/\{live && !ready && \(/);
     // One door at a time: a pending ask is withdrawable from the card, and
     // until it is, no other room's join can be pressed (see "one door at a
     // time" below — the old silent take-back moved the ask on a mis-tap).
@@ -592,7 +594,9 @@ describe("the doorstep follows the host around the app", () => {
 
   it("a room I host says Enter; somebody else's says it is a request", () => {
     const section = read("src/components/team/PublicRoomsSection.tsx");
-    expect(section).toMatch(/inside \? t\("extra\.roomEnter"\) : t\("extra\.roomJoinLive"\)/);
+    expect(section).toMatch(
+      /ready\s*\? t\("extra\.roomReady"\)\s*: inside\s*\? t\("extra\.roomEnter"\)\s*: t\("extra\.roomJoinLive"\)/,
+    );
     for (const lang of ["ka", "en", "de", "es", "fr", "it", "pt"]) {
       expect(read(`src/locales/${lang}.ts`)).toMatch(/roomEnter: "/);
     }

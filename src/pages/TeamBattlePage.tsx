@@ -916,9 +916,12 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
               loading,
             }
           : {
-              label: t("lobby.startGame"),
+              // A guest gets the line, not a dead button. The room's one big
+              // call to action, greyed, in front of somebody it will never
+              // be for, said nothing the caption underneath did not.
+              label: "",
               onPress: () => undefined,
-              disabled: true,
+              captionOnly: true,
               caption: t("teamBattle.waitingHost"),
             }
       }

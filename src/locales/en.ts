@@ -1743,7 +1743,7 @@ export const en: KaTranslations = {
     leaveMatchBody: "Walking out mid-match costs 200 coins — your team plays on without you.",
     leaveMatchConfirm: "Leave (−200)",
     minTwoPerTeam: "You need at least 2 players on each team to start",
-    needToStart: "{n} more to start",
+    needToStart: "You need {n} more to start",
     openSeat: "Open seat",
     rpsTitle: "Rock · Paper · Scissors",
     rpsSubtitle: "The winning team picks first",
@@ -2480,6 +2480,7 @@ export const en: KaTranslations = {
     roomStatusWaiting: "Waiting",
     roomJoinLive: "Join",
     roomEnter: "Enter",
+    roomReady: "Ready",
     // Public rooms: the two tabs, the switch that publishes a room, and
     // the doorstep the host answers at.
     tabPublic: "Public",

@@ -1454,7 +1454,7 @@ export const it: KaTranslations = {
     leaveMatchBody: "Uscire a metà partita costa 200 monete — la tua squadra continua senza di te.",
     leaveMatchConfirm: "Abbandona (−200)",
     minTwoPerTeam: "Servono almeno 2 giocatori per squadra per iniziare",
-    needToStart: "Ancora {n} per iniziare",
+    needToStart: "Servono ancora {n} giocatori per iniziare",
     openSeat: "Libero",
     rpsTitle: "Sasso · Carta · Forbici",
     rpsSubtitle: "La squadra vincente sceglie per prima",
@@ -2150,6 +2150,7 @@ export const it: KaTranslations = {
     roomStatusWaiting: "In attesa",
     roomJoinLive: "Unisciti",
     roomEnter: "Entra",
+    roomReady: "Pronti",
     // Public rooms: the two tabs, the switch that publishes a room, and
     // the doorstep the host answers at.
     tabPublic: "Pubblica",

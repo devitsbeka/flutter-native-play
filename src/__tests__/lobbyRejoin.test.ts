@@ -119,3 +119,71 @@ describe("the arena's heading and its VS", () => {
     expect(universal).toMatch(/mb-\[7px\] mt-\[16px\]/);
   });
 });
+
+describe("the lobby's heading carries the count", () => {
+  it("the name is centred and the seats sit under it", () => {
+    // The one number that says whether this room can start used to be at
+    // the foot of the players tab, below every bench and the hint — three
+    // scrolls from the room's own name, and not on the rules tab at all.
+    expect(universal).toMatch(/className="flex shrink-0 flex-col items-center"/);
+    expect(universal).toMatch(
+      /\{Math\.min\(capacity\.taken, capacity\.max\)\}\/\{capacity\.max\} \{labels\.players\.toLowerCase\(\)\}/,
+    );
+    // And exactly once — it left the foot of the list rather than doubling.
+    expect((universal.match(/capacity\.max\} \{labels\.players/g) ?? []).length).toBe(1);
+  });
+
+  it("the waiting line is two points smaller, and says what it is waiting for", () => {
+    expect(universal).toMatch(/text-\[14px\] font-medium leading-\[18px\][^"]*text-\[#402666\]"/);
+    for (const lang of ["en", "ka", "de", "es", "fr", "it", "pt"]) {
+      expect(read(`src/locales/${lang}.ts`), lang).toMatch(/needToStart: ".*\{n\}.*"/);
+    }
+    // The Georgian is the owner's own wording.
+    expect(read("src/locales/ka.ts")).toContain(
+      "needToStart: \"თამაშის დასაწყებად საჭიროა კიდევ {n} მოთამაშე\",",
+    );
+  });
+});
+
+describe("only the host is offered the start", () => {
+  it("a guest gets the line, not a dead button", () => {
+    // The room's one big call to action, greyed, in front of somebody it
+    // will never be for.
+    expect(universal).toMatch(/captionOnly\?: boolean;/);
+    expect(universal).toMatch(/\{!start\.captionOnly && \(/);
+    expect(battle).toMatch(/captionOnly: true,\s*\n\s*caption: t\("teamBattle\.waitingHost"\)/);
+    // The King's couch has the same shape: a shared couch is the host's to
+    // start, and its guests used to get the button greyed and unexplained.
+    expect(read("src/pages/KingPage.tsx")).toMatch(/humans > 1 && !isKingHost/);
+  });
+
+  it("but a real action in the footer stays a button", () => {
+    // The classic room's guest can ping the host — that is a thing to
+    // press, not a thing to read.
+    const lobby = read("src/components/team/RoomLobbyV2.tsx");
+    expect(lobby).toMatch(/onPress: \(\) => void handlePingHost\(\)/);
+    expect(lobby).not.toMatch(/captionOnly/);
+  });
+});
+
+describe("a room that can start says so", () => {
+  it("full, mine, and everybody in the app turns the button green", () => {
+    const section = read("src/components/team/PublicRoomsSection.tsx");
+    expect(section).toMatch(/const full = seats != null && room\.player_count >= seats;/);
+    // Everyone, not anyone — the host counts too.
+    expect(section).toMatch(
+      /online\.has\(room\.host_user_id\) && players\.every\(\(p\) => online\.has\(p\.user_id\)\)/,
+    );
+    expect(section).toMatch(/const ready = inside && full && everyoneHere;/);
+    expect(section).toMatch(/bg-emerald-400 text-\[#0b3b2c\]/);
+    for (const lang of ["en", "ka", "de", "es", "fr", "it", "pt"]) {
+      expect(read(`src/locales/${lang}.ts`), lang).toMatch(/roomReady: "/);
+    }
+  });
+
+  it("and the arena's crests cluster with its name instead of the card's edges", () => {
+    const section = read("src/components/team/PublicRoomsSection.tsx");
+    expect(section).toMatch(/flex-1 flex items-center justify-center gap-3 py-3/);
+    expect(section).not.toMatch(/flex-1 flex items-center justify-between gap-2 py-3/);
+  });
+});

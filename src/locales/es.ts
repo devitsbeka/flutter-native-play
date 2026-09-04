@@ -1461,7 +1461,7 @@ export const es: KaTranslations = {
     leaveMatchBody: "Irse a mitad de partida cuesta 200 monedas — tu equipo sigue sin ti.",
     leaveMatchConfirm: "Abandonar (−200)",
     minTwoPerTeam: "Se necesitan al menos 2 jugadores por equipo para empezar",
-    needToStart: "Faltan {n} para empezar",
+    needToStart: "Faltan {n} jugadores para empezar",
     openSeat: "Libre",
     rpsTitle: "Piedra · Papel · Tijera",
     rpsSubtitle: "El equipo ganador elige primero",
@@ -2158,6 +2158,7 @@ export const es: KaTranslations = {
     roomStatusWaiting: "Esperando",
     roomJoinLive: "Unirse",
     roomEnter: "Entrar",
+    roomReady: "Listo",
     // Public rooms: the two tabs, the switch that publishes a room, and
     // the doorstep the host answers at.
     tabPublic: "Pública",

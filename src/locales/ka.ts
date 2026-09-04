@@ -1745,7 +1745,7 @@ export const ka = {
     leaveMatchBody: "შუა თამაშში წასვლა 200 მონეტა ღირს — გუნდი შენს გარეშე გააგრძელებს.",
     leaveMatchConfirm: "დატოვება (−200)",
     minTwoPerTeam: "თამაშის დასაწყებად თითო გუნდში მინიმუმ 2 მოთამაშეა საჭირო",
-    needToStart: "დასაწყებად კიდევ {n}",
+    needToStart: "თამაშის დასაწყებად საჭიროა კიდევ {n} მოთამაშე",
     openSeat: "თავისუფალი",
     rpsTitle: "ქვა · ქაღალდი · მაკრატელი",
     rpsSubtitle: "გამარჯვებული გუნდი პირველი ირჩევს",
@@ -2485,6 +2485,7 @@ export const ka = {
     roomStatusWaiting: "მოლოდინი",
     roomJoinLive: "შეუერთდი",
     roomEnter: "შესვლა",
+    roomReady: "მზადაა",
     // Public rooms: the two tabs, the switch that publishes a room, and
     // the doorstep the host answers at.
     tabPublic: "საჯარო",
