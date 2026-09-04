@@ -103,9 +103,19 @@ describe("the lounges invite through the invite page", () => {
     // countdown.
     const mp = read("src/contexts/MultiplayerContextV2.tsx");
     expect(mp).toMatch(/skipImagePreload: true,/);
-    // Warmed rather than skipped: every picture is started, none is waited
-    // for. Three writes and the 3-2-1 stand between here and the first card.
-    expect(mp).toMatch(/void warmQuestionImages\(questions\.map\(q => q\.imageUrl\)\);/);
+    // Warmed rather than skipped: every picture is started, and the FIRST is
+    // waited for — but at the flip to "playing", so the writes pay for the
+    // wait instead of the player. Fire-and-forget was tried and was not
+    // enough: an Image nobody holds can be collected mid-flight once the
+    // create screen navigates away, and question one arrived cold anyway —
+    // the one card that opens on a cold connection and an edge MISS, which
+    // is why it was the only one showing "The picture didn't load".
+    expect(mp).toMatch(/const pendingWarm = warmQuestionImages\(questions\.map\(q => q\.imageUrl\)\);/);
+    expect(mp).toMatch(/if \(pendingWarm\) await pendingWarm;/);
+    // Awaited BEFORE the room goes to "playing", not after.
+    const flip = mp.indexOf('status: "playing",\n        started_at: roundStartedAt');
+    expect(flip).toBeGreaterThan(-1);
+    expect(mp.indexOf("if (pendingWarm) await pendingWarm;")).toBeLessThan(flip);
     expect(mp).toMatch(/import \{ warmQuestionImages \} from "@\/utils\/questionImage";/);
     // The warm helper waits only for the FIRST image, and only briefly — it
     // resolves either way, because a picture that refuses is the card's to
