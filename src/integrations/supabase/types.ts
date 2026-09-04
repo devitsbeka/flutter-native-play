@@ -2066,33 +2066,6 @@ export type Database = {
           },
         ]
       }
-      promotions: {
-        Row: {
-          active: boolean
-          created_at: string
-          ends_at: string
-          id: string
-          label: Json
-          starts_at: string
-        }
-        Insert: {
-          active?: boolean
-          created_at?: string
-          ends_at: string
-          id?: string
-          label: Json
-          starts_at?: string
-        }
-        Update: {
-          active?: boolean
-          created_at?: string
-          ends_at?: string
-          id?: string
-          label?: Json
-          starts_at?: string
-        }
-        Relationships: []
-      }
       purchase_transactions: {
         Row: {
           amount_paid: number
@@ -5027,6 +5000,10 @@ export type Database = {
         }
         Returns: Json
       }
+      king_question_is_long: {
+        Args: { q: Database["public"]["Tables"]["king_questions"]["Row"] }
+        Returns: boolean
+      }
       king_show_options: { Args: { p_match_id: string }; Returns: Json }
       king_start_match: { Args: { p_language?: string }; Returns: Json }
       king_state: {
@@ -5396,6 +5373,8 @@ export type Database = {
         }
         Returns: undefined
       }
+      tb_finish_stale: { Args: { p_room_id: string }; Returns: boolean }
+      tb_leave_match: { Args: { p_room_id: string }; Returns: undefined }
       tb_next_player: {
         Args: { p_game_id: string; p_room_id: string; p_team: string }
         Returns: string
@@ -5428,14 +5407,14 @@ export type Database = {
         Args: { p_icon: string; p_room_id: string; p_team: string }
         Returns: undefined
       }
+      tb_set_team_name: {
+        Args: { p_name: string; p_room_id: string; p_team: string }
+        Returns: undefined
+      }
       tb_settle: { Args: { p_room_id: string }; Returns: Json }
       tb_start_match: {
         Args: { p_board: Json; p_room_id: string; p_turn_seconds?: number }
         Returns: string
-      }
-      tb_set_team_name: {
-        Args: { p_name: string; p_room_id: string; p_team: string }
-        Returns: undefined
       }
       tb_submit_answer: {
         Args: { p_answer: string; p_question_index: number; p_room_id: string }
@@ -5443,14 +5422,6 @@ export type Database = {
       }
       tb_submit_rps: {
         Args: { p_room_id: string; p_throw: string }
-        Returns: undefined
-      }
-      tb_finish_stale: {
-        Args: { p_room_id: string }
-        Returns: boolean
-      }
-      tb_leave_match: {
-        Args: { p_room_id: string }
         Returns: undefined
       }
       tb_submit_super: {
@@ -5527,12 +5498,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -5556,11 +5527,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -5581,11 +5552,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -5606,11 +5577,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -5623,11 +5594,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
