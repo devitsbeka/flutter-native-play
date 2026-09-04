@@ -229,12 +229,14 @@ describe("the room title in the lobby header", () => {
     // One lobby for every mode now (Figma 1018:5815): the classic room
     // passes its name in rather than drawing a header of its own.
     expect(lobby).toMatch(/roomName=\{roomName\}/);
-    // 43.656 on 51.36 and centred under the emblem (Figma 1059:532). It
-    // spent a while at 34/40 beside a 44px icon, to buy back the row that
-    // an emblem above a big heading cost on a short screen; the design
-    // pays for that row out of the empty lilac under the card instead.
-    expect(universal).toMatch(/font-hero text-\[43\.656px\] capitalize leading-\[51\.36px\]/);
-    expect(universal).toMatch(/line-clamp-2/);
+    // Centred under the emblem (Figma 1059:532), starting at the frame's
+    // 43.656px. It ALWAYS stays on ONE line (owner's ask): it never wraps —
+    // it shrinks its font to fit the 321px box (useFitOneLine, down to a
+    // 22px floor) and ellipsises only a name too long to shrink further.
+    // The old two-line clamp is gone.
+    expect(universal).toMatch(/useFitOneLine\(name, 43\.656, 22\)/);
+    expect(universal).toMatch(/w-\[321px\] max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-center font-hero/);
+    expect(universal).not.toMatch(/line-clamp-2/);
   });
 
   it("is the host's way in to rename, and a guest's plain title", () => {
