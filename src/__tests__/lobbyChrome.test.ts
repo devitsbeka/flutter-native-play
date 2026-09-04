@@ -177,10 +177,15 @@ describe("the game's name is centred in the header", () => {
 
 describe("the couch elects its captain, like the arena", () => {
   it("the King's chip opens the vote sheet and the vote goes through the shared RPC", () => {
-    // Tapping the captain chip opens the same CaptainInfoModal the arena
-    // uses, with a live tally, and choosing casts a tb_vote_captain vote —
-    // the one function that serves both lobbies since 20260925100000.
-    expect(king).toMatch(/onClick=\{\(\) => setCaptainInfoOpen\(true\)\}/);
+    // Tapping the armband opens the same CaptainInfoModal the arena uses,
+    // with a live tally, and choosing casts a tb_vote_captain vote — the one
+    // function that serves both lobbies since 20260925100000.
+    //
+    // The trigger moved: the couch used to state the captain in a cell of its
+    // own under the players, and that cell was the way in. The armband now
+    // sits on the captain's own row and carries the vote with it, so what is
+    // guarded here is the wiring, not the chip that used to hold it.
+    expect(king).toMatch(/onCaptainPress: \(\) => setCaptainInfoOpen\(true\)/);
     expect(king).toMatch(/<CaptainInfoModal[^]*?body=\{t\("king\.captainInfoBody"\)\}/);
     expect(king).toMatch(/supabase\.rpc\("tb_vote_captain"/);
     expect(king).toMatch(/voter\.captain_vote === p\.user_id/);

@@ -801,6 +801,7 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
         invite: t("lobby.uInvite"),
         you: t("lobby.uYou"),
         rounds: (count) => t("lobby.uRoundsShort", { count }),
+        captain: t("lobby.captainLabel"),
       }}
       rules={[
         {

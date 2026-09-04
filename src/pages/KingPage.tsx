@@ -776,6 +776,12 @@ export default function KingPage() {
         avatarUrl: p.avatar_url,
         isHost: p.user_id === kingRoom?.host_user_id,
         isYou: p.user_id === user?.id,
+        // The armband, on the row of whoever wears it. It used to be stated
+        // in a cell of its own under the couch, repeating a face and a name
+        // already two rows above.
+        isCaptain: p.user_id === kingCaptain?.user_id,
+        // The mark is also the way in to the vote, which that cell used to be.
+        onCaptainPress: () => setCaptainInfoOpen(true),
         // A seated human opens their profile in place; the host's tap on
         // somebody else is the seat menu.
         onPress:
@@ -818,6 +824,7 @@ export default function KingPage() {
           invite: t("lobby.uInvite"),
           you: t("lobby.uYou"),
           rounds: (count) => t("lobby.uRoundsShort", { count }),
+          captain: t("lobby.captainLabel"),
         }}
         // No visibility row. Versus King is friends-only by decision, so the
         // row could only ever read "private" with the other half greyed
@@ -848,25 +855,6 @@ export default function KingPage() {
         }}
         inviteFaces={inviteFaces}
         onInvite={inviteFriends}
-        playersExtra={
-          <button
-            type="button"
-            onClick={() => setCaptainInfoOpen(true)}
-            className="mt-[16px] flex h-[56px] w-full items-center gap-3 rounded-[20px] border border-[rgba(156,100,181,0.5)] pl-[12px] pr-[15px] text-left"
-          >
-            <span className="block h-8 w-8 overflow-hidden rounded-full bg-[#e9d8ff] shadow-[0px_0px_0px_2px_rgba(148,163,184,0.75)]">
-              {(kingCaptain?.avatar_url ?? profile?.avatar_url) && (
-                <img alt="" src={kingCaptain?.avatar_url ?? profile?.avatar_url ?? undefined} className="h-full w-full object-cover" />
-              )}
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block font-[Nunito] text-[12px] leading-4 text-[#402666]/60">{t("lobby.captainLabel")}</span>
-              <span className="block truncate font-[Nunito] text-[15px] font-bold leading-5 text-[#402666]">
-                {kingCaptain?.nickname ?? profile?.nickname ?? t("lobby.chooseCaptain")}
-              </span>
-            </span>
-          </button>
-        }
         initialTab="players"
         start={{
           label: t("lobby.startGame"),
