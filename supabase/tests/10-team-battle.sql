@@ -324,7 +324,7 @@ BEGIN
   PERFORM pg_temp.must_equal(v_state.team_b_score, 160, 'final score for b');
 
   -- Settlement: once, by anyone in the room; winners take 50/round + the
-  -- 50 participation coins, losers participation only (20260921130000).
+  -- A winner takes a flat 200, a loser nothing (20260930120000).
   SELECT coins INTO v_alice_coins_before FROM public.profiles WHERE user_id = v_alice;
   SELECT coins INTO v_bob_coins_before FROM public.profiles WHERE user_id = v_bob;
 
@@ -339,26 +339,22 @@ BEGIN
 
   PERFORM pg_temp.must_equal(
     (SELECT coins FROM public.profiles WHERE user_id = v_alice),
-    v_alice_coins_before + 50
-      + 50 * (SELECT count(*)::int FROM public.team_battle_board WHERE game_id = v_game),
-    'a winner is paid 50/round + participation');
+    v_alice_coins_before + 200, 'a winner is paid a flat 200');
   PERFORM pg_temp.must_equal(
     (SELECT coins FROM public.profiles WHERE user_id = v_bob),
-    v_bob_coins_before + 50, 'a loser is paid participation only');
+    v_bob_coins_before, 'a loser is paid nothing');
   PERFORM pg_temp.must_equal(
     (SELECT count(*)::int FROM public.currency_grants
       WHERE user_id IN (v_alice, v_bob)
         AND kind IN ('team_battle_win', 'team_battle_play')),
-    3, 'every payout has a ledger row');
+    1, 'only the winner has a ledger row');
 
   PERFORM pg_temp.as_user(v_alice);
   v_settle := public.tb_settle(v_room);
   PERFORM pg_temp.must_equal((v_settle ->> 'applied')::boolean, false, 'second settle is a no-op');
   PERFORM pg_temp.must_equal(
     (SELECT coins FROM public.profiles WHERE user_id = v_alice),
-    v_alice_coins_before + 50
-      + 50 * (SELECT count(*)::int FROM public.team_battle_board WHERE game_id = v_game),
-    'a repeat settle pays nothing more');
+    v_alice_coins_before + 200, 'a repeat settle pays nothing more');
 
   PERFORM pg_temp.must_equal(
     (SELECT status::text FROM public.game_rooms WHERE id = v_room), 'waiting',
@@ -702,15 +698,13 @@ BEGIN
     (SELECT is_captain FROM public.room_participants WHERE room_id = v_room AND user_id = v_alice),
     true, 'a changed vote re-tallies the team');
 
-  -- ── the pot scales with the board (20260921130000) ───────────────────────
+  -- ── the pot is a flat 200 a head (20260930120000) ────────────────────────
 
   PERFORM pg_temp.must_equal(
-    (SELECT bool_and(cg.coins = LEAST(600, 50 * (
-        SELECT count(*) FROM public.team_battle_board b
-         WHERE b.game_id::text = split_part(cg.reference, ':', 2))))
+    (SELECT bool_and(cg.coins = 200)
        FROM public.currency_grants cg
       WHERE cg.kind = 'team_battle_win' AND cg.user_id IN (v_alice, v_bob)),
-    true, 'every win payout is 50 coins per round of its board');
+    true, 'every win payout is a flat 200');
 
   -- ── seat management (20260921120000): host-only, lobby-only ────────────
 

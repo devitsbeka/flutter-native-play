@@ -698,7 +698,16 @@ export function UniversalLobby({
           </motion.button>
           )}
           {start.caption && (
-            <div className="flex items-center justify-center gap-2 [&:not(:first-child)]:mt-2">
+            <div
+              className={cn(
+                "flex items-center justify-center gap-2",
+                // A caption-only footer (a guest's "waiting for the host") is
+                // the first thing in the footer, so it used to sit hard under
+                // the card. Give it room to breathe above (owner's ask); under
+                // a Start button the 8px gap is right.
+                start.captionOnly ? "pt-4" : "[&:not(:first-child)]:mt-2",
+              )}
+            >
               <p className="text-center font-[Nunito] text-[15px] font-semibold leading-[20px] text-[#402666]/70">
                 {start.caption}
               </p>

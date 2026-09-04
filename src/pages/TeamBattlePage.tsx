@@ -16,6 +16,7 @@ import { useFriends } from "@/hooks/useFriends";
 import { useNotifications, createNotification } from "@/hooks/useNotifications";
 import { useParticipantPresence } from "@/hooks/useParticipantPresence";
 import coinIconAsset from "@/assets/tb-lobby/coin.png";
+import crownIcon from "@/assets/lobby/crown.png";
 import iconBattleCrate from "@/assets/play-chooser/icon-crate.png";
 import { containsBlockedText } from "@/utils/contentFilter";
 import { readAppLanguage } from "@/utils/appLanguage";
@@ -276,10 +277,6 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
   // player, so everyone gets at least two spotlight turns. Server cap 20
   // (20260921210000) fits the lounge's ten seats.
   const rounds = Math.min(20, Math.max(4, 2 * (teamA.length + teamB.length)));
-  // The match pool: every seat stakes 50 coins a round, AI players
-  // included. Each winning human collects their 50/round share at settle;
-  // a bot's share simply goes uncollected.
-  const potValue = 50 * rounds * Math.max(1, teamA.length, teamB.length);
 
   const start = () => {
     // Party categories (Most Likely To) have no fixed answers — a board
@@ -443,6 +440,12 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
   const iAmSeated = participants.some((p) => p.user_id === user?.id);
   const myTeamlessSeat = iAmSeated && !myTeam;
   const perSide = Math.max(2, Math.min(5, Math.floor((room?.max_players ?? 10) / 2)));
+  // The pot, counted by players (owner's ask): every seat stakes 200 coins,
+  // and the winning team splits the losing side's stakes — 200 to each
+  // winning human. So the winning TEAM's take is 200 × the side's size (a
+  // 2-2 pays 400, a 5-5 pays 1000), which is what the strip shows. The
+  // server (tb_settle) credits each winner their 200.
+  const potValue = 200 * perSide;
   const oppositeBench = useMemo((): TBTeam | null => {
     const hostTeam = (participants.find((p) => p.is_host)?.team as TBTeam | null) ?? null;
     if (!hostTeam) return null;
@@ -976,8 +979,8 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
         { key: "rules", heading: t("lobby.rulesHeading"), body: t("lobby.tbRules") },
         { key: "time", heading: t("lobby.timeHeading"), body: t("lobby.timeBattle") },
       ]}
-      // The pot: the winning team's real take, 50 coins a round to every
-      // winning human (tb_settle).
+      // The pot: the winning team's take — 200 to every winning human
+      // (tb_settle), so 200 × the side's size on the strip.
       reward={{ label: t("lobby.winnerTakes"), icon: coinIconAsset, amount: potValue }}
       rulesExtra={
         <>
@@ -1009,13 +1012,30 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
             }}
             className="flex h-[44px] items-center gap-2 rounded-[22px] border-b-4 border-[#2bc889] bg-[#81f0c3] px-5 font-[Nunito] text-[15px] font-extrabold text-[#320c69] active:translate-y-[2px] active:border-b-2 disabled:opacity-70"
           >
-            👑 {voting ? t("lobby.captainVoteOpen", { n: voteSecondsLeft }) : t("lobby.chooseCaptainTitle")}
+            <img alt="" src={crownIcon} className="h-5 w-5 shrink-0 object-contain" />
+            {voting ? t("lobby.captainVoteOpen", { n: voteSecondsLeft }) : t("lobby.chooseCaptainTitle")}
           </motion.button>
+        ) : captainA?.nickname && captainB?.nickname ? (
+          // The two sides' captains, with our crown and the CAPTAIN label
+          // between them (owner's ask) — a name on each side, not one emoji
+          // crown ahead of both.
+          <div className="flex w-full items-center justify-center gap-3">
+            <span className="min-w-0 flex-1 truncate text-right font-[Nunito] text-[14px] font-bold leading-[18px] text-[#402666]">
+              {captainA.nickname}
+            </span>
+            <span className="flex shrink-0 items-center gap-1 rounded-full border border-[rgba(156,100,181,0.5)] bg-white/60 px-2.5 py-1">
+              <img alt="" src={crownIcon} className="h-4 w-4 object-contain" />
+              <span className="font-[Nunito] text-[12px] font-semibold leading-[14px] text-[#402666]/70">
+                {t("lobby.captainLabel")}
+              </span>
+            </span>
+            <span className="min-w-0 flex-1 truncate text-left font-[Nunito] text-[14px] font-bold leading-[18px] text-[#402666]">
+              {captainB.nickname}
+            </span>
+          </div>
         ) : (
           <p className="text-center font-[Nunito] text-[14px] font-medium leading-[18px] tracking-[-0.16px] text-[#402666]">
-            {captainA?.nickname && captainB?.nickname
-              ? `👑 ${captainA.nickname} · ${captainB.nickname}`
-              : t("extra.mpRoomFull")}
+            {t("extra.mpRoomFull")}
           </p>
         )
       }

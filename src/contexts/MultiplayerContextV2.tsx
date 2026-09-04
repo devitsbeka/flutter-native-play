@@ -382,7 +382,7 @@ interface MultiplayerContextType extends MultiplayerState {
   // Actions
   createRoom: (categoryId?: string, categoryName?: string, customQuestions?: any[], roomName?: string | null, roomIcon?: string | null, preferredRoomCode?: string, isPublic?: boolean) => Promise<GameRoom | null>;
   enterRoom: (roomCode: string) => Promise<boolean>;
-  startGame: (hostShouldObserve?: boolean) => Promise<void>;
+  startGame: (hostShouldObserve?: boolean, room?: GameRoom) => Promise<void>;
   startNewRound: () => Promise<void>; // Any player can start a new round
   startNextFromQueue: () => Promise<void>; // Continue with next queued category
   submitAnswer: (answer: string, timeRemaining: number) => Promise<void>;
@@ -1636,10 +1636,23 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
 
   // Start game (host only)
   // hostShouldObserve: when undefined, auto-detect based on trivia ownership
-  const startGame = useCallback(async (hostShouldObserve?: boolean) => {
-    if (!state.currentRoom || !isHost || !user) return;
+  /**
+   * Start a round.
+   *
+   * `room` is for the caller that has just created one: state.currentRoom is
+   * set through setState, so a caller a tick behind createRoom reads null off
+   * this closure and the round silently never starts. Passing the room it was
+   * handed removes the race rather than timing around it. Everything below
+   * re-reads the row from the database anyway (freshRoom), so the override
+   * only has to get us past the guard and supply the id.
+   */
+  const startGame = useCallback(async (hostShouldObserve?: boolean, room?: GameRoom) => {
+    const startingRoom = room ?? state.currentRoom;
+    // isHost is derived from state.currentRoom, so it is stale for the same
+    // reason — check the room in hand instead.
+    if (!startingRoom || !user || startingRoom.host_user_id !== user.id) return;
     
-    const roomId = state.currentRoom.id;
+    const roomId = startingRoom.id;
     
     // CRITICAL FIX: Always fetch fresh room data to avoid stale category after selection
     // The realtime subscription may not have updated state.currentRoom yet when startAfterPick triggers
@@ -1655,7 +1668,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       return;
     }
     
-    console.log('[startGame] State category:', state.currentRoom.category_id, '| Fresh category:', freshRoom.category_id, freshRoom.category_name);
+    console.log('[startGame] State category:', startingRoom.category_id, '| Fresh category:', freshRoom.category_id, freshRoom.category_name);
     
     // The lobby's "questions per round" (5 / 10 / 20) lives in
     // total_questions. A trivia round overwrites it with the trivia's own
