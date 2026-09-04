@@ -181,19 +181,22 @@ describe("only the host is offered the start", () => {
   });
 });
 
-describe("a room that can start says so", () => {
-  it("full, mine, and everybody in the app turns the button green", () => {
-    const section = read("src/components/team/PublicRoomsSection.tsx");
-    // Full is measured against the EFFECTIVE seats (never below the head
-    // count), so an under-set cap can't leave a truly full room short.
-    expect(section).toMatch(/const full = effectiveSeats != null && room\.player_count >= effectiveSeats;/);
-    // Everyone, not anyone — the host counts too.
-    expect(section).toMatch(
-      /online\.has\(room\.host_user_id\) && players\.every\(\(p\) => online\.has\(p\.user_id\)\)/,
-    );
-    expect(section).toMatch(/const ready = inside && full && everyoneHere;/);
+describe("a room card offers one way in", () => {
+  it("the same button in two colours, mint on the public list and white on mine", () => {
+    const button = read("src/components/team/RoomCardPlayButton.tsx");
     // The mint "play" button (Figma 1058:325): #81f0c3 face, #2bc889 lip.
-    expect(section).toMatch(/rounded-\[24px\] bg-\[#81f0c3\] border-b-4 border-\[#2bc889\] text-\[#320c69\]/);
+    expect(button).toMatch(/mint: "bg-\[#81f0c3\] border-\[#2bc889\] text-\[#320c69\]"/);
+    expect(button).toMatch(/white: "bg-white border-\[#d5c9e8\] text-\[#320c69\]"/);
+    // Shape, size and depth are the component's, not the tone's, so the two
+    // lists cannot drift apart again.
+    expect(button).toMatch(/rounded-\[24px\] border-b-4 px-4 py-2 text-sm font-extrabold/);
+    expect(button).toMatch(/active:translate-y-\[2px\] active:border-b-2/);
+    expect(read("src/components/team/PublicRoomsSection.tsx")).toMatch(
+      /<RoomCardPlayButton\s*\n\s*tone="mint"/,
+    );
+    expect(read("src/components/team/MyRoomsSection.tsx")).toMatch(
+      /<RoomCardPlayButton\s*\n\s*tone="white"/,
+    );
     for (const lang of ["en", "ka", "de", "es", "fr", "it", "pt"]) {
       expect(read(`src/locales/${lang}.ts`), lang).toMatch(/roomPlay: "/);
     }
