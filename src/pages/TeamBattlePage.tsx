@@ -703,13 +703,19 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
       30_000,
     );
     const name = profile?.nickname || "";
+    // The body is written by the reader's own device from `kind` — what
+    // gets stored here is only the fallback for a build that does not know
+    // the kind. It used to be `room.room_code`, so the card read "Gloria:
+    // Let's play!" over a bare "7EXAZJ".
     await createNotification(
       target.user_id,
       "room_ping",
-      t("teamBattle.pokeNotifTitle", { name: name || "…" }),
-      room.room_code,
+      t("teamBattle.callBackTitle", { name: name || "…" }),
+      t("teamBattle.callBackBody"),
       {
-        kind: "team_poke",
+        // Not team_poke: that is the call to somebody who IS playing and
+        // has the clock running. This one is "your seat is empty".
+        kind: "room_callback",
         room_id: room.id,
         room_code: room.room_code,
         game_type_key: "team_battle",

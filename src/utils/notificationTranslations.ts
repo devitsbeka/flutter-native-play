@@ -99,6 +99,29 @@ export function translateNotificationTitle(
     return getTranslation('extra.welcomeNotifTitle');
   }
 
+  /**
+   * A room ping is three different messages under one type.
+   *
+   * A guest asking the host to start, a teammate calling the player on the
+   * spot while the clock runs, and a lobby calling somebody who wandered off
+   * back to their seat — all of them `room_ping`, and all of them titled
+   * "{name}: Let's play!", which is only true of the first. The kind the
+   * sender wrote in `data` says which.
+   */
+  if (type === 'room_ping' && typeof data?.kind === 'string') {
+    const pingTitles: Record<string, string> = {
+      team_poke: 'teamBattle.pokeNotifTitle',
+      room_callback: 'teamBattle.callBackTitle',
+    };
+    const key = pingTitles[data.kind];
+    if (key) {
+      return getTranslation(key).replace(
+        '{name}',
+        (data.sender_nickname as string) || getTranslation('extra.someoneLabel'),
+      );
+    }
+  }
+
   const translationKey = titleMap[type];
   if (translationKey) {
     let translation = getTranslation(translationKey);
@@ -163,6 +186,23 @@ export function translateNotificationMessage(
       Number(data?.xp) > 0 ? `${data!.xp} XP` : null,
     ].filter(Boolean).join(' · ');
     if (bits) return `${getTranslation('missions.rewardLabel')}: ${bits}`;
+  }
+
+  /**
+   * And the body is never the stored words.
+   *
+   * What got stored was whatever the sender happened to have to hand — a
+   * category name, or a bare room code like "7EXAZJ", which is what the
+   * card showed under "Let's play!". Say what the ping is for; the card's
+   * own room chip carries which room.
+   */
+  if (type === 'room_ping') {
+    const kind = typeof data?.kind === 'string' ? data.kind : '';
+    const pingBodies: Record<string, string> = {
+      team_poke: 'teamBattle.pokeNotifBody',
+      room_callback: 'teamBattle.callBackBody',
+    };
+    return getTranslation(pingBodies[kind] ?? 'extra.pingHostNotifBody');
   }
 
   const translationKey = messageMap[type];

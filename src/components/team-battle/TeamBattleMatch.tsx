@@ -638,7 +638,10 @@ function PhaseRapidFire() {
       player.user_id,
       "room_ping",
       t("teamBattle.pokeNotifTitle", { name: name || "…" }),
-      tile?.category_name ?? undefined,
+      // Same as the lobby's call: the reader's device writes the line from
+      // `kind`, and this is the fallback. A category name under "the clock
+      // is running" told nobody anything.
+      t("teamBattle.pokeNotifBody"),
       {
         kind: "team_poke",
         room_id: room.id,

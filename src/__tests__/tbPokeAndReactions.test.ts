@@ -230,3 +230,43 @@ describe("a turn is as long as its questions need", () => {
     expect(read("src/pages/TeamBattlePage.tsx")).toMatch(/slug: c\.category_id/);
   });
 });
+
+describe("a ping says what it is for", () => {
+  const trans = read("src/utils/notificationTranslations.ts");
+
+  it("three messages under one type, told apart by the kind that was sent", () => {
+    // A guest asking the host to start, a teammate calling the player on
+    // the spot, and a lobby calling somebody back to an empty seat — all
+    // `room_ping`, and all of them titled "{name}: Let's play!", which is
+    // only true of the first.
+    expect(trans).toMatch(/if \(type === 'room_ping' && typeof data\?\.kind === 'string'\)/);
+    expect(trans).toMatch(/team_poke: 'teamBattle\.pokeNotifTitle'/);
+    expect(trans).toMatch(/room_callback: 'teamBattle\.callBackTitle'/);
+  });
+
+  it("and the body is never the words that happened to be stored", () => {
+    // What got stored was whatever the sender had to hand: a category name,
+    // or a bare room code like "7EXAZJ" under "Let's play!".
+    expect(trans).toMatch(/if \(type === 'room_ping'\) \{/);
+    expect(trans).toMatch(/team_poke: 'teamBattle\.pokeNotifBody'/);
+    expect(trans).toMatch(/room_callback: 'teamBattle\.callBackBody'/);
+    expect(trans).toMatch(/pingBodies\[kind\] \?\? 'extra\.pingHostNotifBody'/);
+    // Nobody sends a room code as a message any more either.
+    expect(read("src/pages/TeamBattlePage.tsx")).not.toMatch(
+      /"room_ping",[^]{0,200}room\.room_code,\s*\n\s*\{/,
+    );
+    expect(read("src/pages/TeamBattlePage.tsx")).toMatch(/kind: "room_callback",/);
+    expect(match).toMatch(/t\("teamBattle\.pokeNotifBody"\)/);
+  });
+
+  it("in every language", () => {
+    for (const lang of ["en", "ka", "de", "es", "fr", "it", "pt"]) {
+      const src = read(`src/locales/${lang}.ts`);
+      expect(src, lang).toMatch(/callBackTitle: ".*\{name\}.*"/);
+      expect(src, lang).toMatch(/callBackBody: "/);
+      expect(src, lang).toMatch(/pokeNotifBody: "/);
+      expect(src, lang).toMatch(/pingHostNotifBody: "/);
+      expect(src, lang).toMatch(/someoneLabel: "/);
+    }
+  });
+});
