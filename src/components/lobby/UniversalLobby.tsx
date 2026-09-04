@@ -34,6 +34,15 @@ export interface LobbyPlayer {
   rounds?: number;
   /** Invited but not yet arrived: shown faded. */
   pending?: boolean;
+  /**
+   * A seat nobody is in yet.
+   *
+   * The arena used to draw only the seats that were filled, so "two more
+   * and we can start" was something you worked out by counting names
+   * against a number in a different tab. An empty seat is drawn now — a
+   * dashed slot on both benches, tappable on the one you may invite into.
+   */
+  empty?: boolean;
   /** For the row's tap: a profile, a seat menu. */
   onPress?: () => void;
 }
@@ -87,6 +96,15 @@ export interface UniversalLobbyProps {
     /** "(0r)" — the rounds played, short. */
     rounds: (count: number) => string;
   };
+  /**
+   * How the benches are laid out.
+   *
+   * "stack" is one list under another, which is right for a lounge with a
+   * single group. "columns" puts them side by side — the only way to read
+   * two teams against each other, which on the arena is the whole question:
+   * how many are on mine, how many on theirs, how many seats are left.
+   */
+  playersLayout?: "stack" | "columns";
   rules: LobbyRuleRow[];
   /** Under the rule rows — a mode's own extra control. */
   rulesExtra?: ReactNode;
@@ -141,6 +159,7 @@ export function UniversalLobby({
   category,
   tv,
   labels,
+  playersLayout = "stack",
   rules,
   rulesExtra,
   players,
@@ -359,15 +378,43 @@ export function UniversalLobby({
                       its title sitting hard against the row above it, with
                       nothing to read as a break between the teams. One rhythm
                       between groups, the rows' own inside them. */}
-                  {groups.map((group) => (
-                    <div key={group.key} className="flex flex-col gap-[10px]">
-                      {group.title}
-                      {group.players.map((p) => (
-                        <PlayerRow key={p.id} player={p} youLabel={labels.you} roundsLabel={labels.rounds} />
+                  {playersLayout === "columns" ? (
+                    // Side by side, with the VS in the gutter between the two
+                    // headings. Everything inside a column is narrower than a
+                    // full-width row, so the rows go compact rather than
+                    // truncating a name to three letters.
+                    <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-x-2">
+                      {groups.slice(0, 2).map((group, i) => (
+                        <div
+                          key={group.key}
+                          className="flex min-w-0 flex-col gap-[8px]"
+                          style={{ gridColumn: i === 0 ? 1 : 3 }}
+                        >
+                          {group.title}
+                          {group.players.map((p) => (
+                            <PlayerRow key={p.id} player={p} youLabel={labels.you} roundsLabel={labels.rounds} compact />
+                          ))}
+                          {group.footer}
+                        </div>
                       ))}
-                      {group.footer}
+                      <p
+                        style={{ gridColumn: 2 }}
+                        className="mt-[40px] text-center font-hero text-[20px] leading-[24px] text-[#d8b2e8]"
+                      >
+                        VS
+                      </p>
                     </div>
-                  ))}
+                  ) : (
+                    groups.map((group) => (
+                      <div key={group.key} className="flex flex-col gap-[10px]">
+                        {group.title}
+                        {group.players.map((p) => (
+                          <PlayerRow key={p.id} player={p} youLabel={labels.you} roundsLabel={labels.rounds} />
+                        ))}
+                        {group.footer}
+                      </div>
+                    ))
+                  )}
                   {capacity && (
                     <p className="mt-[14px] text-center font-[Nunito] text-[13px] font-semibold leading-4 tracking-[-0.16px] text-[#402666]/60">
                       {Math.min(capacity.taken, capacity.max)}/{capacity.max} {labels.players.toLowerCase()}
@@ -537,8 +584,12 @@ function RoomTitle({
   icon?: string | null;
   editable?: boolean;
 }) {
+  // 52/62 was the Figma frame's, drawn for a title with nothing beside it.
+  // With a 68px crest in the same row a Georgian name broke under it and
+  // the icon ended up sitting on a line of its own. Smaller, capped at two
+  // lines, and the icon comes down to match: the pair reads as one heading.
   const heading = (
-    <h1 className="min-w-0 flex-1 font-hero text-[52px] capitalize leading-[62px] tracking-[-0.16px] text-[#402666] [overflow-wrap:anywhere]">
+    <h1 className="min-w-0 flex-1 font-hero text-[34px] capitalize leading-[40px] tracking-[-0.16px] text-[#402666] [overflow-wrap:anywhere] line-clamp-2">
       {name}
     </h1>
   );
@@ -549,7 +600,7 @@ function RoomTitle({
         <img
           alt=""
           src={icon}
-          className="size-[68px] object-contain drop-shadow-[0_4px_10px_rgba(88,50,160,0.22)]"
+          className="size-[52px] object-contain drop-shadow-[0_4px_10px_rgba(88,50,160,0.22)]"
         />
         {/* The pencil says the icon is the host's to change; a guest, and a
             room whose face is fixed by the game it plays, get the art alone. */}
@@ -650,32 +701,81 @@ function PlayerRow({
   player,
   youLabel,
   roundsLabel,
+  compact = false,
 }: {
   player: LobbyPlayer;
   youLabel: string;
   roundsLabel: (count: number) => string;
+  /** Half the width to work in: two benches share the card. */
+  compact?: boolean;
 }) {
   const Tag = player.onPress ? motion.button : "div";
+
+  // An open seat. Dashed and quiet on the bench you cannot invite into, a
+  // + on the one you can — either way it is there to be counted.
+  if (player.empty) {
+    return (
+      <Tag
+        type={player.onPress ? "button" : undefined}
+        whileTap={player.onPress ? { scale: 0.97 } : undefined}
+        onClick={player.onPress}
+        className={cn(
+          "flex w-full items-center justify-center rounded-[20px] border-2 border-dashed border-[rgba(156,100,181,0.45)]",
+          compact ? "h-[58px] gap-1.5" : "h-[70px] gap-2",
+          player.onPress ? "bg-white/40" : "opacity-55",
+        )}
+      >
+        <Plus className={cn("text-[#8858d5]", compact ? "h-4 w-4" : "h-5 w-5")} strokeWidth={2.5} />
+        <span
+          className={cn(
+            "truncate font-[Nunito] font-bold tracking-[-0.16px] text-[#402666]/60",
+            compact ? "text-[12px] leading-4" : "text-[14px] leading-5",
+          )}
+        >
+          {player.name}
+        </span>
+      </Tag>
+    );
+  }
+
   return (
     <Tag
       type={player.onPress ? "button" : undefined}
       whileTap={player.onPress ? { scale: 0.99 } : undefined}
       onClick={player.onPress}
       className={cn(
-        "relative flex h-[70px] w-full items-center rounded-[20px] pl-[8px] pr-[15px] text-left",
+        "relative flex w-full items-center rounded-[20px] text-left",
+        compact ? "h-[58px] pl-[6px] pr-[8px]" : "h-[70px] pl-[8px] pr-[15px]",
         RULE_BORDER,
         player.pending && "opacity-60",
       )}
     >
       <span className="relative shrink-0">
-        <span className="block h-12 w-12 overflow-hidden rounded-full bg-[#e9d8ff] shadow-[0px_0px_0px_2px_rgba(148,163,184,0.75)]">
+        <span
+          className={cn(
+            "block overflow-hidden rounded-full bg-[#e9d8ff] shadow-[0px_0px_0px_2px_rgba(148,163,184,0.75)]",
+            compact ? "h-9 w-9" : "h-12 w-12",
+          )}
+        >
           {player.avatarUrl && <img alt="" src={player.avatarUrl} className="h-full w-full object-cover" />}
         </span>
         {player.isHost && (
-          <img alt="" src={crownIcon} className="pointer-events-none absolute left-[24px] top-[-16px] h-7 w-7 object-contain" />
+          <img
+            alt=""
+            src={crownIcon}
+            className={cn(
+              "pointer-events-none absolute object-contain",
+              compact ? "left-[17px] top-[-12px] h-5 w-5" : "left-[24px] top-[-16px] h-7 w-7",
+            )}
+          />
         )}
       </span>
-      <span className="ml-2 min-w-0 flex-1 truncate bg-gradient-to-b from-[#565656] to-black bg-clip-text font-[Nunito] text-[16.16px] font-black leading-[25.13px] tracking-[-0.146px] text-transparent opacity-60">
+      <span
+        className={cn(
+          "ml-2 min-w-0 flex-1 truncate bg-gradient-to-b from-[#565656] to-black bg-clip-text font-[Nunito] font-black tracking-[-0.146px] text-transparent opacity-60",
+          compact ? "text-[13px] leading-[18px]" : "text-[16.16px] leading-[25.13px]",
+        )}
+      >
         {player.isYou ? youLabel : player.name}
       </span>
       {player.score !== undefined && (

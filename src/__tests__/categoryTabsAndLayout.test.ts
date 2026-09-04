@@ -229,7 +229,11 @@ describe("the room title in the lobby header", () => {
     // One lobby for every mode now (Figma 1018:5815): the classic room
     // passes its name in rather than drawing a header of its own.
     expect(lobby).toMatch(/roomName=\{roomName\}/);
-    expect(universal).toMatch(/font-hero text-\[52px\] capitalize leading-\[62px\]/);
+    // 34/40, not the frame's 52/62: the title shares its row with the
+    // room's icon now, and at 52 a Georgian name broke under it and left
+    // the icon sitting on a line of its own.
+    expect(universal).toMatch(/font-hero text-\[34px\] capitalize leading-\[40px\]/);
+    expect(universal).toMatch(/line-clamp-2/);
   });
 
   it("is the host's way in to rename, and a guest's plain title", () => {

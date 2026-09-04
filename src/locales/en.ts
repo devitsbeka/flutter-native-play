@@ -1737,6 +1737,8 @@ export const en: KaTranslations = {
     leaveMatchBody: "Walking out mid-match costs 200 coins — your team plays on without you.",
     leaveMatchConfirm: "Leave (−200)",
     minTwoPerTeam: "You need at least 2 players on each team to start",
+    needToStart: "{n} more to start",
+    openSeat: "Open seat",
     rpsTitle: "Rock · Paper · Scissors",
     rpsSubtitle: "The winning team picks first",
     rpsWaiting: "Waiting for the other throws…",

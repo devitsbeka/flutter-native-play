@@ -681,14 +681,41 @@ describe("the arena's two sides", () => {
     expect(battle).not.toMatch(/update\(\{ team_[ab]_icon/);
   });
 
-  it("the crests head their benches, beside the name and the captain chip", () => {
-    // Each side is a group of the universal lobby's players tab: its
-    // crest, its name and its captain chip make the heading, its rows sit
-    // under that, and its own invite line (own side only) closes it.
+  it("the two benches sit side by side, each under its own crest", () => {
+    // Stacked, "how many are on my side and how many on theirs" was a
+    // scroll and a subtraction. They are two columns now, and each heading
+    // is a column too: crest, name, seat count, captain under it.
     const battle = read("src/pages/TeamBattlePage.tsx");
     expect(battle).toMatch(/const benchTitle = \(team: TBTeam\)/);
-    expect(battle).toMatch(/size-\[60px\] object-contain/);
-    expect(battle).toMatch(/if \(team !== myTeam \|\| taken >= perSide\) return null;/);
+    expect(battle).toMatch(/playersLayout="columns"/);
+    expect(battle).toMatch(/size-\[52px\] object-contain/);
+    const universal = read("src/components/lobby/UniversalLobby.tsx");
+    expect(universal).toMatch(/grid grid-cols-\[1fr_auto_1fr\] items-start/);
+    // Half the width to work in, so the rows go compact rather than
+    // truncating a name to three letters.
+    expect(universal).toMatch(/compact\?: boolean;/);
+  });
+
+  it("an empty seat is drawn on both sides, and tappable on the ones you may fill", () => {
+    const battle = read("src/pages/TeamBattlePage.tsx");
+    // Only the filled seats used to be drawn, so the gaps were invisible.
+    expect(battle).toMatch(/const canFill = team === myTeam \|\| isHost;/);
+    expect(battle).toMatch(/empty: true,/);
+    expect(battle).toMatch(/onPress: canFill \? \(\) => seatAction\(team\) : undefined,/);
+    expect(read("src/components/lobby/UniversalLobby.tsx")).toMatch(/if \(player\.empty\) \{/);
+  });
+
+  it("the lobby says how many more people it is waiting for", () => {
+    const battle = read("src/pages/TeamBattlePage.tsx");
+    expect(battle).toMatch(
+      /const stillNeeded =\s+Math\.max\(0, 2 - teamA\.length\) \+ Math\.max\(0, 2 - teamB\.length\);/,
+    );
+    expect(battle).toMatch(/t\("teamBattle\.needToStart", \{ n: stillNeeded \}\)/);
+    for (const lang of ["en", "ka", "de", "es", "fr", "it", "pt"]) {
+      const src = read(`src/locales/${lang}.ts`);
+      expect(src, lang).toMatch(/needToStart: ".*\{n\}.*"/);
+      expect(src, lang).toMatch(/openSeat: "/);
+    }
   });
 
   it("the host picks their side when they make the room", () => {

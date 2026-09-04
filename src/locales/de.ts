@@ -1445,6 +1445,8 @@ export const de: KaTranslations = {
     leaveMatchBody: "Mitten im Match zu gehen kostet 200 Münzen — dein Team spielt ohne dich weiter.",
     leaveMatchConfirm: "Verlassen (−200)",
     minTwoPerTeam: "Zum Start braucht jedes Team mindestens 2 Spieler",
+    needToStart: "Noch {n} zum Start",
+    openSeat: "Frei",
     rpsTitle: "Stein · Papier · Schere",
     rpsSubtitle: "Das Gewinnerteam wählt zuerst",
     rpsWaiting: "Warten auf die anderen Würfe…",

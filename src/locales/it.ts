@@ -1448,6 +1448,8 @@ export const it: KaTranslations = {
     leaveMatchBody: "Uscire a metà partita costa 200 monete — la tua squadra continua senza di te.",
     leaveMatchConfirm: "Abbandona (−200)",
     minTwoPerTeam: "Servono almeno 2 giocatori per squadra per iniziare",
+    needToStart: "Ancora {n} per iniziare",
+    openSeat: "Libero",
     rpsTitle: "Sasso · Carta · Forbici",
     rpsSubtitle: "La squadra vincente sceglie per prima",
     rpsWaiting: "In attesa degli altri gesti…",

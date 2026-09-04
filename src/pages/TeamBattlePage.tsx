@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type MutableRefObject } from "rea
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ChevronLeft, Pencil } from "lucide-react";
-import { UniversalLobby, LobbyInviteRow, LobbyInfoRow, type LobbyPlayer, type LobbyPlayerGroup } from "@/components/lobby/UniversalLobby";
+import { UniversalLobby, LobbyInfoRow, type LobbyPlayer, type LobbyPlayerGroup } from "@/components/lobby/UniversalLobby";
 import { LOBBY_SCENES } from "@/utils/lobbyScene";
 import { roomVisibilityFields } from "@/utils/roomVisibility";
 import { useFriends } from "@/hooks/useFriends";
@@ -569,7 +569,7 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
       ...teamOf(team).map((p) => ({ p, pending: false })),
       ...(team === "a" ? pendingA : pendingB).map((p) => ({ p, pending: true })),
     ];
-    return entries.slice(0, perSide).map(({ p, pending }) => ({
+    const seated: LobbyPlayer[] = entries.slice(0, perSide).map(({ p, pending }) => ({
       id: p.user_id,
       name: p.nickname,
       avatarUrl: p.avatar_url,
@@ -580,6 +580,22 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
       pending,
       onPress: () => seatTap(p, pending),
     }));
+    // The rest of the bench, drawn rather than left out. Both sides show
+    // their gaps — how many seats are left across the arena is half of
+    // "can we start yet" — and the ones you may fill take the tap: your
+    // own side, or either side if you are the host, who can move people
+    // between benches anyway.
+    const canFill = team === myTeam || isHost;
+    const open = Array.from({ length: Math.max(0, perSide - seated.length) }, (_, i) => ({
+      id: `open-${team}-${i}`,
+      name: t("teamBattle.openSeat"),
+      avatarUrl: null,
+      isHost: false,
+      isYou: false,
+      empty: true,
+      onPress: canFill ? () => seatAction(team) : undefined,
+    }));
+    return [...seated, ...open];
   };
 
   // The named captain (tb_set_captain), falling back to the first human so
@@ -682,94 +698,84 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
     // armband). An empty side has nobody to ask.
     const canDress = !!user && mine?.user_id === user.id;
     const accent = isA ? "#e7ba87" : "#ed6149";
+    // A column, not a row. The two benches sit beside each other now, so a
+    // heading that ran crest → name → captain chip across the full width
+    // has half of it to work in; stacked, each part gets the whole column.
+    // The captain goes under the name, which is where the owner put it.
     return (
-      <div className={isA ? "flex flex-col" : "mt-[18px] flex flex-col"}>
-        {!isA && (
-          <p
-            className="mb-[10px] text-center font-hero text-[26px] leading-[30px] text-[#d8b2e8]"
-            style={{ textShadow: "0px 2px 2px rgba(199,188,204,0.6)" }}
-          >
-            VS
-          </p>
-        )}
-        <div className="flex items-center gap-3 pl-[2px] pr-[4px]">
-          <motion.button
-            type="button"
-            whileTap={canDress ? { scale: 0.92 } : undefined}
-            transition={{ type: "spring", stiffness: 520, damping: 28 }}
-            onClick={canDress ? () => setCrestFor(team) : undefined}
-            className="relative shrink-0"
-          >
-            {icon ? (
-              <img
-                alt=""
-                className="size-[60px] object-contain drop-shadow-[0_4px_10px_rgba(88,50,160,0.22)]"
-                src={icon}
-              />
-            ) : (
-              // The pool hasn't landed yet (or is empty): a quiet slot,
-              // never the stock pair.
-              <span className="block size-[60px] rounded-full bg-white/40 border-2 border-dashed border-[#b9a5e6]" />
-            )}
-            {canDress && (
-              <span className="absolute -right-1 -bottom-1 flex size-[20px] items-center justify-center rounded-full bg-white shadow-[0px_2px_4px_rgba(0,0,0,0.18)]">
-                <Pencil className="w-3 h-3 text-[#523b76]" />
-              </span>
-            )}
-          </motion.button>
-          <div className="min-w-0 flex-1">
-            <p className="truncate font-[Nunito] font-black leading-[22px] text-[#0c172c] text-[18px] tracking-[-0.16px]">
-              {teamName(team)}
-            </p>
-            <p className="font-[Nunito] text-[12px] leading-4 text-[#402666]/60">
-              {teamOf(team).length}/{perSide}
-            </p>
-          </div>
-          <motion.button
-            type="button"
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setCaptainInfo(team)}
-            className="flex h-[40px] max-w-[46%] items-center gap-2 rounded-full border border-[rgba(156,100,181,0.5)] bg-white/60 py-[3px] pl-3 pr-[3px]"
-          >
-            <span className="min-w-0 text-left">
-              <span className="block font-[Nunito] text-[10px] leading-3 text-[#402666]/60">{t("lobby.captainLabel")}</span>
-              <span className="block max-w-[96px] truncate font-[Nunito] text-[13px] font-bold leading-4 text-[#402666]">
-                {face?.nickname ?? t("lobby.chooseCaptain")}
-              </span>
+      <div className="flex min-w-0 flex-col items-center gap-1 pb-1">
+        <motion.button
+          type="button"
+          whileTap={canDress ? { scale: 0.92 } : undefined}
+          transition={{ type: "spring", stiffness: 520, damping: 28 }}
+          onClick={canDress ? () => setCrestFor(team) : undefined}
+          className="relative shrink-0"
+        >
+          {icon ? (
+            <img
+              alt=""
+              className="size-[52px] object-contain drop-shadow-[0_4px_10px_rgba(88,50,160,0.22)]"
+              src={icon}
+            />
+          ) : (
+            // The pool hasn't landed yet (or is empty): a quiet slot,
+            // never the stock pair.
+            <span className="block size-[52px] rounded-full bg-white/40 border-2 border-dashed border-[#b9a5e6]" />
+          )}
+          {canDress && (
+            <span className="absolute -right-1 -bottom-1 flex size-[18px] items-center justify-center rounded-full bg-white shadow-[0px_2px_4px_rgba(0,0,0,0.18)]">
+              <Pencil className="w-2.5 h-2.5 text-[#523b76]" />
             </span>
-            <span
-              className="block h-8 w-8 shrink-0 overflow-hidden rounded-full bg-[#e9d8ff]"
-              style={{ boxShadow: `0 0 0 2px ${accent}` }}
-            >
-              {face?.avatar_url && <img alt="" src={face.avatar_url} className="h-full w-full object-cover" />}
+          )}
+        </motion.button>
+        <p className="w-full truncate text-center font-[Nunito] text-[15px] font-black leading-[19px] tracking-[-0.16px] text-[#0c172c]">
+          {teamName(team)}
+        </p>
+        <p className="font-[Nunito] text-[12px] leading-4 tabular-nums text-[#402666]/60">
+          {teamOf(team).length}/{perSide}
+        </p>
+        <motion.button
+          type="button"
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setCaptainInfo(team)}
+          className="flex h-[34px] w-full items-center gap-1.5 rounded-full border border-[rgba(156,100,181,0.5)] bg-white/60 py-[3px] pl-2 pr-[3px]"
+        >
+          <span className="min-w-0 flex-1 text-left">
+            <span className="block font-[Nunito] text-[9px] leading-[11px] text-[#402666]/60">{t("lobby.captainLabel")}</span>
+            <span className="block truncate font-[Nunito] text-[12px] font-bold leading-[14px] text-[#402666]">
+              {face?.nickname ?? t("lobby.chooseCaptain")}
             </span>
-          </motion.button>
-        </div>
+          </span>
+          <span
+            className="block h-7 w-7 shrink-0 overflow-hidden rounded-full bg-[#e9d8ff]"
+            style={{ boxShadow: `0 0 0 2px ${accent}` }}
+          >
+            {face?.avatar_url && <img alt="" src={face.avatar_url} className="h-full w-full object-cover" />}
+          </span>
+        </motion.button>
       </div>
     );
   };
 
-  // An open seat is only ACTIONABLE on your own side: you invite into your
-  // team, never onto the bench across the arena.
-  const benchFooter = (team: TBTeam) => {
-    const taken = teamOf(team).length + (team === "a" ? pendingA : pendingB).length;
-    if (team !== myTeam || taken >= perSide) return null;
-    return (
-      <LobbyInviteRow
-        className="mb-[6px] mt-[6px]"
-        faces={inviteFaces}
-        label={t("lobby.uInvite")}
-        onPress={() => seatAction(team)}
-      />
-    );
-  };
-
+  // No per-bench invite line any more: the open seats ARE the invite, and
+  // a friends reel under a column half a screen wide was three faces and
+  // a word with nowhere to sit. The arena's one invite row still runs
+  // under the grid, from the universal lobby.
   const benches: LobbyPlayerGroup[] = (["a", "b"] as TBTeam[]).map((team) => ({
     key: team,
     title: benchTitle(team),
     players: benchRows(team, team === "a" ? captainA : captainB),
-    footer: benchFooter(team),
   }));
+
+  /**
+   * How many more people the match is waiting for.
+   *
+   * Two a side is the rule (the cap is the room's own 5-5), and "we need
+   * two more" is the question every lobby is actually asking. It used to be
+   * answerable only by counting names against a number on the other tab.
+   */
+  const stillNeeded =
+    Math.max(0, 2 - teamA.length) + Math.max(0, 2 - teamB.length);
 
   return (
     <UniversalLobby
@@ -828,7 +834,8 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
         </>
       }
       players={benches}
-      playersHint={!enoughPlayers ? t("teamBattle.minTwoPerTeam") : null}
+      playersLayout="columns"
+      playersHint={stillNeeded > 0 ? t("teamBattle.needToStart", { n: stillNeeded }) : null}
       // Two a side to start, up to the size the host set (2-2 … 5-5).
       // Each bench's own invite line already stands down when that side
       // is full, so the arena's count is for the rules tab and the tally.
