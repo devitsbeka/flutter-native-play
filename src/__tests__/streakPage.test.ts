@@ -37,8 +37,7 @@ describe("the flame lands on a page, not a sheet", () => {
       expect(page).toContain(`@/assets/streak/${asset}.png`);
     }
     // The frame's measures: Slackey 56/62 for the counts, the 34px black
-    // upper-case title, the 66px milestone rows, the rail the cards and the
-    // tabs share.
+    // upper-case title, the 66px milestone rows, the stat cards' rail.
     expect(page).toMatch(/font-hero text-\[56px\] leading-\[62px\]/);
     expect(page).toMatch(/text-\[34px\] font-black uppercase leading-\[36px\] tracking-\[-1\.3px\]/);
     expect(page).toMatch(/h-\[66px\] min-h-\[64px\]/);

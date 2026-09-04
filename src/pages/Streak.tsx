@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Bell, Calendar } from "lucide-react";
@@ -35,7 +35,7 @@ import lockImg from "@/assets/streak/lock.png";
 
 const CARD_SHADOW =
   "shadow-[0px_2px_8px_0px_rgba(102,51,153,0.06),0px_8px_24px_0px_rgba(102,51,153,0.12)]";
-/** The stat cards and the tab rail share one box (1069:451, 1069:327). */
+/** The stat cards' box (1069:451). */
 const RAIL =
   "border border-[rgba(156,100,181,0.5)] bg-[#faf0fa] shadow-[inset_0px_2px_4px_0px_rgba(0,0,0,0.05)] rounded-[20px]";
 /** The reward button's chrome (Button - Coins, 1069:466), open and locked alike. */
@@ -55,7 +55,6 @@ export default function Streak() {
   const { profile } = useAuth();
   const { unreadCount } = useNotifications();
   const { milestones, claimed, claiming, claim } = useStreakMilestones();
-  const [tab, setTab] = useState<"missions" | "current">("missions");
   const listRef = useRef<HTMLDivElement>(null);
 
   const currentStreak = profile?.current_streak || 0;
@@ -79,16 +78,6 @@ export default function Streak() {
   }, [currentStreak]);
 
   const dateRange = `${formatDayMonthShort(week[0].date, language)} - ${formatDayMonthShort(week[6].date, language)}`;
-
-  // "Current" is the milestones in reach: the ones reached and not yet paid,
-  // and the next one ahead. "Missions" is the whole ladder.
-  const rows = useMemo(() => {
-    if (tab === "missions") return milestones;
-    const next = milestones.find((m) => m.days > currentStreak);
-    return milestones.filter(
-      (m) => (m.days <= currentStreak && !claimed.includes(m.days)) || m === next,
-    );
-  }, [tab, milestones, currentStreak, claimed]);
 
   const onClaim = async (days: number, coins: number) => {
     const awarded = await claim(days);
@@ -243,29 +232,9 @@ export default function Streak() {
             ))}
           </section>
 
-          {/* Missions / Current (1069:327). */}
-          <div className={cn("mt-[23px] flex h-[52px] items-start p-[6px]", RAIL, "mx-[22px]")}>
-            {(["missions", "current"] as const).map((key) => {
-              const active = tab === key;
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => setTab(key)}
-                  className={cn(
-                    "flex-1 rounded-[16px] px-[15px] py-2 text-center font-[Nunito] text-[16px] leading-[19.5px] tracking-[-0.16px] text-[#402666]",
-                    active ? "bg-white font-semibold drop-shadow-[0px_2px_4px_rgba(0,0,0,0.1)]" : "font-medium",
-                  )}
-                >
-                  {key === "missions" ? t("missions.title") : t("extra.currentLabel")}
-                </button>
-              );
-            })}
-          </div>
-
           {/* The milestones (List Item, 1069:150). */}
-          <div ref={listRef} className="mx-[27px] mt-[18px] flex flex-col gap-[10px] pb-6">
-            {rows.map((m) => {
+          <div ref={listRef} className="mx-[27px] mt-[23px] flex flex-col gap-[10px] pb-6">
+            {milestones.map((m) => {
               const reached = currentStreak >= m.days;
               const paid = claimed.includes(m.days);
               return (
