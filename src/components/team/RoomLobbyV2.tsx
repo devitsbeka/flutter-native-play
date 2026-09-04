@@ -718,17 +718,38 @@ export function RoomLobbyV2() {
    * out of reach of any hook. Keep them in step with those.
    */
   const autoStartedRef = useRef(false);
+  /**
+   * ...and the lobby stays off the screen while it happens.
+   *
+   * startGame is several round-trips — read the room back, fetch the
+   * category's questions, write room_questions, flip the room to playing —
+   * so the lobby rendered for a few seconds before the countdown replaced
+   * it. A screen you were never meant to see, appearing and leaving on its
+   * own, reads as a bug even though the round is on its way.
+   *
+   * Held on the lobby's own wash instead, which is exactly what /team does
+   * for the two round-trips it takes to resolve a ?join= code.
+   */
+  const [autoStarting, setAutoStarting] = useState(() => searchParams.get("autostart") === "1");
   useEffect(() => {
     if (autoStartedRef.current) return;
     if (searchParams.get("autostart") !== "1") return;
-    if (!currentRoom || !isHost || isStarting || loading) return;
+    if (!currentRoom || isStarting || loading) return;
     // Something to play, and somebody to play it. A room still asking which
-    // category is not one this can answer for — it falls through to the
-    // lobby, which is the right place to be asked.
+    // category is not one this can answer for, and a guest cannot start
+    // anybody's round: both fall through to the lobby, which is the right
+    // place to be. Give up as soon as that is known rather than holding the
+    // wash over a decision that will not change.
     const hasSomethingToPlay =
       queue.length > 0 || !!currentRoom.category_id || !!currentRoom.user_trivia_id;
+    if (!isHost || !hasSomethingToPlay) {
+      setAutoStarting(false);
+      return;
+    }
+    // The seats, unlike the two above, do arrive a moment late — an empty
+    // list here means "not yet", not "never", so this one waits.
     const seated = participants.filter((p) => (p.status as string) !== "invited").length;
-    if (!hasSomethingToPlay || seated < 1) return;
+    if (seated < 1) return;
     autoStartedRef.current = true;
     // Spent, so a refresh does not start a second round.
     const next = new URLSearchParams(searchParams);
@@ -738,7 +759,29 @@ export function RoomLobbyV2() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, currentRoom, isHost, isStarting, loading, queue, participants]);
 
+  // Never a blank screen with no way off it: if the round has not taken over
+  // within eight seconds — a failed start, a room that never settles — the
+  // lobby comes back and the host can press Start themselves.
+  useEffect(() => {
+    if (!autoStarting) return;
+    const timer = setTimeout(() => setAutoStarting(false), 8000);
+    return () => clearTimeout(timer);
+  }, [autoStarting]);
+
   if (!currentRoom) return null;
+
+  // The wash. The round replaces this by unmounting the lobby entirely
+  // (phase goes to "playing"), so there is nothing here to take it down.
+  if (autoStarting) {
+    return (
+      <div
+        className="flex h-[100dvh] w-full items-center justify-center safe-bleed"
+        style={{ background: "#f5d9ff" }}
+      >
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#8858d5] border-t-transparent" />
+      </div>
+    );
+  }
 
   /**
    * A game needs somebody to play against.
