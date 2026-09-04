@@ -209,6 +209,13 @@ export interface UniversalLobbyProps {
      * front of somebody it will never be for. The line is the whole message.
      */
     captionOnly?: boolean;
+    /**
+     * The face waited on, shown right after the caption ("…host" then their
+     * avatar) — so "waiting for the host" points at who that is.
+     */
+    captionAvatarUrl?: string | null;
+    /** The waited-on name, for the avatar's fallback initial and alt text. */
+    captionAvatarName?: string | null;
   };
   /** Above the start button — an error the host must read, for instance. */
   footerExtra?: ReactNode;
@@ -671,9 +678,20 @@ export function UniversalLobby({
           </motion.button>
           )}
           {start.caption && (
-            <p className="text-center font-[Nunito] text-[15px] font-semibold leading-[20px] text-[#402666]/70 [&:not(:first-child)]:mt-2">
-              {start.caption}
-            </p>
+            <div className="flex items-center justify-center gap-2 [&:not(:first-child)]:mt-2">
+              <p className="text-center font-[Nunito] text-[15px] font-semibold leading-[20px] text-[#402666]/70">
+                {start.caption}
+              </p>
+              {/* The host's face, right after the "…" — puts a person on the
+                  line that says you are waiting for one (owner's ask). */}
+              {start.captionAvatarUrl !== undefined && (
+                <img
+                  alt={start.captionAvatarName ?? ""}
+                  src={resolveAvatarUrl(start.captionAvatarUrl) ?? fallbackAvatarFor(start.captionAvatarName ?? "")}
+                  className="size-6 shrink-0 rounded-full object-cover ring-2 ring-white/70"
+                />
+              )}
+            </div>
           )}
         </div>
       </motion.div>
