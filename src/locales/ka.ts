@@ -3795,6 +3795,12 @@ export const ka = {
     streakMilestones: "სერიის ეტაპები",
     daysLeft: "{count} დღე დარჩა",
     daysLabel: "{count} დღე",
+    streakTitle: "სთრიქი",
+    streakDayOne: "დღე",
+    streakDayMany: "დღე",
+    streakCoinsReward: "{count} მონეტა",
+    streakWeekChest: "კვირის ჯილდო",
+    streakNotYet: "{count} დღე დაგრჩა",
     // Home widgets
     playTriviaTV: "ითამაშე Trivia TV",
     shopGifts: "საჩუქრები მაღაზიაში",

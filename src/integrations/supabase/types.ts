@@ -4787,6 +4787,18 @@ export type Database = {
         Args: { p_games: number; p_source: string }
         Returns: Json
       }
+      claim_streak_milestone: {
+        Args: { p_days: number }
+        Returns: {
+          coins_awarded: number
+          new_coins: number
+          new_gems: number
+        }[]
+      }
+      streak_milestones_claimed: {
+        Args: never
+        Returns: number[]
+      }
       claim_daily_reward: {
         Args: never
         Returns: {
