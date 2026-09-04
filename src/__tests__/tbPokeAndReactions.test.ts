@@ -5,7 +5,7 @@
  * executes who may send to whom.
  */
 import { describe, expect, it } from "vitest";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { turnSecondsFor } from "@/utils/turnLength";
 
@@ -93,28 +93,41 @@ describe("the icons", () => {
     expect(read(".github/workflows/pr-checks.yml")).not.toMatch(/room-reactions/);
   });
 
-  it("the row is dealt fresh each game, with what you have sent at the front", () => {
-    // It used to be read out of localStorage — "recently used", forever —
-    // so the same six icons greeted the same player every match they ever
-    // played.
+  it("six animations, picked then sent — no library over the question", () => {
     const bar = read("src/components/team-battle/ReactionBar.tsx");
-    expect(bar).toMatch(/function dealIcons\(pool: readonly string\[\], count: number\)/);
-    expect(bar).toMatch(/const row = \[\.\.\.sent, \.\.\.dealt\.filter\(\(d\) => !sent\.includes\(d\)\)\]/);
-    const hook = read("src/hooks/useRoomReactions.ts");
-    expect(hook).not.toMatch(/localStorage\.(get|set)Item/);
-    expect(hook).toMatch(/export function useSentIcons\(\)/);
-  });
-
-  it("the button says send, because the pick leaves the screen", () => {
-    const picker = read("src/components/team/RoomIconPickerModal.tsx");
-    expect(picker).toMatch(/confirmLabel\?: string;/);
-    expect(picker).toMatch(/\{confirmLabel \?\? t\("extra\.ripSelect"\)\}/);
-    expect(read("src/components/team-battle/ReactionBar.tsx")).toMatch(
-      /confirmLabel=\{t\("teamBattle\.sendIconAction"\)\}/,
-    );
+    // The library was three thousand nouns behind a search box, opened over
+    // a live question with a clock running on it, to say "well done".
+    expect(bar).not.toMatch(/RoomIconPickerModal|dealIcons|useSentIcons/);
+    expect(read("src/hooks/useRoomReactions.ts")).not.toMatch(/useSentIcons|localStorage/);
+    // Pick, then Send, where the library's + used to be.
+    expect(bar).toMatch(/onSelect=\{\(\) => setPicked\(/);
+    expect(bar).toMatch(/disabled=\{!picked\}/);
+    expect(bar).toMatch(/\{t\("teamBattle\.sendIconAction"\)\}/);
     for (const lang of ["en", "ka", "de", "es", "fr", "it", "pt"]) {
       expect(read(`src/locales/${lang}.ts`), lang).toMatch(/sendIconAction: "/);
     }
+    // Only the picked one animates: six looping Lotties under a running
+    // clock is a lot of phone for a row nobody has chosen from yet.
+    expect(bar).toMatch(/loop=\{selected\} autoplay=\{selected\}/);
+  });
+
+  it("the six are a fixed catalog keyed by name, and the inbox reads both", () => {
+    const cat = read("src/components/team-battle/reactions.ts");
+    for (const key of ["clap", "laugh", "love", "angry", "disappointed", "genius"]) {
+      expect(cat).toMatch(new RegExp(`key: "${key}"`));
+      expect(existsSync(join(process.cwd(), `src/assets/lottie/reactions/${key}.json`))).toBe(true);
+      const label = `reaction${key.charAt(0).toUpperCase()}${key.slice(1)}`;
+      for (const lang of ["ka", "en", "de", "es", "fr", "it", "pt"]) {
+        expect(read(`src/locales/${lang}.ts`), lang).toMatch(new RegExp(`${label}: "`));
+      }
+    }
+    // The key is what rides the broadcast, so a device still on the build
+    // that sent library icons puts a URL on the wire and it has to render.
+    expect(read("src/components/team-battle/ReactionBar.tsx")).toMatch(
+      /reaction \? \(\s*<Lottie[^]*?\) : \(\s*<img src=\{next\.icon\}/,
+    );
+    // CC BY 4.0 asks for attribution; this is where it lives.
+    expect(read("src/assets/lottie/reactions/README.md")).toMatch(/CC BY 4\.0/);
   });
 
   it("the inbox reads one at a time, and says who sent it", () => {
@@ -177,24 +190,36 @@ describe("the invitation popup", () => {
 });
 
 describe("a turn is as long as its questions need", () => {
-  it("a picture board runs a minute, everything else ninety seconds", () => {
+  it("a guess board runs thirty seconds, everything else a minute", () => {
     const pics = [{ slug: "guess_logo" }, { slug: "guess_city" }];
-    expect(turnSecondsFor(pics)).toBe(60);
-    expect(turnSecondsFor([{ slug: "guess_flag" }])).toBe(60);
+    expect(turnSecondsFor(pics)).toBe(30);
+    expect(turnSecondsFor([{ slug: "guess_flag" }])).toBe(30);
 
-    expect(turnSecondsFor([{ slug: "animals" }])).toBe(90);
+    expect(turnSecondsFor([{ slug: "animals" }])).toBe(60);
     // A mixed board takes the longer clock: the slowest question on it is
     // what the turn has to accommodate.
-    expect(turnSecondsFor([{ slug: "guess_logo" }, { slug: "animals" }])).toBe(90);
+    expect(turnSecondsFor([{ slug: "guess_logo" }, { slug: "animals" }])).toBe(60);
     // And anything that arrives without a slug is not assumed to be quick.
-    expect(turnSecondsFor([{ slug: "guess_logo" }, {}])).toBe(90);
-    expect(turnSecondsFor([])).toBe(90);
+    expect(turnSecondsFor([{ slug: "guess_logo" }, {}])).toBe(60);
+    expect(turnSecondsFor([])).toBe(60);
+  });
+
+  it("the clock reaching zero ends the answering on the device", () => {
+    // The RPC refuses a late answer, but refusing it server-side leaves the
+    // buttons live: the player taps into a hole until tb_advance lands.
+    const match = read("src/components/team-battle/TeamBattleMatch.tsx");
+    expect(match).toMatch(/const timeUp = secondsLeft <= 0;/);
+    expect(match).toMatch(/if \(submitting \|\| choice \|\| !question \|\| timeUp\) return;/);
+    expect(match).toMatch(/disabled=\{!isSpotlight \|\| !!choice \|\| submitting \|\| timeUp\}/);
+    expect(match).toMatch(/if \(!choice && timeUp\) return "disabled";/);
+    // And the fallback clock agrees with what the board now asks for.
+    expect(match).toMatch(/state\?\.turn_seconds \?\? 60/);
   });
 
   it("both values are inside the range every version of the RPC accepts", () => {
     // 20..90 in 20260917100000 and 20260921210000, 20..180 after
     // 20260924100000 — so no start has to be retried at a lower number.
-    for (const n of [60, 90]) {
+    for (const n of [30, 60]) {
       expect(n).toBeGreaterThanOrEqual(20);
       expect(n).toBeLessThanOrEqual(90);
     }

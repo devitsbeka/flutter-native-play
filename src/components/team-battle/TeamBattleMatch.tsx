@@ -621,7 +621,7 @@ function PhaseRapidFire() {
   const questions = tileQuestions(tile);
   const player = participants.find((p) => p.user_id === state?.active_player);
   const isBotTurn = !!player?.is_bot;
-  const turnSeconds = isBotTurn ? 8 : state?.turn_seconds ?? 40;
+  const turnSeconds = isBotTurn ? 8 : state?.turn_seconds ?? 60;
 
   // A teammate who is not answering while the clock runs is losing the
   // team's points. Their teammates can call them: an in-app popup (the
@@ -718,8 +718,16 @@ function PhaseRapidFire() {
     if ((state?.turn_answers ?? 0) < questions.length) setChoice(null);
   }, [state?.turn_answers, questions.length]);
 
+  // The clock is out. tb_submit_answer refuses a late answer anyway ("Turn
+  // is over", two seconds' grace), but refusing it server-side leaves the
+  // buttons live and the player tapping into a hole: the RPC errors, no
+  // pick registers, and the turn looks like it is still going until
+  // tb_advance lands — which is a round trip away, and retried only every
+  // 2.5s. The turn is over the moment the number says so.
+  const timeUp = secondsLeft <= 0;
+
   const answer = async (option: string) => {
-    if (submitting || choice || !question) return;
+    if (submitting || choice || !question || timeUp) return;
     setSubmitting(true);
     const res = await submitAnswer(targetAnswers, option);
     if (res) {
@@ -740,6 +748,7 @@ function PhaseRapidFire() {
       }
       return "disabled";
     }
+    if (!choice && timeUp) return "disabled";
     if (!choice) return submitting ? "loading" : "default";
     if (option === choice.option) return choice.correct ? "correct" : "wrong";
     // A miss surfaces the right answer for the spotlight player too —
@@ -846,7 +855,7 @@ function PhaseRapidFire() {
                 text={option}
                 state={answerState(option)}
                 onClick={() => void answer(option)}
-                disabled={!isSpotlight || !!choice || submitting}
+                disabled={!isSpotlight || !!choice || submitting || timeUp}
                 showLabel
               />
             </div>
