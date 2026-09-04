@@ -61,3 +61,18 @@ export function weekBonusPowerUp(weekStartISO: string): string {
   const slot = Math.floor(Date.parse(`${weekStartISO}T00:00:00Z`) / (7 * 86_400_000));
   return BONUS_POWER_UPS[((slot % BONUS_POWER_UPS.length) + BONUS_POWER_UPS.length) % BONUS_POWER_UPS.length];
 }
+
+/**
+ * One mission per difficulty tier for a date, easiest first.
+ *
+ * The day used to be five consecutive pool entries, which could open with
+ * "win a game with 100% accuracy" and never offer anything gentler. A day is
+ * now a ladder: each tier is its own small rotation on the day slot, so the
+ * first row is always the simplest ask — the one that keeps the streak by
+ * itself — and the rows climb from there.
+ */
+export function rotationByTier<T extends { difficulty: number }>(pool: T[], dateISO: string): T[] {
+  const slot = daySlotOf(dateISO);
+  const tiers = Array.from(new Set(pool.map((m) => m.difficulty))).sort((a, b) => a - b);
+  return tiers.map((tier) => pickRotation(pool.filter((m) => m.difficulty === tier), slot, 1)[0]);
+}

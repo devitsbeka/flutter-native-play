@@ -47,9 +47,13 @@ BEGIN
   INSERT INTO auth.users (id, email) VALUES
     (v_player, 'streak-player@test'), (v_other, 'streak-other@test')
   ON CONFLICT (id) DO NOTHING;
-  INSERT INTO public.profiles (user_id, nickname, coins, gems, current_streak, best_streak) VALUES
-    (v_player, 'Streaker', 100, 0, 2, 2), (v_other, 'Other', 100, 0, 30, 30)
-  ON CONFLICT (user_id) DO UPDATE SET coins = 100, current_streak = EXCLUDED.current_streak;
+  INSERT INTO public.profiles (user_id, nickname, coins, gems) VALUES
+    (v_player, 'Streaker', 100, 0), (v_other, 'Other', 100, 0)
+  ON CONFLICT (user_id) DO UPDATE SET coins = 100;
+  INSERT INTO public.user_mission_streaks (user_id, current_streak, best_streak, last_completion_date) VALUES
+    (v_player, 2, 2, CURRENT_DATE), (v_other, 30, 30, CURRENT_DATE)
+  ON CONFLICT (user_id) DO UPDATE
+    SET current_streak = EXCLUDED.current_streak, last_completion_date = EXCLUDED.last_completion_date;
 
   PERFORM pg_temp.as_user(v_player);
 
@@ -61,7 +65,7 @@ BEGIN
   PERFORM pg_temp.must_fail('SELECT * FROM public.claim_streak_milestone(4)', 'a day that is not a milestone cannot be claimed');
 
   -- Five days in: three and five pay, each once.
-  UPDATE public.profiles SET current_streak = 5 WHERE user_id = v_player;
+  UPDATE public.user_mission_streaks SET current_streak = 5 WHERE user_id = v_player;
   SELECT coins_awarded INTO v_awarded FROM public.claim_streak_milestone(3);
   PERFORM pg_temp.must_equal(v_awarded, 50, 'day 3 pays 50');
   SELECT coins INTO v_coins FROM public.profiles WHERE user_id = v_player;
@@ -76,6 +80,11 @@ BEGIN
   PERFORM pg_temp.must_fail('SELECT * FROM public.claim_streak_milestone(7)', 'day 7 is still ahead');
 
   -- The ledger is per player: the other player's 30-day streak is theirs.
+  -- A streak that lapsed is over, whatever the row still says.
+  UPDATE public.user_mission_streaks SET current_streak = 30, last_completion_date = CURRENT_DATE - 3 WHERE user_id = v_player;
+  PERFORM pg_temp.must_fail('SELECT * FROM public.claim_streak_milestone(7)', 'a lapsed streak claims nothing');
+  UPDATE public.user_mission_streaks SET current_streak = 5, last_completion_date = CURRENT_DATE WHERE user_id = v_player;
+
   PERFORM pg_temp.as_user(v_other);
   PERFORM pg_temp.must_equal(public.streak_milestones_claimed(), '{}'::integer[], 'another player sees their own empty ledger');
   SELECT coins_awarded INTO v_awarded FROM public.claim_streak_milestone(30);

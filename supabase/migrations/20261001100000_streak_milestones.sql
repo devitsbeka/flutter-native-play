@@ -1,6 +1,12 @@
 -- Streak milestones: a one-time coin reward for reaching 3, 5, 7, 14, 21
--- and 30 on the play streak (profiles.current_streak), paid from the streak
--- page.
+-- and 30 on the streak of kept days (user_mission_streaks — a day is kept by
+-- finishing at least one of its missions), paid from the streak page.
+--
+-- user_mission_streaks is the row the missions engine keeps and the page
+-- reads, and the client may write it — the same trust the mission rewards
+-- themselves run on. What this function adds is what that trust cannot
+-- give: a milestone pays once, ever, and never more than the ladder's 900
+-- coins in total (currency_grant_limits below).
 --
 -- Why a function rather than credit_gameplay_reward from the client: that
 -- function bounds an amount, it does not dedupe one. A milestone is worth
@@ -92,14 +98,16 @@ BEGIN
   END IF;
 
   -- Locked for the duration: two taps in the same moment queue here, and the
-  -- second one finds the ledger row the first one wrote.
-  SELECT current_streak INTO v_streak
-  FROM public.profiles
+  -- second one finds the ledger row the first one wrote. A streak whose last
+  -- kept day is before yesterday is over, whatever count the row still holds.
+  SELECT CASE WHEN last_completion_date >= CURRENT_DATE - 1 THEN current_streak ELSE 0 END
+  INTO v_streak
+  FROM public.user_mission_streaks
   WHERE user_id = v_user_id
   FOR UPDATE;
 
   IF NOT FOUND THEN
-    RAISE EXCEPTION 'profile not found';
+    v_streak := 0;
   END IF;
 
   IF COALESCE(v_streak, 0) < p_days THEN

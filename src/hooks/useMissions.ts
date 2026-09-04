@@ -12,7 +12,7 @@ import { useMissionStreak } from "./useMissionStreak";
 import { useMissionAchievements } from "./useMissionAchievements";
 import {
   dayKindOf,
-  rotationForDate,
+  rotationByTier,
   todayKey,
   weekBonusPowerUp,
   weekStartOf,
@@ -94,6 +94,12 @@ interface PoolMission {
    * they leave it alone rather than crediting it by accident.
    */
   requires_tag?: string;
+  /**
+   * Where the mission sits on the day's ladder, 1 (play a game) to 4 (a
+   * perfect round, a TV night). A day runs one mission from each tier, in
+   * order — see rotationByTier.
+   */
+  difficulty: 1 | 2 | 3 | 4;
 }
 
 // Mission color themes for UI
@@ -157,10 +163,10 @@ export const MISSION_THEMES = {
 };
 
 // ---------- Mission pools ----------
-// Daily missions rotate: each day DAILY_ACTIVE_COUNT consecutive pool entries
-// (wrapping) are active, so the set varies day to day. Weekly rotates the
-// same way per ISO-ish week. Feature missions (friends, TV) are part of the
-// pool so players are nudged across the whole app.
+// Daily missions are a ladder: a day runs one mission from each difficulty
+// tier, easiest first, and each tier rotates on its own across the days
+// (rotationByTier). Feature missions (friends, TV) sit on the top tier so
+// players are still nudged across the whole app.
 
 // Dailies pay 60-120 coins, 150-200 XP and 1-2 power-ups — never gems.
 // The two effortful one-shots (a perfect game, a TV night) carry the double
@@ -169,6 +175,19 @@ export const MISSION_THEMES = {
 // 3 for finishing all seven days, so the week bonus was the smaller prize by
 // an order of magnitude. Gems are the week's currency now; see WEEK_BONUS.
 const DAILY_POOL: PoolMission[] = [
+  // Tier 1, the streak keeper: one game, any game. It is the only mission
+  // on its tier on purpose — every day opens with the same gentle ask, so
+  // "come back and play once" is always enough to keep the streak alive.
+  {
+    mission_id: "play_one",
+    title: "დღის თამაში",
+    description: "ითამაშე ერთი თამაში",
+    beginner: { target: 1, xp: 100, coins: 50, gems: 0 },
+    advanced: { target: 1, xp: 100, coins: 50, gems: 0 },
+    color_theme: "emerald",
+    icon: "check",
+    difficulty: 1,
+  },
   {
     mission_id: "play_games",
     title: "მარათონელი",
@@ -179,6 +198,7 @@ const DAILY_POOL: PoolMission[] = [
     power_up_count: 1,
     color_theme: "emerald",
     icon: "shoe",
+    difficulty: 3,
   },
   {
     mission_id: "answer_correct",
@@ -190,6 +210,7 @@ const DAILY_POOL: PoolMission[] = [
     power_up_count: 1,
     color_theme: "blue",
     icon: "check",
+    difficulty: 3,
   },
   {
     mission_id: "win_games",
@@ -201,6 +222,7 @@ const DAILY_POOL: PoolMission[] = [
     power_up_count: 1,
     color_theme: "purple",
     icon: "trophy",
+    difficulty: 3,
   },
   {
     mission_id: "play_categories",
@@ -212,6 +234,7 @@ const DAILY_POOL: PoolMission[] = [
     power_up_count: 1,
     color_theme: "orange",
     icon: "map",
+    difficulty: 3,
   },
   {
     mission_id: "perfect_round",
@@ -223,6 +246,7 @@ const DAILY_POOL: PoolMission[] = [
     power_up_count: 2,
     color_theme: "rose",
     icon: "target",
+    difficulty: 4,
   },
   {
     mission_id: "play_friend",
@@ -234,6 +258,7 @@ const DAILY_POOL: PoolMission[] = [
     power_up_count: 1,
     color_theme: "cyan",
     icon: "hearts",
+    difficulty: 4,
   },
   {
     mission_id: "play_tv",
@@ -245,6 +270,7 @@ const DAILY_POOL: PoolMission[] = [
     power_up_count: 2,
     color_theme: "amber",
     icon: "tv",
+    difficulty: 4,
   },
   {
     mission_id: "category_movies",
@@ -257,6 +283,7 @@ const DAILY_POOL: PoolMission[] = [
     color_theme: "rose",
     icon: "television",
     requires_tag: "movies",
+    difficulty: 2,
   },
   {
     mission_id: "category_music",
@@ -269,6 +296,7 @@ const DAILY_POOL: PoolMission[] = [
     color_theme: "purple",
     icon: "music",
     requires_tag: "music",
+    difficulty: 2,
   },
   {
     mission_id: "category_animals",
@@ -281,6 +309,7 @@ const DAILY_POOL: PoolMission[] = [
     color_theme: "emerald",
     icon: "map",
     requires_tag: "animals",
+    difficulty: 2,
   },
   {
     mission_id: "category_sports",
@@ -293,6 +322,7 @@ const DAILY_POOL: PoolMission[] = [
     color_theme: "orange",
     icon: "trophy",
     requires_tag: "sports",
+    difficulty: 2,
   },
   {
     mission_id: "category_cuisine",
@@ -305,6 +335,7 @@ const DAILY_POOL: PoolMission[] = [
     color_theme: "amber",
     icon: "hearts",
     requires_tag: "georgian_cuisine",
+    difficulty: 2,
   },
   {
     mission_id: "invite_to_play",
@@ -316,6 +347,7 @@ const DAILY_POOL: PoolMission[] = [
     power_up_count: 1,
     color_theme: "cyan",
     icon: "hearts",
+    difficulty: 4,
   },
 ];
 
@@ -328,14 +360,13 @@ const DAILY_POOL: PoolMission[] = [
 // the table and simply stop rendering.
 const WEEKLY_POOL: PoolMission[] = [];
 
-const DAILY_ACTIVE_COUNT = 5;
 const WEEKLY_ACTIVE_COUNT = 0;
 // Players with this many finished games get the advanced targets/rewards
 const ADVANCED_GAMES_THRESHOLD = 30;
 
-/** The five missions that day's rotation runs, past or future. */
+/** The four missions that day runs, past or future, easiest first. */
 export function dailyPoolForDate(dateISO: string): PoolMission[] {
-  return rotationForDate(DAILY_POOL, dateISO, DAILY_ACTIVE_COUNT);
+  return rotationByTier(DAILY_POOL, dateISO);
 }
 
 function activeDailyPool(): PoolMission[] {
@@ -394,7 +425,7 @@ export type MissionEvent =
   | "invited_to_room";
 
 const EVENT_MISSIONS: Record<MissionEvent, string[]> = {
-  game_played: ["play_games"],
+  game_played: ["play_one", "play_games"],
   correct_answers: ["answer_correct"],
   game_won: ["win_games"],
   categories_played: [
@@ -612,7 +643,7 @@ const EMPTY_MISSIONS: MissionsData = { daily: [], weekly: [] };
 
 export function useMissions() {
   const { user, profile, updateProfile, setProfileLocal } = useAuth();
-  const { recordDailyCompletion, claimStreakBonus } = useMissionStreak();
+  const { recordDailyCompletion } = useMissionStreak();
   const { checkAndUnlockAchievements } = useMissionAchievements();
   const queryClient = useQueryClient();
   const queryKey = ["missions", user?.id];
@@ -716,16 +747,50 @@ export function useMissions() {
   );
 
   /**
-   * Called when a daily mission completes: if it was the last one the day
-   * asked for, close the day out.
+   * Called when any daily mission completes: the day is kept.
    *
-   * Two things happen here that nothing else in the app was doing. The
-   * streak row gets its day recorded — useMissionStreak has always exposed
-   * recordDailyCompletion() and nothing ever called it, so last_completion_date
-   * stayed null, the streak never left its starting value, and WeekMissionsStrip,
-   * which colours a day from exactly those two fields, marked finished days
-   * "failed" the moment they were in the past. And the day bonus is paid, so
-   * clearing a whole day is worth marginally more than the missions in it.
+   * One finished mission a day is what the streak asks for — the first row
+   * of every day is "play one game", so coming back and playing once is
+   * enough. The streak row records the day (idempotently: a second
+   * completion the same day changes nothing), and the achievements that
+   * streak and total unlock are checked on the day it was actually earned.
+   *
+   * The streak used to be recorded only when all of the day's missions were
+   * done, and the milestone ladder — 25 coins at one day up to 300 coins
+   * and 15 gems at thirty, paid again every day — hung off that. The
+   * milestones now live on the streak page and pay once each, through
+   * claim_streak_milestone, so nothing is paid here.
+   */
+  const keepDay = useCallback(async () => {
+    if (!user) return;
+    const result = await recordDailyCompletion();
+    if (!result.recorded) return;
+
+    // The catalogue — eight of them, titles and descriptions written and
+    // translated, coins and gems attached — has existed since
+    // user_achievements was created, and the profile's Rewards tab reads
+    // that table; this is the call that fills it.
+    try {
+      const unlocked = await checkAndUnlockAchievements(result.newStreak, result.newTotal);
+      for (const achievement of unlocked) {
+        toast.success(achievement.title, { description: achievement.description });
+        void createNotification(
+          user.id,
+          "reward",
+          achievement.title,
+          achievement.description,
+          { achievement_id: achievement.id, coins: achievement.reward_coins, gems: achievement.reward_gems, xp: 0 }
+        );
+      }
+    } catch (error) {
+      console.error("Achievement check failed:", error);
+    }
+  }, [user, recordDailyCompletion, checkAndUnlockAchievements]);
+
+  /**
+   * Called when a daily mission completes: if it was the last one the day
+   * asked for, pay the day bonus, so clearing a whole day is worth
+   * marginally more than the missions in it.
    *
    * The write is conditional on the row not already being there, the same
    * shape the week bonus uses: two missions finishing in the same second
@@ -786,45 +851,6 @@ export function useMissions() {
         .select("id");
       if (!won || won.length === 0) return;
 
-      // The streak first: the strip reads it, and it should be right even if
-      // the payout below throws.
-      const streakResult = await recordDailyCompletion();
-
-      // And the tier that streak has reached. claimStreakBonus existed from
-      // the beginning and nothing ever called it, so the whole ladder — 25
-      // coins at one day up to 300 and 15 gems at thirty — has never paid
-      // anybody. The count comes from the call above rather than from hook
-      // state, which has not re-rendered yet and still holds yesterday's.
-      if (streakResult?.newStreak) {
-        await claimStreakBonus(streakResult.newStreak);
-      }
-
-      // And the achievements those two numbers unlock. The catalogue —
-      // eight of them, titles and descriptions written and translated, coins
-      // and gems attached — has existed since user_achievements was created,
-      // and checkAndUnlockAchievements was never called from anywhere. The
-      // profile's Rewards tab reads that table, so it has shown "no rewards
-      // yet" to every player who ever opened it, including players thirty
-      // days into a streak.
-      try {
-        const unlocked = await checkAndUnlockAchievements(
-          streakResult?.newStreak ?? 0,
-          streakResult?.newTotal ?? 0
-        );
-        for (const achievement of unlocked) {
-          toast.success(achievement.title, { description: achievement.description });
-          void createNotification(
-            user.id,
-            "reward",
-            achievement.title,
-            achievement.description,
-            { achievement_id: achievement.id, coins: achievement.reward_coins, gems: achievement.reward_gems, xp: 0 }
-          );
-        }
-      } catch (error) {
-        console.error("Achievement check failed:", error);
-      }
-
       const { data: currency } = await supabase.rpc("credit_gameplay_reward", {
         p_kind: "mission",
         p_coins: DAY_BONUS.coins,
@@ -855,7 +881,7 @@ export function useMissions() {
         description: createElement(RewardChipsRow, { coins: DAY_BONUS.coins, xp: DAY_BONUS.xp }),
       });
     },
-    [user, profile, recordDailyCompletion, claimStreakBonus, checkAndUnlockAchievements, setProfileLocal, updateProfile]
+    [user, profile, setProfileLocal]
   );
 
   const updateMissionProgress = useCallback(
@@ -950,7 +976,9 @@ export function useMissions() {
           // weekly missions run across the whole week and finishing one says
           // nothing about today.
           if (mission.mission_type === "daily") {
-            void closeOutDayIfFinished(mission.id);
+            // The streak first: the page reads it, and it should be right
+            // even if the day bonus below throws.
+            void keepDay().then(() => closeOutDayIfFinished(mission.id));
           }
         }
 
@@ -969,7 +997,7 @@ export function useMissions() {
         return { completed: false, xpEarned: 0 };
       }
     },
-    [user, dailyMissions, weeklyMissions, grantMissionRewards, closeOutDayIfFinished]
+    [user, dailyMissions, weeklyMissions, grantMissionRewards, keepDay, closeOutDayIfFinished]
   );
 
   // Report a gameplay EVENT — advances every active daily + weekly mission

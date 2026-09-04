@@ -81,7 +81,8 @@ describe("a milestone pays once, and the server decides", () => {
     for (const fn of ["claim_streak_milestone(integer)", "streak_milestones_claimed()", "streak_milestone_coins(integer)"]) {
       expect(migration, fn).toContain(`REVOKE ALL ON FUNCTION public.${fn} FROM PUBLIC, anon;`);
     }
-    expect(migration).toMatch(/SELECT current_streak INTO v_streak[\s\S]*?FOR UPDATE;/);
+    expect(migration).toMatch(/FROM public\.user_mission_streaks[\s\S]*?FOR UPDATE;/);
+    expect(migration).toContain("last_completion_date >= CURRENT_DATE - 1");
     expect(migration).toMatch(/IF COALESCE\(v_streak, 0\) < p_days THEN/);
     // The client never keeps "claimed" itself: it asks.
     expect(hook).toMatch(/supabase\.rpc\("streak_milestones_claimed"\)/);
@@ -97,5 +98,44 @@ describe("a milestone pays once, and the server decides", () => {
     const types = read("src/integrations/supabase/types.ts");
     expect(types).toMatch(/claim_streak_milestone: \{\s*\n\s*Args: \{ p_days: number \}/);
     expect(types).toMatch(/streak_milestones_claimed: \{\s*\n\s*Args: never\s*\n\s*Returns: number\[\]/);
+  });
+
+  it("the page lists the selected day's four missions, easiest first, and the streak they keep", () => {
+    const page = read("src/pages/Streak.tsx");
+    const missions = read("src/hooks/useMissions.ts");
+    const streak = read("src/hooks/useMissionStreak.ts");
+
+    // The rail is the selector: every tile is a button that picks its day,
+    // and the day hook the home sheet already uses answers for it.
+    expect(page).toContain("useDailyMissionsFor(selected)");
+    expect(page).toContain("onClick={() => setSelected(slot.key)}");
+    // The streak is kept days, not the win streak the results screens mean.
+    expect(page).toContain("useMissionStreak()");
+    expect(page).not.toMatch(/profile\??\.current_streak/);
+
+    // A day is one mission per tier, and the first tier is "play one game"
+    // alone — the ask that keeps the streak by itself.
+    expect(missions).toContain("return rotationByTier(DAILY_POOL, dateISO);");
+    expect(missions.match(/difficulty: 1,/g)).toHaveLength(1);
+    expect(missions).toMatch(/mission_id: "play_one",[\s\S]*?difficulty: 1,/);
+    expect(missions).toContain('game_played: ["play_one", "play_games"]');
+    // The day is kept by the first completion, before the all-done bonus.
+    expect(missions).toContain("void keepDay().then(() => closeOutDayIfFinished(mission.id));");
+    // The daily ladder payout is gone: milestones pay once, server-side.
+    for (const file of ["src/hooks/useMissions.ts", "src/hooks/useMissionStreak.ts", "src/components/home/MissionInfoModal.tsx"]) {
+      expect(read(file), file).not.toContain("claimStreakBonus");
+    }
+    expect(streak).toContain("recorded: true");
+  });
+
+  it("the new page strings and the play_one mission exist in every language", () => {
+    for (const lang of LOCALES) {
+      const src = read(`src/locales/${lang}.ts`);
+      for (const key of ["streakKeepRule", "streakDayMissions", "streakMilestonesTitle", "play_oneTitle", "play_oneDesc"]) {
+        expect(src, `${lang}.${key}`).toMatch(new RegExp(`${key}: "[^"]+"`));
+      }
+      // The achievements no longer ask for every mission of the day.
+      expect(src, lang).not.toMatch(/achStreak3Desc: "[^"]*(all daily|ყველა დღიური|alle täglichen|todas las misiones|toutes les missions|tutte le missioni|todas as missões)/);
+    }
   });
 });
