@@ -106,13 +106,15 @@ describe("the card that draws it", () => {
   });
 
   it("is the public list's button in another colour", () => {
-    // Same component, same shape, same words: only the tone differs.
+    // Same component, same shape: only the tone differs. My own rooms are
+    // rooms I am already in, so theirs is always white; the public list
+    // saves mint for the room that can actually start.
     expect(source).toMatch(/<RoomCardPlayButton\s*\n\s*tone="white"/);
     const publicList = readFileSync(
       join(process.cwd(), "src/components/team/PublicRoomsSection.tsx"),
       "utf8",
     );
-    expect(publicList).toMatch(/<RoomCardPlayButton\s*\n\s*tone="mint"/);
+    expect(publicList).toMatch(/tone=\{ready \? "mint" : "white"\}/);
     const button = readFileSync(
       join(process.cwd(), "src/components/team/RoomCardPlayButton.tsx"),
       "utf8",

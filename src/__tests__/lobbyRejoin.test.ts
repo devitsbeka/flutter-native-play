@@ -251,8 +251,10 @@ describe("a room card offers one way in", () => {
     // lists cannot drift apart again.
     expect(button).toMatch(/rounded-\[24px\] border-b-4 px-4 py-2 text-sm font-extrabold/);
     expect(button).toMatch(/active:translate-y-\[2px\] active:border-b-2/);
+    // The public list wears mint only on a room that can start; every other
+    // card on it is the same shape in white.
     expect(read("src/components/team/PublicRoomsSection.tsx")).toMatch(
-      /<RoomCardPlayButton\s*\n\s*tone="mint"/,
+      /tone=\{ready \? "mint" : "white"\}/,
     );
     expect(read("src/components/team/MyRoomsSection.tsx")).toMatch(
       /<RoomCardPlayButton\s*\n\s*tone="white"/,

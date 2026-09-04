@@ -322,13 +322,13 @@ describe("the public list", () => {
     expect(section).toMatch(/isBattle\s*\n?\s*\? Math\.min\(effectiveSeats, 10\)\s*\n?\s*: Math\.min\(room\.player_count, 10\)/);
     expect(section).toMatch(/Array\.from\(\{ length: seatsToDraw \}/);
     expect(section).toMatch(/\$\{room\.player_count\}\/\$\{effectiveSeats\}/);
-    // Every card's button is the mint "play" button (Figma 1058:325): a
-    // #81f0c3 face with a #2bc889 bottom lip and dark-purple type. It used
-    // to be mint only on a "ready" room and a white pill with a green dot
-    // everywhere else — one act in two shapes down one list.
+    // One button shape (Figma 1058:325) in two colours: the mint "play"
+    // face — #81f0c3 with a #2bc889 bottom lip and dark-purple type — is
+    // worn only by a room that can actually start, and every other card
+    // wears the same shape in white. One shape, two answers.
     const button = read("src/components/team/RoomCardPlayButton.tsx");
     expect(button).toMatch(/mint: "bg-\[#81f0c3\] border-\[#2bc889\] text-\[#320c69\]"/);
-    expect(section).toMatch(/<RoomCardPlayButton\s*\n\s*tone="mint"/);
+    expect(section).toMatch(/tone=\{ready \? "mint" : "white"\}/);
     expect(section).not.toMatch(/from-\[#34d399\]/);
     expect(section).toMatch(/border-dashed border-white\/40/);
     expect(section).toMatch(/online\.has\(person\.user_id\)/);
@@ -606,19 +606,40 @@ describe("the doorstep follows the host around the app", () => {
     expect(gate).toMatch(/here\.toUpperCase\(\)\.includes\(next\.room_code\.toUpperCase\(\)\)/);
   });
 
-  it("every card says Play, and the tap still knows the difference", () => {
-    // Three labels — "Play" on a full room, "Enter" on one I am in, "Join"
-    // on a stranger's — for the one thing a card is for. The words are one
-    // word now; the tap is still the one the room needs, a door for a room
-    // I belong to and a request for anybody else's.
+  it("says Join, Enter or Play — three acts, and the tap matches", () => {
+    // One mint "Play" on every card promised a game and delivered a wait:
+    // a stranger's room cannot be played, the tap only ASKS its host. So a
+    // room I am not in says Join, one I am in says Enter (a door — the host
+    // walks in to invite the people it is short of), and only a room that
+    // can start says Play and goes mint.
     const section = read("src/components/team/PublicRoomsSection.tsx");
     expect(section).toMatch(/<Play className="w-3\.5 h-3\.5 fill-current" \/>/);
     expect(section).toMatch(/t\("extra\.roomPlay"\)/);
-    expect(section).not.toMatch(/extra\.roomEnter|extra\.roomJoinLive/);
+    expect(section).toMatch(/\) : inside \? \(\s*\n\s*t\("extra\.roomEnter"\)/);
+    expect(section).toMatch(/\) : \(\s*\n\s*t\("extra\.roomJoinLive"\)/);
     expect(section).toMatch(/if \(inside\) enter\(\);\s*\n\s*else onAsk\(room\);/);
     for (const lang of ["ka", "en", "de", "es", "fr", "it", "pt"]) {
-      expect(read(`src/locales/${lang}.ts`)).toMatch(/roomPlay: "/);
+      const locale = read(`src/locales/${lang}.ts`);
+      expect(locale).toMatch(/roomPlay: "/);
+      expect(locale).toMatch(/roomEnter: "/);
+      expect(locale).toMatch(/roomJoinLive: "/);
     }
+  });
+
+  it("and 'can start' is seats, by what the game needs", () => {
+    // A Battle needs both benches filled to the size it was made at; every
+    // other room needs somebody to play against and nothing more, because a
+    // classic cap is 10 by default and its host starts whenever they like —
+    // waiting for ten would mean the button never changed.
+    const section = read("src/components/team/PublicRoomsSection.tsx");
+    expect(section).toMatch(/const MIN_TO_START = 2;/);
+    expect(section).toMatch(
+      /const canStart = isBattle \? full : room\.player_count >= MIN_TO_START;/,
+    );
+    expect(section).toMatch(/const ready = inside && canStart;/);
+    // Not who is awake: that flickered the button back to "Enter" whenever
+    // somebody pocketed their phone, and the seat faces carry a dot each.
+    expect(section).not.toMatch(/everyoneHere/);
   });
 });
 

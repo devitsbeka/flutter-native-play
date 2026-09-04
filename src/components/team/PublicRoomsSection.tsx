@@ -88,6 +88,9 @@ const MIXED_LABELS = new Set([
   "__mixed__", "Mixed", "სხვადასხვა", "შერეული", "Gemischt", "Mixto", "Mixte", "Misto",
 ]);
 
+/** Nobody plays trivia alone: one other person is the floor for any room. */
+const MIN_TO_START = 2;
+
 /** A joined (non-host) face on the card, so a filling room shows its people. */
 interface CardPlayer {
   user_id: string;
@@ -161,6 +164,27 @@ function PublicRoomCard({
   // classic room's cap is 10 and the host starts whenever (owner's ask), so
   // ten empty chairs are noise: draw only the seats that are taken.
   const isBattle = room.game_type_key === "team_battle";
+  /**
+   * Can this room start?
+   *
+   * A Battle plays two benches against each other and needs every seat it
+   * was sized for — 2v2 up to 5v5, and the card knows which. Everything else
+   * needs somebody to play against and nothing more: a classic room's cap is
+   * 10 by default and its host starts whenever they like, so waiting for ten
+   * would mean the button never changed.
+   */
+  const full = effectiveSeats != null && room.player_count >= effectiveSeats;
+  const canStart = isBattle ? full : room.player_count >= MIN_TO_START;
+  /**
+   * The one card on the list that is a game rather than a door.
+   *
+   * Seats decide it, not who is awake. An earlier version also required
+   * every seated player to be in the app, which meant the button flickered
+   * back to "Enter" whenever somebody pocketed their phone — and the seat
+   * faces already carry a green dot each, which says the same thing about
+   * the people it is actually about.
+   */
+  const ready = inside && canStart;
   const seatsToDraw =
     effectiveSeats == null
       ? 0
@@ -420,8 +444,23 @@ function PublicRoomCard({
             {/* The public list's button is the mint one. My Rooms draws the
                 same button in white — same shape, same words, same play
                 triangle; which list you are on is the only difference. */}
+            {/* Three acts, three words.
+
+                They were collapsed into one mint "Play" on every card, on the
+                grounds that a card exists for one act — but they are not one
+                act. A stranger's room cannot be played: the button ASKS its
+                host, and the answer comes back later. Saying "Play" there
+                promises a game and delivers a wait, and the two rooms that
+                really are one tap from a game look no different from the
+                twenty that are not.
+
+                So: a room I am not in says Join, because that is what the tap
+                sends. One I am in says Enter, because that is a door — the
+                host walks in to invite the people it is still short of. Only
+                a room that can start says Play, and it is the only one that
+                goes mint. */}
             <RoomCardPlayButton
-              tone="mint"
+              tone={ready ? "mint" : "white"}
               disabled={busy || waiting || blocked}
               onClick={(e) => {
                 e.stopPropagation();
@@ -436,16 +475,15 @@ function PublicRoomCard({
                   <Clock className="w-3.5 h-3.5" />
                   {t("extra.joinWaitingHost")}
                 </>
-              ) : (
+              ) : ready ? (
                 <>
-                  {/* One word for one act. It used to say "Play" on a full
-                      room, "Enter" on one I am already in and "Join" on a
-                      stranger's — three labels for the one thing a card is
-                      for, and the state they were distinguishing is already
-                      on the card above them. */}
                   <Play className="w-3.5 h-3.5 fill-current" />
                   {t("extra.roomPlay")}
                 </>
+              ) : inside ? (
+                t("extra.roomEnter")
+              ) : (
+                t("extra.roomJoinLive")
               )}
             </RoomCardPlayButton>
             {/* Waiting is undoable: one game at a time means the ask must
