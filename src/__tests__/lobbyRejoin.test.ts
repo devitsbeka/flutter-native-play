@@ -189,11 +189,10 @@ describe("a room that can start says so", () => {
       /online\.has\(room\.host_user_id\) && players\.every\(\(p\) => online\.has\(p\.user_id\)\)/,
     );
     expect(section).toMatch(/const ready = inside && full && everyoneHere;/);
-    // A proper chunky green button, white type — not the flat green with
-    // dark text the owner disliked.
-    expect(section).toMatch(/text-white bg-gradient-to-b from-\[#34d399\] to-\[#059669\]/);
+    // The mint "play" button (Figma 1058:325): #81f0c3 face, #2bc889 lip.
+    expect(section).toMatch(/rounded-\[24px\] bg-\[#81f0c3\] border-b-4 border-\[#2bc889\] text-\[#320c69\]/);
     for (const lang of ["en", "ka", "de", "es", "fr", "it", "pt"]) {
-      expect(read(`src/locales/${lang}.ts`), lang).toMatch(/roomReady: "/);
+      expect(read(`src/locales/${lang}.ts`), lang).toMatch(/roomPlay: "/);
     }
   });
 

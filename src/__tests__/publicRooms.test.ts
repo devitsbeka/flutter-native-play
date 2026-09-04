@@ -321,11 +321,11 @@ describe("the public list", () => {
     // The player-count cap can never be set below who is already in the room.
     const lobby = read("src/components/team/RoomLobbyV2.tsx");
     expect(lobby).toMatch(/const floor = Math\.max\(2, participants\.length\);/);
-    // The Ready button is a proper chunky green, white type + check — not the
-    // flat green with dark text the owner disliked.
-    expect(section).toMatch(/text-white bg-gradient-to-b from-\[#34d399\] to-\[#059669\]/);
-    expect(section).toMatch(/ready && <Check className/);
-    expect(section).not.toMatch(/bg-emerald-400 text-\[#0b3b2c\]/);
+    // The Ready button is the mint "play" button (Figma 1058:325): a #81f0c3
+    // face with a #2bc889 bottom lip and dark-purple type, saying "play".
+    expect(section).toMatch(/rounded-\[24px\] bg-\[#81f0c3\] border-b-4 border-\[#2bc889\] text-\[#320c69\]/);
+    expect(section).toMatch(/ready\s*\n?\s*\? t\("extra\.roomPlay"\)/);
+    expect(section).not.toMatch(/from-\[#34d399\]/);
     expect(section).toMatch(/border-dashed border-white\/40/);
     expect(section).toMatch(/online\.has\(person\.user_id\)/);
     // The join button's green dot means somebody in the room is in the app
@@ -607,7 +607,7 @@ describe("the doorstep follows the host around the app", () => {
   it("a room I host says Enter; somebody else's says it is a request", () => {
     const section = read("src/components/team/PublicRoomsSection.tsx");
     expect(section).toMatch(
-      /ready\s*\? t\("extra\.roomReady"\)\s*: inside\s*\? t\("extra\.roomEnter"\)\s*: t\("extra\.roomJoinLive"\)/,
+      /ready\s*\? t\("extra\.roomPlay"\)\s*: inside\s*\? t\("extra\.roomEnter"\)\s*: t\("extra\.roomJoinLive"\)/,
     );
     for (const lang of ["ka", "en", "de", "es", "fr", "it", "pt"]) {
       expect(read(`src/locales/${lang}.ts`)).toMatch(/roomEnter: "/);
@@ -811,6 +811,10 @@ describe("every room wears a face, and the card leads with its category", () => 
     expect(mini).toMatch(/room\.room_icon \|\| room\.cover_image \|\| dealtRoomIcon\(room\.id, pool\)/);
     const pub = read("src/components/team/PublicRoomsSection.tsx");
     expect(pub).toMatch(/room\.room_icon \?\? lounge\?\.icon \?\? dealtRoomIcon\(room\.id, iconPool\)/);
+    // A dealt room face is never one a category wears: the pool strikes out
+    // any library icon whose slug is a category's icon (owner's rule).
+    expect(crests).toMatch(/from\("categories"\)\.select\("icon_slug, icon"\)/);
+    expect(crests).toMatch(/!\(r\.slug && categoryIcons\.has\(String\(r\.slug\)\)\)/);
   });
 
   it("the public card says სათამაშო ოთახი and drops the FIRST ROUND caption", () => {

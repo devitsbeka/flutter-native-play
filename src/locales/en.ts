@@ -2487,6 +2487,7 @@ export const en: KaTranslations = {
     roomJoinLive: "Join",
     roomEnter: "Enter",
     roomReady: "Ready",
+    roomPlay: "Play",
     // Public rooms: the two tabs, the switch that publishes a room, and
     // the doorstep the host answers at.
     tabPublic: "Public",
