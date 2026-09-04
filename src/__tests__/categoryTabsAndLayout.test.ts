@@ -231,7 +231,7 @@ describe("the room title in the lobby header", () => {
     expect(lobby).toMatch(/roomName=\{roomName\}/);
     // 34/40, not the frame's 52/62: the title shares its row with the
     // room's icon now, and at 52 a Georgian name broke under it and left
-    // the icon sitting on a line of its own.
+    // the icon sitting on a line of its own (owner's ask to save space).
     expect(universal).toMatch(/font-hero text-\[34px\] capitalize leading-\[40px\]/);
     expect(universal).toMatch(/line-clamp-2/);
   });
@@ -244,5 +244,36 @@ describe("the room title in the lobby header", () => {
     // The back arrow is a 40px round button at the header's left, never a
     // flex-1 wrapper that would give it a very wide tinted box.
     expect(universal).toMatch(/onClick=\{onBack\}\s*\n\s*className="rounded-full p-2/);
+  });
+});
+
+describe("the classic lobby's create controls (owner's asks)", () => {
+  const lobby = read("src/components/team/RoomLobbyV2.tsx");
+  const universal = read("src/components/lobby/UniversalLobby.tsx");
+
+  it("the host picks the player count 2–10 from a dropdown", () => {
+    expect(lobby).toMatch(/\[2, 3, 4, 5, 6, 7, 8, 9, 10\]\.map/);
+    expect(lobby).toMatch(/variant: "dropdown" as const/);
+    expect(lobby).toMatch(/void setMaxPlayers\(v\)/);
+    expect(lobby).toMatch(/max_players: n/);
+    // The dropdown variant renders a real <select>, and the static "1–10"
+    // line stands down when a players picker is present.
+    expect(universal).toMatch(/function RuleDropdown/);
+    expect(universal).toMatch(/!rules\.some\(\(r\) => r\.key === "players"\)/);
+  });
+
+  it("Play on TV is a row in the rules, not a chip beside the category", () => {
+    // It used to sit up top next to the category; the top row is the
+    // category chip + the add button now.
+    expect(universal).toMatch(/\{tv && \(\s*\n\s*<LobbyInfoRow label=\{tv\.label\} onPress=\{tv\.onPress\}>/);
+    expect(universal).not.toMatch(/<Chip icon=\{chipTv\}/);
+  });
+
+  it("the category has a + to queue rounds, which scroll under it with a count", () => {
+    expect(universal).toMatch(/category\.onAdd && \(/);
+    expect(universal).toMatch(/overflow-x-auto scrollbar-hide/);
+    expect(universal).toMatch(/category\.roundsLabel/);
+    expect(lobby).toMatch(/onAdd: isHost \?/);
+    expect(lobby).toMatch(/uRoundsSelected/);
   });
 });

@@ -1581,6 +1581,7 @@ export const es: KaTranslations = {
     uYou: "Tú",
     uTeamSize: "Jugadores por equipo",
     uRoundsShort: "{count}r",
+    uRoundsSelected: "{count} rondas",
     invite: "Invitar",
     winnerTakes: "El ganador se lleva:",
     captainLabel: "Capitán:",

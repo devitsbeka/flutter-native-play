@@ -21,6 +21,7 @@ import { siteUrl } from "@/config/site";
 import { inviteLinkPath } from "@/utils/inviteLink";
 import { useRoomMatchHistory } from "@/hooks/useRoomMatchHistory";
 import { useRoomCategoryQueue } from "@/hooks/useRoomCategoryQueue";
+import { useLocalizedCategoryName } from "@/utils/categoryDisplayName";
 import { Input } from "@/components/ui/input";
 import { RoomScoreboard } from "./RoomScoreboard";
 import { TVSetupInline } from "./TVSetupInline";
@@ -219,6 +220,7 @@ export function RoomLobbyV2() {
   // showed the room's single category_name, so three queued topics read as
   // one, and reorderQueue/removeFromQueue were never called by anything.
   const [showRoundOrder, setShowRoundOrder] = useState(false);
+  const localizeQueueCategory = useLocalizedCategoryName();
 
   // Play sound when new participant joins
   useEffect(() => {
@@ -764,6 +766,13 @@ export function RoomLobbyV2() {
     if (!isHost) return;
     await supabase.from("game_rooms").update({ total_questions: Number(value) }).eq("id", currentRoom.id);
   };
+  // How many players the host wants — 2 through 10, always starting at 2
+  // (owner's ask). It caps the room and the seats the players tab draws.
+  const setMaxPlayers = async (value: string) => {
+    if (!isHost) return;
+    const n = Math.max(2, Math.min(10, Number(value) || 2));
+    await supabase.from("game_rooms").update({ max_players: n }).eq("id", currentRoom.id);
+  };
   const setVisibility = async (value: string) => {
     if (!isHost) return;
     await supabase
@@ -788,6 +797,16 @@ export function RoomLobbyV2() {
   // so the questions-per-round choice is a library/random room's alone.
   const playsUserTrivia = !!currentRoom.user_trivia_id && !currentRoom.category_id;
   const lobbyRules: LobbyRuleRow[] = [
+    // The host picks the player count (2–10) from a dropdown; a guest sees
+    // the room's cap on the static line instead (UniversalLobby).
+    ...(isHost ? [{
+      key: "players",
+      label: t("lobby.uPlayersTab"),
+      variant: "dropdown" as const,
+      options: [2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => ({ value: String(n), label: String(n) })),
+      value: String(Math.max(2, Math.min(10, currentRoom.max_players || 10))),
+      onChange: (v: string) => void setMaxPlayers(v),
+    } satisfies LobbyRuleRow] : []),
     ...(playsUserTrivia ? [] : [{
       key: "questions",
       label: t("lobby.uQuestionsPerRound"),
@@ -821,23 +840,27 @@ export function RoomLobbyV2() {
         // because no chip can carry three names and the count is the thing
         // worth knowing at a glance.
         label:
-          queue.length > 1
-            ? t("lobby.uCategoriesCount", { count: queue.length })
-            : queue.length === 1
-              ? queue[0].category_name || t("lobby.uSelectCategory")
-              : (justReturnedFromResults && !madeNewSelection)
-                ? t("lobby.uSelectCategory")
-                : currentRoom.category_name || t("lobby.uSelectCategory"),
-        // With rounds queued the chip opens them — the order is the thing you
-        // came to change. With none it opens the picker, as it always did.
-        // A guest can read the order but not set it, so the chip still opens
-        // for them once there is something to read.
-        onPress:
-          queue.length > 1
-            ? () => setShowRoundOrder(true)
-            : isHost
-              ? () => { setStartAfterPick(false); setShowCategoryPicker(true); }
-              : undefined,
+          (justReturnedFromResults && !madeNewSelection && queue.length === 0)
+            ? t("lobby.uSelectCategory")
+            : currentRoom.category_name || t("lobby.uSelectCategory"),
+        onPress: isHost ? () => { setStartAfterPick(false); setShowCategoryPicker(true); } : undefined,
+        // The + queues another round; the queue scrolls under the chip, with
+        // the total rounds counted below it. Tapping the queue opens the
+        // round-order sheet (reorder / remove), for host and guest alike.
+        onAdd: isHost ? () => { setStartAfterPick(false); setShowCategoryPicker(true); } : undefined,
+        queue: queue.map((q) => ({
+          id: q.id,
+          name: q.source_type === "random"
+            ? t("extra.cpRandomTitle")
+            : localizeQueueCategory(q.category_name) || t("extra.categoryType"),
+          iconSlug: q.icon_slug,
+        })),
+        onQueuePress: queue.length > 0 ? () => setShowRoundOrder(true) : undefined,
+        roundsLabel: (() => {
+          const hasCurrent = !!(currentRoom.category_id || currentRoom.user_trivia_id);
+          const rounds = (hasCurrent ? 1 : 0) + queue.length;
+          return rounds > 1 ? t("lobby.uRoundsSelected", { count: rounds }) : undefined;
+        })(),
       }}
       tv={isHost ? { label: t("lobby.uPlayOnTv"), onPress: () => setIsTVModeEnabled(true) } : undefined}
       labels={{

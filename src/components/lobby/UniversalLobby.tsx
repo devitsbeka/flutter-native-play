@@ -2,6 +2,7 @@ import { useState, type ReactNode } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { ArrowLeft, Bell, BellRing, Loader2, Pencil, Play, Plus } from "lucide-react";
 import SpotlightSearch from "@/components/search/SpotlightSearch";
+import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { cn } from "@/lib/utils";
 import bgBlob1 from "@/assets/tb-lobby/bg-blob-1.jpg";
 import bgBlob2 from "@/assets/tb-lobby/bg-blob-2.png";
@@ -74,6 +75,12 @@ export interface LobbyRuleRow {
   value: string;
   /** Absent for a guest: the row shows the host's choice and takes no tap. */
   onChange?: (value: string) => void;
+  /**
+   * How the choice is offered. "segmented" (default) lays every option out
+   * side by side — right for two or three. "dropdown" is for a long list
+   * (the player count, 2–10) that a segmented control could never hold.
+   */
+  variant?: "segmented" | "dropdown";
 }
 
 export interface LobbyPlayerGroup {
@@ -105,9 +112,24 @@ export interface UniversalLobbyProps {
   unreadCount?: number;
   /** The bell. Without it the header's badge is decoration. */
   onBell?: () => void;
-  /** The left chip. Hidden when the mode has no category to pick. */
-  category?: { label: string; onPress?: () => void };
-  /** The right chip. Hidden when the mode cannot play on a TV. */
+  /**
+   * The category chip. Hidden when the mode has no category to pick.
+   *  - `onPress` opens the picker to change the first round's category.
+   *  - `onAdd` (the + beside it) queues another round.
+   *  - `queue` is the rounds already lined up — a horizontal scroll of
+   *    icon + name under the chip.
+   *  - `roundsLabel` is the count caption under the queue ("3 rounds").
+   */
+  category?: {
+    label: string;
+    onPress?: () => void;
+    onAdd?: () => void;
+    queue?: { id: string; name: string; iconSlug?: string | null }[];
+    /** Tapping the queue / rounds caption opens the round-order sheet. */
+    onQueuePress?: () => void;
+    roundsLabel?: string;
+  };
+  /** Play on TV — rendered as a row inside the Game Rules tab, host only. */
   tv?: { label: string; onPress?: () => void };
   /** Copy for the two tabs. */
   labels: {
@@ -305,13 +327,62 @@ export function UniversalLobby({
           document never does on the device. */}
       <div className="relative z-10 min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
         <div className="mx-auto flex min-h-full w-full max-w-[700px] flex-col px-4 md:max-w-[520px]">
-          {(category || tv) && (
-            <motion.div {...arrive(0.24)} className="mt-[9px] flex h-[52px] shrink-0 items-start gap-2 pl-[9px] pr-[3px]">
-              {category && (
+          {category && (
+            <motion.div {...arrive(0.24)} className="mt-[9px] shrink-0 pl-[9px] pr-[3px]">
+              <div className="flex h-[52px] items-stretch gap-2">
                 <Chip icon={chipQuestion} label={category.label} onPress={category.onPress} />
+                {/* The + queues another round's category (owner's ask). */}
+                {category.onAdd && (
+                  <motion.button
+                    type="button"
+                    whileTap={{ scale: 0.94 }}
+                    onClick={category.onAdd}
+                    aria-label="add category"
+                    className={cn(
+                      "flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-[20px] bg-[rgba(252,247,255,0.6)]",
+                      RULE_BORDER,
+                    )}
+                  >
+                    <Plus className="h-6 w-6 text-[#402666]" strokeWidth={2.4} />
+                  </motion.button>
+                )}
+              </div>
+              {/* The rounds lined up — icon + name, scrolling left/right.
+                  Tapping opens the round-order sheet (reorder / remove). */}
+              {category.queue && category.queue.length > 0 && (
+                <div
+                  role={category.onQueuePress ? "button" : undefined}
+                  onClick={category.onQueuePress}
+                  className={cn(
+                    "mt-2 flex gap-2 overflow-x-auto scrollbar-hide pb-1",
+                    category.onQueuePress && "cursor-pointer",
+                  )}
+                >
+                  {category.queue.map((q) => (
+                    <span
+                      key={q.id}
+                      className={cn(
+                        "flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-[rgba(252,247,255,0.6)] px-3",
+                        RULE_BORDER,
+                      )}
+                    >
+                      <DynamicIcon slug={q.iconSlug || "mystery-box"} size={18} />
+                      <span className="whitespace-nowrap font-[Nunito] text-[13px] font-medium tracking-[-0.16px] text-[#402666]">
+                        {q.name}
+                      </span>
+                    </span>
+                  ))}
+                </div>
               )}
-              {tv && (
-                <Chip icon={chipTv} label={tv.label} onPress={tv.onPress} iconShadow />
+              {category.roundsLabel && (
+                <button
+                  type="button"
+                  onClick={category.onQueuePress}
+                  disabled={!category.onQueuePress}
+                  className="mt-1.5 block pl-1 text-left font-[Nunito] text-[12px] font-semibold tracking-[-0.16px] text-[#402666]/60"
+                >
+                  {category.roundsLabel}
+                </button>
               )}
             </motion.div>
           )}
@@ -389,7 +460,10 @@ export function UniversalLobby({
                   transition={{ duration: 0.18 }}
                   className="mt-[10px] flex flex-col gap-[15px] px-[3px]"
                 >
-                  {capacity && (
+                  {/* The static "Players 1–10" line only when a mode gives no
+                      picker for it — a host who can choose the count gets the
+                      dropdown row instead, not both. */}
+                  {capacity && !rules.some((r) => r.key === "players") && (
                     <LobbyInfoRow label={labels.players}>
                       {capacity.min === capacity.max ? capacity.min : `${capacity.min}–${capacity.max}`}
                     </LobbyInfoRow>
@@ -402,9 +476,21 @@ export function UniversalLobby({
                       <span className="font-[Nunito] text-[16px] font-medium leading-[19.5px] tracking-[-0.16px] text-[#402666]">
                         {row.label}
                       </span>
-                      <Segmented row={row} />
+                      {row.variant === "dropdown" ? <RuleDropdown row={row} /> : <Segmented row={row} />}
                     </div>
                   ))}
+                  {/* Play on TV lives here now, a row in the rules — not a chip
+                      up beside the category (owner's ask). */}
+                  {tv && (
+                    <LobbyInfoRow label={tv.label} onPress={tv.onPress}>
+                      <img
+                        alt=""
+                        src={chipTv}
+                        style={{ filter: "drop-shadow(2px -2px 0 rgba(0,0,0,0.12))" }}
+                        className="h-8 w-8 object-contain"
+                      />
+                    </LobbyInfoRow>
+                  )}
                   {rulesExtra}
                 </motion.div>
               ) : (
@@ -653,9 +739,10 @@ function RoomTitle({
   editable?: boolean;
 }) {
   // 52/62 was the Figma frame's, drawn for a title with nothing beside it.
-  // With a 68px crest in the same row a Georgian name broke under it and
-  // the icon ended up sitting on a line of its own. Smaller, capped at two
-  // lines, and the icon comes down to match: the pair reads as one heading.
+  // With a crest in the same row a Georgian name broke under it and the icon
+  // ended up sitting on a line of its own. Smaller, capped at two lines, and
+  // the icon comes down to match: the pair reads as one heading (owner's ask
+  // — the two-line 52px heading ate the screen).
   const heading = (
     <h1 className="min-w-0 flex-1 font-hero text-[34px] capitalize leading-[40px] tracking-[-0.16px] text-[#402666] [overflow-wrap:anywhere] line-clamp-2">
       {name}
@@ -732,6 +819,41 @@ function Chip({
         {label}
       </span>
     </Tag>
+  );
+}
+
+/** A dropdown for a rule with too many options to lay out in a row — the
+    player count runs 2–10. A native select, styled to sit in the rule box. */
+function RuleDropdown({ row }: { row: LobbyRuleRow }) {
+  return (
+    <div
+      className={cn(
+        "relative flex shrink-0 items-center rounded-[20px] bg-[#ecdbf3] pl-[18px] pr-[10px] shadow-[inset_0px_2px_4px_0px_rgba(0,0,0,0.05)]",
+        RULE_BORDER,
+        !row.onChange && "opacity-70",
+      )}
+    >
+      <span className="pointer-events-none font-[Nunito] text-[16px] font-black leading-6 tracking-[-0.16px] text-[#402666]">
+        {row.options.find((o) => o.value === row.value)?.label ?? row.value}
+      </span>
+      <svg className="pointer-events-none ml-1 h-4 w-4 text-[#402666]" viewBox="0 0 24 24" fill="none">
+        <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+      {row.onChange && (
+        <select
+          value={row.value}
+          onChange={(e) => row.onChange?.(e.target.value)}
+          aria-label={row.label}
+          className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+        >
+          {row.options.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+      )}
+    </div>
   );
 }
 
