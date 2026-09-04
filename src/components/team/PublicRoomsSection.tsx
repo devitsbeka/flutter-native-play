@@ -15,7 +15,7 @@ import { useFriends } from "@/contexts/FriendsContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { onlineUserIds } from "@/utils/presence";
 import { motion } from "framer-motion";
-import { Globe, Loader2, Users, Clock, Trash2, LogOut, X, UserPlus } from "lucide-react";
+import { Globe, Loader2, Users, Clock, Trash2, LogOut, X, UserPlus, Check } from "lucide-react";
 import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
 import { GradientBackground, ROOM_GRADIENT_PRESETS } from "@/components/ui/noisy-gradient-backgrounds";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
@@ -156,7 +156,12 @@ function PublicRoomCard({
    * I arrive — nobody to wait for, nobody to wake — so it says so, and the
    * button goes green rather than wearing a green dot on white.
    */
-  const full = seats != null && room.player_count >= seats;
+  // A room's cap can lag behind who is actually in it — the host set 2 and a
+  // third walked in — so the seats a card DRAWS are never fewer than the
+  // heads it counts. That is what kept a full room reading "3/2" and drawing
+  // only two circles for three people.
+  const effectiveSeats = seats != null ? Math.max(seats, room.player_count) : null;
+  const full = effectiveSeats != null && room.player_count >= effectiveSeats;
   const everyoneHere =
     online.has(room.host_user_id) && players.every((p) => online.has(p.user_id));
   const ready = inside && full && everyoneHere;
@@ -268,7 +273,7 @@ function PublicRoomCard({
             <div className={`flex items-center gap-1 rounded-full backdrop-blur-md border px-2.5 py-1 ${ink.pill}`}>
               <Users className={`w-3.5 h-3.5 ${ink.text}`} />
               <span className={`text-xs font-bold ${ink.text}`}>
-                {seats ? `${room.player_count}/${seats}` : room.player_count}
+                {effectiveSeats ? `${room.player_count}/${effectiveSeats}` : room.player_count}
               </span>
             </div>
             {/* The way OUT, for the people who are in: the host deletes
@@ -361,9 +366,9 @@ function PublicRoomCard({
             faces (host first, crowned by the chip above), each with a green
             dot when that person is in the app right now; open seats are
             dashed outlines waiting to be filled. */}
-        {seats != null && seats > 0 && (
+        {effectiveSeats != null && effectiveSeats > 0 && (
           <div className="relative z-10 flex items-center gap-1 pb-2 flex-wrap">
-            {Array.from({ length: Math.min(seats, 10) }, (_, i) => {
+            {Array.from({ length: Math.min(effectiveSeats, 10) }, (_, i) => {
               const person: CardPlayer | undefined =
                 i === 0
                   ? {
@@ -419,12 +424,15 @@ function PublicRoomCard({
                 if (inside) enter();
                 else onAsk(room);
               }}
-              className={`flex items-center gap-1.5 shrink-0 rounded-lg backdrop-blur-md px-3 py-1.5 text-sm font-extrabold shadow-md disabled:opacity-60 ${
+              className={`relative flex items-center gap-1.5 shrink-0 rounded-xl px-3.5 py-2 text-sm font-extrabold disabled:opacity-60 ${
                 ready
-                  ? "bg-emerald-400 text-[#0b3b2c] shadow-[0_0_16px_rgba(16,185,129,0.55)]"
-                  : "bg-white/70 text-[#2E1065]"
+                  ? "text-white bg-gradient-to-b from-[#34d399] to-[#059669] shadow-[0_3px_0_0_#047857,0_6px_16px_rgba(5,150,105,0.4)] active:translate-y-[2px] active:shadow-[0_1px_0_0_#047857]"
+                  : "bg-white/70 backdrop-blur-md text-[#2E1065] shadow-md"
               }`}
             >
+              {ready && (
+                <span className="pointer-events-none absolute left-2 right-2 top-[3px] h-px rounded-full bg-white/50" />
+              )}
               {busy ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
               ) : waiting ? (
@@ -434,9 +442,9 @@ function PublicRoomCard({
                 </>
               ) : (
                 <>
-                  {/* The dot means LIVE — somebody in that room is in the
-                      app right now — so a sleeping room's button carries
-                      no dot rather than a lie. */}
+                  {/* Ready wears a check; a merely-live room a green dot;
+                      a sleeping one nothing rather than a lie. */}
+                  {ready && <Check className="w-4 h-4" strokeWidth={3} />}
                   {live && !ready && (
                     <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)]" />
                   )}

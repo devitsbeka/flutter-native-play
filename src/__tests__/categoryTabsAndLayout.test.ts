@@ -252,7 +252,9 @@ describe("the classic lobby's create controls (owner's asks)", () => {
   const universal = read("src/components/lobby/UniversalLobby.tsx");
 
   it("the host picks the player count 2–10 from a dropdown", () => {
-    expect(lobby).toMatch(/\[2, 3, 4, 5, 6, 7, 8, 9, 10\]\.map/);
+    // The options run from the current head count (min 2) up to 10 — you
+    // cannot cap a room below the people already in it.
+    expect(lobby).toMatch(/Math\.max\(2, participants\.length\) \+ i/);
     expect(lobby).toMatch(/variant: "dropdown" as const/);
     expect(lobby).toMatch(/void setMaxPlayers\(v\)/);
     expect(lobby).toMatch(/max_players: n/);
