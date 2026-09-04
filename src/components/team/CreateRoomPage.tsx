@@ -1896,11 +1896,10 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
               // the rules tab states what the game is: one board, alone
               // or with the one friend picked on the players tab.
               rules={[]}
-              rulesExtra={
-                <p className="px-[6px] pt-[2px] font-[Nunito] text-[13px] leading-[18px] text-[#402666]/70">
-                  {t("extra.modeWordsDesc")}
-                </p>
-              }
+              rulesText={[
+                { key: "rules", heading: t("lobby.rulesHeading"), body: t("lobby.rulesWords") },
+                { key: "time", heading: t("lobby.timeHeading"), body: t("lobby.timeWords") },
+              ]}
               // One board seats two: you and the one friend.
               capacity={{
                 min: 1,

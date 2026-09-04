@@ -12,6 +12,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { UniversalLobby, LobbyInviteRow, LobbyInfoRow, type LobbyPlayer, type LobbyPlayerGroup } from "@/components/lobby/UniversalLobby";
 import { LOBBY_SCENES } from "@/utils/lobbyScene";
 import coinIconAsset from "@/assets/tb-lobby/coin.png";
+import iconKingMascot from "@/assets/play-chooser/icon-king.webp";
 
 const FACE = (seed: string) => `https://api.dicebear.com/9.x/thumbs/png?seed=${seed}&size=96`;
 
@@ -93,15 +94,15 @@ export default function LobbyShot() {
         unreadCount={2}
         labels={labels}
         rules={[visibility("public")]}
+        rulesText={[
+          { key: "rules", heading: t("lobby.rulesHeading"), body: t("lobby.tbRules") },
+          { key: "time", heading: t("lobby.timeHeading"), body: t("lobby.timeBattle") },
+        ]}
+        reward={{ label: t("lobby.winnerTakes"), icon: coinIconAsset, amount: 1200 }}
         rulesExtra={
           <>
             <LobbyInfoRow label={t("lobby.uTeamSize")}>3 v 3</LobbyInfoRow>
             <LobbyInfoRow label={t("lobby.roundsN", { n: 8 })} hint={t("lobby.autoRounds")} />
-            <LobbyInfoRow label={t("lobby.winnerTakes")}>
-              <img alt="" src={coinIconAsset} className="h-6 w-6 object-contain" />
-              1200
-            </LobbyInfoRow>
-            <p className="px-[6px] pt-[2px] font-[Nunito] text-[13px] leading-[18px] text-[#402666]/70">{t("lobby.tbRules")}</p>
           </>
         }
         players={[bench("a", [PEOPLE[0], PEOPLE[3]]), bench("b", [PEOPLE[1], PEOPLE[2]])]}
@@ -122,12 +123,11 @@ export default function LobbyShot() {
         onBack={noop}
         labels={labels}
         rules={[]}
-        rulesExtra={
-          <>
-            <LobbyInfoRow label={t("lobby.uPlayersTab")}>1</LobbyInfoRow>
-            <p className="px-[6px] pt-[2px] font-[Nunito] text-[13px] leading-[18px] text-[#402666]/70">{t("extra.modeQuickDesc")}</p>
-          </>
-        }
+        rulesText={[
+          { key: "rules", heading: t("lobby.rulesHeading"), body: t("lobby.rulesClassic") },
+          { key: "time", heading: t("lobby.timeHeading"), body: t("lobby.timeClassic") },
+        ]}
+        rulesExtra={<LobbyInfoRow label={t("lobby.uPlayersTab")}>1</LobbyInfoRow>}
         players={[{ ...PEOPLE[0], score: undefined, rounds: undefined }]}
         inviteFaces={FACES}
         initialTab={tab}
@@ -140,7 +140,8 @@ export default function LobbyShot() {
   return (
     <UniversalLobby
       sceneArt={LOBBY_SCENES.guess}
-      roomName="Midnight Owls"
+      roomName={t("extra.modeKingTitle")}
+      icon={iconKingMascot}
       onRename={noop}
       onBack={noop}
       unreadCount={2}
@@ -157,6 +158,11 @@ export default function LobbyShot() {
         },
         visibility("private"),
       ]}
+      rulesText={[
+        { key: "rules", heading: t("lobby.rulesHeading"), body: t("lobby.rulesKing") },
+        { key: "time", heading: t("lobby.timeHeading"), body: t("lobby.timeKing") },
+      ]}
+      reward={{ label: t("lobby.winnerTakes"), icon: coinIconAsset, amount: 200 }}
       players={PEOPLE}
       playersHint={null}
       capacity={{ min: 1, max: 10, taken: 4, fullLabel: t("extra.mpRoomFull") }}

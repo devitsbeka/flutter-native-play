@@ -229,10 +229,11 @@ describe("the room title in the lobby header", () => {
     // One lobby for every mode now (Figma 1018:5815): the classic room
     // passes its name in rather than drawing a header of its own.
     expect(lobby).toMatch(/roomName=\{roomName\}/);
-    // 34/40, not the frame's 52/62: the title shares its row with the
-    // room's icon now, and at 52 a Georgian name broke under it and left
-    // the icon sitting on a line of its own (owner's ask to save space).
-    expect(universal).toMatch(/font-hero text-\[34px\] capitalize leading-\[40px\]/);
+    // 43.656 on 51.36 and centred under the emblem (Figma 1059:532). It
+    // spent a while at 34/40 beside a 44px icon, to buy back the row that
+    // an emblem above a big heading cost on a short screen; the design
+    // pays for that row out of the empty lilac under the card instead.
+    expect(universal).toMatch(/font-hero text-\[43\.656px\] capitalize leading-\[51\.36px\]/);
     expect(universal).toMatch(/line-clamp-2/);
   });
 
@@ -258,10 +259,12 @@ describe("the classic lobby's create controls (owner's asks)", () => {
     expect(lobby).toMatch(/variant: "dropdown" as const/);
     expect(lobby).toMatch(/void setMaxPlayers\(v\)/);
     expect(lobby).toMatch(/max_players: n/);
-    // The dropdown variant renders a real <select>, and the static "1–10"
-    // line stands down when a players picker is present.
+    // The dropdown variant renders a real <select>. The static "1–10" line
+    // it used to stand down for is gone entirely: how full the room is is
+    // said under the room's own name (Figma 1059:532), and saying it again
+    // as a row two inches below was saying it twice.
     expect(universal).toMatch(/function RuleDropdown/);
-    expect(universal).toMatch(/!rules\.some\(\(r\) => r\.key === "players"\)/);
+    expect(universal).not.toMatch(/rules\.some\(\(r\) => r\.key === "players"\)/);
   });
 
   it("Play on TV is a row in the rules, not a chip beside the category", () => {
@@ -299,11 +302,16 @@ describe("the classic lobby's create controls (owner's asks)", () => {
     expect(picker).toMatch(/key: "random5", icon: iconFiveRounds/);
   });
 
-  it("the room title carries the rename pencil beside the name, not on the icon", () => {
+  it("the room title carries one rename pencil, on the emblem's shoulder", () => {
     const universal = read("src/components/lobby/UniversalLobby.tsx");
-    expect(universal).toMatch(/The pencil sits beside the NAME now, not on the icon/);
-    // No pencil pinned to the icon's corner any more.
+    // Figma 1059:532 puts it back on the emblem — top-right, on the
+    // shoulder, not in the old bottom-right corner and not floating beside
+    // a name it has to push around to sit next to.
+    expect(universal).toMatch(/absolute left-\[65px\] top-\[4px\] flex size-\[22px\]/);
     expect(universal).not.toMatch(/absolute -bottom-0\.5 -right-0\.5[^]*<Pencil/);
+    // A room with no emblem still gets one, on the name — and that is the
+    // only other place it may appear.
+    expect((universal.match(/<Pencil className="size-3/g) ?? []).length).toBe(2);
   });
 
   it("the TV setup panel is dark ink on the lobby's light sheet, not white", () => {

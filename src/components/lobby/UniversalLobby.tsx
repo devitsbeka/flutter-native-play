@@ -155,6 +155,27 @@ export interface UniversalLobbyProps {
    */
   playersLayout?: "stack" | "columns";
   rules: LobbyRuleRow[];
+  /**
+   * The game, in words (Figma 1059:532): a small uppercase heading over a
+   * paragraph, one section per thing worth knowing before you press Start.
+   *
+   * Every mode fills this in, and the reason is the room the design was
+   * drawn against: the Rules tab used to be a column of dropdowns — how
+   * many players, how many questions, play on TV — which is a settings
+   * sheet, not the rules. What the game IS was never written down
+   * anywhere, so a lobby only made sense to somebody who had already
+   * played it. These are those sentences, and they come before the
+   * controls.
+   */
+  rulesText?: { key: string; heading: string; body: string }[];
+  /**
+   * The stake, on a strip at the foot of the card: "Winner takes: 200".
+   *
+   * It was a rule row on the arena and a hand-built box on the King's
+   * couch, in two different shapes, and on the other two modes it was not
+   * said at all. One strip, on every lobby that plays for something.
+   */
+  reward?: { label: string; icon?: string; amount: ReactNode };
   /** Under the rule rows — a mode's own extra control. */
   rulesExtra?: ReactNode;
   /** One flat list, or the arena's two benches. */
@@ -219,6 +240,8 @@ export function UniversalLobby({
   labels,
   playersLayout = "stack",
   rules,
+  rulesText,
+  reward,
   rulesExtra,
   players,
   playersHint,
@@ -366,33 +389,28 @@ export function UniversalLobby({
             </motion.div>
           )}
 
-          {/* All the slack, above the title: the card is the foot of this
-              screen and sits 20px clear of Start, rather than floating in
-              the middle of it with a screen of empty lilac underneath.
-              It claims nothing when the content is taller than the frame —
-              there is no free space to claim, and the 12px floor keeps the
-              title off the chip in that case. */}
-          <div className="min-h-[12px] flex-1" />
-
-          {/* The room's name (1018:6828): Slackey, 52 on 62, two lines, with
-              the room's own face beside it. The icon rides INSIDE the rename
-              button rather than next to it, because on a room that has one to
-              change they are one control: tapping either opens the sheet that
-              sets both. */}
-          <motion.div {...arrive(0.3)} className="flex shrink-0 flex-col items-center">
+          {/* The room, said once and centred: its face, its name, how full
+              it is (Figma 1059:532). 39px of air above the emblem and every
+              spare pixel below the count, so the card underneath is the foot
+              of the screen and sits 20px clear of Start rather than floating
+              mid-air. The block claims nothing when the content is taller
+              than the frame — there is no free space to claim — and the 12px
+              floor keeps the emblem off the category chip in that case. */}
+          <motion.div
+            {...arrive(0.3)}
+            className="flex min-h-[12px] flex-1 flex-col items-center pt-[39px]"
+          >
             {onRename ? (
               <motion.button
                 type="button"
                 whileTap={{ scale: 0.98 }}
                 onClick={onRename}
-                className="block max-w-[456px]"
+                className="flex w-full flex-col items-center"
               >
                 <RoomTitle name={roomName} icon={icon} editable />
               </motion.button>
             ) : (
-              <div className="max-w-[456px]">
-                <RoomTitle name={roomName} icon={icon} />
-              </div>
+              <RoomTitle name={roomName} icon={icon} />
             )}
             {/* How full the room is, right under its name.
                 It used to sit at the foot of the players tab, below every
@@ -400,7 +418,7 @@ export function UniversalLobby({
                 room can start, three scrolls from the room's own name and
                 invisible on the rules tab entirely. */}
             {capacity && (
-              <p className="mt-1 font-[Nunito] text-[13px] font-semibold leading-4 tracking-[-0.16px] text-[#402666]/60">
+              <p className="mt-[18px] font-[Nunito] text-[16px] font-medium leading-[19.5px] tracking-[-0.16px] text-[#402666]">
                 {Math.min(capacity.taken, capacity.max)}/{capacity.max} {labels.players.toLowerCase()}
               </p>
             )}
@@ -410,9 +428,11 @@ export function UniversalLobby({
           <motion.section
             {...arrive(0.36)}
             className={cn(
-              "relative mb-[20px] mt-[16px] w-full shrink-0 overflow-clip rounded-[24px_24px_54px_24px] border-2 border-[rgba(255,255,255,0.6)] bg-[rgba(252,247,255,0.6)] px-[9px] pt-[9px]",
+              "relative mb-[20px] mt-[16px] w-full shrink-0 overflow-clip rounded-[24px] border-2 border-[rgba(255,255,255,0.6)] bg-[rgba(252,247,255,0.6)] px-[9px] pt-[9px]",
               CARD_SHADOW,
-              tab === "rules" ? "pb-[50px]" : "pb-[31px]",
+              // The stake's strip brings its own 22px foot; without one the
+              // tab's content is the last thing in the card and pays for it.
+              reward ? "pb-[22px]" : tab === "rules" ? "pb-[50px]" : "pb-[31px]",
             )}
           >
             <div className={cn("relative flex items-center rounded-[20px] p-[6px]", RULE_BORDER)}>
@@ -448,40 +468,57 @@ export function UniversalLobby({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -6 }}
                   transition={{ duration: 0.18 }}
-                  className="mt-[10px] flex flex-col gap-[15px] px-[3px]"
+                  className="flex flex-col px-[3px]"
                 >
-                  {/* The static "Players 1–10" line only when a mode gives no
-                      picker for it — a host who can choose the count gets the
-                      dropdown row instead, not both. */}
-                  {capacity && !rules.some((r) => r.key === "players") && (
-                    <LobbyInfoRow label={labels.players}>
-                      {capacity.min === capacity.max ? capacity.min : `${capacity.min}–${capacity.max}`}
-                    </LobbyInfoRow>
-                  )}
-                  {rules.map((row) => (
-                    <div
-                      key={row.key}
-                      className={cn("flex h-[84px] items-center justify-between rounded-[20px] pl-[26px] pr-[13px]", RULE_BORDER)}
-                    >
-                      <span className="font-[Nunito] text-[16px] font-medium leading-[19.5px] tracking-[-0.16px] text-[#402666]">
-                        {row.label}
-                      </span>
-                      {row.variant === "dropdown" ? <RuleDropdown row={row} /> : <Segmented row={row} />}
+                  {/* What the game IS, before what it is set to. The tab
+                      opened on a column of dropdowns for years — a settings
+                      sheet under a heading that promised rules — and the
+                      rules themselves were written down nowhere in the app.
+                      An uppercase label over a paragraph, one section each
+                      (Figma 1059:532). */}
+                  {rulesText && rulesText.length > 0 && (
+                    <div className="flex flex-col gap-[36px] px-[23px] pb-[6px] pt-[27px]">
+                      {rulesText.map((section) => (
+                        <div key={section.key}>
+                          <h3 className="font-hero text-[16px] uppercase leading-[14px] tracking-[-0.2054px] text-[#402666] opacity-50">
+                            {section.heading}
+                          </h3>
+                          <p className="mt-[17px] font-[Nunito] text-[14px] font-medium leading-[22px] tracking-[-0.16px] text-[#402666]">
+                            {section.body}
+                          </p>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                  {/* Play on TV lives here now, a row in the rules — not a chip
-                      up beside the category (owner's ask). */}
-                  {tv && (
-                    <LobbyInfoRow label={tv.label} onPress={tv.onPress}>
-                      <img
-                        alt=""
-                        src={chipTv}
-                        style={{ filter: "drop-shadow(2px -2px 0 rgba(0,0,0,0.12))" }}
-                        className="h-8 w-8 object-contain"
-                      />
-                    </LobbyInfoRow>
                   )}
-                  {rulesExtra}
+                  {/* What the host can still set — the count, the round
+                      length, the TV. Under the rules, because a rule you
+                      cannot change is still the thing you needed to read. */}
+                  <div className="mt-[10px] flex flex-col gap-[15px] empty:hidden">
+                    {rules.map((row) => (
+                      <div
+                        key={row.key}
+                        className={cn("flex h-[84px] items-center justify-between rounded-[20px] pl-[26px] pr-[13px]", RULE_BORDER)}
+                      >
+                        <span className="font-[Nunito] text-[16px] font-medium leading-[19.5px] tracking-[-0.16px] text-[#402666]">
+                          {row.label}
+                        </span>
+                        {row.variant === "dropdown" ? <RuleDropdown row={row} /> : <Segmented row={row} />}
+                      </div>
+                    ))}
+                    {/* Play on TV lives here now, a row in the rules — not a chip
+                        up beside the category (owner's ask). */}
+                    {tv && (
+                      <LobbyInfoRow label={tv.label} onPress={tv.onPress}>
+                        <img
+                          alt=""
+                          src={chipTv}
+                          style={{ filter: "drop-shadow(2px -2px 0 rgba(0,0,0,0.12))" }}
+                          className="h-8 w-8 object-contain"
+                        />
+                      </LobbyInfoRow>
+                    )}
+                    {rulesExtra}
+                  </div>
                 </motion.div>
               ) : (
                 <motion.div
@@ -571,15 +608,34 @@ export function UniversalLobby({
                 </motion.div>
               )}
             </AnimatePresence>
+
+            {/* The stake, on the card's own foot rather than inside a tab
+                (Figma 1059:532): what this room is played for is true of the
+                room, not of whichever tab happens to be open. */}
+            {reward && (
+              <div className="mx-[3px] mt-[36px] flex h-[66px] items-center justify-between rounded-[20px] border border-[rgba(128,94,143,0.23)] bg-[#fdfbff] pl-[19px] pr-[15px] shadow-[0px_5px_0px_#d3c5db]">
+                <span className="font-[Nunito] text-[14px] font-medium leading-[19.5px] tracking-[-0.16px] text-[#402666] opacity-60">
+                  {reward.label}
+                </span>
+                <span className="flex h-[43px] min-w-[84px] shrink-0 items-center gap-[4px] rounded-[14.616px] border border-[#e8e0f5] pl-[7px] pr-[12px] shadow-[0px_2.94px_0px_0px_#d8d0e8,0px_4.409px_11.758px_0px_rgba(0,0,0,0.1)]">
+                  {reward.icon && (
+                    <img alt="" src={reward.icon} className="size-[32.305px] shrink-0 object-contain" />
+                  )}
+                  <span className="font-[Nunito] text-[18px] font-black leading-6 tracking-[-0.16px] text-[#402666]">
+                    {reward.amount}
+                  </span>
+                </span>
+              </div>
+            )}
           </motion.section>
         </div>
       </div>
 
-      {/* Footer (1018:6840): Start Game. */}
-      <motion.div
-        {...arrive(0.42)}
-        className="relative z-20 shrink-0 border-t border-[rgba(229,231,235,0.3)] px-4 pb-4 pt-4"
-      >
+      {/* Footer (1059:532): Start Game, and nothing else — no rule above it
+          and no padding of its own. The card's 20px is the whole gap, which
+          is what the divider and a second 16px of padding were quietly
+          turning into 36. */}
+      <motion.div {...arrive(0.42)} className="relative z-20 shrink-0 px-4 pb-4">
         <div className="mx-auto w-full max-w-[700px] md:max-w-[520px]">
           {footerExtra}
           {!start.captionOnly && (
@@ -751,42 +807,46 @@ function RoomTitle({
   icon?: string | null;
   editable?: boolean;
 }) {
-  // 52/62 was the Figma frame's, drawn for a title with nothing beside it.
-  // With a crest in the same row a Georgian name broke under it and the icon
-  // ended up sitting on a line of its own. Smaller, capped at two lines, and
-  // the icon comes down to match: the pair reads as one heading (owner's ask
-  // — the two-line 52px heading ate the screen).
-  // The pencil sits beside the NAME now, not on the icon (owner's ask): a
-  // small round chip after the heading, so "this is yours to rename" reads
-  // off the title rather than off the emblem.
-  const pencil = editable ? (
-    <span className="ml-1.5 inline-flex size-[22px] shrink-0 translate-y-[6px] items-center justify-center rounded-full bg-white shadow-[0px_2px_4px_rgba(0,0,0,0.18)]">
-      <Pencil className="h-3 w-3 text-[#523b76]" />
-    </span>
-  ) : null;
+  // Stacked and centred (Figma 1059:532): the emblem at 91px, the name
+  // under it at 43.656 on 51.36, capped at two lines.
+  //
+  // These two spent a while side by side, at 34px, to buy back the row an
+  // icon above a 52px heading was costing on a short screen. The design
+  // answers that differently: the name IS the screen above the card, so it
+  // gets the size back, and the slack it needs comes out of the empty lilac
+  // that used to sit under the card rather than out of the heading.
+  //
+  // The pencil rides on the emblem's shoulder — one control, whichever half
+  // is tapped, opening the sheet that sets both the name and the face.
   const heading = (
-    <h1 className="min-w-0 flex-1 font-hero text-[34px] capitalize leading-[40px] tracking-[-0.16px] text-[#402666] [overflow-wrap:anywhere] line-clamp-2">
+    <h1 className="w-[321px] max-w-full text-center font-hero text-[43.656px] capitalize leading-[51.36px] tracking-[-0.2054px] text-[#402666] [overflow-wrap:anywhere] line-clamp-2">
       {name}
-      {pencil}
+      {/* A room with no emblem has nowhere to hang the pencil, so it rides
+          the name instead — the same chip, on the only half there is. */}
+      {!icon && editable && (
+        <span className="ml-1.5 inline-flex size-[22px] shrink-0 translate-y-[10px] items-center justify-center rounded-full bg-white drop-shadow-[0px_2px_2px_rgba(0,0,0,0.18)]">
+          <Pencil className="size-3 text-[#523b76]" />
+        </span>
+      )}
     </h1>
   );
   if (!icon) return heading;
   return (
-    // One row, icon and name together. It was stacked for a while, and that
-    // was the right call against a 52px hero line — a 44px emblem above it
-    // cost nothing where a 68px one beside it took a fifth of the width. The
-    // line is 34px now: the pair fits across, and stacked it was spending a
-    // whole row of a short screen on an icon.
-    <div className="flex items-center gap-2.5">
-      <span className="relative shrink-0">
+    <>
+      <span className="relative mb-[15px] block size-[91px] shrink-0">
         <img
           alt=""
           src={icon}
-          className="size-[44px] object-contain drop-shadow-[0_4px_10px_rgba(88,50,160,0.22)]"
+          className="size-full object-contain drop-shadow-[0_4px_10px_rgba(88,50,160,0.22)]"
         />
+        {editable && (
+          <span className="absolute left-[65px] top-[4px] flex size-[22px] items-center justify-center rounded-full bg-white drop-shadow-[0px_2px_2px_rgba(0,0,0,0.18)]">
+            <Pencil className="size-3 text-[#523b76]" />
+          </span>
+        )}
       </span>
       {heading}
-    </div>
+    </>
   );
 }
 

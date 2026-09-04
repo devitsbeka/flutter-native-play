@@ -834,17 +834,11 @@ export default function KingPage() {
         // invites the tap that proves it. What the room does not offer, the
         // lobby does not draw.
         rules={[]}
-        rulesExtra={
-          <div className="flex h-[84px] items-center justify-between rounded-[20px] border border-[rgba(156,100,181,0.5)] pl-[26px] pr-[20px]">
-            <span className="font-[Nunito] text-[16px] font-medium leading-[19.5px] tracking-[-0.16px] text-[#402666]">
-              {t("lobby.winnerTakes")}
-            </span>
-            <span className="flex items-center gap-2 font-[Nunito] text-[18px] font-black leading-6 tracking-[-0.16px] text-[#402666]">
-              <img alt="" src={coinIconAsset} className="h-6 w-6 object-contain" />
-              {coins}
-            </span>
-          </div>
-        }
+        rulesText={[
+          { key: "rules", heading: t("lobby.rulesHeading"), body: t("lobby.rulesKing") },
+          { key: "time", heading: t("lobby.timeHeading"), body: t("lobby.timeKing") },
+        ]}
+        reward={{ label: t("lobby.winnerTakes"), icon: coinIconAsset, amount: coins }}
         players={couch}
         playersHint={null}
         // The couch: one to ten humans against the King (the room row's

@@ -890,23 +890,25 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
           onChange: isHost ? (value) => void setVisibility(value) : undefined,
         },
       ]}
+      // How the arena is played, and how long it runs. tbRules was already
+      // written for this screen — it just used to sit in 13px grey under
+      // three rows, as a footnote to the settings rather than the point.
+      rulesText={[
+        { key: "rules", heading: t("lobby.rulesHeading"), body: t("lobby.tbRules") },
+        { key: "time", heading: t("lobby.timeHeading"), body: t("lobby.timeBattle") },
+      ]}
+      // The pot: the winning team's real take, 50 coins a round to every
+      // winning human (tb_settle).
+      reward={{ label: t("lobby.winnerTakes"), icon: coinIconAsset, amount: potValue }}
       rulesExtra={
         <>
-          {/* The size the host set on the create screen; the match length,
-              stated rather than picked (two rounds a player, live as seats
-              fill); and the pot — the winning team's real take, 50 coins a
-              round to every winning human (tb_settle). */}
+          {/* The size the host set on the create screen, and the match
+              length — stated rather than picked (two rounds a player, live
+              as seats fill). */}
           <LobbyInfoRow label={t("lobby.uTeamSize")}>
             {perSide} v {perSide}
           </LobbyInfoRow>
           <LobbyInfoRow label={t("lobby.roundsN", { n: rounds })} hint={t("lobby.autoRounds")} />
-          <LobbyInfoRow label={t("lobby.winnerTakes")}>
-            <img alt="" src={coinIconAsset} className="h-6 w-6 object-contain" />
-            {potValue}
-          </LobbyInfoRow>
-          <p className="px-[6px] pt-[2px] font-[Nunito] text-[13px] leading-[18px] text-[#402666]/70">
-            {t("lobby.tbRules")}
-          </p>
         </>
       }
       players={benches}
