@@ -771,7 +771,10 @@ export function RoomLobbyV2() {
   // (owner's ask). It caps the room and the seats the players tab draws.
   const setMaxPlayers = async (value: string) => {
     if (!isHost) return;
-    const n = Math.max(2, Math.min(10, Number(value) || 2));
+    // Never below who is already in the room — a cap of 2 with three people
+    // seated read as "3/2" and drew too few chairs everywhere it showed.
+    const floor = Math.max(2, participants.length);
+    const n = Math.max(floor, Math.min(10, Number(value) || floor));
     await supabase.from("game_rooms").update({ max_players: n }).eq("id", currentRoom.id);
   };
   const setVisibility = async (value: string) => {
@@ -804,8 +807,14 @@ export function RoomLobbyV2() {
       key: "players",
       label: t("lobby.uPlayersTab"),
       variant: "dropdown" as const,
-      options: [2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => ({ value: String(n), label: String(n) })),
-      value: String(Math.max(2, Math.min(10, currentRoom.max_players || 10))),
+      // The floor is however many are already in the room (min 2): you can't
+      // cap a room below the people sitting in it.
+      options: Array.from({ length: 10 - Math.max(2, participants.length) + 1 }, (_, i) =>
+        Math.max(2, participants.length) + i,
+      ).map((n) => ({ value: String(n), label: String(n) })),
+      value: String(
+        Math.max(2, participants.length, Math.min(10, currentRoom.max_players || participants.length || 2)),
+      ),
       onChange: (v: string) => void setMaxPlayers(v),
     } satisfies LobbyRuleRow] : []),
     ...(playsUserTrivia ? [] : [{
@@ -888,7 +897,9 @@ export function RoomLobbyV2() {
       // when the host will sit out of their own trivia.
       capacity={{
         min: willBeObserver ? 2 : 1,
-        max: currentRoom.max_players || 10,
+        // Never below who is actually here, so an under-set cap can't read
+        // as "2/2" over three seated players.
+        max: Math.max(currentRoom.max_players || 10, participants.length),
         taken: participants.length,
         fullLabel: t("extra.mpRoomFull"),
       }}

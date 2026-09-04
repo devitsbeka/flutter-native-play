@@ -313,7 +313,19 @@ describe("the public list", () => {
     // The full couch: a placeholder for every open seat, a face (with an
     // online dot) on every claimed one — so "one player short" is visible
     // at a glance.
-    expect(section).toMatch(/Array\.from\(\{ length: Math\.min\(seats, 10\) \}/);
+    // The seats a card DRAWS are the effective ones — never fewer than the
+    // heads counted — so a room over its own cap doesn't hide a player.
+    expect(section).toMatch(/const effectiveSeats = seats != null \? Math\.max\(seats, room\.player_count\) : null;/);
+    expect(section).toMatch(/Array\.from\(\{ length: Math\.min\(effectiveSeats, 10\) \}/);
+    expect(section).toMatch(/\$\{room\.player_count\}\/\$\{effectiveSeats\}/);
+    // The player-count cap can never be set below who is already in the room.
+    const lobby = read("src/components/team/RoomLobbyV2.tsx");
+    expect(lobby).toMatch(/const floor = Math\.max\(2, participants\.length\);/);
+    // The Ready button is a proper chunky green, white type + check — not the
+    // flat green with dark text the owner disliked.
+    expect(section).toMatch(/text-white bg-gradient-to-b from-\[#34d399\] to-\[#059669\]/);
+    expect(section).toMatch(/ready && <Check className/);
+    expect(section).not.toMatch(/bg-emerald-400 text-\[#0b3b2c\]/);
     expect(section).toMatch(/border-dashed border-white\/40/);
     expect(section).toMatch(/online\.has\(person\.user_id\)/);
     // The join button's green dot means somebody in the room is in the app

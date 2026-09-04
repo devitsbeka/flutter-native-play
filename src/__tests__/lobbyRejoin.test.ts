@@ -181,13 +181,17 @@ describe("only the host is offered the start", () => {
 describe("a room that can start says so", () => {
   it("full, mine, and everybody in the app turns the button green", () => {
     const section = read("src/components/team/PublicRoomsSection.tsx");
-    expect(section).toMatch(/const full = seats != null && room\.player_count >= seats;/);
+    // Full is measured against the EFFECTIVE seats (never below the head
+    // count), so an under-set cap can't leave a truly full room short.
+    expect(section).toMatch(/const full = effectiveSeats != null && room\.player_count >= effectiveSeats;/);
     // Everyone, not anyone — the host counts too.
     expect(section).toMatch(
       /online\.has\(room\.host_user_id\) && players\.every\(\(p\) => online\.has\(p\.user_id\)\)/,
     );
     expect(section).toMatch(/const ready = inside && full && everyoneHere;/);
-    expect(section).toMatch(/bg-emerald-400 text-\[#0b3b2c\]/);
+    // A proper chunky green button, white type — not the flat green with
+    // dark text the owner disliked.
+    expect(section).toMatch(/text-white bg-gradient-to-b from-\[#34d399\] to-\[#059669\]/);
     for (const lang of ["en", "ka", "de", "es", "fr", "it", "pt"]) {
       expect(read(`src/locales/${lang}.ts`), lang).toMatch(/roomReady: "/);
     }
