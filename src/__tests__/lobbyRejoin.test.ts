@@ -176,6 +176,18 @@ describe("only the host is offered the start", () => {
     expect(read("src/pages/KingPage.tsx")).toMatch(/humans > 1 && !isKingHost/);
   });
 
+  it("shows the host's face after the waiting caption (owner's ask)", () => {
+    // "…waiting for the host" points at who: the host's avatar renders right
+    // after the caption, from the host participant, in every lobby that shows
+    // the line.
+    expect(universal).toMatch(/captionAvatarUrl\?: string \| null;/);
+    expect(universal).toMatch(/start\.captionAvatarUrl !== undefined && \(/);
+    expect(universal).toMatch(/resolveAvatarUrl\(start\.captionAvatarUrl\) \?\? fallbackAvatarFor/);
+    for (const file of ["src/pages/TeamBattlePage.tsx", "src/pages/KingPage.tsx", "src/components/team/RoomLobbyV2.tsx"]) {
+      expect(read(file), file).toMatch(/captionAvatarUrl:[\s\S]{0,120}is_host\)\?\.avatar_url/);
+    }
+  });
+
   it("but a real action in the footer stays a button", () => {
     // The classic room's guest can ping the host — that is a thing to
     // press, not a thing to read.
