@@ -1919,12 +1919,11 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         return;
       }
 
-      // Start the pictures now, wait for none of them. Three writes and the
-      // countdown stand between here and the first card — several seconds of
-      // warming time that used to be spent blocking instead. Only the solo
-      // GameContext awaits this; there it is the last thing before the card,
-      // so there is nothing else to overlap with.
-      void warmQuestionImages(questions.map(q => q.imageUrl));
+      // Start the pictures now; the writes below overlap them, and the flip
+      // to "playing" waits for the first one. Fire-and-forget was not enough:
+      // an Image nobody holds a reference to can be collected mid-flight once
+      // this screen navigates away, so question one arrived cold anyway.
+      const pendingWarm = warmQuestionImages(questions.map(q => q.imageUrl));
 
       // Mark questions as seen globally (unified tracking)
       markQuestionsAsSeen(questions.map(q => q.id));
@@ -1937,7 +1936,8 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         questions,
         shouldObserve,
         { used_question_ids: newUsedIds },
-        pendingDelete
+        pendingDelete,
+        pendingWarm
       );
 
       // Consume matching queue item if it exists (prevents "next round" showing played category)
@@ -1960,7 +1960,13 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     questions: TriviaQuestion[],
     hostShouldObserve: boolean = false,
     extraRoomFields: Record<string, unknown> = {},
-    pendingDelete?: Promise<boolean>
+    pendingDelete?: Promise<boolean>,
+    /**
+     * The round's pictures, warming. Awaited immediately before the room
+     * flips to "playing" — which is the moment the first card can appear —
+     * so the writes above pay for the wait instead of the player.
+     */
+    pendingWarm?: Promise<void>
   ) => {
     // Clear old questions/answers with verification
     const deleteSuccess2 = await (pendingDelete ?? safeDeleteRoomQuestions(roomId));
@@ -2031,6 +2037,17 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       toast.error(tStandalone("extra.mpGameStartFailed"));
       return;
     }
+
+    // Question one's picture, before the round is visible.
+    //
+    // warmQuestionImages waits for the FIRST image only, and only up to two
+    // seconds; the rest are started and left to finish on their own. That
+    // wait is the whole point of the helper — question one is the only card
+    // that opens on a cold connection to the /img origin and an edge MISS,
+    // which is why it was the only one that showed "The picture didn't
+    // load" while every later question was fine. The writes above have
+    // usually outlasted it, so in the common case this costs nothing.
+    if (pendingWarm) await pendingWarm;
 
     // Update room status (includes host_is_observer to prevent premature realtime trigger)
     // Also sync total_questions - a stale count from a previous custom-trivia round
