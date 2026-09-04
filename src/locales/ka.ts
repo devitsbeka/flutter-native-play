@@ -3526,7 +3526,7 @@ export const ka = {
     cpMyTrivias: "ჩემი ტრივიები",
     cpRandomTitle: "შემთხვევითი",
     cpRandomDesc: "რანდომ კატეგორია თამაშისთვის",
-    cpRandom5Title: "5 შემთხვევითი",
+    cpRandom5Title: "5 რაუნდი",
     cpRandom5Desc: "5 რაუნდი შემთხვევითი კატეგორიებით",
     cpLibraryTitle: "ბიბლიოთეკა",
     cpLibraryDesc: "აირჩიე კატეგორია სიიდან",
