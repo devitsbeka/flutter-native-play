@@ -113,6 +113,21 @@ describe("Guess replaced Random on the create screen", () => {
     expect(create).toMatch(/\}, \[gameChoice, createEnabled, isCreating, selectedCategory\]\);/);
   });
 
+  it("and going back brings the carousel back with it", () => {
+    // The cards derive their height from --row-h, which the row measures and
+    // publishes on itself. That measurement used to be a mount effect with []
+    // deps — but the Guess screen UNMOUNTS the row while this component stays
+    // mounted, so coming back mounted a new row the effect never ran for and
+    // the observer was still watching the old, detached one. --row-h went
+    // unset and every card resolved to zero height: a heading, a hairline and
+    // no cards. A callback ref follows the element instead of the mount.
+    expect(create).toMatch(/const rowRef = useCallback\(\(el: HTMLDivElement \| null\) => \{/);
+    expect(create).toMatch(/rowObserver\.current\?\.disconnect\(\);/);
+    expect(create).toMatch(/rowObserver\.current = ro;/);
+    // The old shape, which could not survive the row being remounted.
+    expect(create).not.toMatch(/const el = rowRef\.current;/);
+  });
+
   it("the tiles are the picture games the database actually has", () => {
     // POPULAR_IMAGE_CATEGORY_IDS names six; guess_movie has no row, and a
     // tile that opens a category nobody can play is worse than no tile.

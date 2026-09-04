@@ -1,5 +1,5 @@
 import { BackgroundVideo } from "@/components/shared/BackgroundVideo";
-import { useState, useEffect, useRef, useMemo, type CSSProperties } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback, type CSSProperties } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -680,9 +680,18 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   // (both left the cards 0px wide or taller than the row, clipped by the
   // footer). So the row measures itself and publishes --row-h, its content
   // height, and the cards read it.
-  const rowRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const el = rowRef.current;
+  //
+  // A callback ref rather than a mount effect, because the row is not always
+  // on screen: the Guess screen replaces it, and coming back mounts a NEW row
+  // element while this component stays mounted throughout. An effect with []
+  // deps never re-ran for that node — it went on observing the old, detached
+  // one — so --row-h was never set on the new row and every card resolved to
+  // a height of zero. Back from Guess landed on a heading, a hairline, and no
+  // cards at all.
+  const rowObserver = useRef<ResizeObserver | null>(null);
+  const rowRef = useCallback((el: HTMLDivElement | null) => {
+    rowObserver.current?.disconnect();
+    rowObserver.current = null;
     if (!el) return;
     const publish = () => {
       const cs = getComputedStyle(el);
@@ -692,7 +701,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     publish();
     const ro = new ResizeObserver(publish);
     ro.observe(el);
-    return () => ro.disconnect();
+    rowObserver.current = ro;
   }, []);
 
   const cardRefs = useRef<Record<string, HTMLButtonElement | null>>({});
