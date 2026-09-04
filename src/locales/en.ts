@@ -1854,6 +1854,7 @@ export const en: KaTranslations = {
     uPlayersTab: "Players",
     uQuestionsPerRound: "Questions per round",
     uVisibility: "Visibility",
+    uJoining: "Joining",
     uInviteHint: "Invite a friend — a game needs two players",
     uSelectCategory: "Select Category",
     // The rounds queue — one category per round, in the order they play.
@@ -2503,6 +2504,8 @@ export const en: KaTranslations = {
     tabPublic: "Public",
     tabPrivate: "Private",
     roomPublic: "Public",
+    roomJoinOpen: "Open",
+    roomJoinAsk: "Ask me",
     roomPrivate: "Private",
     roomPublicHint: "Listed for everyone — you decide who actually gets in.",
     roomPrivateHint: "Only reachable with the code, the link, or your invite.",

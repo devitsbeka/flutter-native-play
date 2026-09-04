@@ -168,19 +168,24 @@ describe("the private tab and the lobby it opens", () => {
     expect(page).toMatch(/undefined,\s*\n\s*false,\s*\n\s*\);/);
   });
 
-  it("a game needs somebody who can answer before it can start", () => {
+  it("a room is two people — a lone host cannot start one", () => {
     const lobby = read("src/components/team/RoomLobbyV2.tsx");
     // A pending invitation is a participant row too; counting it would arm
     // the button for somebody who has not arrived.
     expect(lobby).toMatch(/\(p\.status as string\) !== "invited"/);
-    // A lone host can play a random or a library category (owner's rule:
-    // a mode that does not need a second player starts without one). The
-    // host of their OWN trivia sits out as observer, so that room needs one
-    // more seat before it can start — and the disabled button says why.
+    // A lone host used to be allowed to start, and a solo round IS a real
+    // game — but this room is not where you play one: there is a library to
+    // play alone and a quick VS to be matched into. A room is for the people
+    // you asked into it (owner's ask). Counted in ANSWERERS, so the host of
+    // their own trivia — who sits out of it — needs two guests, not one.
     expect(lobby).toMatch(/const answeringPlayers = seatedPlayers - \(willBeObserver \? 1 : 0\);/);
-    expect(lobby).toMatch(/const enoughPlayers = answeringPlayers >= 1;/);
+    expect(lobby).toMatch(/const enoughPlayers = answeringPlayers >= 2;/);
     expect(lobby).toMatch(/\(!needsCategorySelection && !enoughPlayers\)/);
     expect(lobby).toMatch(/rlNeedsSecondPlayer/);
+    // The button's disabled state is not the only guard: the category picker
+    // can start a round on its own, and the last guest can leave between the
+    // tap and the write.
+    expect(lobby).toMatch(/if \(!enoughPlayersRef\.current\) \{\s*\n\s*toast\.error\(t\("extra\.rlNeedsSecondPlayer"\)\);/);
     // And the Invite line opens the room's own invite sheet.
     expect(lobby).toMatch(/onInvite=\{\(\) => setShowInviteModal\(true\)\}/);
     expect(lobby).toMatch(/<InviteFriendsModal\s*\n\s*isOpen=\{showInviteModal\}/);

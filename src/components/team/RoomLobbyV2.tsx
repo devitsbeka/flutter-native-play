@@ -44,7 +44,7 @@ import {
 import { UniversalLobby, type LobbyPlayer, type LobbyRuleRow } from "@/components/lobby/UniversalLobby";
 import { RoundOrderModal } from "@/components/team/RoundOrderModal";
 import { classicLobbyScene } from "@/utils/lobbyScene";
-import { roomVisibilityFields } from "@/utils/roomVisibility";
+import { gameRoomsHasApproval, roomVisibilityFields } from "@/utils/roomVisibility";
 import { dealtRoomIcon, fetchCrestPool } from "@/utils/roomCrests";
 import { useFriends } from "@/hooks/useFriends";
 import {
@@ -80,10 +80,37 @@ export function RoomLobbyV2() {
   
   const [showIconPicker, setShowIconPicker] = useState(false);
   // The ordered icon deck a faceless room is dealt from — see roomFace below.
+  /**
+   * Whether this database knows about `requires_approval` yet.
+   *
+   * The switch is HIDDEN until it does. Migrations land here by hand, and a
+   * switch that silently writes nothing is worse than no switch at all — the
+   * host would set it, watch it snap back, and conclude the room is broken.
+   */
+  const [hasApprovalColumn, setHasApprovalColumn] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    void gameRoomsHasApproval().then((ok) => {
+      if (alive) setHasApprovalColumn(ok);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
   const [iconPool, setIconPool] = useState<readonly string[]>([]);
   useEffect(() => {
     void fetchCrestPool().then(setIconPool);
   }, []);
+  /**
+   * Whether the room can start, for the handler rather than the button.
+   *
+   * `enoughPlayers` is worked out far below, after the early returns —
+   * handleStartGame is declared above it and closes over nothing useful. A
+   * ref carries the answer down: the button's disabled state is the first
+   * line of defence, this is the one that holds when the picker auto-starts
+   * or the last guest leaves between the tap and the write.
+   */
+  const enoughPlayersRef = useRef(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
   const [isTVModeEnabled, setIsTVModeEnabled] = useState(() => searchParams.get("tvMode") === "true");
@@ -374,6 +401,13 @@ export function RoomLobbyV2() {
 
   const handleStartGame = async () => {
     if (!currentRoom) return;
+    // The button is disabled for this, but the category picker can start a
+    // round on its own (startAfterPick) and the last player can leave between
+    // the tap and the write.
+    if (!enoughPlayersRef.current) {
+      toast.error(t("extra.rlNeedsSecondPlayer"));
+      return;
+    }
 
     // When rounds are queued and no current category/trivia is selected
     // (adding to the queue clears the room's current selection), start from
@@ -754,12 +788,19 @@ export function RoomLobbyV2() {
    * for a second person to accept.
    */
   const seatedPlayers = participants.filter((p) => (p.status as string) !== "invited").length;
-  // A round needs somebody who can ANSWER. The host plays a random or a
-  // library category, so a lone host can start — a solo round is a real
-  // game — but a host who knows their own trivia's answers sits out
-  // (willBeObserver), and then the room needs one more seat filled.
+  // A room is two people. A lone host used to be allowed to start — a solo
+  // round IS a real game — but this room is not where you play one: there is
+  // a whole library to play by yourself, and a quick VS if you want an
+  // opponent found for you. What a room is FOR is the people you asked into
+  // it, and starting without them turned an empty lobby into a game nobody
+  // else was in (owner's ask).
+  //
+  // Counted in answerers, not seats: a host who knows their own trivia's
+  // answers sits out of it (willBeObserver), so that room needs two guests
+  // rather than one.
   const answeringPlayers = seatedPlayers - (willBeObserver ? 1 : 0);
-  const enoughPlayers = answeringPlayers >= 1;
+  const enoughPlayers = answeringPlayers >= 2;
+  enoughPlayersRef.current = enoughPlayers;
   const canStartGame = participants.length >= 1;
   const roomGradient = getGradientById(currentRoom?.background_gradient);
   const roomName = currentRoom.room_name || t("extra.gameRoomDefault");
@@ -819,6 +860,24 @@ export function RoomLobbyV2() {
       .eq("id", currentRoom.id);
   };
   const isPublicRoom = Boolean((currentRoom as { is_public?: boolean }).is_public);
+  /**
+   * Who may walk in.
+   *
+   * Every published room used to be a door you knocked on: tap Join, an ask
+   * goes to the host, and until they look at their phone you sit on a card
+   * that says "Waiting" — for a room whose whole point is being listed where
+   * strangers can find it. Open is the default now, and vetting arrivals is
+   * the host's choice. The server decides it either way
+   * (request_room_join); this row only says which.
+   */
+  const needsApproval = Boolean((currentRoom as { requires_approval?: boolean }).requires_approval);
+  const setApproval = async (value: string) => {
+    if (!isHost || !hasApprovalColumn) return;
+    await supabase
+      .from("game_rooms")
+      .update({ requires_approval: value === "ask" })
+      .eq("id", currentRoom.id);
+  };
 
   /**
    * The room's face, beside its name.
@@ -855,6 +914,21 @@ export function RoomLobbyV2() {
       value: isPublicRoom ? "public" : "private",
       onChange: isHost ? (v) => void setVisibility(v) : undefined,
     },
+    // Only a PUBLIC room has a door worth guarding. A private one is joined
+    // with its code, and whoever handed that over has already said yes — so
+    // the row would be a switch with nothing on the other side of it.
+    ...(isPublicRoom && hasApprovalColumn
+      ? [{
+          key: "joining",
+          label: t("lobby.uJoining"),
+          options: [
+            { value: "open", label: t("extra.roomJoinOpen") },
+            { value: "ask", label: t("extra.roomJoinAsk") },
+          ],
+          value: needsApproval ? "ask" : "open",
+          onChange: isHost ? (v: string) => void setApproval(v) : undefined,
+        } satisfies LobbyRuleRow]
+      : []),
   ];
 
   return (

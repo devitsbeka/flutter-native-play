@@ -88,8 +88,36 @@ export async function teamNameFields(
   };
 }
 
+/**
+ * Same story again: `requires_approval` decides whether a published room is
+ * open or has a doorman, and until 20260930100000_open_rooms.sql is pasted
+ * the column does not exist.
+ *
+ * This one is read by the lobby rather than written on create — the column
+ * defaults to false, so a room made before the migration is already open —
+ * and the row is HIDDEN while the column is missing. Offering a switch that
+ * silently writes nothing is worse than not offering it: the host would set
+ * it, watch it snap back, and conclude the room is broken.
+ */
+let approvalProbe: Promise<boolean> | null = null;
+
+export function gameRoomsHasApproval(): Promise<boolean> {
+  if (!approvalProbe) {
+    approvalProbe = (async () => {
+      try {
+        const { error } = await supabase.from("game_rooms").select("requires_approval").limit(1);
+        return !error;
+      } catch {
+        return false;
+      }
+    })();
+  }
+  return approvalProbe;
+}
+
 /** Test seam: forget what was probed. */
 export function resetRoomVisibilityProbe(): void {
   probe = null;
   namesProbe = null;
+  approvalProbe = null;
 }

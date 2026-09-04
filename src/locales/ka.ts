@@ -1859,6 +1859,7 @@ export const ka = {
     uPlayersTab: "მოთამაშეები",
     uQuestionsPerRound: "კითხვები რაუნდში",
     uVisibility: "ხილვადობა",
+    uJoining: "შემოსვლა",
     uInviteHint: "მოიწვიე მეგობარი — თამაშს ორი მოთამაშე სჭირდება",
     uSelectCategory: "აირჩიე კატეგორია",
     // რაუნდების რიგი — თითო კატეგორია თითო რაუნდზე, თამაშის თანმიმდევრობით.
@@ -2508,6 +2509,8 @@ export const ka = {
     tabPublic: "საჯარო",
     tabPrivate: "პირადი",
     roomPublic: "საჯარო",
+    roomJoinOpen: "თავისუფალი",
+    roomJoinAsk: "დადასტურებით",
     roomPrivate: "პირადი",
     roomPublicHint: "ოთახი გამოჩნდება საჯარო სიაში — შემოსვლის ნებართვას შენ იძლევი.",
     roomPrivateHint: "ოთახში მხოლოდ კოდით, ბმულით ან შენი მოწვევით შემოვლენ.",

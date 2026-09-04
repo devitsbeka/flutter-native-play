@@ -794,6 +794,7 @@ export type Database = {
           last_activity_at: string | null
           max_players: number | null
           min_players: number | null
+          requires_approval: boolean
           room_code: string
           room_icon: string | null
           room_name: string | null
@@ -832,6 +833,7 @@ export type Database = {
           last_activity_at?: string | null
           max_players?: number | null
           min_players?: number | null
+          requires_approval?: boolean
           room_code: string
           room_icon?: string | null
           room_name?: string | null
@@ -870,6 +872,7 @@ export type Database = {
           last_activity_at?: string | null
           max_players?: number | null
           min_players?: number | null
+          requires_approval?: boolean
           room_code?: string
           room_icon?: string | null
           room_name?: string | null

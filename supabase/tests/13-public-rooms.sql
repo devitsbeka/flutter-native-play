@@ -519,4 +519,88 @@ BEGIN
   PERFORM pg_temp.as_user(NULL);
 END $$;
 
+-- ── an open room seats you; a guarded one still asks ──────────────────────
+--
+-- The whole point of the new column, executed. Publishing a room shows it to
+-- everyone; whether that also OPENS it is the host's choice, and the default
+-- is open. The claim worth testing is that the choice is the server's to
+-- enforce — not the button's.
+
+DO $$
+DECLARE
+  v_host uuid := 'bc000000-0000-0000-0000-00000000004a';
+  v_open uuid := 'bc000000-0000-0000-0000-00000000004b';
+  v_ask  uuid := 'bc000000-0000-0000-0000-00000000004c';
+  v_room uuid;
+  v_shut uuid;
+  v_priv uuid;
+  v_out  text;
+BEGIN
+  INSERT INTO auth.users (id, email) VALUES
+    (v_host, 'host4@pub.test'), (v_open, 'open@pub.test'), (v_ask, 'ask@pub.test')
+  ON CONFLICT (id) DO NOTHING;
+  INSERT INTO public.profiles (user_id, nickname) VALUES
+    (v_host, 'Host4'), (v_open, 'Walker'), (v_ask, 'Knocker')
+  ON CONFLICT (user_id) DO UPDATE SET nickname = EXCLUDED.nickname;
+
+  -- Default: a published room is open.
+  INSERT INTO public.game_rooms (room_code, host_user_id, status, is_public)
+  VALUES ('PUBOP1', v_host, 'waiting', true) RETURNING id INTO v_room;
+  INSERT INTO public.room_participants (room_id, user_id, nickname, is_host, status)
+  VALUES (v_room, v_host, 'Host4', true, 'joined');
+  PERFORM pg_temp.must_equal(
+    (SELECT requires_approval FROM public.game_rooms WHERE id = v_room),
+    false, 'a published room is open unless its host says otherwise');
+
+  SET LOCAL ROLE authenticated;
+  PERFORM pg_temp.as_user(v_open);
+  v_out := public.request_room_join(v_room);
+  RESET ROLE;
+  PERFORM pg_temp.must_equal(v_out, 'joined', 'an open room seats the caller');
+  PERFORM pg_temp.must_equal(
+    (SELECT count(*) FROM public.room_participants
+      WHERE room_id = v_room AND user_id = v_open AND status = 'joined'),
+    1::bigint, 'and the seat is real');
+  PERFORM pg_temp.must_equal(
+    (SELECT count(*) FROM public.room_join_requests WHERE room_id = v_room),
+    0::bigint, 'with nothing left waiting on the host');
+
+  -- The same room with the switch on: back to knocking.
+  INSERT INTO public.game_rooms (room_code, host_user_id, status, is_public, requires_approval)
+  VALUES ('PUBAS1', v_host, 'waiting', true, true) RETURNING id INTO v_shut;
+  INSERT INTO public.room_participants (room_id, user_id, nickname, is_host, status)
+  VALUES (v_shut, v_host, 'Host4', true, 'joined');
+
+  SET LOCAL ROLE authenticated;
+  PERFORM pg_temp.as_user(v_ask);
+  v_out := public.request_room_join(v_shut);
+  RESET ROLE;
+  PERFORM pg_temp.must_equal(v_out, 'pending', 'a guarded room still asks');
+  PERFORM pg_temp.must_equal(
+    (SELECT count(*) FROM public.room_participants WHERE room_id = v_shut AND user_id = v_ask),
+    0::bigint, 'and seats nobody until the host says yes');
+
+  -- Open is about PUBLISHED rooms. A private room is joined with its code,
+  -- and this door stays shut whatever the column says.
+  INSERT INTO public.game_rooms (room_code, host_user_id, status, is_public, requires_approval)
+  VALUES ('PRVOP1', v_host, 'waiting', false, false) RETURNING id INTO v_priv;
+  SET LOCAL ROLE authenticated;
+  PERFORM pg_temp.as_user(v_open);
+  PERFORM pg_temp.must_fail(
+    format('SELECT public.request_room_join(%L)', v_priv),
+    'an open flag does not publish a private room');
+  RESET ROLE;
+
+  -- A full room turns everyone away, however friendly its door.
+  UPDATE public.game_rooms SET max_players = 2 WHERE id = v_room;
+  SET LOCAL ROLE authenticated;
+  PERFORM pg_temp.as_user(v_ask);
+  PERFORM pg_temp.must_fail(
+    format('SELECT public.request_room_join(%L)', v_room),
+    'a full open room seats nobody');
+  RESET ROLE;
+
+  PERFORM pg_temp.as_user(NULL);
+END $$;
+
 DO $$ BEGIN RAISE NOTICE 'all public-room assertions passed'; END $$;
