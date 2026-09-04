@@ -63,8 +63,18 @@ describe("it is visible while scrolling, above the play button", () => {
     // The 90px face stands 22px proud of the bar (marginTop -42 against
     // py-5), and the plays-remaining badge another 8px above that.
     expect(nav).toMatch(/marginTop: -42/);
-    expect(button).toMatch(/absolute left-1\/2 -translate-x-1\/2/);
     expect(button).toMatch(/bottom: "calc\(100% \+ 36px\)"/);
+  });
+
+  it("centred by a box, not by a class the animation overwrites", () => {
+    // `left-1/2 -translate-x-1/2` on the button itself did not survive:
+    // framer writes the animated transform inline, an inline transform beats
+    // a class, and the button sat half its own width right of centre.
+    expect(button).toMatch(/pointer-events-none absolute inset-x-0 z-\[70\] flex justify-center/);
+    // (the class name survives in the comment above it, explaining why)
+    expect(button).not.toMatch(/className="[^"]*-translate-x-1\/2/);
+    // Full width, so it must not eat taps meant for the cards behind it.
+    expect(button).toMatch(/pointer-events-auto flex h-8 w-8/);
   });
 
   it("shows only once there is something to come back from", () => {

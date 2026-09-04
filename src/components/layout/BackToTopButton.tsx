@@ -86,28 +86,45 @@ export function BackToTopButton() {
   }, []);
 
   return (
-    <AnimatePresence>
-      {visible && (
-        <motion.button
-          type="button"
-          onClick={toTop}
-          aria-label={t("common.backToTop")}
-          initial={{ opacity: 0, y: 10, scale: 0.8 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 10, scale: 0.8 }}
-          // whileTap, not active:scale-95 — framer writes the transform
-          // inline, and an inline transform beats the class.
-          whileTap={{ scale: 0.9 }}
-          transition={{ type: "spring", stiffness: 420, damping: 26 }}
-          // Centred on the play button and clear of the plays-remaining badge
-          // above it: the centre button's 90px face already stands 22px proud
-          // of the bar, and its badge another 8px above that.
-          className="absolute left-1/2 -translate-x-1/2 z-[70] flex h-10 w-10 items-center justify-center rounded-full border border-black/5 bg-white"
-          style={{ bottom: "calc(100% + 36px)", boxShadow: "0 4px 14px rgba(0,0,0,0.16)" }}
-        >
-          <ChevronUp className="h-6 w-6 text-[#7126d5]" strokeWidth={3} />
-        </motion.button>
-      )}
-    </AnimatePresence>
+    // The centring lives on this box, not on the button.
+    //
+    // `left-1/2 -translate-x-1/2` on the button itself did not survive:
+    // framer writes the animated transform inline, and an inline transform
+    // beats a class, so the -50% was dropped and the button sat half its own
+    // width right of centre — visibly leaning on the play button. A plain
+    // flex row centres it with no transform to lose, and leaves the button's
+    // transform entirely to the animation.
+    //
+    // Full width and click-through, so the strip it spans does not take taps
+    // meant for the cards behind it.
+    //
+    // 36px up: the centre button's 90px face already stands 22px proud of the
+    // bar (marginTop -42 against the row's py-5), and on the home screen its
+    // plays-remaining badge another 8px above that — so this clears the badge
+    // by 6px and reads as sitting on top of the button everywhere else.
+    <div
+      className="pointer-events-none absolute inset-x-0 z-[70] flex justify-center"
+      style={{ bottom: "calc(100% + 36px)" }}
+    >
+      <AnimatePresence>
+        {visible && (
+          <motion.button
+            type="button"
+            onClick={toTop}
+            aria-label={t("common.backToTop")}
+            initial={{ opacity: 0, y: 10, scale: 0.8 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.8 }}
+            // whileTap, not active:scale-95 — same inline-transform rule.
+            whileTap={{ scale: 0.9 }}
+            transition={{ type: "spring", stiffness: 420, damping: 26 }}
+            className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-full border border-black/5 bg-white"
+            style={{ boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}
+          >
+            <ChevronUp className="h-[18px] w-[18px] text-[#7126d5]" strokeWidth={3} />
+          </motion.button>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
