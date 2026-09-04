@@ -1890,12 +1890,14 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
               icon={iconWordsBoard}
               onBack={() => setPreLobby(null)}
               unreadCount={unreadCount}
+              onBell={() => navigate("/notifications")}
               labels={{
                 rules: t("lobby.uGameRules"),
                 players: t("lobby.uPlayersTab"),
                 invite: t("lobby.uInvite"),
                 you: t("lobby.uYou"),
                 rounds: (count) => t("lobby.uRoundsShort", { count }),
+                notifications: t("extra.notifications"),
               }}
               // Words publishes no room and picks no category or TV, so
               // the rules tab states what the game is: one board, alone

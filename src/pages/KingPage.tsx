@@ -818,12 +818,14 @@ export default function KingPage() {
         onRename={isKingHost ? () => setRenameOpen(true) : undefined}
         onBack={() => navigate(-1)}
         unreadCount={unreadCount}
+        onBell={() => navigate("/notifications")}
         labels={{
           rules: t("lobby.uGameRules"),
           players: t("lobby.uPlayersTab"),
           invite: t("lobby.uInvite"),
           you: t("lobby.uYou"),
           rounds: (count) => t("lobby.uRoundsShort", { count }),
+          notifications: t("extra.notifications"),
           captain: t("lobby.captainLabel"),
         }}
         // No visibility row. Versus King is friends-only by decision, so the

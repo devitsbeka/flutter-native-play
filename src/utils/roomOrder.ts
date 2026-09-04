@@ -14,12 +14,24 @@
  * it is worthless where it lands by default — invites tend to arrive for old
  * rooms, whose recency is months stale, so the room you were just asked into
  * sorted below every room you happened to open yesterday.
+ *
+ * And above all of it: a room of yours whose whole roster is in the app right
+ * now. That is the one room on the list you can walk back into and play in
+ * this minute — everybody else is already there — and by recency it sorted
+ * wherever it happened to fall.
  */
 export interface OrderableRoom {
   created_at?: string | null;
   last_activity_at?: string | null;
   hasLiveTV?: boolean;
   hasPendingInvite?: boolean;
+  /**
+   * Everyone seated in it is online, and there is somebody besides you.
+   *
+   * Not "someone is online": a room with one of four present is a room you
+   * would sit and wait in. This is the one you can rejoin and start.
+   */
+  hasFullRoster?: boolean;
 }
 
 export function roomRecency(room: OrderableRoom): number {
@@ -29,6 +41,7 @@ export function roomRecency(room: OrderableRoom): number {
 }
 
 export function compareRooms(a: OrderableRoom, b: OrderableRoom): number {
+  if (!!a.hasFullRoster !== !!b.hasFullRoster) return a.hasFullRoster ? -1 : 1;
   if (!!a.hasPendingInvite !== !!b.hasPendingInvite) return a.hasPendingInvite ? -1 : 1;
   if (!!a.hasLiveTV !== !!b.hasLiveTV) return a.hasLiveTV ? -1 : 1;
   return roomRecency(b) - roomRecency(a);

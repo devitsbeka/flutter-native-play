@@ -815,6 +815,7 @@ export function RoomLobbyV2() {
       onRename={isHost ? () => setShowIconPicker(true) : undefined}
       onBack={handleExitRoom}
       unreadCount={unreadCount}
+      onBell={() => navigate("/notifications")}
       category={{
         // One queued topic still reads as itself; several read as how many,
         // because no chip can carry three names and the count is the thing
@@ -845,6 +846,7 @@ export function RoomLobbyV2() {
         invite: t("lobby.uInvite"),
         you: t("lobby.uYou"),
         rounds: (count) => t("lobby.uRoundsShort", { count }),
+        notifications: t("extra.notifications"),
       }}
       rules={lobbyRules}
       players={lobbyPlayers}

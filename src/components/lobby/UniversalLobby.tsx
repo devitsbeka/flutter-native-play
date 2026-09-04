@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { ArrowLeft, Bell, Loader2, Pencil, Play, Plus } from "lucide-react";
+import { ArrowLeft, Bell, BellRing, Loader2, Pencil, Play, Plus } from "lucide-react";
 import SpotlightSearch from "@/components/search/SpotlightSearch";
 import { cn } from "@/lib/utils";
 import bgBlob1 from "@/assets/tb-lobby/bg-blob-1.jpg";
@@ -53,6 +53,16 @@ export interface LobbyPlayer {
   isCaptain?: boolean;
   /** Tapping the armband — the vote, on the modes that elect one. */
   onCaptainPress?: () => void;
+  /**
+   * Seated, but not in the app.
+   *
+   * A room waits on people who have wandered off, and from inside it that
+   * is invisible: their row looks exactly like everyone else's, so the
+   * host waits, and waits. Marked here, with a bell that pings them back.
+   */
+  offline?: boolean;
+  /** Ping an absent player. Absent when there is nobody to call. */
+  onCall?: () => void;
   /** For the row's tap: a profile, a seat menu. */
   onPress?: () => void;
 }
@@ -93,6 +103,8 @@ export interface UniversalLobbyProps {
   onRename?: () => void;
   onBack: () => void;
   unreadCount?: number;
+  /** The bell. Without it the header's badge is decoration. */
+  onBell?: () => void;
   /** The left chip. Hidden when the mode has no category to pick. */
   category?: { label: string; onPress?: () => void };
   /** The right chip. Hidden when the mode cannot play on a TV. */
@@ -107,6 +119,10 @@ export interface UniversalLobbyProps {
     rounds: (count: number) => string;
     /** Read out for the armband; the mark itself carries no text. */
     captain?: string;
+    /** Read out for the bell. */
+    notifications?: string;
+    /** Read out for the bell on an absent player's row. */
+    call?: string;
   };
   /**
    * How the benches are laid out.
@@ -168,6 +184,7 @@ export function UniversalLobby({
   onRename,
   onBack,
   unreadCount = 0,
+  onBell,
   category,
   tv,
   labels,
@@ -255,7 +272,18 @@ export function UniversalLobby({
           </motion.button>
           <div className="flex items-center gap-1">
             <SpotlightSearch variant="button" />
-            <span className="relative flex h-10 w-10 items-center justify-center rounded-full">
+            {/* It was a <span>. Every other header in the app opens the
+                notifications from here; in a lobby the bell counted them,
+                showed the badge, and did nothing at all when pressed —
+                which is exactly where an invitation or a join request is
+                most likely to be waiting. */}
+            <motion.button
+              type="button"
+              whileTap={{ scale: 0.9 }}
+              onClick={onBell}
+              aria-label={labels.notifications ?? "Notifications"}
+              className="relative flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-white/30"
+            >
               <Bell className="h-5 w-5 text-[#4b5563]" />
               {unreadCount > 0 && (
                 <span
@@ -268,7 +296,7 @@ export function UniversalLobby({
                   {unreadCount > 9 ? "9+" : unreadCount}
                 </span>
               )}
-            </span>
+            </motion.button>
           </div>
         </div>
       </motion.header>
@@ -288,7 +316,12 @@ export function UniversalLobby({
             </motion.div>
           )}
 
-          <div className="min-h-[36px] flex-1" />
+          {/* The breathing room over the title. It was 36px and a flex-1
+              that ate every spare pixel, which on the arena pushed the card
+              — the whole point of the screen — under the fold, so the second
+              bench and the Start caption were a scroll away. 12px and a much
+              weaker claim on the slack. */}
+          <div className="min-h-[12px] flex-[0.35]" />
 
           {/* The room's name (1018:6828): Slackey, 52 on 62, two lines, with
               the room's own face beside it. The icon rides INSIDE the rename
@@ -316,7 +349,7 @@ export function UniversalLobby({
           <motion.section
             {...arrive(0.36)}
             className={cn(
-              "relative mb-[7px] mt-[35px] w-full shrink-0 overflow-clip rounded-[24px_24px_54px_24px] border-2 border-[rgba(255,255,255,0.6)] bg-[rgba(252,247,255,0.6)] px-[9px] pt-[9px]",
+              "relative mb-[7px] mt-[16px] w-full shrink-0 overflow-clip rounded-[24px_24px_54px_24px] border-2 border-[rgba(255,255,255,0.6)] bg-[rgba(252,247,255,0.6)] px-[9px] pt-[9px]",
               CARD_SHADOW,
               tab === "rules" ? "pb-[50px]" : "pb-[31px]",
             )}
@@ -400,7 +433,12 @@ export function UniversalLobby({
                         <div
                           key={group.key}
                           className="flex min-w-0 flex-col gap-[8px]"
-                          style={{ gridColumn: i === 0 ? 1 : 3 }}
+                          // Row 1 explicitly, all three of them. Grid's
+                          // auto-placement is sparse: naming columns 1 and 3
+                          // and leaving 2 for a later child put that child on
+                          // a row of its own, which is how the VS ended up
+                          // under both benches instead of between them.
+                          style={{ gridColumn: i === 0 ? 1 : 3, gridRow: 1 }}
                         >
                           {group.title}
                           {group.players.map((p) => (
@@ -410,15 +448,19 @@ export function UniversalLobby({
                               youLabel={labels.you}
                               roundsLabel={labels.rounds}
                               captainLabel={labels.captain ?? "Captain"}
+                              callLabel={labels.call ?? "Call"}
                               compact
                             />
                           ))}
                           {group.footer}
                         </div>
                       ))}
+                      {/* Level with the crests, which are the first 52px of
+                          each heading — that is the line the eye reads the
+                          two sides across. */}
                       <p
-                        style={{ gridColumn: 2 }}
-                        className="mt-[40px] text-center font-hero text-[20px] leading-[24px] text-[#d8b2e8]"
+                        style={{ gridColumn: 2, gridRow: 1 }}
+                        className="mt-[14px] self-start text-center font-hero text-[20px] leading-[24px] text-[#d8b2e8]"
                       >
                         VS
                       </p>
@@ -434,6 +476,7 @@ export function UniversalLobby({
                             youLabel={labels.you}
                             roundsLabel={labels.rounds}
                             captainLabel={labels.captain ?? "Captain"}
+                            callLabel={labels.call ?? "Call"}
                           />
                         ))}
                         {group.footer}
@@ -620,23 +663,23 @@ function RoomTitle({
   );
   if (!icon) return heading;
   return (
-    // The face sits above the name, not beside it. Beside it, a 68px emblem
-    // took a fifth of the width from a 52px hero line that already wraps to
-    // two lines on a phone, so the name broke earlier than it needed to and
-    // the two competed for the same row. Stacked, both start at the same left
-    // edge and the name gets the full column.
-    <div className="flex flex-col items-start gap-2">
+    // One row, icon and name together. It was stacked for a while, and that
+    // was the right call against a 52px hero line — a 44px emblem above it
+    // cost nothing where a 68px one beside it took a fifth of the width. The
+    // line is 34px now: the pair fits across, and stacked it was spending a
+    // whole row of a short screen on an icon.
+    <div className="flex items-center gap-2.5">
       <span className="relative shrink-0">
         <img
           alt=""
           src={icon}
-          className="size-[52px] object-contain drop-shadow-[0_4px_10px_rgba(88,50,160,0.22)]"
+          className="size-[44px] object-contain drop-shadow-[0_4px_10px_rgba(88,50,160,0.22)]"
         />
         {/* The pencil says the icon is the host's to change; a guest, and a
             room whose face is fixed by the game it plays, get the art alone. */}
         {editable && (
-          <span className="absolute -bottom-0.5 -right-0.5 flex size-[22px] items-center justify-center rounded-full bg-white shadow-[0px_2px_4px_rgba(0,0,0,0.18)]">
-            <Pencil className="h-3 w-3 text-[#523b76]" />
+          <span className="absolute -bottom-0.5 -right-0.5 flex size-[18px] items-center justify-center rounded-full bg-white shadow-[0px_2px_4px_rgba(0,0,0,0.18)]">
+            <Pencil className="h-2.5 w-2.5 text-[#523b76]" />
           </span>
         )}
       </span>
@@ -732,12 +775,14 @@ function PlayerRow({
   youLabel,
   roundsLabel,
   captainLabel,
+  callLabel,
   compact = false,
 }: {
   player: LobbyPlayer;
   youLabel: string;
   roundsLabel: (count: number) => string;
   captainLabel: string;
+  callLabel: string;
   /** Half the width to work in: two benches share the card. */
   compact?: boolean;
 }) {
@@ -785,6 +830,9 @@ function PlayerRow({
           className={cn(
             "block overflow-hidden rounded-full bg-[#e9d8ff] shadow-[0px_0px_0px_2px_rgba(148,163,184,0.75)]",
             compact ? "h-9 w-9" : "h-12 w-12",
+            // Away, not gone. Greyed rather than hidden: the seat is still
+            // theirs and the room is still waiting on it.
+            player.offline && "opacity-45 grayscale",
           )}
         >
           {player.avatarUrl && <img alt="" src={player.avatarUrl} className="h-full w-full object-cover" />}
@@ -843,6 +891,25 @@ function PlayerRow({
     )
   ) : null;
 
+  // The bell on an absent player's own row: the fastest way to ask for the
+  // one thing the room is waiting on. It is a control of its own, beside
+  // the row's tap rather than inside it.
+  const call =
+    player.offline && player.onCall ? (
+      <motion.button
+        type="button"
+        whileTap={{ scale: 0.92 }}
+        onClick={player.onCall}
+        aria-label={callLabel}
+        className={cn(
+          "flex shrink-0 items-center justify-center rounded-full bg-amber-400 text-[#402666] shadow-sm",
+          compact ? "ml-1 h-7 w-7" : "ml-2 h-9 w-9",
+        )}
+      >
+        <BellRing className={compact ? "h-3.5 w-3.5" : "h-4 w-4"} strokeWidth={2.5} />
+      </motion.button>
+    ) : null;
+
   return (
     <div
       className={cn(
@@ -853,6 +920,7 @@ function PlayerRow({
       )}
     >
       {Body}
+      {call}
       {armband}
     </div>
   );

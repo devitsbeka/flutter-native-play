@@ -6,7 +6,8 @@ import { UniversalLobby, LobbyInfoRow, type LobbyPlayer, type LobbyPlayerGroup }
 import { LOBBY_SCENES } from "@/utils/lobbyScene";
 import { roomVisibilityFields } from "@/utils/roomVisibility";
 import { useFriends } from "@/hooks/useFriends";
-import { useNotifications } from "@/hooks/useNotifications";
+import { useNotifications, createNotification } from "@/hooks/useNotifications";
+import { useParticipantPresence } from "@/hooks/useParticipantPresence";
 import coinIconAsset from "@/assets/tb-lobby/coin.png";
 import iconBattleCrate from "@/assets/play-chooser/icon-crate.png";
 import { containsBlockedText } from "@/utils/contentFilter";
@@ -202,7 +203,7 @@ function TBGate({ joining }: { joining: boolean }) {
 
 function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null> }) {
   const { t } = useLanguage();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
   const {
     room, participants, pendingInvites, isHost, myTeam, setTeam, refreshRoom,
@@ -578,6 +579,9 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
       isHost: !pending && p.user_id === captain?.user_id,
       isYou: p.user_id === user?.id,
       pending,
+      // A bot is never "away"; neither are you, sitting here reading this.
+      offline: !pending && !p.is_bot && p.user_id !== user?.id && !online.has(p.user_id),
+      onCall: calledIds.has(p.user_id) ? undefined : () => void callBack(p),
       onPress: () => seatTap(p, pending),
     }));
     // The rest of the bench, drawn rather than left out. Both sides show
@@ -665,6 +669,58 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
       });
     };
   }, []);
+
+  /**
+   * Who on the benches is actually in the app.
+   *
+   * From inside a lobby an absent player is invisible: their row looks like
+   * everyone else's, so the host waits on somebody who closed the app ten
+   * minutes ago. Greyed, and given a bell.
+   */
+  const seatedIds = useMemo(
+    () => participants.filter((p) => !p.is_bot).map((p) => p.user_id),
+    [participants],
+  );
+  const { online } = useParticipantPresence(seatedIds);
+
+  /**
+   * Ping an absent teammate back into the room.
+   *
+   * The same road the in-match call takes: a notification, whose tap routes
+   * to this arena, plus a push for a player who has left the app entirely.
+   * One per person per half-minute, and the server throttles as well.
+   */
+  const [calledIds, setCalledIds] = useState<Set<string>>(() => new Set());
+  const callBack = async (target: TBParticipant) => {
+    if (!room || !user || calledIds.has(target.user_id)) return;
+    setCalledIds((prev) => new Set(prev).add(target.user_id));
+    window.setTimeout(
+      () => setCalledIds((prev) => {
+        const next = new Set(prev);
+        next.delete(target.user_id);
+        return next;
+      }),
+      30_000,
+    );
+    const name = profile?.nickname || "";
+    await createNotification(
+      target.user_id,
+      "room_ping",
+      t("teamBattle.pokeNotifTitle", { name: name || "…" }),
+      room.room_code,
+      {
+        kind: "team_poke",
+        room_id: room.id,
+        room_code: room.room_code,
+        game_type_key: "team_battle",
+        sender_nickname: name,
+      },
+    );
+    supabase.functions
+      .invoke("send-social-push", { body: { kind: "team_poke", roomId: room.id } })
+      .catch(() => {});
+    toast.success(t("teamBattle.pokeSent"));
+  };
 
   const inviteFaces = [...friends]
     .filter((f) => f.status === "accepted")
@@ -795,12 +851,15 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
         void leaveRoom();
       }}
       unreadCount={unreadCount}
+      onBell={() => navigate("/notifications")}
       labels={{
         rules: t("lobby.uGameRules"),
         players: t("lobby.uPlayersTab"),
         invite: t("lobby.uInvite"),
         you: t("lobby.uYou"),
         rounds: (count) => t("lobby.uRoundsShort", { count }),
+        notifications: t("extra.notifications"),
+        call: t("teamBattle.poke"),
         captain: t("lobby.captainLabel"),
       }}
       rules={[

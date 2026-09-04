@@ -55,6 +55,8 @@ export interface MyRoom {
     avatar_url: string | null;
   }[];
   has_others_online: boolean;
+  /** Everyone seated is in the app, and it is not only you (see roomOrder). */
+  has_full_roster: boolean;
   // Players actually INSIDE this room (current_page = /room/<id>)
   in_room_participants: {
     user_id: string;
@@ -332,6 +334,11 @@ async function fetchRoomsForUser(userId: string, options?: FetchRoomsOptions): P
       })),
       online_participants: onlineParticipants,
       has_others_online: onlineParticipants.some(p => p.user_id !== userId),
+      // Everyone who has a seat is in the app, and it is not just you: the
+      // one room on this list you can walk back into and play right now.
+      // It sorts to the top (see roomOrder).
+      has_full_roster:
+        participants.length > 1 && onlineParticipants.length === participants.length,
       in_room_participants: inRoomParticipants,
       has_players_in_room: inRoomParticipants.length > 0,
       has_recent_activity: hasRecentActivity,
@@ -544,8 +551,18 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
     // sink during the session it is running.
     result = [...result].sort((a, b) =>
       compareRooms(
-        { ...a, hasLiveTV: isActiveTVSession(a.tv_status), hasPendingInvite: a.has_pending_invite },
-        { ...b, hasLiveTV: isActiveTVSession(b.tv_status), hasPendingInvite: b.has_pending_invite }
+        {
+          ...a,
+          hasLiveTV: isActiveTVSession(a.tv_status),
+          hasPendingInvite: a.has_pending_invite,
+          hasFullRoster: a.has_full_roster,
+        },
+        {
+          ...b,
+          hasLiveTV: isActiveTVSession(b.tv_status),
+          hasPendingInvite: b.has_pending_invite,
+          hasFullRoster: b.has_full_roster,
+        }
       )
     );
 
