@@ -4,6 +4,7 @@ import { CategoryArtwork } from "@/components/shared/CategoryArtwork";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useLocalizedCategoryName } from "@/utils/categoryDisplayName";
 import { getCategoryIconSlug } from "@/data/categoryIconMap";
+import { isUndecidedRound, UNDECIDED_ICON_SLUG } from "@/utils/undecidedRound";
 
 interface RoundCountdownProps {
   /**
@@ -45,8 +46,15 @@ export function RoundCountdown({ number, categoryId, categoryName, iconSlug }: R
   // still resolve on the async lookup; the point of the second slug is that
   // something correct is on screen immediately rather than after a round trip
   // this screen may not live long enough to see.
+  //
+  // A "mixed" or "random" round is the exception: it HAS no category to carry
+  // an icon, so both slugs are empty and DynamicIcon's last resort — a grey
+  // question mark — was the picture the whole app otherwise draws as the
+  // mystery box.
   const mapSlug = categoryId ? getCategoryIconSlug(categoryId) : null;
-  const slug = [iconSlug, mapSlug].filter(Boolean).join(",") || null;
+  const slug = isUndecidedRound(categoryId, categoryName)
+    ? UNDECIDED_ICON_SLUG
+    : [iconSlug, mapSlug].filter(Boolean).join(",") || null;
 
   return (
     <div className="fixed inset-0 z-[120] flex flex-col items-center justify-center gap-6 bg-[#2E1065] px-8 text-center">

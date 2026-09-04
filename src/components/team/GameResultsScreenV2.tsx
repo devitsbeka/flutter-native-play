@@ -25,6 +25,7 @@ import { toast } from "@/lib/toast";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { CategoryPickerModal } from "./CategoryPickerModal";
 import { CategoryArtwork } from "@/components/shared/CategoryArtwork";
+import { isUndecidedRound, UNDECIDED_ICON_SLUG } from "@/utils/undecidedRound";
 import { useCategoryIdentity } from "@/hooks/useCategoryIdentity";
 import { RoomQueueSheet } from "./RoomQueueSheet";
 import { calculateMultiplayerPayout } from "@/utils/multiplayerPayout";
@@ -621,9 +622,17 @@ export function GameResultsScreenV2() {
                 out as a camera and guess-the-city as a banana. Resolving the
                 identity first turns the uuid into the category's own slug and
                 its icon_slug, and the random fallback is never reached. */}
+            {/* A "mixed" or "random" round has no category to carry an icon,
+                so both halves come back empty and DynamicIcon's last resort —
+                a grey question mark — stood in for the one category the rest
+                of the app draws as the mystery box. */}
             <CategoryArtwork
               categoryId={resultsCategory.categoryId ?? currentRoom.category_id}
-              iconSlug={resultsCategory.iconSlug}
+              iconSlug={
+                isUndecidedRound(currentRoom.category_id, currentRoom.category_name)
+                  ? UNDECIDED_ICON_SLUG
+                  : resultsCategory.iconSlug
+              }
               size={24}
               className="drop-shadow-none"
             />
