@@ -33,6 +33,17 @@ interface RoundOrderModalProps {
   open: boolean;
   onClose: () => void;
   items: QueueItem[];
+  /**
+   * The round the room is already holding, when that is what plays first.
+   *
+   * It is not a queue row — it lives on the room itself — so the list used to
+   * leave it out entirely and number the queue from 1. That made the lobby's
+   * chip and this list disagree about which category opens the game, and
+   * about how many rounds there are: the chip counted this one, the list did
+   * not. Pinned at the top, not draggable and not removable, because there is
+   * no queue row to move or delete.
+   */
+  current?: { name: string; iconSlug?: string | null } | null;
   /** The host orders the rounds; everyone else reads them. */
   canEdit: boolean;
   onReorder: (next: QueueItem[]) => void | Promise<unknown>;
@@ -45,6 +56,7 @@ export function RoundOrderModal({
   open,
   onClose,
   items,
+  current,
   canEdit,
   onReorder,
   onRemove,
@@ -100,6 +112,26 @@ export function RoundOrderModal({
               {canEdit ? t("lobby.uRoundsHint") : t("lobby.uRoundsHintGuest")}
             </p>
 
+            {/* The room's own round, when it has one: round 1, fixed. */}
+            {current && (
+              <div className="mb-2 flex items-center gap-3 rounded-xl bg-card px-3 py-3 shadow-sm">
+                <span className="w-5 shrink-0 text-center text-sm font-bold tabular-nums text-muted-foreground">
+                  1
+                </span>
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted">
+                  <DynamicIcon slug={current.iconSlug ?? undefined} size={26} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[15px] font-bold text-foreground">
+                    {current.name}
+                  </span>
+                  <span className="block text-xs text-muted-foreground">
+                    {t("lobby.uRoundLabel", { count: 1 })}
+                  </span>
+                </span>
+              </div>
+            )}
+
             <Reorder.Group
               axis="y"
               values={order}
@@ -118,24 +150,33 @@ export function RoundOrderModal({
                     void onReorder(order);
                   }}
                   onRemove={() => void onRemove(item.id)}
-                  roundLabel={t("lobby.uRoundLabel", { count: index + 1 })}
+                  roundLabel={t("lobby.uRoundLabel", { count: index + 1 + (current ? 1 : 0) })}
                 />
               ))}
             </Reorder.Group>
 
-            {canEdit && (
+          </div>
+        </div>
+
+        {/* Add sits UNDER the scroller, not in it.
+            A twelve-round room pushed it off the bottom of the screen, so the
+            one control this sheet exists to offer was the one thing you had to
+            scroll a list of twelve to reach. The rounds scroll; this does not. */}
+        {canEdit && (
+          <div className="shrink-0 px-4 pb-[calc(1rem_+_var(--safe-bottom))] pt-2">
+            <div className="mx-auto w-full max-w-[520px]">
               <motion.button
                 type="button"
                 onClick={onAdd}
                 whileTap={{ scale: 0.98 }}
-                className="mt-3 flex min-h-[56px] w-full items-center justify-center gap-2 rounded-xl border border-dashed border-primary/50 text-[15px] font-semibold text-primary"
+                className="flex min-h-[56px] w-full items-center justify-center gap-2 rounded-xl border border-dashed border-primary/50 bg-background/80 text-[15px] font-semibold text-primary backdrop-blur-sm"
               >
                 <Plus className="h-5 w-5" />
                 {t("lobby.uAddRounds")}
               </motion.button>
-            )}
+            </div>
           </div>
-        </div>
+        )}
       </motion.div>
     </AnimatePresence>
   );

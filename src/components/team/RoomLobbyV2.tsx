@@ -770,6 +770,30 @@ export function RoomLobbyV2() {
   // Only offer "choose a category" when there's truly nothing to play
   const needsCategorySelection = !hasContent;
 
+  /**
+   * What the room plays first, and how many rounds it has.
+   *
+   * The chip and the round list used to work this out separately and get
+   * different answers: the chip counted the room's own held round plus the
+   * queue, the list showed the queue alone. So a room with a category and
+   * eleven queued topics said "+11" on the chip (twelve rounds) over a list
+   * numbered 1 to 11, and the two named different categories as round one.
+   *
+   * One answer now, computed here and handed to both. It follows the same
+   * rule handleStartGame does: a room holding an explicit selection plays it
+   * first and the queue follows; otherwise the queue's head opens.
+   */
+  const heldRound = (currentRoom.category_id || currentRoom.user_trivia_id)
+    ? {
+        name: currentRoom.category_name || t("extra.categoryType"),
+        iconSlug:
+          iconForCategoryName(currentRoom.category_name)
+          || getCategoryIconSlug(currentRoom.category_id ?? "")
+          || null,
+      }
+    : null;
+  const totalRounds = (heldRound ? 1 : 0) + queue.length;
+
   const handleStartOrPick = () => {
     if (needsCategorySelection) {
       // No content or returned from game - just open picker (no auto-start)
@@ -904,20 +928,19 @@ export function RoomLobbyV2() {
         // Just the FIRST round on the chip, with its category's own icon and
         // a "(+N)" when more are queued (owner's ask). The first round is the
         // room's own category if it has one, else the head of the queue.
-        const hasCurrent = !!(currentRoom.category_id || currentRoom.user_trivia_id);
         const firstQueue = queue[0];
-        const rounds = (hasCurrent ? 1 : 0) + queue.length;
+        const rounds = totalRounds;
         const extra = rounds - 1;
-        const freshStart = justReturnedFromResults && !madeNewSelection && queue.length === 0 && !hasCurrent;
-        const firstName = hasCurrent
-          ? currentRoom.category_name
+        const freshStart = justReturnedFromResults && !madeNewSelection && queue.length === 0 && !heldRound;
+        const firstName = heldRound
+          ? heldRound.name
           : firstQueue
             ? (firstQueue.source_type === "random"
                 ? t("extra.cpRandomTitle")
                 : localizeQueueCategory(firstQueue.category_name) || t("extra.categoryType"))
             : null;
-        const firstIconSlug = hasCurrent
-          ? (iconForCategoryName(currentRoom.category_name) || getCategoryIconSlug(currentRoom.category_id ?? "") || undefined)
+        const firstIconSlug = heldRound
+          ? (heldRound.iconSlug ?? undefined)
           : (firstQueue?.icon_slug ?? undefined);
         return {
           label: freshStart || !firstName ? t("lobby.uSelectCategory") : firstName,
@@ -1176,6 +1199,9 @@ export function RoomLobbyV2() {
         open={showRoundOrder}
         onClose={() => setShowRoundOrder(false)}
         items={queue}
+        // The same round the chip names — so the list's "1" and the chip
+        // cannot disagree about which category opens the game.
+        current={heldRound}
         canEdit={isHost}
         onReorder={reorderQueue}
         onRemove={removeFromQueue}
