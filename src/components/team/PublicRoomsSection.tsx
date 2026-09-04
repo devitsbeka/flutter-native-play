@@ -15,7 +15,7 @@ import { useFriends } from "@/contexts/FriendsContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { onlineUserIds } from "@/utils/presence";
 import { motion } from "framer-motion";
-import { Globe, Loader2, Users, Clock, Trash2, LogOut, X, UserPlus, Check } from "lucide-react";
+import { Globe, Loader2, Users, Clock, Trash2, LogOut, X, UserPlus } from "lucide-react";
 import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
 import { GradientBackground, ROOM_GRADIENT_PRESETS } from "@/components/ui/noisy-gradient-backgrounds";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
@@ -424,15 +424,12 @@ function PublicRoomCard({
                 if (inside) enter();
                 else onAsk(room);
               }}
-              className={`relative flex items-center gap-1.5 shrink-0 rounded-xl px-3.5 py-2 text-sm font-extrabold disabled:opacity-60 ${
+              className={`relative flex items-center gap-1.5 shrink-0 px-4 py-2 text-sm font-extrabold disabled:opacity-60 ${
                 ready
-                  ? "text-white bg-gradient-to-b from-[#34d399] to-[#059669] shadow-[0_3px_0_0_#047857,0_6px_16px_rgba(5,150,105,0.4)] active:translate-y-[2px] active:shadow-[0_1px_0_0_#047857]"
-                  : "bg-white/70 backdrop-blur-md text-[#2E1065] shadow-md"
+                  ? "rounded-[24px] bg-[#81f0c3] border-b-4 border-[#2bc889] text-[#320c69] active:translate-y-[2px] active:border-b-2"
+                  : "rounded-xl bg-white/70 backdrop-blur-md text-[#2E1065] shadow-md"
               }`}
             >
-              {ready && (
-                <span className="pointer-events-none absolute left-2 right-2 top-[3px] h-px rounded-full bg-white/50" />
-              )}
               {busy ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
               ) : waiting ? (
@@ -442,20 +439,19 @@ function PublicRoomCard({
                 </>
               ) : (
                 <>
-                  {/* Ready wears a check; a merely-live room a green dot;
-                      a sleeping one nothing rather than a lie. */}
-                  {ready && <Check className="w-4 h-4" strokeWidth={3} />}
+                  {/* A live-but-not-ready room wears the green dot; a sleeping
+                      one nothing rather than a lie. The ready button is the
+                      mint "play" button (Figma 1058:325) — its colour is the
+                      signal, so it needs no dot. */}
                   {live && !ready && (
                     <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)]" />
                   )}
                   {/* My own room is a door I walk through; somebody
                       else's is a request I send, and the label says
-                      which — "Join" on a room I host read as if the
-                      host had to ask themselves in. And a full room
-                      whose people are all here is not a door, it is a
-                      game waiting on me. */}
+                      which. A full room whose people are all here is
+                      not a door — it is a game waiting on me: "play". */}
                   {ready
-                    ? t("extra.roomReady")
+                    ? t("extra.roomPlay")
                     : inside
                       ? t("extra.roomEnter")
                       : t("extra.roomJoinLive")}

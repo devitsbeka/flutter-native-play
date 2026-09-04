@@ -2492,6 +2492,7 @@ export const ka = {
     roomJoinLive: "შეუერთდი",
     roomEnter: "შესვლა",
     roomReady: "მზადაა",
+    roomPlay: "ითამაშე",
     // Public rooms: the two tabs, the switch that publishes a room, and
     // the doorstep the host answers at.
     tabPublic: "საჯარო",

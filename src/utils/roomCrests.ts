@@ -12,15 +12,33 @@ import { supabase } from "@/integrations/supabase/client";
  * always wins.
  */
 
-/** One shared pool, ordered so every client deals from the same deck. */
+/**
+ * One shared pool, ordered so every client deals from the same deck.
+ *
+ * A room's dealt face must never be one a CATEGORY wears (owner's rule) — so
+ * the library icons whose slug is a category's icon are struck out before the
+ * deck is dealt. A wider fetch than 80 leaves room to still hand back ~80
+ * after the strike.
+ */
 export async function fetchCrestPool(): Promise<string[]> {
-  const { data } = await supabase
-    .from("icon_library")
-    .select("icon_url")
-    .not("icon_url", "is", null)
-    .order("icon_url")
-    .limit(80);
-  return (data ?? []).map((r) => r.icon_url as string).filter(Boolean);
+  const [{ data: lib }, { data: cats }] = await Promise.all([
+    supabase
+      .from("icon_library")
+      .select("icon_url, slug")
+      .not("icon_url", "is", null)
+      .order("icon_url")
+      .limit(240),
+    supabase.from("categories").select("icon_slug, icon"),
+  ]);
+  const categoryIcons = new Set<string>();
+  (cats ?? []).forEach((c) => {
+    if (c.icon_slug) categoryIcons.add(String(c.icon_slug));
+    if (c.icon) categoryIcons.add(String(c.icon));
+  });
+  return (lib ?? [])
+    .filter((r) => r.icon_url && !(r.slug && categoryIcons.has(String(r.slug))))
+    .map((r) => r.icon_url as string)
+    .slice(0, 80);
 }
 
 const seed = (s: string) => {
