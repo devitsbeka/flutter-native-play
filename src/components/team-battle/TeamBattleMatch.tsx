@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { BellRing, Bot, Check, ChevronLeft, Star, UserPlus } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFriends } from "@/hooks/useFriends";
@@ -301,127 +302,153 @@ function PhaseRps() {
   // The opener is the captains' duel (20260921210000): one throw per team,
   // by the armband. Everyone else watches the two captains face off.
   const amCaptain = !!participants.find((p) => p.user_id === user?.id)?.is_captain;
-  const captainsOf = (team: TBTeam) =>
-    participants.filter((p) => p.team === team && p.is_captain);
+  const captainOf = (team: TBTeam) =>
+    participants.find((p) => p.team === team && p.is_captain);
+
+  /**
+   * Nothing is shown until both hands are in.
+   *
+   * Whoever threw second could otherwise read the winning counter off the
+   * screen, so the tiles say only THAT a captain has locked in — then both
+   * turn over together, big enough to see from across the room, which is
+   * the moment the whole phase exists for.
+   */
+  const capA = captainOf("a");
+  const capB = captainOf("b");
+  const throwOf = (p: typeof capA) => (p ? (throws[p.user_id] as TBGesture | undefined) : undefined);
+  const bothIn = !!throwOf(capA) && !!throwOf(capB);
+
+  /** One captain: their face, their side's name, and what they threw. */
+  const CaptainSide = ({ team }: { team: TBTeam }) => {
+    const p = captainOf(team);
+    const live = throwOf(p);
+    // After a tie the resolved hand lingers until that captain rethrows, so
+    // the room can see WHY it was a tie.
+    const stale = !live && last?.tie && p ? (last.throws[p.user_id] as TBGesture | undefined) : undefined;
+    const shown = bothIn ? live : stale;
+    return (
+      <div className="flex min-w-0 flex-col items-center gap-1.5">
+        {/* +15% on the 32px this used to be: the two faces are the subject
+            of the screen now, not a caption on a list. */}
+        <SmartAvatar
+          avatarUrl={p?.avatar_url}
+          fallback={p?.nickname ?? "?"}
+          size="xs"
+          className="w-[37px] h-[37px]"
+        />
+        <span className="w-full truncate text-center font-[Nunito] text-[12px] font-bold leading-4 text-[#402666]">
+          {teamLabel(t, team, room)}
+        </span>
+        {/* The hand, under the face. It was a 13px emoji pinned to the
+            avatar's corner — unreadable, and a ✅ for everyone but you. */}
+        <motion.div
+          key={shown ?? (live ? "locked" : "waiting")}
+          initial={{ scale: 0.72, opacity: 0, rotate: -8 }}
+          animate={{ scale: 1, opacity: 1, rotate: 0 }}
+          transition={{ type: "spring", stiffness: 420, damping: 20 }}
+          className={cn(
+            "flex h-[84px] w-full max-w-[104px] items-center justify-center rounded-[20px]",
+            shown
+              ? "bg-white shadow-[0px_2px_0px_0px_#e6e0f0,0px_6px_16px_rgba(64,38,102,0.10)]"
+              : live
+                ? "bg-[#e9e2f7]"
+                : "border-2 border-dashed border-[#c9b8ea] bg-white/50",
+            stale && !bothIn && "opacity-45",
+          )}
+        >
+          {shown ? (
+            <img alt="" src={GESTURE_ICONS[shown]} className="h-[62px] w-[62px] object-contain" />
+          ) : live ? (
+            <Check className="h-7 w-7 text-[#7126d5]" strokeWidth={3} />
+          ) : (
+            <span className="animate-pulse-soft text-[26px] leading-none">💭</span>
+          )}
+        </motion.div>
+      </div>
+    );
+  };
 
   return (
     <div className={SHELL}>
       <div className={COLUMN}>
         <ScoreHeader seconds={secondsLeft} maxSeconds={last?.tie ? 20 : 15} />
-        <div className="flex-1 flex flex-col items-center justify-center gap-6 px-6">
-          <div className="text-center">
-            <h1
-              className="text-3xl font-black text-white"
-              style={{ fontFamily: "'TASolivare', sans-serif", textShadow: "0 2px 10px rgba(0,0,0,0.3)" }}
-            >
+        {/* The stage is LIGHT.
+            Three white cards on a lilac sheet at the bottom and everything
+            above them floating on flat purple read as two screens stacked;
+            the duel is one thing, so it gets one surface, and the hands are
+            legible on it rather than glowing against a dark ground. */}
+        <div className="mt-2 flex min-h-0 flex-1 flex-col overflow-y-auto rounded-t-[28px] bg-[#f5f2fa] px-5 pt-6">
+          <div className="shrink-0 text-center">
+            <h1 className="font-hero text-[26px] capitalize leading-[32px] tracking-[-0.16px] text-[#402666]">
               {t("teamBattle.rpsTitle")}
             </h1>
-            <p className="text-white/70 text-sm mt-2">{t("teamBattle.rpsSubtitle")}</p>
+            <p className="mt-1.5 font-[Nunito] text-[13px] font-medium text-[#402666]/60">
+              {t("teamBattle.rpsSubtitle")}
+            </p>
           </div>
 
-          {/* The hands, without spoilers. While a round is open, another
-              player's tile only says THAT they locked in (✅) — never which
-              gesture, or whoever throws second reads the winning counter off
-              the screen. You see your own pick; everyone's actual hands
-              reveal together when the round resolves — the tie banner here,
-              the winner banner on the board. After a tie the resolved hand's
-              gestures linger dimmed until that player rethrows. */}
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: "spring", stiffness: 380, damping: 22 }}
-            className="w-full max-w-sm rounded-2xl bg-white/10 border border-white/20 p-4 flex flex-col gap-3"
-          >
-            {last?.tie && (
-              <p className="text-center font-bold text-white flex items-center justify-center gap-2">
-                <GestureIcon g={last.team_a} size={26} /> {t("teamBattle.rpsTieBanner")}{" "}
-                <GestureIcon g={last.team_b} size={26} />
-              </p>
-            )}
-            {(["a", "b"] as TBTeam[]).map((team) => (
-              <div key={team} className="flex items-center gap-2">
-                <span className="text-[11px] text-white/60 w-16 shrink-0">{teamLabel(t, team, room)}</span>
-                <div className="flex flex-wrap gap-2">
-                  {captainsOf(team).map((p) => {
-                    const live = throws[p.user_id];
-                    const isMe = p.user_id === user?.id;
-                    const stale = !live && last?.tie ? last.throws[p.user_id] : undefined;
-                    return (
-                      <span key={p.user_id} className="relative inline-block">
-                        <SmartAvatar avatarUrl={p.avatar_url} fallback={p.nickname} size="xs" />
-                        <span
-                          className={`absolute -bottom-1 -right-1 text-[13px] drop-shadow ${
-                            live ? "" : stale ? "opacity-40" : "animate-pulse-soft"
-                          }`}
-                        >
-                          {live ? (
-                            isMe ? (
-                              <GestureIcon g={live} size={18} />
-                            ) : (
-                              "✅"
-                            )
-                          ) : stale ? (
-                            <GestureIcon g={stale} size={18} />
-                          ) : (
-                            "💭"
-                          )}
-                        </span>
-                      </span>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </motion.div>
+          {last?.tie && (
+            <p className="mt-4 flex shrink-0 items-center justify-center gap-2 rounded-full bg-[#e9e2f7] px-4 py-2 text-center font-[Nunito] text-[13px] font-bold text-[#402666]">
+              <GestureIcon g={last.team_a} size={26} /> {t("teamBattle.rpsTieBanner")}{" "}
+              <GestureIcon g={last.team_b} size={26} />
+            </p>
+          )}
+
+          {/* Side by side, with the VS between them: a duel is two people
+              facing each other, not a two-row list. */}
+          <div className="mt-5 grid shrink-0 grid-cols-[1fr_auto_1fr] items-start gap-2">
+            <CaptainSide team="a" />
+            <span className="mt-[10px] font-hero text-[20px] leading-6 text-[#b9a5e6]">VS</span>
+            <CaptainSide team="b" />
+          </div>
+
           {!amCaptain && (
-            <p className="text-white/70 text-sm text-center animate-pulse-soft">
+            <p className="mt-5 shrink-0 animate-pulse-soft text-center font-[Nunito] text-[13px] font-medium text-[#402666]/60">
               {t("teamBattle.rpsCaptainsHint")}
             </p>
           )}
-        </div>
+          <div className="min-h-[12px] flex-1" />
 
-        {/* The captain's hand, on the frame's light bottom sheet
-            (966:30083): three white cards with the 3D renders — the rock on
-            its grass, the paper roll, the scissors — and the "pick one"
-            caption beneath. */}
-        {amCaptain && (
-          <div className="w-full shrink-0 bg-[#f5f2fa] rounded-t-[28px] px-5 pt-5 pb-[calc(1.1rem_+_var(--safe-bottom))] flex flex-col gap-3.5">
-            <div className="grid grid-cols-3 gap-3 w-full max-w-sm mx-auto">
-              {GESTURES.map((g) => {
-                const picked = mine === g.key;
-                return (
-                  <motion.button
-                    key={g.key}
-                    whileTap={!mine ? { scale: 0.94 } : undefined}
-                    disabled={!!mine}
-                    onClick={() => {
-                      setThrown(g.key);
-                      void submitRps(g.key);
-                    }}
-                    className={`relative h-[96px] rounded-[22px] flex items-center justify-center transition-shadow ${
-                      picked
-                        ? "bg-[#eef7ff] ring-2 ring-[#38BDF8]"
-                        : "bg-white"
-                    }`}
-                    style={{
-                      boxShadow: "0px 2px 0px 0px #e6e0f0, 0px 6px 16px rgba(64,38,102,0.10)",
-                      opacity: mine && !picked ? 0.4 : 1,
-                    }}
-                  >
-                    <img alt={g.key} src={g.icon} className="w-[68px] h-[68px] object-contain" />
-                  </motion.button>
-                );
-              })}
+          {/* The captain's hand, on the same surface (966:30083): three
+              white cards with the 3D renders — the rock on its grass, the
+              paper roll, the scissors — and the "pick one" caption beneath. */}
+          {amCaptain && (
+            <div className="shrink-0 pb-[calc(1.1rem_+_var(--safe-bottom))]">
+              <div className="mx-auto grid w-full max-w-sm grid-cols-3 gap-3">
+                {GESTURES.map((g) => {
+                  const picked = mine === g.key;
+                  return (
+                    <motion.button
+                      key={g.key}
+                      whileTap={!mine ? { scale: 0.94 } : undefined}
+                      disabled={!!mine}
+                      onClick={() => {
+                        setThrown(g.key);
+                        void submitRps(g.key);
+                      }}
+                      className={`relative flex h-[96px] items-center justify-center rounded-[22px] transition-shadow ${
+                        picked ? "bg-[#eef7ff] ring-2 ring-[#38BDF8]" : "bg-white"
+                      }`}
+                      style={{
+                        boxShadow: "0px 2px 0px 0px #e6e0f0, 0px 6px 16px rgba(64,38,102,0.10)",
+                        opacity: mine && !picked ? 0.4 : 1,
+                      }}
+                    >
+                      <img alt={g.key} src={g.icon} className="h-[68px] w-[68px] object-contain" />
+                    </motion.button>
+                  );
+                })}
+              </div>
+              <p
+                className={`mt-3.5 text-center font-[Nunito] text-sm font-semibold ${
+                  mine ? "animate-pulse-soft text-[#402666]/50" : "text-[#402666]/70"
+                }`}
+              >
+                {mine ? t("teamBattle.rpsWaiting") : t("teamBattle.rpsPickOne")}
+              </p>
             </div>
-            <p
-              className={`text-center text-sm font-[Nunito] font-semibold ${
-                mine ? "text-[#402666]/50 animate-pulse-soft" : "text-[#402666]/70"
-              }`}
-            >
-              {mine ? t("teamBattle.rpsWaiting") : t("teamBattle.rpsPickOne")}
-            </p>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
@@ -460,7 +487,10 @@ function PhaseBoard() {
         {rpsLast && !rpsLast.tie && openingPick && (
           <div className="px-4 pb-2 flex-shrink-0">
             <div className="rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-center text-sm font-medium text-white flex items-center justify-center gap-1.5 flex-wrap">
-              <GestureIcon g={rpsLast.team_a} size={22} /> vs <GestureIcon g={rpsLast.team_b} size={22} /> —{" "}
+              {/* The hands at a size that can be read: this banner is the
+                  only place the room learns HOW the opener was won, and at
+                  22px the two 3D renders were a pair of smudges. */}
+              <GestureIcon g={rpsLast.team_a} size={34} /> vs <GestureIcon g={rpsLast.team_b} size={34} /> —{" "}
               {t("teamBattle.rpsWonBanner", { team: teamLabel(t, (rpsLast.winner ?? null) as TBTeam, room) })}
             </div>
           </div>
