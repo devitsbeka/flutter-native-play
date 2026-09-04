@@ -93,6 +93,28 @@ describe("the lounges invite through the invite page", () => {
     expect(service).toMatch(/skipImagePreload\s*\n?\s*\? ordered\.slice\(0, count\)/);
   });
 
+  it("nor does a room's round start — it warms the pictures instead", () => {
+    // The same validation pass, on the same critical path, one screen over:
+    // it downloads every one of the round's pictures IN FULL before it will
+    // return them. On a picture category — guess the flag, the logo, the
+    // city — every question has one, so a 10-question round fetched about
+    // 1.6 MB before the room could even be told a round was starting. That
+    // was the multi-second wait between tapping a picture game and the
+    // countdown.
+    const mp = read("src/contexts/MultiplayerContextV2.tsx");
+    expect(mp).toMatch(/skipImagePreload: true,/);
+    // Warmed rather than skipped: every picture is started, none is waited
+    // for. Three writes and the 3-2-1 stand between here and the first card.
+    expect(mp).toMatch(/void warmQuestionImages\(questions\.map\(q => q\.imageUrl\)\);/);
+    expect(mp).toMatch(/import \{ warmQuestionImages \} from "@\/utils\/questionImage";/);
+    // The warm helper waits only for the FIRST image, and only briefly — it
+    // resolves either way, because a picture that refuses is the card's to
+    // report, not this path's to block on.
+    const img = read("src/utils/questionImage.ts");
+    expect(img).toMatch(/firstImageDeadlineMs = 2000/);
+    expect(img).toMatch(/img\.onerror = \(\) => resolve\(\);/);
+  });
+
   it("a side has a NAME, dealt plural and renamed only by its captain", () => {
     // "Team A" told nobody anything: the randomizer deals plural names
     // (owner's rule) written with the room row, the lobby shows them, and

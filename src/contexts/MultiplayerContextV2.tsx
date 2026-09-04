@@ -10,6 +10,7 @@ import { toast } from "@/lib/toast";
 import { getRandomGradient } from "@/config/roomGradients";
 import { siteUrl } from "@/config/site";
 import { getQuestions } from "@/services/questionService";
+import { warmQuestionImages } from "@/utils/questionImage";
 import { shuffleArray } from "@/utils/shuffle";
 import { readAppLanguage } from "@/utils/appLanguage";
 import { getSeenQuestionIds, markQuestionsAsSeen } from "@/services/questionTracker";
@@ -1868,6 +1869,20 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           categorySlug: isMixedCategory ? undefined : (freshRoom.category_id || undefined),
           count: questionCount,
           excludeIds: usedIds,
+          // skipImagePreload: the validation pass downloads every one of the
+          // round's pictures IN FULL before it will return them, to drop any
+          // that refuse to load. On a picture category — guess the flag, the
+          // logo, the city — every question has one, and a 10-question round
+          // is about 1.6 MB fetched before the room can even be told a round
+          // is starting. That is the multi-second wait between tapping a
+          // picture game and the countdown; on a phone it is most of it.
+          //
+          // The arena reached the same conclusion for the same reason (see
+          // TeamBattleContext). The round shows one question at a time, the
+          // pictures are warmed below while the writes and the 3-2-1 run,
+          // and a picture that still refuses is the card's to report — it
+          // has the retry and the fallback for exactly that.
+          skipImagePreload: true,
         });
         // Map to TriviaQuestion format using FRESH category name
         questions = result.questions.map(q => ({
@@ -1890,6 +1905,13 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         toast.error(tStandalone("extra.mpQuestionsNotFound"));
         return;
       }
+
+      // Start the pictures now, wait for none of them. Three writes and the
+      // countdown stand between here and the first card — several seconds of
+      // warming time that used to be spent blocking instead. Only the solo
+      // GameContext awaits this; there it is the last thing before the card,
+      // so there is nothing else to overlap with.
+      void warmQuestionImages(questions.map(q => q.imageUrl));
 
       // Mark questions as seen globally (unified tracking)
       markQuestionsAsSeen(questions.map(q => q.id));
