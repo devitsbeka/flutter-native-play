@@ -232,9 +232,12 @@ describe("the room title in the lobby header", () => {
     // Centred under the emblem (Figma 1059:532), starting at the frame's
     // 43.656px. It ALWAYS stays on ONE line (owner's ask): it never wraps —
     // it shrinks its font to fit the 321px box (useFitOneLine, down to a
-    // 22px floor) and ellipsises only a name too long to shrink further.
-    // The old two-line clamp is gone.
-    expect(universal).toMatch(/useFitOneLine\(name, 43\.656, 22\)/);
+    // 16px floor) so even a long name shows in full, re-fitting once the
+    // heavy display font loads. The old two-line clamp is gone.
+    expect(universal).toMatch(/useFitOneLine\(name, 43\.656, 16\)/);
+    // Re-measures when the font settles — a ResizeObserver never sees a font
+    // swap, so the name would otherwise overflow the fallback measurement.
+    expect(universal).toMatch(/fonts\?\.ready\.then\(fit\)/);
     expect(universal).toMatch(/w-\[321px\] max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-center font-hero/);
     expect(universal).not.toMatch(/line-clamp-2/);
   });

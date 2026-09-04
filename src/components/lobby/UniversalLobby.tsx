@@ -470,30 +470,11 @@ export function UniversalLobby({
                   transition={{ duration: 0.18 }}
                   className="flex flex-col px-[3px]"
                 >
-                  {/* What the game IS, before what it is set to. The tab
-                      opened on a column of dropdowns for years — a settings
-                      sheet under a heading that promised rules — and the
-                      rules themselves were written down nowhere in the app.
-                      An uppercase label over a paragraph, one section each
-                      (Figma 1059:532). */}
-                  {rulesText && rulesText.length > 0 && (
-                    <div className="flex flex-col gap-[36px] px-[23px] pb-[6px] pt-[27px]">
-                      {rulesText.map((section) => (
-                        <div key={section.key}>
-                          <h3 className="font-hero text-[16px] uppercase leading-[14px] tracking-[-0.2054px] text-[#402666] opacity-50">
-                            {section.heading}
-                          </h3>
-                          <p className="mt-[17px] font-[Nunito] text-[14px] font-medium leading-[22px] tracking-[-0.16px] text-[#402666]">
-                            {section.body}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                   {/* What the host can still set — the count, the round
-                      length, the TV. Under the rules, because a rule you
-                      cannot change is still the thing you needed to read. */}
-                  <div className="mt-[10px] flex flex-col gap-[15px] empty:hidden">
+                      length, the TV — comes FIRST now (owner's ask): the
+                      controls you touch to start sit at the top, and the
+                      written rules read below them, not above. */}
+                  <div className="mt-[16px] flex flex-col gap-[15px] empty:hidden">
                     {rules.map((row) => (
                       <div
                         key={row.key}
@@ -519,6 +500,23 @@ export function UniversalLobby({
                     )}
                     {rulesExtra}
                   </div>
+                  {/* What the game IS, written out — at the BOTTOM, under the
+                      TV row (owner's ask). An uppercase label over a paragraph,
+                      one section each (Figma 1059:532). */}
+                  {rulesText && rulesText.length > 0 && (
+                    <div className="mt-[36px] flex flex-col gap-[36px] px-[23px] pb-[6px]">
+                      {rulesText.map((section) => (
+                        <div key={section.key}>
+                          <h3 className="font-hero text-[16px] uppercase leading-[14px] tracking-[-0.2054px] text-[#402666] opacity-50">
+                            {section.heading}
+                          </h3>
+                          <p className="mt-[17px] font-[Nunito] text-[14px] font-medium leading-[22px] tracking-[-0.16px] text-[#402666]">
+                            {section.body}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </motion.div>
               ) : (
                 <motion.div
@@ -830,7 +828,18 @@ function useFitOneLine(text: string, basePx: number, minPx: number) {
     const ro = new ResizeObserver(fit);
     ro.observe(el);
     if (el.parentElement) ro.observe(el.parentElement);
-    return () => ro.disconnect();
+    // The heading is set in a heavy display face (Slackey) that loads after
+    // first paint. Measured against the fallback the name looks like it fits;
+    // when the much wider face swaps in it overflows — and a ResizeObserver
+    // never sees a font swap. Re-fit once the fonts settle, and again on the
+    // next load event, so the name is shrunk against the face it is drawn in.
+    const fonts = document.fonts;
+    fonts?.ready.then(fit).catch(() => {});
+    fonts?.addEventListener?.("loadingdone", fit);
+    return () => {
+      ro.disconnect();
+      fonts?.removeEventListener?.("loadingdone", fit);
+    };
   }, [text, basePx, minPx]);
   return { ref, px };
 }
@@ -856,14 +865,14 @@ function RoomTitle({
   // The name ALWAYS stays on ONE line (owner's ask — a two-line title ate the
   // screen and read as broken). It never wraps: it renders at the frame's
   // 43.656px and, only when a longer name would not fit the 321px box, shrinks
-  // its own font to fit (`useFitOneLine`, down to a 22px floor), ellipsising
+  // its own font to fit (`useFitOneLine`, down to a 16px floor), ellipsising
   // only a name too long to shrink further.
   //
   // The pencil rides on the emblem's shoulder — one control, whichever half
   // is tapped, opening the sheet that sets both the name and the face. It is
   // never a child of the h1, so the chip's round edge and its shadow are never
   // clipped by the heading's overflow.
-  const { ref: headingRef, px: headingPx } = useFitOneLine(name, 43.656, 22);
+  const { ref: headingRef, px: headingPx } = useFitOneLine(name, 43.656, 16);
   const chip = (
     <span className="flex size-[22px] shrink-0 items-center justify-center rounded-full bg-white drop-shadow-[0px_2px_2px_rgba(0,0,0,0.18)]">
       <Pencil className="size-3 text-[#523b76]" />
