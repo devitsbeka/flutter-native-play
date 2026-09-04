@@ -1482,7 +1482,7 @@ export const de: KaTranslations = {
     superRoundTitle: "Superrunde",
     firstTo3: "wer zuerst 3 hat",
     shotBurned: "Dein Versuch für diese Frage ist verbraucht",
-    championsPlaying: "Die Champions denken nach…",
+    championsPlaying: "Superrunde — die Kapitäne spielen",
     youWon: "Dein Team hat gewonnen!",
     youLost: "Dein Team hat verloren",
     playedWith: "Gespielt mit",

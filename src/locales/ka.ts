@@ -1776,7 +1776,7 @@ export const ka = {
     superRoundTitle: "სუპერ რაუნდი",
     firstTo3: "3 ქულამდე",
     shotBurned: "ამ კითხვაზე შანსი უკვე გამოიყენე",
-    championsPlaying: "ჩემპიონები ფიქრობენ…",
+    championsPlaying: "სუპერ რაუნდი — კაპიტნები თამაშობენ",
     youWon: "შენმა გუნდმა მოიგო!",
     youLost: "შენმა გუნდმა წააგო",
     playedWith: "ვისთან ითამაშე",

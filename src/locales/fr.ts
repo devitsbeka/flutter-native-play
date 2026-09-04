@@ -1479,7 +1479,7 @@ export const fr: KaTranslations = {
     superRoundTitle: "Super manche",
     firstTo3: "premier à 3",
     shotBurned: "Tu as utilisé ta chance sur celle-ci",
-    championsPlaying: "Les champions réfléchissent…",
+    championsPlaying: "Super manche — les capitaines jouent",
     youWon: "Ton équipe a gagné !",
     youLost: "Ton équipe a perdu",
     playedWith: "Avec qui tu as joué",
