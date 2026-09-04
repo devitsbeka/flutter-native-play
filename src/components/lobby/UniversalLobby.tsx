@@ -9,6 +9,7 @@ import bgBlob2 from "@/assets/tb-lobby/bg-blob-2.png";
 import chipQuestion from "@/assets/lobby/chip-question.webp";
 import chipTv from "@/assets/lobby/chip-tv.webp";
 import crownIcon from "@/assets/lobby/crown.png";
+import { resolveAvatarUrl, fallbackAvatarFor } from "@/utils/avatarUtils";
 
 /**
  * The one lobby every game mode opens into — Figma 1018:5815 (Game Rules)
@@ -365,12 +366,13 @@ export function UniversalLobby({
             </motion.div>
           )}
 
-          {/* The breathing room over the title. It was 36px and a flex-1
-              that ate every spare pixel, which on the arena pushed the card
-              — the whole point of the screen — under the fold, so the second
-              bench and the Start caption were a scroll away. 12px and a much
-              weaker claim on the slack. */}
-          <div className="min-h-[12px] flex-[0.35]" />
+          {/* All the slack, above the title: the card is the foot of this
+              screen and sits 20px clear of Start, rather than floating in
+              the middle of it with a screen of empty lilac underneath.
+              It claims nothing when the content is taller than the frame —
+              there is no free space to claim, and the 12px floor keeps the
+              title off the chip in that case. */}
+          <div className="min-h-[12px] flex-1" />
 
           {/* The room's name (1018:6828): Slackey, 52 on 62, two lines, with
               the room's own face beside it. The icon rides INSIDE the rename
@@ -408,7 +410,7 @@ export function UniversalLobby({
           <motion.section
             {...arrive(0.36)}
             className={cn(
-              "relative mb-[7px] mt-[16px] w-full shrink-0 overflow-clip rounded-[24px_24px_54px_24px] border-2 border-[rgba(255,255,255,0.6)] bg-[rgba(252,247,255,0.6)] px-[9px] pt-[9px]",
+              "relative mb-[20px] mt-[16px] w-full shrink-0 overflow-clip rounded-[24px_24px_54px_24px] border-2 border-[rgba(255,255,255,0.6)] bg-[rgba(252,247,255,0.6)] px-[9px] pt-[9px]",
               CARD_SHADOW,
               tab === "rules" ? "pb-[50px]" : "pb-[31px]",
             )}
@@ -619,6 +621,32 @@ export function UniversalLobby({
 }
 
 /**
+ * One friend's face, with something to show when their avatar cannot be
+ * drawn.
+ *
+ * `profiles.avatar_url` is not always loadable: build-hashed asset paths
+ * from an older deploy 404, and eight per cent of accounts have no avatar
+ * at all. Rendering that URL straight into an <img> is what put a torn-page
+ * glyph in the middle of the invite row. resolveAvatarUrl recovers the
+ * hashed paths it can, and anything still missing or broken falls back to
+ * the same mascot the person wears everywhere else — seeded, so it is the
+ * same one each time rather than a new face per render.
+ */
+function LobbyFace({ url, seed }: { url: string | null; seed: string }) {
+  const [failed, setFailed] = useState(false);
+  const resolved = resolveAvatarUrl(url);
+  const src = failed || !resolved ? fallbackAvatarFor(seed) : resolved;
+  return (
+    <img
+      alt=""
+      src={src}
+      onError={() => setFailed(true)}
+      className="h-full w-full object-cover"
+    />
+  );
+}
+
+/**
  * The invite line (1018:5480): up to three friends' faces in gradient
  * rings, then the dashed green + and the word. Exported so a lobby with
  * more than one bench (the arena) can put one under each side.
@@ -652,7 +680,7 @@ export function LobbyInviteRow({
             >
               <span className="block rounded-full bg-white p-[1.34px]">
                 <span className="block h-[36px] w-[36px] overflow-hidden rounded-full bg-[#e9d8ff]">
-                  {face.url && <img alt="" src={face.url} className="h-full w-full object-cover" />}
+                  <LobbyFace url={face.url} seed={face.url ?? String(i)} />
                 </span>
               </span>
             </span>
@@ -970,16 +998,6 @@ function PlayerRow({
         >
           {player.avatarUrl && <img alt="" src={player.avatarUrl} className="h-full w-full object-cover" />}
         </span>
-        {player.isHost && (
-          <img
-            alt=""
-            src={crownIcon}
-            className={cn(
-              "pointer-events-none absolute object-contain",
-              compact ? "left-[17px] top-[-12px] h-5 w-5" : "left-[24px] top-[-16px] h-7 w-7",
-            )}
-          />
-        )}
         {/* The bell belongs ON the grey face, not at the far end of the
             row: the face is what says "away", and the two read as one
             thing — this person, and the way to fetch them. At the row's
@@ -1013,8 +1031,11 @@ function PlayerRow({
     </Tag>
   );
 
-  // The crown on the avatar is the room's host; this one, on the right, is the
-  // armband — the same mark the captain wears everywhere else in the app.
+  // The crown, said once. It used to be said twice on the host's own row —
+  // one tipped over the avatar and one in the armband at the far end — which
+  // read as two different marks meaning two different things. The armband is
+  // the one that stays: it is the mark the captain wears everywhere else in
+  // the app, and it is a control on the rows where the crown can be passed.
   const armbandClass = cn(
     "shrink-0 items-center justify-center rounded-full bg-white/60 flex",
     compact ? "ml-1 h-7 w-7" : "ml-2 h-9 w-9",

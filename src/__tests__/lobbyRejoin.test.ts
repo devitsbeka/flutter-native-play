@@ -124,11 +124,14 @@ describe("the arena's heading and its VS", () => {
     expect(universal).not.toMatch(/flex flex-col items-start gap-2/);
   });
 
-  it("and the card starts higher up the screen", () => {
-    // 36px of fixed air plus a flex-1 that ate every spare pixel pushed the
-    // card — the point of the screen — under the fold.
-    expect(universal).toMatch(/min-h-\[12px\] flex-\[0\.35\]/);
-    expect(universal).toMatch(/mb-\[7px\] mt-\[16px\]/);
+  it("and the card sits at the foot of the screen, 20px clear of Start", () => {
+    // It used to take only 35% of the slack, which parked the card mid-air
+    // with a screen of empty lilac between it and the button. All of it
+    // now, above the title — and the 12px floor is what keeps the card off
+    // the fold when the content is taller than the frame and there is no
+    // slack to take.
+    expect(universal).toMatch(/min-h-\[12px\] flex-1/);
+    expect(universal).toMatch(/mb-\[20px\] mt-\[16px\]/);
   });
 });
 
