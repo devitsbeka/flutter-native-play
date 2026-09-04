@@ -34,6 +34,16 @@ export interface LobbyPlayer {
   rounds?: number;
   /** Invited but not yet arrived: shown faded. */
   pending?: boolean;
+  /**
+   * Wears the armband, marked on their own row.
+   *
+   * The couch used to state it underneath instead — a whole cell reading
+   * "Captain: Beka", repeating a face and a name already in the list two rows
+   * above it. Who the captain is belongs to that person's row.
+   */
+  isCaptain?: boolean;
+  /** Tapping the armband — the vote, on the modes that elect one. */
+  onCaptainPress?: () => void;
   /** For the row's tap: a profile, a seat menu. */
   onPress?: () => void;
 }
@@ -86,6 +96,8 @@ export interface UniversalLobbyProps {
     you: string;
     /** "(0r)" — the rounds played, short. */
     rounds: (count: number) => string;
+    /** Read out for the armband; the mark itself carries no text. */
+    captain?: string;
   };
   rules: LobbyRuleRow[];
   /** Under the rule rows — a mode's own extra control. */
@@ -363,7 +375,7 @@ export function UniversalLobby({
                     <div key={group.key} className="flex flex-col gap-[10px]">
                       {group.title}
                       {group.players.map((p) => (
-                        <PlayerRow key={p.id} player={p} youLabel={labels.you} roundsLabel={labels.rounds} />
+                        <PlayerRow key={p.id} player={p} youLabel={labels.you} roundsLabel={labels.rounds} captainLabel={labels.captain ?? "Captain"} />
                       ))}
                       {group.footer}
                     </div>
@@ -544,7 +556,12 @@ function RoomTitle({
   );
   if (!icon) return heading;
   return (
-    <div className="flex items-center gap-3">
+    // The face sits above the name, not beside it. Beside it, a 68px emblem
+    // took a fifth of the width from a 52px hero line that already wraps to
+    // two lines on a phone, so the name broke earlier than it needed to and
+    // the two competed for the same row. Stacked, both start at the same left
+    // edge and the name gets the full column.
+    <div className="flex flex-col items-start gap-2">
       <span className="relative shrink-0">
         <img
           alt=""
@@ -650,22 +667,23 @@ function PlayerRow({
   player,
   youLabel,
   roundsLabel,
+  captainLabel,
 }: {
   player: LobbyPlayer;
   youLabel: string;
   roundsLabel: (count: number) => string;
+  captainLabel: string;
 }) {
   const Tag = player.onPress ? motion.button : "div";
-  return (
+  // The armband is its own control when it can be tapped, so the row is a box
+  // holding two things rather than one button — a button inside a button is
+  // not something a browser will honour, and the vote has to stay reachable.
+  const Body = (
     <Tag
       type={player.onPress ? "button" : undefined}
       whileTap={player.onPress ? { scale: 0.99 } : undefined}
       onClick={player.onPress}
-      className={cn(
-        "relative flex h-[70px] w-full items-center rounded-[20px] pl-[8px] pr-[15px] text-left",
-        RULE_BORDER,
-        player.pending && "opacity-60",
-      )}
+      className="flex min-w-0 flex-1 items-center text-left"
     >
       <span className="relative shrink-0">
         <span className="block h-12 w-12 overflow-hidden rounded-full bg-[#e9d8ff] shadow-[0px_0px_0px_2px_rgba(148,163,184,0.75)]">
@@ -685,5 +703,47 @@ function PlayerRow({
         </span>
       )}
     </Tag>
+  );
+
+  // The crown on the avatar is the room's host; this one, on the right, is the
+  // armband — the same mark the captain wears everywhere else in the app.
+  const armband = player.isCaptain ? (
+    player.onCaptainPress ? (
+      <motion.button
+        type="button"
+        whileTap={{ scale: 0.94 }}
+        onClick={player.onCaptainPress}
+        aria-label={captainLabel}
+        className={cn(
+          "ml-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/60",
+          RULE_BORDER,
+        )}
+      >
+        <img alt="" src={crownIcon} className="h-5 w-5 object-contain" />
+      </motion.button>
+    ) : (
+      <span
+        aria-label={captainLabel}
+        className={cn(
+          "ml-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/60",
+          RULE_BORDER,
+        )}
+      >
+        <img alt="" src={crownIcon} className="h-5 w-5 object-contain" />
+      </span>
+    )
+  ) : null;
+
+  return (
+    <div
+      className={cn(
+        "relative flex h-[70px] w-full items-center rounded-[20px] pl-[8px] pr-[15px]",
+        RULE_BORDER,
+        player.pending && "opacity-60",
+      )}
+    >
+      {Body}
+      {armband}
+    </div>
   );
 }
