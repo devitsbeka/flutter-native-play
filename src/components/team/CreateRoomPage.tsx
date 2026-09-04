@@ -186,7 +186,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { createRoom, loading } = useMultiplayerV2();
+  const { createRoom, startGame, loading } = useMultiplayerV2();
 
   /**
    * The code the room WILL have, decided before the room exists.
@@ -1087,6 +1087,28 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         // The code the room actually got, not the one that was planned:
         // createRoom falls back to a fresh code on a collision.
         walkInCode = room?.room_code ?? null;
+
+        /**
+         * A Guess tile is "play this": the round starts HERE, before the
+         * screen changes, so /team opens a room that is already playing and
+         * never renders a lobby at all.
+         *
+         * This used to be done from the other end — the create screen sent
+         * ?autostart=1 and the lobby pressed its own Start when it saw it —
+         * and that is a race with several ways to lose: the lobby has to
+         * mount, read the flag back out of a URL that three effects rewrite,
+         * and find the room, the seat, the host flag and the category all
+         * settled in the same render. Miss any one and it waits for a
+         * condition that has already passed. Starting it here needs none of
+         * that to line up.
+         *
+         * If it fails, the room is left in "waiting" and the walk-in below
+         * lands on the lobby with a working Start button — which is the right
+         * thing to fall back to.
+         */
+        if (gameChoice === "guess" && room) {
+          await startGame(false, room);
+        }
       }
       
       // Send invitations immediately after room is created — picked friends
@@ -1161,13 +1183,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       // Last, so the invitations above are sent before this screen goes.
       if (walkInCode) {
         onClose();
-        // A Guess tile is "play this", not "make me a room": which picture
-        // game IS the choice, so the lobby presses its own Start on arrival
-        // rather than showing a one-seat room a button it already has the
-        // answer for. Every other way in still stops at the lobby, where
-        // there is a category to pick or people to wait for.
-        const autostart = gameChoice === "guess" ? "&autostart=1" : "";
-        navigate(`/team?join=${walkInCode}${autostart}`);
+        navigate(`/team?join=${walkInCode}`);
       }
     } catch (error) {
       console.error("Error creating room:", error);

@@ -129,44 +129,38 @@ describe("Guess replaced Random on the create screen", () => {
     expect(create).not.toMatch(/const el = rowRef\.current;/);
   });
 
-  it("a picked tile starts the round, it does not stop at a lobby", () => {
+  it("a picked tile starts the round itself, before the screen changes", () => {
     // Which picture game IS the whole choice, so a one-seat lobby with a
-    // Start button asks a question that was already answered. Only Guess
-    // does this: every other way into a room still stops at the lobby,
-    // where there is a category to pick or people to wait for.
-    expect(create).toMatch(/const autostart = gameChoice === "guess" \? "&autostart=1" : "";/);
-    expect(create).toMatch(/navigate\(`\/team\?join=\$\{walkInCode\}\$\{autostart\}`\);/);
-
-    const lobby = read("src/components/team/RoomLobbyV2.tsx");
-    // The lobby presses its OWN Start. Doing it from the create screen would
-    // call startGame a tick after createRoom set state.currentRoom, and
-    // startGame reads that off its own closure — it would see null and
-    // return without a word.
-    expect(lobby).toMatch(/if \(searchParams\.get\("autostart"\) !== "1"\) return;/);
-    expect(lobby).toMatch(/void handleStartGame\(\);/);
-    // Spent on use, so a refresh does not start a second round.
-    expect(lobby).toMatch(/next\.delete\("autostart"\);/);
-    expect(lobby).toMatch(/const autoStartedRef = useRef\(false\);/);
-    // Above `if (!currentRoom) return null`, or it is a conditional hook.
-    expect(lobby.indexOf("const autoStartedRef")).toBeLessThan(
-      lobby.indexOf("if (!currentRoom) return null;"),
-    );
+    // Start button asks a question that was already answered.
+    //
+    // This was tried from the other end first — the create screen sent
+    // ?autostart=1 and the lobby pressed its own Start when it saw it — and
+    // that is a race with several ways to lose: the lobby has to mount, read
+    // the flag back out of a URL that three effects rewrite, and find the
+    // room, the seat, the host flag and the category all settled in the same
+    // render. It shipped, and it lost. Starting the round here needs none of
+    // it to line up, and /team then opens a room that is already playing.
+    expect(create).toMatch(/if \(gameChoice === "guess" && room\) \{\s*\n\s*await startGame\(false, room\);/);
+    expect(create).toMatch(/const \{ createRoom, startGame, loading \} = useMultiplayerV2\(\);/);
+    // No flag on the URL, and nothing in the lobby waiting for one.
+    // No flag on the URL (the comments above still name it — that is the
+    // history, not the mechanism), and nothing in the lobby waiting for one.
+    expect(create).not.toMatch(/&autostart=1/);
+    expect(create).toMatch(/navigate\(`\/team\?join=\$\{walkInCode\}`\);/);
+    expect(read("src/components/team/RoomLobbyV2.tsx")).not.toMatch(/autostart|autoStarting/);
   });
 
-  it("and the lobby never shows itself on the way to the round", () => {
-    // startGame is several round-trips, so the lobby rendered for a few
-    // seconds before the countdown replaced it — a screen you were never
-    // meant to see, arriving and leaving on its own. Held on the lobby's own
-    // wash instead, the same thing /team does while it resolves a ?join=.
-    const lobby = read("src/components/team/RoomLobbyV2.tsx");
-    expect(lobby).toMatch(/const \[autoStarting, setAutoStarting\] = useState\(\(\) => searchParams\.get\("autostart"\) === "1"\);/);
-    expect(lobby).toMatch(/if \(autoStarting\) \{\s*\n\s*return \(/);
-    expect(lobby).toMatch(/background: "#f5d9ff"/);
-    // A guest, or a room with nothing to play, gives the lobby straight back
-    // rather than holding a wash over a decision that will not change.
-    expect(lobby).toMatch(/if \(!isHost \|\| !hasSomethingToPlay\) \{\s*\n\s*setAutoStarting\(false\);/);
-    // And nothing can strand it: the wash times out into the lobby.
-    expect(lobby).toMatch(/setTimeout\(\(\) => setAutoStarting\(false\), 8000\)/);
+  it("and startGame can be told which room, so it cannot read a stale one", () => {
+    // state.currentRoom is set through setState, so a caller a tick behind
+    // createRoom reads null off that closure and the round silently never
+    // starts — the same silent nothing as every other bug in this sequence.
+    const ctx = read("src/contexts/MultiplayerContextV2.tsx");
+    expect(ctx).toMatch(/const startGame = useCallback\(async \(hostShouldObserve\?: boolean, room\?: GameRoom\) => \{/);
+    expect(ctx).toMatch(/const startingRoom = room \?\? state\.currentRoom;/);
+    // isHost is derived from state.currentRoom and is stale for the same
+    // reason, so the guard reads the room in hand.
+    expect(ctx).toMatch(/if \(!startingRoom \|\| !user \|\| startingRoom\.host_user_id !== user\.id\) return;/);
+    expect(ctx).toMatch(/startGame: \(hostShouldObserve\?: boolean, room\?: GameRoom\) => Promise<void>;/);
   });
 
   it("the tiles are the picture games the database actually has", () => {
