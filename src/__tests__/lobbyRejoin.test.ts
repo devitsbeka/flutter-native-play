@@ -227,11 +227,23 @@ describe("the lobby says what the game is", () => {
     }
   });
 
-  it("the stake is one strip at the card's foot, not a shape per mode", () => {
+  it("the stake is one strip in the rules, not a shape per mode", () => {
     // It was a hand-built box on the King's couch, a rule row in the arena,
     // and nothing at all on the other two.
     expect(universal).toMatch(/reward\?: \{ label: string; icon\?: string; amount: ReactNode \};/);
     expect(universal).toMatch(/bg-\[#fdfbff\] pl-\[19px\] pr-\[15px\] shadow-\[0px_5px_0px_#d3c5db\]/);
+    // In the Rules tab and ABOVE the written rules (owner's ask). It used to
+    // sit on the card's foot, under whichever tab was open — so it appeared
+    // below the benches on the Players tab, where it answers nothing anyone
+    // is looking at, and three paragraphs down on the Rules tab.
+    const rulesTab = universal.slice(
+      universal.indexOf('key="rules"'),
+      universal.indexOf('key="players"'),
+    );
+    expect(rulesTab).toMatch(/\{reward && \(/);
+    expect(rulesTab.indexOf("{reward && (")).toBeLessThan(rulesTab.indexOf("{rulesText && rulesText.length > 0"));
+    // And the card's foot no longer changes shape for it.
+    expect(universal).not.toMatch(/reward \? "pb-\[22px\]"/);
     for (const file of ["src/pages/KingPage.tsx", "src/pages/TeamBattlePage.tsx"]) {
       expect(read(file), file).toMatch(/reward=\{\{ label: t\("lobby\.winnerTakes"\), icon: coinIconAsset/);
     }

@@ -430,9 +430,11 @@ export function UniversalLobby({
             className={cn(
               "relative mb-[20px] mt-[16px] w-full shrink-0 overflow-clip rounded-[24px] border-2 border-[rgba(255,255,255,0.6)] bg-[rgba(252,247,255,0.6)] px-[9px] pt-[9px]",
               CARD_SHADOW,
-              // The stake's strip brings its own 22px foot; without one the
-              // tab's content is the last thing in the card and pays for it.
-              reward ? "pb-[22px]" : tab === "rules" ? "pb-[50px]" : "pb-[31px]",
+              // The stake used to sit here, below the tabs, and brought its
+              // own 22px foot with it. It is a row inside the Rules tab now,
+              // so whichever tab is open is the last thing in the card and
+              // pays for its own bottom.
+              tab === "rules" ? "pb-[50px]" : "pb-[31px]",
             )}
           >
             <div className={cn("relative flex items-center rounded-[20px] p-[6px]", RULE_BORDER)}>
@@ -500,9 +502,34 @@ export function UniversalLobby({
                     )}
                     {rulesExtra}
                   </div>
-                  {/* What the game IS, written out — at the BOTTOM, under the
-                      TV row (owner's ask). An uppercase label over a paragraph,
-                      one section each (Figma 1059:532). */}
+                  {/* The stake: what this room is played for.
+
+                      It sat on the card's own foot, below whichever tab was
+                      open, which put it under the benches on the Players tab
+                      — where it is not an answer to anything anyone is
+                      looking at — and at the very bottom of the Rules tab,
+                      three paragraphs below the last thing that mentions it.
+                      It belongs with the rules, and above them: it is a
+                      number the host sets the room up around, not a footnote
+                      to the prose (owner's ask). */}
+                  {reward && (
+                    <div className="mt-[15px] flex h-[66px] items-center justify-between rounded-[20px] border border-[rgba(128,94,143,0.23)] bg-[#fdfbff] pl-[19px] pr-[15px] shadow-[0px_5px_0px_#d3c5db]">
+                      <span className="font-[Nunito] text-[14px] font-medium leading-[19.5px] tracking-[-0.16px] text-[#402666] opacity-60">
+                        {reward.label}
+                      </span>
+                      <span className="flex h-[43px] min-w-[84px] shrink-0 items-center gap-[4px] rounded-[14.616px] border border-[#e8e0f5] pl-[7px] pr-[12px] shadow-[0px_2.94px_0px_0px_#d8d0e8,0px_4.409px_11.758px_0px_rgba(0,0,0,0.1)]">
+                        {reward.icon && (
+                          <img alt="" src={reward.icon} className="size-[32.305px] shrink-0 object-contain" />
+                        )}
+                        <span className="font-[Nunito] text-[18px] font-black leading-6 tracking-[-0.16px] text-[#402666]">
+                          {reward.amount}
+                        </span>
+                      </span>
+                    </div>
+                  )}
+                  {/* What the game IS, written out — under the controls and
+                      the stake (owner's ask). An uppercase label over a
+                      paragraph, one section each (Figma 1059:532). */}
                   {rulesText && rulesText.length > 0 && (
                     <div className="mt-[36px] flex flex-col gap-[36px] px-[23px] pb-[6px]">
                       {rulesText.map((section) => (
@@ -607,24 +634,6 @@ export function UniversalLobby({
               )}
             </AnimatePresence>
 
-            {/* The stake, on the card's own foot rather than inside a tab
-                (Figma 1059:532): what this room is played for is true of the
-                room, not of whichever tab happens to be open. */}
-            {reward && (
-              <div className="mx-[3px] mt-[36px] flex h-[66px] items-center justify-between rounded-[20px] border border-[rgba(128,94,143,0.23)] bg-[#fdfbff] pl-[19px] pr-[15px] shadow-[0px_5px_0px_#d3c5db]">
-                <span className="font-[Nunito] text-[14px] font-medium leading-[19.5px] tracking-[-0.16px] text-[#402666] opacity-60">
-                  {reward.label}
-                </span>
-                <span className="flex h-[43px] min-w-[84px] shrink-0 items-center gap-[4px] rounded-[14.616px] border border-[#e8e0f5] pl-[7px] pr-[12px] shadow-[0px_2.94px_0px_0px_#d8d0e8,0px_4.409px_11.758px_0px_rgba(0,0,0,0.1)]">
-                  {reward.icon && (
-                    <img alt="" src={reward.icon} className="size-[32.305px] shrink-0 object-contain" />
-                  )}
-                  <span className="font-[Nunito] text-[18px] font-black leading-6 tracking-[-0.16px] text-[#402666]">
-                    {reward.amount}
-                  </span>
-                </span>
-              </div>
-            )}
           </motion.section>
         </div>
       </div>
