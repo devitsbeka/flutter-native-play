@@ -728,27 +728,31 @@ function RoomTitle({
   // ended up sitting on a line of its own. Smaller, capped at two lines, and
   // the icon comes down to match: the pair reads as one heading (owner's ask
   // — the two-line 52px heading ate the screen).
-  // The pencil sits beside the NAME now, not on the icon (owner's ask): a
-  // small round chip after the heading, so "this is yours to rename" reads
-  // off the title rather than off the emblem.
+  // The pencil sits beside the NAME (owner's ask), but it is its OWN flex
+  // child — never inside the h1. The heading clamps to two lines with
+  // overflow-hidden, which was clipping the pencil's round chip and its
+  // shadow; a sibling is outside that clip and centres against the title.
   const pencil = editable ? (
-    <span className="ml-1.5 inline-flex size-[22px] shrink-0 translate-y-[6px] items-center justify-center rounded-full bg-white shadow-[0px_2px_4px_rgba(0,0,0,0.18)]">
+    <span className="flex size-[24px] shrink-0 items-center justify-center rounded-full bg-white shadow-[0px_2px_6px_rgba(0,0,0,0.2)]">
       <Pencil className="h-3 w-3 text-[#523b76]" />
     </span>
   ) : null;
   const heading = (
-    <h1 className="min-w-0 flex-1 font-hero text-[34px] capitalize leading-[40px] tracking-[-0.16px] text-[#402666] [overflow-wrap:anywhere] line-clamp-2">
+    <h1 className="min-w-0 font-hero text-[34px] capitalize leading-[40px] tracking-[-0.16px] text-[#402666] [overflow-wrap:anywhere] line-clamp-2">
       {name}
-      {pencil}
     </h1>
   );
-  if (!icon) return heading;
+  if (!icon) {
+    return (
+      <div className="flex items-center gap-2">
+        {heading}
+        {pencil}
+      </div>
+    );
+  }
   return (
-    // One row, icon and name together. It was stacked for a while, and that
-    // was the right call against a 52px hero line — a 44px emblem above it
-    // cost nothing where a 68px one beside it took a fifth of the width. The
-    // line is 34px now: the pair fits across, and stacked it was spending a
-    // whole row of a short screen on an icon.
+    // One row: the icon, the (clamped) name, and the rename pencil — each its
+    // own flex child so the pencil is never swallowed by the name's clip.
     <div className="flex items-center gap-2.5">
       <span className="relative shrink-0">
         <img
@@ -758,6 +762,7 @@ function RoomTitle({
         />
       </span>
       {heading}
+      {pencil}
     </div>
   );
 }
