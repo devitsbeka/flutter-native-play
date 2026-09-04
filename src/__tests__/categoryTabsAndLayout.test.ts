@@ -251,17 +251,11 @@ describe("the classic lobby's create controls (owner's asks)", () => {
   const lobby = read("src/components/team/RoomLobbyV2.tsx");
   const universal = read("src/components/lobby/UniversalLobby.tsx");
 
-  it("the host picks the player count 2–10 from a dropdown", () => {
-    // The options run from the current head count (min 2) up to 10 — you
-    // cannot cap a room below the people already in it.
-    expect(lobby).toMatch(/Math\.max\(2, participants\.length\) \+ i/);
-    expect(lobby).toMatch(/variant: "dropdown" as const/);
-    expect(lobby).toMatch(/void setMaxPlayers\(v\)/);
-    expect(lobby).toMatch(/max_players: n/);
-    // The dropdown variant renders a real <select>, and the static "1–10"
-    // line stands down when a players picker is present.
-    expect(universal).toMatch(/function RuleDropdown/);
-    expect(universal).toMatch(/!rules\.some\(\(r\) => r\.key === "players"\)/);
+  it("a classic room has NO player-count picker — the cap is 10, host starts whenever", () => {
+    // Owner's ask: the classic room dropped the players picker entirely.
+    expect(lobby).not.toMatch(/key: "players"/);
+    expect(lobby).not.toMatch(/setMaxPlayers/);
+    expect(lobby).toMatch(/No player-count picker on a classic room/);
   });
 
   it("Play on TV is a row in the rules, not a chip beside the category", () => {
@@ -301,8 +295,10 @@ describe("the classic lobby's create controls (owner's asks)", () => {
 
   it("the room title carries the rename pencil beside the name, not on the icon", () => {
     const universal = read("src/components/lobby/UniversalLobby.tsx");
-    expect(universal).toMatch(/The pencil sits beside the NAME now, not on the icon/);
-    // No pencil pinned to the icon's corner any more.
+    expect(universal).toMatch(/The pencil sits beside the NAME \(owner's ask\)/);
+    // It is its own flex child, not inside the clamped h1 — so the round
+    // chip and its shadow are never clipped (owner's ask).
+    expect(universal).toMatch(/a sibling is outside that clip and centres against the title/);
     expect(universal).not.toMatch(/absolute -bottom-0\.5 -right-0\.5[^]*<Pencil/);
   });
 
