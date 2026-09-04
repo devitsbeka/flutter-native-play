@@ -14,7 +14,6 @@ import powersIcon from "@/assets/icons/icon-powers.png";
 import { ChestRewardModal } from "@/components/home/ChestRewardModal";
 import { SideMenuDrawer } from "@/components/home/SideMenuDrawer";
 import { DailyRewardsModal } from "@/components/home/DailyRewardsModal";
-import { StreakModal } from "@/components/home/StreakModal";
 import { MissionsModal } from "@/components/home/MissionsModal";
 import { LevelInfoModal } from "@/components/home/LevelInfoModal";
 import { NotEnoughStakeModal } from "@/components/home/NotEnoughStakeModal";
@@ -288,7 +287,6 @@ export default function Index() {
   const [isSideMenuOpen, setIsSideMenuOpen] = useState(false);
   const [isSoundModalOpen, setIsSoundModalOpen] = useState(false);
   const [isDailyRewardsOpen, setIsDailyRewardsOpen] = useState(false);
-  const [showStreakModal, setShowStreakModal] = useState(false);
 
   // `/?daily=1` opens the daily rewards on arrival. The rewards modal lives
   // here, so screens elsewhere that want to point a player at it — the
@@ -828,12 +826,6 @@ export default function Index() {
         currentStreak={currentStreak || 1}
         onClaim={() => setIsDailyRewardsOpen(false)}
       />
-      <StreakModal
-        isOpen={showStreakModal}
-        onClose={() => setShowStreakModal(false)}
-        currentStreak={currentStreak}
-        bestStreak={profile?.best_streak || 0}
-      />
       <PowerUpDetailModal 
         isOpen={selectedPowerUp !== null} 
         onClose={() => setSelectedPowerUp(null)} 
@@ -1186,7 +1178,8 @@ export default function Index() {
             onCoinsClick={() => navigate("/power-ups?section=coins")}
             onGemsClick={() => navigate("/power-ups?section=gems-lari")}
             onGiftClick={() => setIsDailyRewardsOpen(true)}
-            onStreakClick={() => setShowStreakModal(true)}
+            // The flame opens the streak page (Figma 1069:18), not a sheet over the home screen.
+            onStreakClick={() => navigate("/streak")}
           />
         )}
 

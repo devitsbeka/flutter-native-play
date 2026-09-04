@@ -103,6 +103,32 @@ export function formatDayWithWeekday(
   });
 }
 
+/**
+ * "12 სექ." / "12 Sep" — the day and its short month, for a date range.
+ *
+ * Georgian goes through the local month table with the design's trailing
+ * full stop; every other language through Intl, which abbreviates months
+ * the way each of them actually does.
+ */
+export function formatDayMonthShort(
+  date: Date,
+  language: string,
+  { utc = false }: DateFormatOptions = {}
+): string {
+  if (Number.isNaN(date.getTime())) return "";
+
+  if (isGeorgian(language)) {
+    const { day, month } = parts(date, utc);
+    return `${day} ${KA_MONTHS_SHORT[month]}.`;
+  }
+
+  return date.toLocaleDateString(language, {
+    day: "numeric",
+    month: "short",
+    ...(utc ? { timeZone: "UTC" } : {}),
+  });
+}
+
 /** "ორშ" — the three-letter weekday used by the streak strip. */
 export function formatWeekdayShort(
   date: Date,
