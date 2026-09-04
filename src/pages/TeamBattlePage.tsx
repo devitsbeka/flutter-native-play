@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ChevronLeft, Pencil } from "lucide-react";
 import { UniversalLobby, LobbyInfoRow, type LobbyPlayer, type LobbyPlayerGroup } from "@/components/lobby/UniversalLobby";
+import { YoureCaptainModal } from "@/components/team-battle/YoureCaptainModal";
 import { LOBBY_SCENES } from "@/utils/lobbyScene";
 import { roomVisibilityFields } from "@/utils/roomVisibility";
 import { useFriends } from "@/hooks/useFriends";
@@ -47,6 +48,16 @@ import { dealTeamNames, TEAM_NAME_MAX } from "@/utils/teamNameGenerator";
  * game screens' periwinkle; the lobby wears the room's jewel gradient like
  * RoomLobbyV2 does.
  */
+/** How long the room has to vote for a captain, once the window opens. */
+const CAPTAIN_VOTE_MS = 10_000;
+/**
+ * How long the host has to open it themselves before it opens anyway.
+ *
+ * Long enough to be a choice, short enough that a host who has put their
+ * phone down does not hold a full room.
+ */
+const CAPTAIN_VOTE_GRACE_MS = 5_000;
+
 export default function TeamBattlePage() {
   return (
     <TeamBattleProvider>
@@ -208,6 +219,7 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
   const {
     room, participants, pendingInvites, isHost, myTeam, setTeam, refreshRoom,
     setCaptain, voteCaptain, manageSeat, startMatch, startError, leaveRoom, loading, state, settle,
+    captainVoteAt, openCaptainVote,
   } = useTeamBattle();
   const { categories } = useCategories();
   const { openProfile } = usePlayerProfile();
@@ -756,20 +768,21 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
     if (error) toast.error(error.message);
   };
 
-  // The bench's heading: its crest (the captain dresses it), its name, how
-  // full it is, and the captain chip that opens the vote sheet. While an
-  // all-AI side's crown is being rolled the chip flips through the bots'
-  // faces like a slot reel.
+  // The bench's heading: its crest (the captain dresses it), its name and how
+  // full it is.
+  //
+  // The captain used to be a chip under the count, on both sides, before
+  // there was a team to captain — a role nobody can fill yet, named twice,
+  // above two empty benches. It is decided once the room is full and said
+  // where the "we need N more" line was (owner's ask).
   const benchTitle = (team: TBTeam) => {
     const isA = team === "a";
     const icon = isA ? dealt.a : dealt.b;
     const mine = isA ? captainA : captainB;
-    const face = (isA ? rollFace.a : rollFace.b) ?? mine;
     // Only the side's captain dresses its crest — the host gets no say
     // over the other team (and their own side only while they wear its
     // armband). An empty side has nobody to ask.
     const canDress = !!user && mine?.user_id === user.id;
-    const accent = isA ? "#e7ba87" : "#ed6149";
     // A column, not a row. The two benches sit beside each other now, so a
     // heading that ran crest → name → captain chip across the full width
     // has half of it to work in; stacked, each part gets the whole column.
@@ -806,25 +819,6 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
         <p className="font-[Nunito] text-[12px] leading-4 tabular-nums text-[#402666]/60">
           {teamOf(team).length}/{perSide}
         </p>
-        <motion.button
-          type="button"
-          whileTap={{ scale: 0.95 }}
-          onClick={() => setCaptainInfo(team)}
-          className="flex h-[34px] w-full items-center gap-1.5 rounded-full border border-[rgba(156,100,181,0.5)] bg-white/60 py-[3px] pl-2 pr-[3px]"
-        >
-          <span className="min-w-0 flex-1 text-left">
-            <span className="block font-[Nunito] text-[9px] leading-[11px] text-[#402666]/60">{t("lobby.captainLabel")}</span>
-            <span className="block truncate font-[Nunito] text-[12px] font-bold leading-[14px] text-[#402666]">
-              {face?.nickname ?? t("lobby.chooseCaptain")}
-            </span>
-          </span>
-          <span
-            className="block h-7 w-7 shrink-0 overflow-hidden rounded-full bg-[#e9d8ff]"
-            style={{ boxShadow: `0 0 0 2px ${accent}` }}
-          >
-            {face?.avatar_url && <img alt="" src={face.avatar_url} className="h-full w-full object-cover" />}
-          </span>
-        </motion.button>
       </div>
     );
   };
@@ -848,6 +842,96 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
    */
   const stillNeeded =
     Math.max(0, 2 - teamA.length) + Math.max(0, 2 - teamB.length);
+
+  /**
+   * The armband, decided once the benches are full.
+   *
+   * It used to be a chip under each team's name from the moment the room
+   * was made: a role nobody could fill yet, named twice, over two empty
+   * benches. Nothing about it can be settled until the teams exist — so it
+   * waits for them, and takes over the line that was counting people in.
+   *
+   * Voted from three a side up. In a 2-2 a vote between two people is a
+   * staring contest, so the host's device rolls a captain for each bench
+   * and the winner is simply told (owner's rule).
+   */
+  const bothFull = teamA.length >= perSide && teamB.length >= perSide;
+  const votes = perSide >= 3;
+  // Ticks only while the window is open — a second's resolution is all a
+  // ten-second clock needs, and nothing re-renders once it has closed.
+  const [voteNow, setVoteNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (captainVoteAt == null) return;
+    const iv = window.setInterval(() => setVoteNow(Date.now()), 250);
+    return () => window.clearInterval(iv);
+  }, [captainVoteAt]);
+  const voteMsLeft =
+    captainVoteAt == null ? 0 : CAPTAIN_VOTE_MS - (voteNow - captainVoteAt);
+  const voting = voteMsLeft > 0;
+  const voteSecondsLeft = Math.ceil(voteMsLeft / 1000);
+
+  /**
+   * Nobody has to press anything.
+   *
+   * The host gets five seconds to open the vote themselves — long enough to
+   * be a choice, short enough that a host who has put their phone down does
+   * not hold the room. Only the host broadcasts it, so the window opens once
+   * however many devices are watching.
+   */
+  const openedRef = useRef(false);
+  useEffect(() => {
+    if (!isHost || !bothFull || !votes || openedRef.current) return;
+    const timer = window.setTimeout(() => {
+      // Checked here, not only at setup: a host who pressed the button a
+      // moment ago has already opened it, and this timer is still pending.
+      if (openedRef.current) return;
+      openedRef.current = true;
+      openCaptainVote();
+    }, CAPTAIN_VOTE_GRACE_MS);
+    return () => window.clearTimeout(timer);
+  }, [isHost, bothFull, votes, openCaptainVote]);
+
+  /**
+   * The 2-2 roll.
+   *
+   * The host's device is the only one that writes, so the two benches get
+   * one captain each rather than one per device racing the others. A side
+   * that already elected somebody is left alone.
+   */
+  const rolledRef = useRef(false);
+  useEffect(() => {
+    if (!isHost || !bothFull || votes || rolledRef.current) return;
+    rolledRef.current = true;
+    for (const members of [teamA, teamB]) {
+      const humans = members.filter((p) => !p.is_bot);
+      if (humans.length === 0 || humans.some((p) => p.is_captain)) continue;
+      const pick = humans[Math.floor(Math.random() * humans.length)];
+      void setCaptain(pick.user_id);
+    }
+  }, [isHost, bothFull, votes, teamA, teamB, setCaptain]);
+
+  /**
+   * "You're captain!" — once, to the person it happened to.
+   *
+   * Watched rather than pushed: the armband lands on room_participants, and
+   * every device already reads that. Remembered so a re-render, a refetch or
+   * a reconnect does not show it again.
+   */
+  const [crowned, setCrowned] = useState(false);
+  // The window opens the sheet on every device, on the viewer's own bench,
+  // and closes it when the ten seconds are up — including for somebody who
+  // opened it by hand a moment before the broadcast landed.
+  useEffect(() => {
+    if (voting) setCaptainInfo(myTeam ?? "a");
+    else setCaptainInfo((cur) => (captainVoteAt == null ? cur : null));
+  }, [voting, captainVoteAt, myTeam]);
+  const toldRef = useRef(false);
+  const iAmCaptain = !!user && participants.some((p) => p.user_id === user.id && p.is_captain);
+  useEffect(() => {
+    if (!iAmCaptain || toldRef.current) return;
+    toldRef.current = true;
+    setCrowned(true);
+  }, [iAmCaptain]);
 
   return (
     <UniversalLobby
@@ -914,6 +998,32 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
       players={benches}
       playersLayout="columns"
       playersHint={stillNeeded > 0 ? t("teamBattle.needToStart", { n: stillNeeded }) : null}
+      // A full room has stopped asking how many more it needs. What is left
+      // to settle is the armband, so it stands here: the button while the
+      // window is shut, the clock while it is open, and on a 2-2 — where
+      // there is nothing to vote on — just the elected pair.
+      playersFullSlot={
+        votes ? (
+          <motion.button
+            type="button"
+            whileTap={{ scale: 0.96 }}
+            disabled={voting}
+            onClick={() => {
+              openedRef.current = true;
+              openCaptainVote();
+            }}
+            className="flex h-[44px] items-center gap-2 rounded-[22px] border-b-4 border-[#2bc889] bg-[#81f0c3] px-5 font-[Nunito] text-[15px] font-extrabold text-[#320c69] active:translate-y-[2px] active:border-b-2 disabled:opacity-70"
+          >
+            👑 {voting ? t("lobby.captainVoteOpen", { n: voteSecondsLeft }) : t("lobby.chooseCaptainTitle")}
+          </motion.button>
+        ) : (
+          <p className="text-center font-[Nunito] text-[14px] font-medium leading-[18px] tracking-[-0.16px] text-[#402666]">
+            {captainA?.nickname && captainB?.nickname
+              ? `👑 ${captainA.nickname} · ${captainB.nickname}`
+              : t("extra.mpRoomFull")}
+          </p>
+        )
+      }
       // Two a side to start, up to the size the host set (2-2 … 5-5).
       // Each bench's own invite line already stands down when that side
       // is full, so the arena's count is for the rules tab and the tally.
@@ -999,9 +1109,12 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
         />
       )}
 
+      <YoureCaptainModal open={crowned} onClose={() => setCrowned(false)} />
+
       <CaptainInfoModal
         open={captainInfo !== null}
         onClose={() => setCaptainInfo(null)}
+        secondsLeft={voting && captainInfo === myTeam ? voteSecondsLeft : null}
         title={
           perSide >= 3 && myTeam === captainInfo
             ? t("lobby.chooseCaptainTitle")

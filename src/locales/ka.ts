@@ -1881,6 +1881,8 @@ export const ka = {
     captainLabel: "კაპიტანი:",
     chooseCaptain: "აირჩიე კაპიტანი",
     chooseCaptainTitle: "აირჩიე გუნდის კაპიტანი",
+    captainVoteOpen: "კენჭისყრა… {n}წმ",
+    youAreCaptain: "შენ ხარ კაპიტანი!",
     claimSeatHint: "აირჩიე გუნდი — შეეხე თავისუფალ ადგილს",
     pickingTeam: "{name} ირჩევს გუნდს…",
     votePick: "არჩევა",

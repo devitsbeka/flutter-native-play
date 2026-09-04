@@ -143,6 +143,18 @@ interface TeamBattleContextValue {
   lastPoke: TBPoke | null;
   sendPoke: (toUserId: string, fromNickname: string) => void;
   /**
+   * When the captain vote opened, on THIS device's clock, or null.
+   *
+   * The window is ten seconds and then it is gone, so it is a message
+   * rather than a record — the same reasoning as the poke and the
+   * reactions above, and the same channel. Nothing reads it back later:
+   * the votes themselves go through tb_vote_captain and land on
+   * room_participants, which is where the armband actually lives.
+   */
+  captainVoteAt: number | null;
+  /** Open the window for everyone in the room. Host only, by convention. */
+  openCaptainVote: () => void;
+  /**
    * Icons sent to players during the match, in the order they arrived.
    *
    * Over the same broadcast, and for the same reason: a reaction is read
@@ -218,6 +230,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
   // updates as the match runs).
   const [turnPicks, setTurnPicks] = useState<TBPick[]>([]);
   const [lastPoke, setLastPoke] = useState<TBPoke | null>(null);
+  const [captainVoteAt, setCaptainVoteAt] = useState<number | null>(null);
   const [reactions, setReactions] = useState<RoomReaction[]>([]);
   // Who I am, readable from a callback that must not re-create itself every
   // time auth settles — the live channel it writes to is set up once.
@@ -366,6 +379,12 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
         if (!p?.to) return;
         setLastPoke({ to: p.to, from: p.from ?? "", at: Date.now() });
       })
+      // Stamped on ARRIVAL, like a reaction: the opener's clock is not this
+      // device's, and every device runs the same ten seconds from when it
+      // heard about them.
+      .on("broadcast", { event: "captain_vote" }, () => {
+        setCaptainVoteAt(Date.now());
+      })
       .on("broadcast", { event: "reaction" }, ({ payload }) => {
         const r = payload as Partial<RoomReaction>;
         if (!r?.id || !r.to_user_id || !r.from_user_id || !r.icon) return;
@@ -445,6 +464,21 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
       type: "broadcast",
       event: "poke",
       payload: { to: toUserId, from: fromNickname },
+    });
+  }, []);
+
+  /**
+   * Open the captain vote for the whole room.
+   *
+   * self:true on the channel, so the device that opens it starts its own
+   * ten seconds off the same message every other device does rather than
+   * off a local set — one clock for the window, not two.
+   */
+  const openCaptainVote = useCallback(() => {
+    void liveChannelRef.current?.send({
+      type: "broadcast",
+      event: "captain_vote",
+      payload: { at: Date.now() },
     });
   }, []);
 
@@ -1111,6 +1145,8 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
       sendPick,
       lastPoke,
       sendPoke,
+      captainVoteAt,
+      openCaptainVote,
       reactions,
       sendReaction,
       playedBy,
@@ -1122,7 +1158,8 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
     [room, participants, pendingInvites, tiles, state, loading, isHost, myTeam, isSpotlight,
      createRoom, joinRoom, enterRoom, leaveRoom, leaveMatch, refreshRoom, setTeam, addBot, removeBot,
      setCaptain, voteCaptain, manageSeat, startMatch, startError, submitRps, pickTile, submitAnswer,
-     turnPicks, sendPick, lastPoke, sendPoke, reactions, sendReaction, playedBy, voteSuper, submitSuper, advance, settle],
+     turnPicks, sendPick, lastPoke, sendPoke, captainVoteAt, openCaptainVote,
+     reactions, sendReaction, playedBy, voteSuper, submitSuper, advance, settle],
   );
 
   return <TeamBattleContext.Provider value={value}>{children}</TeamBattleContext.Provider>;

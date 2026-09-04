@@ -1581,6 +1581,8 @@ export const fr: KaTranslations = {
     captainLabel: "Capitaine :",
     chooseCaptain: "Choisir le capitaine",
     chooseCaptainTitle: "Choisis le capitaine de l'équipe",
+    captainVoteOpen: "Vote… {n}s",
+    youAreCaptain: "Tu es capitaine !",
     claimSeatHint: "Choisis ton équipe — touche une place libre",
     pickingTeam: "{name} choisit son équipe…",
     votePick: "Choisir",

@@ -182,6 +182,15 @@ export interface UniversalLobbyProps {
   players: LobbyPlayer[] | LobbyPlayerGroup[];
   /** "Invite a friend — a game needs two players" — shown while it is true. */
   playersHint?: string | null;
+  /**
+   * What stands where the hint does once every seat is taken.
+   *
+   * The hint answers "how many more?", which a full room is not asking. The
+   * arena puts its captain vote here instead — the one thing left to decide
+   * before Start — and anything that gives none falls back to the capacity's
+   * own "room full".
+   */
+  playersFullSlot?: ReactNode;
   /** Faces for the invite row: the player's friends, online first. */
   inviteFaces: { url: string | null; online?: boolean }[];
   onInvite?: () => void;
@@ -245,6 +254,7 @@ export function UniversalLobby({
   rulesExtra,
   players,
   playersHint,
+  playersFullSlot,
   inviteFaces,
   onInvite,
   playersExtra,
@@ -621,10 +631,20 @@ export function UniversalLobby({
                       </div>
                     ))
                   )}
-                  {(playersHint || (capacity && capacity.taken >= capacity.max)) && (
-                    <p className="mt-[20px] text-center font-[Nunito] text-[14px] font-medium leading-[18px] tracking-[-0.16px] text-[#402666]">
-                      {capacity && capacity.taken >= capacity.max ? capacity.fullLabel : playersHint}
-                    </p>
+                  {capacity && capacity.taken >= capacity.max ? (
+                    <div className="mt-[20px] flex flex-col items-center">
+                      {playersFullSlot ?? (
+                        <p className="text-center font-[Nunito] text-[14px] font-medium leading-[18px] tracking-[-0.16px] text-[#402666]">
+                          {capacity.fullLabel}
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    playersHint && (
+                      <p className="mt-[20px] text-center font-[Nunito] text-[14px] font-medium leading-[18px] tracking-[-0.16px] text-[#402666]">
+                        {playersHint}
+                      </p>
+                    )
                   )}
                   {onInvite && !(capacity && capacity.taken >= capacity.max) && (
                     <LobbyInviteRow className="mt-[35px]" faces={inviteFaces} label={labels.invite} onPress={onInvite} />

@@ -559,11 +559,19 @@ export function CaptainInfoModal({
   myVoteUserId,
   members,
   onChoose,
+  secondsLeft,
 }: {
   open: boolean;
   onClose: () => void;
   title: string;
   body: string;
+  /**
+   * The vote's clock, when it is on one.
+   *
+   * A window with no number on it is a window nobody hurries for — and this
+   * one closes itself after ten seconds whether or not anybody voted.
+   */
+  secondsLeft?: number | null;
   /** The pill on a votable face ("choose"). Only shown when onChoose is given. */
   pickLabel?: string;
   /** The team's own emblem for the top of the card; the crown without one. */
@@ -603,6 +611,14 @@ export function CaptainInfoModal({
           transition={{ type: "spring", stiffness: 320, damping: 15 }}
           className="size-[72px] object-contain drop-shadow"
         />
+        {/* The clock, when the vote is on one — a ring of seconds under the
+            crest, so the ten seconds are a thing you can watch run out
+            rather than a surprise when the sheet closes itself. */}
+        {secondsLeft != null && (
+          <span className="flex size-[34px] shrink-0 items-center justify-center rounded-full bg-[#f3ecff] font-[Nunito] text-[15px] font-black tabular-nums text-[#7126d5]">
+            {Math.max(0, secondsLeft)}
+          </span>
+        )}
         <p className="text-[19px] text-[#523b76] text-center" style={{ fontFamily: "'TASolivare', sans-serif" }}>
           {title}
         </p>
