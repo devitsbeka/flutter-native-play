@@ -1868,6 +1868,7 @@ export const ka = {
     uYou: "შენ",
     uTeamSize: "მოთამაშე გუნდში",
     uRoundsShort: "{count}რ",
+    uRoundsSelected: "{count} რაუნდი",
     invite: "მოწვევა",
     winnerTakes: "გამარჯვებული იღებს:",
     captainLabel: "კაპიტანი:",
