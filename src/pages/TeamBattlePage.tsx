@@ -1051,6 +1051,9 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
               onPress: () => undefined,
               captionOnly: true,
               caption: t("teamBattle.waitingHost"),
+              // The host's face after the "…" — so the wait points at who.
+              captionAvatarUrl: participants.find((p) => p.is_host)?.avatar_url ?? null,
+              captionAvatarName: participants.find((p) => p.is_host)?.nickname ?? null,
             }
       }
       footerExtra={

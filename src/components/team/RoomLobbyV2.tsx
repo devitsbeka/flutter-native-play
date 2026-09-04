@@ -1073,6 +1073,9 @@ export function RoomLobbyV2() {
               disabled: pingCooldown,
               icon: <BellRing className="h-5 w-5" />,
               caption: t("team.waitingForHost"),
+              // The host's face after the "…" — the person being waited on.
+              captionAvatarUrl: participants.find((p) => p.is_host)?.avatar_url ?? null,
+              captionAvatarName: participants.find((p) => p.is_host)?.nickname ?? null,
             }
       }
     >
