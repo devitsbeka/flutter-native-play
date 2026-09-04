@@ -1492,7 +1492,7 @@ export const es: KaTranslations = {
     superRoundTitle: "Super ronda",
     firstTo3: "el primero a 3",
     shotBurned: "Ya has usado tu intento en esta",
-    championsPlaying: "Los campeones están pensando…",
+    championsPlaying: "Ronda Súper — juegan los capitanes",
     youWon: "¡Tu equipo ganó!",
     youLost: "Tu equipo perdió",
     playedWith: "Jugaste con",
