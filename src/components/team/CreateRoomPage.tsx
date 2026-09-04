@@ -1,5 +1,5 @@
 import { BackgroundVideo } from "@/components/shared/BackgroundVideo";
-import { useState, useEffect, useRef, useMemo, type CSSProperties } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback, type CSSProperties } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -680,9 +680,18 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   // (both left the cards 0px wide or taller than the row, clipped by the
   // footer). So the row measures itself and publishes --row-h, its content
   // height, and the cards read it.
-  const rowRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const el = rowRef.current;
+  //
+  // A callback ref rather than a mount effect, because the row is not always
+  // on screen: the Guess screen replaces it, and coming back mounts a NEW row
+  // element while this component stays mounted throughout. An effect with []
+  // deps never re-ran for that node — it went on observing the old, detached
+  // one — so --row-h was never set on the new row and every card resolved to
+  // a height of zero. Back from Guess landed on a heading, a hairline, and no
+  // cards at all.
+  const rowObserver = useRef<ResizeObserver | null>(null);
+  const rowRef = useCallback((el: HTMLDivElement | null) => {
+    rowObserver.current?.disconnect();
+    rowObserver.current = null;
     if (!el) return;
     const publish = () => {
       const cs = getComputedStyle(el);
@@ -692,7 +701,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     publish();
     const ro = new ResizeObserver(publish);
     ro.observe(el);
-    return () => ro.disconnect();
+    rowObserver.current = ro;
   }, []);
 
   const cardRefs = useRef<Record<string, HTMLButtonElement | null>>({});
@@ -932,6 +941,20 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     // Resolve everyone to invite before creating the room
     const invitees = collectInvitees();
 
+    /**
+     * The room to walk into once this is done, when nothing else will.
+     *
+     * The two trivia branches below navigate themselves. The category
+     * branch never did: it leaned on createRoom flipping the multiplayer
+     * context to phase "lobby", which the rooms hub renders over itself —
+     * and /create-room mounts its OWN provider whose only consumer is this
+     * screen. So on that route the room was created, the context changed,
+     * and absolutely nothing happened on screen. The Guess tiles made it
+     * obvious (a tap with no Create button behind it to press instead), but
+     * the library's picker was landing in the same hole.
+     */
+    let walkInCode: string | null = null;
+
     const effectiveRoomName = roomName;
 
     setIsCreating(true);
@@ -1061,6 +1084,9 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         if (room?.id) {
           await persistQueuedRounds(room.id);
         }
+        // The code the room actually got, not the one that was planned:
+        // createRoom falls back to a fresh code on a collision.
+        walkInCode = room?.room_code ?? null;
       }
       
       // Send invitations immediately after room is created — picked friends
@@ -1130,6 +1156,12 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
           // Small delay to ensure DB writes complete
           await new Promise(resolve => setTimeout(resolve, 150));
         }
+      }
+
+      // Last, so the invitations above are sent before this screen goes.
+      if (walkInCode) {
+        onClose();
+        navigate(`/team?join=${walkInCode}`);
       }
     } catch (error) {
       console.error("Error creating room:", error);
@@ -1466,13 +1498,19 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   );
 
   // The tap above armed a start → press Create the moment the mode is ready.
+  //
+  // selectedCategory is in the deps because createEnabled does not change
+  // when one category replaces another: after a create that failed and
+  // toasted, a second tap on a different tile armed the ref and then waited
+  // for a dependency that was already true, so nothing fired and nothing
+  // said why.
   useEffect(() => {
     if (!autoStart.current) return;
     if (!createEnabled || isCreating) return;
     autoStart.current = false;
     void handleCreate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameChoice, createEnabled, isCreating]);
+  }, [gameChoice, createEnabled, isCreating, selectedCategory]);
 
   return (
     <motion.div
