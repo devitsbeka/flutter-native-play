@@ -90,6 +90,10 @@ describe("being told", () => {
     // Tapping closes it earlier.
     expect(modal).toMatch(/onClick=\{onClose\}/);
     expect(modal).toMatch(/t\("lobby\.youAreCaptain"\)/);
+    // Our crown ICON, not the emoji (owner's ask — one crown across the lobby).
+    expect(modal).toMatch(/import crownIcon from "@\/assets\/lobby\/crown\.png"/);
+    expect(modal).toMatch(/src=\{crownIcon\}/);
+    expect(modal).not.toMatch(/👑/);
   });
 
   it("watched on the armband itself, and only once", () => {

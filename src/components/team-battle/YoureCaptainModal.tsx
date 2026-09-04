@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
+import crownIcon from "@/assets/lobby/crown.png";
 
 /** How long the crown stays up before it takes itself away. */
 export const CAPTAIN_CROWN_MS = 1500;
@@ -40,16 +41,15 @@ export function YoureCaptainModal({ open, onClose }: { open: boolean; onClose: (
         className="flex w-full max-w-[300px] flex-col items-center gap-2 rounded-[24px] bg-white px-6 py-7 shadow-[0px_8px_24px_0px_rgba(102,51,153,0.18)]"
         onClick={(e) => e.stopPropagation()}
       >
-        <motion.span
+        <motion.img
+          src={crownIcon}
+          alt=""
           initial={{ scale: 0.3, rotate: -25 }}
           animate={{ scale: 1, rotate: 0 }}
           transition={{ type: "spring", stiffness: 320, damping: 14 }}
-          className="text-[56px] leading-none"
-          role="img"
+          className="h-[56px] w-[56px] object-contain"
           aria-hidden
-        >
-          👑
-        </motion.span>
+        />
         <p
           className="text-center text-[21px] text-[#523b76]"
           style={{ fontFamily: "'TASolivare', sans-serif" }}
