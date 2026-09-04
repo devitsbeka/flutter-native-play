@@ -113,21 +113,17 @@ export interface UniversalLobbyProps {
   /** The bell. Without it the header's badge is decoration. */
   onBell?: () => void;
   /**
-   * The category chip. Hidden when the mode has no category to pick.
-   *  - `onPress` opens the picker to change the first round's category.
+   * The category chip — the FIRST round only.
+   *  - `label` is the first round's name, with a "(+N)" when more are queued.
+   *  - `iconSlug` is that category's own icon (not a generic question mark).
+   *  - `onPress` opens the round list (or the picker when there is one round).
    *  - `onAdd` (the + beside it) queues another round.
-   *  - `queue` is the rounds already lined up — a horizontal scroll of
-   *    icon + name under the chip.
-   *  - `roundsLabel` is the count caption under the queue ("3 rounds").
    */
   category?: {
     label: string;
+    iconSlug?: string | null;
     onPress?: () => void;
     onAdd?: () => void;
-    queue?: { id: string; name: string; iconSlug?: string | null }[];
-    /** Tapping the queue / rounds caption opens the round-order sheet. */
-    onQueuePress?: () => void;
-    roundsLabel?: string;
   };
   /** Play on TV — rendered as a row inside the Game Rules tab, host only. */
   tv?: { label: string; onPress?: () => void };
@@ -337,9 +333,17 @@ export function UniversalLobby({
         <div className="mx-auto flex min-h-full w-full max-w-[700px] flex-col px-4 md:max-w-[520px]">
           {category && (
             <motion.div {...arrive(0.24)} className="mt-[9px] shrink-0 pl-[9px] pr-[3px]">
+              {/* Just the FIRST round — its category's icon and name, with a
+                  "(+N)" when more rounds are queued (owner's ask; the list of
+                  them read as clutter under the chip). Tapping the chip opens
+                  the round list; the + queues another. */}
               <div className="flex h-[52px] items-stretch gap-2">
-                <Chip icon={chipQuestion} label={category.label} onPress={category.onPress} />
-                {/* The + queues another round's category (owner's ask). */}
+                <Chip
+                  icon={chipQuestion}
+                  iconSlug={category.iconSlug}
+                  label={category.label}
+                  onPress={category.onPress}
+                />
                 {category.onAdd && (
                   <motion.button
                     type="button"
@@ -355,43 +359,6 @@ export function UniversalLobby({
                   </motion.button>
                 )}
               </div>
-              {/* The rounds lined up — icon + name, scrolling left/right.
-                  Tapping opens the round-order sheet (reorder / remove). */}
-              {category.queue && category.queue.length > 0 && (
-                <div
-                  role={category.onQueuePress ? "button" : undefined}
-                  onClick={category.onQueuePress}
-                  className={cn(
-                    "mt-2 flex gap-2 overflow-x-auto scrollbar-hide pb-1",
-                    category.onQueuePress && "cursor-pointer",
-                  )}
-                >
-                  {category.queue.map((q) => (
-                    <span
-                      key={q.id}
-                      className={cn(
-                        "flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-[rgba(252,247,255,0.6)] px-3",
-                        RULE_BORDER,
-                      )}
-                    >
-                      <DynamicIcon slug={q.iconSlug || "mystery-box"} size={18} />
-                      <span className="whitespace-nowrap font-[Nunito] text-[13px] font-medium tracking-[-0.16px] text-[#402666]">
-                        {q.name}
-                      </span>
-                    </span>
-                  ))}
-                </div>
-              )}
-              {category.roundsLabel && (
-                <button
-                  type="button"
-                  onClick={category.onQueuePress}
-                  disabled={!category.onQueuePress}
-                  className="mt-1.5 block pl-1 text-left font-[Nunito] text-[12px] font-semibold tracking-[-0.16px] text-[#402666]/60"
-                >
-                  {category.roundsLabel}
-                </button>
-              )}
             </motion.div>
           )}
 
@@ -804,11 +771,15 @@ function RoomTitle({
  */
 function Chip({
   icon,
+  iconSlug,
   iconShadow,
   label,
   onPress,
 }: {
   icon: string;
+  /** The category's own icon. When set it replaces the static art — the
+      first round wears its category's face, not a generic question mark. */
+  iconSlug?: string | null;
   iconShadow?: boolean;
   label: string;
   onPress?: () => void;
@@ -824,12 +795,18 @@ function Chip({
         RULE_BORDER,
       )}
     >
-      <img
-        alt=""
-        src={icon}
-        style={{ filter: iconShadow ? "drop-shadow(2px -2px 0 rgba(0,0,0,0.12))" : undefined }}
-        className="pointer-events-none h-8 w-8 shrink-0 object-contain"
-      />
+      {iconSlug ? (
+        <span className="pointer-events-none shrink-0">
+          <DynamicIcon slug={iconSlug} size={32} />
+        </span>
+      ) : (
+        <img
+          alt=""
+          src={icon}
+          style={{ filter: iconShadow ? "drop-shadow(2px -2px 0 rgba(0,0,0,0.12))" : undefined }}
+          className="pointer-events-none h-8 w-8 shrink-0 object-contain"
+        />
+      )}
       <span className="min-w-0 flex-1 truncate font-[Nunito] text-[16px] font-medium leading-[19.5px] tracking-[-0.16px] text-[#402666]">
         {label}
       </span>

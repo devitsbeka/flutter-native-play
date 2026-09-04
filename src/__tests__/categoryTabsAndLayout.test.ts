@@ -269,11 +269,32 @@ describe("the classic lobby's create controls (owner's asks)", () => {
     expect(universal).not.toMatch(/<Chip icon=\{chipTv\}/);
   });
 
-  it("the category has a + to queue rounds, which scroll under it with a count", () => {
+  it("the chip shows only the first round — its icon + name + (+N) — and a + queues more", () => {
+    // The list of queued rounds under the chip read as clutter (owner's
+    // ask): show the first round with its category's OWN icon and a "(+N)"
+    // count, and open the round list on tap. The + still queues a round.
     expect(universal).toMatch(/category\.onAdd && \(/);
-    expect(universal).toMatch(/overflow-x-auto scrollbar-hide/);
-    expect(universal).toMatch(/category\.roundsLabel/);
-    expect(lobby).toMatch(/onAdd: isHost \?/);
-    expect(lobby).toMatch(/uRoundsSelected/);
+    expect(universal).toMatch(/iconSlug=\{category\.iconSlug\}/);
+    // The horizontal queue scroll and the rounds caption are gone.
+    expect(universal).not.toMatch(/overflow-x-auto scrollbar-hide/);
+    expect(universal).not.toMatch(/category\.roundsLabel/);
+    // The chip's icon is the category's own (DynamicIcon), not the question
+    // mark, when a first round is set.
+    expect(lobby).toMatch(/iconSlug: freshStart \? undefined : \(firstIconSlug \?\? undefined\)/);
+    expect(lobby).toMatch(/\(\+\$\{extra\}\)/);
+    expect(lobby).toMatch(/rounds > 1\s*\n\s*\? \(\) => setShowRoundOrder\(true\)/);
+  });
+
+  it("the category picker offers a fourth option: five random categories", () => {
+    const picker = read("src/components/team/CategoryPickerModal.tsx");
+    expect(picker).toMatch(/const handlePickFiveRandom = \(\) => \{/);
+    expect(picker).toMatch(/for \(let i = 0; i < 5; i\+\+\)/);
+    expect(picker).toMatch(/key: "random5"[^]*cpRandom5Title/);
+  });
+
+  it("the TV setup panel is dark ink on the lobby's light sheet, not white", () => {
+    const tv = read("src/components/team/TVSetupInline.tsx");
+    expect(tv).toMatch(/text-\[#402666\] text-sm font-medium/);
+    expect(tv).not.toMatch(/border-white\/30 text-white/);
   });
 });

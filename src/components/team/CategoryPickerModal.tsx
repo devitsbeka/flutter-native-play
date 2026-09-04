@@ -306,6 +306,24 @@ export function CategoryPickerModal({
     setView("main");
   };
 
+  /**
+   * Deal five random-category rounds in one tap (owner's ask). It queues
+   * five when there is a queue to add to; without one it falls back to the
+   * single random round the other callers expect.
+   */
+  const handlePickFiveRandom = () => {
+    if (onAddToQueue) {
+      for (let i = 0; i < 5; i++) {
+        onAddToQueue({ source_type: "random", category_name: t("extra.randomCategoryName") });
+      }
+    } else {
+      onSelectRandom();
+    }
+    onClose();
+    setSelectedItems([]);
+    setView("main");
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -361,6 +379,7 @@ export function CategoryPickerModal({
               {(
                 [
                   { key: "random", icon: iconDiceCard, title: t("extra.cpRandomTitle"), desc: t("extra.cpRandomDesc"), onTap: () => togglePick({ type: "random" }), picked: isPicked({ type: "random" }) },
+                  { key: "random5", icon: iconDiceCard, title: t("extra.cpRandom5Title"), desc: t("extra.cpRandom5Desc"), onTap: handlePickFiveRandom, picked: false },
                   { key: "library", icon: iconLibraryCard, title: t("extra.cpLibraryTitle"), desc: t("extra.cpLibraryDesc"), onTap: () => setView("library"), picked: false },
                   { key: "my-trivias", icon: stickerAlbum, title: t("extra.cpMyTriviasTitle"), desc: t("extra.cpMyTriviasDesc"), onTap: () => setView("my-trivias"), picked: false },
                 ]

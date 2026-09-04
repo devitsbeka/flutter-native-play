@@ -3084,6 +3084,8 @@ export const pt: KaTranslations = {
     cpMyTrivias: "Minhas Trivias",
     cpRandomTitle: "Aleatório",
     cpRandomDesc: "Categoria aleatória para o jogo",
+    cpRandom5Title: "5 aleatórias",
+    cpRandom5Desc: "Cinco rodadas de categorias aleatórias",
     cpLibraryTitle: "Biblioteca",
     cpLibraryDesc: "Escolha uma categoria da lista",
     cpMyTriviasTitle: "Meus Trivias",
