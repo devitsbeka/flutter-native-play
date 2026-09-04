@@ -153,6 +153,22 @@ describe("Guess replaced Random on the create screen", () => {
     );
   });
 
+  it("and the lobby never shows itself on the way to the round", () => {
+    // startGame is several round-trips, so the lobby rendered for a few
+    // seconds before the countdown replaced it — a screen you were never
+    // meant to see, arriving and leaving on its own. Held on the lobby's own
+    // wash instead, the same thing /team does while it resolves a ?join=.
+    const lobby = read("src/components/team/RoomLobbyV2.tsx");
+    expect(lobby).toMatch(/const \[autoStarting, setAutoStarting\] = useState\(\(\) => searchParams\.get\("autostart"\) === "1"\);/);
+    expect(lobby).toMatch(/if \(autoStarting\) \{\s*\n\s*return \(/);
+    expect(lobby).toMatch(/background: "#f5d9ff"/);
+    // A guest, or a room with nothing to play, gives the lobby straight back
+    // rather than holding a wash over a decision that will not change.
+    expect(lobby).toMatch(/if \(!isHost \|\| !hasSomethingToPlay\) \{\s*\n\s*setAutoStarting\(false\);/);
+    // And nothing can strand it: the wash times out into the lobby.
+    expect(lobby).toMatch(/setTimeout\(\(\) => setAutoStarting\(false\), 8000\)/);
+  });
+
   it("the tiles are the picture games the database actually has", () => {
     // POPULAR_IMAGE_CATEGORY_IDS names six; guess_movie has no row, and a
     // tile that opens a category nobody can play is worse than no tile.
