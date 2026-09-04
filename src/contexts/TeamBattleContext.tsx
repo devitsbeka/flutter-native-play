@@ -19,6 +19,7 @@ import React, {
 } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { turnSecondsFor } from "@/utils/turnLength";
+import type { RoomReaction } from "@/hooks/useRoomReactions";
 import { roomVisibilityFields, teamNameFields } from "@/utils/roomVisibility";
 import type { Json, Tables } from "@/integrations/supabase/types";
 import { useAuth } from "./AuthContext";
@@ -141,6 +142,15 @@ interface TeamBattleContextValue {
    */
   lastPoke: TBPoke | null;
   sendPoke: (toUserId: string, fromNickname: string) => void;
+  /**
+   * Icons sent to players during the match, in the order they arrived.
+   *
+   * Over the same broadcast, and for the same reason: a reaction is read
+   * once, by one person, minutes after it is sent, and then never again.
+   * See the note at the head of useRoomReactions for what a table cost.
+   */
+  reactions: RoomReaction[];
+  sendReaction: (toUserId: string, icon: string) => void;
   playedBy: Record<string, string>;
   voteSuper: (candidate: string) => Promise<void>;
   submitSuper: (questionIndex: number, answer: string) => Promise<{ correct: boolean } | null>;
@@ -208,6 +218,11 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
   // updates as the match runs).
   const [turnPicks, setTurnPicks] = useState<TBPick[]>([]);
   const [lastPoke, setLastPoke] = useState<TBPoke | null>(null);
+  const [reactions, setReactions] = useState<RoomReaction[]>([]);
+  // Who I am, readable from a callback that must not re-create itself every
+  // time auth settles — the live channel it writes to is set up once.
+  const userRef = useRef<string | null>(null);
+  userRef.current = user?.id ?? null;
   const [playedBy, setPlayedBy] = useState<Record<string, string>>({});
 
   const me = participants.find((p) => p.user_id === user?.id) ?? null;
@@ -351,6 +366,15 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
         if (!p?.to) return;
         setLastPoke({ to: p.to, from: p.from ?? "", at: Date.now() });
       })
+      .on("broadcast", { event: "reaction" }, ({ payload }) => {
+        const r = payload as Partial<RoomReaction>;
+        if (!r?.id || !r.to_user_id || !r.from_user_id || !r.icon) return;
+        setReactions((prev) =>
+          prev.some((x) => x.id === r.id)
+            ? prev
+            : [...prev, r as RoomReaction],
+        );
+      })
       .subscribe();
     liveChannelRef.current = liveCh;
     channelsRef.current = [stateCh, boardCh, partCh, roomCh, liveCh];
@@ -382,6 +406,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
   useEffect(() => {
     setTurnPicks([]);
     setPlayedBy({});
+    setReactions([]);
   }, [state?.game_id]);
   useEffect(() => {
     const tileId = state?.active_tile;
@@ -393,6 +418,24 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
   const sendPick = useCallback((pick: TBPick) => {
     void liveChannelRef.current?.send({ type: "broadcast", event: "pick", payload: pick });
   }, []);
+
+  const sendReaction = useCallback(
+    (toUserId: string, icon: string) => {
+      const from = userRef.current;
+      if (!from) return;
+      void liveChannelRef.current?.send({
+        type: "broadcast",
+        event: "reaction",
+        payload: {
+          id: `${from}:${Date.now()}:${Math.random().toString(36).slice(2, 8)}`,
+          from_user_id: from,
+          to_user_id: toUserId,
+          icon,
+        },
+      });
+    },
+    [],
+  );
 
   const sendPoke = useCallback((toUserId: string, fromNickname: string) => {
     void liveChannelRef.current?.send({
@@ -1058,6 +1101,8 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
       sendPick,
       lastPoke,
       sendPoke,
+      reactions,
+      sendReaction,
       playedBy,
       voteSuper,
       submitSuper,
@@ -1067,7 +1112,7 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
     [room, participants, pendingInvites, tiles, state, loading, isHost, myTeam, isSpotlight,
      createRoom, joinRoom, enterRoom, leaveRoom, leaveMatch, refreshRoom, setTeam, addBot, removeBot,
      setCaptain, voteCaptain, manageSeat, startMatch, startError, submitRps, pickTile, submitAnswer,
-     turnPicks, sendPick, lastPoke, sendPoke, playedBy, voteSuper, submitSuper, advance, settle],
+     turnPicks, sendPick, lastPoke, sendPoke, reactions, sendReaction, playedBy, voteSuper, submitSuper, advance, settle],
   );
 
   return <TeamBattleContext.Provider value={value}>{children}</TeamBattleContext.Provider>;
