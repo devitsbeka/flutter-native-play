@@ -10,6 +10,7 @@ import { filterCategoriesForLanguage } from "@/utils/languageCategoryFilter";
 import { excludePartyCategories, pinPartyCategoriesFirst } from "@/config/partyCategories";
 import { useAuth } from "@/contexts/AuthContext";
 import iconDiceCard from "@/assets/play-chooser/icon-dice.webp";
+import iconFiveRounds from "@/assets/spin-the-bottle.png";
 import iconLibraryCard from "@/assets/play-chooser/icon-library.webp";
 import stickerAlbum from "@/assets/sticker-album.png";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -379,7 +380,7 @@ export function CategoryPickerModal({
               {(
                 [
                   { key: "random", icon: iconDiceCard, title: t("extra.cpRandomTitle"), desc: t("extra.cpRandomDesc"), onTap: () => togglePick({ type: "random" }), picked: isPicked({ type: "random" }) },
-                  { key: "random5", icon: iconDiceCard, title: t("extra.cpRandom5Title"), desc: t("extra.cpRandom5Desc"), onTap: handlePickFiveRandom, picked: false },
+                  { key: "random5", icon: iconFiveRounds, title: t("extra.cpRandom5Title"), desc: t("extra.cpRandom5Desc"), onTap: handlePickFiveRandom, picked: false },
                   { key: "library", icon: iconLibraryCard, title: t("extra.cpLibraryTitle"), desc: t("extra.cpLibraryDesc"), onTap: () => setView("library"), picked: false },
                   { key: "my-trivias", icon: stickerAlbum, title: t("extra.cpMyTriviasTitle"), desc: t("extra.cpMyTriviasDesc"), onTap: () => setView("my-trivias"), picked: false },
                 ]

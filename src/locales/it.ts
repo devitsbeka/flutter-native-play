@@ -3082,7 +3082,7 @@ export const it: KaTranslations = {
     cpMyTrivias: "I Miei Trivia",
     cpRandomTitle: "Casuale",
     cpRandomDesc: "Categoria casuale per il gioco",
-    cpRandom5Title: "5 casuali",
+    cpRandom5Title: "5 round",
     cpRandom5Desc: "Cinque round di categorie casuali",
     cpLibraryTitle: "Libreria",
     cpLibraryDesc: "Scegli una categoria dalla lista",

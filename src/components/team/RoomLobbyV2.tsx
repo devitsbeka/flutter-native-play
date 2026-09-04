@@ -856,12 +856,10 @@ export function RoomLobbyV2() {
           ? (iconForCategoryName(currentRoom.category_name) || getCategoryIconSlug(currentRoom.category_id ?? "") || undefined)
           : (firstQueue?.icon_slug ?? undefined);
         return {
-          label:
-            freshStart || !firstName
-              ? t("lobby.uSelectCategory")
-              : extra > 0
-                ? `${firstName} (+${extra})`
-                : firstName,
+          label: freshStart || !firstName ? t("lobby.uSelectCategory") : firstName,
+          // The extra rounds ride the FAR RIGHT of the chip (owner's ask),
+          // not crowded against the category's name.
+          trailing: !freshStart && firstName && extra > 0 ? `+${extra}` : undefined,
           iconSlug: freshStart ? undefined : (firstIconSlug ?? undefined),
           // Tapping opens the round list when there is more than one; a single
           // round opens the picker to change it. The + always queues another.
