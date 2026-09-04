@@ -132,8 +132,14 @@ export function ReactionBar({ toUserId }: { toUserId: string }) {
  * and read one at a time AFTER their turn. So the six people who sent them
  * watched nothing happen, and the one person they were for read them once
  * the moment had passed. A reaction is a noise you make while something is
- * happening. It pops on every screen in the room, under the face of whoever
+ * happening. It pops on every screen in the room, beside the face of whoever
  * is playing, and then it is gone.
+ *
+ * It lives at the end of that row rather than in a band of its own: a row of
+ * its own held 46px of empty purple whenever nobody was reacting and pushed
+ * the question and its answers down the screen to hold it. Fixed height, so
+ * the header does not jump as reactions come and go, and it shrinks rather
+ * than shoving the name beside it off the row.
  */
 export function ReactionPops({
   items,
@@ -143,11 +149,11 @@ export function ReactionPops({
   senders: Map<string, { nickname: string; avatar_url: string | null }>;
 }) {
   return (
-    <div className="pointer-events-none flex h-[46px] flex-shrink-0 items-center justify-center gap-2 px-4">
+    <div className="pointer-events-none flex h-[34px] min-w-0 flex-shrink items-center justify-end gap-1.5 overflow-hidden">
       <AnimatePresence initial={false}>
-        {/* Newest last, and never more than a handful: a burst from a full
-            room must not push the question off the screen. */}
-        {items.slice(-5).map((r) => {
+        {/* Newest last, and never more than three: this is the end of a row
+            that already carries a name and a Call button. */}
+        {items.slice(-3).map((r) => {
           const who = senders.get(r.from_user_id);
           const reaction = reactionFor(r.icon);
           return (
@@ -157,12 +163,12 @@ export function ReactionPops({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -12, scale: 0.7 }}
               transition={{ type: "spring", stiffness: 460, damping: 24 }}
-              className="relative flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full bg-white/15 ring-1 ring-white/25"
+              className="relative flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full bg-white/15 ring-1 ring-white/25"
             >
               {reaction ? (
-                <Lottie animationData={reaction.data} loop className="h-8 w-8" />
+                <Lottie animationData={reaction.data} loop className="h-7 w-7" />
               ) : (
-                <img src={r.icon} alt="" className="h-7 w-7 object-contain" />
+                <img src={r.icon} alt="" className="h-6 w-6 object-contain" />
               )}
               {/* Whose it is — a reaction with nobody attached is just noise. */}
               <span className="absolute -bottom-1 -right-1">
@@ -170,7 +176,7 @@ export function ReactionPops({
                   avatarUrl={who?.avatar_url ?? null}
                   fallback={who?.nickname ?? "?"}
                   size="xs"
-                  className="h-[18px] w-[18px] ring-2 ring-[#7E7BDC]"
+                  className="h-4 w-4 ring-2 ring-[#7E7BDC]"
                 />
               </span>
             </motion.span>
