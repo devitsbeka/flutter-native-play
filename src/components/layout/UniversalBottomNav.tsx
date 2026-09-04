@@ -8,6 +8,7 @@ import { useNewContentIndicators } from "@/hooks/useNewContentIndicators";
 import { useNavigationPrefetch } from "@/hooks/useNavigationPrefetch";
 import { toast } from "@/lib/toast";
 import { GuestMaxPlaysModal } from "@/components/home/GuestMaxPlaysModal";
+import { BackToTopButton } from "./BackToTopButton";
 
 // Eager preload main route chunks for instant navigation
 const preloadRouteChunks = () => {
@@ -111,6 +112,11 @@ export function UniversalBottomNav({
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 overflow-visible">
+      {/* Back to the top of whatever is scrolling, above the centre button.
+          It lives here because this bar is the one thing on screen on every
+          page that has a long list on it, and it is where the thumb rests. */}
+      <BackToTopButton />
+
       {/* Wave divider at top */}
       <svg 
         className="absolute w-full" 
