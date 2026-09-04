@@ -236,7 +236,7 @@ export default function Streak() {
           </section>
 
           {/* The week (1069:336): one tappable tile per day. */}
-          <section className="mt-[29px] px-4">
+          <section className="mt-[29px] px-4" aria-label={t("extra.streakKeepRule")}>
             <div className="flex items-center gap-[6px]">
               <Calendar className="h-4 w-4 text-[#6b7280]" strokeWidth={1.33} />
               <span className="font-[Nunito] text-[14px] font-medium leading-5 tracking-[-0.16px] text-[#4b5563]">
@@ -294,21 +294,13 @@ export default function Streak() {
                 );
               })}
             </div>
-            <p className="mt-[12px] text-center font-[Nunito] text-[12px] font-medium leading-[16px] tracking-[-0.16px] text-[#6b7280]">
-              {t("extra.streakKeepRule")}
-            </p>
           </section>
 
           {/* The selected day's missions (List Item, 1069:150), easiest first. */}
-          <section className="mt-[23px] px-[27px]">
-            <div className="mb-[10px] flex items-baseline justify-between">
-              <h2 className="font-[Nunito] text-[16px] font-bold leading-[22px] tracking-[-0.16px] text-[#402666]">
-                {t("extra.streakDayMissions")}
-              </h2>
-              <span className="font-[Nunito] text-[12px] font-medium leading-[16px] tracking-[-0.16px] text-[#6b7280]">
-                {formatDayWithWeekday(selectedSlot.date, language, { utc: true })}
-              </span>
-            </div>
+          <section className="mt-[29px] px-[27px]" aria-label={t("extra.streakDayMissions")}>
+            <h2 className="mb-[10px] font-[Nunito] text-[16px] font-bold leading-[22px] tracking-[-0.16px] text-[#402666]">
+              {formatDayWithWeekday(selectedSlot.date, language, { utc: true })}
+            </h2>
             <div className="flex flex-col gap-[10px]">
               {user && day.loading && rows.length === 0
                 ? Array.from({ length: 4 }, (_, i) => (
@@ -325,12 +317,12 @@ export default function Streak() {
                           src={MISSION_ICONS[getMissionIcon(row.missionId)]}
                           className={cn("mr-[10px] size-[34px] shrink-0 object-contain", muted && "mix-blend-luminosity opacity-60")}
                         />
-                        <span className={cn("flex min-w-0 flex-1 flex-col pr-[96px] text-left", muted && "opacity-50")}>
-                          <span className={cn(LABEL, "truncate leading-[20px]")}>{row.title}</span>
-                          <span className="truncate font-[Nunito] text-[12px] font-medium leading-[16px] tracking-[-0.16px] text-[#6b7280]">
-                            {row.description}
-                            {row.target > 1 && !row.completed && row.progress > 0 ? ` · ${row.progress}/${row.target}` : ""}
-                          </span>
+                        <span
+                          className={cn(LABEL, "line-clamp-3 min-w-0 flex-1 pr-[88px] text-left leading-[18px]", muted && "opacity-50")}
+                          title={row.title}
+                        >
+                          {row.description}
+                          {row.target > 1 && !row.completed && row.progress > 0 ? ` · ${row.progress}/${row.target}` : ""}
                         </span>
 
                         {row.completed ? (
@@ -382,7 +374,7 @@ export default function Streak() {
           </section>
 
           {/* The milestones (List Item, 1069:150): coins, once each. */}
-          <section className="mt-[23px] px-[27px] pb-6">
+          <section className="mt-[29px] px-[27px] pb-6">
             <h2 className="mb-[10px] font-[Nunito] text-[16px] font-bold leading-[22px] tracking-[-0.16px] text-[#402666]">
               {t("extra.streakMilestonesTitle")}
             </h2>
