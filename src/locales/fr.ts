@@ -1433,6 +1433,7 @@ export const fr: KaTranslations = {
     pokeSent: "Appelé",
     pokeNotifTitle: "{name} t'appelle — le chrono tourne !",
     pokeNotifBody: "C'est ton tour — le temps tourne",
+    callBack: "Rappeler",
     callBackTitle: "{name} te rappelle",
     callBackBody: "Ton équipe t'attend — reviens et lancez la partie",
     sendIcon: "Envoyer une icône",

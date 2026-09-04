@@ -25,11 +25,22 @@ export interface ParticipantPresence {
   /** Ids that were not online a moment ago and are now — one render's worth,
    *  which is what an arrival animation needs to fire once and not again. */
   arrived: Set<string>;
+  /**
+   * The first answer has come back.
+   *
+   * Before it, `online` is empty — which is indistinguishable from "nobody
+   * is here" and is why a lobby opened with every avatar greyed out. Callers
+   * that draw an ABSENCE (a grey face, a bell to call somebody back) have to
+   * wait for this; callers that draw a presence (a green ring) can read
+   * `online` straight away, since an empty set draws nothing.
+   */
+  loaded: boolean;
 }
 
 export function useParticipantPresence(userIds: string[]): ParticipantPresence {
   const [online, setOnline] = useState<Set<string>>(() => new Set());
   const [arrived, setArrived] = useState<Set<string>>(() => new Set());
+  const [loaded, setLoaded] = useState(false);
 
   // Sorted and joined so a re-render with the same people does not restart
   // the subscription. Array identity changes on every parent render; this
@@ -43,6 +54,7 @@ export function useParticipantPresence(userIds: string[]): ParticipantPresence {
     if (ids.length === 0) {
       previous.current = new Set();
       setOnline(new Set());
+      setLoaded(true);
       return;
     }
 
@@ -60,6 +72,7 @@ export function useParticipantPresence(userIds: string[]): ParticipantPresence {
     previous.current = next;
 
     setOnline(next);
+    setLoaded(true);
     if (justArrived.size > 0) setArrived(justArrived);
   }, [key]);
 
@@ -90,5 +103,5 @@ export function useParticipantPresence(userIds: string[]): ParticipantPresence {
     };
   }, [key, fetchPresence]);
 
-  return { online, arrived };
+  return { online, arrived, loaded };
 }

@@ -1728,6 +1728,7 @@ export const en: KaTranslations = {
     pokeSent: "Called them",
     pokeNotifTitle: "{name} is calling you — the clock is running!",
     pokeNotifBody: "It's your turn — the clock is running",
+    callBack: "Call back",
     callBackTitle: "{name} is calling you back",
     callBackBody: "Your team is waiting — come back and start the game",
     sendIcon: "Send an icon",

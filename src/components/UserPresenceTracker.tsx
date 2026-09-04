@@ -20,6 +20,21 @@ export const UserPresenceTracker = () => {
   const location = useLocation();
   const heartbeatRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isUpdatingRef = useRef(false);
+  /**
+   * The page, read rather than closed over.
+   *
+   * `updatePresence` used to depend on `location.pathname`, so it was a new
+   * function on every navigation — and the effect below, which depends on
+   * it, tore down and rebuilt. Its cleanup writes `offline`. So walking from
+   * one screen to the next marked you offline to everybody else, and the
+   * `online` that followed was swallowed by the in-flight guard: for up to a
+   * minute, until the heartbeat, a player who had just arrived in a lobby
+   * read as away. Every avatar in that lobby greyed out.
+   */
+  const pageRef = useRef(location.pathname);
+  pageRef.current = location.pathname;
+  /** What we last asked for, so a dropped write can be re-sent. */
+  const wantedRef = useRef<'online' | 'away' | 'offline' | null>(null);
 
   // Session tracking for analytics (separate from presence)
   useSessionTracker();
@@ -47,32 +62,44 @@ export const UserPresenceTracker = () => {
       return;
     }
 
-    // Prevent concurrent updates
+    // Remember what was asked for even if this call cannot run now. The
+    // guard below used to DROP a concurrent update, which is fine for two
+    // identical heartbeats and wrong for a status change — an `offline`
+    // in flight would swallow the `online` behind it and leave the row
+    // saying the opposite of the truth until the next heartbeat.
+    wantedRef.current = status;
     if (isUpdatingRef.current) return;
     isUpdatingRef.current = true;
 
     try {
-      const { error } = await supabase
-        .from('user_presence')
-        .upsert({
-          user_id: user.id,
-          status,
-          current_page: location.pathname,
-          last_seen: new Date().toISOString(),
-        }, {
-          onConflict: 'user_id'
-        });
+      while (wantedRef.current) {
+        const next = wantedRef.current;
+        wantedRef.current = null;
+        const { error } = await supabase
+          .from('user_presence')
+          .upsert({
+            user_id: user.id,
+            status: next,
+            current_page: pageRef.current,
+            last_seen: new Date().toISOString(),
+          }, {
+            onConflict: 'user_id'
+          });
 
-      if (error) {
-        // Silent fail - don't spam console
-        logger.debug('Presence update failed:', error.message);
+        if (error) {
+          // Silent fail - don't spam console
+          logger.debug('Presence update failed:', error.message);
+        }
       }
     } catch {
       // Silent fail
     } finally {
       isUpdatingRef.current = false;
     }
-  }, [user?.id, location.pathname, isSessionValid]);
+    // No location.pathname: this function must keep its identity across a
+    // navigation, or the effect that owns the heartbeat restarts and its
+    // cleanup writes `offline`. The page it records is read off the ref.
+  }, [user?.id, isSessionValid]);
 
   useEffect(() => {
     // Guard: Only track authenticated users

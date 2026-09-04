@@ -46,19 +46,31 @@ describe("the lobby's bell", () => {
 });
 
 describe("an absent player is visible, and callable", () => {
-  it("the row greys and grows a bell", () => {
+  it("the face greys and wears the bell, and the row says the word", () => {
     expect(universal).toMatch(/offline\?: boolean;/);
     expect(universal).toMatch(/onCall\?: \(\) => void;/);
     expect(universal).toMatch(/player\.offline && "opacity-45 grayscale"/);
+    // The badge sits ON the avatar: the face is what says "away", and a
+    // loose amber circle at the far end of the row was a whole name away
+    // from what it referred to.
+    expect(universal).toMatch(/\{player\.offline && \(\s*\n\s*<span[^]*?-bottom-0\.5 -right-0\.5[^]*?BellRing/);
     expect(universal).toMatch(/player\.offline && player\.onCall \?/);
+    expect(universal).toMatch(/\{callLabel\}/);
   });
 
   it("the arena reads presence and pings the person who is missing", () => {
-    expect(battle).toMatch(/const \{ online \} = useParticipantPresence\(seatedIds\)/);
-    // A bot is never away; nor are you, sitting here looking at the screen.
     expect(battle).toMatch(
-      /offline: !pending && !p\.is_bot && p\.user_id !== user\?\.id && !online\.has\(p\.user_id\)/,
+      /const \{ online, loaded: presenceLoaded \} = useParticipantPresence\(seatedIds\)/,
     );
+    // A bot is never away; nor are you, sitting here looking at the screen —
+    // and nor is anybody before the first answer has come back. `online`
+    // starts empty, which is indistinguishable from a deserted room, so the
+    // lobby opened with every face greyed and belled.
+    expect(battle).toMatch(/offline:\s*\n?\s*presenceLoaded &&/);
+    expect(battle).toMatch(/!online\.has\(p\.user_id\)/);
+    const hook = read("src/hooks/useParticipantPresence.ts");
+    expect(hook).toMatch(/loaded: boolean;/);
+    expect(hook).toMatch(/return \{ online, arrived, loaded \};/);
     // Same road the in-match call takes: a notification that routes back
     // here, plus a push for somebody who has left the app.
     expect(battle).toMatch(/createNotification\(\s*target\.user_id,\s*"room_ping",/);
@@ -185,5 +197,29 @@ describe("a room that can start says so", () => {
     const section = read("src/components/team/PublicRoomsSection.tsx");
     expect(section).toMatch(/flex-1 flex items-center justify-center gap-3 py-3/);
     expect(section).not.toMatch(/flex-1 flex items-center justify-between gap-2 py-3/);
+  });
+});
+
+describe("walking to another screen does not sign you out of the room", () => {
+  const tracker = read("src/components/UserPresenceTracker.tsx");
+
+  it("the heartbeat survives a navigation", () => {
+    // `updatePresence` depended on location.pathname, so it was a new
+    // function on every route change — and the effect that owns the
+    // heartbeat, which depends on it, tore down and rebuilt. Its cleanup
+    // writes `offline`. Everyone in the lobby you had just walked into saw
+    // you as away until the next heartbeat, up to a minute later.
+    expect(tracker).toMatch(/const pageRef = useRef\(location\.pathname\);/);
+    expect(tracker).toMatch(/current_page: pageRef\.current,/);
+    expect(tracker).toMatch(/\}, \[user\?\.id, isSessionValid\]\);/);
+    expect(tracker).not.toMatch(/\[user\?\.id, location\.pathname, isSessionValid\]/);
+  });
+
+  it("and a status change is never swallowed by the one in flight", () => {
+    // Fine for two identical heartbeats, wrong for a change: an `offline`
+    // in flight dropped the `online` behind it and left the row saying the
+    // opposite of the truth.
+    expect(tracker).toMatch(/wantedRef\.current = status;/);
+    expect(tracker).toMatch(/while \(wantedRef\.current\) \{/);
   });
 });

@@ -967,6 +967,21 @@ function PlayerRow({
             )}
           />
         )}
+        {/* The bell belongs ON the grey face, not at the far end of the
+            row: the face is what says "away", and the two read as one
+            thing — this person, and the way to fetch them. At the row's
+            edge it was a loose amber circle a whole name away from what
+            it referred to. */}
+        {player.offline && (
+          <span
+            className={cn(
+              "pointer-events-none absolute -bottom-0.5 -right-0.5 flex items-center justify-center rounded-full bg-amber-400 text-[#402666] shadow-[0_1px_3px_rgba(0,0,0,0.3)]",
+              compact ? "h-[18px] w-[18px]" : "h-[22px] w-[22px]",
+            )}
+          >
+            <BellRing className={compact ? "h-2.5 w-2.5" : "h-3 w-3"} strokeWidth={2.75} />
+          </span>
+        )}
       </span>
       <span
         className={cn(
@@ -1011,22 +1026,21 @@ function PlayerRow({
     )
   ) : null;
 
-  // The bell on an absent player's own row: the fastest way to ask for the
-  // one thing the room is waiting on. It is a control of its own, beside
-  // the row's tap rather than inside it.
+  // The word next to the bell: "call them back", said once, in text, so the
+  // badge on the face is not the only thing carrying the meaning.
   const call =
     player.offline && player.onCall ? (
       <motion.button
         type="button"
-        whileTap={{ scale: 0.92 }}
+        whileTap={{ scale: 0.94 }}
         onClick={player.onCall}
         aria-label={callLabel}
         className={cn(
-          "flex shrink-0 items-center justify-center rounded-full bg-amber-400 text-[#402666] shadow-sm",
-          compact ? "ml-1 h-7 w-7" : "ml-2 h-9 w-9",
+          "shrink-0 truncate rounded-full bg-amber-400 font-[Nunito] font-bold text-[#402666] shadow-sm",
+          compact ? "ml-1 px-2 py-1 text-[11px] leading-3" : "ml-2 px-3 py-1.5 text-[13px] leading-4",
         )}
       >
-        <BellRing className={compact ? "h-3.5 w-3.5" : "h-4 w-4"} strokeWidth={2.5} />
+        {callLabel}
       </motion.button>
     ) : null;
 

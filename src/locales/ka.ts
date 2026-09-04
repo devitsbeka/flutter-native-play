@@ -1730,6 +1730,7 @@ export const ka = {
     pokeSent: "დაუძახე — გაიგზავნა",
     pokeNotifTitle: "{name} გეძახის — დრო მიდის!",
     pokeNotifBody: "შენი სვლაა — დრო მიდის",
+    callBack: "დაძახება",
     callBackTitle: "{name} გიხმობს ოთახში",
     callBackBody: "გუნდი გელოდება — დაბრუნდი და დაიწყეთ თამაში",
     sendIcon: "გაუგზავნე იკონი",

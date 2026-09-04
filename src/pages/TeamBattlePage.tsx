@@ -580,7 +580,17 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
       isYou: p.user_id === user?.id,
       pending,
       // A bot is never "away"; neither are you, sitting here reading this.
-      offline: !pending && !p.is_bot && p.user_id !== user?.id && !online.has(p.user_id),
+      //
+      // And nobody is away until presence has actually answered. `online`
+      // starts empty, which is indistinguishable from "the room is deserted"
+      // — so the lobby opened with every face greyed and a bell on each of
+      // them, before a single request had come back.
+      offline:
+        presenceLoaded &&
+        !pending &&
+        !p.is_bot &&
+        p.user_id !== user?.id &&
+        !online.has(p.user_id),
       onCall: calledIds.has(p.user_id) ? undefined : () => void callBack(p),
       onPress: () => seatTap(p, pending),
     }));
@@ -681,7 +691,7 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
     () => participants.filter((p) => !p.is_bot).map((p) => p.user_id),
     [participants],
   );
-  const { online } = useParticipantPresence(seatedIds);
+  const { online, loaded: presenceLoaded } = useParticipantPresence(seatedIds);
 
   /**
    * Ping an absent teammate back into the room.
@@ -865,7 +875,7 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
         you: t("lobby.uYou"),
         rounds: (count) => t("lobby.uRoundsShort", { count }),
         notifications: t("extra.notifications"),
-        call: t("teamBattle.poke"),
+        call: t("teamBattle.callBack"),
         captain: t("lobby.captainLabel"),
       }}
       rules={[
