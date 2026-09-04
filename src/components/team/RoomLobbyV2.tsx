@@ -697,6 +697,47 @@ export function RoomLobbyV2() {
     }
   };
 
+  /**
+   * The round the create screen already asked for.
+   *
+   * A Guess tile is a "play this" tap, not a "make me a room" tap: picking
+   * the picture game IS the whole choice, so stopping at a lobby with one
+   * seat in it and a Start button asks a question that was already answered.
+   * The create screen sends ?autostart=1 along with the room code and the
+   * lobby presses its own Start on arrival.
+   *
+   * Here rather than in the create screen because startGame reads
+   * state.currentRoom off its own closure: called a tick after createRoom
+   * set it, it would read null and return without a word. Going through
+   * handleStartGame puts the round behind the same checks the button has —
+   * the queue, the host-observer policy, isStarting.
+   *
+   * The two conditions below are written from the room and its seats rather
+   * than from `needsCategorySelection` and `enoughPlayers`, which are
+   * declared under this file's `if (!currentRoom) return null` and so are
+   * out of reach of any hook. Keep them in step with those.
+   */
+  const autoStartedRef = useRef(false);
+  useEffect(() => {
+    if (autoStartedRef.current) return;
+    if (searchParams.get("autostart") !== "1") return;
+    if (!currentRoom || !isHost || isStarting || loading) return;
+    // Something to play, and somebody to play it. A room still asking which
+    // category is not one this can answer for — it falls through to the
+    // lobby, which is the right place to be asked.
+    const hasSomethingToPlay =
+      queue.length > 0 || !!currentRoom.category_id || !!currentRoom.user_trivia_id;
+    const seated = participants.filter((p) => (p.status as string) !== "invited").length;
+    if (!hasSomethingToPlay || seated < 1) return;
+    autoStartedRef.current = true;
+    // Spent, so a refresh does not start a second round.
+    const next = new URLSearchParams(searchParams);
+    next.delete("autostart");
+    setSearchParams(next, { replace: true });
+    void handleStartGame();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, currentRoom, isHost, isStarting, loading, queue, participants]);
+
   if (!currentRoom) return null;
 
   /**
@@ -727,6 +768,7 @@ export function RoomLobbyV2() {
   const hasContent = queue.length > 0 || currentRoom.category_id || currentRoom.user_trivia_id;
   // Only offer "choose a category" when there's truly nothing to play
   const needsCategorySelection = !hasContent;
+
   const handleStartOrPick = () => {
     if (needsCategorySelection) {
       // No content or returned from game - just open picker (no auto-start)
