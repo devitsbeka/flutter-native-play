@@ -85,6 +85,49 @@ describe("Guess replaced Random on the create screen", () => {
     expect(screen).toMatch(/if \(blockStart \+ 4 > total\) return "rounded-\[24px\]";/);
   });
 
+  it("a picked tile actually walks into the room it just made", () => {
+    // The category branch of performCreate created the room and stopped
+    // there. It leaned on createRoom flipping the multiplayer context to
+    // phase "lobby" — which only the rooms hub renders, over itself — and
+    // /create-room mounts its own provider whose only consumer is the create
+    // screen. So on that route the room was made, the context changed, and
+    // the screen sat exactly where it was. Every other branch navigates; this
+    // one has to as well.
+    expect(create).toMatch(/let walkInCode: string \| null = null;/);
+    // The code the room GOT, not the one that was planned — createRoom falls
+    // back to a fresh code on a collision.
+    expect(create).toMatch(/walkInCode = room\?\.room_code \?\? null;/);
+    expect(create).toMatch(/if \(walkInCode\) \{\s*\n\s*onClose\(\);\s*\n\s*navigate\(`\/team\?join=\$\{walkInCode\}`\);/);
+    // And it goes last, so the invitations are sent before the screen leaves.
+    const walkIn = create.indexOf("if (walkInCode) {");
+    const invites = create.indexOf("await sendInvitation(challengeUserId, room.id);");
+    expect(invites).toBeGreaterThan(-1);
+    expect(walkIn).toBeGreaterThan(invites);
+  });
+
+  it("and a second tap can still arm the start", () => {
+    // createEnabled does not change when one category replaces another, so
+    // an effect keyed only on it never re-ran: after a create that failed and
+    // toasted, every later tap set the ref and waited on a dependency that
+    // was already true.
+    expect(create).toMatch(/\}, \[gameChoice, createEnabled, isCreating, selectedCategory\]\);/);
+  });
+
+  it("and going back brings the carousel back with it", () => {
+    // The cards derive their height from --row-h, which the row measures and
+    // publishes on itself. That measurement used to be a mount effect with []
+    // deps — but the Guess screen UNMOUNTS the row while this component stays
+    // mounted, so coming back mounted a new row the effect never ran for and
+    // the observer was still watching the old, detached one. --row-h went
+    // unset and every card resolved to zero height: a heading, a hairline and
+    // no cards. A callback ref follows the element instead of the mount.
+    expect(create).toMatch(/const rowRef = useCallback\(\(el: HTMLDivElement \| null\) => \{/);
+    expect(create).toMatch(/rowObserver\.current\?\.disconnect\(\);/);
+    expect(create).toMatch(/rowObserver\.current = ro;/);
+    // The old shape, which could not survive the row being remounted.
+    expect(create).not.toMatch(/const el = rowRef\.current;/);
+  });
+
   it("the tiles are the picture games the database actually has", () => {
     // POPULAR_IMAGE_CATEGORY_IDS names six; guess_movie has no row, and a
     // tile that opens a category nobody can play is worse than no tile.
