@@ -112,8 +112,11 @@ BEGIN
     (v_host, 'Host'), (v_guest, 'Guest'), (v_friend, 'Friend')
   ON CONFLICT (user_id) DO UPDATE SET nickname = EXCLUDED.nickname;
 
-  INSERT INTO public.game_rooms (room_code, host_user_id, room_name, status, is_public)
-  VALUES ('PUBLIC', v_host, 'The published one', 'waiting', true)
+  -- This block exercises the knock-and-approve flow, which is now the
+  -- opt-in path: a public room is OPEN by default (20260930100000), so the
+  -- room that tests approval has to ask for it with requires_approval.
+  INSERT INTO public.game_rooms (room_code, host_user_id, room_name, status, is_public, requires_approval)
+  VALUES ('PUBLIC', v_host, 'The published one', 'waiting', true, true)
   RETURNING id INTO v_pub;
 
   INSERT INTO public.game_rooms (room_code, host_user_id, room_name, status, is_public)
@@ -257,8 +260,10 @@ BEGIN
     (v_host, 'Host3'), (v_pest, 'Pest'), (v_guest, 'Guest3')
   ON CONFLICT (user_id) DO UPDATE SET nickname = EXCLUDED.nickname;
 
-  INSERT INTO public.game_rooms (room_code, host_user_id, status, is_public)
-  VALUES ('PUBIN3', v_host, 'waiting', true) RETURNING id INTO v_room;
+  -- Approval-required, so the knock/block/approve flow below has a request
+  -- to act on rather than an instant seat (a public room is open by default).
+  INSERT INTO public.game_rooms (room_code, host_user_id, status, is_public, requires_approval)
+  VALUES ('PUBIN3', v_host, 'waiting', true, true) RETURNING id INTO v_room;
   INSERT INTO public.room_participants (room_id, user_id, nickname, is_host, status)
   VALUES (v_room, v_host, 'Host3', true, 'joined');
 
@@ -401,8 +406,10 @@ BEGIN
     (v_host, 'Host5'), (v_asker, 'Asker5')
   ON CONFLICT (user_id) DO UPDATE SET nickname = EXCLUDED.nickname;
 
-  INSERT INTO public.game_rooms (room_code, host_user_id, status, is_public, game_type_key)
-  VALUES ('ARENA2', v_host, 'waiting', true, 'team_battle') RETURNING id INTO v_room;
+  -- Approval-required so the ask files a request the host then answers onto a
+  -- team (a public room is open by default, which would seat with no request).
+  INSERT INTO public.game_rooms (room_code, host_user_id, status, is_public, requires_approval, game_type_key)
+  VALUES ('ARENA2', v_host, 'waiting', true, true, 'team_battle') RETURNING id INTO v_room;
   INSERT INTO public.room_participants (room_id, user_id, nickname, is_host, status, team)
   VALUES (v_room, v_host, 'Host5', true, 'joined', 'a');
 
@@ -440,8 +447,10 @@ BEGIN
     (v_host, 'Host2'), (v_asked, 'Asked')
   ON CONFLICT (user_id) DO UPDATE SET nickname = EXCLUDED.nickname;
 
-  INSERT INTO public.game_rooms (room_code, host_user_id, status, is_public)
-  VALUES ('PUBIN2', v_host, 'waiting', true) RETURNING id INTO v_room;
+  -- Approval-required, so the invite (not the open door) is what walks the
+  -- asked player straight in — which is the branch this block exercises.
+  INSERT INTO public.game_rooms (room_code, host_user_id, status, is_public, requires_approval)
+  VALUES ('PUBIN2', v_host, 'waiting', true, true) RETURNING id INTO v_room;
   INSERT INTO public.room_participants (room_id, user_id, nickname, is_host, status)
   VALUES (v_room, v_host, 'Host2', true, 'joined');
 
@@ -480,8 +489,10 @@ BEGIN
     (v_host, 'Host3'), (v_one, 'One'), (v_two, 'Two')
   ON CONFLICT (user_id) DO UPDATE SET nickname = EXCLUDED.nickname;
 
-  INSERT INTO public.game_rooms (room_code, host_user_id, status, is_public)
-  VALUES ('PUBWD1', v_host, 'waiting', true) RETURNING id INTO v_room;
+  -- Approval-required, so the two asks land as pending rows to withdraw
+  -- (an open room would seat them and file nothing to take back).
+  INSERT INTO public.game_rooms (room_code, host_user_id, status, is_public, requires_approval)
+  VALUES ('PUBWD1', v_host, 'waiting', true, true) RETURNING id INTO v_room;
   INSERT INTO public.room_participants (room_id, user_id, nickname, is_host, status)
   VALUES (v_room, v_host, 'Host3', true, 'joined');
 
