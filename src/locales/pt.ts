@@ -1449,6 +1449,7 @@ export const pt: KaTranslations = {
     callBackBody: "A tua equipa espera — volta e comecem o jogo",
     sendIcon: "Enviar um ícone",
     sendIconAction: "Enviar",
+    reactionSent: "Enviado",
     reactionClap: "Aplauso",
     reactionLaugh: "Risada",
     reactionLove: "Amor",

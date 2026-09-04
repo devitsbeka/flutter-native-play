@@ -1735,6 +1735,7 @@ export const ka = {
     callBackBody: "გუნდი გელოდება — დაბრუნდი და დაიწყეთ თამაში",
     sendIcon: "გაუგზავნე იკონი",
     sendIconAction: "გაგზავნა",
+    reactionSent: "გაიგზავნა",
     reactionClap: "ტაში",
     reactionLaugh: "სიცილი",
     reactionLove: "სიყვარული",

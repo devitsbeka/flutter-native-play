@@ -44,8 +44,8 @@ import { dealtCrests, fetchCrestPool } from "@/utils/roomCrests";
 import { createNotification } from "@/hooks/useNotifications";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast";
-import { useIncomingReactions } from "@/hooks/useRoomReactions";
-import { ReactionBar, ReactionInbox } from "@/components/team-battle/ReactionBar";
+import { useLiveReactions } from "@/hooks/useRoomReactions";
+import { ReactionBar, ReactionPops } from "@/components/team-battle/ReactionBar";
 
 // The app's chunky-3D language (see QuizAnswerButton/QuizTrueFalseButton):
 // a solid depth layer behind a face, on the periwinkle game background.
@@ -222,30 +222,8 @@ function ScoreHeader({ seconds, maxSeconds }: { seconds?: number; maxSeconds?: n
 }
 
 export function TeamBattleMatch({ onResultDismiss }: { onResultDismiss?: () => void }) {
-  const { state, participants, reactions } = useTeamBattle();
-  const { user } = useAuth();
-  // Icons sent to me during my turn, held until the turn is over: the
-  // inbox lives here, above the phases, so it survives the phase switch
-  // that is exactly when it gets read.
-  const inbox = useIncomingReactions(reactions, user?.id);
-  const senders = useMemo(
-    () => new Map(participants.map((p) => [p.user_id, { nickname: p.nickname, avatar_url: p.avatar_url }])),
-    [participants],
-  );
+  const { state } = useTeamBattle();
   if (!state) return null;
-  const onSpot = state.phase === "rapid_fire" && state.active_player === user?.id;
-  const strip = !onSpot && inbox.next && (
-    <div className="fixed inset-x-0 z-30 flex justify-center pointer-events-none" style={{ top: "calc(var(--safe-top) + 4.5rem)" }}>
-      <div className="w-full max-w-[520px] pointer-events-auto">
-        <ReactionInbox
-          next={inbox.next}
-          remaining={inbox.remaining}
-          senders={senders}
-          onDismiss={inbox.dismiss}
-        />
-      </div>
-    </div>
-  );
   const phase = (() => {
     switch (state.phase) {
       case "rps":
@@ -267,7 +245,6 @@ export function TeamBattleMatch({ onResultDismiss }: { onResultDismiss?: () => v
   return (
     <>
       {phase}
-      {strip}
     </>
   );
 }
@@ -641,8 +618,15 @@ function PhaseRapidFire() {
   const { user, profile } = useAuth();
   const {
     state, room, tiles, participants, isSpotlight, myTeam, submitAnswer,
-    turnPicks, sendPick, lastPoke, sendPoke, advance,
+    turnPicks, sendPick, lastPoke, sendPoke, reactions, advance,
   } = useTeamBattle();
+  // What is in the air right now — the same on every device in the room,
+  // for a second and a half each.
+  const pops = useLiveReactions(reactions);
+  const senders = useMemo(
+    () => new Map(participants.map((p) => [p.user_id, { nickname: p.nickname, avatar_url: p.avatar_url }])),
+    [participants],
+  );
   const secondsLeft = useServerDeadline(state?.deadline, advance);
   const [choice, setChoice] = useState<{ option: string; correct: boolean } | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -835,6 +819,13 @@ function PhaseRapidFire() {
           </div>
         </div>
 
+        {/* Reactions land here, under the face of whoever is playing: the
+            spotlight sees what is being sent them WHILE they play, and so
+            does everyone else. It holds its height whether or not anything
+            is in the air, so the question does not hop down the screen
+            every time somebody claps. */}
+        <ReactionPops items={pops} senders={senders} />
+
         {/* the turn's running tally — a green/red dot per answered question,
             so everyone reads the turn at a glance (only the freshest twelve:
             a three-minute run would otherwise overflow the row) */}
@@ -853,21 +844,6 @@ function PhaseRapidFire() {
         )}
 
         <div className="relative px-4 pt-8 flex-shrink-0">
-          <AnimatePresence>
-            {called && (
-              <motion.div
-                key="call"
-                initial={{ opacity: 0, y: -6, scale: 0.9 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ type: "spring", stiffness: 480, damping: 26 }}
-                className="pointer-events-none absolute left-1/2 top-0.5 z-30 flex -translate-x-1/2 items-center gap-1.5 whitespace-nowrap rounded-full bg-amber-400 px-3 py-1 text-xs font-black uppercase tracking-wide text-[#402666] shadow-lg"
-              >
-                <BellRing className="h-3.5 w-3.5" />
-                {t("teamBattle.callOut")}
-              </motion.div>
-            )}
-          </AnimatePresence>
           <TurnQuestionCard
             tile={tile}
             question={question}
@@ -893,15 +869,37 @@ function PhaseRapidFire() {
               />
             </div>
           ))}
+          {/* "Pick an answer!" — under D, in the flow.
+              It was a pill floating over the gap above the question card,
+              which is the one place on this screen where something CAN be
+              covered. Below the last answer it is the next thing the eye
+              reaches after reading them, and it pushes nothing aside. */}
+          <AnimatePresence>
+            {called && (
+              <motion.div
+                key="call"
+                initial={{ opacity: 0, y: 8, scale: 0.92 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.92 }}
+                transition={{ type: "spring", stiffness: 480, damping: 26 }}
+                className="flex flex-shrink-0 justify-center pt-1"
+              >
+                <span className="flex items-center gap-1.5 whitespace-nowrap rounded-full bg-amber-400 px-3.5 py-1.5 text-xs font-black uppercase tracking-wide text-[#402666] shadow-lg">
+                  <BellRing className="h-3.5 w-3.5" />
+                  {t("teamBattle.callOut")}
+                </span>
+              </motion.div>
+            )}
+          </AnimatePresence>
           {!isSpotlight && (
             <p className="text-center text-white/60 text-xs pt-1">
               {t("teamBattle.tileWorth", { n: tile.price })}
             </p>
           )}
         </div>
-        {/* Everyone watching can send the player on the spot an icon —
-            a cheer from their side, a jab from the other. It waits in
-            their inbox until the turn is over. */}
+        {/* Everyone watching can send the player on the spot a reaction —
+            a cheer from their side, a jab from the other. It pops on every
+            screen in the room the moment it is sent, above. */}
         {!isSpotlight && !isBotTurn && room && player && (
           <ReactionBar toUserId={player.user_id} />
         )}

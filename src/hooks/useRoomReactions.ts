@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 /**
  * Reactions sent between players during a match.
@@ -36,38 +36,41 @@ export interface RoomReaction {
   from_user_id: string;
   to_user_id: string;
   icon: string;
+  /** When THIS device saw it. Set by the receiver; see TeamBattleContext. */
+  at?: number;
 }
 
+/** How long a reaction stays on screen. */
+export const REACTION_MS = 1500;
+
 /**
- * What came in for me while I was on the spot, read one at a time.
+ * The reactions on screen right now — everybody's, for a second and a half.
  *
- * `next` is the oldest unread; `dismiss` drops it and the one behind it
- * takes its place. One card at a time was the owner's ask — a wrap of six
- * icons over the top of the board says nothing about who sent what.
+ * They used to be held back: addressed to the player on the spot, stacked in
+ * an inbox, and shown to them only once their turn was over. Which meant the
+ * six people who sent them watched nothing happen, and the one person they
+ * were sent to read them after the moment had passed. A reaction is a noise
+ * you make while something is happening; it belongs on everyone's screen,
+ * now, and then gone.
+ *
+ * Re-renders itself as they expire — the array they come from only ever
+ * grows, so nothing else would tell this hook that a window had closed.
  */
-export function useIncomingReactions(
-  reactions: RoomReaction[],
-  meId: string | null | undefined,
-) {
-  const [readIds, setReadIds] = useState<string[]>([]);
-  const readRef = useRef<Set<string>>(new Set());
+export function useLiveReactions(reactions: RoomReaction[]): RoomReaction[] {
+  const [, tick] = useState(0);
 
-  const items = useMemo(
-    () => reactions.filter((r) => r.to_user_id === meId && !readIds.includes(r.id)),
-    [reactions, meId, readIds],
-  );
+  const live = useMemo(() => {
+    const now = Date.now();
+    return reactions.filter((r) => r.at != null && now - r.at < REACTION_MS);
+  }, [reactions]);
 
-  const dismiss = useCallback(() => {
-    setReadIds((prev) => {
-      const first = reactions.find((r) => r.to_user_id === meId && !prev.includes(r.id));
-      if (!first || readRef.current.has(first.id)) return prev;
-      readRef.current.add(first.id);
-      return [...prev, first.id];
-    });
-  }, [reactions, meId]);
+  const soonest = live.length > 0 ? Math.min(...live.map((r) => r.at ?? 0)) : null;
+  useEffect(() => {
+    if (soonest == null) return;
+    const left = Math.max(0, soonest + REACTION_MS - Date.now()) + 20;
+    const timer = window.setTimeout(() => tick((n) => n + 1), left);
+    return () => window.clearTimeout(timer);
+  }, [soonest, reactions]);
 
-  return useMemo(
-    () => ({ items, next: items[0] ?? null, remaining: items.length, dismiss }),
-    [items, dismiss],
-  );
+  return live;
 }

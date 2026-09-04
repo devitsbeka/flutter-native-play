@@ -1,7 +1,8 @@
 import { useState } from "react";
 import Lottie from "lottie-react";
 import { AnimatePresence, motion } from "framer-motion";
-import { X } from "lucide-react";
+import { Check, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTeamBattle } from "@/contexts/TeamBattleContext";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
@@ -62,12 +63,23 @@ export function ReactionBar({ toUserId }: { toUserId: string }) {
   const { sendReaction } = useTeamBattle();
   const [picked, setPicked] = useState<string | null>(null);
   const [flying, setFlying] = useState(false);
+  /**
+   * "Sent", for a moment.
+   *
+   * Pressing Send cleared the picked tile and did nothing else, so from the
+   * sender's side the button just went dead — and the reaction itself
+   * appears in the same instant it is read, which is easy to miss. The
+   * button says what happened.
+   */
+  const [sent, setSent] = useState(false);
 
   const send = () => {
     if (!picked) return;
     setFlying(true);
     window.setTimeout(() => setFlying(false), 700);
     sendReaction(toUserId, picked);
+    setSent(true);
+    window.setTimeout(() => setSent(false), 1400);
     // Cleared on the way out: the next thing to send is a fresh choice, and
     // a tile left lit looks like it is still waiting to be sent.
     setPicked(null);
@@ -92,9 +104,21 @@ export function ReactionBar({ toUserId }: { toUserId: string }) {
           transition={{ duration: 0.5 }}
           onClick={send}
           disabled={!picked}
-          className="flex-shrink-0 h-[46px] px-2.5 rounded-2xl bg-white/25 border border-white/30 text-white text-xs font-bold uppercase whitespace-nowrap active:scale-95 transition-transform disabled:opacity-40"
+          className={cn(
+            "flex-shrink-0 h-[46px] px-2.5 rounded-2xl border text-xs font-bold uppercase whitespace-nowrap active:scale-95 transition-colors disabled:opacity-40",
+            sent
+              ? "bg-emerald-400/90 border-emerald-200/70 text-[#0b3b2c]"
+              : "bg-white/25 border-white/30 text-white",
+          )}
         >
-          {t("teamBattle.sendIconAction")}
+          {sent ? (
+            <span className="flex items-center gap-1">
+              <Check className="h-3.5 w-3.5" strokeWidth={3} />
+              {t("teamBattle.reactionSent")}
+            </span>
+          ) : (
+            t("teamBattle.sendIconAction")
+          )}
         </motion.button>
       </div>
     </div>
@@ -102,69 +126,57 @@ export function ReactionBar({ toUserId }: { toUserId: string }) {
 }
 
 /**
- * What came in while you were playing — one card at a time.
+ * The reactions in the air right now — everyone's, for a second and a half.
  *
- * It used to be all of them at once in a wrapped row, which read as a pile
- * of stickers with no sender attached to any of them. Each is its own card
- * now: the icon, the face of whoever sent it, their name, and a count of
- * what is still waiting. Closing one brings up the next.
+ * This was an inbox: reactions addressed to the player on the spot, stacked,
+ * and read one at a time AFTER their turn. So the six people who sent them
+ * watched nothing happen, and the one person they were for read them once
+ * the moment had passed. A reaction is a noise you make while something is
+ * happening. It pops on every screen in the room, under the face of whoever
+ * is playing, and then it is gone.
  */
-export function ReactionInbox({
-  next,
-  remaining,
+export function ReactionPops({
+  items,
   senders,
-  onDismiss,
 }: {
-  next: RoomReaction | null;
-  remaining: number;
+  items: RoomReaction[];
   senders: Map<string, { nickname: string; avatar_url: string | null }>;
-  onDismiss: () => void;
 }) {
-  const { t } = useLanguage();
-  if (!next) return null;
-  const who = senders.get(next.from_user_id);
-  const reaction = reactionFor(next.icon);
   return (
-    <AnimatePresence mode="wait">
-      <motion.button
-        key={next.id}
-        type="button"
-        initial={{ opacity: 0, y: -10, scale: 0.94 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.94 }}
-        transition={{ type: "spring", stiffness: 420, damping: 28 }}
-        onClick={onDismiss}
-        className="mx-4 mb-2 flex w-[calc(100%-2rem)] flex-shrink-0 items-center gap-3 rounded-2xl border border-white/25 bg-[#4b3a86]/90 px-3 py-2.5 text-left shadow-lg backdrop-blur-sm"
-      >
-        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/20">
-          {/* A key we know is one of the six; anything else came from a
-              device still on the build that sent library icons. */}
-          {reaction ? (
-            <Lottie animationData={reaction.data} loop className="h-9 w-9" />
-          ) : (
-            <img src={next.icon} alt="" className="h-9 w-9 object-contain" />
-          )}
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block text-[11px] font-semibold uppercase tracking-wide text-white/60">
-            {t("teamBattle.iconsForYou")}
-          </span>
-          <span className="mt-0.5 flex items-center gap-1.5">
-            <SmartAvatar avatarUrl={who?.avatar_url ?? null} fallback={who?.nickname ?? "?"} size="xs" />
-            <span className="truncate text-sm font-bold text-white">{who?.nickname ?? "…"}</span>
-          </span>
-        </span>
-        {/* How many are queued behind this one, so closing it does not look
-            like the last of them arriving out of nowhere. */}
-        {remaining > 1 && (
-          <span className="shrink-0 rounded-full bg-white/20 px-2 py-0.5 text-[11px] font-bold text-white">
-            +{remaining - 1}
-          </span>
-        )}
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/15 text-white">
-          <X className="h-4 w-4" />
-        </span>
-      </motion.button>
-    </AnimatePresence>
+    <div className="pointer-events-none flex h-[46px] flex-shrink-0 items-center justify-center gap-2 px-4">
+      <AnimatePresence initial={false}>
+        {/* Newest last, and never more than a handful: a burst from a full
+            room must not push the question off the screen. */}
+        {items.slice(-5).map((r) => {
+          const who = senders.get(r.from_user_id);
+          const reaction = reactionFor(r.icon);
+          return (
+            <motion.span
+              key={r.id}
+              initial={{ opacity: 0, y: 14, scale: 0.6 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -12, scale: 0.7 }}
+              transition={{ type: "spring", stiffness: 460, damping: 24 }}
+              className="relative flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full bg-white/15 ring-1 ring-white/25"
+            >
+              {reaction ? (
+                <Lottie animationData={reaction.data} loop className="h-8 w-8" />
+              ) : (
+                <img src={r.icon} alt="" className="h-7 w-7 object-contain" />
+              )}
+              {/* Whose it is — a reaction with nobody attached is just noise. */}
+              <span className="absolute -bottom-1 -right-1">
+                <SmartAvatar
+                  avatarUrl={who?.avatar_url ?? null}
+                  fallback={who?.nickname ?? "?"}
+                  size="xs"
+                  className="h-[18px] w-[18px] ring-2 ring-[#7E7BDC]"
+                />
+              </span>
+            </motion.span>
+          );
+        })}
+      </AnimatePresence>
+    </div>
   );
 }

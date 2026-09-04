@@ -1733,6 +1733,7 @@ export const en: KaTranslations = {
     callBackBody: "Your team is waiting — come back and start the game",
     sendIcon: "Send an icon",
     sendIconAction: "Send",
+    reactionSent: "Sent",
     reactionClap: "Clap",
     reactionLaugh: "Laugh",
     reactionLove: "Love",

@@ -1444,6 +1444,7 @@ export const it: KaTranslations = {
     callBackBody: "La tua squadra ti aspetta: torna e iniziate la partita",
     sendIcon: "Invia un'icona",
     sendIconAction: "Invia",
+    reactionSent: "Inviato",
     reactionClap: "Applauso",
     reactionLaugh: "Risata",
     reactionLove: "Amore",

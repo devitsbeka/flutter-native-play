@@ -369,10 +369,13 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
       .on("broadcast", { event: "reaction" }, ({ payload }) => {
         const r = payload as Partial<RoomReaction>;
         if (!r?.id || !r.to_user_id || !r.from_user_id || !r.icon) return;
+        // Stamped on ARRIVAL, not on send: a reaction is on screen for a
+        // second and a half from the moment it lands here, and the sender's
+        // clock is not this device's.
         setReactions((prev) =>
           prev.some((x) => x.id === r.id)
             ? prev
-            : [...prev, r as RoomReaction],
+            : [...prev, { ...(r as RoomReaction), at: Date.now() }],
         );
       })
       .subscribe();

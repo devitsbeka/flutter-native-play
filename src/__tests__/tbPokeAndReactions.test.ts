@@ -33,10 +33,13 @@ describe("the poke", () => {
     // Only the player being called, and a fresh call re-triggers it.
     expect(match).toMatch(/if \(!lastPoke \|\| !user \|\| lastPoke\.to !== user\.id\) return;/);
     expect(match).toMatch(/setTimeout\(\(\) => setCalled\(false\), 3000\)/);
-    // In the gap the question card already leaves above itself, and out of
-    // the way of taps: a call that hides what it is telling you to answer is
-    // worse than no call.
-    expect(match).toMatch(/pointer-events-none absolute left-1\/2 top-0\.5 z-30/);
+    // Under the last answer, in the flow. It was a pill floating over the
+    // gap above the question card — the one place on this screen where
+    // something CAN be covered — and it is the next thing the eye reaches
+    // after reading D.
+    expect(match).toMatch(/\{called && \(/);
+    expect(match).toMatch(/className="flex flex-shrink-0 justify-center pt-1"/);
+    expect(match).not.toMatch(/pointer-events-none absolute left-1\/2 top-0\.5 z-30/);
     expect(match).toMatch(/t\("teamBattle\.callOut"\)/);
   });
 
@@ -102,9 +105,17 @@ describe("the icons", () => {
     // Pick, then Send, where the library's + used to be.
     expect(bar).toMatch(/onSelect=\{\(\) => setPicked\(/);
     expect(bar).toMatch(/disabled=\{!picked\}/);
-    expect(bar).toMatch(/\{t\("teamBattle\.sendIconAction"\)\}/);
+    expect(bar).toMatch(/t\("teamBattle\.sendIconAction"\)/);
     for (const lang of ["en", "ka", "de", "es", "fr", "it", "pt"]) {
       expect(read(`src/locales/${lang}.ts`), lang).toMatch(/sendIconAction: "/);
+    }
+    // And it says so afterwards: the button used to clear the picked tile
+    // and go dead, which from the sender's side is indistinguishable from
+    // nothing having happened.
+    expect(bar).toMatch(/t\("teamBattle\.reactionSent"\)/);
+    expect(bar).toMatch(/setTimeout\(\(\) => setSent\(false\), 1400\)/);
+    for (const lang of ["en", "ka", "de", "es", "fr", "it", "pt"]) {
+      expect(read(`src/locales/${lang}.ts`), lang).toMatch(/reactionSent: "/);
     }
     // Only the picked one animates: six looping Lotties under a running
     // clock is a lot of phone for a row nobody has chosen from yet.
@@ -124,23 +135,36 @@ describe("the icons", () => {
     // The key is what rides the broadcast, so a device still on the build
     // that sent library icons puts a URL on the wire and it has to render.
     expect(read("src/components/team-battle/ReactionBar.tsx")).toMatch(
-      /reaction \? \(\s*<Lottie[^]*?\) : \(\s*<img src=\{next\.icon\}/,
+      /reaction \? \(\s*<Lottie[^]*?\) : \(\s*<img src=\{r\.icon\}/,
     );
     // CC BY 4.0 asks for attribution; this is where it lives.
     expect(read("src/assets/lottie/reactions/README.md")).toMatch(/CC BY 4\.0/);
   });
 
-  it("the inbox reads one at a time, and says who sent it", () => {
-    // A wrapped row of six was a pile of stickers with no sender attached to
-    // any of them. One card, one face, one name; closing it brings the next.
+  it("they pop on every screen at once, for a second and a half", () => {
+    // This was an inbox: reactions addressed to the player on the spot,
+    // stacked, and read one at a time AFTER their turn. So the people who
+    // sent them watched nothing happen, and the one person they were for
+    // read them once the moment had passed.
     expect(match).toMatch(/<ReactionBar toUserId=\{player\.user_id\} \/>/);
-    expect(match).toMatch(/const onSpot = state\.phase === "rapid_fire" && state\.active_player === user\?\.id;/);
-    expect(match).toMatch(/!onSpot && inbox\.next/);
-    const bar = read("src/components/team-battle/ReactionBar.tsx");
-    expect(bar).toMatch(/<SmartAvatar avatarUrl=\{who\?\.avatar_url \?\? null\}/);
-    expect(bar).toMatch(/remaining > 1 &&/);
+    expect(match).toMatch(/<ReactionPops items=\{pops\} senders=\{senders\} \/>/);
+    expect(match).not.toMatch(/ReactionInbox|inbox\.next/);
     const hook = read("src/hooks/useRoomReactions.ts");
-    expect(hook).toMatch(/next: items\[0\] \?\? null/);
+    expect(hook).toMatch(/export const REACTION_MS = 1500;/);
+    expect(hook).toMatch(/now - r\.at < REACTION_MS/);
+    expect(hook).not.toMatch(/to_user_id === meId/);
+    // Stamped on arrival: the sender's clock is not this device's.
+    expect(read("src/contexts/TeamBattleContext.tsx")).toMatch(/at: Date\.now\(\) \}\],/);
+    // And each one says whose it is.
+    const bar = read("src/components/team-battle/ReactionBar.tsx");
+    expect(bar).toMatch(/<SmartAvatar\s*\n?\s*avatarUrl=\{who\?\.avatar_url \?\? null\}/);
+  });
+
+  it("the row holds its height, so a clap does not move the question", () => {
+    const bar = read("src/components/team-battle/ReactionBar.tsx");
+    expect(bar).toMatch(/h-\[46px\] flex-shrink-0 items-center justify-center/);
+    // A burst from a full room must not fill the screen either.
+    expect(bar).toMatch(/items\.slice\(-5\)/);
   });
 });
 
