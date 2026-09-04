@@ -769,14 +769,6 @@ export function RoomLobbyV2() {
   };
   // How many players the host wants — 2 through 10, always starting at 2
   // (owner's ask). It caps the room and the seats the players tab draws.
-  const setMaxPlayers = async (value: string) => {
-    if (!isHost) return;
-    // Never below who is already in the room — a cap of 2 with three people
-    // seated read as "3/2" and drew too few chairs everywhere it showed.
-    const floor = Math.max(2, participants.length);
-    const n = Math.max(floor, Math.min(10, Number(value) || floor));
-    await supabase.from("game_rooms").update({ max_players: n }).eq("id", currentRoom.id);
-  };
   const setVisibility = async (value: string) => {
     if (!isHost) return;
     await supabase
@@ -801,22 +793,9 @@ export function RoomLobbyV2() {
   // so the questions-per-round choice is a library/random room's alone.
   const playsUserTrivia = !!currentRoom.user_trivia_id && !currentRoom.category_id;
   const lobbyRules: LobbyRuleRow[] = [
-    // The host picks the player count (2–10) from a dropdown; a guest sees
-    // the room's cap on the static line instead (UniversalLobby).
-    ...(isHost ? [{
-      key: "players",
-      label: t("lobby.uPlayersTab"),
-      variant: "dropdown" as const,
-      // The floor is however many are already in the room (min 2): you can't
-      // cap a room below the people sitting in it.
-      options: Array.from({ length: 10 - Math.max(2, participants.length) + 1 }, (_, i) =>
-        Math.max(2, participants.length) + i,
-      ).map((n) => ({ value: String(n), label: String(n) })),
-      value: String(
-        Math.max(2, participants.length, Math.min(10, currentRoom.max_players || participants.length || 2)),
-      ),
-      onChange: (v: string) => void setMaxPlayers(v),
-    } satisfies LobbyRuleRow] : []),
+    // No player-count picker on a classic room (owner's ask): the cap is 10
+    // and the host starts whenever — with one friend or ten. The card no
+    // longer draws ten empty chairs to imply otherwise.
     ...(playsUserTrivia ? [] : [{
       key: "questions",
       label: t("lobby.uQuestionsPerRound"),

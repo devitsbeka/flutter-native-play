@@ -162,6 +162,17 @@ function PublicRoomCard({
   // only two circles for three people.
   const effectiveSeats = seats != null ? Math.max(seats, room.player_count) : null;
   const full = effectiveSeats != null && room.player_count >= effectiveSeats;
+  // How many seat circles to draw. A Battle room has a small fixed size, so
+  // its empty chairs read as "one short of starting" — worth showing. A
+  // classic room's cap is 10 and the host starts whenever (owner's ask), so
+  // ten empty chairs are noise: draw only the seats that are taken.
+  const isBattle = room.game_type_key === "team_battle";
+  const seatsToDraw =
+    effectiveSeats == null
+      ? 0
+      : isBattle
+        ? Math.min(effectiveSeats, 10)
+        : Math.min(room.player_count, 10);
   const everyoneHere =
     online.has(room.host_user_id) && players.every((p) => online.has(p.user_id));
   const ready = inside && full && everyoneHere;
@@ -366,9 +377,9 @@ function PublicRoomCard({
             faces (host first, crowned by the chip above), each with a green
             dot when that person is in the app right now; open seats are
             dashed outlines waiting to be filled. */}
-        {effectiveSeats != null && effectiveSeats > 0 && (
+        {seatsToDraw > 0 && (
           <div className="relative z-10 flex items-center gap-1 pb-2 flex-wrap">
-            {Array.from({ length: Math.min(effectiveSeats, 10) }, (_, i) => {
+            {Array.from({ length: seatsToDraw }, (_, i) => {
               const person: CardPlayer | undefined =
                 i === 0
                   ? {
