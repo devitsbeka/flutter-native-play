@@ -1030,7 +1030,17 @@ function PhaseSuperRound() {
             >
               {t("teamBattle.superRoundTitle")}
             </h1>
-            <span className="text-white/60 text-[11px]">{t("teamBattle.firstTo3")}</span>
+            {/* First to three, out of five at the most — the count is the
+                only thing that says how much rope is left when both
+                champions keep missing. Digits, so it needs no locale. */}
+            <span className="text-white/60 text-[11px]">
+              {t("teamBattle.firstTo3")}
+              {questions.length > 0 && (
+                <span className="ml-1.5 text-white/45">
+                  {Math.min(index + 1, questions.length)}/{questions.length}
+                </span>
+              )}
+            </span>
             <TimerBadge seconds={secondsLeft} maxSeconds={15} compact />
           </div>
           {champSide(sup.champion_b, sup.score_b)}
