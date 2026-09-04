@@ -799,13 +799,23 @@ export function LobbyInfoRow({
 /**
  * Keep one line of text on ONE line by shrinking its font to fit.
  *
- * The h1 is a fixed-width, centred box (`w-[321px] max-w-full`) with
- * `whitespace-nowrap`, so its rendered width (`clientWidth`) is the box while
- * the full name keeps its natural `scrollWidth`. Measuring both at the base
- * size gives the exact scale that makes the name fit, floored so it stays a
- * heading — a name too long even then simply ellipsises. A ResizeObserver
- * re-fits on width changes (rotation, the two phone widths in the mocks);
- * changing font-size moves scrollWidth, not clientWidth, so there is no loop.
+ * The h1 is a centred `whitespace-nowrap` box, so its rendered width
+ * (`clientWidth`) is the box while the full name keeps its natural
+ * `scrollWidth` — the standard way to ask "is this being cut off".
+ *
+ * It MEASURES rather than estimates. One pass of `base × avail / natural`
+ * looks exact and is not: the heading carries a fixed negative tracking that
+ * does not scale with the type, glyph advances round to whole pixels, and the
+ * display face can swap in wider than whatever was measured. Any of those
+ * leaves a name a few pixels over the edge — and a few pixels over is the
+ * ellipsis, which is what the owner kept seeing. So the estimate is only the
+ * first jump: after it, this checks, and keeps stepping down a pixel at a
+ * time until the name genuinely fits (or hits the floor, where it ellipsises
+ * because there is nothing left to give).
+ *
+ * A ResizeObserver re-fits on width changes (rotation, the two phone widths
+ * in the mocks); changing font-size moves scrollWidth, not clientWidth, so
+ * there is no loop.
  */
 function useFitOneLine(text: string, basePx: number, minPx: number) {
   const ref = useRef<HTMLHeadingElement>(null);
@@ -814,15 +824,20 @@ function useFitOneLine(text: string, basePx: number, minPx: number) {
     const el = ref.current;
     if (!el) return;
     const fit = () => {
-      el.style.fontSize = `${basePx}px`;
-      const avail = el.clientWidth;
-      const natural = el.scrollWidth;
-      const next =
-        avail > 0 && natural > avail
-          ? Math.max(minPx, Math.floor((basePx * avail) / natural))
-          : basePx;
-      el.style.fontSize = `${next}px`;
-      setPx(next);
+      let size = basePx;
+      el.style.fontSize = `${size}px`;
+      // Bounded: the first pass jumps most of the way, the rest walk the last
+      // pixel or two, and the guard means a pathological measurement costs a
+      // few reflows rather than the frame.
+      for (let guard = 0; guard < 64; guard++) {
+        const avail = el.clientWidth;
+        const natural = el.scrollWidth;
+        if (avail <= 0 || natural <= avail || size <= minPx) break;
+        const estimate = Math.floor((size * avail) / natural);
+        size = Math.max(minPx, estimate < size ? estimate : size - 1);
+        el.style.fontSize = `${size}px`;
+      }
+      setPx(size);
     };
     fit();
     const ro = new ResizeObserver(fit);
@@ -864,15 +879,22 @@ function RoomTitle({
   //
   // The name ALWAYS stays on ONE line (owner's ask — a two-line title ate the
   // screen and read as broken). It never wraps: it renders at the frame's
-  // 43.656px and, only when a longer name would not fit the 321px box, shrinks
-  // its own font to fit (`useFitOneLine`, down to a 16px floor), ellipsising
-  // only a name too long to shrink further.
+  // 43.656px and, only when a longer name would not fit, shrinks its own font
+  // until it does (`useFitOneLine`), ellipsising only a name too long even at
+  // the floor.
+  //
+  // The box is the width it HAS, not the frame's 321px. That number came off
+  // a 375pt mock, where it is the content width; hard-coded, it threw away
+  // 40px of a modern phone and shrank — or cut off — names that had the room
+  // to be drawn in full. The floor is 20px rather than 16: below that the
+  // "heading" is smaller than the count under it, and a name that far over
+  // is better ellipsised than whispered.
   //
   // The pencil rides on the emblem's shoulder — one control, whichever half
   // is tapped, opening the sheet that sets both the name and the face. It is
   // never a child of the h1, so the chip's round edge and its shadow are never
   // clipped by the heading's overflow.
-  const { ref: headingRef, px: headingPx } = useFitOneLine(name, 43.656, 16);
+  const { ref: headingRef, px: headingPx } = useFitOneLine(name, 43.656, 20);
   const chip = (
     <span className="flex size-[22px] shrink-0 items-center justify-center rounded-full bg-white drop-shadow-[0px_2px_2px_rgba(0,0,0,0.18)]">
       <Pencil className="size-3 text-[#523b76]" />
@@ -882,7 +904,7 @@ function RoomTitle({
     <h1
       ref={headingRef}
       style={{ fontSize: headingPx, lineHeight: 1.176 }}
-      className="w-[321px] max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-center font-hero capitalize tracking-[-0.2054px] text-[#402666]"
+      className="w-full overflow-hidden text-ellipsis whitespace-nowrap text-center font-hero capitalize tracking-[-0.2054px] text-[#402666]"
     >
       {name}
     </h1>
