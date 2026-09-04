@@ -817,20 +817,26 @@ function Chip({
 /** A dropdown for a rule with too many options to lay out in a row — the
     player count runs 2–10. A native select, styled to sit in the rule box. */
 function RuleDropdown({ row }: { row: LobbyRuleRow }) {
+  // Same shell as Segmented — the [#ecdbf3] track with a p-[6px] inset — so
+  // it reads as one control family. The current value rides a white pill,
+  // exactly like a segmented control's selected option (owner's ask: it
+  // looked like a different kind of control beside the 5/10/20 row).
   return (
     <div
       className={cn(
-        "relative flex shrink-0 items-center rounded-[20px] bg-[#ecdbf3] pl-[18px] pr-[10px] shadow-[inset_0px_2px_4px_0px_rgba(0,0,0,0.05)]",
+        "relative flex shrink-0 items-center rounded-[20px] bg-[#ecdbf3] p-[6px] shadow-[inset_0px_2px_4px_0px_rgba(0,0,0,0.05)]",
         RULE_BORDER,
         !row.onChange && "opacity-70",
       )}
     >
-      <span className="pointer-events-none font-[Nunito] text-[16px] font-black leading-6 tracking-[-0.16px] text-[#402666]">
-        {row.options.find((o) => o.value === row.value)?.label ?? row.value}
+      <span className="pointer-events-none flex items-center gap-1 rounded-[16px] bg-white px-[15px] py-2 drop-shadow-[0px_2px_4px_rgba(0,0,0,0.1)]">
+        <span className="font-[Nunito] text-[16px] font-medium leading-[19.5px] tracking-[-0.16px] text-[#402666]">
+          {row.options.find((o) => o.value === row.value)?.label ?? row.value}
+        </span>
+        <svg className="h-4 w-4 text-[#402666]" viewBox="0 0 24 24" fill="none">
+          <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
       </span>
-      <svg className="pointer-events-none ml-1 h-4 w-4 text-[#402666]" viewBox="0 0 24 24" fill="none">
-        <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
       {row.onChange && (
         <select
           value={row.value}
