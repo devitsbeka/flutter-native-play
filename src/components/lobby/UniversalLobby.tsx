@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { ArrowLeft, Bell, BellRing, Loader2, Pencil, Play, Plus } from "lucide-react";
 import SpotlightSearch from "@/components/search/SpotlightSearch";
@@ -798,6 +798,43 @@ export function LobbyInfoRow({
   );
 }
 
+/**
+ * Keep one line of text on ONE line by shrinking its font to fit.
+ *
+ * The h1 is a fixed-width, centred box (`w-[321px] max-w-full`) with
+ * `whitespace-nowrap`, so its rendered width (`clientWidth`) is the box while
+ * the full name keeps its natural `scrollWidth`. Measuring both at the base
+ * size gives the exact scale that makes the name fit, floored so it stays a
+ * heading — a name too long even then simply ellipsises. A ResizeObserver
+ * re-fits on width changes (rotation, the two phone widths in the mocks);
+ * changing font-size moves scrollWidth, not clientWidth, so there is no loop.
+ */
+function useFitOneLine(text: string, basePx: number, minPx: number) {
+  const ref = useRef<HTMLHeadingElement>(null);
+  const [px, setPx] = useState(basePx);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const fit = () => {
+      el.style.fontSize = `${basePx}px`;
+      const avail = el.clientWidth;
+      const natural = el.scrollWidth;
+      const next =
+        avail > 0 && natural > avail
+          ? Math.max(minPx, Math.floor((basePx * avail) / natural))
+          : basePx;
+      el.style.fontSize = `${next}px`;
+      setPx(next);
+    };
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(el);
+    if (el.parentElement) ro.observe(el.parentElement);
+    return () => ro.disconnect();
+  }, [text, basePx, minPx]);
+  return { ref, px };
+}
+
 function RoomTitle({
   name,
   icon,
@@ -808,7 +845,7 @@ function RoomTitle({
   editable?: boolean;
 }) {
   // Stacked and centred (Figma 1059:532): the emblem at 91px, the name
-  // under it at 43.656 on 51.36, capped at two lines.
+  // under it at 43.656 on 51.36.
   //
   // These two spent a while side by side, at 34px, to buy back the row an
   // emblem above a big heading was costing on a short screen. The design
@@ -816,17 +853,28 @@ function RoomTitle({
   // gets the size back, and the slack it needs comes out of the empty lilac
   // that used to sit under the card rather than out of the heading.
   //
+  // The name ALWAYS stays on ONE line (owner's ask — a two-line title ate the
+  // screen and read as broken). It never wraps: it renders at the frame's
+  // 43.656px and, only when a longer name would not fit the 321px box, shrinks
+  // its own font to fit (`useFitOneLine`, down to a 22px floor), ellipsising
+  // only a name too long to shrink further.
+  //
   // The pencil rides on the emblem's shoulder — one control, whichever half
   // is tapped, opening the sheet that sets both the name and the face. It is
-  // never a child of the h1: that clamps to two lines with overflow-hidden,
-  // which clipped the chip's round edge and its shadow.
+  // never a child of the h1, so the chip's round edge and its shadow are never
+  // clipped by the heading's overflow.
+  const { ref: headingRef, px: headingPx } = useFitOneLine(name, 43.656, 22);
   const chip = (
     <span className="flex size-[22px] shrink-0 items-center justify-center rounded-full bg-white drop-shadow-[0px_2px_2px_rgba(0,0,0,0.18)]">
       <Pencil className="size-3 text-[#523b76]" />
     </span>
   );
   const heading = (
-    <h1 className="w-[321px] max-w-full text-center font-hero text-[43.656px] capitalize leading-[51.36px] tracking-[-0.2054px] text-[#402666] [overflow-wrap:anywhere] line-clamp-2">
+    <h1
+      ref={headingRef}
+      style={{ fontSize: headingPx, lineHeight: 1.176 }}
+      className="w-[321px] max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-center font-hero capitalize tracking-[-0.2054px] text-[#402666]"
+    >
       {name}
     </h1>
   );
