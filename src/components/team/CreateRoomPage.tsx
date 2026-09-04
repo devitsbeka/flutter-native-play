@@ -31,6 +31,7 @@ import { createNotification, useNotifications } from "@/hooks/useNotifications";
 import { TVPlayModal } from "@/components/team/TVPlayModal";
 import { isPartyCategory } from "@/config/partyCategories";
 import { POPULAR_IMAGE_CATEGORY_IDS } from "@/config/popularImageCategories";
+import { GuessPickerScreen } from "@/components/team/GuessPickerScreen";
 import { CategorySelectorModal } from "@/components/team/CategorySelectorModal";
 import { CategoryPickerModal } from "@/components/team/CategoryPickerModal";
 import { CreateBlindTriviaModal } from "@/components/team/CreateBlindTriviaModal";
@@ -782,6 +783,14 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
           // entry point runs is not a settled choice until it stops.
           hasValidSelection && !isSearchingRandom;
 
+  /**
+   * The Guess card asks which picture game — and the answer is a screen of
+   * its own (Figma 1059:8), not a strip of tiles under the card that asked.
+   * It replaces the carousel and the Create button for as long as the
+   * question is open: the tap on a game IS the Create press.
+   */
+  const guessPicking = gameChoice === "guess";
+
   // Handle blind trivia creation - questions are hidden from creator
   // IMPORTANT: This now persists the trivia to user_quiz_posts so it appears in "My Trivia"
   const handleBlindTriviaReady = async (questions: GeneratedQuestion[], title: string, subject: string) => {
@@ -1169,52 +1178,19 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     [categories],
   );
 
+  /**
+   * A picture game picked on the Guess screen: the same room a library pick
+   * opens, on that category. The tap IS the choice, so it arms Create the
+   * way every other card's tap does.
+   */
+  const pickGuessCategory = (cat: Category) => {
+    setSelectedCategory(cat);
+    setSelectionMode("library");
+    autoStart.current = true;
+  };
+
   const pickedDetail = (
     <div className="mt-3 shrink-0 space-y-3 empty:hidden">
-    {/* Which picture game. The Guess card is the only one that asks a
-        question back instead of starting something, so the answer unfolds
-        directly under it: each tile is the category's own 3D art over its
-        name, and the tap creates the room the way a library pick does. */}
-    {gameChoice === "guess" && (
-      <div>
-        <h2 className="mb-1.5 text-[13.2px] font-medium text-muted-foreground">
-          {t("extra.guessPickTitle")}
-        </h2>
-        {guessCategories.length === 0 ? (
-          <div className="flex h-[92px] items-center justify-center rounded-2xl bg-muted">
-            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-          </div>
-        ) : (
-          <div className="grid grid-cols-3 gap-2">
-            {guessCategories.map((cat) => {
-              const picked = selectedCategory?.category_id === cat.category_id;
-              return (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => {
-                    setSelectedCategory(cat);
-                    setSelectionMode("library");
-                    autoStart.current = true;
-                  }}
-                  className={cn(
-                    "flex flex-col items-center gap-1.5 rounded-2xl border-2 px-2 py-3 transition-colors",
-                    picked
-                      ? "border-primary bg-background text-foreground shadow-sm"
-                      : "border-transparent bg-muted text-muted-foreground",
-                  )}
-                >
-                  <CategoryArtwork categoryId={cat.category_id} iconSlug={cat.icon_slug} size={44} />
-                  <span className="line-clamp-2 text-center text-[11.5px] font-bold leading-tight">
-                    {cat.name}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    )}
     {/* Which side of the arena you take — two big cards, the crest
         above the name. A tap picks the side AND deals its crest a
         fresh random icon; a tap on the crest itself opens the
@@ -1544,7 +1520,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
             type="button"
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
-            onClick={() => navigate("/")}
+            onClick={() => (guessPicking ? setGameChoice(null) : navigate("/"))}
             className="rounded-full p-2 transition-colors hover:bg-white/30"
           >
             <ArrowLeft className="h-6 w-6 text-gray-600" />
@@ -1582,6 +1558,20 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         </div>
       </header>
 
+      {guessPicking ? (
+        // The screen the Guess card opens. Its own scroller, like every
+        // standalone page here — the document does not scroll on the device.
+        <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
+          <GuessPickerScreen
+            title={t("extra.guessPickTitle")}
+            categories={guessCategories}
+            onPick={pickGuessCategory}
+            busyCategoryId={isCreating ? selectedCategory?.category_id ?? null : null}
+            disabled={isCreating}
+          />
+        </div>
+      ) : (
+        <>
       {/* Content */}
       <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
         {/* The column is WIDE from tablet up — the carousel is the point of
@@ -1854,6 +1844,9 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         </div>
       </div>
 
+        </>
+      )}
+
       {/* End of frosted popup panel */}
       </div>
 
@@ -1903,11 +1896,10 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
               // the rules tab states what the game is: one board, alone
               // or with the one friend picked on the players tab.
               rules={[]}
-              rulesExtra={
-                <p className="px-[6px] pt-[2px] font-[Nunito] text-[13px] leading-[18px] text-[#402666]/70">
-                  {t("extra.modeWordsDesc")}
-                </p>
-              }
+              rulesText={[
+                { key: "rules", heading: t("lobby.rulesHeading"), body: t("lobby.rulesWords") },
+                { key: "time", heading: t("lobby.timeHeading"), body: t("lobby.timeWords") },
+              ]}
               // One board seats two: you and the one friend.
               capacity={{
                 min: 1,

@@ -21,6 +21,7 @@ const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 const create = read("src/components/team/CreateRoomPage.tsx");
 const picker = read("src/components/team/RoomIconPickerModal.tsx");
 const battle = read("src/pages/TeamBattlePage.tsx");
+const screen = read("src/components/team/GuessPickerScreen.tsx");
 
 const LOCALES = ["en", "ka", "de", "es", "fr", "it", "pt"] as const;
 
@@ -37,14 +38,51 @@ describe("Guess replaced Random on the create screen", () => {
 
   it("the card asks which picture game instead of starting one", () => {
     // Every other card starts its game on the tap. This one cannot: which
-    // picture game IS the choice, so it unfolds them and arms the start on
-    // the pick.
+    // picture game IS the choice, so it opens the question and arms the
+    // start on the answer.
     expect(create).toMatch(/if \(key === "guess"\) \{/);
     const guessBranch = create.slice(create.indexOf('if (key === "guess") {'));
     const branchBody = guessBranch.slice(0, guessBranch.indexOf("autoStart.current = true;"));
     expect(branchBody).not.toMatch(/autoStart/);
     expect(create).toMatch(/extra\.guessPickTitle/);
-    expect(create).toMatch(/autoStart\.current = true;\s*\n\s*\}\}/);
+    // The answer arms Create exactly as a library pick does.
+    expect(create).toMatch(
+      /const pickGuessCategory = \(cat: Category\) => \{[\s\S]*?autoStart\.current = true;\s*\n\s*\};/,
+    );
+  });
+
+  it("the question gets a screen, not a strip under the card", () => {
+    // It used to unfold as three-to-a-row tiles beneath the picked card,
+    // half of them below the fold and wedged against the Create button.
+    // Figma 1059:8 gives it the page: the carousel AND the Create footer
+    // stand down while it is open.
+    expect(create).toMatch(/const guessPicking = gameChoice === "guess";/);
+    expect(create).toMatch(/\{guessPicking \? \(/);
+    expect(create).toMatch(/<GuessPickerScreen/);
+    // Its own scroller — the document does not scroll on the device.
+    expect(create).toMatch(/guessPicking \? \(\s*\n(?:.*\n)*?\s*<div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">/);
+    // And the back arrow closes the question before it leaves the page.
+    expect(create).toMatch(/guessPicking \? setGameChoice\(null\) : navigate\("\/"\)/);
+  });
+
+  it("the screen is the designed grid", () => {
+    // Two to a row at 167px, the art at its designed 82x96 box, and the
+    // petal corners: within a complete 2x2 block each card rounds its
+    // inner corner to 54. A block that is not complete stays plain, which
+    // is what the design shows for a fifth, partnerless card.
+    expect(screen).toMatch(/grid-cols-2 gap-x-\[14px\] gap-y-\[20px\]/);
+    expect(screen).toMatch(/h-\[167px\]/);
+    expect(screen).toMatch(/h-\[96px\] w-\[82px\]/);
+    expect(screen).toMatch(/size=\{82\}/);
+    for (const radius of [
+      "rounded-\\[24px_24px_54px_24px\\]",
+      "rounded-\\[24px_24px_24px_54px\\]",
+      "rounded-\\[24px_54px_24px_24px\\]",
+      "rounded-\\[54px_24px_24px_24px\\]",
+    ]) {
+      expect(screen).toMatch(new RegExp(radius));
+    }
+    expect(screen).toMatch(/if \(blockStart \+ 4 > total\) return "rounded-\[24px\]";/);
   });
 
   it("the tiles are the picture games the database actually has", () => {

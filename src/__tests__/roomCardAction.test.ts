@@ -88,16 +88,39 @@ describe("the card that draws it", () => {
 
   it("draws no button at all when there is no action", () => {
     // Not a disabled button, not an empty pill: nothing.
-    expect(source).toMatch(/\{action && \(\s*<motion\.button/);
+    expect(source).toMatch(/\{action && \(\s*\/\*[\s\S]*?<RoomCardPlayButton/);
   });
 
-  it("uses the short label, not the lobby's long one", () => {
+  it("says Play, in the short form, whichever state the card is in", () => {
+    // It used to be three labels for one act — "Join" on a live round,
+    // "Join" again on a room I have a seat in, the short "Play" only when I
+    // host it — and the state they were distinguishing is already on the
+    // card above them.
+    expect(source).toMatch(/<Play className="w-3\.5 h-3\.5 fill-current" \/>/);
+    expect(source).toMatch(/t\("extra\.roomPlay"\)/);
+    expect(source).not.toMatch(/extra\.roomJoinLive/);
     // "თამაშის დაწყება" is four syllables in a pill that shares its row with
     // a count and two faces, and it pushed the group off the card. The lobby
     // keeps the long form; it has a screen width to say it in.
-    expect(source).toMatch(/action === "start" \?[\s\S]{0,900}extra\.roomCardStart/);
-    expect(source, "the long form does not fit on a card")
-      .not.toMatch(/action === "start" \?[\s\S]{0,900}extra\.rlStartGame/);
+    expect(source, "the long form does not fit on a card").not.toMatch(/extra\.rlStartGame/);
+  });
+
+  it("is the public list's button in another colour", () => {
+    // Same component, same shape, same words: only the tone differs.
+    expect(source).toMatch(/<RoomCardPlayButton\s*\n\s*tone="white"/);
+    const publicList = readFileSync(
+      join(process.cwd(), "src/components/team/PublicRoomsSection.tsx"),
+      "utf8",
+    );
+    expect(publicList).toMatch(/<RoomCardPlayButton\s*\n\s*tone="mint"/);
+    const button = readFileSync(
+      join(process.cwd(), "src/components/team/RoomCardPlayButton.tsx"),
+      "utf8",
+    );
+    // The tone map carries colours and nothing else — no second shape can
+    // creep back in through it.
+    const tones = button.slice(button.indexOf("const TONES"), button.indexOf("export const RoomCardPlayButton"));
+    expect(tones).not.toMatch(/rounded|px-|py-|text-sm|font-|shadow|backdrop/);
   });
 
   it("pulses only for the live round", () => {

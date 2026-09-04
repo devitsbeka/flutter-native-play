@@ -10,6 +10,7 @@ import iconWordsLounge from "@/assets/play-chooser/icon-words.webp";
 import iconPartyLounge from "@/assets/group-of-people.png";
 import { roomKind, routeForRoom } from "@/utils/roomRoutes";
 import { roomCardAction } from "@/utils/roomCardAction";
+import { RoomCardPlayButton } from "@/components/team/RoomCardPlayButton";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -1165,8 +1166,19 @@ function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, isJoining = fals
                     navigates, so a player parked on this very list is the one
                     person a starting round cannot reach. */}
                 {action && (
-                  <motion.button
-                    type="button"
+                  /* The public list's button in white — same shape, same
+                     word, same play triangle. Which list you are on is the
+                     only difference between them.
+
+                     The three states no longer wear three labels: "Play" is
+                     what every one of them does, and a live round says so by
+                     pulsing rather than by being called something else.
+                     "ითამაშე", not the lobby's "თამაშის დაწყება" — the long
+                     form is four syllables of Georgian in a pill that shares
+                     its row with a count and up to two faces, and it pushed
+                     the whole group off the card. */
+                  <RoomCardPlayButton
+                    tone="white"
                     onClick={(e) => {
                       e.stopPropagation();
                       if (!isJoining) onJoin();
@@ -1178,31 +1190,10 @@ function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, isJoining = fals
                         ? { duration: 1.6, repeat: Infinity, ease: "easeInOut" }
                         : undefined
                     }
-                    className="flex items-center gap-1.5 flex-shrink-0 rounded-lg bg-white/70 backdrop-blur-md px-3 py-1.5 text-sm font-extrabold text-[#2E1065] shadow-md disabled:opacity-60"
                   >
-                    {action === "live" ? (
-                      <>
-                        <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                        {t("extra.roomJoinLive")}
-                      </>
-                    ) : action === "start" ? (
-                      <>
-                        <Play className="w-3.5 h-3.5 fill-current" />
-                        {/* "ითამაშე", not the lobby's "თამაშის დაწყება".
-                            The long form is four syllables of Georgian in a
-                            pill that shares its row with a count and up to
-                            two faces, and it pushed the whole group off the
-                            card. The lobby's button keeps the long form —
-                            it has a full screen width to say it in. */}
-                        {t("extra.roomCardStart")}
-                      </>
-                    ) : (
-                      <>
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                        {t("extra.roomJoinLive")}
-                      </>
-                    )}
-                  </motion.button>
+                    <Play className="w-3.5 h-3.5 fill-current" />
+                    {t("extra.roomPlay")}
+                  </RoomCardPlayButton>
                 )}
               </div>
             </div>

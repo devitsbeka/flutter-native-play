@@ -870,6 +870,10 @@ export function RoomLobbyV2() {
         notifications: t("extra.notifications"),
       }}
       rules={lobbyRules}
+      rulesText={[
+        { key: "rules", heading: t("lobby.rulesHeading"), body: t("lobby.rulesClassic") },
+        { key: "time", heading: t("lobby.timeHeading"), body: t("lobby.timeClassic") },
+      ]}
       players={lobbyPlayers}
       playersHint={enoughPlayers ? null : t("extra.rlNeedsSecondPlayer")}
       // The room's own cap (max_players), and one seat more than the host

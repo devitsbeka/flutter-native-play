@@ -322,19 +322,20 @@ describe("the public list", () => {
     expect(section).toMatch(/isBattle\s*\n?\s*\? Math\.min\(effectiveSeats, 10\)\s*\n?\s*: Math\.min\(room\.player_count, 10\)/);
     expect(section).toMatch(/Array\.from\(\{ length: seatsToDraw \}/);
     expect(section).toMatch(/\$\{room\.player_count\}\/\$\{effectiveSeats\}/);
-    // The Ready button is the mint "play" button (Figma 1058:325): a #81f0c3
-    // face with a #2bc889 bottom lip and dark-purple type, saying "play".
-    expect(section).toMatch(/rounded-\[24px\] bg-\[#81f0c3\] border-b-4 border-\[#2bc889\] text-\[#320c69\]/);
-    expect(section).toMatch(/ready\s*\n?\s*\? t\("extra\.roomPlay"\)/);
+    // Every card's button is the mint "play" button (Figma 1058:325): a
+    // #81f0c3 face with a #2bc889 bottom lip and dark-purple type. It used
+    // to be mint only on a "ready" room and a white pill with a green dot
+    // everywhere else — one act in two shapes down one list.
+    const button = read("src/components/team/RoomCardPlayButton.tsx");
+    expect(button).toMatch(/mint: "bg-\[#81f0c3\] border-\[#2bc889\] text-\[#320c69\]"/);
+    expect(section).toMatch(/<RoomCardPlayButton\s*\n\s*tone="mint"/);
     expect(section).not.toMatch(/from-\[#34d399\]/);
     expect(section).toMatch(/border-dashed border-white\/40/);
     expect(section).toMatch(/online\.has\(person\.user_id\)/);
-    // The join button's green dot means somebody in the room is in the app
-    // right now — a sleeping room's button carries none.
-    expect(section).toMatch(/const live = online\.has\(room\.host_user_id\) \|\| players\.some/);
-    // The dot means LIVE, and it stands down on a Ready card, which is
-    // green all over and says so in words.
-    expect(section).toMatch(/\{live && !ready && \(/);
+    // Who is online is said by the seats — a face each, each with its own
+    // dot — not by a dot on the button, which said it for the whole room at
+    // once and only sometimes.
+    expect(section).not.toMatch(/\{live && !ready && \(/);
     // One door at a time: a pending ask is withdrawable from the card, and
     // until it is, no other room's join can be pressed (see "one door at a
     // time" below — the old silent take-back moved the ask on a mis-tap).
@@ -605,13 +606,18 @@ describe("the doorstep follows the host around the app", () => {
     expect(gate).toMatch(/here\.toUpperCase\(\)\.includes\(next\.room_code\.toUpperCase\(\)\)/);
   });
 
-  it("a room I host says Enter; somebody else's says it is a request", () => {
+  it("every card says Play, and the tap still knows the difference", () => {
+    // Three labels — "Play" on a full room, "Enter" on one I am in, "Join"
+    // on a stranger's — for the one thing a card is for. The words are one
+    // word now; the tap is still the one the room needs, a door for a room
+    // I belong to and a request for anybody else's.
     const section = read("src/components/team/PublicRoomsSection.tsx");
-    expect(section).toMatch(
-      /ready\s*\? t\("extra\.roomPlay"\)\s*: inside\s*\? t\("extra\.roomEnter"\)\s*: t\("extra\.roomJoinLive"\)/,
-    );
+    expect(section).toMatch(/<Play className="w-3\.5 h-3\.5 fill-current" \/>/);
+    expect(section).toMatch(/t\("extra\.roomPlay"\)/);
+    expect(section).not.toMatch(/extra\.roomEnter|extra\.roomJoinLive/);
+    expect(section).toMatch(/if \(inside\) enter\(\);\s*\n\s*else onAsk\(room\);/);
     for (const lang of ["ka", "en", "de", "es", "fr", "it", "pt"]) {
-      expect(read(`src/locales/${lang}.ts`)).toMatch(/roomEnter: "/);
+      expect(read(`src/locales/${lang}.ts`)).toMatch(/roomPlay: "/);
     }
   });
 });

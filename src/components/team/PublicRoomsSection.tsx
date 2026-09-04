@@ -15,7 +15,8 @@ import { useFriends } from "@/contexts/FriendsContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { onlineUserIds } from "@/utils/presence";
 import { motion } from "framer-motion";
-import { Globe, Loader2, Users, Clock, Trash2, LogOut, X, UserPlus } from "lucide-react";
+import { Globe, Loader2, Users, Clock, Trash2, LogOut, X, UserPlus, Play } from "lucide-react";
+import { RoomCardPlayButton } from "@/components/team/RoomCardPlayButton";
 import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
 import { GradientBackground, ROOM_GRADIENT_PRESETS } from "@/components/ui/noisy-gradient-backgrounds";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
@@ -143,25 +144,18 @@ function PublicRoomCard({
   const seats = roomSeats(room);
   const inside = room.my_state === "host" || room.my_state === "joined";
   const waiting = room.my_state === "pending";
-  // The room is LIVE when somebody in it is in the app right now — that is
-  // what the green dot on the join button means, so a room whose whole
-  // couch has closed the app doesn't wear one.
-  const live = online.has(room.host_user_id) || players.some((p) => online.has(p.user_id));
-  /**
-   * Ready: my room, every seat taken, and every one of those people in the
-   * app right now.
-   *
-   * "Enter" is true of any room I belong to and says nothing about whether
-   * walking in is worth it. This one is the room that can start the moment
-   * I arrive — nobody to wait for, nobody to wake — so it says so, and the
-   * button goes green rather than wearing a green dot on white.
-   */
   // A room's cap can lag behind who is actually in it — the host set 2 and a
   // third walked in — so the seats a card DRAWS are never fewer than the
   // heads it counts. That is what kept a full room reading "3/2" and drawing
   // only two circles for three people.
+  //
+  // Who is online no longer changes the button. It used to: a "ready" room
+  // (mine, full, everyone in the app) turned it mint while every other card
+  // kept a white pill with a green dot, which meant the same act wore two
+  // shapes and three words across one list. The seats above already say who
+  // is here, one face at a time, and the dot on each of them says it better
+  // than a dot on a button ever did.
   const effectiveSeats = seats != null ? Math.max(seats, room.player_count) : null;
-  const full = effectiveSeats != null && room.player_count >= effectiveSeats;
   // How many seat circles to draw. A Battle room has a small fixed size, so
   // its empty chairs read as "one short of starting" — worth showing. A
   // classic room's cap is 10 and the host starts whenever (owner's ask), so
@@ -173,9 +167,6 @@ function PublicRoomCard({
       : isBattle
         ? Math.min(effectiveSeats, 10)
         : Math.min(room.player_count, 10);
-  const everyoneHere =
-    online.has(room.host_user_id) && players.every((p) => online.has(p.user_id));
-  const ready = inside && full && everyoneHere;
   // The first round: its category's own icon and name, in the viewer's
   // language — or "mixed", whichever language the host's picker stored it
   // in. The listing carries an icon only for a queued round; a room whose
@@ -426,20 +417,17 @@ function PublicRoomCard({
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0">
-            <motion.button
-              type="button"
-              whileTap={{ scale: 0.96 }}
+            {/* The public list's button is the mint one. My Rooms draws the
+                same button in white — same shape, same words, same play
+                triangle; which list you are on is the only difference. */}
+            <RoomCardPlayButton
+              tone="mint"
               disabled={busy || waiting || blocked}
               onClick={(e) => {
                 e.stopPropagation();
                 if (inside) enter();
                 else onAsk(room);
               }}
-              className={`relative flex items-center gap-1.5 shrink-0 px-4 py-2 text-sm font-extrabold disabled:opacity-60 ${
-                ready
-                  ? "rounded-[24px] bg-[#81f0c3] border-b-4 border-[#2bc889] text-[#320c69] active:translate-y-[2px] active:border-b-2"
-                  : "rounded-xl bg-white/70 backdrop-blur-md text-[#2E1065] shadow-md"
-              }`}
             >
               {busy ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -450,25 +438,16 @@ function PublicRoomCard({
                 </>
               ) : (
                 <>
-                  {/* A live-but-not-ready room wears the green dot; a sleeping
-                      one nothing rather than a lie. The ready button is the
-                      mint "play" button (Figma 1058:325) — its colour is the
-                      signal, so it needs no dot. */}
-                  {live && !ready && (
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)]" />
-                  )}
-                  {/* My own room is a door I walk through; somebody
-                      else's is a request I send, and the label says
-                      which. A full room whose people are all here is
-                      not a door — it is a game waiting on me: "play". */}
-                  {ready
-                    ? t("extra.roomPlay")
-                    : inside
-                      ? t("extra.roomEnter")
-                      : t("extra.roomJoinLive")}
+                  {/* One word for one act. It used to say "Play" on a full
+                      room, "Enter" on one I am already in and "Join" on a
+                      stranger's — three labels for the one thing a card is
+                      for, and the state they were distinguishing is already
+                      on the card above them. */}
+                  <Play className="w-3.5 h-3.5 fill-current" />
+                  {t("extra.roomPlay")}
                 </>
               )}
-            </motion.button>
+            </RoomCardPlayButton>
             {/* Waiting is undoable: one game at a time means the ask must
                 be withdrawable to knock on another door. */}
             {waiting && !busy && (

@@ -229,10 +229,11 @@ describe("the room title in the lobby header", () => {
     // One lobby for every mode now (Figma 1018:5815): the classic room
     // passes its name in rather than drawing a header of its own.
     expect(lobby).toMatch(/roomName=\{roomName\}/);
-    // 34/40, not the frame's 52/62: the title shares its row with the
-    // room's icon now, and at 52 a Georgian name broke under it and left
-    // the icon sitting on a line of its own (owner's ask to save space).
-    expect(universal).toMatch(/font-hero text-\[34px\] capitalize leading-\[40px\]/);
+    // 43.656 on 51.36 and centred under the emblem (Figma 1059:532). It
+    // spent a while at 34/40 beside a 44px icon, to buy back the row that
+    // an emblem above a big heading cost on a short screen; the design
+    // pays for that row out of the empty lilac under the card instead.
+    expect(universal).toMatch(/font-hero text-\[43\.656px\] capitalize leading-\[51\.36px\]/);
     expect(universal).toMatch(/line-clamp-2/);
   });
 
@@ -256,6 +257,11 @@ describe("the classic lobby's create controls (owner's asks)", () => {
     expect(lobby).not.toMatch(/key: "players"/);
     expect(lobby).not.toMatch(/setMaxPlayers/);
     expect(lobby).toMatch(/No player-count picker on a classic room/);
+    // And with it went the static "Players 1–10" line the lobby drew when no
+    // picker was present: how full the room is is said under the room's own
+    // name (Figma 1059:532), and saying it again as a row two inches below
+    // was saying it twice.
+    expect(universal).not.toMatch(/rules\.some\(\(r\) => r\.key === "players"\)/);
   });
 
   it("Play on TV is a row in the rules, not a chip beside the category", () => {
@@ -293,13 +299,21 @@ describe("the classic lobby's create controls (owner's asks)", () => {
     expect(picker).toMatch(/key: "random5", icon: iconFiveRounds/);
   });
 
-  it("the room title carries the rename pencil beside the name, not on the icon", () => {
+  it("the room title carries one rename pencil, on the emblem's shoulder", () => {
     const universal = read("src/components/lobby/UniversalLobby.tsx");
-    expect(universal).toMatch(/The pencil sits beside the NAME \(owner's ask\)/);
-    // It is its own flex child, not inside the clamped h1 — so the round
-    // chip and its shadow are never clipped (owner's ask).
-    expect(universal).toMatch(/a sibling is outside that clip and centres against the title/);
+    // Figma 1059:532 puts it back on the emblem — top-right, on the
+    // shoulder, not in the old bottom-right corner and not floating beside
+    // a name it has to push around to sit next to.
+    expect(universal).toMatch(/absolute left-\[65px\] top-\[4px\]/);
+    // Wherever it hangs, it is never a child of the clamped h1: that clips
+    // with overflow-hidden, which ate the round chip and its shadow.
+    expect(universal).toMatch(/It is\s*\n\s*\/\/ never a child of the h1/);
+    expect(universal).not.toMatch(/\{name\}\s*\n\s*\{[^}]*[Pp]encil/);
     expect(universal).not.toMatch(/absolute -bottom-0\.5 -right-0\.5[^]*<Pencil/);
+    // One chip, built once: a room with no emblem hangs the same one beside
+    // its name, so the two cannot drift into two different pencils.
+    expect((universal.match(/<Pencil className="size-3/g) ?? []).length).toBe(1);
+    expect(universal).toMatch(/const chip = \(/);
   });
 
   it("the TV setup panel is dark ink on the lobby's light sheet, not white", () => {
