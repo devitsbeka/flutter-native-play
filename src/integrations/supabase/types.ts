@@ -2066,6 +2066,33 @@ export type Database = {
           },
         ]
       }
+      promotions: {
+        Row: {
+          active: boolean
+          created_at: string
+          ends_at: string
+          id: string
+          label: Json
+          starts_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          ends_at: string
+          id?: string
+          label: Json
+          starts_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          ends_at?: string
+          id?: string
+          label?: Json
+          starts_at?: string
+        }
+        Relationships: []
+      }
       purchase_transactions: {
         Row: {
           amount_paid: number
