@@ -122,6 +122,8 @@ export interface UniversalLobbyProps {
   category?: {
     label: string;
     iconSlug?: string | null;
+    /** "+5" — the extra rounds, shown at the FAR RIGHT of the chip. */
+    trailing?: string;
     onPress?: () => void;
     onAdd?: () => void;
   };
@@ -342,6 +344,7 @@ export function UniversalLobby({
                   icon={chipQuestion}
                   iconSlug={category.iconSlug}
                   label={category.label}
+                  trailing={category.trailing}
                   onPress={category.onPress}
                 />
                 {category.onAdd && (
@@ -725,9 +728,18 @@ function RoomTitle({
   // ended up sitting on a line of its own. Smaller, capped at two lines, and
   // the icon comes down to match: the pair reads as one heading (owner's ask
   // — the two-line 52px heading ate the screen).
+  // The pencil sits beside the NAME now, not on the icon (owner's ask): a
+  // small round chip after the heading, so "this is yours to rename" reads
+  // off the title rather than off the emblem.
+  const pencil = editable ? (
+    <span className="ml-1.5 inline-flex size-[22px] shrink-0 translate-y-[6px] items-center justify-center rounded-full bg-white shadow-[0px_2px_4px_rgba(0,0,0,0.18)]">
+      <Pencil className="h-3 w-3 text-[#523b76]" />
+    </span>
+  ) : null;
   const heading = (
     <h1 className="min-w-0 flex-1 font-hero text-[34px] capitalize leading-[40px] tracking-[-0.16px] text-[#402666] [overflow-wrap:anywhere] line-clamp-2">
       {name}
+      {pencil}
     </h1>
   );
   if (!icon) return heading;
@@ -744,13 +756,6 @@ function RoomTitle({
           src={icon}
           className="size-[44px] object-contain drop-shadow-[0_4px_10px_rgba(88,50,160,0.22)]"
         />
-        {/* The pencil says the icon is the host's to change; a guest, and a
-            room whose face is fixed by the game it plays, get the art alone. */}
-        {editable && (
-          <span className="absolute -bottom-0.5 -right-0.5 flex size-[18px] items-center justify-center rounded-full bg-white shadow-[0px_2px_4px_rgba(0,0,0,0.18)]">
-            <Pencil className="h-2.5 w-2.5 text-[#523b76]" />
-          </span>
-        )}
       </span>
       {heading}
     </div>
@@ -774,6 +779,7 @@ function Chip({
   iconSlug,
   iconShadow,
   label,
+  trailing,
   onPress,
 }: {
   icon: string;
@@ -782,6 +788,8 @@ function Chip({
   iconSlug?: string | null;
   iconShadow?: boolean;
   label: string;
+  /** A note pinned to the far right of the chip — "+5" extra rounds. */
+  trailing?: string;
   onPress?: () => void;
 }) {
   const Tag = onPress ? motion.button : motion.div;
@@ -810,6 +818,11 @@ function Chip({
       <span className="min-w-0 flex-1 truncate font-[Nunito] text-[16px] font-medium leading-[19.5px] tracking-[-0.16px] text-[#402666]">
         {label}
       </span>
+      {trailing && (
+        <span className="ml-2 shrink-0 font-[Nunito] text-[16px] font-bold leading-[19.5px] tracking-[-0.16px] text-[#402666]/60">
+          {trailing}
+        </span>
+      )}
     </Tag>
   );
 }

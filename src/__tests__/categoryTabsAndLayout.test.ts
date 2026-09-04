@@ -281,15 +281,27 @@ describe("the classic lobby's create controls (owner's asks)", () => {
     // The chip's icon is the category's own (DynamicIcon), not the question
     // mark, when a first round is set.
     expect(lobby).toMatch(/iconSlug: freshStart \? undefined : \(firstIconSlug \?\? undefined\)/);
-    expect(lobby).toMatch(/\(\+\$\{extra\}\)/);
+    // The extra-rounds count rides the far RIGHT of the chip (trailing),
+    // not crowded against the category name.
+    expect(lobby).toMatch(/trailing: !freshStart && firstName && extra > 0 \? `\+\$\{extra\}` : undefined/);
+    expect(universal).toMatch(/A note pinned to the far right of the chip/);
     expect(lobby).toMatch(/rounds > 1\s*\n\s*\? \(\) => setShowRoundOrder\(true\)/);
   });
 
-  it("the category picker offers a fourth option: five random categories", () => {
+  it("the category picker offers a fourth option: five rounds of random categories", () => {
     const picker = read("src/components/team/CategoryPickerModal.tsx");
     expect(picker).toMatch(/const handlePickFiveRandom = \(\) => \{/);
     expect(picker).toMatch(/for \(let i = 0; i < 5; i\+\+\)/);
-    expect(picker).toMatch(/key: "random5"[^]*cpRandom5Title/);
+    // The spin-the-bottle 3D art, not the die (owner's ask).
+    expect(picker).toMatch(/import iconFiveRounds from "@\/assets\/spin-the-bottle\.png"/);
+    expect(picker).toMatch(/key: "random5", icon: iconFiveRounds/);
+  });
+
+  it("the room title carries the rename pencil beside the name, not on the icon", () => {
+    const universal = read("src/components/lobby/UniversalLobby.tsx");
+    expect(universal).toMatch(/The pencil sits beside the NAME now, not on the icon/);
+    // No pencil pinned to the icon's corner any more.
+    expect(universal).not.toMatch(/absolute -bottom-0\.5 -right-0\.5[^]*<Pencil/);
   });
 
   it("the TV setup panel is dark ink on the lobby's light sheet, not white", () => {
