@@ -46,7 +46,8 @@ describe("the rooms rail keeps its shape when empty", () => {
     expect(rooms).toMatch(/rooms\.length === 0 && homeRail && !searching \?/);
     expect(rooms).toMatch(/<StartHereCard\s*\n\s*variant="room"/);
     expect(rooms).toMatch(/title=\{t\("extra\.railFirstRoom"\)\}/);
-    expect(rooms).toMatch(/desc=\{t\("extra\.railFirstRoomDesc"\)\}/);
+    // The title alone (owner's ask): no line under it explaining the title.
+    expect(rooms).not.toMatch(/railFirstRoomDesc/);
     expect(rooms).toMatch(/onPress=\{\(\) => onCreateRoom\?\.\(\)\}/);
   });
 
@@ -84,14 +85,15 @@ describe("the panel itself", () => {
     expect(card).not.toMatch(/<Plus /);
   });
 
-  it("the words sit below the icon, title over subtitle", () => {
+  it("the words sit below the icon — the title alone, no subtitle", () => {
+    // The title already says what to do; the explaining line beneath it
+    // made the invitation read as a notice (owner's ask). The panel takes
+    // no desc at all, so a call site cannot quietly bring one back.
     const icon = card.indexOf("src={variant ===");
     const title = card.indexOf("{title}");
-    const desc = card.indexOf("{desc && (");
     expect(icon).toBeLessThan(title);
-    expect(title).toBeLessThan(desc);
-    // Subtitle in regular weight, matching the rail headers.
-    expect(card).toMatch(/text-\[12px\] font-normal leading-\[16px\] text-\[#6b5b86\]/);
+    expect(card).not.toMatch(/\{desc && \(/);
+    expect(card).not.toMatch(/desc\?: string/);
   });
 
   it("in all seven languages", () => {

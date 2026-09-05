@@ -18,17 +18,19 @@ import triviaBuzzerIcon from "@/assets/trivia-buzzer.png";
  * The icon is the rail's own: the dance floor for rooms, the buzzer for
  * trivias, each the picture that surface already uses for itself. A generic
  * plus said only "something goes here".
+ *
+ * Just the picture and the title — no line under it (owner's ask). The
+ * title already says what to do; the explaining line beneath it made the
+ * invitation read as a notice.
  */
 export function StartHereCard({
   variant,
   title,
-  desc,
   onPress,
 }: {
   /** Which rail this stands in — picks the picture. */
   variant: "room" | "trivia";
   title: string;
-  desc?: string;
   onPress: () => void;
 }) {
   return (
@@ -48,11 +50,6 @@ export function StartHereCard({
       <span className="font-[Nunito] text-[15px] font-bold leading-[20px] text-[#402666]">
         {title}
       </span>
-      {desc && (
-        <span className="max-w-[280px] font-[Nunito] text-[12px] font-normal leading-[16px] text-[#6b5b86]">
-          {desc}
-        </span>
-      )}
     </motion.button>
   );
 }
