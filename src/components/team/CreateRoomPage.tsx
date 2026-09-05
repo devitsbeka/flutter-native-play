@@ -1655,8 +1655,12 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                 // artTop: where Figma parks each render, as a share of the
                 // card's height (1013:1407 and its siblings); descW: the
                 // blurb's box in 393rds, 273 for all but Words' longer line.
-                { key: "guess", art: featuredGuess, artTop: 0.05, descW: 273, players: "1-10", title: t("extra.modeGuessTitle"), desc: t("extra.modeGuessDesc") },
+                // Quick Game leads and Classic Trivia (the library) follows —
+                // the two most-played, first in reach. Guess and the rest keep
+                // their order behind them.
                 { key: "quick", art: featuredQuick, artTop: -1.71, descW: 273, players: "1-10", title: t("extra.modeQuickTitle"), desc: t("extra.modeQuickDesc") },
+                { key: "library", art: featuredLibrary, artTop: -2.86, descW: 273, players: null, title: t("extra.modeLibraryTitle"), desc: t("extra.libraryDesc") },
+                { key: "guess", art: featuredGuess, artTop: 0.05, descW: 273, players: "1-10", title: t("extra.modeGuessTitle"), desc: t("extra.modeGuessDesc") },
                 // The King and Battle posters are developer-only until the
                 // modes are promoted — see DEVELOPER_ONLY_GAME_TYPES.
                 ...(developerMode
@@ -1666,7 +1670,6 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                     ]
                   : []),
                 { key: "words", art: featuredWords, artTop: 0.04, descW: 329, players: "1-2", title: t("gameTypes.wordsTitle"), desc: t("extra.modeWordsDesc") },
-                { key: "library", art: featuredLibrary, artTop: -2.86, descW: 273, players: null, title: t("extra.modeLibraryTitle"), desc: t("extra.libraryDesc") },
                 { key: "mytrivias", art: featuredMyTrivias, artTop: -0.02, descW: 273, players: null, title: t("extra.myTriviaOption"), desc: t("extra.myTriviaDesc") },
               ] as { key: GameChoice; art: string; artTop: number; descW: number; players: string | null; title: string; desc: string }[]
             ).map((card, i) => {
