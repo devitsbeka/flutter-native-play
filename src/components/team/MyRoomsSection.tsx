@@ -47,6 +47,11 @@ interface MyRoomsSectionProps {
   onCreateRoom?: () => void;
   onShowAllRooms?: () => void;
   vertical?: boolean;
+  /**
+   * The home's Rooms rail: no leave/delete button (that lives on the rooms
+   * page), one age badge rather than two, avatars on the right.
+   */
+  homeRail?: boolean;
   filter?: RoomFilter;
   searchQuery?: string;
   onNavigateToTab?: (tab: string) => void;
@@ -74,6 +79,7 @@ export function MyRoomsSection({
   onCreateRoom, 
   onShowAllRooms, 
   vertical = false,
+  homeRail = false,
   filter = "all",
   searchQuery = "",
   onNavigateToTab,
@@ -414,8 +420,9 @@ export function MyRoomsSection({
                       index={index}
                       onJoin={() => handleJoin(room)}
                       onDelete={handleDeleteRoom}
-                    onLeave={handleLeaveRoom}
+                      onLeave={handleLeaveRoom}
                       isJoining={joiningRoomId === room.id}
+                      homeRail={homeRail}
                     />
                   </motion.div>
                 ))}
@@ -454,9 +461,11 @@ interface RoomCardProps {
   fullWidth?: boolean;
   /** Opening this room: the card says so and stops taking taps. */
   isJoining?: boolean;
+  /** See MyRoomsSectionProps.homeRail. */
+  homeRail?: boolean;
 }
 
-function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = false, isJoining = false }: RoomCardProps) {
+function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = false, isJoining = false, homeRail = false }: RoomCardProps) {
   const { t, language } = useLanguage();
   const localizeCategory = useLocalizedCategoryName();
   const isMobile = useIsMobile();
@@ -634,9 +643,11 @@ function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = false, i
                 <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-white/40 border-t-white" />
               </div>
             )}
-            {/* Top row - Avatars left, Status badge + menu right */}
+            {/* Top row - Avatars left, Status badge + menu right. On the
+                home rail the row runs the other way: avatars on the right
+                where the badge sat, the age badge on the left. */}
             <div className="relative z-10 px-2 pb-4">
-              <div className="flex items-start justify-between mb-8">
+              <div className={`flex items-start justify-between mb-8 ${homeRail ? "flex-row-reverse" : ""}`}>
                 {/* Top left - Avatars (use TV players when active) */}
                 <div className="flex -space-x-2">
                   {displayPlayers.slice(0, ROOM_CARD_FACES).map((p, idx) => {
@@ -707,22 +718,25 @@ function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = false, i
                   
                   {/* The way out, in the open on every device — the same
                       trash (host) / log-out (guest) the public tab wears.
-                      It used to hide in a desktop-only 3-dot menu. */}
-                  <button
-                    type="button"
-                    aria-label={room.is_host ? t("extra.rlDeleteRoom") : t("extra.rlLeaveRoom")}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowDeleteConfirm(true);
-                    }}
-                    className="w-8 h-8 rounded-full bg-black/25 backdrop-blur-sm flex items-center justify-center hover:bg-black/35 active:scale-95 transition"
-                  >
-                    {room.is_host ? (
-                      <Trash2 className="w-4 h-4 text-white" />
-                    ) : (
-                      <LogOut className="w-4 h-4 text-white" />
-                    )}
-                  </button>
+                      It used to hide in a desktop-only 3-dot menu. Not on
+                      the home rail: leaving a room is the rooms page's job. */}
+                  {!homeRail && (
+                    <button
+                      type="button"
+                      aria-label={room.is_host ? t("extra.rlDeleteRoom") : t("extra.rlLeaveRoom")}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowDeleteConfirm(true);
+                      }}
+                      className="w-8 h-8 rounded-full bg-black/25 backdrop-blur-sm flex items-center justify-center hover:bg-black/35 active:scale-95 transition"
+                    >
+                      {room.is_host ? (
+                        <Trash2 className="w-4 h-4 text-white" />
+                      ) : (
+                        <LogOut className="w-4 h-4 text-white" />
+                      )}
+                    </button>
+                  )}
                 </div>
               </div>
               
@@ -758,14 +772,18 @@ function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = false, i
                   <Users className="w-4 h-4 text-white/80" />
                   <span className="text-sm font-bold text-white">{displayPlayerCount}</span>
                 </div>
-                <p className="text-xs text-white/60">
-                  {formatDistanceToNow(new Date(room.created_at), { 
-                    addSuffix: true, 
-                    // Was `ka` unconditionally: "3 დღის წინ" under a room card
-                    // whose every other word was in the reader's language.
-                    locale: dateLocaleFor(language) 
-                  })}
-                </p>
+                {/* The age, again — the badge up top already says it, so the
+                    home rail shows it once. */}
+                {!homeRail && (
+                  <p className="text-xs text-white/60">
+                    {formatDistanceToNow(new Date(room.created_at), { 
+                      addSuffix: true, 
+                      // Was `ka` unconditionally: "3 დღის წინ" under a room card
+                      // whose every other word was in the reader's language.
+                      locale: dateLocaleFor(language) 
+                    })}
+                  </p>
+                )}
               </div>
             </div>
           </GradientBackground>
