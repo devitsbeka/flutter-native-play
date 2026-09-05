@@ -2032,6 +2032,8 @@ export const de: KaTranslations = {
     whatToPlay: "Was möchtest du spielen?",
     railRooms: "Räume",
     railRoomsDesc: "Weiterspielen",
+    railCategories: "Kategorien",
+    railCategoriesDesc: "Thema wählen",
     railPlay: "Spielen",
     railPlayDesc: "Modus wählen",
     railMyTrivias: "Meine Trivias",

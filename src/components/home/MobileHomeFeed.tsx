@@ -8,6 +8,9 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { MyRoomsSection } from "@/components/team/MyRoomsSection";
 import { useGameTypes } from "@/hooks/useGameTypes";
+import { useCategories } from "@/hooks/useCategories";
+import { useVipStatus } from "@/hooks/useVipStatus";
+import { AirbnbCategoryCard } from "@/components/discover/AirbnbCategoryCard";
 import { ProBannerReel } from "@/components/shop/MobileProCarousel";
 import { useLiveDeals, DealBannerCard } from "@/components/shop/DailyDealsRow";
 
@@ -88,7 +91,14 @@ export function MobileHomeFeed() {
   const { t } = useLanguage();
   const { user } = useAuth();
   const gameTypes = useGameTypes();
+  const { categories } = useCategories();
+  const { isVip } = useVipStatus();
   const { dailyDeal, hourlyDeal, dailyRemaining, hourlyRemaining } = useLiveDeals();
+
+  // The first dozen categories as a rail — the app's richest, always-present
+  // "what to play" content, and what keeps the feed taller than a screen so
+  // it fills rather than trailing off into an empty band.
+  const railCategories = categories.slice(0, 12);
 
   const { data: trivias = [] } = useQuery({
     queryKey: ["home-feed-my-trivias", user?.id],
@@ -149,6 +159,36 @@ export function MobileHomeFeed() {
           })}
         </Rail>
       </section>
+
+      {/* ── Categories (the airbnb-style chunky cards) ────────────────── */}
+      {railCategories.length > 0 && (
+        <section>
+          <RailHeader
+            title={t("extra.railCategories")}
+            desc={t("extra.railCategoriesDesc")}
+            action={{ label: t("extra.seeAll"), onPress: () => navigate("/discover") }}
+          />
+          <Rail>
+            {railCategories.map((cat) => (
+              <div key={cat.id} className="w-[158px] shrink-0 snap-start">
+                <AirbnbCategoryCard
+                  id={cat.id}
+                  categoryId={cat.category_id || cat.id}
+                  iconSlug={cat.icon_slug}
+                  name={cat.name}
+                  icon={cat.icon}
+                  color={cat.color}
+                  totalLevels={cat.totalLevels || 20}
+                  imageUrl={cat.image_url ?? undefined}
+                  isLocked={!isVip && cat.tier === "premium"}
+                  onClick={() => navigate(`/category/${cat.id}`)}
+                  variant="compact"
+                />
+              </div>
+            ))}
+          </Rail>
+        </section>
+      )}
 
       {/* ── My Trivias (newest first, from the left) ──────────────────── */}
       {trivias.length > 0 && (

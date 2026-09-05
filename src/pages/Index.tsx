@@ -720,9 +720,6 @@ export default function Index() {
   // feature rails, which brings its own blob background, mascot strip, friends
   // reel and profile identity — so the old absolute mobile layers stand down.
   const showHomeFeed = !!user && isMobileViewport;
-  // The scroll-reveal home fades this page-level scene wrapper out as the hero
-  // scrolls away, so the scene keeps its full-bleed old-home geometry.
-  const homeSceneRef = useRef<HTMLDivElement>(null);
   const sceneUrl = user && mascot ? mascot.scene : null;
   // Nothing is painted until the choice is known — a King that swaps to an
   // owl a moment later reads as a glitch, not a load.
@@ -910,21 +907,14 @@ export default function Index() {
             King loop, framed the way the mobile design does: far wider than
             the screen and anchored just above the bottom nav. Guests get
             their own artwork inside MobileGuestHero. */}
-        {/* The old-home scene stays full-bleed behind the header (so it is
-            never cropped); the scroll-reveal home fades it out through this
-            wrapper's ref as the hero scrolls away. */}
+        {/* On the scroll-reveal phone home the scene is rendered INSIDE
+            MobileHomeScroll's hero (see the `scene` prop below) so it scrolls
+            away with it — never as a fixed page-level backdrop. iOS composites
+            the scene's <video> above anything that scrolls over it regardless
+            of z-index, which is how a fixed scene punched through the feed. */}
         {user && isMobileViewport && !showHomeFeed && sceneUrl && <MobileMascotScene sceneUrl={sceneUrl} />}
         {user && isMobileViewport && !showHomeFeed && showDefaultScene && (
           <MobileSceneBackground defaultVideoSrc={DEFAULT_SCENE_VIDEO} />
-        )}
-        {showHomeFeed && (sceneUrl || showDefaultScene) && (
-          <div ref={homeSceneRef} className="md:hidden absolute inset-0 z-[4] will-change-[opacity]">
-            {sceneUrl ? (
-              <MobileMascotScene sceneUrl={sceneUrl} />
-            ) : (
-              <MobileSceneBackground defaultVideoSrc={DEFAULT_SCENE_VIDEO} />
-            )}
-          </div>
         )}
         {/* The mascot's scene (or the default Trivia King loop) as the
             full-bleed page background (xl+); the header, friends strip and
@@ -1155,9 +1145,14 @@ export default function Index() {
             down for the phone (see the !showHomeFeed gates). */}
         {showHomeFeed && (
           <MobileHomeScroll
-            sceneFadeRef={homeSceneRef}
+            scene={
+              sceneUrl ? (
+                <MobileMascotScene sceneUrl={sceneUrl} />
+              ) : showDefaultScene ? (
+                <MobileSceneBackground defaultVideoSrc={DEFAULT_SCENE_VIDEO} />
+              ) : null
+            }
             nickname={profile?.nickname || t("game.guest")}
-            avatarUrl={profile?.avatar_url ?? null}
             countryCode={myCountry}
             rank={myRank}
             coins={coins}
@@ -1168,8 +1163,6 @@ export default function Index() {
             onGemsClick={() => navigate("/power-ups?section=gems-lari")}
             onGiftClick={() => setIsDailyRewardsOpen(true)}
             onStreakClick={() => navigate("/streak")}
-            onAvatar={() => openAvatarModal(() => {})}
-            onShop={() => setIsGemShopOpen(true)}
             onAddFriend={() => setShowAddFriendModal(true)}
           />
         )}
@@ -1234,8 +1227,13 @@ export default function Index() {
           onClose={() => setShowChangeNameModal(false)}
         />
 
-        {/* Content area */}
-        <div className="flex-1 flex relative">
+        {/* Content area. On the scroll-reveal phone home this column stands
+            down entirely: everything in it is desktop-only or `hidden` on the
+            phone, but it was still a second `flex-1` sibling of
+            MobileHomeScroll — and two flex-1 children split the column 50/50,
+            which squeezed the whole home into a half-screen window with a
+            blank half beneath it. `hidden` takes it out of the flow. */}
+        <div className={showHomeFeed ? "hidden" : "flex-1 flex relative"}>
           {/* Action Cards - Fixed Right Side Panel (Desktop only) */}
           {user && (
             <motion.div 
