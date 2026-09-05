@@ -2365,6 +2365,8 @@ export const ka = {
     railRoomsDesc: "ითამაშე ონლაინ",
     heroStreak: "სტრიკი",
     heroQuest: "ქვესტი",
+    roomPlayersOf: "{count}/{max} მოთამაშე",
+    roomPlayersCount: "{count} მოთამაშე",
     railCategories: "კატეგორიები",
     railCategoriesDesc: "აირჩიე თემა",
     railFirstRoom: "შექმენი შენი პირველი ოთახი",

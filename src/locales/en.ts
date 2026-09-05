@@ -2360,6 +2360,8 @@ export const en: KaTranslations = {
     railRoomsDesc: "jump back in",
     heroStreak: "Streak",
     heroQuest: "Quest",
+    roomPlayersOf: "{count}/{max} players",
+    roomPlayersCount: "{count} players",
     railCategories: "Categories",
     railCategoriesDesc: "pick a topic",
     railFirstRoom: "Create your first room",
