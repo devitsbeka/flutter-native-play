@@ -182,7 +182,10 @@ describe("only the host is offered the start", () => {
     // the line.
     expect(universal).toMatch(/captionAvatarUrl\?: string \| null;/);
     expect(universal).toMatch(/start\.captionAvatarUrl !== undefined && \(/);
-    expect(universal).toMatch(/resolveAvatarUrl\(start\.captionAvatarUrl\) \?\? fallbackAvatarFor/);
+    // Through LobbyFace now, not a bare <img>: resolveAvatarUrl alone
+    // recovers a hashed path but cannot know the URL 404s, so a host whose
+    // avatar came from an older deploy drew a torn-page glyph on the line.
+    expect(universal).toMatch(/<LobbyFace\s*\n\s*url=\{start\.captionAvatarUrl \?\? null\}/);
     for (const file of ["src/pages/TeamBattlePage.tsx", "src/pages/KingPage.tsx", "src/components/team/RoomLobbyV2.tsx"]) {
       expect(read(file), file).toMatch(/captionAvatarUrl:[\s\S]{0,120}is_host\)\?\.avatar_url/);
     }

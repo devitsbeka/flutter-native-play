@@ -1142,6 +1142,9 @@ export default function KingPage() {
                 onPress: () => undefined,
                 captionOnly: true,
                 caption: noPool ? t("king.noQuestions") : t("teamBattle.waitingHost"),
+                // Only the wait breathes. "No questions" is a dead end, not
+                // a thing in progress.
+                captionPulse: !noPool,
                 // The host's face after the "…" — but only on the wait line,
                 // not the "no questions" one, which is about the room.
                 captionAvatarUrl: noPool ? undefined : (kingParts.find((p) => p.is_host)?.avatar_url ?? null),

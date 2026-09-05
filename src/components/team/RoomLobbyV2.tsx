@@ -974,7 +974,10 @@ export function RoomLobbyV2() {
         { key: "time", heading: t("lobby.timeHeading"), body: t("lobby.timeClassic") },
       ]}
       players={lobbyPlayers}
-      playersHint={enoughPlayers ? null : t("extra.rlNeedsSecondPlayer")}
+      // No playersHint here: the footer caption below the Start button says
+      // exactly this, word for word, and the two were on screen together —
+      // once under the player rows and once under the CTA. The arena keeps
+      // its hint because there it says something else ("2 more to start").
       // The room's own cap (max_players), and one seat more than the host
       // when the host will sit out of their own trivia.
       capacity={{
@@ -1013,6 +1016,7 @@ export function RoomLobbyV2() {
               disabled: pingCooldown,
               icon: <BellRing className="h-5 w-5" />,
               caption: t("team.waitingForHost"),
+              captionPulse: true,
               // The host's face after the "…" — the person being waited on.
               captionAvatarUrl: participants.find((p) => p.is_host)?.avatar_url ?? null,
               captionAvatarName: participants.find((p) => p.is_host)?.nickname ?? null,

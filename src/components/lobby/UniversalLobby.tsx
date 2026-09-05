@@ -225,6 +225,17 @@ export interface UniversalLobbyProps {
     captionAvatarUrl?: string | null;
     /** The waited-on name, for the avatar's fallback initial and alt text. */
     captionAvatarName?: string | null;
+    /**
+     * Breathe the caption, for a line that is waiting on somebody.
+     *
+     * "Waiting for the host to start…" is a state, not a label, and a line
+     * that never moves reads as one more piece of furniture — a guest could
+     * not tell whether the room was live or stuck. A slow fade says it is
+     * still running without asking for attention the way a spinner does.
+     * Off by default: a caption that tells the host to invite a friend is an
+     * instruction, and instructions should hold still.
+     */
+    captionPulse?: boolean;
   };
   /** Above the start button — an error the host must read, for instance. */
   footerExtra?: ReactNode;
@@ -698,7 +709,18 @@ export function UniversalLobby({
           </motion.button>
           )}
           {start.caption && (
-            <div
+            <motion.div
+              // A 2.4s round trip to 60% and back — slow enough to read as
+              // breathing rather than blinking. Reduced motion gets the
+              // words and the face, holding still.
+              animate={
+                start.captionPulse && !reduceMotion ? { opacity: [1, 0.6, 1] } : undefined
+              }
+              transition={
+                start.captionPulse && !reduceMotion
+                  ? { duration: 2.4, repeat: Infinity, ease: "easeInOut" }
+                  : undefined
+              }
               className={cn(
                 "flex items-center justify-center gap-2",
                 // A caption-only footer (a guest's "waiting for the host") is
@@ -714,13 +736,14 @@ export function UniversalLobby({
               {/* The host's face, right after the "…" — puts a person on the
                   line that says you are waiting for one (owner's ask). */}
               {start.captionAvatarUrl !== undefined && (
-                <img
-                  alt={start.captionAvatarName ?? ""}
-                  src={resolveAvatarUrl(start.captionAvatarUrl) ?? fallbackAvatarFor(start.captionAvatarName ?? "")}
-                  className="size-6 shrink-0 rounded-full object-cover ring-2 ring-white/70"
-                />
+                <span className="size-6 shrink-0 overflow-hidden rounded-full ring-2 ring-white/70">
+                  <LobbyFace
+                    url={start.captionAvatarUrl ?? null}
+                    seed={start.captionAvatarName ?? ""}
+                  />
+                </span>
               )}
-            </div>
+            </motion.div>
           )}
         </div>
       </motion.div>
@@ -1217,7 +1240,14 @@ function PlayerRow({
             player.offline && "opacity-45 grayscale",
           )}
         >
-          {player.avatarUrl && <img alt="" src={player.avatarUrl} className="h-full w-full object-cover" />}
+          {/* LobbyFace, not a bare <img>. This row rendered
+              `player.avatarUrl` straight, so a build-hashed path from an
+              older deploy — which 404s — drew a torn-page glyph next to the
+              player's name. That is the exact bug the comment on LobbyFace
+              describes being fixed for the invite row; the players list was
+              never moved over. Seeded by name, so the fallback is the same
+              mascot they wear everywhere else. */}
+          <LobbyFace url={player.avatarUrl ?? null} seed={player.name} />
         </span>
         {/* The bell belongs ON the grey face, not at the far end of the
             row: the face is what says "away", and the two read as one
