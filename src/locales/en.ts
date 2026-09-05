@@ -1799,7 +1799,7 @@ export const en: KaTranslations = {
     haveIt: "I have it!",
     teamLabel: "Team",
     teamDiscussHint: "Talk it over — the captain opens the options",
-    teamSuggestHint: "Tap what you believe — the captain decides",
+    teamSuggestHint: "Pick your answer from the options",
     captainLock: "Lock the answer",
     captainNextHint: "The captain moves to the next question",
     captainInfoBody: "The captain leads the couch: they open the options and lock in the team's answer. The couch picks its captain by voting — tap a teammate to give them your vote. Without a vote, the host leads.",

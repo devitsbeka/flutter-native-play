@@ -1,14 +1,13 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import type { Tables } from "@/integrations/supabase/types";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronLeft, Crown } from "lucide-react";
+import { Check, ChevronLeft, Crown } from "lucide-react";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { containsBlockedText } from "@/utils/contentFilter";
 import iconKingMascot from "@/assets/play-chooser/icon-king.webp";
 import crownIconAsset from "@/assets/crown-icon.png";
-import iconAnswerCorrect from "@/assets/answer-correct-3d.png";
 import iconAnswerWrong from "@/assets/answer-wrong-3d.png";
 import { resolveAvatarUrl } from "@/utils/avatarUtils";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,16 +39,18 @@ import {
 
 const CARD_SHADOW = "0px 2px 8px 0px rgba(102,51,153,0.06), 0px 8px 24px 0px rgba(102,51,153,0.12)";
 
-// The duel plays on the game screens' periwinkle (same as Team Battle), so
-// the light cards carry the contrast and the purple CTA no longer sinks
-// into a near-identical background — CTAs are white with purple type.
+// The duel plays on the LIGHT ground the design gives it (Figma 1072:6642):
+// #f7e2f7, with white cards and dark ink on top. It used to be the game
+// screens' periwinkle, which meant every label on the screen was white
+// text floating on purple and the white cards were the only structure.
+//
 // A column: the header, score and question scroll in the middle; the one
 // action of the moment — "I know it!", the captain's lock, "next" — sits in
 // a footer pinned to the bottom, where every other game screen keeps its
 // button. It used to ride under the question, which put it at a different
 // height every phase and, on a tall puzzle, below the fold.
 const DUEL_SHELL =
-  "h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] overflow-hidden bg-[#7E7BDC] flex flex-col";
+  "h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] overflow-hidden bg-[#f7e2f7] flex flex-col";
 const DUEL_BODY = "flex-1 min-h-0 overflow-y-auto";
 const DUEL_FOOTER = "shrink-0 max-w-md mx-auto w-full px-5 pt-3 pb-5";
 const DUEL_CTA =
@@ -65,6 +66,130 @@ const qTextSize = (s: string) =>
       : "text-[17px] leading-relaxed";
 
 const OPTION_LABELS = ["A", "B", "C", "D", "E", "F"];
+
+/**
+ * One answer, as the design draws it (Figma 1072:6642).
+ *
+ * A white 60px row with its own shadow BLOCK behind it — a #cbd5e1
+ * rectangle offset four pixels down, not a blur — so the row reads as a key
+ * you press. The letter is a 36px lilac chip, the text is 16px ink. It used
+ * to be a small translucent pill with a purple circle, sized for the purple
+ * ground the screen no longer has.
+ *
+ * `state` is the row's own: "picked" is the captain's lock, "backed" is a
+ * teammate's suggestion. Both wear a ring rather than a different shape.
+ */
+function DuelAnswer({
+  label,
+  text,
+  state = "idle",
+  disabled,
+  onClick,
+  trailing,
+}: {
+  label: string;
+  text: string;
+  state?: "idle" | "picked" | "backed";
+  disabled?: boolean;
+  onClick?: () => void;
+  /** The faces backing this answer, on the co-op duel. */
+  trailing?: ReactNode;
+}) {
+  return (
+    <div className="relative w-full">
+      {/* The block the key sits on. */}
+      <div aria-hidden className="absolute inset-x-0 top-[4px] h-[60px] rounded-[20px] bg-[#cbd5e1]" />
+      <motion.button
+        type="button"
+        whileTap={disabled ? undefined : { scale: 0.985 }}
+        disabled={disabled}
+        onClick={onClick}
+        className={`relative flex h-[60px] w-full items-center rounded-[20px] bg-white py-[10px] text-left shadow-[inset_0px_2px_0px_0px_rgba(255,255,255,0.4)] disabled:opacity-60 ${
+          state === "picked"
+            ? "ring-2 ring-[#7C3AED]"
+            : state === "backed"
+              ? "ring-2 ring-[#7C3AED]/40"
+              : ""
+        }`}
+      >
+        <span className="flex shrink-0 items-start pl-[12px]">
+          <span className="flex size-9 items-center justify-center rounded-[16px] bg-[#eadffb] font-[Nunito] text-[16px] font-bold leading-6 text-[#705c8c]">
+            {label}
+          </span>
+        </span>
+        <span className="min-w-0 flex-1 px-[12px] font-[Nunito] text-[16px] font-medium leading-5 tracking-[-0.16px] text-[#402666]">
+          {text}
+        </span>
+        {trailing}
+      </motion.button>
+    </div>
+  );
+}
+
+/**
+ * The clock, as a badge on the question card's shoulder.
+ *
+ * The count used to be a bare 3xl monospace number under the card, in white
+ * — which on the light ground would be invisible, and which took a line of
+ * its own on a screen that has none to spare. The King's blue, so it reads
+ * as his clock running.
+ */
+function DuelTimerBadge({ seconds, urgent = false }: { seconds: number; urgent?: boolean }) {
+  return (
+    <span
+      className="absolute right-[9px] top-[9px] flex size-10 items-center justify-center rounded-full shadow-[inset_0px_2px_0px_0px_rgba(255,255,255,0.3),inset_0px_-2px_0px_0px_rgba(0,0,0,0.2)]"
+      style={{
+        background: urgent
+          ? "linear-gradient(180deg,#f2696a 0%,#d94b4c 100%)"
+          : "linear-gradient(180deg,#3ca7dd 0%,#288cbd 100%)",
+      }}
+    >
+      <span
+        className="text-[14px] leading-5 text-white"
+        style={{ fontFamily: "'TASolivare', sans-serif" }}
+      >
+        {seconds}
+      </span>
+    </span>
+  );
+}
+
+/**
+ * One line of the reveal: a label, then a 36px status chip beside the text.
+ *
+ * The frame gives the correct answer a filled green chip with a white tick
+ * and a miss the 3D cross the rest of the app uses, at the same size — so
+ * the two rows line up whatever they say.
+ */
+function RevealRow({
+  label,
+  text,
+  tone,
+}: {
+  label: string;
+  text: string;
+  tone: "right" | "wrong";
+}) {
+  return (
+    <div className="pb-4">
+      <p className="font-[Nunito] text-[14px] font-medium leading-5 tracking-[-0.16px] text-[#402666]">
+        {label}
+      </p>
+      <div className="mt-1.5 flex items-center gap-3">
+        {tone === "right" ? (
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-[16px] bg-[#34d399]">
+            <Check className="size-5 text-white" strokeWidth={3} />
+          </span>
+        ) : (
+          <img alt="" src={iconAnswerWrong} className="size-9 shrink-0 object-contain" />
+        )}
+        <span className="min-w-0 font-[Nunito] text-[14px] font-medium leading-5 tracking-[-0.16px] text-[#402666]">
+          {text}
+        </span>
+      </div>
+    </div>
+  );
+}
 
 /**
  * Phase-flip tap guard. Every duel phase puts its CTA in the same spot, so
@@ -85,10 +210,14 @@ function useArmedCta(key: unknown) {
 }
 
 /**
- * The duel scoreboard — two chunky score chips instead of bare numbers on
- * white. The King wears his own blue (the mascot's), the challenger side
- * wears gold; the "first to 6" rule sits between them. Shared by the solo
- * and the co-op duel, which kept two identical bare rows before.
+ * The duel scoreboard (Figma 1072:6642): who is playing on one row, the
+ * score under each of them, and the rule between.
+ *
+ * It used to be two chunky white chips on purple with the label inside them,
+ * which said the same thing in a quarter of the space and none of the
+ * personality — the team's crest and the King's mascot were nowhere on the
+ * screen once the match started. Names at 20, scores at 32 in the display
+ * face, and "first to 6" small between the two numbers.
  */
 function DuelScoreRow({
   youLabel,
@@ -96,59 +225,65 @@ function DuelScoreRow({
   kingScore,
   ruleLabel,
   kingLabel,
+  teamIcon,
 }: {
   youLabel: string;
   youScore: number;
   kingScore: number;
   ruleLabel: string;
   kingLabel: string;
+  /** The team's crest, when the host has dressed one. */
+  teamIcon?: string | null;
 }) {
-  const chip = (label: string, score: number, stroke: string, depth: string, labelColor: string) => (
-    <div
-      className="min-w-[104px] px-4 py-1.5 text-center rounded-2xl bg-white/90"
-      style={{ border: `2px solid ${stroke}`, boxShadow: `0px 3px 0px 0px ${depth}` }}
+  const name = (text: string) => (
+    <p className="font-[Nunito] text-[20px] font-bold leading-[32px] tracking-[-0.16px] text-[#402666] truncate min-w-0">
+      {text}
+    </p>
+  );
+  const score = (n: number) => (
+    <p
+      className="text-[32px] leading-[28px] text-[#402666] text-center"
+      style={{ fontFamily: "'TASolivare', sans-serif" }}
     >
-      <p className="text-[11px] font-bold" style={{ color: labelColor }}>
-        {label}
-      </p>
-      <p className="font-display text-2xl font-bold leading-7 text-[#402666]">{score}</p>
-    </div>
+      {n}
+    </p>
   );
   return (
-    <div className="flex items-center justify-center gap-3 py-2">
-      {chip(youLabel, youScore, "#F2C14E", "#E3AC30", "#A16207")}
-      <span className="text-white/70 text-xs">{ruleLabel}</span>
-      {chip(kingLabel, kingScore, "#7BA3F0", "#5F8BE0", "#3565C9")}
+    <div className="pt-1">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center justify-center gap-2">
+          {teamIcon && <img alt="" src={teamIcon} className="size-9 shrink-0 object-contain" />}
+          {name(youLabel)}
+        </div>
+        <div className="flex shrink-0 items-center justify-center gap-1">
+          {name(kingLabel)}
+          <img alt="" src={iconKingMascot} className="size-10 shrink-0 rotate-[6.5deg] object-contain" />
+        </div>
+      </div>
+      {/* The two numbers sit under their own side, with the rule between —
+          a three-column grid so the middle stays centred whatever the
+          numbers are. */}
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center pt-1">
+        {score(youScore)}
+        <span className="px-3 font-[Nunito] text-[12px] leading-4 text-[#402666]/70">{ruleLabel}</span>
+        {score(kingScore)}
+      </div>
     </div>
   );
 }
 
 /**
- * The duel is billed like a fight card: "Trivia King VS <the team>", with
- * the team's icon when the host has dressed one (owner's direction). A
- * lounge that hasn't been named yet falls back to the plain game title.
+ * The screen's own name, in Slackey beside the back arrow (Figma 1072:6642).
+ *
+ * It used to bill the match like a fight card — "Trivia King VS <team>",
+ * with the mascot and the crest inline — which on a long team name pushed
+ * the player chip off the row and repeated, badly, what the scoreboard
+ * directly underneath says properly.
  */
-function DuelTitle({
-  t,
-  teamName,
-  teamIcon,
-}: {
-  t: (k: string) => string;
-  teamName?: string | null;
-  teamIcon?: string | null;
-}) {
+function DuelTitle({ t }: { t: (k: string) => string }) {
   return (
-    <h1 className="font-display text-xl font-bold text-white flex items-center gap-2 min-w-0">
-      <img alt="" src={iconKingMascot} className="w-8 h-8 object-contain shrink-0" />
-      {teamName ? (
-        <>
-          <span className="shrink-0 whitespace-nowrap">{t("king.vsTitle")}</span>
-          {teamIcon && <img alt="" src={teamIcon} className="w-7 h-7 object-contain shrink-0" />}
-          <span className="truncate min-w-0">{teamName}</span>
-        </>
-      ) : (
-        <span className="truncate">{t("king.title")}</span>
-      )}
+    <h1 className="font-slackey text-[16px] leading-4 tracking-[-0.16px] text-[#402666] truncate">
+      {t("king.title")}
     </h1>
   );
 }
@@ -971,30 +1106,31 @@ export default function KingPage() {
           <button
             onClick={() => void abandon()}
             aria-label={t("common.back")}
-            className="w-10 h-10 -ml-2 rounded-full flex items-center justify-center text-white active:scale-95 transition-transform"
+            className="w-10 h-10 -ml-2 rounded-full flex items-center justify-center text-[#402666] active:scale-95 transition-transform"
           >
             <ChevronLeft className="w-6 h-6" />
           </button>
-          <DuelTitle t={t} teamName={kingRoom?.room_name} teamIcon={kingRoom?.room_icon} />
+          <DuelTitle t={t} />
         </div>
 
         {state && (
           <DuelScoreRow
-            youLabel={t("king.you")}
+            youLabel={kingRoom?.room_name || t("king.you")}
             youScore={state.player_score}
             kingScore={state.king_score}
             ruleLabel={t("king.firstTo6")}
             kingLabel={t("king.king")}
+            teamIcon={kingRoom?.room_icon}
           />
         )}
 
         {stage === "thinking" && state?.question && (
           <div className="flex flex-col gap-3 mt-1">
-            <p className="text-xs text-white/60 text-center">
+            <p className="text-xs text-[#402666]/60 text-center">
               {t("king.questionNo", { n: state.question_number })}
             </p>
             <div
-              className="rounded-[24px] p-5"
+              className="relative rounded-[24px] p-5"
               style={{ background: "rgba(252,247,255,0.95)", boxShadow: CARD_SHADOW }}
             >
               {/* Every puzzle wears its icon (20260921160000); rows without
@@ -1006,22 +1142,22 @@ export default function KingPage() {
                   size={68}
                 />
               </div>
-              <p className={`font-bold text-[#402666] ${qTextSize(state.question.question_text)}`}>
+              <DuelTimerBadge seconds={thinkSeconds} />
+              <p className={`font-bold text-center text-[#402666] ${qTextSize(state.question.question_text)}`}>
                 {state.question.question_text}
               </p>
               {state.question.image_url && (
                 <img src={state.question.image_url} alt="" className="mt-4 rounded-xl max-w-full" />
               )}
             </div>
-            <p className="font-mono text-3xl text-white font-bold text-center">{thinkSeconds}</p>
-            <p className="text-sm text-white/70 text-center -mt-2">{t("king.thinkHint")}</p>
+            <p className="text-sm text-[#402666]/70 text-center">{t("king.thinkHint")}</p>
           </div>
         )}
 
         {stage === "commit" && state?.question && (
           <div className="flex flex-col gap-2.5 mt-1">
             <div
-              className="rounded-[24px] p-4"
+              className="relative rounded-[24px] p-4 pr-14"
               style={{ background: "rgba(252,247,255,0.95)", boxShadow: CARD_SHADOW }}
             >
               <div className="flex items-center gap-3">
@@ -1039,26 +1175,20 @@ export default function KingPage() {
                   {state.question.question_text}
                 </p>
               </div>
+              <DuelTimerBadge seconds={commitSeconds} urgent />
             </div>
-            <p className="font-mono text-2xl text-red-300 font-bold text-center">{commitSeconds}</p>
-            <p className="text-sm text-white/70 text-center -mt-1.5">{t("king.commitHint")}</p>
-            <div className="flex flex-col gap-2">
+            <p className="text-sm text-[#402666]/70 text-center -mt-1">{t("king.commitHint")}</p>
+            <div className="flex flex-col gap-4 pt-1">
               {(state.options ?? []).map((option, i) => (
-                <motion.button
+                <DuelAnswer
                   key={option}
-                  whileTap={{ scale: 0.97 }}
+                  label={OPTION_LABELS[i]}
+                  text={option}
                   // The tap that opened the options must not also answer:
                   // these commit the team's fate, so they arm with the CTA.
                   disabled={busy || !soloCtaArmed}
                   onClick={() => void submit(option)}
-                  className="rounded-xl px-3 py-2.5 text-left text-sm font-medium text-[#402666] disabled:opacity-60 flex items-center gap-2.5"
-                  style={{ background: "rgba(252,247,255,0.95)", boxShadow: CARD_SHADOW }}
-                >
-                  <span className="w-7 h-7 shrink-0 rounded-full bg-[#7C3AED]/10 text-[#7C3AED] text-xs font-bold flex items-center justify-center">
-                    {OPTION_LABELS[i]}
-                  </span>
-                  <span className="flex-1 min-w-0">{option}</span>
-                </motion.button>
+                />
               ))}
             </div>
           </div>
@@ -1070,35 +1200,28 @@ export default function KingPage() {
               initial={{ scale: 0.7, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               className={`font-display text-2xl font-bold text-center ${
-                reveal.correct ? "text-emerald-300" : "text-red-300"
+                reveal.correct ? "text-[#1eb880]" : "text-[#ff615d]"
               }`}
             >
               {reveal.correct ? t("king.cracked") : t("king.kingScores")}
             </motion.p>
-            <div
-              className="rounded-[24px] p-5"
-              style={{ background: "rgba(252,247,255,0.95)", boxShadow: CARD_SHADOW }}
-            >
-              {/* On a miss, what was sent (or that time ran out) shows red
-                  above the truth — same read as the co-op reveal. The rows
-                  wear the 3D cross and check (owner's pick), and the type
-                  runs a size up: the old xs/sm read as fine print. */}
+            <div className="rounded-[20px] bg-white p-5 shadow-[inset_0px_2px_0px_0px_rgba(255,255,255,0.4)]">
+              {/* On a miss, what was sent (or that time ran out) shows above
+                  the truth — same read as the co-op reveal. */}
               {!reveal.correct && (
-                <>
-                  <p className="text-sm font-semibold text-[#402666]/60 mb-1.5">{t("king.yourPickLabel")}</p>
-                  <p className="flex items-start gap-2 text-lg font-bold text-red-500 mb-4">
-                    <img alt="" src={iconAnswerWrong} className="w-6 h-6 mt-0.5 shrink-0 object-contain" />
-                    <span className="min-w-0">{myPick ?? t("king.nothingLocked")}</span>
-                  </p>
-                </>
+                <RevealRow
+                  label={t("king.yourPickLabel")}
+                  text={myPick ?? t("king.nothingLocked")}
+                  tone="wrong"
+                />
               )}
-              <p className="text-sm font-semibold text-[#402666]/60 mb-1.5">{t("king.answerLabel")}</p>
-              <p className={`flex items-start gap-2 text-lg font-bold mb-4 ${reveal.correct ? "text-emerald-600" : "text-[#402666]"}`}>
-                <img alt="" src={iconAnswerCorrect} className="w-6 h-6 mt-0.5 shrink-0 object-contain" />
-                <span className="min-w-0">{reveal.correct_answer}</span>
+              <RevealRow label={t("king.answerLabel")} text={reveal.correct_answer ?? ""} tone="right" />
+              <p className="font-[Nunito] text-[14px] font-medium leading-5 tracking-[-0.16px] text-[#402666]">
+                {t("king.logicLabel")}
               </p>
-              <p className="text-sm font-semibold text-[#402666]/60 mb-1.5">{t("king.logicLabel")}</p>
-              <p className="text-base text-[#402666]/90 leading-relaxed">{reveal.explanation}</p>
+              <p className="mt-1.5 font-[Nunito] text-[16px] leading-[26px] tracking-[-0.16px] text-[#402666]/90">
+                {reveal.explanation}
+              </p>
             </div>
           </div>
         )}
@@ -1108,7 +1231,7 @@ export default function KingPage() {
             {/* Won: the golden crown is yours. Lost: the King himself hops
                 in to gloat — a grey crown outline said nothing. */}
             {state.status === "won" ? (
-              <Crown className="w-16 h-16 text-amber-300" />
+              <Crown className="w-16 h-16 text-[#f5a623]" />
             ) : (
               <motion.img
                 alt=""
@@ -1119,10 +1242,10 @@ export default function KingPage() {
                 className="w-24 h-24 object-contain drop-shadow-lg"
               />
             )}
-            <p className="font-display text-2xl font-bold text-white text-center">
+            <p className="font-display text-2xl font-bold text-[#402666] text-center">
               {state.status === "won" ? t("king.youWon") : t("king.kingWon")}
             </p>
-            <p className="text-white/70">
+            <p className="text-[#402666]/70">
               {state.player_score} : {state.king_score}
             </p>
             <button
@@ -1136,7 +1259,7 @@ export default function KingPage() {
             >
               {t("king.playAgain")}
             </button>
-            <button onClick={() => navigate(-1)} className="text-sm font-semibold text-white/80">
+            <button onClick={() => navigate(-1)} className="text-sm font-semibold text-[#402666]/80">
               ← {t("common.back")}
             </button>
           </div>
@@ -1241,11 +1364,11 @@ function KingTeamDuel({
           <button
             onClick={onExit}
             aria-label={t("common.back")}
-            className="w-10 h-10 -ml-2 rounded-full flex items-center justify-center text-white active:scale-95 transition-transform"
+            className="w-10 h-10 -ml-2 rounded-full flex items-center justify-center text-[#402666] active:scale-95 transition-transform"
           >
             <ChevronLeft className="w-6 h-6" />
           </button>
-          <DuelTitle t={t} teamName={teamName} teamIcon={teamIcon} />
+          <DuelTitle t={t} />
           {captain && (
             <span className="ml-auto flex items-center gap-1.5 bg-white/90 rounded-full pl-2 pr-3 py-1 shrink-0">
               <span className="relative w-6 h-6">
@@ -1264,20 +1387,21 @@ function KingTeamDuel({
         </div>
 
         <DuelScoreRow
-          youLabel={t("king.teamLabel")}
+          youLabel={teamName || t("king.teamLabel")}
           youScore={view.team_score}
           kingScore={view.king_score}
           ruleLabel={t("king.firstTo6")}
           kingLabel={t("king.king")}
+          teamIcon={teamIcon}
         />
 
         {phase === "think" && view.question && (
           <div className="flex flex-col gap-3 mt-1">
-            <p className="text-xs text-white/60 text-center">
+            <p className="text-xs text-[#402666]/60 text-center">
               {t("king.questionNo", { n: view.question_number })}
             </p>
             <div
-              className="rounded-[24px] p-5"
+              className="relative rounded-[24px] p-5"
               style={{ background: "rgba(252,247,255,0.95)", boxShadow: CARD_SHADOW }}
             >
               <div className="flex justify-center mb-3">
@@ -1287,13 +1411,13 @@ function KingTeamDuel({
                   size={68}
                 />
               </div>
-              <p className={`font-bold text-[#402666] ${qTextSize(view.question.question_text)}`}>
+              <DuelTimerBadge seconds={thinkLeft} />
+              <p className={`font-bold text-center text-[#402666] ${qTextSize(view.question.question_text)}`}>
                 {view.question.question_text}
               </p>
             </div>
-            <p className="font-mono text-3xl text-white font-bold text-center">{thinkLeft}</p>
             {!isCaptain && (
-              <p className="text-sm text-white/70 text-center">{t("king.teamDiscussHint")}</p>
+              <p className="text-sm text-[#402666]/70 text-center">{t("king.teamDiscussHint")}</p>
             )}
           </div>
         )}
@@ -1301,7 +1425,7 @@ function KingTeamDuel({
         {phase === "commit" && view.question && (
           <div className="flex flex-col gap-2.5 mt-1">
             <div
-              className="rounded-[24px] p-4"
+              className="relative rounded-[24px] p-4 pr-14"
               style={{ background: "rgba(252,247,255,0.95)", boxShadow: CARD_SHADOW }}
             >
               <div className="flex items-center gap-3">
@@ -1319,38 +1443,27 @@ function KingTeamDuel({
                   {view.question.question_text}
                 </p>
               </div>
+              <DuelTimerBadge seconds={commitLeft} urgent />
             </div>
-            <p className="font-mono text-2xl text-red-300 font-bold text-center">{commitLeft}</p>
-            <p className="text-sm text-white/70 text-center -mt-1.5">
+            <p className="text-sm text-[#402666]/70 text-center -mt-1">
               {t("king.teamSuggestHint")}
             </p>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-4 pt-1">
               {(view.options ?? []).map((option, i) => {
                 const mine = mySuggestion === option;
                 const picked = isCaptain && capPick === option;
                 return (
-                  <motion.button
+                  <DuelAnswer
                     key={option}
-                    whileTap={{ scale: 0.97 }}
+                    label={OPTION_LABELS[i]}
+                    text={option}
+                    state={picked ? "picked" : mine ? "backed" : "idle"}
                     onClick={() => {
                       if (isCaptain) setCapPick(option);
                       onSuggest(option);
                     }}
-                    className={`rounded-xl px-3 py-2.5 text-left text-sm font-medium text-[#402666] flex items-center gap-2.5 ${
-                      picked
-                        ? "ring-2 ring-[#7C3AED]"
-                        : mine
-                          ? "ring-2 ring-[#7C3AED]/40"
-                          : ""
-                    }`}
-                    style={{ background: "rgba(252,247,255,0.95)", boxShadow: CARD_SHADOW }}
-                  >
-                    <span className="w-7 h-7 shrink-0 rounded-full bg-[#7C3AED]/10 text-[#7C3AED] text-xs font-bold flex items-center justify-center">
-                      {OPTION_LABELS[i]}
-                    </span>
-                    <span className="flex-1 min-w-0">{option}</span>
-                    {/* the teammates backing this answer, live */}
-                    <span className="flex -space-x-1.5 shrink-0">
+                    trailing={
+                    <span className="flex -space-x-1.5 shrink-0 pr-3">
                       {backers(option).map((p) => (
                         <motion.span
                           key={p.user_id}
@@ -1369,7 +1482,8 @@ function KingTeamDuel({
                         </motion.span>
                       ))}
                     </span>
-                  </motion.button>
+                    }
+                  />
                 );
               })}
             </div>
@@ -1382,43 +1496,40 @@ function KingTeamDuel({
               initial={{ scale: 0.7, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               className={`font-display text-2xl font-bold text-center ${
-                view.last_result.correct ? "text-emerald-300" : "text-red-300"
+                view.last_result.correct ? "text-[#1eb880]" : "text-[#ff615d]"
               }`}
             >
               {view.last_result.correct ? t("king.cracked") : t("king.kingScores")}
             </motion.p>
-            <div
-              className="rounded-[24px] p-5"
-              style={{ background: "rgba(252,247,255,0.95)", boxShadow: CARD_SHADOW }}
-            >
+            <div className="rounded-[20px] bg-white p-5 shadow-[inset_0px_2px_0px_0px_rgba(255,255,255,0.4)]">
               {/* What the captain locked, next to the truth — "the King
                   scored" alone never said WHY. On a miss the team's pick
-                  shows red above the green answer; on a timeout it says so. */}
+                  shows above the answer; on a timeout it says so. */}
               {!view.last_result.correct && (
-                <>
-                  <p className="text-sm font-semibold text-[#402666]/60 mb-1.5">{t("king.teamPickedLabel")}</p>
-                  <p className="flex items-start gap-2 text-lg font-bold text-red-500 mb-4">
-                    <img alt="" src={iconAnswerWrong} className="w-6 h-6 mt-0.5 shrink-0 object-contain" />
-                    <span className="min-w-0">{view.last_result.chosen ?? t("king.nothingLocked")}</span>
-                  </p>
-                </>
+                <RevealRow
+                  label={t("king.teamPickedLabel")}
+                  text={view.last_result.chosen ?? t("king.nothingLocked")}
+                  tone="wrong"
+                />
               )}
-              <p className="text-sm font-semibold text-[#402666]/60 mb-1.5">{t("king.answerLabel")}</p>
-              <p className={`flex items-start gap-2 text-lg font-bold mb-4 ${view.last_result.correct ? "text-emerald-600" : "text-[#402666]"}`}>
-                <img alt="" src={iconAnswerCorrect} className="w-6 h-6 mt-0.5 shrink-0 object-contain" />
-                <span className="min-w-0">{view.last_result.correct_answer}</span>
-              </p>
+              <RevealRow
+                label={t("king.answerLabel")}
+                text={view.last_result.correct_answer ?? ""}
+                tone="right"
+              />
               {view.last_result.explanation && (
                 <>
-                  <p className="text-sm font-semibold text-[#402666]/60 mb-1.5">{t("king.logicLabel")}</p>
-                  <p className="text-base text-[#402666]/90 leading-relaxed">
+                  <p className="font-[Nunito] text-[14px] font-medium leading-5 tracking-[-0.16px] text-[#402666]">
+                    {t("king.logicLabel")}
+                  </p>
+                  <p className="mt-1.5 font-[Nunito] text-[16px] leading-[26px] tracking-[-0.16px] text-[#402666]/90">
                     {view.last_result.explanation}
                   </p>
                 </>
               )}
             </div>
             {!isCaptain && (
-              <p className="text-sm text-white/70 text-center">
+              <p className="text-sm text-[#402666]/70 text-center">
                 {t("king.captainNextHint")}
               </p>
             )}
@@ -1428,7 +1539,7 @@ function KingTeamDuel({
         {phase === "result" && (
           <div className="flex flex-col items-center gap-4 pt-16">
             {view.status === "won" ? (
-              <Crown className="w-16 h-16 text-amber-300" />
+              <Crown className="w-16 h-16 text-[#f5a623]" />
             ) : (
               <motion.img
                 alt=""
@@ -1439,10 +1550,10 @@ function KingTeamDuel({
                 className="w-24 h-24 object-contain drop-shadow-lg"
               />
             )}
-            <p className="font-display text-2xl font-bold text-white text-center">
+            <p className="font-display text-2xl font-bold text-[#402666] text-center">
               {view.status === "won" ? t("king.teamWon") : t("king.teamLost")}
             </p>
-            <p className="text-white/70">
+            <p className="text-[#402666]/70">
               {view.team_score} : {view.king_score}
             </p>
             {isHost && (
@@ -1450,7 +1561,7 @@ function KingTeamDuel({
                 {t("king.playAgain")}
               </button>
             )}
-            <button onClick={onExit} className="text-sm font-semibold text-white/80">
+            <button onClick={onExit} className="text-sm font-semibold text-[#402666]/80">
               ← {t("common.back")}
             </button>
           </div>

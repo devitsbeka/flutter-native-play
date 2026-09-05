@@ -1509,7 +1509,7 @@ export const it: KaTranslations = {
     haveIt: "Ce l'ho!",
     teamLabel: "Squadra",
     teamDiscussHint: "Parlatene — il capitano apre le opzioni",
-    teamSuggestHint: "Tocca la tua risposta — decide il capitano",
+    teamSuggestHint: "Scegli la tua risposta tra le opzioni",
     captainLock: "Blocca la risposta",
     captainNextHint: "Il capitano passa alla prossima domanda",
     captainInfoBody: "Il capitano guida la squadra: apre le opzioni e blocca la risposta della squadra. La squadra sceglie il capitano votando: tocca un compagno per dargli il tuo voto. Senza voti, guida l'host.",

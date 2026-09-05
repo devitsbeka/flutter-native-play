@@ -271,19 +271,59 @@ describe("the King's duel keeps its one action at the bottom", () => {
     expect(king).not.toMatch(/<p className="text-sm text-white\/70 text-center -mt-2">\{t\("king\.thinkHint"\)\}<\/p>\s*<button/);
   });
 
-  it("the duel is billed Trivia King VS the team, and the reveal is readable", () => {
-    // The header is a fight card — "Trivia King VS <team>" with the team's
-    // icon — and the host dresses the team (icon + name) through the shared
-    // picker with the AI namer off. The reveal's rows wear the 3D verdict
-    // icons and stepped-up type: the old xs/40% labels read as fine print
-    // on the owner's device.
-    expect(king).toMatch(/king\.vsTitle/);
-    expect(king).toMatch(/answer-correct-3d\.png/);
+  it("the duel plays on the light ground the frame gives it", () => {
+    // Figma 1072:6642. It used to be the game screens' periwinkle, which
+    // made every label on the screen white text floating on purple.
+    expect(king).toMatch(/bg-\[#f7e2f7\] flex flex-col/);
+    // Nothing is drawn for a dark ground any more — the two survivors are
+    // the white tick on the green chip and the number on the blue clock.
+    expect(king.match(/text-white/g) ?? []).toHaveLength(2);
+    expect(king).not.toMatch(/text-white\/70/);
+    expect(king).not.toMatch(/text-emerald-300|text-red-300|text-amber-300/);
+  });
+
+  it("the header names the game; the scoreboard carries the two sides", () => {
+    // The header used to bill the match like a fight card — "Trivia King VS
+    // <team>", mascot and crest inline — which on a long team name pushed
+    // the player chip off the row and repeated, badly, what the scoreboard
+    // directly under it says properly.
+    expect(king).toMatch(/font-slackey text-\[16px\][^"]*text-\[#402666\]/);
+    expect(king).not.toMatch(/king\.vsTitle/);
+    expect(king).toMatch(/teamIcon=\{kingRoom\?\.room_icon\}/);
+    expect(king).toMatch(/teamIcon=\{teamIcon\}/);
+    // Names at 20, scores at 32 in the display face, rule between them.
+    expect(king).toMatch(/text-\[32px\] leading-\[28px\] text-\[#402666\]/);
+    expect(king).toMatch(/grid-cols-\[1fr_auto_1fr\] items-center pt-1/);
+  });
+
+  it("an answer is a key on a block, and the clock is a badge", () => {
+    // A white 60px row over a #cbd5e1 rectangle offset four pixels down —
+    // a block, not a blur — with a 36px lilac letter chip.
+    expect(king).toMatch(/absolute inset-x-0 top-\[4px\] h-\[60px\] rounded-\[20px\] bg-\[#cbd5e1\]/);
+    expect(king).toMatch(/rounded-\[16px\] bg-\[#eadffb\][^"]*text-\[#705c8c\]/);
+    // The count was a bare 3xl monospace number under the card, in white.
+    expect(king).not.toMatch(/font-mono text-3xl/);
+    expect(king).toMatch(/function DuelTimerBadge/);
+    expect(king).toMatch(/<DuelTimerBadge seconds=\{commitSeconds\} urgent \/>/);
+  });
+
+  it("the reveal reads as rows, and the host still dresses the team", () => {
+    // The correct row is the frame's filled green chip with a white tick;
+    // a miss keeps the app's 3D cross at the same size, so the rows line up.
+    expect(king).toMatch(/rounded-\[16px\] bg-\[#34d399\]/);
     expect(king).toMatch(/answer-wrong-3d\.png/);
+    expect(king).not.toMatch(/answer-correct-3d\.png/);
     expect(king).toMatch(/<RoomIconPickerModal[^]*?autoName=\{false\}/);
     expect(king).toMatch(/size=\{68\}/);
     expect(king).toMatch(/size=\{47\}/);
-    expect(king).not.toMatch(/text-xs text-\[#402666\]\/40/);
+  });
+
+  it("and the team is told to pick, not that the captain decides", () => {
+    for (const lang of ["en", "ka", "de", "es", "fr", "it", "pt"]) {
+      const locale = read(`src/locales/${lang}.ts`);
+      expect(locale, lang).not.toMatch(/teamSuggestHint: "[^"]*—/);
+    }
+    expect(read("src/locales/ka.ts")).toMatch(/teamSuggestHint: "აირჩიე შენი ვერსია პასუხებიდან"/);
   });
 });
 
