@@ -2363,6 +2363,8 @@ export const ka = {
     whatToPlay: "რას ითამაშებთ?",
     railRooms: "ოთახები",
     railRoomsDesc: "დაუბრუნდი თამაშს",
+    railCategories: "კატეგორიები",
+    railCategoriesDesc: "აირჩიე თემა",
     railPlay: "თამაში",
     railPlayDesc: "აირჩიე რეჟიმი",
     railMyTrivias: "ჩემი ვიქტორინები",
