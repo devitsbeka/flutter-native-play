@@ -232,34 +232,36 @@ describe("the room title in the lobby header", () => {
     // Centred under the emblem (Figma 1059:532), starting at the frame's
     // 43.656px. It ALWAYS stays on ONE line (owner's ask): it never wraps —
     // it shrinks its own font until the name fits (useFitOneLine, down to a
-    // 20px floor, below which a "heading" is smaller than the count under
-    // it), re-fitting once the heavy display font loads. The old two-line
-    // clamp is gone.
-    expect(universal).toMatch(/useFitOneLine\(name, 43\.656, 20\)/);
+    // 16px floor so even a long name is read whole and small rather than cut),
+    // re-fitting once the heavy display font loads. The old two-line clamp is
+    // gone.
+    expect(universal).toMatch(/useFitOneLine\(name, 43\.656, 16\)/);
     // Re-measures when the font settles — a ResizeObserver never sees a font
     // swap, so the name would otherwise overflow the fallback measurement.
     expect(universal).toMatch(/fonts\?\.ready\.then\(fit\)/);
-    // The box is the width it HAS. The frame's 321px is the content width of
-    // a 375pt mock; hard-coded it threw away 40px of a modern phone and cut
-    // off names that had the room to be drawn in full.
-    expect(universal).toMatch(/w-full overflow-hidden text-ellipsis whitespace-nowrap text-center font-hero/);
+    // The box is the width it HAS, and min-w-0 lets the flex-item h1 be
+    // constrained below its own text (without it, min-width:auto pins the h1
+    // to the name's width, the "is it cut off" test always reads false, and a
+    // long name never shrinks — it just ellipsises, which is what the owner
+    // kept seeing).
+    expect(universal).toMatch(/w-full min-w-0 max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-center font-hero/);
     expect(universal).not.toMatch(/w-\[321px\]/);
     expect(universal).not.toMatch(/line-clamp-2/);
   });
 
-  it("measures the fit instead of estimating it once", () => {
-    // One pass of `base x avail / natural` looks exact and is not: the
-    // heading carries a fixed negative tracking that does not scale with the
-    // type, glyph advances round to whole pixels, and the display face can
-    // swap in wider than what was measured. A few pixels over is the
-    // ellipsis — which is what the owner kept seeing. The estimate is the
-    // first jump only; after it the loop checks and steps down until the
-    // name genuinely fits.
-    expect(universal).toMatch(/for \(let guard = 0; guard < 64; guard\+\+\)/);
-    expect(universal).toMatch(/if \(avail <= 0 \|\| natural <= avail \|\| size <= minPx\) break;/);
-    expect(universal).toMatch(
-      /size = Math\.max\(minPx, estimate < size \? estimate : size - 1\);/,
-    );
+  it("measures against the parent, not the h1's own clientWidth", () => {
+    // The h1 is a flex item with the default min-width:auto, so its own
+    // clientWidth stays equal to its text and never reports "cut off". The
+    // available width has to come from the full-width PARENT, and the natural
+    // width from the text at base size with the box lifted (max-content).
+    expect(universal).toMatch(/const parent = el\.parentElement;/);
+    expect(universal).toMatch(/const avail = parent\.clientWidth;/);
+    expect(universal).toMatch(/el\.style\.width = "max-content";/);
+    expect(universal).toMatch(/const natural = el\.scrollWidth;/);
+    // One measured jump, then a few corrective pixel steps for the fixed
+    // tracking and rounding.
+    expect(universal).toMatch(/size = Math\.max\(minPx, Math\.floor\(\(basePx \* avail\) \/ natural\)\);/);
+    expect(universal).toMatch(/guard < 12 && size > minPx && el\.scrollWidth > avail/);
   });
 
   it("is the host's way in to rename, and a guest's plain title", () => {

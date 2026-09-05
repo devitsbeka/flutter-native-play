@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   BONUS_POWER_UPS,
   dayKindOf,
+  rotationByTier,
   rotationForDate,
   weekBonusPowerUp,
   weekStartOf,
@@ -94,5 +95,47 @@ describe("weekBonusPowerUp", () => {
       const week = new Date(Date.UTC(2026, 0, 5) + i * 7 * 86_400_000).toISOString().slice(0, 10);
       expect(known.has(weekBonusPowerUp(week)), week).toBe(true);
     }
+  });
+});
+
+describe("rotationByTier", () => {
+  const POOL_BY_TIER = [
+    { id: "one", difficulty: 1 },
+    { id: "m1", difficulty: 2 },
+    { id: "m2", difficulty: 2 },
+    { id: "m3", difficulty: 2 },
+    { id: "h1", difficulty: 3 },
+    { id: "h2", difficulty: 3 },
+    { id: "x1", difficulty: 4 },
+    { id: "x2", difficulty: 4 },
+    { id: "x3", difficulty: 4 },
+  ];
+
+  it("runs one mission per tier, easiest first", () => {
+    for (const date of ["2026-08-10", "2026-08-11", "2026-08-12", "2026-08-13"]) {
+      const day = rotationByTier(POOL_BY_TIER, date);
+      expect(day.map((m) => m.difficulty), date).toEqual([1, 2, 3, 4]);
+    }
+  });
+
+  it("always opens with the only tier-one mission", () => {
+    // The streak keeper: whatever else the day asks, playing once is on it.
+    for (let i = 0; i < 10; i++) {
+      const date = new Date(Date.UTC(2026, 7, 10) + i * 86_400_000).toISOString().slice(0, 10);
+      expect(rotationByTier(POOL_BY_TIER, date)[0].id).toBe("one");
+    }
+  });
+
+  it("rotates each tier across the days", () => {
+    const seen = new Set<string>();
+    for (let i = 0; i < 6; i++) {
+      const date = new Date(Date.UTC(2026, 7, 10) + i * 86_400_000).toISOString().slice(0, 10);
+      seen.add(rotationByTier(POOL_BY_TIER, date)[3].id);
+    }
+    expect(seen).toEqual(new Set(["x1", "x2", "x3"]));
+  });
+
+  it("is stable for a date", () => {
+    expect(rotationByTier(POOL_BY_TIER, "2026-08-12")).toEqual(rotationByTier(POOL_BY_TIER, "2026-08-12"));
   });
 });

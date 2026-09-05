@@ -164,8 +164,8 @@ export const COMPONENTS_HOME = [
     usedIn: ["GameContainer"]
   },
   {
-    name: "StreakModal",
-    path: "src/components/home/StreakModal.tsx",
+    name: "Streak",
+    path: "src/pages/Streak.tsx",
     description: "Shows current streak, best streak, and milestone progress.",
     props: ["isOpen", "onClose", "currentStreak", "bestStreak"],
     usedIn: ["HomeScreen"]

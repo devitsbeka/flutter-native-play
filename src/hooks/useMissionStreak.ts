@@ -11,7 +11,9 @@ interface MissionStreak {
   streak_bonus_claimed: boolean;
 }
 
-// Streak bonus rewards based on current streak
+// The streak ladder. Day three and up are the milestones the streak page
+// pays once each (see useStreakMilestones); the tiers used to be paid again
+// every day the streak stood at them, which nothing does any more.
 export const STREAK_BONUSES = [
   { minStreak: 1, coins: 25, gems: 0, xp: 15 },
   { minStreak: 3, coins: 50, gems: 1, xp: 30 },
@@ -22,17 +24,8 @@ export const STREAK_BONUSES = [
   { minStreak: 30, coins: 300, gems: 15, xp: 250 },
 ];
 
-export function getStreakBonus(streak: number) {
-  // Find the highest applicable bonus
-  const applicableBonus = STREAK_BONUSES
-    .filter((b) => streak >= b.minStreak)
-    .sort((a, b) => b.minStreak - a.minStreak)[0];
-
-  return applicableBonus || { minStreak: 0, coins: 20, gems: 0, xp: 10 };
-}
-
 export function useMissionStreak() {
-  const { user, profile, updateProfile, setProfileLocal } = useAuth();
+  const { user } = useAuth();
   const [streak, setStreak] = useState<MissionStreak | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -76,14 +69,19 @@ export function useMissionStreak() {
     fetchStreak();
   }, [fetchStreak]);
 
+  /**
+   * Mark today as kept. Idempotent: a second call the same day reports the
+   * standing numbers with `recorded: false`, so callers can tell the
+   * completion that earned the day from the ones after it.
+   */
   const recordDailyCompletion = async (): Promise<{
     newStreak: number;
     newTotal: number;
     streakBroken: boolean;
-    bonusAvailable: boolean;
+    recorded: boolean;
   }> => {
     if (!user || !streak) {
-      return { newStreak: 0, newTotal: 0, streakBroken: false, bonusAvailable: false };
+      return { newStreak: 0, newTotal: 0, streakBroken: false, recorded: false };
     }
 
     try {
@@ -102,11 +100,11 @@ export function useMissionStreak() {
 
         if (diffDays === 0) {
           // Already completed today
-          return { 
-            newStreak: streak.current_streak, 
+          return {
+            newStreak: streak.current_streak,
             newTotal: streak.total_completions,
-            streakBroken: false, 
-            bonusAvailable: !streak.streak_bonus_claimed 
+            streakBroken: false,
+            recorded: false,
           };
         } else if (diffDays === 1) {
           // Consecutive day - extend streak
@@ -127,7 +125,6 @@ export function useMissionStreak() {
           best_streak: newBestStreak,
           last_completion_date: today,
           total_completions: streak.total_completions + 1,
-          streak_bonus_claimed: false, // Reset for new day
           updated_at: new Date().toISOString(),
         })
         .eq("id", streak.id);
@@ -140,99 +137,37 @@ export function useMissionStreak() {
         best_streak: newBestStreak,
         last_completion_date: today,
         total_completions: streak.total_completions + 1,
-        streak_bonus_claimed: false,
       });
 
-      return { 
-        newStreak: newCurrentStreak, 
+      return {
+        newStreak: newCurrentStreak,
         newTotal: streak.total_completions + 1,
-        streakBroken, 
-        bonusAvailable: true 
+        streakBroken,
+        recorded: true,
       };
     } catch (error) {
       console.error("Error recording daily completion:", error);
-      return { newStreak: 0, newTotal: 0, streakBroken: false, bonusAvailable: false };
+      return { newStreak: 0, newTotal: 0, streakBroken: false, recorded: false };
     }
   };
 
-  /**
-   * Pay the tier the current streak has reached, once per day.
-   *
-   * `forStreak` is for the caller that has just recorded the day: React has
-   * not re-rendered yet, so the `streak` in this closure still holds
-   * yesterday's count and yesterday's claimed flag. The fresh number is
-   * passed in rather than read from stale state.
-   *
-   * Which is also why the claim is a conditional UPDATE rather than a read
-   * then a write. Only the caller whose update actually flips the flag gets
-   * a row back, and only that caller pays — so a stale local flag cannot
-   * cause a double credit, and two callers in the same moment cannot both
-   * bank the day. Same guard the week and day bonuses use.
-   */
-  const claimStreakBonus = async (forStreak?: number): Promise<{ success: boolean; coins: number; gems: number; xp: number }> => {
-    if (!user || !profile || !streak) {
-      return { success: false, coins: 0, gems: 0, xp: 0 };
-    }
-
-    try {
-      const bonus = getStreakBonus(forStreak ?? streak.current_streak);
-
-      const { data: won } = await supabase
-        .from("user_mission_streaks")
-        .update({ streak_bonus_claimed: true })
-        .eq("id", streak.id)
-        .eq("streak_bonus_claimed", false)
-        .select("id");
-      if (!won || won.length === 0) {
-        return { success: false, coins: 0, gems: 0, xp: 0 };
-      }
-
-      // Award coins/gems atomically via the delta RPC — an absolute write
-      // off the in-memory profile overwrites gems granted by other claims
-      // (the client can't read the locked gems column back).
-      if (bonus.coins > 0 || bonus.gems > 0) {
-        const { data: currencyData, error: currencyError } = await supabase.rpc(
-          "credit_gameplay_reward",
-          {
-            p_kind: "mission",
-            p_coins: bonus.coins || 0,
-            p_gems: bonus.gems || 0,
-            p_reference: "streak",
-          }
-        );
-        if (currencyError) throw currencyError;
-        if (currencyData && currencyData.length > 0) {
-          setProfileLocal({
-            coins: currencyData[0].new_coins,
-            gems: currencyData[0].new_gems,
-          });
-        }
-      }
-
-      if (bonus.xp > 0) {
-        await updateProfile({
-          total_points: (profile.total_points || 0) + bonus.xp,
-        });
-      }
-
-      setStreak({ ...streak, streak_bonus_claimed: true });
-
-      return { success: true, coins: bonus.coins, gems: bonus.gems, xp: bonus.xp };
-    } catch (error) {
-      console.error("Error claiming streak bonus:", error);
-      return { success: false, coins: 0, gems: 0, xp: 0 };
-    }
-  };
+  // A streak is alive while yesterday or today is kept. The row keeps its
+  // last count until the next completion resets it, so a player back after
+  // a week away would otherwise still read the old number.
+  const alive = (() => {
+    if (!streak?.last_completion_date) return false;
+    const today = Date.parse(`${new Date().toISOString().slice(0, 10)}T00:00:00Z`);
+    const last = Date.parse(`${streak.last_completion_date}T00:00:00Z`);
+    return today - last <= 86_400_000;
+  })();
 
   return {
     streak,
     loading,
     recordDailyCompletion,
-    claimStreakBonus,
     refreshStreak: fetchStreak,
-    currentStreak: streak?.current_streak || 0,
+    currentStreak: alive ? streak?.current_streak || 0 : 0,
     bestStreak: streak?.best_streak || 0,
     totalCompletions: streak?.total_completions || 0,
-    canClaimBonus: streak ? !streak.streak_bonus_claimed : false,
   };
 }

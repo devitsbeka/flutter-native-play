@@ -3,7 +3,7 @@ import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { WEEK_BONUS } from "@/hooks/useMissions";
-import { STREAK_BONUSES } from "@/hooks/useMissionStreak";
+import { STREAK_MILESTONES } from "@/hooks/useStreakMilestones";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
 import xpSparkIcon from "@/assets/level/xp-spark.png";
@@ -133,13 +133,14 @@ export function MissionInfoModal({
                 </div>
               ) : (
                 // The ladder, with the tier the player is on marked. Reading
-                // it should answer "is it worth another day?" directly.
+                // it should answer "is it worth another day?" directly. These
+                // are the streak page's milestones: coins, paid once each.
                 <div className="mt-3 space-y-1.5">
-                  {STREAK_BONUSES.map((tier) => {
-                    const reached = currentStreak >= tier.minStreak;
+                  {STREAK_MILESTONES.map((tier) => {
+                    const reached = currentStreak >= tier.days;
                     return (
                       <div
-                        key={tier.minStreak}
+                        key={tier.days}
                         className={`flex items-center justify-between rounded-xl px-3 py-2 ${
                           reached ? "bg-emerald-50" : "bg-white"
                         }`}
@@ -149,11 +150,10 @@ export function MissionInfoModal({
                             reached ? "text-emerald-700" : "text-[#402666]"
                           }`}
                         >
-                          {t("missions.infoStreakDays", { count: tier.minStreak })}
+                          {t("missions.infoStreakDays", { count: tier.days })}
                         </span>
                         <span className="text-sm font-semibold text-slate-600">
-                          {tier.coins}
-                          {tier.gems > 0 ? ` · ${tier.gems}💎` : ""} · {tier.xp}XP
+                          {t("extra.streakCoinsReward", { count: tier.coins })}
                         </span>
                       </div>
                     );

@@ -27,7 +27,7 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
   {
     id: "streak_3",
     title: "სტაბილური მოთამაშე",
-    description: "შეასრულე ყველა დღიური მისია 3 დღე ზედიზედ",
+    description: "შეინარჩუნე სთრიქი 3 დღე ზედიზედ",
     icon_slug: "flame",
     requirement: { type: "streak", value: 3 },
     reward_coins: 100,
@@ -37,7 +37,7 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
   {
     id: "streak_7",
     title: "კვირის გმირი",
-    description: "შეასრულე ყველა დღიური მისია 7 დღე ზედიზედ",
+    description: "შეინარჩუნე სთრიქი 7 დღე ზედიზედ",
     icon_slug: "lightning",
     requirement: { type: "streak", value: 7 },
     reward_coins: 300,
@@ -47,7 +47,7 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
   {
     id: "streak_14",
     title: "ორკვირიანი ჩემპიონი",
-    description: "შეასრულე ყველა დღიური მისია 14 დღე ზედიზედ",
+    description: "შეინარჩუნე სთრიქი 14 დღე ზედიზედ",
     icon_slug: "award",
     requirement: { type: "streak", value: 14 },
     reward_coins: 500,
@@ -57,7 +57,7 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
   {
     id: "streak_30",
     title: "თვის ლეგენდა",
-    description: "შეასრულე ყველა დღიური მისია 30 დღე ზედიზედ",
+    description: "შეინარჩუნე სთრიქი 30 დღე ზედიზედ",
     icon_slug: "crown",
     requirement: { type: "streak", value: 30 },
     reward_coins: 1000,

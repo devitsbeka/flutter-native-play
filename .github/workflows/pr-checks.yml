@@ -266,3 +266,16 @@ jobs:
           psql -h localhost -p 5432 -U postgres \
             -v ON_ERROR_STOP=1 -f supabase/tests/13-public-rooms.sql
 
+      # Streak milestones. The streak page pays 3, 5, 7, 14, 21 and 30 days
+      # in coins, once each, through claim_streak_milestone. The client
+      # cannot read the grant ledger, so "once" is decided here or nowhere:
+      # these assert a milestone below the streak is refused, one already
+      # paid is refused without moving the wallet, and one player's ledger
+      # is not another's.
+      - name: Assert streak milestone rules
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -p 5432 -U postgres \
+            -v ON_ERROR_STOP=1 -f supabase/tests/14-streak-milestones.sql
+

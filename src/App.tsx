@@ -55,6 +55,8 @@ import Loading from "./pages/Loading";
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const PowerUps = lazy(() => import("./pages/PowerUps"));
+// The streak page — where the home screen's flame lands (Figma 1069:18).
+const Streak = lazy(() => import("./pages/Streak"));
 const Leaderboards = lazy(() => import("./pages/Leaderboards"));
 const Profile = lazy(() => import("./pages/Profile"));
 const PublicProfile = lazy(() => import("./pages/PublicProfile"));
@@ -299,6 +301,7 @@ const App = () => (
                 <Route path="/trivialoader" element={<TriviaLoader />} />
                 
                 <Route path="/power-ups" element={<PowerUps />} />
+                <Route path="/streak" element={<Streak />} />
                 <Route path="/category/:categoryId" element={<CategoryPage />} />
                 <Route path="/play/:categoryId/:levelId" element={<CategoryQuizPage />} />
                 <Route path="/auth" element={<Auth />} />

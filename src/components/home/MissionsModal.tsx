@@ -18,34 +18,13 @@ import {
   WEEK_BONUS,
   weekBonusPowerUp,
   weekStartOf,
-  type MissionIconKey,
 } from "@/hooks/useMissions";
 import { useMissionStreak } from "@/hooks/useMissionStreak";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-// 3D mission icons from the Figma set
-import iconCheck from "@/assets/missions/check.png";
-import iconMap from "@/assets/missions/map.png";
-import iconTarget from "@/assets/missions/target.png";
-import iconShoe from "@/assets/missions/shoe.png";
-import iconTrophy from "@/assets/missions/trophy.png";
-import iconTv from "@/assets/missions/tv.png";
-import iconHearts from "@/assets/missions/hearts.png";
-import iconTelevision from "@/assets/missions/television.png";
-import iconMusic from "@/assets/missions/music.png";
 import xpSparkIcon from "@/assets/level/xp-spark.png";
-
-const MISSION_ICONS: Record<MissionIconKey, string> = {
-  check: iconCheck,
-  map: iconMap,
-  target: iconTarget,
-  shoe: iconShoe,
-  trophy: iconTrophy,
-  tv: iconTv,
-  hearts: iconHearts,
-  television: iconTelevision,
-  music: iconMusic,
-};
+import { MISSION_ICONS } from "@/components/mission/missionIcons";
+import { missionDestination } from "@/utils/missionDestination";
 
 // Power-up icons for reward chips
 import power5050 from "@/assets/powers/5050.png";
@@ -60,38 +39,6 @@ interface MissionsModalProps {
   onClose: () => void;
   /** Which day to open on. null (the default) means today. */
   date?: string | null;
-}
-
-// Where the CTA takes the player to actually work on a mission: category
-// missions go to discover, friend missions open the create-room flow, the TV
-// mission opens a room with TV mode pre-toggled, everything else (play, win,
-// answers, perfect) starts from the "how do you want to play" chooser.
-function missionDestination(missionId: string): { to: string; state?: Record<string, unknown> } {
-  switch (missionId) {
-    case "play_categories":
-    case "weekly_categories":
-      return { to: "/discover" };
-    // A mission naming one category opens that category, not the browser.
-    case "category_movies":
-      return { to: "/category/movies" };
-    case "category_music":
-      return { to: "/category/music" };
-    case "category_animals":
-      return { to: "/category/animals" };
-    case "category_sports":
-      return { to: "/category/sports" };
-    case "category_cuisine":
-      return { to: "/category/georgian_cuisine" };
-    case "invite_to_play":
-      return { to: "/create-room" };
-    case "play_friend":
-    case "weekly_friend_games":
-      return { to: "/create-room" };
-    case "play_tv":
-      return { to: "/team", state: { openTV: true } };
-    default:
-      return { to: "/", state: { openPlayOptions: true } };
-  }
 }
 
 const POWER_UP_ICONS: Record<string, string | null> = {
