@@ -45,9 +45,11 @@ describe("Guess replaced Random on the create screen", () => {
     const branchBody = guessBranch.slice(0, guessBranch.indexOf("autoStart.current = true;"));
     expect(branchBody).not.toMatch(/autoStart/);
     expect(create).toMatch(/extra\.guessPickTitle/);
-    // The answer arms Create exactly as a library pick does.
+    // The answer opens the pre-lobby — invite friends, or press Start and
+    // play alone — rather than arming a one-seat round (owner's ask: a
+    // picture game is 2-10 players).
     expect(create).toMatch(
-      /const pickGuessCategory = \(cat: Category\) => \{[\s\S]*?autoStart\.current = true;\s*\n\s*\};/,
+      /const pickGuessCategory = \(cat: Category\) => \{[\s\S]*?setPreLobby\("guess"\);\s*\n\s*\};/,
     );
   });
 
@@ -129,9 +131,11 @@ describe("Guess replaced Random on the create screen", () => {
     expect(create).not.toMatch(/const el = rowRef\.current;/);
   });
 
-  it("a picked tile starts the round itself, before the screen changes", () => {
-    // Which picture game IS the whole choice, so a one-seat lobby with a
-    // Start button asks a question that was already answered.
+  it("a solo Guess starts the round itself, before the screen changes", () => {
+    // Played alone, the round starts here: the room lobby will not let a
+    // lone host start (a room is two people), and a solo picture game is a
+    // real game. With friends invited from the pre-lobby it waits instead,
+    // and the walk-in lands on the lobby (owner's ask: 2-10 players).
     //
     // This was tried from the other end first — the create screen sent
     // ?autostart=1 and the lobby pressed its own Start when it saw it — and
@@ -140,7 +144,8 @@ describe("Guess replaced Random on the create screen", () => {
     // room, the seat, the host flag and the category all settled in the same
     // render. It shipped, and it lost. Starting the round here needs none of
     // it to line up, and /team then opens a room that is already playing.
-    expect(create).toMatch(/if \(gameChoice === "guess" && room\) \{\s*\n\s*await startGame\(false, room\);/);
+    expect(create).toMatch(/const guessSolo = invitees\.length === 0 && selectedFriends\.size === 0;/);
+    expect(create).toMatch(/if \(gameChoice === "guess" && room && guessSolo\) \{\s*\n\s*await startGame\(false, room\);/);
     expect(create).toMatch(/const \{ createRoom, startGame, loading \} = useMultiplayerV2\(\);/);
     // No flag on the URL, and nothing in the lobby waiting for one.
     // No flag on the URL (the comments above still name it — that is the
