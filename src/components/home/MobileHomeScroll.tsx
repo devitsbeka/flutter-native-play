@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { FriendsStoriesBar } from "@/components/team/FriendsStoriesBar";
 import { MobileHeroWidgets, MobileProfileCard, NAV_CHROME } from "@/components/home/MobileHome";
 import { MobileHomeFeed } from "@/components/home/MobileHomeFeed";
+import { WaveEdge } from "@/components/home/WaveEdge";
 
 /**
  * The phone home as a scroll-reveal (owner's ask).
@@ -132,6 +133,9 @@ export function MobileHomeScroll({
           className="relative z-10 min-h-full rounded-t-[28px] bg-[#faf6ff] shadow-[0_-10px_28px_rgba(60,30,90,0.14)]"
           style={{ marginTop: `calc(-1 * (${NAV_CHROME}))`, paddingBottom: `calc(${NAV_CHROME} + 92px)` }}
         >
+          {/* The panel's top edge rolls (Figma 1076:3281): the frame's wave,
+              in the panel's own colour, rising 14px above the straight edge. */}
+          <WaveEdge shape="feed" color="#faf6ff" className="inset-x-0 top-[-14px] h-[16px]" />
           <div className="flex justify-center pt-2">
             <span className="h-[5px] w-[44px] rounded-full bg-[rgba(90,60,130,0.22)]" />
           </div>

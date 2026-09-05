@@ -97,14 +97,12 @@ interface Trivia {
   cover_gradient: string | null;
 }
 
-/** A rail's title and its two-or-three-word line, with an optional "see all". */
+/** A rail's title, with an optional "see all". */
 function RailHeader({
   title,
-  desc,
   action,
 }: {
   title: string;
-  desc: string;
   /**
    * `kind: "add"` turns the link into a round +.
    *
@@ -115,17 +113,13 @@ function RailHeader({
   action?: { label: string; onPress: () => void; kind?: "link" | "add" };
 }) {
   return (
-    <div className="mb-[10px] flex items-end justify-between gap-2 px-4">
-      <div className="min-w-0">
-        {/* Figma 1076:2116 / 2119: an 18px semibold Georgian sans heading
-            with a 12px medium Nunito line under it. */}
-        <h2 className="font-georgian text-[18px] font-semibold leading-[22px] text-[#402666]">
-          {title}
-        </h2>
-        <p className="mt-[2px] font-[Nunito] text-[12px] font-medium leading-[15px] tracking-[-0.16px] text-[#6b5b86]">
-          {desc}
-        </p>
-      </div>
+    // Figma 1076:2113: the display face at 26px in the deep aubergine, on a
+    // 29px row with the link centred against it; the rail follows 20px
+    // below. The frame's rails carry no line under the title.
+    <div className="mb-5 flex h-[29px] items-center justify-between gap-2 px-4">
+      <h2 className="min-w-0 truncate font-display text-[26px] leading-[22.5px] tracking-[-0.16px] text-[#552d7a]">
+        {title}
+      </h2>
       {action && (action.kind === "add" ? (
         <button
           type="button"
@@ -168,18 +162,18 @@ export function MobileHomeFeed() {
   // and Battle are developer-only until promoted) — at a compact size. A tap
   // opens the chooser with that mode already started, as tapping the card
   // there would.
-  const playCards: { key: GameChoice; art: string; players: string | null; title: string; desc: string }[] = [
-    { key: "quick", art: featuredQuick, players: "1", title: t("extra.modeQuickTitle"), desc: t("extra.modeQuickDesc") },
-    { key: "library", art: featuredLibrary, players: "2-10", title: t("extra.modeLibraryTitle"), desc: t("extra.libraryDesc") },
-    { key: "guess", art: featuredGuess, players: "2-10", title: t("extra.modeGuessTitle"), desc: t("extra.modeGuessDesc") },
+  const playCards: { key: GameChoice; art: string; players: string | null; title: string }[] = [
+    { key: "quick", art: featuredQuick, players: "1", title: t("extra.modeQuickTitle") },
+    { key: "library", art: featuredLibrary, players: "2-10", title: t("extra.modeLibraryTitle") },
+    { key: "guess", art: featuredGuess, players: "2-10", title: t("extra.modeGuessTitle") },
     ...(developerMode
       ? [
-          { key: "king" as const, art: featuredKing, players: "1-10", title: t("extra.modeKingTitle"), desc: t("lobby.kingCardDesc") },
-          { key: "battle" as const, art: featuredBattle, players: "4-10", title: t("extra.modeBattleTitle"), desc: t("gameTypes.teamBattleDesc") },
+          { key: "king" as const, art: featuredKing, players: "1-10", title: t("extra.modeKingTitle") },
+          { key: "battle" as const, art: featuredBattle, players: "4-10", title: t("extra.modeBattleTitle") },
         ]
       : []),
-    { key: "words", art: featuredWords, players: "1-2", title: t("gameTypes.wordsTitle"), desc: t("extra.modeWordsDesc") },
-    { key: "mytrivias", art: featuredMyTrivias, players: null, title: t("extra.myTriviaOption"), desc: t("extra.myTriviaDesc") },
+    { key: "words", art: featuredWords, players: "1-2", title: t("gameTypes.wordsTitle") },
+    { key: "mytrivias", art: featuredMyTrivias, players: null, title: t("extra.myTriviaOption") },
   ];
   const { categories } = useCategories();
   const { isVip } = useVipStatus();
@@ -216,7 +210,6 @@ export function MobileHomeFeed() {
       <section>
         <RailHeader
           title={t("extra.railRooms")}
-          desc={t("extra.railRoomsDesc")}
           action={
             roomsEmpty
               ? { label: t("extra.railFirstRoom"), onPress: () => navigate("/create-room"), kind: "add" }
@@ -234,54 +227,44 @@ export function MobileHomeFeed() {
         />
       </section>
 
-      {/* ── Play modes: the chooser's cards, compact ─────────────────────
-          The same poster card the play chooser shows on the main button —
-          the render up top with its foot dissolving into the lavender wash,
-          the peach players pill, the title and blurb — at about half the
-          chooser's height so a few sit in reach across the rail. The still
-          stands in for the chooser's looping video: a rail of loops is a
-          rail of decoders. */}
+      {/* ── Play modes (Figma 1076:2455) ────────────────────────────────
+          The chooser's poster card, simplified: the render fills the whole
+          221×291 card, a lavender wash climbs the lower two fifths, the
+          peach players pill sits top right and one line names the mode at
+          the foot. The still stands in for the chooser's looping video: a
+          rail of loops is a rail of decoders. */}
       <section>
-        <RailHeader title={t("extra.railPlay")} desc={t("extra.railPlayDesc")} />
+        <RailHeader title={t("extra.railPlay")} />
         <Rail>
           {playCards.map((card) => (
             <button
               key={card.key}
               type="button"
               onClick={() => navigate(`/create-room?mode=${card.key}`)}
-              className="relative isolate block h-[258px] w-[196px] shrink-0 snap-start overflow-clip rounded-[24px] bg-[#e9d8ff] text-left shadow-[0px_0px_0px_1px_rgba(0,0,0,0.06),0px_8px_24px_0px_rgba(15,23,41,0.1)] transition-transform active:scale-[0.97]"
+              className="relative isolate block h-[291.3px] w-[221.3px] shrink-0 snap-start overflow-clip rounded-[27.1px] bg-[#e9d8ff] text-left transition-transform active:scale-[0.97]"
             >
-              {/* The render: a 3:4 still across the top, its foot masked out
-                  over the same stretch the wash fades in. */}
-              <div className="absolute left-0 top-0 z-0 aspect-[3/4] w-full overflow-hidden [-webkit-mask-image:linear-gradient(to_bottom,black_50%,transparent_100%)] [mask-image:linear-gradient(to_bottom,black_50%,transparent_100%)]">
-                <img
-                  alt=""
-                  src={card.art}
-                  draggable={false}
-                  loading="lazy"
-                  className="absolute inset-0 size-full object-cover object-top"
-                />
-              </div>
-              {/* The lavender wash over the lower 55%. */}
-              <div className="absolute inset-x-0 bottom-0 z-10 h-[55%] bg-[linear-gradient(to_top,#f3e6ff_0%,#f3e6ff_50%,rgba(243,230,255,0)_100%)]" />
+              <img
+                alt=""
+                src={card.art}
+                draggable={false}
+                loading="lazy"
+                className="absolute inset-x-0 top-[-1px] z-0 h-[295px] w-full object-cover object-top"
+              />
+              {/* The lavender wash over the lower 41.5%, solid for its lower half. */}
+              <div className="absolute inset-x-0 bottom-0 z-10 h-[41.5%] bg-[linear-gradient(to_top,#f3e6ff_0%,#f3e6ff_50%,rgba(243,230,255,0)_100%)]" />
               {/* How many play: the peach pill, top right. */}
               {card.players && (
-                <div className="absolute right-[8px] top-[8px] z-20 flex items-center gap-[4px] rounded-[14px] border-[2px] border-solid border-white/65 bg-gradient-to-b from-[#fff3ed] to-[#f5cdcd] px-[9px] py-[1px] shadow-[0px_2px_6px_0px_rgba(151,64,64,0.06),0px_2px_0px_0px_#d6c7c4]">
-                  <img alt="" src={playersIcon} className="h-[13px] w-[10px]" />
-                  <span className="whitespace-nowrap bg-gradient-to-b from-[#522b28] to-[#99665f] bg-clip-text font-hero text-[13px] capitalize leading-[20px] tracking-[-0.16px] text-transparent">
+                <div className="absolute right-[8px] top-[8px] z-20 flex items-center gap-[4.5px] rounded-[15.8px] border-[2.26px] border-solid border-white/65 bg-gradient-to-b from-[#fff3ed] to-[#f5cdcd] px-[10.2px] py-[1.1px] shadow-[0px_2.26px_6.78px_0px_rgba(151,64,64,0.06),0px_2.26px_0px_0px_#d6c7c4]">
+                  <img alt="" src={playersIcon} className="h-[14.7px] w-[11.3px]" />
+                  <span className="whitespace-nowrap bg-gradient-to-b from-[#522b28] to-[#99665f] bg-clip-text font-hero text-[14.7px] capitalize leading-[22.6px] tracking-[-0.18px] text-transparent">
                     {card.players}
                   </span>
                 </div>
               )}
-              {/* Title and blurb, at the chooser's share of the height. */}
-              <div className="absolute left-[16px] right-[12px] top-[calc(78.86%_-_14px)] z-20">
-                <p className="overflow-hidden text-ellipsis whitespace-nowrap font-hero text-[16px] capitalize leading-[20px] tracking-[-0.16px] text-[#402666]">
-                  {card.title}
-                </p>
-                <p className="mt-[4px] line-clamp-2 font-[Nunito] text-[11px] leading-[14px] tracking-[-0.16px] text-[#4b5563]">
-                  {card.desc}
-                </p>
-              </div>
+              {/* The mode's name, one line at the foot (Figma 1076:3714). */}
+              <p className="absolute left-[23px] right-[18px] top-[248px] z-20 truncate font-display text-[16px] leading-[22.5px] tracking-[-0.16px] text-[#552d7a]">
+                {card.title}
+              </p>
             </button>
           ))}
         </Rail>
@@ -292,7 +275,6 @@ export function MobileHomeFeed() {
         <section>
           <RailHeader
             title={t("extra.railCategories")}
-            desc={t("extra.railCategoriesDesc")}
             action={{ label: t("extra.seeAll"), onPress: () => navigate("/discover") }}
           />
           <Rail>
@@ -330,7 +312,6 @@ export function MobileHomeFeed() {
       <section>
           <RailHeader
             title={t("extra.railMyTrivias")}
-            desc={t("extra.railMyTriviasDesc")}
             action={
               trivias.length === 0
                 ? {
@@ -379,7 +360,7 @@ export function MobileHomeFeed() {
 
       {/* ── Pro (solo + friends) ──────────────────────────────────────── */}
       <section>
-        <RailHeader title={t("extra.railPro")} desc={t("extra.railProDesc")} />
+        <RailHeader title={t("extra.railPro")} />
         <ProBannerReel
           slides="pro"
           purchasedItems={EMPTY_PURCHASES}
@@ -393,7 +374,7 @@ export function MobileHomeFeed() {
           the Pro reel above. The old 300px strip cut the second card and
           its Purchase button off at the screen edge. */}
       <section>
-        <RailHeader title={t("extra.railOffers")} desc={t("extra.railOffersDesc")} />
+        <RailHeader title={t("extra.railOffers")} />
         <ProBannerReel
           slides="deals"
           purchasedItems={EMPTY_PURCHASES}
