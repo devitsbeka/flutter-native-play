@@ -349,7 +349,6 @@ export function MobileHomeFeed() {
               <StartHereCard
                 variant="trivia"
                 title={t("extra.railFirstTrivia")}
-                desc={t("extra.railFirstTriviaDesc")}
                 onPress={() => navigate("/team", { state: { openTrivia: true } })}
               />
             </div>

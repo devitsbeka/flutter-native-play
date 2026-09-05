@@ -344,7 +344,6 @@ export function MyRoomsSection({
           <StartHereCard
             variant="room"
             title={t("extra.railFirstRoom")}
-            desc={t("extra.railFirstRoomDesc")}
             onPress={() => onCreateRoom?.()}
           />
         </div>
