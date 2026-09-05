@@ -1750,21 +1750,20 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                   <div className="absolute inset-x-0 bottom-0 z-10 h-[55%] bg-[linear-gradient(to_top,#f3e6ff_0%,#f3e6ff_50%,rgba(243,230,255,0)_100%)]" />
                   {/* How many play: the peach pill, top right. */}
                   {card.players && (
-                    <div className="absolute right-[calc(12*var(--u))] top-[calc(12*var(--u))] z-20 flex items-center gap-[calc(7*var(--u))] rounded-bl-[calc(25.046*var(--u))] rounded-br-[calc(12.57*var(--u))] rounded-tl-[calc(25.05*var(--u))] rounded-tr-[calc(20*var(--u))] border-solid border-white/65 bg-gradient-to-b from-[#fff3ed] to-[#f5cdcd] px-[calc(16*var(--u))] py-[calc(1*var(--u))] shadow-[0px_2.277px_6.831px_0px_rgba(151,64,64,0.06),0px_2.277px_0px_0px_#d6c7c4] border-[length:calc(3.415*var(--u))]">
+                    <div className="absolute right-[calc(12*var(--u))] top-[calc(12*var(--u))] z-20 flex origin-top-right scale-[0.85] items-center gap-[calc(7*var(--u))] rounded-bl-[calc(25.046*var(--u))] rounded-br-[calc(12.57*var(--u))] rounded-tl-[calc(25.05*var(--u))] rounded-tr-[calc(20*var(--u))] border-solid border-white/65 bg-gradient-to-b from-[#fff3ed] to-[#f5cdcd] px-[calc(16*var(--u))] py-[calc(1*var(--u))] shadow-[0px_2.277px_6.831px_0px_rgba(151,64,64,0.06),0px_2.277px_0px_0px_#d6c7c4] border-[length:calc(3.415*var(--u))]">
                       <img alt="" src={playersIcon} className="h-[calc(22.75*var(--u))] w-[calc(17.333*var(--u))]" />
                       <span className="font-hero bg-gradient-to-b from-[#522b28] to-[#99665f] bg-clip-text text-[calc(32*var(--u))] capitalize leading-[calc(48*var(--u))] tracking-[-0.16px] text-transparent whitespace-nowrap">
                         {card.players}
                       </span>
                     </div>
                   )}
-                  {/* 10 design-px above the frame's own 78.86%: a title and a
-                      blurb that wraps to two lines — which several languages
-                      do where the English is one — used to sit on the card's
-                      bottom edge. Written in --u so it stays 10px at the
-                      designed width and scales with the card like every other
-                      measure here. */}
+                  {/* 20 design-px above the frame's own 78.86% — 10 more than
+                      the frame (owner's ask), so the title and its blurb (which
+                      wraps to two lines in several languages where the English
+                      is one) sit clear of the card's bottom edge. Written in
+                      --u so it scales with the card like every other measure. */}
                   <div
-                    className="absolute left-[calc(39*var(--u))] right-[calc(20*var(--u))] top-[calc(78.86%_-_10*var(--u))] z-20"
+                    className="absolute left-[calc(39*var(--u))] right-[calc(20*var(--u))] top-[calc(78.86%_-_20*var(--u))] z-20"
                   >
                     {/* The title runs to the card's edge: a Georgian or German
                         title is longer than the English the frame was set in. */}
