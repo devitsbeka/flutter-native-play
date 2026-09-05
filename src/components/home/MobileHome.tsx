@@ -335,7 +335,11 @@ export function MobileProfileCard({
         style={{ width: designWidth, height: CARD_H, transform: `scale(${scale})` }}
       >
         <div
-          className="relative size-full overflow-hidden border-2 border-solid border-white bg-[rgba(252,247,255,0.8)]"
+          // Frosted, not just translucent: the mascot wallpaper runs under the
+          // card now, and at 80% white alone the character's legs read
+          // through the balances. The blur turns whatever is behind it into
+          // a wash the text sits on.
+          className="relative size-full overflow-hidden border-2 border-solid border-white bg-[rgba(252,247,255,0.72)] backdrop-blur-2xl"
           style={{ borderRadius: "24px 24px 54px 24px", boxShadow: CARD_SHADOW }}
         >
           {/* Flag, name, rank. The name is bounded by the flame tab and

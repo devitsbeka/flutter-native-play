@@ -490,6 +490,7 @@ export const es: KaTranslations = {
       monkey: "Mono",
       elephant: "Elefante",
       giraffe: "Jirafa",
+      dolphin: "Delfín",
     },
     createNew: "Crear nuevo avatar",
     uploadPhoto: "Subir",

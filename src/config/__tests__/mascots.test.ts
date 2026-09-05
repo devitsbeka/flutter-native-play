@@ -1,14 +1,14 @@
 import { describe, it, expect } from "vitest";
 import { MASCOTS, MASCOT_IDS, isMascotId, mascotById, parseMascotId } from "@/config/mascots";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { translations, LANGUAGES } from "@/locales";
 
 describe("the mascot catalog", () => {
-  it("carries the seven animals, and no King", () => {
+  it("carries the eight animals, and no King", () => {
     // The King is the home screen's own default, not a choice: a player who
     // never picks keeps the idle loop, and the picker shows only the animals.
     expect(MASCOTS.map((m) => m.id)).toEqual([...MASCOT_IDS]);
-    expect(MASCOTS).toHaveLength(7);
+    expect(MASCOTS).toHaveLength(8);
     expect(isMascotId("king")).toBe(false);
   });
 
@@ -45,8 +45,12 @@ describe("the mascot catalog", () => {
 
   it("matches the ids the database accepts", () => {
     // profiles.home_mascot carries a CHECK naming the ids; a mascot added on
-    // one side only is refused on save and silently forgotten on reload.
-    const sql = readFileSync("supabase/migrations/20261004100000_home_mascot.sql", "utf8");
-    for (const id of MASCOT_IDS) expect(sql).toContain(`'${id}'`);
+    // one side only is refused on save and silently forgotten on reload. The
+    // constraint is recreated by a new migration each time the list grows,
+    // so the LATEST home_mascot migration is the one that has to name them.
+    const dir = "supabase/migrations";
+    const latest = readdirSync(dir).filter((f) => f.includes("home_mascot")).sort().at(-1)!;
+    const sql = readFileSync(`${dir}/${latest}`, "utf8");
+    for (const id of MASCOT_IDS) expect(sql, latest).toContain(`'${id}'`);
   });
 });

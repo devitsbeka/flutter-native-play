@@ -17,8 +17,9 @@
  *
  * Adding a mascot means: an id here, a scene and a face thumb under
  * `src/assets/mascots`, a name in every locale's `avatar.mascotNames`, and
- * the id in the `profiles.home_mascot` CHECK (see the migration that added
- * the column) — the database refuses ids it does not know.
+ * the id in the `profiles.home_mascot` CHECK (a new migration that recreates
+ * the constraint, as the dolphin's did) — the database refuses ids it does
+ * not know.
  */
 import owlScene from "@/assets/mascots/owl.webp";
 import owlThumb from "@/assets/mascots/thumbs/owl.webp";
@@ -34,6 +35,8 @@ import elephantScene from "@/assets/mascots/elephant.webp";
 import elephantThumb from "@/assets/mascots/thumbs/elephant.webp";
 import giraffeScene from "@/assets/mascots/giraffe.webp";
 import giraffeThumb from "@/assets/mascots/thumbs/giraffe.webp";
+import dolphinScene from "@/assets/mascots/dolphin.webp";
+import dolphinThumb from "@/assets/mascots/thumbs/dolphin.webp";
 
 export const MASCOT_IDS = [
   "owl",
@@ -43,6 +46,7 @@ export const MASCOT_IDS = [
   "monkey",
   "elephant",
   "giraffe",
+  "dolphin",
 ] as const;
 
 export type MascotId = (typeof MASCOT_IDS)[number];
@@ -63,6 +67,7 @@ export const MASCOTS: readonly Mascot[] = [
   { id: "monkey", thumb: monkeyThumb, scene: monkeyScene },
   { id: "elephant", thumb: elephantThumb, scene: elephantScene },
   { id: "giraffe", thumb: giraffeThumb, scene: giraffeScene },
+  { id: "dolphin", thumb: dolphinThumb, scene: dolphinScene },
 ];
 
 export const isMascotId = (value: unknown): value is MascotId =>

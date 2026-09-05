@@ -584,6 +584,7 @@ export const ka = {
       monkey: "მაიმუნი",
       elephant: "სპილო",
       giraffe: "ჟირაფი",
+      dolphin: "დელფინი",
     },
     createNew: "ახალი ავატარის შექმნა",
     takeSelfie: "სელფი",
