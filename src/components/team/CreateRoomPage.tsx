@@ -63,6 +63,7 @@ import featuredMyTrivias from "@/assets/play-chooser/featured-mytrivias.webp";
 import playersIcon from "@/assets/play-chooser/players.svg";
 import { LOBBY_SCENES, rememberLobbyScene } from "@/utils/lobbyScene";
 import { UniversalLobby, type LobbyPlayer } from "@/components/lobby/UniversalLobby";
+import { useDeveloperMode } from "@/contexts/DeveloperModeContext";
 import SpotlightSearch from "@/components/search/SpotlightSearch";
 import { MyTriviaLiveLogo } from "@/components/shared/MyTriviaLiveLogo";
 import { getRandomGradient } from "@/config/roomGradients";
@@ -226,6 +227,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   // on the matching source card; otherwise NOTHING is picked — starting on
   // Random quietly rolled a category the player never chose, and the create
   // button read as ready for a game nobody asked for.
+  const { developerMode } = useDeveloperMode();
   const [gameChoice, setGameChoice] = useState<GameChoice | null>(() => {
     if (preSelectedCategory || defaultChallengeType === "library") return "library";
     if (defaultChallengeType === "my-trivias" || defaultChallengeType === "create") return "mytrivias";
@@ -1672,8 +1674,14 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                 // blurb's box in 393rds, 273 for all but Words' longer line.
                 { key: "guess", art: featuredGuess, artTop: 0.05, descW: 273, players: "1-10", title: t("extra.modeGuessTitle"), desc: t("extra.modeGuessDesc") },
                 { key: "quick", art: featuredQuick, artTop: -1.71, descW: 273, players: "1-10", title: t("extra.modeQuickTitle"), desc: t("extra.modeQuickDesc") },
-                { key: "king", art: featuredKing, artTop: 0, descW: 273, players: "1-10", title: t("extra.modeKingTitle"), desc: t("lobby.kingCardDesc") },
-                { key: "battle", art: featuredBattle, artTop: -4.56, descW: 273, players: "4-10", title: t("extra.modeBattleTitle"), desc: t("gameTypes.teamBattleDesc") },
+                // The King and Battle posters are developer-only until the
+                // modes are promoted — see DEVELOPER_ONLY_GAME_TYPES.
+                ...(developerMode
+                  ? [
+                      { key: "king", art: featuredKing, artTop: 0, descW: 273, players: "1-10", title: t("extra.modeKingTitle"), desc: t("lobby.kingCardDesc") },
+                      { key: "battle", art: featuredBattle, artTop: -4.56, descW: 273, players: "4-10", title: t("extra.modeBattleTitle"), desc: t("gameTypes.teamBattleDesc") },
+                    ]
+                  : []),
                 { key: "words", art: featuredWords, artTop: 0.04, descW: 329, players: "1-2", title: t("gameTypes.wordsTitle"), desc: t("extra.modeWordsDesc") },
                 { key: "library", art: featuredLibrary, artTop: -2.86, descW: 273, players: null, title: t("extra.modeLibraryTitle"), desc: t("extra.libraryDesc") },
                 { key: "mytrivias", art: featuredMyTrivias, artTop: -0.02, descW: 273, players: null, title: t("extra.myTriviaOption"), desc: t("extra.myTriviaDesc") },

@@ -238,6 +238,8 @@ export const ka = {
     help: "დახმარება",
     privacy: "კონფიდენციალურობა",
     signOut: "გამოსვლა",
+    developerMode: "დეველოპერ რეჟიმი",
+    developerModeHint: "აჩვენებს დაუსრულებელ რეჟიმებს: Versus King, გუნდური ბრძოლა",
     signIn: "შესვლა",
     player: "მოთამაშე",
     points: "ქულა",

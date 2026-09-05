@@ -195,6 +195,8 @@ export const fr: KaTranslations = {
     help: "Aide",
     privacy: "Confidentialité",
     signOut: "Déconnexion",
+    developerMode: "Mode développeur",
+    developerModeHint: "Affiche les modes inachevés : Versus King, Team Battle",
     signIn: "Connexion",
     player: "Joueur",
     play: "Jouer",

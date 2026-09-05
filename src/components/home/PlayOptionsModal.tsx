@@ -57,6 +57,10 @@ export function PlayOptionsModal({
     gt.launch?.(navigate);
   };
   const dark = (key: "king" | "team_battle") => modeOf(key)?.status === "coming_soon";
+  // Not offered at all (developer mode off, or hidden by the registry): the
+  // card is not drawn. It used to be drawn regardless and simply did
+  // nothing when tapped.
+  const offered = (key: "king" | "team_battle") => !!modeOf(key);
 
   // The rotated 56px icon tile every card carries (950:9961 family).
   const tile = (gradient: string, glow: string, rotate: number) => (
@@ -181,7 +185,7 @@ export function PlayOptionsModal({
               </motion.button>
 
               {/* Versus King (950:9978) */}
-              <motion.button
+              {offered("king") && <motion.button
                 initial={{ opacity: 0, y: 60, scale: 0.8 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ type: "spring", stiffness: 360, damping: 18, delay: 0.19 }}
@@ -203,10 +207,10 @@ export function PlayOptionsModal({
                 <p className="absolute left-[25px] top-[288px] max-w-[170px] overflow-hidden text-ellipsis capitalize leading-[34.5px] text-[#402666] text-[20px] tracking-[-0.14px] whitespace-nowrap" style={{ fontFamily: "'Slackey', 'TASolivare', cursive" }}>
                   {t("lobby.vkTitle")}
                 </p>
-              </motion.button>
+              </motion.button>}
 
               {/* Play Team Battle (950:9987) */}
-              <motion.button
+              {offered("team_battle") && <motion.button
                 initial={{ opacity: 0, y: 60, scale: 0.8 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ type: "spring", stiffness: 360, damping: 18, delay: 0.26 }}
@@ -231,7 +235,7 @@ export function PlayOptionsModal({
                 <p className="absolute left-[24px] top-[118px] max-w-[170px] overflow-hidden text-ellipsis capitalize leading-[34.5px] text-[#402666] text-[20px] tracking-[-0.14px] whitespace-nowrap" style={{ fontFamily: "'Slackey', 'TASolivare', cursive" }}>
                   {t("teamBattle.title")}
                 </p>
-              </motion.button>
+              </motion.button>}
             </div>
           </ScaledCanvas>
         </motion.div>

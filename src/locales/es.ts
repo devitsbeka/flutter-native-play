@@ -195,6 +195,8 @@ export const es: KaTranslations = {
     help: "Ayuda",
     privacy: "Privacidad",
     signOut: "Cerrar sesión",
+    developerMode: "Modo desarrollador",
+    developerModeHint: "Muestra modos sin terminar: Versus King, Team Battle",
     signIn: "Iniciar sesión",
     player: "Jugador",
     points: "puntos",

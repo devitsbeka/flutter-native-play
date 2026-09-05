@@ -191,6 +191,8 @@ export const it: KaTranslations = {
     accountSettings: "Gestione account",
     help: "Aiuto",
     signOut: "Esci",
+    developerMode: "Modalità sviluppatore",
+    developerModeHint: "Mostra le modalità incomplete: Versus King, Team Battle",
     signIn: "Accedi",
     player: "Giocatore",
     points: "punti",

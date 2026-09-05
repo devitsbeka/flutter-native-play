@@ -16,6 +16,7 @@ import { VipProvider } from "@/contexts/VipContext";
 import { FriendsProvider } from "@/contexts/FriendsContext";
 import { PlayGuardProvider } from "@/contexts/PlayGuardContext";
 import { PendingChallengesProvider } from "@/contexts/PendingChallengesContext";
+import { DeveloperModeProvider } from "@/contexts/DeveloperModeContext";
 import { TVGameProvider } from "@/contexts/TVGameContext";
 import { SplashScreen } from "@/components/SplashScreen";
 // VideoPreloader auto-starts on import - no component needed
@@ -199,6 +200,9 @@ const App = () => (
           because LanguageProvider is outside it. */}
       <LanguageFollowsCountry />
       <PostHogProvider>
+      {/* Admin-only switch that reveals unreleased modes; inside AuthProvider
+          because it asks has_role(admin) for the signed-in user. */}
+      <DeveloperModeProvider>
       <VipProvider>
       <SoundProvider>
         <FriendsProvider>
@@ -420,6 +424,7 @@ const App = () => (
         </FriendsProvider>
       </SoundProvider>
       </VipProvider>
+      </DeveloperModeProvider>
     </PostHogProvider>
     </AuthProvider>
   </LanguageProvider>

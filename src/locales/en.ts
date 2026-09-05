@@ -240,6 +240,8 @@ export const en: KaTranslations = {
     help: "Help",
     privacy: "Privacy",
     signOut: "Sign Out",
+    developerMode: "Developer mode",
+    developerModeHint: "Shows unfinished modes: Versus King, Team Battle",
     signIn: "Sign In",
     player: "Player",
     points: "points",

@@ -192,6 +192,8 @@ export const de: KaTranslations = {
     help: "Hilfe",
     privacy: "Datenschutz",
     signOut: "Abmelden",
+    developerMode: "Entwicklermodus",
+    developerModeHint: "Zeigt unfertige Modi: Versus King, Team Battle",
     signIn: "Anmelden",
     player: "Spieler",
     points: "Punkte",
