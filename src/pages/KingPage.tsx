@@ -7,6 +7,8 @@ import { Check, ChevronLeft, Crown } from "lucide-react";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { containsBlockedText } from "@/utils/contentFilter";
 import iconKingMascot from "@/assets/play-chooser/icon-king.webp";
+import { dealtRoomIcon } from "@/utils/roomCrests";
+import { useRoomIconPool } from "@/hooks/useRoomIconPool";
 import crownIconAsset from "@/assets/crown-icon.png";
 import iconAnswerWrong from "@/assets/answer-wrong-3d.png";
 import { resolveAvatarUrl } from "@/utils/avatarUtils";
@@ -155,6 +157,23 @@ function DuelTimerBadge({ seconds, urgent = false }: { seconds: number; urgent?:
 }
 
 /**
+ * Which question this is, on the card's other shoulder.
+ *
+ * It used to sit above the card as a grey caption, which cost a line and
+ * left the clock alone up there looking like the only thing worth knowing.
+ * The two balance now: the number on the left, the clock on the right, and
+ * the puzzle between them. It wears the answer chips' lilac so the card's
+ * furniture reads as one set.
+ */
+function DuelQuestionNo({ label }: { label: string }) {
+  return (
+    <span className="absolute left-[14px] top-[16px] rounded-full bg-[#eadffb] px-2.5 py-1 font-[Nunito] text-[12px] font-bold leading-4 text-[#705c8c]">
+      {label}
+    </span>
+  );
+}
+
+/**
  * One line of the reveal: a label, then a 36px status chip beside the text.
  *
  * The frame gives the correct answer a filled green chip with a white tick
@@ -252,6 +271,11 @@ function DuelScoreRow({
     <div className="pt-1">
       <div className="flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center justify-center gap-2">
+          {/* Always a face on this side too. A couch nobody has dressed used
+              to show a bare name against the King's mascot, which read as
+              half a scoreboard. The fallback is the room's OWN dealt icon —
+              the same one its card and its lobby show — not the mascot,
+              which would put the King's face on both sides. */}
           {teamIcon && <img alt="" src={teamIcon} className="size-9 shrink-0 object-contain" />}
           {name(youLabel)}
         </div>
@@ -283,7 +307,7 @@ function DuelScoreRow({
 function DuelTitle({ t }: { t: (k: string) => string }) {
   return (
     <h1 className="font-slackey text-[16px] leading-4 tracking-[-0.16px] text-[#402666] truncate">
-      {t("king.title")}
+      {t("lobby.vkTitle")}
     </h1>
   );
 }
@@ -481,6 +505,12 @@ export default function KingPage() {
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const [kingRoom, setKingRoom] = useState<Tables<"game_rooms"> | null>(null);
+  /**
+   * The couch's face: the one the host dressed it in, else the one dealt
+   * from its room id — the same deck (and so the same face) its card and its
+   * lobby already show.
+   */
+  const iconPool = useRoomIconPool();
   const [renameOpen, setRenameOpen] = useState(false);
   const nameAttempted = useRef(false);
   const [kingParts, setKingParts] = useState<Tables<"room_participants">[]>([]);
@@ -871,7 +901,7 @@ export default function KingPage() {
         meId={user?.id ?? ""}
         isHost={kingRoom?.host_user_id === user?.id}
         teamName={kingRoom?.room_name}
-        teamIcon={kingRoom?.room_icon}
+        teamIcon={kingRoom?.room_icon ?? dealtRoomIcon(kingRoom?.id ?? "", iconPool)}
         onOptions={teamOptions}
         onSuggest={teamSuggest}
         onCommit={teamCommit}
@@ -1120,17 +1150,14 @@ export default function KingPage() {
             kingScore={state.king_score}
             ruleLabel={t("king.firstTo6")}
             kingLabel={t("king.king")}
-            teamIcon={kingRoom?.room_icon}
+            teamIcon={kingRoom?.room_icon ?? dealtRoomIcon(kingRoom?.id ?? "", iconPool)}
           />
         )}
 
         {stage === "thinking" && state?.question && (
-          <div className="flex flex-col gap-3 mt-1">
-            <p className="text-xs text-[#402666]/60 text-center">
-              {t("king.questionNo", { n: state.question_number })}
-            </p>
+          <div className="flex flex-col gap-3 mt-4">
             <div
-              className="relative rounded-[24px] p-5"
+              className="relative rounded-[24px] p-5 pt-[52px]"
               style={{ background: "rgba(252,247,255,0.95)", boxShadow: CARD_SHADOW }}
             >
               {/* Every puzzle wears its icon (20260921160000); rows without
@@ -1143,6 +1170,7 @@ export default function KingPage() {
                 />
               </div>
               <DuelTimerBadge seconds={thinkSeconds} />
+              <DuelQuestionNo label={t("king.questionNo", { n: state.question_number })} />
               <p className={`font-bold text-center text-[#402666] ${qTextSize(state.question.question_text)}`}>
                 {state.question.question_text}
               </p>
@@ -1155,7 +1183,7 @@ export default function KingPage() {
         )}
 
         {stage === "commit" && state?.question && (
-          <div className="flex flex-col gap-2.5 mt-1">
+          <div className="flex flex-col gap-2.5 mt-4">
             <div
               className="relative rounded-[24px] p-4 pr-14"
               style={{ background: "rgba(252,247,255,0.95)", boxShadow: CARD_SHADOW }}
@@ -1396,12 +1424,9 @@ function KingTeamDuel({
         />
 
         {phase === "think" && view.question && (
-          <div className="flex flex-col gap-3 mt-1">
-            <p className="text-xs text-[#402666]/60 text-center">
-              {t("king.questionNo", { n: view.question_number })}
-            </p>
+          <div className="flex flex-col gap-3 mt-4">
             <div
-              className="relative rounded-[24px] p-5"
+              className="relative rounded-[24px] p-5 pt-[52px]"
               style={{ background: "rgba(252,247,255,0.95)", boxShadow: CARD_SHADOW }}
             >
               <div className="flex justify-center mb-3">
@@ -1412,6 +1437,7 @@ function KingTeamDuel({
                 />
               </div>
               <DuelTimerBadge seconds={thinkLeft} />
+              <DuelQuestionNo label={t("king.questionNo", { n: view.question_number })} />
               <p className={`font-bold text-center text-[#402666] ${qTextSize(view.question.question_text)}`}>
                 {view.question.question_text}
               </p>
@@ -1423,7 +1449,7 @@ function KingTeamDuel({
         )}
 
         {phase === "commit" && view.question && (
-          <div className="flex flex-col gap-2.5 mt-1">
+          <div className="flex flex-col gap-2.5 mt-4">
             <div
               className="relative rounded-[24px] p-4 pr-14"
               style={{ background: "rgba(252,247,255,0.95)", boxShadow: CARD_SHADOW }}

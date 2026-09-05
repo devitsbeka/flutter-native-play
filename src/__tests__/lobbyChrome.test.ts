@@ -289,7 +289,12 @@ describe("the King's duel keeps its one action at the bottom", () => {
     // directly under it says properly.
     expect(king).toMatch(/font-slackey text-\[16px\][^"]*text-\[#402666\]/);
     expect(king).not.toMatch(/king\.vsTitle/);
-    expect(king).toMatch(/teamIcon=\{kingRoom\?\.room_icon\}/);
+    // The couch always has a face: the one the host dressed it in, else the
+    // one dealt from its room id — the same deck its card and lobby use, not
+    // the mascot, which would put the King on both sides of the score.
+    expect(king).toMatch(
+      /teamIcon=\{kingRoom\?\.room_icon \?\? dealtRoomIcon\(kingRoom\?\.id \?\? "", iconPool\)\}/,
+    );
     expect(king).toMatch(/teamIcon=\{teamIcon\}/);
     // Names at 20, scores at 32 in the display face, rule between them.
     expect(king).toMatch(/text-\[32px\] leading-\[28px\] text-\[#402666\]/);
@@ -316,6 +321,34 @@ describe("the King's duel keeps its one action at the bottom", () => {
     expect(king).toMatch(/<RoomIconPickerModal[^]*?autoName=\{false\}/);
     expect(king).toMatch(/size=\{68\}/);
     expect(king).toMatch(/size=\{47\}/);
+  });
+
+  it("the card's shoulders carry the number and the clock", () => {
+    // The question number used to be a grey caption above the card, which
+    // cost a line and left the clock up there looking like the only thing
+    // worth knowing. They balance now, and the card is padded to clear both.
+    expect(king).toMatch(/function DuelQuestionNo/);
+    expect(king).toMatch(/absolute left-\[14px\] top-\[16px\][^"]*bg-\[#eadffb\]/);
+    expect(king).toMatch(/<DuelQuestionNo label=\{t\("king\.questionNo", \{ n: state\.question_number \}\)\} \/>/);
+    expect(king).toMatch(/<DuelQuestionNo label=\{t\("king\.questionNo", \{ n: view\.question_number \}\)\} \/>/);
+    expect(king).toMatch(/rounded-\[24px\] p-5 pt-\[52px\]/);
+    // And the score no longer sits on the card's roof.
+    expect(king).not.toMatch(/flex flex-col gap-3 mt-1"/);
+  });
+
+  it("the King speaks Georgian in Georgian", () => {
+    // "ტყის კლანი … King" was half a scoreboard in each language. The King
+    // as a CHARACTER is მეფე; the GAME keeps its brand name (lobby.vkTitle),
+    // which is spelled the same way in all seven.
+    const ka = read("src/locales/ka.ts");
+    expect(ka).toMatch(/\n\s{4}king: "მეფე",/);
+    expect(ka).toMatch(/kingScores: "ქულა მეფეს ერგო"/);
+    expect(ka).not.toMatch(/teamWon: "[^"]*King/);
+    expect(ka).not.toMatch(/kingWon: "[^"]*King/);
+    // The duel header says what the rest of the app calls this game, rather
+    // than a string used nowhere else.
+    expect(king).toMatch(/\{t\("lobby\.vkTitle"\)\}/);
+    expect(king).not.toMatch(/t\("king\.title"\)/);
   });
 
   it("and the team is told to pick, not that the captain decides", () => {
