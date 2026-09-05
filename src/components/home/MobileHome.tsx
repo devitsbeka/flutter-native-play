@@ -11,6 +11,7 @@ import giftDaily from "@/assets/figma-home/gift-daily.png";
 import chestDaily from "@/assets/figma-home/chest-daily.png";
 import streakFire from "@/assets/figma-home/streak-fire.png";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
+import { WaveEdge } from "@/components/home/WaveEdge";
 import { BackgroundVideo } from "@/components/shared/BackgroundVideo";
 import heroScene from "@/assets/figma-landing/hero-scene.png";
 
@@ -299,6 +300,12 @@ export function MobileProfileCard({
         className="absolute bottom-0 left-0 origin-bottom-left"
         style={{ width: designWidth, height: CARD_H, transform: `scale(${scale})` }}
       >
+        {/* The card's top and bottom edges roll (Figma 1076:3700 / 3697):
+            the frame's 427px wave, 19px in from either end, its base 5px
+            inside the edge and its hills reaching 11px above the top and
+            10px below the bottom. */}
+        <WaveEdge shape="card" color="#F8F9FA" className="left-[19px] right-[18px] top-[-11px] z-10 h-[16px]" />
+        <WaveEdge shape="card" color="#F8F9FA" flip className="bottom-[-10px] left-[19px] right-[18px] z-10 h-[16px]" />
         <div
           // Frosted AND nearly opaque: the mascot wallpaper runs under the
           // card. The blur turns whatever is behind it into a wash, and the

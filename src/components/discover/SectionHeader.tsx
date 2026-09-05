@@ -13,12 +13,12 @@ export function SectionHeader({ title, subtitle, onSeeAll }: SectionHeaderProps)
     <div className="flex items-start justify-between mb-3" style={{ paddingLeft: 20, paddingRight: 20 }}>
       <div className="min-w-0 flex-1">
         {/* The same heading the home feed's rails wear (MobileHomeFeed's
-            RailHeader): the home frame's 18px semibold Georgian sans in the
-            app's aubergine (Figma 1076:2116). Discover was the one browsing
+            RailHeader): the display face at 26px in the home frame's deep
+            aubergine (Figma 1076:2116). Discover was the one browsing
             surface still setting its own — a semibold slate sans — so
             scrolling from home to here changed typeface for no reason a
             reader could name. */}
-        <h2 className="font-georgian text-[18px] font-semibold leading-[22px] text-[#402666]">
+        <h2 className="font-display text-[26px] leading-[22.5px] tracking-[-0.16px] text-[#552d7a]">
           {title}
         </h2>
         {subtitle && (

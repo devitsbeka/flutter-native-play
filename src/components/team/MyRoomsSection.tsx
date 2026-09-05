@@ -26,6 +26,7 @@ import danceFloorIcon from "@/assets/dance-floor.png";
 import crownIcon from "@/assets/crown-icon.png";
 import retroTv3d from "@/assets/retro-tv-3d.png";
 import { GradientBackground, ROOM_GRADIENT_PRESETS } from "@/components/ui/noisy-gradient-backgrounds";
+import { WaveEdge } from "@/components/home/WaveEdge";
 import { useRoomAge } from "@/hooks/useRoomAge";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "@/lib/toast";
@@ -87,6 +88,32 @@ const HOME_RAIL_FIRST_GRADIENT = [
   { color: "rgba(202,179,214,1)", stop: "65%" },
   { color: "rgba(148,201,233,1)", stop: "100%" },
 ];
+
+/**
+ * The colour a preset's radial gradient reaches at `t` of its radius, for
+ * the wavy bands on the home rail card: the frame paints each band in the
+ * card's own colour where the band sits — the first stop at the bottom,
+ * and at the top the colour four fifths of the way out, which is where the
+ * top edge's middle falls on a gradient sized 125% from the bottom.
+ */
+function gradientColorAt(colors: { color: string; stop: string }[], t: number): string {
+  const parsed = colors.map((c) => ({
+    at: parseFloat(c.stop) / 100,
+    rgb: (c.color.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number),
+  }));
+  if (parsed.length === 0) return "transparent";
+  if (t <= parsed[0].at) return colors[0].color;
+  for (let i = 1; i < parsed.length; i++) {
+    if (t <= parsed[i].at) {
+      const a = parsed[i - 1];
+      const b = parsed[i];
+      const k = (t - a.at) / (b.at - a.at || 1);
+      const mix = a.rgb.map((v, j) => Math.round(v + (b.rgb[j] - v) * k));
+      return `rgb(${mix.join(",")})`;
+    }
+  }
+  return colors[colors.length - 1].color;
+}
 
 export function MyRoomsSection({ 
   hideTV = false, 
@@ -724,11 +751,12 @@ export function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = f
           }}
           className={`${
             fullWidth
-              ? "w-full rounded-2xl"
+              ? "w-full rounded-2xl overflow-hidden"
               : homeRail
+                // Not clipped: the wavy bands hang just outside its edges.
                 ? "flex-shrink-0 w-[280px] snap-start rounded-[20px]"
-                : "flex-shrink-0 w-[70vw] max-w-[280px] snap-start rounded-2xl"
-          } overflow-hidden cursor-pointer ${!isMobile ? "transition-transform duration-200 hover:scale-[1.02]" : ""} active:scale-[0.98] ${
+                : "flex-shrink-0 w-[70vw] max-w-[280px] snap-start rounded-2xl overflow-hidden"
+          } cursor-pointer ${!isMobile ? "transition-transform duration-200 hover:scale-[1.02]" : ""} active:scale-[0.98] ${
             room.has_unread_activity ? "ring-2 ring-primary ring-offset-2" : ""
           }`}
         >
@@ -742,7 +770,7 @@ export function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = f
               gradientSize="125% 125%"
               gradientOrigin="bottom-middle"
               enableNoise={false}
-              className="relative h-[212px] rounded-[20px]"
+              className="relative h-[212px] overflow-hidden rounded-[20px]"
             >
               {isJoining && (
                 <div className="absolute inset-0 z-20 flex items-center justify-center rounded-[20px] bg-black/35 backdrop-blur-[1px]">
@@ -910,6 +938,26 @@ export function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = f
               </div>
             </div>
           </GradientBackground>
+          )}
+          {homeRail && (
+            // The card's edges roll (Figma 1076:3672 – 3676): the frame's
+            // 243px wave 18.5px in from either side, painted in the card's
+            // own colour — its base 7px inside the top edge with the hills
+            // rising 3px above it, and flipped under the bottom edge with
+            // the hills hanging 10px below.
+            <>
+              <WaveEdge
+                shape="room"
+                color={gradientColorAt(railColors, 0.8)}
+                className="left-[18.5px] right-[18.5px] top-[-3px] z-10 h-[10px]"
+              />
+              <WaveEdge
+                shape="room"
+                color={gradientColorAt(railColors, 0)}
+                flip
+                className="bottom-[-10px] left-[18.5px] right-[18.5px] z-10 h-[10px]"
+              />
+            </>
           )}
         </motion.div>
       </div>

@@ -3,7 +3,7 @@
  *
  * "კლასიკური ტრივია", "გართობა" and the rest were set in a semibold slate
  * sans, while every rail on the home feed uses the home frame's heading —
- * an 18px semibold Georgian sans in the app's aubergine (Figma 1076:2116).
+ * the display face at 26px in its deep aubergine (Figma 1076:2116).
  * Scrolling from one browsing surface to the other changed typeface for no
  * reason a reader could name.
  *
@@ -25,7 +25,7 @@ const tailwind = read("tailwind.config.ts");
 
 /** The heading class list, from whichever file we pull it out of. */
 const headingClass = (src: string): string | undefined =>
-  /<h2 className="(font-georgian[^"]*)"/.exec(src)?.[1];
+  /<h2 className="(?:min-w-0 truncate )?(font-display[^"]*)"/.exec(src)?.[1];
 
 describe("the two surfaces share one heading", () => {
   it("Discover's title is character-for-character the home rail's", () => {
@@ -36,9 +36,9 @@ describe("the two surfaces share one heading", () => {
     expect(disc).toBe(home);
   });
 
-  it("which is the frame's 18px semibold Georgian sans in the app's aubergine", () => {
+  it("which is the frame's display face at 26px in its deep aubergine", () => {
     expect(headingClass(header)).toBe(
-      "font-georgian text-[18px] font-semibold leading-[22px] text-[#402666]",
+      "font-display text-[26px] leading-[22.5px] tracking-[-0.16px] text-[#552d7a]",
     );
   });
 
@@ -63,10 +63,8 @@ describe("one component, every title", () => {
   });
 });
 
-describe("font-georgian is the right token for Georgian", () => {
-  it("leads with Noto Sans Georgian, with Google Sans behind it", () => {
-    // The frame's heading face carries Georgian itself; Google Sans, which
-    // the app already loads with Georgian support, stands behind it.
-    expect(tailwind).toMatch(/georgian: \[\s*\n\s*'Noto Sans Georgian',\s*\n\s*'Google Sans',/);
+describe("font-display is the right token for Georgian", () => {
+  it("is TASolivare, the face the frame sets its headings in", () => {
+    expect(tailwind).toMatch(/display: \[\s*\n\s*'TASolivare',/);
   });
 });
