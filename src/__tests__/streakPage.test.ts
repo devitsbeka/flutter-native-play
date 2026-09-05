@@ -108,7 +108,13 @@ describe("a milestone pays once, and the server decides", () => {
     // The rail is the selector: every tile is a button that picks its day,
     // and the day hook the home sheet already uses answers for it.
     expect(page).toContain("useDailyMissionsFor(selected)");
-    expect(page).toContain("onClick={() => setSelected(slot.key)}");
+    expect(page).toContain("onClick={() => (isChest ? setRewardsOpen(true) : setSelected(slot.key))}");
+    // The sheets are the app's own modal (MissionInfoModal's shell), not
+    // the shadcn dialog; the milestones live behind the chest, not on the
+    // page.
+    expect(page).not.toContain("@/components/ui/dialog");
+    expect(page).toContain("<AnimatePresence>");
+    expect(page).toMatch(/<StreakSheet open=\{rewardsOpen\}/);
     // The streak is kept days, not the win streak the results screens mean.
     expect(page).toContain("useMissionStreak()");
     expect(page).not.toMatch(/profile\??\.current_streak/);
