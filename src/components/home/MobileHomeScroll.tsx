@@ -1,12 +1,8 @@
-import { useRef, useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 
 import { FriendsStoriesBar } from "@/components/team/FriendsStoriesBar";
 import { MobileProfileCard } from "@/components/home/MobileHome";
 import { MobileHomeFeed } from "@/components/home/MobileHomeFeed";
-import { resolveAvatarUrl, fallbackAvatarFor } from "@/utils/avatarUtils";
-
-import coinNew from "@/assets/figma-home/coin-new.png";
-import gemNew from "@/assets/figma-home/gem-new.png";
 
 /**
  * The phone home as a scroll-reveal (owner's ask).
@@ -14,10 +10,9 @@ import gemNew from "@/assets/figma-home/gem-new.png";
  * At rest it IS the old home: the mascot scene fills the first screen, the
  * friends reel rides the top, the profile card sits above the nav — nothing
  * moved. Scrolling lifts that whole hero — scene included — up and out of
- * view, revealing a light, chunky feed of feature rails beneath it. Once the
- * hero is gone a compact header — the player's face, name and balances —
- * fades in and stays, so the identity the scene used to carry is still there
- * while you browse.
+ * view, revealing a light, chunky feed of feature rails beneath it. The
+ * identity stays exactly where it always was, on the profile card; there is
+ * deliberately no second name/balances bar.
  *
  * The scene lives INSIDE the hero, in the scroll flow, on purpose. It used to
  * be a page-level fixed backdrop that the feed panel had to paint over, and
@@ -30,9 +25,6 @@ import gemNew from "@/assets/figma-home/gem-new.png";
  * It owns its own vertical scroller (CLAUDE.md rule 4b).
  */
 
-// Scroll past this and the compact identity header is shown.
-const HEADER_AT_PX = 72;
-
 export interface MobileHomeScrollProps {
   /**
    * The mascot scene (or the default Trivia King loop), rendered inside the
@@ -40,9 +32,8 @@ export interface MobileHomeScrollProps {
    * inset-0`, so they fill the hero — one full screen at rest.
    */
   scene: ReactNode;
-  // Identity
+  // Identity, for the profile card
   nickname: string;
-  avatarUrl: string | null;
   countryCode?: string | null;
   rank?: number | null;
   coins: number;
@@ -54,15 +45,12 @@ export interface MobileHomeScrollProps {
   onGemsClick: () => void;
   onGiftClick: () => void;
   onStreakClick: () => void;
-  onAvatar: () => void;
-  onShop: () => void;
   onAddFriend: () => void;
 }
 
 export function MobileHomeScroll({
   scene,
   nickname,
-  avatarUrl,
   countryCode,
   rank,
   coins,
@@ -73,69 +61,16 @@ export function MobileHomeScroll({
   onGemsClick,
   onGiftClick,
   onStreakClick,
-  onAvatar,
-  onShop,
   onAddFriend,
 }: MobileHomeScrollProps) {
-  const [scrolled, setScrolled] = useState(false);
-  const ticking = useRef(false);
-
-  const onScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const top = e.currentTarget.scrollTop;
-    if (ticking.current) return;
-    ticking.current = true;
-    requestAnimationFrame(() => {
-      setScrolled(top > HEADER_AT_PX);
-      ticking.current = false;
-    });
-  };
-
   return (
     // The scroller is `absolute inset-0` of this positioned, flex-filled root
     // rather than `h-full`, so it takes a real pixel height from the root and
-    // the hero's `h-full` resolves to exactly one screen.
+    // the hero's `h-full` resolves to exactly one screen. This root must be
+    // the ONLY flex-1 child of the home column: a sibling flex-1 splits the
+    // height with it and turns the home into a half-screen window.
     <div className="relative z-10 min-h-0 flex-1">
-      {/* Compact identity + balances, fading in once the hero has gone. */}
-      <div
-        className={`absolute inset-x-0 top-0 z-40 flex items-center gap-3 border-b border-white/50 bg-[rgba(250,246,255,0.86)] px-4 py-2 backdrop-blur-xl transition-opacity duration-200 ${
-          scrolled ? "opacity-100" : "pointer-events-none opacity-0"
-        }`}
-      >
-        <button type="button" onClick={onAvatar} className="shrink-0">
-          <img
-            alt=""
-            src={resolveAvatarUrl(avatarUrl) ?? fallbackAvatarFor(nickname)}
-            className="size-[36px] rounded-full border-2 border-white object-cover"
-          />
-        </button>
-        <p className="min-w-0 flex-1 truncate font-hero text-[17px] leading-[20px] text-[#402666]">
-          {nickname}
-        </p>
-        <div className="flex shrink-0 items-center gap-2">
-          <button
-            type="button"
-            onClick={onShop}
-            className="flex h-[30px] items-center gap-1 rounded-full border-[1.5px] border-[#ffd98a] bg-[#fff8e8] px-[9px]"
-          >
-            <img alt="" src={coinNew} className="size-[15px] object-contain" />
-            <span className="font-[Nunito] text-[12px] font-extrabold text-[#b9761a]">
-              {coins.toLocaleString("en-US")}
-            </span>
-          </button>
-          <button
-            type="button"
-            onClick={onShop}
-            className="flex h-[30px] items-center gap-1 rounded-full border-[1.5px] border-[#c9b0f5] bg-[#f6f0ff] px-[9px]"
-          >
-            <img alt="" src={gemNew} className="size-[15px] object-contain" />
-            <span className="font-[Nunito] text-[12px] font-extrabold text-[#7b3fc4]">
-              {gems.toLocaleString("en-US")}
-            </span>
-          </button>
-        </div>
-      </div>
-
-      <div className="absolute inset-0 overflow-y-auto overscroll-contain" onScroll={onScroll}>
+      <div className="absolute inset-0 overflow-y-auto overscroll-contain">
         {/* ── Hero: exactly one screenful, scrolls away as a whole ─────────
             The scene fills it (absolute inset-0 behind the reel and card),
             so at rest it is pixel-for-pixel the old home, and the feed waits
