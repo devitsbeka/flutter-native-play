@@ -1153,7 +1153,6 @@ export default function Index() {
               ) : null
             }
             nickname={profile?.nickname || t("game.guest")}
-            avatarUrl={profile?.avatar_url ?? null}
             countryCode={myCountry}
             rank={myRank}
             coins={coins}
@@ -1164,8 +1163,6 @@ export default function Index() {
             onGemsClick={() => navigate("/power-ups?section=gems-lari")}
             onGiftClick={() => setIsDailyRewardsOpen(true)}
             onStreakClick={() => navigate("/streak")}
-            onAvatar={() => openAvatarModal(() => {})}
-            onShop={() => setIsGemShopOpen(true)}
             onAddFriend={() => setShowAddFriendModal(true)}
           />
         )}
@@ -1230,8 +1227,13 @@ export default function Index() {
           onClose={() => setShowChangeNameModal(false)}
         />
 
-        {/* Content area */}
-        <div className="flex-1 flex relative">
+        {/* Content area. On the scroll-reveal phone home this column stands
+            down entirely: everything in it is desktop-only or `hidden` on the
+            phone, but it was still a second `flex-1` sibling of
+            MobileHomeScroll — and two flex-1 children split the column 50/50,
+            which squeezed the whole home into a half-screen window with a
+            blank half beneath it. `hidden` takes it out of the flow. */}
+        <div className={showHomeFeed ? "hidden" : "flex-1 flex relative"}>
           {/* Action Cards - Fixed Right Side Panel (Desktop only) */}
           {user && (
             <motion.div 
