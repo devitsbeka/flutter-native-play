@@ -1982,6 +1982,7 @@ export type Database = {
           games_won: number | null
           gems: number
           has_face_photo: boolean | null
+          home_mascot: string | null
           id: string
           last_play_regen_at: string | null
           nickname: string
@@ -2012,6 +2013,7 @@ export type Database = {
           games_won?: number | null
           gems?: number
           has_face_photo?: boolean | null
+          home_mascot?: string | null
           id?: string
           last_play_regen_at?: string | null
           nickname: string
@@ -2042,6 +2044,7 @@ export type Database = {
           games_won?: number | null
           gems?: number
           has_face_photo?: boolean | null
+          home_mascot?: string | null
           id?: string
           last_play_regen_at?: string | null
           nickname?: string

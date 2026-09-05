@@ -32,8 +32,9 @@ import { AvatarCircle } from "@/components/home/AvatarCircle";
 import { SceneHero } from "@/components/home/SceneHero";
 import { SceneSidebar } from "@/components/home/SceneSidebar";
 import { DesktopGuestLanding, DesktopGuestSceneBackground } from "@/components/home/DesktopGuestLanding";
-import { MobileSceneBackground, MobileProfileCard, MobileGuestHero } from "@/components/home/MobileHome";
-import { useUserScene } from "@/hooks/useUserScene";
+import { MobileSceneBackground, MobileMascotScene, MobileProfileCard, MobileGuestHero } from "@/components/home/MobileHome";
+import { MobileHomeScroll } from "@/components/home/MobileHomeScroll";
+import { useHomeMascot } from "@/hooks/useHomeMascot";
 import { useMyLeaderboardRank, defaultScopeFor } from "@/hooks/useMyLeaderboardRank";
 import { DesktopActionCards } from "@/components/home/DesktopActionCards";
 import { LoggedInHomeV2 } from "@/pages/LoggedInHomeV2";
@@ -52,8 +53,8 @@ import coinIcon from "@/assets/icons/icon-coin.png";
 import defaultGuestAvatar from "@/assets/guest-avatar.png";
 import handGestureIcon from "@/assets/icons/hand-gesture.png";
 import defaultGuestAvatarAnimated from "@/assets/guest-avatar-animated.mp4";
-// Default Trivia King scene loop — everyone who hasn't explicitly generated
-// their own scene sees this (guests included), regardless of custom avatars.
+// The Trivia King idle loop — the home screen of everyone who has not picked
+// another mascot (guests included), regardless of custom avatars.
 const DEFAULT_SCENE_VIDEO = "/videos/trivia-king-scene.mp4";
 
 // Feathers the generated scene's top and side edges into the page
@@ -709,16 +710,23 @@ export default function Index() {
   const currentStreak = profile?.current_streak || 0;
   const levelInfo = calculateLevel(profile?.total_points || 0);
 
-  // Personalized 16:9 homepage scene (generated from the user's photo) —
-  // when present it replaces the classic centered avatar hero on xl+.
-  // Anyone without their own generated scene — guests and logged-in users
-  // alike, even with custom avatars — gets the default Trivia King loop.
-  const { data: userScene, isLoading: sceneLoading } = useUserScene(user?.id);
+  // The home-screen scene is the chosen mascot's, a portrait still. With no
+  // pick yet the Trivia King idle loop plays full-bleed, as the home screen
+  // always has. Guests get the King.
+  const { mascot, isLoading: mascotLoading } = useHomeMascot(user?.id);
   const isSceneViewport = useIsSceneViewport();
   const isMobileViewport = useIsMobileViewport();
-  const sceneUrl = userScene?.imageUrl || null;
-  const sceneVideoUrl = userScene?.videoUrl || null;
-  const showDefaultScene = !sceneUrl && !(user && sceneLoading);
+  // The scrollable phone home: a logged-in player on a phone gets the feed of
+  // feature rails, which brings its own blob background, mascot strip, friends
+  // reel and profile identity — so the old absolute mobile layers stand down.
+  const showHomeFeed = !!user && isMobileViewport;
+  // The scroll-reveal home fades this page-level scene wrapper out as the hero
+  // scrolls away, so the scene keeps its full-bleed old-home geometry.
+  const homeSceneRef = useRef<HTMLDivElement>(null);
+  const sceneUrl = user && mascot ? mascot.scene : null;
+  // Nothing is painted until the choice is known — a King that swaps to an
+  // owl a moment later reads as a glitch, not a load.
+  const showDefaultScene = !sceneUrl && !(user && mascotLoading);
   const showAnimatePrompt = !isAnimatingFromHome && !!profile?.avatar_url && profile.avatar_url.includes('supabase.co/storage') && profile.has_face_photo === true && !profile?.animated_avatar_url;
 
   // The phone profile card carries the player's flag and their place on the
@@ -896,26 +904,36 @@ export default function Index() {
         disableScroll
       >
         <div className="h-full flex flex-col w-full relative overflow-hidden md:overflow-visible">
-        {/* Phone scene layer (Figma 626:201 / 628:437) — the same artwork the
-            desktop uses, but framed the way the mobile design does: far wider
-            than the screen and anchored just above the bottom nav. Guests get
-            their own artwork inside MobileGuestHero instead. */}
-        {user && isMobileViewport && (
-          <MobileSceneBackground
-            sceneUrl={sceneUrl}
-            sceneVideoUrl={sceneVideoUrl}
-            showDefaultScene={showDefaultScene}
-            defaultVideoSrc={DEFAULT_SCENE_VIDEO}
-          />
+        {/* Phone scene layer (Figma 626:201 / 628:437). A chosen mascot is
+            the page's wallpaper: its 9:16 frame full-bleed behind the header,
+            the friends strip and the profile card. With no pick, the Trivia
+            King loop, framed the way the mobile design does: far wider than
+            the screen and anchored just above the bottom nav. Guests get
+            their own artwork inside MobileGuestHero. */}
+        {/* The old-home scene stays full-bleed behind the header (so it is
+            never cropped); the scroll-reveal home fades it out through this
+            wrapper's ref as the hero scrolls away. */}
+        {user && isMobileViewport && !showHomeFeed && sceneUrl && <MobileMascotScene sceneUrl={sceneUrl} />}
+        {user && isMobileViewport && !showHomeFeed && showDefaultScene && (
+          <MobileSceneBackground defaultVideoSrc={DEFAULT_SCENE_VIDEO} />
         )}
-        {/* Personalized scene (or the default Trivia King loop) as the
+        {showHomeFeed && (sceneUrl || showDefaultScene) && (
+          <div ref={homeSceneRef} className="md:hidden absolute inset-0 z-[4] will-change-[opacity]">
+            {sceneUrl ? (
+              <MobileMascotScene sceneUrl={sceneUrl} />
+            ) : (
+              <MobileSceneBackground defaultVideoSrc={DEFAULT_SCENE_VIDEO} />
+            )}
+          </div>
+        )}
+        {/* The mascot's scene (or the default Trivia King loop) as the
             full-bleed page background (xl+); the header, friends strip and
             cards float over it. Clicks are caught by SceneHero's catcher
             layer, not here — background layers never receive them.
             Mounted only when the viewport is actually xl, so smaller
             screens never download the media. */}
         {!isSceneViewport ? null : sceneUrl ? (
-          /* Generated scene: the whole artwork fits in the band BELOW the
+          /* Mascot scene: the whole artwork fits in the band BELOW the
              friends reel (top 230px), bottom-anchored and centered, so the
              subject can never sit under the reel and nothing is cropped at
              any resolution. Its top and side edges feather into the page's
@@ -935,28 +953,13 @@ export default function Index() {
             className="hidden md:block absolute inset-0 z-0 select-none pointer-events-none overflow-hidden"
           >
             <div className="absolute left-0 right-0 top-[230px] bottom-0 flex items-end justify-center">
-              {sceneVideoUrl ? (
-                /* Seamless idle-loop video — poster keeps the still visible
-                   until the video is ready to play */
-                <video
-                  src={sceneVideoUrl}
-                  poster={sceneUrl}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  className="max-h-full max-w-full object-contain"
-                  style={SCENE_EDGE_FADE}
-                />
-              ) : (
-                <img
-                  src={sceneUrl}
-                  alt=""
-                  className="max-h-full max-w-full object-contain"
-                  draggable={false}
-                  style={SCENE_EDGE_FADE}
-                />
-              )}
+              <img
+                src={sceneUrl}
+                alt=""
+                className="max-h-full max-w-full object-contain"
+                draggable={false}
+                style={SCENE_EDGE_FADE}
+              />
             </div>
           </motion.div>
         ) : showDefaultScene && user ? (
@@ -1144,14 +1147,42 @@ export default function Index() {
           />
         )}
 
+        {/* The scroll-reveal phone home: the old home is the hero (mascot
+            scene, friends reel, profile card), and scrolling lifts it away to
+            reveal the feature rails, with a compact identity header fading in.
+            It owns its own scroller (CLAUDE.md rule 4b) and renders the scene,
+            reel and profile card itself — the standalone copies below stand
+            down for the phone (see the !showHomeFeed gates). */}
+        {showHomeFeed && (
+          <MobileHomeScroll
+            sceneFadeRef={homeSceneRef}
+            nickname={profile?.nickname || t("game.guest")}
+            avatarUrl={profile?.avatar_url ?? null}
+            countryCode={myCountry}
+            rank={myRank}
+            coins={coins}
+            gems={gems}
+            onNameClick={() => setShowChangeNameModal(true)}
+            onRankClick={() => navigate("/leaderboards")}
+            onCoinsClick={() => navigate("/power-ups?section=coins")}
+            onGemsClick={() => navigate("/power-ups?section=gems-lari")}
+            onGiftClick={() => setIsDailyRewardsOpen(true)}
+            onStreakClick={() => navigate("/streak")}
+            onAvatar={() => openAvatarModal(() => {})}
+            onShop={() => setIsGemShopOpen(true)}
+            onAddFriend={() => setShowAddFriendModal(true)}
+          />
+        )}
+
         {/* Friends strip - logged-in users, horizontally scrollable (mobile + desktop).
             Right padding on lg+ keeps it clear of the fixed action cards panel.
             On lg+ the logo lives in the sidebar, leaving the header row empty, so the
             strip is pulled up into it; pointer-events pass through the padded right
             zone so the header's search/bell buttons stay clickable. The -mt is tuned
             so the avatars land 16px below the page top — the same offset the reel
-            has inside the rooms page header, keeping the two pages in sync. */}
-        {user && (
+            has inside the rooms page header, keeping the two pages in sync.
+            On the phone home this reel lives inside MobileHomeFeed instead. */}
+        {user && !showHomeFeed && (
           <div className="relative z-20 px-4 lg:pl-[26px]">
             <div className="lg:pointer-events-auto">
               <FriendsStoriesBar
@@ -1165,8 +1196,9 @@ export default function Index() {
             chunky coin/gem pills, and the purse and flame tabs for daily
             rewards and the streak. It positions itself just above the bottom
             nav, so it is placed here for reading order rather than for where
-            it lands. Desktop keeps SceneHero's stack. */}
-        {user && (
+            it lands. Desktop keeps SceneHero's stack. On the phone home the
+            identity moved up into MobileHomeFeed. */}
+        {user && !showHomeFeed && (
           <MobileProfileCard
             nickname={profile?.nickname || t("game.guest")}
             countryCode={myCountry}
@@ -1235,7 +1267,7 @@ export default function Index() {
             {user && isMobileViewport && (
               <button
                 type="button"
-                aria-label="შეცვალე სცენა"
+                aria-label={t("extra.changeScene")}
                 onClick={() => openAvatarModal()}
                 className="md:hidden absolute inset-0 cursor-pointer"
               />

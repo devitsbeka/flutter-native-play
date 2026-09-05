@@ -2,8 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   GAME_TYPES,
+  applyDeveloperMode,
   type GameTypeDescriptor,
 } from "@/game-types/registry";
+import { useDeveloperMode } from "@/contexts/DeveloperModeContext";
 
 type GameTypeRow = {
   key: string;
@@ -21,8 +23,13 @@ type GameTypeRow = {
 //
 // DB → status mapping: is_live → "live"; not live but badged → "coming_soon"
 // (a teaser card); not live and unbadged → "hidden".
+//
+// Developer-only modes (registry: DEVELOPER_ONLY_GAME_TYPES) are applied on
+// top of all that: gone for everyone, live for an admin with developer mode
+// on. The DB row cannot release one of those — promoting it is a code change.
 export function useGameTypes(): GameTypeDescriptor[] {
   const [rows, setRows] = useState<GameTypeRow[] | null>(null);
+  const { developerMode } = useDeveloperMode();
 
   useEffect(() => {
     let cancelled = false;
@@ -39,7 +46,7 @@ export function useGameTypes(): GameTypeDescriptor[] {
 
   return useMemo(() => {
     const byKey = new Map(rows?.map((r) => [r.key, r]) ?? []);
-    return GAME_TYPES.map((gt) => {
+    const resolved = GAME_TYPES.map((gt) => {
       const row = byKey.get(gt.key);
       if (!row) return gt;
       return {
@@ -49,8 +56,9 @@ export function useGameTypes(): GameTypeDescriptor[] {
         sortOrder: row.sort_order,
         supportsMatchmaking: row.supports_matchmaking,
       } satisfies GameTypeDescriptor;
-    })
+    });
+    return applyDeveloperMode(resolved, developerMode)
       .filter((gt) => gt.status !== "hidden")
       .sort((a, b) => a.sortOrder - b.sortOrder);
-  }, [rows]);
+  }, [rows, developerMode]);
 }

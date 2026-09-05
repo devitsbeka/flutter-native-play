@@ -4,16 +4,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { anyBlockedText, containsBlockedText } from "@/utils/contentFilter";
-import { Loader2, ArrowLeft, Bell, X, RefreshCw, Play, Pencil, Gamepad2, Plus, Check, Globe, Lock } from "lucide-react";
+import { Loader2, ArrowLeft, Bell, X, RefreshCw, Pencil, Gamepad2, Plus, Check, Globe, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { generateRoomIdentity } from "@/utils/roomNameGenerator";
 import { roomVisibilityFields } from "@/utils/roomVisibility";
 import { localizeCategoryNames } from "@/utils/localizeCategories";
@@ -39,7 +31,6 @@ import { CreateCollectionModal } from "@/components/social/CreateCollectionModal
 import { RoomIconPickerModal } from "@/components/team/RoomIconPickerModal";
 import { MyTriviasPickerModal } from "@/components/team/MyTriviasPickerModal";
 import { GameStylePersonalTrivia } from "@/components/team/GameStylePersonalTrivia";
-import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -63,6 +54,7 @@ import featuredMyTrivias from "@/assets/play-chooser/featured-mytrivias.webp";
 import playersIcon from "@/assets/play-chooser/players.svg";
 import { LOBBY_SCENES, rememberLobbyScene } from "@/utils/lobbyScene";
 import { UniversalLobby, type LobbyPlayer } from "@/components/lobby/UniversalLobby";
+import { useDeveloperMode } from "@/contexts/DeveloperModeContext";
 import SpotlightSearch from "@/components/search/SpotlightSearch";
 import { MyTriviaLiveLogo } from "@/components/shared/MyTriviaLiveLogo";
 import { getRandomGradient } from "@/config/roomGradients";
@@ -226,6 +218,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   // on the matching source card; otherwise NOTHING is picked — starting on
   // Random quietly rolled a category the player never chose, and the create
   // button read as ready for a game nobody asked for.
+  const { developerMode } = useDeveloperMode();
   const [gameChoice, setGameChoice] = useState<GameChoice | null>(() => {
     if (preSelectedCategory || defaultChallengeType === "library") return "library";
     if (defaultChallengeType === "my-trivias" || defaultChallengeType === "create") return "mytrivias";
@@ -358,7 +351,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
    * device picked something else last time: the choice is remembered
    * per device (owner's ask), and a cleared store just means 2-2 again.
    */
-  const [battleTeamSize, setBattleTeamSizeState] = useState(() => {
+  const [battleTeamSize] = useState(() => {
     try {
       const saved = Number(localStorage.getItem("mt.battleTeamSize"));
       return saved >= 2 && saved <= 5 ? saved : 2;
@@ -366,14 +359,6 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       return 2;
     }
   });
-  const setBattleTeamSize = (n: number) => {
-    setBattleTeamSizeState(n);
-    try {
-      localStorage.setItem("mt.battleTeamSize", String(n));
-    } catch {
-      // A per-device nicety only — nothing to do when storage is blocked.
-    }
-  };
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState("");
   
@@ -1670,12 +1655,21 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                 // artTop: where Figma parks each render, as a share of the
                 // card's height (1013:1407 and its siblings); descW: the
                 // blurb's box in 393rds, 273 for all but Words' longer line.
-                { key: "guess", art: featuredGuess, artTop: 0.05, descW: 273, players: "1-10", title: t("extra.modeGuessTitle"), desc: t("extra.modeGuessDesc") },
+                // Quick Game leads and Classic Trivia (the library) follows —
+                // the two most-played, first in reach. Guess and the rest keep
+                // their order behind them.
                 { key: "quick", art: featuredQuick, artTop: -1.71, descW: 273, players: "1-10", title: t("extra.modeQuickTitle"), desc: t("extra.modeQuickDesc") },
-                { key: "king", art: featuredKing, artTop: 0, descW: 273, players: "1-10", title: t("extra.modeKingTitle"), desc: t("lobby.kingCardDesc") },
-                { key: "battle", art: featuredBattle, artTop: -4.56, descW: 273, players: "4-10", title: t("extra.modeBattleTitle"), desc: t("gameTypes.teamBattleDesc") },
-                { key: "words", art: featuredWords, artTop: 0.04, descW: 329, players: "1-2", title: t("gameTypes.wordsTitle"), desc: t("extra.modeWordsDesc") },
                 { key: "library", art: featuredLibrary, artTop: -2.86, descW: 273, players: null, title: t("extra.modeLibraryTitle"), desc: t("extra.libraryDesc") },
+                { key: "guess", art: featuredGuess, artTop: 0.05, descW: 273, players: "1-10", title: t("extra.modeGuessTitle"), desc: t("extra.modeGuessDesc") },
+                // The King and Battle posters are developer-only until the
+                // modes are promoted — see DEVELOPER_ONLY_GAME_TYPES.
+                ...(developerMode
+                  ? [
+                      { key: "king", art: featuredKing, artTop: 0, descW: 273, players: "1-10", title: t("extra.modeKingTitle"), desc: t("lobby.kingCardDesc") },
+                      { key: "battle", art: featuredBattle, artTop: -4.56, descW: 273, players: "4-10", title: t("extra.modeBattleTitle"), desc: t("gameTypes.teamBattleDesc") },
+                    ]
+                  : []),
+                { key: "words", art: featuredWords, artTop: 0.04, descW: 329, players: "1-2", title: t("gameTypes.wordsTitle"), desc: t("extra.modeWordsDesc") },
                 { key: "mytrivias", art: featuredMyTrivias, artTop: -0.02, descW: 273, players: null, title: t("extra.myTriviaOption"), desc: t("extra.myTriviaDesc") },
               ] as { key: GameChoice; art: string; artTop: number; descW: number; players: string | null; title: string; desc: string }[]
             ).map((card, i) => {
@@ -1750,21 +1744,20 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                   <div className="absolute inset-x-0 bottom-0 z-10 h-[55%] bg-[linear-gradient(to_top,#f3e6ff_0%,#f3e6ff_50%,rgba(243,230,255,0)_100%)]" />
                   {/* How many play: the peach pill, top right. */}
                   {card.players && (
-                    <div className="absolute right-[calc(12*var(--u))] top-[calc(12*var(--u))] z-20 flex items-center gap-[calc(7*var(--u))] rounded-bl-[calc(25.046*var(--u))] rounded-br-[calc(12.57*var(--u))] rounded-tl-[calc(25.05*var(--u))] rounded-tr-[calc(20*var(--u))] border-solid border-white/65 bg-gradient-to-b from-[#fff3ed] to-[#f5cdcd] px-[calc(16*var(--u))] py-[calc(1*var(--u))] shadow-[0px_2.277px_6.831px_0px_rgba(151,64,64,0.06),0px_2.277px_0px_0px_#d6c7c4] border-[length:calc(3.415*var(--u))]">
+                    <div className="absolute right-[calc(12*var(--u))] top-[calc(12*var(--u))] z-20 flex origin-top-right scale-[0.85] items-center gap-[calc(7*var(--u))] rounded-bl-[calc(25.046*var(--u))] rounded-br-[calc(12.57*var(--u))] rounded-tl-[calc(25.05*var(--u))] rounded-tr-[calc(20*var(--u))] border-solid border-white/65 bg-gradient-to-b from-[#fff3ed] to-[#f5cdcd] px-[calc(16*var(--u))] py-[calc(1*var(--u))] shadow-[0px_2.277px_6.831px_0px_rgba(151,64,64,0.06),0px_2.277px_0px_0px_#d6c7c4] border-[length:calc(3.415*var(--u))]">
                       <img alt="" src={playersIcon} className="h-[calc(22.75*var(--u))] w-[calc(17.333*var(--u))]" />
                       <span className="font-hero bg-gradient-to-b from-[#522b28] to-[#99665f] bg-clip-text text-[calc(32*var(--u))] capitalize leading-[calc(48*var(--u))] tracking-[-0.16px] text-transparent whitespace-nowrap">
                         {card.players}
                       </span>
                     </div>
                   )}
-                  {/* 10 design-px above the frame's own 78.86%: a title and a
-                      blurb that wraps to two lines — which several languages
-                      do where the English is one — used to sit on the card's
-                      bottom edge. Written in --u so it stays 10px at the
-                      designed width and scales with the card like every other
-                      measure here. */}
+                  {/* 20 design-px above the frame's own 78.86% — 10 more than
+                      the frame (owner's ask), so the title and its blurb (which
+                      wraps to two lines in several languages where the English
+                      is one) sit clear of the card's bottom edge. Written in
+                      --u so it scales with the card like every other measure. */}
                   <div
-                    className="absolute left-[calc(39*var(--u))] right-[calc(20*var(--u))] top-[calc(78.86%_-_10*var(--u))] z-20"
+                    className="absolute left-[calc(39*var(--u))] right-[calc(20*var(--u))] top-[calc(78.86%_-_20*var(--u))] z-20"
                   >
                     {/* The title runs to the card's edge: a Georgian or German
                         title is longer than the English the frame was set in. */}
@@ -1852,57 +1845,11 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         </div>
       </div>
 
-      {/* Footer - Normal Button */}
-      <div className="border-t border-border/30 shrink-0">
-        <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full px-4 py-4">
-        {/* How many a side holds — 2-2 through 5-5.
-
-            The published-or-private switch used to share this row. It is
-            gone: the lobby asks the same question, on the screen where the
-            room actually exists and where the answer can still be changed,
-            and being asked it twice on the way in made the create screen
-            look like it wanted a decision it did not need yet. A room that
-            can publish now opens published, and the lobby is where that is
-            reconsidered. */}
-        {gameChoice === "battle" && (
-          <div className="mb-3 flex items-stretch justify-end">
-            <Select
-              value={String(battleTeamSize)}
-              onValueChange={(v) => setBattleTeamSize(Number(v))}
-            >
-              <SelectTrigger
-                aria-label={t("extra.playersPerTeam")}
-                className="w-[108px] shrink-0 h-auto rounded-2xl border-0 bg-muted px-3.5 py-2.5 text-[13px] font-bold tabular-nums"
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {[2, 3, 4, 5].map((size) => (
-                  <SelectItem key={size} value={String(size)} className="tabular-nums font-semibold">
-                    {size}-{size}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-
-        <ChunkyButton
-          onClick={handleCreate}
-          disabled={loading || isCreating || !createEnabled}
-          variant="primary"
-          size="lg"
-          className="w-full"
-        >
-          {isCreating || loading ? (
-            <Loader2 className="w-5 h-5 animate-spin mr-2" />
-          ) : (
-            <Play className="w-5 h-5 mr-2" />
-          )}
-          {gameChoice === "quick" ? t("lobby.startGame") : t("extra.createBtn")}
-        </ChunkyButton>
-        </div>
-      </div>
+      {/* No footer, no Create button. A card starts its game the moment it
+          is tapped (see startMode and the auto-start effect), so a button
+          that pressed Create for the same thing was a second tap to one
+          place — and, being disabled until a card was picked, it read as a
+          step the screen was waiting on. */}
 
         </>
       )}

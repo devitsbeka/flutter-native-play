@@ -75,41 +75,19 @@ const SCENE_WASH =
   "linear-gradient(180deg, #d1c8f3 3.1744%, rgba(244,216,253,0) 22.768%)";
 
 interface MobileSceneBackgroundProps {
-  /** Generated still for this user, when they have one. */
-  sceneUrl: string | null;
-  /** Matching idle-loop video for the generated scene. */
-  sceneVideoUrl: string | null;
-  /** Fall back to the shared Trivia King loop. */
-  showDefaultScene: boolean;
-  /** The Trivia King idle loop, played when there is no generated scene. */
+  /** The Trivia King idle loop, played while no mascot is chosen. */
   defaultVideoSrc: string;
 }
 
-export function MobileSceneBackground({
-  sceneUrl,
-  sceneVideoUrl,
-  showDefaultScene,
-  defaultVideoSrc,
-}: MobileSceneBackgroundProps) {
-  if (!sceneUrl && !showDefaultScene) return null;
-
-  // Each scene gets the width its own aspect needs. They are not the same
-  // picture and cannot take the same box.
-  //
-  // The full-bleed rewrite gave both `size-full object-cover`, which fits to
-  // whichever edge is proportionally longer — on any phone taller than the
-  // frame's 0.558 that means filling the height, blowing the art up and
-  // cropping it. Fitting both to the screen width instead fixed that for the
-  // portrait scene and broke the default one: the Trivia King loop is 16:9, so
-  // at 100vw it is only 0.56 screens tall and sat as a shallow strip along the
-  // bottom with the page empty above it.
-  //
-  // The frame's own measures, which is what this looked like when it was
-  // right: the generated portrait spans 154.94vw from -22.06vw, and the 16:9
-  // loop 227.2vw from -47.8vw — far wider than the screen precisely so that a
-  // landscape clip is tall enough to fill the space above the nav. Both are
-  // anchored to the bottom and fade out at the top into the page's wash.
-  const portraitBox = "absolute left-[-22.06vw] w-[154.94vw] max-w-none";
+// The default scene: the Trivia King loop at the page root, behind the
+// header and the friends strip, exactly as the home screen has always
+// played it. A chosen mascot is a different picture with different needs
+// and is painted by MobileMascotScene instead.
+export function MobileSceneBackground({ defaultVideoSrc }: MobileSceneBackgroundProps) {
+  // The loop is 16:9, so it spans 227.2vw from -47.8vw as in the frame —
+  // far wider than the screen precisely so that a landscape clip is tall
+  // enough to fill the space above the nav. Bottom-anchored, fading out at
+  // the top into the page's wash.
   const style: React.CSSProperties = { bottom: NAV_H, ...SCENE_TOP_FADE };
 
   return (
@@ -119,47 +97,58 @@ export function MobileSceneBackground({
       transition={{ duration: 0.6 }}
       className={`md:hidden absolute inset-0 ${SCENE_Z} select-none pointer-events-none overflow-hidden`}
     >
-      {sceneUrl ? (
-        sceneVideoUrl ? (
-          // BackgroundVideo, not <video autoplay>: Low Power Mode paints a
-          // play glyph over a suspended autoplay video and CSS cannot hide
-          // it. The still renders until playback truly starts.
-          //
-          // `intrinsic` so the wrapper takes its height from the video rather
-          // than from the box — the same width-led sizing as the still.
-          <BackgroundVideo
-            src={sceneVideoUrl}
-            still={sceneUrl}
-            layout="intrinsic"
-            className={portraitBox}
-            style={style}
-          />
-        ) : (
-          <img src={sceneUrl} alt="" draggable={false} className={portraitBox} style={style} />
-        )
-      ) : (
-        // The default scene is the Trivia King idle loop, not a still of it.
-        // The full-bleed rewrite dropped the video and rendered the home-scene
-        // artwork on its own, so the character simply stopped moving;
-        // `heroScene` is the exported frame that holds until playback starts.
+      {/* The default scene is the Trivia King idle loop, not a still of it.
+          The full-bleed rewrite dropped the video and rendered the home-scene
+          artwork on its own, so the character simply stopped moving;
+          `heroScene` is the exported frame that holds until playback starts. */}
+      <div className="absolute left-[-47.8vw] w-[227.2vw] aspect-video" style={style}>
+        <BackgroundVideo
+          src={defaultVideoSrc}
+          still={heroScene}
+          className="absolute inset-0 size-full"
+        />
+        {/* The loop's own foot, dissolved into the page so the clip does not
+            end on a visible edge above the nav. */}
         <div
-          className="absolute left-[-47.8vw] w-[227.2vw] aspect-video"
-          style={style}
-        >
-          <BackgroundVideo
-            src={defaultVideoSrc}
-            still={heroScene}
-            className="absolute inset-0 size-full"
-          />
-          {/* The loop's own foot, dissolved into the page so the clip does not
-              end on a visible edge above the nav. */}
-          <div
-            aria-hidden
-            className="absolute inset-0"
-            style={{ background: "linear-gradient(to bottom, rgba(246,222,255,0) 55.7%, #f6deff 88.4%)" }}
-          />
-        </div>
-      )}
+          aria-hidden
+          className="absolute inset-0"
+          style={{ background: "linear-gradient(to bottom, rgba(246,222,255,0) 55.7%, #f6deff 88.4%)" }}
+        />
+      </div>
+      <div aria-hidden className="absolute inset-0" style={{ backgroundImage: SCENE_WASH }} />
+    </motion.div>
+  );
+}
+
+interface MobileMascotSceneProps {
+  /** The chosen mascot's 9:16 scene. */
+  sceneUrl: string;
+}
+
+// The chosen mascot as the phone's wallpaper: the whole 9:16 frame, covering
+// the page behind the header, the friends strip and the profile card, with
+// the same white wash over the top that the King loop wears so the chrome
+// stays readable on it. A phone taller than 9:16 loses a sliver off each
+// side; the character sits in the middle of the frame and keeps.
+//
+// Two framings came before this and were both wrong: bled to 106vw and
+// nav-anchored, the head went under the friends strip; fitted whole into
+// the band above the card, it read as a pasted card. The art was made for
+// the screen — it takes the screen.
+export function MobileMascotScene({ sceneUrl }: MobileMascotSceneProps) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      className={`md:hidden absolute inset-0 ${SCENE_Z} select-none pointer-events-none overflow-hidden`}
+    >
+      <img
+        src={sceneUrl}
+        alt=""
+        draggable={false}
+        className="absolute inset-0 size-full object-cover object-center"
+      />
       <div aria-hidden className="absolute inset-0" style={{ backgroundImage: SCENE_WASH }} />
     </motion.div>
   );
@@ -346,7 +335,11 @@ export function MobileProfileCard({
         style={{ width: designWidth, height: CARD_H, transform: `scale(${scale})` }}
       >
         <div
-          className="relative size-full overflow-hidden border-2 border-solid border-white bg-[rgba(252,247,255,0.8)]"
+          // Frosted AND nearly opaque: the mascot wallpaper runs under the
+          // card now. The blur turns whatever is behind it into a wash, and
+          // the fill keeps that wash pale enough that the name and the
+          // balances sit on white rather than on the character's hoodie.
+          className="relative size-full overflow-hidden border-2 border-solid border-white bg-[rgba(252,247,255,0.9)] backdrop-blur-2xl"
           style={{ borderRadius: "24px 24px 54px 24px", boxShadow: CARD_SHADOW }}
         >
           {/* Flag, name, rank. The name is bounded by the flame tab and

@@ -1,7 +1,7 @@
 import { BackgroundVideo } from "@/components/shared/BackgroundVideo";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, User, Play, Compass, Store, Trophy, Headphones, Settings, ChevronRight, LogOut, Pencil } from "lucide-react";
+import { ChevronLeft, User, Play, Compass, Store, Trophy, Headphones, Settings, ChevronRight, LogOut, Pencil, Code2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -13,6 +13,8 @@ import { DailyRewardsModal } from "./DailyRewardsModal";
 import { ChestRewardModal } from "./ChestRewardModal";
 import { calculateLevel } from "@/utils/levelCalculation";
 import { usePlayGuard } from "@/contexts/PlayGuardContext";
+import { useDeveloperMode } from "@/contexts/DeveloperModeContext";
+import { Switch } from "@/components/ui/switch";
 
 import { TeamMenuScreen } from "@/components/team/TeamMenuScreen";
 import { CategorySelectorModal } from "@/components/team/CategorySelectorModal";
@@ -36,6 +38,7 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
   const { t } = useLanguage();
   const { openAvatarModal } = useAvatarModal();
   const { guardPlay } = usePlayGuard();
+  const { isAdmin, enabled: developerModeOn, setEnabled: setDeveloperMode } = useDeveloperMode();
   const [isMissionsOpen, setIsMissionsOpen] = useState(false);
   const [isDailyRewardsOpen, setIsDailyRewardsOpen] = useState(false);
   const [isChestModalOpen, setIsChestModalOpen] = useState(false);
@@ -281,6 +284,32 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
                   </span>
                   <ChevronRight className="w-5 h-5 text-muted-foreground" />
                 </button>
+
+                {/* Developer mode — admins only. Reveals the modes that are
+                    built but not released (DEVELOPER_ONLY_GAME_TYPES); off,
+                    those modes do not exist as far as the app shows. A row
+                    with a switch rather than a page: it is flipped often
+                    while testing, and it is the only setting of its kind. */}
+                {user && isAdmin && (
+                  <label className="w-full flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-muted/50 cursor-pointer">
+                    <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center">
+                      <Code2 className="w-5 h-5 text-muted-foreground" />
+                    </div>
+                    <span className="flex-1 min-w-0 text-left">
+                      <span className="block text-base font-medium text-foreground">
+                        {t("menu.developerMode")}
+                      </span>
+                      <span className="block text-xs text-muted-foreground truncate">
+                        {t("menu.developerModeHint")}
+                      </span>
+                    </span>
+                    <Switch
+                      checked={developerModeOn}
+                      onCheckedChange={setDeveloperMode}
+                      aria-label={t("menu.developerMode")}
+                    />
+                  </label>
+                )}
 
                 {/* Logout Button */}
                 {user && (

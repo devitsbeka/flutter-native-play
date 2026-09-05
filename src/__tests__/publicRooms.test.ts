@@ -130,20 +130,19 @@ describe("a room is private unless somebody published it", () => {
 });
 
 describe("the arena is sized before it is opened", () => {
-  it("the host picks 2-2 through 5-5 from a dropdown above the button", () => {
+  it("the remembered size rides into the arena; the create screen has no footer to pick it in", () => {
     const create = read("src/components/team/CreateRoomPage.tsx");
     // 2-2 is the default — the smallest game that can start — and the last
     // pick is remembered per device (owner's ask).
     expect(create).toMatch(/localStorage\.getItem\("mt\.battleTeamSize"\)/);
     expect(create).toMatch(/return saved >= 2 && saved <= 5 \? saved : 2;/);
-    expect(create).toMatch(/localStorage\.setItem\("mt\.battleTeamSize", String\(n\)\)/);
-    // The size dropdown is the whole footer row now — the visibility switch
-    // that used to share it moved to the lobby. Still one short row above
-    // the button, so the team pickers never scroll out of reach.
-    expect(create).toMatch(/<div className="mb-3 flex items-stretch justify-end">/);
-    expect(create).toMatch(/onValueChange=\{\(v\) => setBattleTeamSize\(Number\(v\)\)\}/);
-    expect(create).toMatch(/\[2, 3, 4, 5\]\.map\(\(size\) =>/);
     expect(create).toMatch(/teamSize: gameChoice === "battle" \? battleTeamSize : undefined/);
+    // The footer — the Create button and the size dropdown beside it — is
+    // gone: a card starts its game on the tap, so the button was a second
+    // tap to one place and the dropdown never had a moment to be used.
+    expect(create).toMatch(/No footer, no Create button/);
+    expect(create).not.toMatch(/t\("extra\.createBtn"\)/);
+    expect(create).not.toMatch(/<SelectTrigger/);
   });
 
   it("the size caps the room and the seats the lobby draws", () => {

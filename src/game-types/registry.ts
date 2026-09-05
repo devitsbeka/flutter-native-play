@@ -33,6 +33,41 @@ export interface GameTypeDescriptor {
   launch?: (navigate: NavigateFunction) => void;
 }
 
+/**
+ * Modes that exist in the bundle but are not released: nobody sees them
+ * until an admin turns developer mode on (DeveloperModeContext), and they
+ * stay here until they are explicitly promoted to the public — at which
+ * point the key is removed from this set and the DB registry's is_live
+ * takes over as usual.
+ */
+export const DEVELOPER_ONLY_GAME_TYPES: ReadonlySet<GameTypeKey> = new Set<GameTypeKey>([
+  "team_battle",
+  "king",
+]);
+
+/**
+ * Applies developer mode to a resolved list of modes.
+ *
+ * With it OFF a developer-only mode is dropped outright — not a "coming
+ * soon" teaser, not a greyed card; it is not shown. With it ON the mode is
+ * live for that admin regardless of the DB registry, so it can be played
+ * end to end before anyone else can see it.
+ */
+export function applyDeveloperMode<T extends { key: GameTypeKey; status: GameTypeStatus }>(
+  types: readonly T[],
+  developerMode: boolean,
+): T[] {
+  const out: T[] = [];
+  for (const gt of types) {
+    if (!DEVELOPER_ONLY_GAME_TYPES.has(gt.key)) {
+      out.push(gt);
+      continue;
+    }
+    if (developerMode) out.push({ ...gt, status: "live" });
+  }
+  return out;
+}
+
 export const GAME_TYPES: GameTypeDescriptor[] = [
   {
     key: "classic",
