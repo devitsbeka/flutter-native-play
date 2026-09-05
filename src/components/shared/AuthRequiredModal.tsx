@@ -17,6 +17,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "@/lib/toast";
 import guestWelcomeVideo from "@/assets/guest-welcome-avatar.mp4";
+import { forgetAuthReturnTo, rememberAuthReturnTo } from "@/utils/authReturnTo";
 
 interface AuthRequiredModalProps {
   isOpen: boolean;
@@ -170,16 +171,25 @@ export function AuthRequiredModal({
 
   const handleGoogleSignIn = async () => {
     try {
+      // Timestamped, because this redirect comes back to the ORIGIN and not
+      // to /auth, which is the only screen that consumes the value. On the
+      // happy path nothing ever reads it; on a cancelled one nothing writes
+      // it back. Left untimed it simply stayed, and the next visit to /auth
+      // — most often from the "sign in to play" wall — obeyed a destination
+      // chosen weeks earlier. The Apple branch below already avoided this by
+      // storing nothing at all.
       if (returnToPath) {
-        localStorage.setItem('authReturnTo', returnToPath);
+        rememberAuthReturnTo(returnToPath);
       }
       const result = await oauth.auth.signInWithOAuth("google", {
         redirect_uri: window.location.origin,
       });
       if (result.error) {
+        forgetAuthReturnTo();
         toast.error(t("authModal.googleSignInFailed"));
       }
     } catch (err) {
+      forgetAuthReturnTo();
       toast.error(t("authModal.googleSignInFailed"));
     }
   };

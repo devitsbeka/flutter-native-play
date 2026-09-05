@@ -28,6 +28,11 @@ import {
   AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
 import { ReturningUserPicker } from "@/components/auth/ReturningUserPicker";
+import {
+  forgetAuthReturnTo,
+  rememberAuthReturnTo,
+  takeAuthReturnTo,
+} from "@/utils/authReturnTo";
 
 export default function Auth() {
   const [searchParams] = useSearchParams();
@@ -82,17 +87,20 @@ export default function Auth() {
   });
 
   useEffect(() => {
-    if (user) {
-      // Check for saved returnTo from OAuth flow first
-      const savedReturnTo = localStorage.getItem('authReturnTo');
-      if (savedReturnTo) {
-        localStorage.removeItem('authReturnTo');
-        navigate(savedReturnTo);
-      } else if (returnTo) {
-        navigate(decodeURIComponent(returnTo));
-      } else {
-        navigate("/");
-      }
+    if (!user) return;
+    // Read (and clear) the stored destination either way, so a value too old
+    // to obey cannot sit here waiting to hijack a later visit.
+    const saved = takeAuthReturnTo();
+    // An explicit ?returnTo is the fresher of the two: it came from the tap
+    // that opened this screen, while a stored one may be left over from an
+    // OAuth trip that never came back. The stored value still carries the
+    // OAuth flow, which returns to the origin with no query of its own.
+    if (returnTo) {
+      navigate(decodeURIComponent(returnTo));
+    } else if (saved) {
+      navigate(saved);
+    } else {
+      navigate("/");
     }
   }, [user, navigate, returnTo]);
 
@@ -179,7 +187,7 @@ export default function Auth() {
     try {
       // Store returnTo for OAuth redirect
       if (returnTo) {
-        localStorage.setItem('authReturnTo', returnTo);
+        rememberAuthReturnTo(decodeURIComponent(returnTo));
       }
       // signInWithApple picks the right flow itself: the native
       // ASAuthorization sheet on iOS (Apple expects its own dialog there,
@@ -187,8 +195,13 @@ export default function Auth() {
       // used to call the web redirect directly, bouncing iOS users to a
       // Safari sheet — the exact degraded Apple sign-in review flags.
       const { error } = await signInWithApple();
-      if (error && !/cancel/i.test(error.message ?? "")) {
-        notify.error(t("common.error"), { description: translateErrorMessage(error.message) });
+      if (error) {
+        // We are still here, so no redirect is coming back to consume the
+        // destination — drop it rather than leave it for a later visit.
+        forgetAuthReturnTo();
+        if (!/cancel/i.test(error.message ?? "")) {
+          notify.error(t("common.error"), { description: translateErrorMessage(error.message) });
+        }
       }
       // On success the auth listener navigates; user-cancel is silent.
     } catch (err) {
@@ -204,10 +217,11 @@ export default function Auth() {
     try {
       // Store returnTo for OAuth redirect (will be checked after OAuth callback)
       if (returnTo) {
-        localStorage.setItem('authReturnTo', returnTo);
+        rememberAuthReturnTo(decodeURIComponent(returnTo));
       }
       const { error } = await signInWithGoogle();
       if (error) {
+        forgetAuthReturnTo();
         notify.error(t("common.error"), { description: translateErrorMessage(error.message) });
       }
       // OAuth will redirect, so no need to navigate manually

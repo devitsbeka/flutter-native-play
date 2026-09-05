@@ -176,25 +176,66 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Set up auth state listener FIRST - keep it synchronous!
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
-        
-        // Don't set loading false here - let the profile effect handle it
-        if (!currentSession?.user) {
-          setProfile(null);
-          setLoading(false);
+        if (currentSession?.user) {
+          setSession(currentSession);
+          setUser(currentSession.user);
+          // Don't set loading false here - let the profile effect handle it
+          return;
         }
+
+        // A null session is not automatically "signed out".
+        //
+        // supabase-js delivers one on several events, and only two of them
+        // mean the account is gone: an explicit SIGNED_OUT, and an
+        // INITIAL_SESSION that found nothing in storage. The others are
+        // hiccups — a TOKEN_REFRESHED that came back empty because the
+        // device was asleep or the network dropped mid-refresh, which mobile
+        // Chrome produces routinely when it freezes a backgrounded tab.
+        //
+        // This used to clear the user and, worse, set loading false on ANY of
+        // them. Every consumer reads "no user, done loading" as signed out —
+        // so a refresh hiccup put the "Sign in to play with friends" wall
+        // over a session that was still perfectly good, and a reload fixed
+        // it because the stored token was never actually invalid.
+        //
+        // Ignoring the transient ones leaves the last good user in place. If
+        // the session really is gone, the next SIGNED_OUT says so.
+        if (event !== "SIGNED_OUT" && event !== "INITIAL_SESSION") {
+          // Logged, not silent: if the wall is ever reported again this names
+          // the event that produced it, which is the one thing that cannot be
+          // worked out after the fact.
+          console.warn("[AuthContext] empty session on", event, "— keeping the user");
+          return;
+        }
+
+        setSession(null);
+        setUser(null);
+        setProfile(null);
+        setLoading(false);
       }
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
-      setSession(existingSession);
-      setUser(existingSession?.user ?? null);
-      if (!existingSession?.user) {
+    supabase.auth
+      .getSession()
+      .then(({ data: { session: existingSession } }) => {
+        // Only ever ADDS a user here. The listener may already have delivered
+        // a good session, and this resolving with null afterwards would
+        // otherwise wipe it — the same wall, from the other direction.
+        if (existingSession?.user) {
+          setSession(existingSession);
+          setUser(existingSession.user);
+          return;
+        }
         setLoading(false);
-      }
-    });
+      })
+      .catch((err) => {
+        // Without this the rejection is unhandled and `loading` stays true
+        // forever: a spinner that never resolves, which is worse than the
+        // wall because there is nothing to tap.
+        console.warn("[AuthContext] getSession failed:", err);
+        setLoading(false);
+      });
 
     return () => subscription.unsubscribe();
   }, []);
