@@ -1,7 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { ArrowLeft, Bell, Calendar, Check } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { ArrowLeft, Bell, Calendar, Check, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -16,7 +16,7 @@ import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import SpotlightSearch from "@/components/search/SpotlightSearch";
 import { MyTriviaLiveLogo } from "@/components/shared/MyTriviaLiveLogo";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { SunsetButton } from "@/components/shared/SunsetButton";
 import coinImg from "@/assets/streak/coin.png";
 import flameImg from "@/assets/streak/flame.png";
 import chestImg from "@/assets/streak/chest.png";
@@ -54,6 +54,70 @@ const CHIP_GLOSS = "pointer-events-none absolute inset-0 rounded-[inherit] shado
 
 const DAY_MS = 86_400_000;
 
+/** The app's modal, as MissionInfoModal and LevelInfoModal draw it. */
+function StreakSheet({
+  open,
+  onClose,
+  title,
+  children,
+}: {
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  children: ReactNode;
+}) {
+  const { t } = useLanguage();
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
+  return (
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 pt-[calc(1rem_+_var(--safe-top))] pb-[calc(1rem_+_var(--safe-bottom))] backdrop-blur-[2px]"
+          onClick={onClose}
+        >
+          <motion.div
+            initial={{ opacity: 0, y: 24, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 24, scale: 0.96 }}
+            transition={{ type: "spring", stiffness: 380, damping: 32 }}
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-label={title}
+            className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-[24px] bg-white p-5"
+            style={{ boxShadow: "0 8px 0 #E8E4EC, 0 12px 32px rgba(0,0,0,0.18)" }}
+          >
+            <div className="sticky top-0 z-10 h-0">
+              <button
+                type="button"
+                onClick={onClose}
+                className="absolute right-0 top-0 flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 transition-colors hover:bg-gray-200"
+                style={{ boxShadow: "0 2px 0 #E5E7EB" }}
+                aria-label={t("common.close")}
+              >
+                <X className="h-4 w-4 text-gray-600" />
+              </button>
+            </div>
+            <h2 className="px-11 text-center font-display text-2xl font-bold text-[#6D28D9]">{title}</h2>
+            {children}
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
 type DaySlot = {
   /** The day key mission rows are stored under (a UTC date). */
   key: string;
@@ -88,6 +152,8 @@ export default function Streak() {
   const day = useDailyMissionsFor(selected);
   /** The row opened for its full text. */
   const [detail, setDetail] = useState<DayRow | null>(null);
+  /** The milestones, behind the chest tile. */
+  const [rewardsOpen, setRewardsOpen] = useState(false);
 
   // The week (1069:345): today sits in the fourth slot with three days
   // either side. A day behind today is kept while the recorded streak
@@ -245,7 +311,8 @@ export default function Streak() {
             ))}
           </section>
 
-          {/* The week (1069:336): one tappable tile per day. */}
+          {/* The week (1069:336): one tappable tile per day, and the chest
+              on the end that holds the streak's rewards. */}
           <section className="mt-[29px] px-4" aria-label={t("extra.streakKeepRule")}>
             <div className="flex items-center gap-[6px]">
               <Calendar className="h-4 w-4 text-[#6b7280]" strokeWidth={1.33} />
@@ -270,8 +337,8 @@ export default function Streak() {
                     key={slot.key}
                     type="button"
                     aria-label={isChest ? t("extra.streakWeekChest") : formatDayWithWeekday(slot.date, language, { utc: true })}
-                    aria-pressed={isSelected}
-                    onClick={() => setSelected(slot.key)}
+                    aria-pressed={isChest ? undefined : isSelected}
+                    onClick={() => (isChest ? setRewardsOpen(true) : setSelected(slot.key))}
                     className={cn(
                       "relative flex h-full min-w-0 flex-1 flex-col items-center rounded-[16px] py-2 transition-shadow",
                       slot.state === "today"
@@ -382,115 +449,107 @@ export default function Streak() {
             </div>
           </section>
 
-          {/* The milestones (List Item, 1069:150): coins, once each. */}
-          <section className="mt-[29px] px-[27px] pb-6">
-            <h2 className="mb-[10px] font-[Nunito] text-[16px] font-bold leading-[22px] tracking-[-0.16px] text-[#402666]">
-              {t("extra.streakMilestonesTitle")}
-            </h2>
-            <div className="flex flex-col gap-[10px]">
-              {milestones.map((m) => {
-                const reached = currentStreak >= m.days;
-                const paid = claimed.includes(m.days);
-                return (
-                  <div key={m.days} className={cn(ROW, CARD_SHADOW)}>
-                    <span className={cn(LABEL, !reached && "opacity-50")}>
-                      {t("extra.daysLabel", { count: m.days })}
-                    </span>
-
-                    {reached ? (
-                      <button
-                        type="button"
-                        disabled={paid || claiming !== null}
-                        onClick={() => void onClaim(m.days)}
-                        aria-label={`${t("extra.open")} — ${t("extra.streakCoinsReward", { count: m.coins })}`}
-                        className={cn(
-                          REWARD_BUTTON,
-                          "absolute right-[15px] flex min-w-[84px] items-center gap-[3px] pl-[7px] pr-[10px] disabled:cursor-default",
-                          paid && "opacity-70",
-                        )}
-                      >
-                        <img
-                          alt=""
-                          src={moneyBagImg}
-                          className={cn("size-[32px] shrink-0 object-contain", paid && "mix-blend-luminosity")}
-                        />
-                        <span className={CHIP_TEXT}>{paid ? t("missions.claimed") : t("extra.open")}</span>
-                        <span aria-hidden className={CHIP_GLOSS} />
-                      </button>
-                    ) : (
-                      <span
-                        aria-label={t("extra.streakNotYet", { count: m.days - currentStreak })}
-                        className={cn(REWARD_BUTTON, "absolute right-[15px] flex w-[45px] items-center justify-center")}
-                      >
-                        <img alt="" src={lockImg} className="size-[32px] object-contain mix-blend-luminosity" />
-                        <span aria-hidden className={CHIP_GLOSS} />
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </section>
         </div>
       </div>
 
       {/* The full mission, for a row that was cut short — and the way to
           go and do it, when it is today's and still open. */}
-      <Dialog open={detail !== null} onOpenChange={(open) => !open && setDetail(null)}>
-        <DialogContent className="w-[calc(100%-48px)] max-w-[360px] rounded-[24px] border-2 border-[rgba(255,255,255,0.7)] bg-[#fbfaf8] p-6">
-          {detail && (
-            <div className="flex flex-col items-center text-center">
-              <img
-                alt=""
-                src={MISSION_ICONS[getMissionIcon(detail.missionId)]}
-                className={cn("size-[64px] object-contain", detail.completed && "mix-blend-luminosity opacity-60")}
-              />
-              <DialogTitle className="mt-3 font-[Nunito] text-[18px] font-bold leading-[24px] tracking-[-0.16px] text-[#402666]">
-                {detail.title}
-              </DialogTitle>
-              <p
-                className={cn(
-                  "mt-1 font-[Nunito] text-[15px] font-semibold leading-[22px] tracking-[-0.16px] text-[#0f1729]",
-                  detail.completed && "text-[#6b7280] line-through",
-                )}
-              >
-                {detail.description}
-              </p>
-              <div className="mt-4 flex items-center gap-3">
-                {detail.completed ? (
-                  <span className="flex items-center gap-1 font-[Nunito] text-[13px] font-bold text-[#6b7280]">
-                    <Check className="size-[16px]" strokeWidth={3} />
-                    {t("missions.completedLabel")}
-                  </span>
-                ) : (
-                  <>
-                    {detail.target > 1 && (
-                      <span className="font-[Nunito] text-[13px] font-bold text-[#6b7280]">
-                        {detail.progress}/{detail.target}
-                      </span>
-                    )}
-                    <span className="flex items-center gap-1 font-[Nunito] text-[13px] font-bold text-[#334155]">
-                      <img alt="" src={coinImg} className="size-[22px] object-contain" />+{detail.coins}
+      <StreakSheet open={detail !== null} onClose={() => setDetail(null)} title={detail?.title ?? ""}>
+        {detail && (
+          <div className="flex flex-col items-center text-center">
+            <img
+              alt=""
+              src={MISSION_ICONS[getMissionIcon(detail.missionId)]}
+              className={cn("mt-3 size-[72px] object-contain", detail.completed && "mix-blend-luminosity opacity-60")}
+            />
+            <p
+              className={cn(
+                "mt-3 px-2 text-[15px] font-semibold leading-[22px] text-[#402666]",
+                detail.completed && "text-slate-500 line-through",
+              )}
+            >
+              {detail.description}
+            </p>
+            <div className="mt-3 flex items-center gap-2">
+              {detail.completed ? (
+                <span className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-sm font-bold text-emerald-700">
+                  <Check className="size-4" strokeWidth={3} />
+                  {t("missions.completedLabel")}
+                </span>
+              ) : (
+                <>
+                  {detail.target > 1 && (
+                    <span className="rounded-full bg-white px-3 py-1.5 text-sm font-bold text-[#402666] shadow-sm">
+                      {detail.progress}/{detail.target}
                     </span>
-                  </>
-                )}
-              </div>
-              {!!user && selectedSlot.state === "today" && !detail.completed && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setDetail(null);
-                    openMission(detail.missionId);
-                  }}
-                  className="mt-5 h-[44px] w-full rounded-[14px] bg-[#402666] font-[Nunito] text-[15px] font-bold text-white active:scale-[0.98]"
-                >
-                  {t("missions.startBtn")}
-                </button>
+                  )}
+                  <span className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-sm font-bold text-[#402666] shadow-sm">
+                    <img alt="" src={coinImg} className="size-[18px] object-contain" />+{detail.coins}
+                  </span>
+                </>
               )}
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
+            {!!user && selectedSlot.state === "today" && !detail.completed && (
+              <SunsetButton
+                className="mt-5 w-full"
+                onClick={() => {
+                  setDetail(null);
+                  openMission(detail.missionId);
+                }}
+              >
+                {t("missions.startBtn")}
+              </SunsetButton>
+            )}
+          </div>
+        )}
+      </StreakSheet>
+
+      {/* The streak's rewards (List Item, 1069:150): coins, once each. */}
+      <StreakSheet open={rewardsOpen} onClose={() => setRewardsOpen(false)} title={t("extra.streakMilestonesTitle")}>
+        <div className="mt-4 flex flex-col gap-[10px]">
+          {milestones.map((m) => {
+            const reached = currentStreak >= m.days;
+            const paid = claimed.includes(m.days);
+            return (
+              <div key={m.days} className={cn(ROW, "border-[#efe8f6] bg-[#fbf8ff]")}>
+                <span className={cn(LABEL, "flex-1", !reached && "opacity-50")}>
+                  {t("extra.daysLabel", { count: m.days })}
+                </span>
+
+                {reached ? (
+                  <button
+                    type="button"
+                    disabled={paid || claiming !== null}
+                    onClick={() => void onClaim(m.days)}
+                    aria-label={`${t("extra.open")} — ${t("extra.streakCoinsReward", { count: m.coins })}`}
+                    className={cn(
+                      REWARD_BUTTON,
+                      "flex min-w-[84px] shrink-0 items-center gap-[3px] pl-[7px] pr-[10px] disabled:cursor-default",
+                      paid && "opacity-70",
+                    )}
+                  >
+                    <img
+                      alt=""
+                      src={moneyBagImg}
+                      className={cn("size-[32px] shrink-0 object-contain", paid && "mix-blend-luminosity")}
+                    />
+                    <span className={CHIP_TEXT}>{paid ? t("missions.claimed") : t("extra.open")}</span>
+                    <span aria-hidden className={CHIP_GLOSS} />
+                  </button>
+                ) : (
+                  <span
+                    aria-label={t("extra.streakNotYet", { count: m.days - currentStreak })}
+                    className={cn(REWARD_BUTTON, "flex w-[45px] shrink-0 items-center justify-center")}
+                  >
+                    <img alt="" src={lockImg} className="size-[32px] object-contain mix-blend-luminosity" />
+                    <span aria-hidden className={CHIP_GLOSS} />
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </StreakSheet>
     </div>
   );
 }
