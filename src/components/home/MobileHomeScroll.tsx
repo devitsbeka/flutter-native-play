@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 import { FriendsStoriesBar } from "@/components/team/FriendsStoriesBar";
-import { MobileProfileCard } from "@/components/home/MobileHome";
+import { MobileProfileCard, NAV_CHROME } from "@/components/home/MobileHome";
 import { MobileHomeFeed } from "@/components/home/MobileHomeFeed";
 
 /**
@@ -105,8 +105,21 @@ export function MobileHomeScroll({
         {/* ── Feed: light, chunky rails revealed on scroll ──────────────────
             `min-h-full` — at least one scroller viewport — so the hero can
             scroll fully off (the feed has to be at least a screen tall for
-            that) and the feed lands as solid ground rather than trailing off. */}
-        <div className="relative z-10 min-h-full rounded-t-[28px] bg-[#faf6ff] pb-[calc(104px_+_var(--safe-bottom))] shadow-[0_-10px_28px_rgba(60,30,90,0.14)]">
+            that) and the feed lands as solid ground rather than trailing off.
+
+            Pulled up by NAV_CHROME: the profile card anchors above the nav,
+            so the hero keeps a nav-height strip below the card. At rest that
+            strip is under the nav; scrolled, it rose into view as a dead band
+            between the card and the feed. Starting the feed exactly at the
+            nav's top edge hides its lip under the nav at rest and closes the
+            band on scroll (z-10 over the scene's z-[4]; the card's z-20 stays
+            above both). The bottom clearance reaches past the back-to-top
+            chevron, which sits 36px above the nav on top of the play button
+            — the reel's dots and Purchase button used to end up behind it. */}
+        <div
+          className="relative z-10 min-h-full rounded-t-[28px] bg-[#faf6ff] shadow-[0_-10px_28px_rgba(60,30,90,0.14)]"
+          style={{ marginTop: `calc(-1 * (${NAV_CHROME}))`, paddingBottom: `calc(${NAV_CHROME} + 92px)` }}
+        >
           <div className="flex justify-center pt-2">
             <span className="h-[5px] w-[44px] rounded-full bg-[rgba(90,60,130,0.22)]" />
           </div>

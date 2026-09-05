@@ -244,7 +244,10 @@ const CARD_INSET = 24;
 // The bottom nav's real height: 88px of chrome (20px of padding around 48px
 // items) plus the padding it adds for the home indicator. The card floats
 // 53px clear of it, as in the frame (nav at 854, card bottom at 801).
-const NAV_CHROME = "calc(88px + max(0.25rem, var(--safe-bottom) / 2))";
+// Exported: the scroll-reveal home's feed pulls itself up over exactly this
+// strip and clears the nav by it, so the card and the feed cannot disagree
+// about where the nav is.
+export const NAV_CHROME = "calc(88px + max(0.25rem, var(--safe-bottom) / 2))";
 const CARD_GAP_ABOVE_NAV = 53;
 
 // Reward tabs — nodes 991:1027 (purse) and 994:5637 (flame). The flame tab
