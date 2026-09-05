@@ -437,8 +437,18 @@ function AirbnbCategoryCardComponent({
 
           {/* Name Section */}
           <div className="px-5 pb-3" style={{ marginTop: '-1px' }}>
+            {/* Two lines on the compact card, not one.
+                A single clamped line is what forced the home rail's cards
+                wide enough to fit "მსოფლიო გეოგრაფია" — Georgian category
+                names run long, and at one line the only way to show them was
+                more width, which cost the rail its third card. Wrapping buys
+                the same room vertically. The min-height reserves the second
+                line whether or not it is used, so a rail of one- and
+                two-line names still has one baseline. */}
             <h3
-              className="font-bold tracking-wider line-clamp-1 text-left"
+              className={`font-bold tracking-wider text-left ${
+                isFull ? "line-clamp-1" : "line-clamp-2 min-h-[2.2em]"
+              }`}
               style={{
                 fontFamily: "'Google Sans', sans-serif",
                 fontSize: isFull ? '1rem' : '0.9rem',

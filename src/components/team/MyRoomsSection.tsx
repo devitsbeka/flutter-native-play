@@ -41,6 +41,7 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 import { useLocalizedCategoryName } from "@/utils/categoryDisplayName";
+import { StartHereCard } from "@/components/home/StartHereCard";
 
 interface MyRoomsSectionProps {
   hideTV?: boolean;
@@ -308,7 +309,20 @@ export function MyRoomsSection({
       <TVMirrorModal open={showTVModal} onOpenChange={setShowTVModal} />
 
       {/* Rooms List */}
-      {rooms.length === 0 ? (
+      {rooms.length === 0 && homeRail && !searching ? (
+        // On the home rail an empty state has to stay a CARD. The panel
+        // below is full width and centred, which in a row of horizontal
+        // cards reads as something having gone wrong rather than as an
+        // invitation — and the rail loses its shape entirely.
+        <div className="flex gap-3 overflow-x-auto px-4 pb-4 scrollbar-hide">
+          <StartHereCard
+            variant="room"
+            title={t("extra.railFirstRoom")}
+            desc={t("extra.railFirstRoomDesc")}
+            onPress={() => onCreateRoom?.()}
+          />
+        </div>
+      ) : rooms.length === 0 ? (
         showOnboardingCarousel ? (
           <motion.div
             initial={{ opacity: 0 }}

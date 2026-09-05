@@ -23,6 +23,7 @@ import { useCategories } from "@/hooks/useCategories";
 import { useVipStatus } from "@/hooks/useVipStatus";
 import { AirbnbCategoryCard } from "@/components/discover/AirbnbCategoryCard";
 import { ProBannerReel } from "@/components/shop/MobileProCarousel";
+import { StartHereCard } from "@/components/home/StartHereCard";
 
 /**
  * The feature rails revealed BELOW the home hero when the player scrolls
@@ -268,7 +269,12 @@ export function MobileHomeFeed() {
           />
           <Rail>
             {railCategories.map((cat) => (
-              <div key={cat.id} className="w-[max(212px,calc((100vw_-_56px)/1.9))] shrink-0 snap-start">
+              // Two cards and the edge of a third, so the rail reads as a
+              // rail rather than a pair. #543 widened these to 1.9 because
+              // Georgian names were truncating at one line — the card's
+              // title now wraps to two instead, which buys the same room
+              // back without the width.
+              <div key={cat.id} className="w-[max(164px,calc((100vw_-_56px)/2.35))] shrink-0 snap-start">
                 <AirbnbCategoryCard
                   id={cat.id}
                   categoryId={cat.category_id || cat.id}
@@ -288,15 +294,25 @@ export function MobileHomeFeed() {
         </section>
       )}
 
-      {/* ── My Trivias (newest first, from the left) ──────────────────── */}
-      {trivias.length > 0 && (
-        <section>
+      {/* ── My Trivias (newest first, from the left) ────────────────────
+          Shown even when there are none. Hiding the whole section meant a
+          player who had never made one had no heading for it and no way in
+          — the feature was invisible to exactly the people who had not found
+          it yet. */}
+      <section>
           <RailHeader
             title={t("extra.railMyTrivias")}
             desc={t("extra.railMyTriviasDesc")}
             action={{ label: t("extra.allTriviasBtn"), onPress: () => navigate("/team") }}
           />
           <Rail>
+            {trivias.length === 0 && (
+              <StartHereCard
+                variant="trivia"
+                title={t("extra.railFirstTrivia")}
+                onPress={() => navigate("/team", { state: { openTrivia: true } })}
+              />
+            )}
             {trivias.map((tr) => (
               <button
                 key={tr.id}
@@ -318,8 +334,7 @@ export function MobileHomeFeed() {
               </button>
             ))}
           </Rail>
-        </section>
-      )}
+      </section>
 
       {/* ── Pro (solo + friends) ──────────────────────────────────────── */}
       <section>
