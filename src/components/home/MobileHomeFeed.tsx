@@ -1,3 +1,4 @@
+import { useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronRight } from "lucide-react";
@@ -7,6 +8,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { MyRoomsSection } from "@/components/team/MyRoomsSection";
 import { useDeveloperMode } from "@/contexts/DeveloperModeContext";
+import { POPULAR_IMAGE_CATEGORY_IDS } from "@/config/popularImageCategories";
 import type { GameChoice } from "@/components/team/CreateRoomPage";
 
 import playersIcon from "@/assets/play-chooser/players.svg";
@@ -35,6 +37,57 @@ import { ProBannerReel } from "@/components/shop/MobileProCarousel";
 
 // The reel marks bought deals; the home doesn't buy from the rail itself.
 const EMPTY_PURCHASES: Set<string> = new Set();
+
+const PICTURE_GUESS = POPULAR_IMAGE_CATEGORY_IDS as readonly string[];
+
+/** mulberry32 — a tiny seeded PRNG, so one seed always deals one order. */
+function seededRandom(seed: number) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/**
+ * Deal `count` categories, mixed. The catalogue leads with the six
+ * picture-guess categories, so "the first twelve" was a wall of "Guess the…"
+ * cards. Shuffle on the seed, then deal round-robin across groups — the
+ * picture-guess six as one group, everything else by type — so no two alike
+ * sit side by side when it can be helped.
+ */
+function dealMixed<T extends { id: string; category_id?: string; type?: string }>(
+  list: T[],
+  seed: number,
+  count: number,
+): T[] {
+  const rand = seededRandom(seed);
+  const shuffled = [...list];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  const groups = new Map<string, T[]>();
+  for (const c of shuffled) {
+    const key = PICTURE_GUESS.includes(c.category_id ?? c.id) ? "guess" : (c.type ?? "other");
+    let q = groups.get(key);
+    if (!q) groups.set(key, (q = []));
+    q.push(c);
+  }
+  const queues = [...groups.values()];
+  const out: T[] = [];
+  while (out.length < count && queues.some((q) => q.length > 0)) {
+    for (const q of queues) {
+      if (out.length >= count) break;
+      const next = q.shift();
+      if (next) out.push(next);
+    }
+  }
+  return out;
+}
 
 interface Trivia {
   id: string;
@@ -112,10 +165,11 @@ export function MobileHomeFeed() {
   const { categories } = useCategories();
   const { isVip } = useVipStatus();
 
-  // The first dozen categories as a rail — the app's richest, always-present
-  // "what to play" content, and what keeps the feed taller than a screen so
-  // it fills rather than trailing off into an empty band.
-  const railCategories = categories.slice(0, 12);
+  // A dozen categories, mixed, dealt fresh on every visit: the seed is fixed
+  // for this mount (random per refresh, stable while you browse — the cards
+  // must not reshuffle under a finger when the list re-renders).
+  const seed = useRef(Math.floor(Math.random() * 0x7fffffff));
+  const railCategories = useMemo(() => dealMixed(categories, seed.current, 12), [categories]);
 
   const { data: trivias = [] } = useQuery({
     queryKey: ["home-feed-my-trivias", user?.id],
@@ -144,6 +198,7 @@ export function MobileHomeFeed() {
         {/* MyRoomsSection brings its own full-width px-4 scroller. */}
         <MyRoomsSection
           vertical={false}
+          homeRail
           filter="all"
           onCreateRoom={() => navigate("/create-room")}
           onShowAllRooms={() => navigate("/team")}
@@ -213,7 +268,7 @@ export function MobileHomeFeed() {
           />
           <Rail>
             {railCategories.map((cat) => (
-              <div key={cat.id} className="w-[158px] shrink-0 snap-start">
+              <div key={cat.id} className="w-[max(168px,calc((100vw_-_56px)/2.5))] shrink-0 snap-start">
                 <AirbnbCategoryCard
                   id={cat.id}
                   categoryId={cat.category_id || cat.id}
