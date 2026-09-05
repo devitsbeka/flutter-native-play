@@ -49,7 +49,8 @@ const ROW =
 const REWARD_BUTTON =
   "relative h-[43px] rounded-[14.616px] border border-[#e8e0f5] shadow-[0px_2.94px_0px_0px_#d8d0e8,0px_4.409px_11.758px_0px_rgba(0,0,0,0.1)] bg-[linear-gradient(180deg,rgba(255,255,255,0.5)_0%,rgba(254,254,254,0.5)_100%)]";
 const LABEL = "font-[Nunito] text-[15px] font-semibold leading-[22.5px] tracking-[-0.16px] text-[#0f1729]";
-const CHIP_TEXT = "font-[Nunito] text-[12px] font-bold leading-[25.132px] tracking-[-0.36px] text-[#334155]";
+// Larger than the frame's 12px: at that size the amounts were unreadable on the phone.
+const CHIP_TEXT = "font-[Nunito] text-[15px] font-bold leading-[25.132px] tracking-[-0.36px] text-[#334155]";
 const CHIP_GLOSS = "pointer-events-none absolute inset-0 rounded-[inherit] shadow-[inset_0px_1.47px_0px_0px_white]";
 
 const DAY_MS = 86_400_000;
@@ -352,7 +353,7 @@ export default function Streak() {
                   >
                     <span
                       className={cn(
-                        "font-[Nunito] text-[10px] font-bold leading-[15px] tracking-[-0.16px]",
+                        "font-[Nunito] text-[13px] font-bold leading-[16px] tracking-[-0.16px]",
                         isChest ? "text-white" : "text-[#6b7280]",
                       )}
                     >
