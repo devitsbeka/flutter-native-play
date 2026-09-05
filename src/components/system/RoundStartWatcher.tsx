@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { isInterruptible } from "@/utils/roundStartRoutes";
+import { isFreshRoundStart } from "@/utils/roundCountdown";
 import { RoundCountdown } from "@/components/team/RoundCountdown";
 import { useRoundCountdown, useRoundStartHold } from "@/hooks/useRoundCountdown";
 
@@ -80,8 +81,16 @@ export function RoundStartWatcher() {
     let cancelled = false;
     let roomChannel: ReturnType<typeof supabase.channel> | null = null;
 
-    const onRoomUpdate = (room: RoomRow) => {
+    // `source` matters. A live UPDATE is a start happening right now. The
+    // read this does when it mounts is a guess about the past, and it needs
+    // to be treated as one: a room sitting in `playing` says nothing about
+    // WHEN it started, and rooms sit in `playing` indefinitely — an
+    // abandoned match, a game nobody settled. Without the freshness check
+    // below, every page load read that row and navigated into it, so
+    // refreshing the home page landed on the online-game page every time.
+    const onRoomUpdate = (room: RoomRow, source: "live" | "catchup") => {
       if (room.status !== "playing") return;
+      if (source === "catchup" && !isFreshRoundStart(room.started_at, Date.now())) return;
       // current_game_id changes per round, so it is what makes "this start,
       // once" different from "this room, ever".
       const key = `${room.id}:${room.current_game_id ?? ""}`;
@@ -145,14 +154,16 @@ export function RoundStartWatcher() {
 
       // A round that started while this was being resolved still counts —
       // the player may have been mid-navigation when the host pressed start.
-      onRoomUpdate(room);
+      // "While this was being resolved", though, not "at some point": the
+      // catch-up path only chases a start that is still fresh.
+      onRoomUpdate(room, "catchup");
 
       roomChannel = supabase
         .channel(`round-start:${room.id}`)
         .on(
           "postgres_changes",
           { event: "UPDATE", schema: "public", table: "game_rooms", filter: `id=eq.${room.id}` },
-          (payload) => onRoomUpdate(payload.new as RoomRow),
+          (payload) => onRoomUpdate(payload.new as RoomRow, "live"),
         )
         .subscribe();
     };

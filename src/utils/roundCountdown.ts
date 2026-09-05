@@ -80,3 +80,46 @@ export function msUntilNextTick(
   const elapsed = Math.max(0, now - start);
   return 1000 - (elapsed % 1000);
 }
+
+/**
+ * How recently a round must have started for a page that is only NOW loading
+ * to chase it.
+ *
+ * The watcher has two ways of hearing about a start: a live UPDATE on the
+ * room, which is by definition happening right now, and a one-off read when
+ * the component mounts. That read exists for a narrow race — the host presses
+ * start while the player is mid-navigation, so no subscription is listening
+ * yet — and it was written with no time bound at all: any room sitting in
+ * `playing` matched it.
+ *
+ * A room can sit in `playing` indefinitely. An abandoned match, a game nobody
+ * settled, a lobby left open a fortnight ago — all of them still say
+ * "playing". So every single page load, on every page, read that row and
+ * navigated the player into it. Refreshing the home page took you to the
+ * online-game page, forever, and no amount of leaving fixed it because
+ * leaving is not what clears the row.
+ *
+ * Fifteen seconds is the race this is meant to catch, plus room for a cold
+ * mount on a phone: the 3s count, its 5s grace, and margin. Past that there
+ * is nothing to join in progress — the count is long spent — so the player is
+ * left where they are, and the room is still one tap away.
+ */
+export const ROUND_START_CATCHUP_MS = 15000;
+
+/**
+ * Did this round start recently enough to pull a just-loaded page into it?
+ *
+ * A missing or unparseable `started_at` is false: "playing since who knows
+ * when" is exactly the state that must not navigate anybody.
+ */
+export function isFreshRoundStart(
+  startedAt: string | null | undefined,
+  now: number,
+): boolean {
+  if (!startedAt) return false;
+  const start = Date.parse(startedAt);
+  if (Number.isNaN(start)) return false;
+  // A clock behind the server's yields a negative age; that is still a start
+  // that just happened, so it counts.
+  return now - start < ROUND_START_CATCHUP_MS;
+}
