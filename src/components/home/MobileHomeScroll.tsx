@@ -79,8 +79,10 @@ export function MobileHomeScroll({
         <section className="relative h-full overflow-hidden">
           {scene}
 
-          {/* Friends reel, riding the top of the hero as it always did. */}
-          <div className="relative z-20 px-4 lg:pl-[26px]">
+          {/* Friends reel, riding the top of the hero as it always did — padded
+              down by the floating header's measured height so it sits below
+              it rather than underneath it. */}
+          <div className="relative z-20 px-4 pt-[var(--home-header-h,64px)] lg:pl-[26px]">
             <FriendsStoriesBar onAddFriendClick={onAddFriend} />
           </div>
 

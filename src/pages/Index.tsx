@@ -720,6 +720,25 @@ export default function Index() {
   // feature rails, which brings its own blob background, mascot strip, friends
   // reel and profile identity — so the old absolute mobile layers stand down.
   const showHomeFeed = !!user && isMobileViewport;
+  // The scroll-reveal home floats the header over its scroller so the mascot
+  // scene runs up behind it, as it did on the old home. The hero pads its reel
+  // down by the header's measured height (a CSS var set on the column) so
+  // nothing sits underneath it.
+  const homeHeaderRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (!showHomeFeed) return;
+    const el = homeHeaderRef.current;
+    const col = el?.parentElement;
+    if (!el || !col) return;
+    const apply = () => col.style.setProperty("--home-header-h", `${el.offsetHeight}px`);
+    apply();
+    const ro = new ResizeObserver(apply);
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+      col.style.removeProperty("--home-header-h");
+    };
+  }, [showHomeFeed]);
   const sceneUrl = user && mascot ? mascot.scene : null;
   // Nothing is painted until the choice is known — a King that swaps to an
   // owl a moment later reads as a glitch, not a load.
@@ -977,6 +996,7 @@ export default function Index() {
         {/* Guests on phones get their header from MobileGuestHero (burger +
             search only, no wordmark — the wordmark is in the body there). */}
         <header
+          ref={homeHeaderRef}
           // The greeting, the friends strip below it and the scene's widget
           // stack are one column on lg+, so they share one left inset. That
           // inset is 26px from lg, which is where the search and bell glyphs
@@ -986,9 +1006,18 @@ export default function Index() {
           // buttons' 16px of padding left this column looking tighter than
           // the icons opposite it. Matching the glyphs instead makes the two
           // sides read as equal.
-          className={`relative z-20 px-4 py-3 md:pt-4 lg:pl-[26px] border-b border-border/30 lg:border-b-0 ${
-            !user ? "hidden md:block" : ""
-          }`}
+          className={
+            showHomeFeed
+              ? // Scroll-reveal phone home: the header floats over the
+                // scroller so the scene runs up behind it (as on the old
+                // home), lightly frosted so the feed reads cleanly as it
+                // passes underneath. No border — that line was the seam
+                // between a flat header band and the content below it.
+                "absolute inset-x-0 top-0 z-30 px-4 py-3 lg:pl-[26px] bg-[rgba(250,246,255,0.7)] backdrop-blur-xl"
+              : `relative z-20 px-4 py-3 md:pt-4 lg:pl-[26px] border-b border-border/30 lg:border-b-0 ${
+                  !user ? "hidden md:block" : ""
+                }`
+          }
         >
           <div className="flex items-center justify-between gap-3 md:min-h-12">
             {/* Left side: Burger menu (mobile only) - Hidden for guests.
