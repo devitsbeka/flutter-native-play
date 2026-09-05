@@ -33,7 +33,7 @@ import { SceneHero } from "@/components/home/SceneHero";
 import { SceneSidebar } from "@/components/home/SceneSidebar";
 import { DesktopGuestLanding, DesktopGuestSceneBackground } from "@/components/home/DesktopGuestLanding";
 import { MobileSceneBackground, MobileMascotScene, MobileProfileCard, MobileGuestHero } from "@/components/home/MobileHome";
-import { MobileHomeFeed } from "@/components/home/MobileHomeFeed";
+import { MobileHomeScroll } from "@/components/home/MobileHomeScroll";
 import { useHomeMascot } from "@/hooks/useHomeMascot";
 import { useMyLeaderboardRank, defaultScopeFor } from "@/hooks/useMyLeaderboardRank";
 import { DesktopActionCards } from "@/components/home/DesktopActionCards";
@@ -1132,15 +1132,29 @@ export default function Index() {
           />
         )}
 
-        {/* The scrollable phone home: its own mascot strip, friends reel and
-            feature rails over the blob wash. Fills the space under the header
-            and owns its own scroller (CLAUDE.md rule 4b). */}
+        {/* The scroll-reveal phone home: the old home is the hero (mascot
+            scene, friends reel, profile card), and scrolling lifts it away to
+            reveal the feature rails, with a compact identity header fading in.
+            It owns its own scroller (CLAUDE.md rule 4b) and renders the scene,
+            reel and profile card itself — the standalone copies below stand
+            down for the phone (see the !showHomeFeed gates). */}
         {showHomeFeed && (
-          <MobileHomeFeed
+          <MobileHomeScroll
+            sceneUrl={sceneUrl}
+            showDefaultScene={showDefaultScene}
+            defaultSceneVideo={DEFAULT_SCENE_VIDEO}
             nickname={profile?.nickname || t("game.guest")}
             avatarUrl={profile?.avatar_url ?? null}
+            countryCode={myCountry}
+            rank={myRank}
             coins={coins}
             gems={gems}
+            onNameClick={() => setShowChangeNameModal(true)}
+            onRankClick={() => navigate("/leaderboards")}
+            onCoinsClick={() => navigate("/power-ups?section=coins")}
+            onGemsClick={() => navigate("/power-ups?section=gems-lari")}
+            onGiftClick={() => setIsDailyRewardsOpen(true)}
+            onStreakClick={() => navigate("/streak")}
             onAvatar={() => openAvatarModal(() => {})}
             onShop={() => setIsGemShopOpen(true)}
             onAddFriend={() => setShowAddFriendModal(true)}
