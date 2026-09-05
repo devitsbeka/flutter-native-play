@@ -4,16 +4,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { anyBlockedText, containsBlockedText } from "@/utils/contentFilter";
-import { Loader2, ArrowLeft, Bell, X, RefreshCw, Play, Pencil, Gamepad2, Plus, Check, Globe, Lock } from "lucide-react";
+import { Loader2, ArrowLeft, Bell, X, RefreshCw, Pencil, Gamepad2, Plus, Check, Globe, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { generateRoomIdentity } from "@/utils/roomNameGenerator";
 import { roomVisibilityFields } from "@/utils/roomVisibility";
 import { localizeCategoryNames } from "@/utils/localizeCategories";
@@ -39,7 +31,6 @@ import { CreateCollectionModal } from "@/components/social/CreateCollectionModal
 import { RoomIconPickerModal } from "@/components/team/RoomIconPickerModal";
 import { MyTriviasPickerModal } from "@/components/team/MyTriviasPickerModal";
 import { GameStylePersonalTrivia } from "@/components/team/GameStylePersonalTrivia";
-import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -360,7 +351,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
    * device picked something else last time: the choice is remembered
    * per device (owner's ask), and a cleared store just means 2-2 again.
    */
-  const [battleTeamSize, setBattleTeamSizeState] = useState(() => {
+  const [battleTeamSize] = useState(() => {
     try {
       const saved = Number(localStorage.getItem("mt.battleTeamSize"));
       return saved >= 2 && saved <= 5 ? saved : 2;
@@ -368,14 +359,6 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       return 2;
     }
   });
-  const setBattleTeamSize = (n: number) => {
-    setBattleTeamSizeState(n);
-    try {
-      localStorage.setItem("mt.battleTeamSize", String(n));
-    } catch {
-      // A per-device nicety only — nothing to do when storage is blocked.
-    }
-  };
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState("");
   
@@ -1859,57 +1842,11 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         </div>
       </div>
 
-      {/* Footer - Normal Button */}
-      <div className="border-t border-border/30 shrink-0">
-        <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full px-4 py-4">
-        {/* How many a side holds — 2-2 through 5-5.
-
-            The published-or-private switch used to share this row. It is
-            gone: the lobby asks the same question, on the screen where the
-            room actually exists and where the answer can still be changed,
-            and being asked it twice on the way in made the create screen
-            look like it wanted a decision it did not need yet. A room that
-            can publish now opens published, and the lobby is where that is
-            reconsidered. */}
-        {gameChoice === "battle" && (
-          <div className="mb-3 flex items-stretch justify-end">
-            <Select
-              value={String(battleTeamSize)}
-              onValueChange={(v) => setBattleTeamSize(Number(v))}
-            >
-              <SelectTrigger
-                aria-label={t("extra.playersPerTeam")}
-                className="w-[108px] shrink-0 h-auto rounded-2xl border-0 bg-muted px-3.5 py-2.5 text-[13px] font-bold tabular-nums"
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {[2, 3, 4, 5].map((size) => (
-                  <SelectItem key={size} value={String(size)} className="tabular-nums font-semibold">
-                    {size}-{size}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-
-        <ChunkyButton
-          onClick={handleCreate}
-          disabled={loading || isCreating || !createEnabled}
-          variant="primary"
-          size="lg"
-          className="w-full"
-        >
-          {isCreating || loading ? (
-            <Loader2 className="w-5 h-5 animate-spin mr-2" />
-          ) : (
-            <Play className="w-5 h-5 mr-2" />
-          )}
-          {gameChoice === "quick" ? t("lobby.startGame") : t("extra.createBtn")}
-        </ChunkyButton>
-        </div>
-      </div>
+      {/* No footer, no Create button. A card starts its game the moment it
+          is tapped (see startMode and the auto-start effect), so a button
+          that pressed Create for the same thing was a second tap to one
+          place — and, being disabled until a card was picked, it read as a
+          step the screen was waiting on. */}
 
         </>
       )}
