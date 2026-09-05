@@ -691,12 +691,20 @@ BEGIN
     (SELECT is_captain FROM public.room_participants WHERE room_id = v_room AND user_id = v_alice),
     true, 'a tie hands the armband to the earliest joiner');
 
-  -- Alice switches to herself: 2-0 and she keeps it outright.
+  -- Alice cannot hand it to herself (20261002100000). The sheet has never
+  -- offered your own row; now the server agrees, so a call made past the UI
+  -- is refused too.
   PERFORM pg_temp.as_user(v_alice);
-  PERFORM public.tb_vote_captain(v_room, v_alice);
+  PERFORM pg_temp.must_fail(
+    format('SELECT public.tb_vote_captain(%L, %L)', v_room, v_alice),
+    'nobody votes for themselves');
+  PERFORM pg_temp.must_equal(
+    (SELECT captain_vote FROM public.room_participants
+      WHERE room_id = v_room AND user_id = v_alice),
+    v_out, 'a refused self-vote leaves the vote already cast alone');
   PERFORM pg_temp.must_equal(
     (SELECT is_captain FROM public.room_participants WHERE room_id = v_room AND user_id = v_alice),
-    true, 'a changed vote re-tallies the team');
+    true, 'and the tie-break armband stays where it was');
 
   -- ── the pot is a flat 200 a head (20260930120000) ────────────────────────
 
@@ -803,29 +811,36 @@ BEGIN
   PERFORM pg_temp.must_equal(pg_temp.captain_count(room,'a'), 1::bigint, 'exactly one captain on A');
   PERFORM pg_temp.must_equal(pg_temp.captain_count(room,'b'), 0::bigint, 'and B is untouched by A''s vote');
 
-  RAISE NOTICE '--- plurality: two beats one';
+  RAISE NOTICE '--- a 1-1 tie holds with the earliest joiner';
   PERFORM pg_temp.as_user(a2);
-  PERFORM public.tb_vote_captain(room, a3);   -- A3: 1
-  PERFORM pg_temp.as_user(a3);
-  PERFORM public.tb_vote_captain(room, a3);   -- A3: 2 (self-vote reaches the server)
+  PERFORM public.tb_vote_captain(room, a3);   -- A2: 1 (a1), A3: 1 (a2)
+  PERFORM pg_temp.must_equal(pg_temp.captain_of(room,'a'), 'A2',
+    'level on votes, the earlier seat keeps the armband');
+
+  RAISE NOTICE '--- plurality: two beats one';
+  PERFORM pg_temp.as_user(a1);
+  PERFORM public.tb_vote_captain(room, a3);   -- A3: 2 (a1, a2), A2: 0
   PERFORM pg_temp.must_equal(pg_temp.captain_of(room,'a'), 'A3', 'two votes take the armband from one');
+  PERFORM pg_temp.must_equal(pg_temp.captain_count(room,'a'), 1::bigint, 'exactly one captain on A');
 
   RAISE NOTICE '--- changing your mind re-tallies';
-  PERFORM pg_temp.as_user(a3);
-  PERFORM public.tb_vote_captain(room, a2);   -- A3: 1 (a2), A2: 1 (a1) + 1 (a3) = 2
-  PERFORM pg_temp.must_equal(pg_temp.captain_of(room,'a'), 'A2', 'a changed vote moves the armband back');
+  PERFORM pg_temp.as_user(a2);
+  PERFORM public.tb_vote_captain(room, a1);   -- A1: 1 (a2), A3: 1 (a1) -> tie, A1 seated first
+  PERFORM pg_temp.must_equal(pg_temp.captain_of(room,'a'), 'A1', 'a changed vote moves the armband');
   PERFORM pg_temp.must_equal(pg_temp.captain_count(room,'a'), 1::bigint, 'still exactly one captain on A');
 
   RAISE NOTICE '--- the other bench elects independently';
   PERFORM pg_temp.as_user(b2);
   PERFORM public.tb_vote_captain(room, b3);
   PERFORM pg_temp.must_equal(pg_temp.captain_of(room,'b'), 'B3', 'B elects its own');
-  PERFORM pg_temp.must_equal(pg_temp.captain_of(room,'a'), 'A2', 'without disturbing A''s');
+  PERFORM pg_temp.must_equal(pg_temp.captain_of(room,'a'), 'A1', 'without disturbing A''s');
 
   RAISE NOTICE '--- what is refused';
   PERFORM pg_temp.as_user(a1);
   PERFORM pg_temp.must_fail(format('SELECT public.tb_vote_captain(%L,%L)', room, b1),
     'cannot vote for the other team');
+  PERFORM pg_temp.must_fail(format('SELECT public.tb_vote_captain(%L,%L)', room, a1),
+    'cannot vote for yourself');
   PERFORM pg_temp.as_user(b1);
   PERFORM pg_temp.must_fail(format('SELECT public.tb_vote_captain(%L,%L)', room, bot),
     'cannot make a bot captain');

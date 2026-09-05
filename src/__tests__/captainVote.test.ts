@@ -115,6 +115,41 @@ describe("being told", () => {
   });
 });
 
+describe("nobody nominates themselves", () => {
+  it("both lobbies grey out your own row", () => {
+    const king = read("src/pages/KingPage.tsx");
+    for (const [name, src] of [["arena", page], ["couch", king]] as const) {
+      expect(src, name).toMatch(/selectable: !p\.is_bot && p\.user_id !== user\?\.id,/);
+    }
+  });
+
+  it("and the server refuses it too, not just the sheet", () => {
+    // The rule was drawn in the UI from the start and never checked in
+    // tb_vote_captain, so a call made past the sheet was tallied like any
+    // other. Asserted against the migration because a later CREATE OR
+    // REPLACE that rebuilds the body from an older copy would silently
+    // drop it — which is exactly how request_room_join lost its block
+    // guard.
+    const sql = read("supabase/migrations/20261002100000_no_self_vote_captain.sql");
+    expect(sql).toMatch(/IF p_candidate = v_caller THEN/);
+    expect(sql).toMatch(/RAISE EXCEPTION 'You cannot vote for yourself';/);
+    // Still revoked from PUBLIC and anon after the replace (CLAUDE.md #3).
+    expect(sql).toMatch(
+      /REVOKE ALL ON FUNCTION public\.tb_vote_captain\(uuid, uuid\) FROM PUBLIC, anon;/,
+    );
+    expect(sql).toMatch(
+      /GRANT EXECUTE ON FUNCTION public\.tb_vote_captain\(uuid, uuid\) TO authenticated;/,
+    );
+  });
+
+  it("and both suites execute the refusal", () => {
+    expect(read("supabase/tests/10-team-battle.sql")).toMatch(/'cannot vote for yourself'/);
+    expect(read("supabase/tests/11-king.sql")).toMatch(
+      /'nobody nominates themselves for the couch''s armband'/,
+    );
+  });
+});
+
 describe("the window, run rather than read", () => {
   const t = 1_000_000;
 

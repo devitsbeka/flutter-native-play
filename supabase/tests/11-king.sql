@@ -565,9 +565,15 @@ BEGIN
   PERFORM pg_temp.must_fail(
     format('SELECT public.tb_vote_captain(%L, %L)', v_room, v_out),
     'the couch cannot elect someone who is not on it');
+  -- Nor for yourself (20261002100000) — the couch's sheet has never offered
+  -- your own row, and now neither does the server.
+  PERFORM pg_temp.must_fail(
+    format('SELECT public.tb_vote_captain(%L, %L)', v_room, v_mate),
+    'nobody nominates themselves for the couch''s armband');
 
   -- Two of three back the mate: the host loses the armband before the
   -- duel starts.
+  PERFORM pg_temp.as_user(v_host);
   PERFORM public.tb_vote_captain(v_room, v_mate);
   PERFORM pg_temp.as_user(v_third);
   PERFORM public.tb_vote_captain(v_room, v_mate);
