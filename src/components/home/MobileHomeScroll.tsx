@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { FriendsStoriesBar } from "@/components/team/FriendsStoriesBar";
 import { MobileHeroWidgets, MobileProfileCard, NAV_CHROME } from "@/components/home/MobileHome";
 import { MobileHomeFeed } from "@/components/home/MobileHomeFeed";
-import { WaveEdge } from "@/components/home/WaveEdge";
+import { useWaveMask } from "@/components/home/wave";
 
 /**
  * The phone home as a scroll-reveal (owner's ask).
@@ -69,6 +69,10 @@ export function MobileHomeScroll({
   onQuestClick,
   onAddFriend,
 }: MobileHomeScrollProps) {
+  // The panel's top edge rolls (Figma 1076:3281): a lip in the panel's own
+  // colour, its hills dealt fresh on every visit, rising 14px above the
+  // straight edge and overlapping it by two so the two are one surface.
+  const lip = useWaveMask({ top: 16, width: 500 });
   return (
     // The scroller is `absolute inset-0` of this positioned, flex-filled root
     // rather than `h-full`, so it takes a real pixel height from the root and
@@ -128,14 +132,14 @@ export function MobileHomeScroll({
             band on scroll (z-10 over the scene's z-[4]; the card's z-20 stays
             above both). The bottom clearance reaches past the back-to-top
             chevron, which sits 36px above the nav on top of the play button
-            — the reel's dots and Purchase button used to end up behind it. */}
+            — the reel's dots and Purchase button used to end up behind it.
+            No shadow above it: the frame's panel is flat, and a shadow cast
+            from the straight edge would show through the lip's troughs. */}
         <div
-          className="relative z-10 min-h-full rounded-t-[28px] bg-[#faf6ff] shadow-[0_-10px_28px_rgba(60,30,90,0.14)]"
+          className="relative z-10 min-h-full rounded-t-[28px] bg-[#faf6ff]"
           style={{ marginTop: `calc(-1 * (${NAV_CHROME}))`, paddingBottom: `calc(${NAV_CHROME} + 92px)` }}
         >
-          {/* The panel's top edge rolls (Figma 1076:3281): the frame's wave,
-              in the panel's own colour, rising 14px above the straight edge. */}
-          <WaveEdge shape="feed" color="#faf6ff" className="inset-x-0 top-[-14px] h-[16px]" />
+          <div aria-hidden className="absolute inset-x-0 top-[-14px] h-[18px] bg-[#faf6ff]" style={lip} />
           <div className="flex justify-center pt-2">
             <span className="h-[5px] w-[44px] rounded-full bg-[rgba(90,60,130,0.22)]" />
           </div>

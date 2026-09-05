@@ -11,7 +11,7 @@ import giftDaily from "@/assets/figma-home/gift-daily.png";
 import chestDaily from "@/assets/figma-home/chest-daily.png";
 import streakFire from "@/assets/figma-home/streak-fire.png";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
-import { WaveEdge } from "@/components/home/WaveEdge";
+import { useWaveMask } from "@/components/home/wave";
 import { BackgroundVideo } from "@/components/shared/BackgroundVideo";
 import heroScene from "@/assets/figma-landing/hero-scene.png";
 
@@ -216,8 +216,10 @@ const CARD_RIGHT = 19;
 // is scaled down uniformly instead of squeezed: every size, gap and radius
 // stays the frame's own, only smaller. Every current phone is wider.
 const CARD_MIN_W = 340;
-const PROFILE_CARD_SHADOW =
-  "0px 1.867px 7.469px 0px rgba(102,51,153,0.06), 0px 7.469px 22.407px 0px rgba(102,51,153,0.12)";
+// How far the card's hills reach past its lines (Figma 1076:3700 / 3697):
+// 11px above the top, 10px below the bottom.
+const CARD_WAVE_TOP = 11;
+const CARD_WAVE_BOTTOM = 10;
 
 // The bottom nav's real height: 88px of chrome (20px of padding around 48px
 // items) plus the padding it adds for the home indicator. The card floats
@@ -281,6 +283,10 @@ export function MobileProfileCard({
   onGemsClick,
 }: MobileProfileCardProps) {
   const { ref, scale, designWidth } = useCardScale();
+  // The card's edges roll (Figma 1076:3700 / 3697): the frosted glass itself
+  // is masked to a wave dealt fresh on every visit, with its hills reaching
+  // 11px above the top edge and 10px below the bottom.
+  const wave = useWaveMask({ top: CARD_WAVE_TOP + 5, bottom: CARD_WAVE_BOTTOM + 6, width: designWidth });
 
   return (
     <motion.div
@@ -300,19 +306,26 @@ export function MobileProfileCard({
         className="absolute bottom-0 left-0 origin-bottom-left"
         style={{ width: designWidth, height: CARD_H, transform: `scale(${scale})` }}
       >
-        {/* The card's top and bottom edges roll (Figma 1076:3700 / 3697):
-            the frame's 427px wave, 19px in from either end, its base 5px
-            inside the edge and its hills reaching 11px above the top and
-            10px below the bottom. */}
-        <WaveEdge shape="card" color="#F8F9FA" className="left-[19px] right-[18px] top-[-11px] z-10 h-[16px]" />
-        <WaveEdge shape="card" color="#F8F9FA" flip className="bottom-[-10px] left-[19px] right-[18px] z-10 h-[16px]" />
+        {/* The shadow, cast by the same wavy shape: a blurred copy of the
+            card's silhouette under it. A box-shadow would trace the straight
+            box, and a mask on the card would cut a shadow of its own away. */}
+        <div
+          aria-hidden
+          className="absolute left-0 right-0 translate-y-[7px] blur-[11px]"
+          style={{ top: -CARD_WAVE_TOP, bottom: -CARD_WAVE_BOTTOM }}
+        >
+          <div className="size-full rounded-[33.41px] bg-[rgba(102,51,153,0.16)]" style={wave} />
+        </div>
         <div
           // Frosted AND nearly opaque: the mascot wallpaper runs under the
           // card. The blur turns whatever is behind it into a wash, and the
           // fill keeps that wash pale enough that the name and the balances
-          // sit on white rather than on the character's hoodie.
-          className="relative size-full overflow-hidden rounded-[33.41px] border-[1.867px] border-solid border-white bg-[rgba(252,247,255,0.82)] backdrop-blur-[37px]"
-          style={{ boxShadow: PROFILE_CARD_SHADOW }}
+          // sit on white rather than on the character's hoodie. The box
+          // reaches past the card's lines by the hills' height, and the
+          // mask rolls its edges; everything inside is placed from the
+          // card's own top, CARD_WAVE_TOP further down.
+          className="absolute left-0 right-0 overflow-hidden rounded-[33.41px] border-[1.867px] border-solid border-white bg-[rgba(252,247,255,0.82)] backdrop-blur-[37px]"
+          style={{ top: -CARD_WAVE_TOP, bottom: -CARD_WAVE_BOTTOM, ...wave }}
         >
           {/* Avatar — node 1076:3548: a 52px disc, 2.5px gradient ring, 1.6px
               white ring, 44px picture, 14.6px in from the card's edge. */}
@@ -320,7 +333,7 @@ export function MobileProfileCard({
             type="button"
             onClick={onAvatarClick}
             aria-label={t("extra.changeScene")}
-            className="absolute left-[14.64px] top-[14px] size-[52.364px] rounded-full p-[2.455px]"
+            className="absolute left-[14.64px] top-[25px] size-[52.364px] rounded-full p-[2.455px]"
             style={{ background: AVATAR_RING }}
           >
             <span className="block size-full rounded-full bg-white p-[1.636px]">
@@ -343,12 +356,12 @@ export function MobileProfileCard({
           <button
             type="button"
             onClick={onNameClick}
-            className="absolute left-[77px] right-[196px] top-[17px] h-[44.814px] truncate text-left font-slackey text-[26px] capitalize leading-[44.814px] tracking-[-0.1494px] text-[#402666]"
+            className="absolute left-[77px] right-[196px] top-[28px] h-[44.814px] truncate text-left font-slackey text-[26px] capitalize leading-[44.814px] tracking-[-0.1494px] text-[#402666]"
           >
             {nickname}
           </button>
 
-          <div className="absolute right-[20px] top-[17px] flex gap-[6.162px]">
+          <div className="absolute right-[20px] top-[28px] flex gap-[6.162px]">
             <StatPill
               icon={coinChunky}
               value={formatCompactNumber(coins)}
