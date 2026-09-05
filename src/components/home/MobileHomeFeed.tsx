@@ -268,7 +268,7 @@ export function MobileHomeFeed() {
           />
           <Rail>
             {railCategories.map((cat) => (
-              <div key={cat.id} className="w-[max(168px,calc((100vw_-_56px)/2.5))] shrink-0 snap-start">
+              <div key={cat.id} className="w-[max(212px,calc((100vw_-_56px)/1.9))] shrink-0 snap-start">
                 <AirbnbCategoryCard
                   id={cat.id}
                   categoryId={cat.category_id || cat.id}
