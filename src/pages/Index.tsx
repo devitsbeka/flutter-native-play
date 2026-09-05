@@ -720,6 +720,9 @@ export default function Index() {
   // feature rails, which brings its own blob background, mascot strip, friends
   // reel and profile identity — so the old absolute mobile layers stand down.
   const showHomeFeed = !!user && isMobileViewport;
+  // The scroll-reveal home fades this page-level scene wrapper out as the hero
+  // scrolls away, so the scene keeps its full-bleed old-home geometry.
+  const homeSceneRef = useRef<HTMLDivElement>(null);
   const sceneUrl = user && mascot ? mascot.scene : null;
   // Nothing is painted until the choice is known — a King that swaps to an
   // owl a moment later reads as a glitch, not a load.
@@ -907,9 +910,21 @@ export default function Index() {
             King loop, framed the way the mobile design does: far wider than
             the screen and anchored just above the bottom nav. Guests get
             their own artwork inside MobileGuestHero. */}
+        {/* The old-home scene stays full-bleed behind the header (so it is
+            never cropped); the scroll-reveal home fades it out through this
+            wrapper's ref as the hero scrolls away. */}
         {user && isMobileViewport && !showHomeFeed && sceneUrl && <MobileMascotScene sceneUrl={sceneUrl} />}
         {user && isMobileViewport && !showHomeFeed && showDefaultScene && (
           <MobileSceneBackground defaultVideoSrc={DEFAULT_SCENE_VIDEO} />
+        )}
+        {showHomeFeed && (sceneUrl || showDefaultScene) && (
+          <div ref={homeSceneRef} className="md:hidden absolute inset-0 z-[4] will-change-[opacity]">
+            {sceneUrl ? (
+              <MobileMascotScene sceneUrl={sceneUrl} />
+            ) : (
+              <MobileSceneBackground defaultVideoSrc={DEFAULT_SCENE_VIDEO} />
+            )}
+          </div>
         )}
         {/* The mascot's scene (or the default Trivia King loop) as the
             full-bleed page background (xl+); the header, friends strip and
@@ -1140,9 +1155,7 @@ export default function Index() {
             down for the phone (see the !showHomeFeed gates). */}
         {showHomeFeed && (
           <MobileHomeScroll
-            sceneUrl={sceneUrl}
-            showDefaultScene={showDefaultScene}
-            defaultSceneVideo={DEFAULT_SCENE_VIDEO}
+            sceneFadeRef={homeSceneRef}
             nickname={profile?.nickname || t("game.guest")}
             avatarUrl={profile?.avatar_url ?? null}
             countryCode={myCountry}

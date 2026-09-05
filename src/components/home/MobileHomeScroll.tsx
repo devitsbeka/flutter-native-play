@@ -1,8 +1,7 @@
-import { useRef, useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { useRef, useState, type RefObject } from "react";
 
 import { FriendsStoriesBar } from "@/components/team/FriendsStoriesBar";
-import { MobileSceneBackground, MobileMascotScene, MobileProfileCard } from "@/components/home/MobileHome";
+import { MobileProfileCard } from "@/components/home/MobileHome";
 import { MobileHomeFeed } from "@/components/home/MobileHomeFeed";
 import { resolveAvatarUrl, fallbackAvatarFor } from "@/utils/avatarUtils";
 
@@ -12,24 +11,29 @@ import gemNew from "@/assets/figma-home/gem-new.png";
 /**
  * The phone home as a scroll-reveal (owner's ask).
  *
- * At rest it IS the old home: the mascot scene fills the screen, the friends
- * reel rides the top, the profile card sits above the nav — nothing moved.
+ * At rest it IS the old home: the mascot scene fills the screen (rendered at
+ * the page level so it is never cropped), the friends reel rides the top, the
+ * profile card sits above the nav — nothing moved.
  *
- * Scrolling lifts that hero out of view and reveals a light, chunky feed of
- * feature rails beneath it. Once the scene is gone a compact header — the
- * player's face, name and balances — fades in and stays, so the identity the
- * scene used to carry is still there while you browse.
+ * Scrolling fades the scene out and lifts the hero content away, revealing a
+ * light, chunky feed of feature rails whose panel peeks a little at rest as a
+ * cue. Once the scene is gone a compact header — the player's face, name and
+ * balances — fades in and stays, so the identity the scene used to carry is
+ * still there while you browse.
  *
- * It owns its own vertical scroller: nativeShell kills the webview's document
- * scroller on iOS (CLAUDE.md rule 4b), so the feed is a fixed-height
- * `overflow-y-auto` box, not content that merely grows.
+ * The scene lives in Index (behind the header) and is faded through
+ * `sceneFadeRef` so this scroller never has to reproduce its full-bleed
+ * geometry. It owns its own vertical scroller (CLAUDE.md rule 4b).
  */
 
+// Pixels of scroll over which the scene fades fully out.
+const SCENE_FADE_PX = 240;
+// Scroll past this and the compact identity header is shown.
+const HEADER_AT_PX = 72;
+
 export interface MobileHomeScrollProps {
-  // Scene
-  sceneUrl: string | null;
-  showDefaultScene: boolean;
-  defaultSceneVideo: string;
+  /** The page-level scene wrapper this scroller fades as the hero leaves. */
+  sceneFadeRef: RefObject<HTMLDivElement>;
   // Identity
   nickname: string;
   avatarUrl: string | null;
@@ -50,9 +54,7 @@ export interface MobileHomeScrollProps {
 }
 
 export function MobileHomeScroll({
-  sceneUrl,
-  showDefaultScene,
-  defaultSceneVideo,
+  sceneFadeRef,
   nickname,
   avatarUrl,
   countryCode,
@@ -69,9 +71,6 @@ export function MobileHomeScroll({
   onShop,
   onAddFriend,
 }: MobileHomeScrollProps) {
-  // Fades the compact header in and the scroll hint out once the hero has
-  // begun to leave — a small threshold so it reacts to intent, not just to
-  // reaching the feed.
   const [scrolled, setScrolled] = useState(false);
   const ticking = useRef(false);
 
@@ -80,19 +79,21 @@ export function MobileHomeScroll({
     if (ticking.current) return;
     ticking.current = true;
     requestAnimationFrame(() => {
-      setScrolled(top > 72);
+      // Fade the page-level scene straight off the scroll — no React re-render.
+      const scene = sceneFadeRef.current;
+      if (scene) scene.style.opacity = String(Math.max(0, 1 - top / SCENE_FADE_PX));
+      setScrolled(top > HEADER_AT_PX);
       ticking.current = false;
     });
   };
 
   return (
-    <div className="relative min-h-0 flex-1">
+    <div className="relative z-10 min-h-0 flex-1">
       {/* Compact identity + balances, fading in once the scene has gone. */}
       <div
-        className={`pointer-events-none absolute inset-x-0 top-0 z-40 flex items-center gap-3 border-b border-white/50 bg-[rgba(250,246,255,0.86)] px-4 py-2 backdrop-blur-xl transition-opacity duration-200 ${
-          scrolled ? "opacity-100" : "opacity-0"
+        className={`absolute inset-x-0 top-0 z-40 flex items-center gap-3 border-b border-white/50 bg-[rgba(250,246,255,0.86)] px-4 py-2 backdrop-blur-xl transition-opacity duration-200 ${
+          scrolled ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
-        style={{ pointerEvents: scrolled ? "auto" : "none" }}
       >
         <button type="button" onClick={onAvatar} className="shrink-0">
           <img
@@ -129,20 +130,18 @@ export function MobileHomeScroll({
       </div>
 
       <div className="h-full overflow-y-auto overscroll-contain" onScroll={onScroll}>
-        {/* ── Hero: the old home, one screenful, scrolls away ─────────── */}
+        {/* ── Hero: transparent over the page-level scene, scrolls away ──
+            Exactly one screenful, so at rest it is pixel-for-pixel the old
+            home: the scene shows through, the reel sits at the top and the
+            card above the nav, and the feed waits entirely below the fold —
+            nothing of it is seen until the scroll starts. */}
         <section className="relative h-full">
-          {sceneUrl ? (
-            <MobileMascotScene sceneUrl={sceneUrl} />
-          ) : showDefaultScene ? (
-            <MobileSceneBackground defaultVideoSrc={defaultSceneVideo} />
-          ) : null}
-
           {/* Friends reel, riding the top of the hero as it always did. */}
-          <div className="relative z-20 px-4 pt-2">
+          <div className="relative z-20 px-4 lg:pl-[26px]">
             <FriendsStoriesBar onAddFriendClick={onAddFriend} />
           </div>
 
-          {/* The profile card, anchored above the nav. */}
+          {/* The profile card, anchored above the nav (its own absolute pos). */}
           <MobileProfileCard
             nickname={nickname}
             countryCode={countryCode}
@@ -156,23 +155,11 @@ export function MobileHomeScroll({
             onGiftClick={onGiftClick}
             onStreakClick={onStreakClick}
           />
-
-          {/* The cue that there is a feed below — a soft pill that bounces,
-              and stands down the moment the scroll starts. */}
-          <div
-            className={`pointer-events-none absolute inset-x-0 bottom-[calc(88px_+_var(--safe-bottom)_+_78px)] z-20 flex justify-center transition-opacity duration-200 ${
-              scrolled ? "opacity-0" : "opacity-100"
-            }`}
-          >
-            <span className="flex size-9 animate-bounce items-center justify-center rounded-full border border-white/70 bg-white/70 shadow-[0_2px_8px_rgba(60,30,90,0.18)] backdrop-blur">
-              <ChevronDown className="h-5 w-5 text-[#7126d5]" />
-            </span>
-          </div>
         </section>
 
-        {/* ── Feed: light, chunky rails revealed on scroll ────────────── */}
-        <div className="relative z-10 rounded-t-[28px] bg-[#faf6ff] pb-[calc(104px_+_var(--safe-bottom))] shadow-[0_-10px_28px_rgba(60,30,90,0.12)]">
-          <div className="mx-auto flex justify-center pt-2">
+        {/* ── Feed: light, chunky rails revealed on scroll ──────────────── */}
+        <div className="relative z-10 rounded-t-[28px] bg-[#faf6ff] pb-[calc(104px_+_var(--safe-bottom))] shadow-[0_-10px_28px_rgba(60,30,90,0.14)]">
+          <div className="flex justify-center pt-2">
             <span className="h-[5px] w-[44px] rounded-full bg-[rgba(90,60,130,0.22)]" />
           </div>
           <MobileHomeFeed />
