@@ -13,7 +13,6 @@ import flagGeRound from "@/assets/figma-home/flag-ge-round.svg";
 import { getCountryFlag } from "@/data/opponents";
 import { BackgroundVideo } from "@/components/shared/BackgroundVideo";
 import heroScene from "@/assets/figma-landing/hero-scene.png";
-import { MASCOT_SCENE_ASPECT } from "@/config/mascots";
 
 // Figma: Hom — the mobile home states, all drawn on a 500x946 frame:
 //   632:296  Logged out / guest
@@ -121,63 +120,36 @@ export function MobileSceneBackground({ defaultVideoSrc }: MobileSceneBackground
   );
 }
 
-// Feathers every edge of the fitted mascot still into the page, the bottom
-// only lightly — the rug grounds the picture there. Both masks intersect so
-// each edge fades on its own. Applied to a box the size of the PICTURE, not
-// the band: a mask on the band fades the band's edges, which the fitted
-// picture never reaches, and the picture keeps its hard rectangle.
-const MASCOT_EDGE_FADE: React.CSSProperties = {
-  maskImage:
-    "linear-gradient(to right, transparent 0, black 14%, black 86%, transparent 100%), linear-gradient(to bottom, transparent 0, black 18%, black 94%, transparent 100%)",
-  WebkitMaskImage:
-    "linear-gradient(to right, transparent 0, black 14%, black 86%, transparent 100%), linear-gradient(to bottom, transparent 0, black 18%, black 94%, transparent 100%)",
-  maskComposite: "intersect",
-  WebkitMaskComposite: "source-in",
-};
-
 interface MobileMascotSceneProps {
-  /** The chosen mascot's portrait scene. */
+  /** The chosen mascot's 9:16 scene. */
   sceneUrl: string;
 }
 
-// The chosen mascot, fitted whole into the band between the friends strip
-// and the profile card. It mounts inside the home's content column — which
-// starts where the friends strip ends — so the top of the band is simply
-// the column's top; the bottom is the card's top edge, computed from the
-// same measures the card positions itself with.
+// The chosen mascot as the phone's wallpaper: the whole 9:16 frame, covering
+// the page behind the header, the friends strip and the profile card, with
+// the same white wash over the top that the King loop wears so the chrome
+// stays readable on it. A phone taller than 9:16 loses a sliver off each
+// side; the character sits in the middle of the frame and keeps.
 //
-// Fitted, not filled: the first cut bled the still to 106vw and bottom-
-// anchored it at the nav, which on a real phone put the character's head
-// under the friends strip and its feet under the card. Nothing here is
-// cropped and nothing sits behind another element.
+// Two framings came before this and were both wrong: bled to 106vw and
+// nav-anchored, the head went under the friends strip; fitted whole into
+// the band above the card, it read as a pasted card. The art was made for
+// the screen — it takes the screen.
 export function MobileMascotScene({ sceneUrl }: MobileMascotSceneProps) {
-  // The card is CARD_H tall at its design width and scales down uniformly
-  // on narrower phones — see useCardScale. 12px of air above it.
-  const cardTop = `calc(${NAV_CHROME} + ${CARD_GAP_ABOVE_NAV}px + min(${CARD_H}px, (100vw - ${CARD_INSET * 2}px) * ${(CARD_H / CARD_DESIGN_W).toFixed(4)}) + 12px)`;
-
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
-      className={`md:hidden absolute inset-x-0 top-0 ${SCENE_Z} select-none pointer-events-none overflow-hidden`}
-      style={{ bottom: cardTop }}
+      className={`md:hidden absolute inset-0 ${SCENE_Z} select-none pointer-events-none overflow-hidden`}
     >
-      {/* The picture's own box: as tall as the band, at the stills' aspect,
-          centred and grounded at the bottom. On a phone too narrow for that
-          height it is capped at the band's width and the image letterboxes
-          inside it. */}
-      <div
-        className="absolute bottom-0 left-1/2 h-full max-w-full -translate-x-1/2"
-        style={{ aspectRatio: MASCOT_SCENE_ASPECT, ...MASCOT_EDGE_FADE }}
-      >
-        <img
-          src={sceneUrl}
-          alt=""
-          draggable={false}
-          className="absolute inset-0 size-full object-contain object-bottom"
-        />
-      </div>
+      <img
+        src={sceneUrl}
+        alt=""
+        draggable={false}
+        className="absolute inset-0 size-full object-cover object-center"
+      />
+      <div aria-hidden className="absolute inset-0" style={{ backgroundImage: SCENE_WASH }} />
     </motion.div>
   );
 }

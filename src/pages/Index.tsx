@@ -896,12 +896,13 @@ export default function Index() {
         disableScroll
       >
         <div className="h-full flex flex-col w-full relative overflow-hidden md:overflow-visible">
-        {/* Phone default scene (Figma 626:201 / 628:437) — the Trivia King
-            loop, framed the way the mobile design does: far wider than the
-            screen and anchored just above the bottom nav. A chosen mascot is
-            painted inside the content area below instead, where it fits
-            between the friends strip and the profile card. Guests get their
-            own artwork inside MobileGuestHero. */}
+        {/* Phone scene layer (Figma 626:201 / 628:437). A chosen mascot is
+            the page's wallpaper: its 9:16 frame full-bleed behind the header,
+            the friends strip and the profile card. With no pick, the Trivia
+            King loop, framed the way the mobile design does: far wider than
+            the screen and anchored just above the bottom nav. Guests get
+            their own artwork inside MobileGuestHero. */}
+        {user && isMobileViewport && sceneUrl && <MobileMascotScene sceneUrl={sceneUrl} />}
         {user && isMobileViewport && showDefaultScene && (
           <MobileSceneBackground defaultVideoSrc={DEFAULT_SCENE_VIDEO} />
         )}
@@ -1214,11 +1215,6 @@ export default function Index() {
                 in here, first, exactly as SceneHero does it on md+: later
                 children keep their own clicks, and what is left over is the
                 scene. */}
-            {/* The chosen mascot's scene. It lives in this column, not at the
-                page root like the King loop, because the column starts where
-                the friends strip ends: that is the top of the band the scene
-                has to fit in, and the profile card marks its bottom. */}
-            {user && isMobileViewport && sceneUrl && <MobileMascotScene sceneUrl={sceneUrl} />}
             {user && isMobileViewport && (
               <button
                 type="button"

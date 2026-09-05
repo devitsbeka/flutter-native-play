@@ -11,6 +11,10 @@
  * King idle loop, which the home screen plays on its own (see Index). The
  * King is not one of the choices here — this list is the animals.
  *
+ * The scenes are 9:16 renders (1080 x 1920 here, from 1152 x 2048), made
+ * for a phone screen: the phone paints one full-bleed behind everything,
+ * the way a wallpaper sits.
+ *
  * Adding a mascot means: an id here, a scene and a face thumb under
  * `src/assets/mascots`, a name in every locale's `avatar.mascotNames`, and
  * the id in the `profiles.home_mascot` CHECK (see the migration that added
@@ -43,20 +47,11 @@ export const MASCOT_IDS = [
 
 export type MascotId = (typeof MASCOT_IDS)[number];
 
-/**
- * Width over height of every scene under `src/assets/mascots` (1080 x 1497:
- * the shared 1152 x 2048 renders with the top 22% of empty sky cut off,
- * then scaled). The phone home screen sizes the picture's box from this so
- * its edge fade hugs the picture. Regenerate the assets at the same crop,
- * or update this with them.
- */
-export const MASCOT_SCENE_ASPECT = "1080 / 1497";
-
 export interface Mascot {
   id: MascotId;
   /** Square face crop — the tile in the studio. */
   thumb: string;
-  /** Portrait scene the home screen paints. */
+  /** 9:16 scene — the phone home screen's wallpaper, painted full-bleed. */
   scene: string;
 }
 
