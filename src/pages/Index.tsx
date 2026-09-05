@@ -33,7 +33,7 @@ import { SceneHero } from "@/components/home/SceneHero";
 import { SceneSidebar } from "@/components/home/SceneSidebar";
 import { DesktopGuestLanding, DesktopGuestSceneBackground } from "@/components/home/DesktopGuestLanding";
 import { MobileSceneBackground, MobileProfileCard, MobileGuestHero } from "@/components/home/MobileHome";
-import { useUserScene } from "@/hooks/useUserScene";
+import { useHomeMascot } from "@/hooks/useHomeMascot";
 import { useMyLeaderboardRank, defaultScopeFor } from "@/hooks/useMyLeaderboardRank";
 import { DesktopActionCards } from "@/components/home/DesktopActionCards";
 import { LoggedInHomeV2 } from "@/pages/LoggedInHomeV2";
@@ -52,8 +52,8 @@ import coinIcon from "@/assets/icons/icon-coin.png";
 import defaultGuestAvatar from "@/assets/guest-avatar.png";
 import handGestureIcon from "@/assets/icons/hand-gesture.png";
 import defaultGuestAvatarAnimated from "@/assets/guest-avatar-animated.mp4";
-// Default Trivia King scene loop — everyone who hasn't explicitly generated
-// their own scene sees this (guests included), regardless of custom avatars.
+// The Trivia King idle loop — the home screen of everyone who has not picked
+// another mascot (guests included), regardless of custom avatars.
 const DEFAULT_SCENE_VIDEO = "/videos/trivia-king-scene.mp4";
 
 // Feathers the generated scene's top and side edges into the page
@@ -709,16 +709,17 @@ export default function Index() {
   const currentStreak = profile?.current_streak || 0;
   const levelInfo = calculateLevel(profile?.total_points || 0);
 
-  // Personalized 16:9 homepage scene (generated from the user's photo) —
-  // when present it replaces the classic centered avatar hero on xl+.
-  // Anyone without their own generated scene — guests and logged-in users
-  // alike, even with custom avatars — gets the default Trivia King loop.
-  const { data: userScene, isLoading: sceneLoading } = useUserScene(user?.id);
+  // The home-screen scene is the chosen mascot's. The King (the default)
+  // has an idle loop and plays it full-bleed, as the home screen always
+  // has; the animal mascots are portrait stills painted the way a generated
+  // scene used to be. Guests get the King.
+  const { mascot, isLoading: mascotLoading } = useHomeMascot(user?.id);
   const isSceneViewport = useIsSceneViewport();
   const isMobileViewport = useIsMobileViewport();
-  const sceneUrl = userScene?.imageUrl || null;
-  const sceneVideoUrl = userScene?.videoUrl || null;
-  const showDefaultScene = !sceneUrl && !(user && sceneLoading);
+  const sceneUrl = user && !mascot.video ? mascot.scene : null;
+  // Nothing is painted until the choice is known — a King that swaps to an
+  // owl a moment later reads as a glitch, not a load.
+  const showDefaultScene = !sceneUrl && !(user && mascotLoading);
   const showAnimatePrompt = !isAnimatingFromHome && !!profile?.avatar_url && profile.avatar_url.includes('supabase.co/storage') && profile.has_face_photo === true && !profile?.animated_avatar_url;
 
   // The phone profile card carries the player's flag and their place on the
@@ -896,26 +897,25 @@ export default function Index() {
         disableScroll
       >
         <div className="h-full flex flex-col w-full relative overflow-hidden md:overflow-visible">
-        {/* Phone scene layer (Figma 626:201 / 628:437) — the same artwork the
-            desktop uses, but framed the way the mobile design does: far wider
-            than the screen and anchored just above the bottom nav. Guests get
-            their own artwork inside MobileGuestHero instead. */}
+        {/* Phone scene layer (Figma 626:201 / 628:437) — the mascot's scene,
+            framed the way the mobile design does: anchored just above the
+            bottom nav. Guests get their own artwork inside MobileGuestHero
+            instead. */}
         {user && isMobileViewport && (
           <MobileSceneBackground
             sceneUrl={sceneUrl}
-            sceneVideoUrl={sceneVideoUrl}
             showDefaultScene={showDefaultScene}
             defaultVideoSrc={DEFAULT_SCENE_VIDEO}
           />
         )}
-        {/* Personalized scene (or the default Trivia King loop) as the
+        {/* The mascot's scene (or the default Trivia King loop) as the
             full-bleed page background (xl+); the header, friends strip and
             cards float over it. Clicks are caught by SceneHero's catcher
             layer, not here — background layers never receive them.
             Mounted only when the viewport is actually xl, so smaller
             screens never download the media. */}
         {!isSceneViewport ? null : sceneUrl ? (
-          /* Generated scene: the whole artwork fits in the band BELOW the
+          /* Mascot scene: the whole artwork fits in the band BELOW the
              friends reel (top 230px), bottom-anchored and centered, so the
              subject can never sit under the reel and nothing is cropped at
              any resolution. Its top and side edges feather into the page's
@@ -935,28 +935,13 @@ export default function Index() {
             className="hidden md:block absolute inset-0 z-0 select-none pointer-events-none overflow-hidden"
           >
             <div className="absolute left-0 right-0 top-[230px] bottom-0 flex items-end justify-center">
-              {sceneVideoUrl ? (
-                /* Seamless idle-loop video — poster keeps the still visible
-                   until the video is ready to play */
-                <video
-                  src={sceneVideoUrl}
-                  poster={sceneUrl}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  className="max-h-full max-w-full object-contain"
-                  style={SCENE_EDGE_FADE}
-                />
-              ) : (
-                <img
-                  src={sceneUrl}
-                  alt=""
-                  className="max-h-full max-w-full object-contain"
-                  draggable={false}
-                  style={SCENE_EDGE_FADE}
-                />
-              )}
+              <img
+                src={sceneUrl}
+                alt=""
+                className="max-h-full max-w-full object-contain"
+                draggable={false}
+                style={SCENE_EDGE_FADE}
+              />
             </div>
           </motion.div>
         ) : showDefaultScene && user ? (
@@ -1235,7 +1220,7 @@ export default function Index() {
             {user && isMobileViewport && (
               <button
                 type="button"
-                aria-label="შეცვალე სცენა"
+                aria-label={t("extra.changeScene")}
                 onClick={() => openAvatarModal()}
                 className="md:hidden absolute inset-0 cursor-pointer"
               />

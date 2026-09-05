@@ -1,9 +1,7 @@
-import heroScene from "@/assets/figma-landing/hero-scene.png";
-import { BackgroundVideo } from "@/components/shared/BackgroundVideo";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { motion, AnimatePresence } from "framer-motion";
-import { Camera, Upload, RefreshCw, Loader2, Check, ImageIcon, Wand2, Sparkles, Play, Trash2, Lock, Plus, AlertCircle } from "lucide-react";
+import { motion } from "framer-motion";
+import { Camera, Upload, Loader2, Check, ImageIcon, Trash2, AlertCircle } from "lucide-react";
 
 // Import 3D icons for avatar flow
 import iconScissors from '@/assets/icons/icon-scissors.png';
@@ -25,12 +23,9 @@ import { resolveAvatarUrl } from "@/utils/avatarUtils";
 import {
   calculateAvatarQuota,
   decideGeneration,
-  isRequestedPortraitUrl,
-  needsSceneUpload,
   shouldResetSession,
   EXTRA_GENERATION_GEM_COST,
   MAX_AVATAR_GENERATIONS,
-  type GenerationKind,
   type KindQuota,
 } from "@/utils/avatarStudio";
 import { useCurrency } from "@/hooks/useCurrency";
@@ -42,45 +37,10 @@ import {
 } from "@/utils/nativePhotoPicker";
 import { photoError, type PhotoError } from "@/utils/photoErrorMessage";
 import { useNavigate } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { generateAndRecordPortrait, generatePublicPortrait } from "@/utils/portraitAvatar";
-import { SCENE_ANIMATION_PROMPT } from "@/config/sceneAnimationPrompt";
-import { useAnimateAvatar } from "@/hooks/useAnimateAvatar";
-
-// Import mascot avatars
-import mascotAvatar1 from '@/assets/avatars/mascot-avatar-1.png';
-import mascotAvatar2 from '@/assets/avatars/mascot-avatar-2.png';
-import mascotAvatar3 from '@/assets/avatars/mascot-avatar-3.png';
-import mascotAvatar4 from '@/assets/avatars/mascot-avatar-4.png';
-import mascotAvatar5 from '@/assets/avatars/mascot-avatar-5.png';
-import mascotAvatar6 from '@/assets/avatars/mascot-avatar-6.png';
-import mascotAvatar7 from '@/assets/avatars/mascot-avatar-7.png';
-import mascotAvatar8 from '@/assets/avatars/mascot-avatar-8.png';
-import { SCENE_AVATAR_PROMPT } from "@/config/sceneAvatarPrompt";
-
-const DEFAULT_AVATARS = [
-  mascotAvatar1, mascotAvatar2, mascotAvatar3, mascotAvatar4,
-  mascotAvatar5, mascotAvatar6, mascotAvatar7, mascotAvatar8,
-];
-
-// Canonical paths that are stable across builds
-// resolveAvatarUrl() converts these to valid bundled URLs at runtime
-const DEFAULT_AVATAR_PATHS = [
-  '/src/assets/avatars/mascot-avatar-1.png',
-  '/src/assets/avatars/mascot-avatar-2.png',
-  '/src/assets/avatars/mascot-avatar-3.png',
-  '/src/assets/avatars/mascot-avatar-4.png',
-  '/src/assets/avatars/mascot-avatar-5.png',
-  '/src/assets/avatars/mascot-avatar-6.png',
-  '/src/assets/avatars/mascot-avatar-7.png',
-  '/src/assets/avatars/mascot-avatar-8.png',
-];
-
-// Map from bundled URL → canonical path for storage
-const BUNDLED_TO_CANONICAL: Record<string, string> = {};
-DEFAULT_AVATARS.forEach((bundledUrl, index) => {
-  BUNDLED_TO_CANONICAL[bundledUrl] = DEFAULT_AVATAR_PATHS[index];
-});
+import { useQuery } from "@tanstack/react-query";
+import { generatePublicPortrait } from "@/utils/portraitAvatar";
+import { MASCOTS, type MascotId } from "@/config/mascots";
+import { useHomeMascot } from "@/hooks/useHomeMascot";
 
 interface AvatarModalProps {
   isOpen: boolean;
@@ -89,7 +49,7 @@ interface AvatarModalProps {
   /** Reports a running generation to the shell so it can show a floating
       progress chip while the modal is closed and reopen it when done.
       `kind` says whether finishing should bring the modal back: a new avatar
-      or scene has to be chosen, an animation applies itself. */
+      has to be chosen, an animation applies itself. */
   onGeneratingChange?: (
     active: boolean,
     thumb?: string | null,
@@ -216,19 +176,9 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
   const { isVip } = useVipStatus();
   const { gems, spendGems } = useCurrency();
   const { t } = useLanguage();
-  const queryClient = useQueryClient();
-
-  // Detect if current avatar is a preset mascot/bot avatar
-  const isCurrentAvatarMascot = (() => {
-    const url = profile?.avatar_url;
-    if (!url) return true; // No avatar = treat as mascot
-    if (DEFAULT_AVATAR_PATHS.some(p => url.includes(p) || p.includes(url))) return true;
-    if (DEFAULT_AVATARS.some(b => url === b)) return true;
-    if (/mascot-avatar-\d+/.test(url) || /bot-avatar-\d+/.test(url)) return true;
-    return false;
-  })();
   const navigate = useNavigate();
-  const { animate: runAnimation } = useAnimateAvatar();
+  // Which mascot backs the home screen — the mascots grid below sets it.
+  const { mascotId, setMascot } = useHomeMascot(user?.id);
   const [step, setStep] = useState<"gallery" | "upload" | "camera" | "generating" | "preview">("gallery");
 
   const [selectedAvatar, setSelectedAvatar] = useState<string | null>(null);
@@ -236,24 +186,12 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
   const [generatedAvatar, setGeneratedAvatar] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isCameraReady, setIsCameraReady] = useState(false);
-  const [isAnimating, setIsAnimating] = useState(false);
   const [isProcessingFile, setIsProcessingFile] = useState(false);
-  // Which of the two things the person set out to make. Both flows start
-  // from the same photo picker, so without this the modal cannot tell an
-  // avatar request from a scene request — and they have separate budgets.
-  const [flowKind, setFlowKind] = useState<GenerationKind>("avatar");
   // The last thing that went wrong, shown IN the modal. A toast can be
   // missed, scrolled past, or — as it turned out — never rendered at all;
   // the step that failed should carry its own explanation.
   const [failure, setFailure] = useState<PhotoError | null>(null);
   const [selectedForAction, setSelectedForAction] = useState<string | null>(null);
-  // "default" = the Trivia King mascot loop backs the homepage instead of a
-  // generated scene; anything else = the picked generated scene. Local
-  // preference, read by useUserScene.
-  const [scenePref, setScenePref] = useState<string | null>(null);
-  useEffect(() => {
-    if (isOpen && user) setScenePref(localStorage.getItem(`scene_pref_${user.id}`));
-  }, [isOpen, user?.id]);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -269,9 +207,6 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
   // lands on the preview step, consumed by the reset below — without it the
   // reopen that exists to show the result resets straight past it.
   const awaitingPreview = useRef(false);
-  // The scene generated in this session, already uploaded and recorded.
-  // Applying it later only has to flip which scene is current.
-  const storedScene = useRef<{ sceneUrl: string; sourceUrl: string | null } | null>(null);
   useEffect(() => {
     if (
       shouldResetSession({
@@ -283,7 +218,6 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
     ) {
       setIsLoading(false);
       setIsProcessingFile(false);
-      setIsAnimating(false);
       setSelectedForAction(null);
       // Otherwise last session's error is on screen the moment the modal
       // opens, describing a photo nobody has picked yet.
@@ -310,30 +244,20 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
     enabled: !!user?.id && isOpen,
     staleTime: 5 * 60_000,
     queryFn: async (): Promise<AvatarGeneration[]> => {
-      // Each type gets its own budget. One combined LIMIT meant a run of
-      // background portraits could push every scene out of the window: "my
-      // scenes" came back empty and the scene count the new-scene tile is
-      // gated on read zero, on an account that plainly had scenes.
-      const byType = (scenesOnly: boolean) => {
-        const base = supabase
-          .from("avatar_generations")
-          // Named columns rather than *: the row carries fields this screen
-          // never reads, and this payload is what the player waits for.
-          .select("id, avatar_url, animated_avatar_url, is_current, created_at")
-          .eq("user_id", user!.id);
-        const scoped = scenesOnly
-          ? base.like("avatar_url", "%/scene_%")
-          : base.not("avatar_url", "like", "%/scene_%");
-        return scoped.order("created_at", { ascending: false }).limit(12);
-      };
-
-      const [scenes, portraits] = await Promise.all([byType(true), byType(false)]);
-      if (scenes.error) throw scenes.error;
-      if (portraits.error) throw portraits.error;
-
-      return [...(scenes.data || []), ...(portraits.data || [])].sort(
-        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
+      // Portraits only. Scene rows (`<user>/scene_<ts>.png`) are what the
+      // old "my scenes" picker showed; the home screen is backed by a mascot
+      // now and nothing here reads them.
+      const { data, error } = await supabase
+        .from("avatar_generations")
+        // Named columns rather than *: the row carries fields this screen
+        // never reads, and this payload is what the player waits for.
+        .select("id, avatar_url, animated_avatar_url, is_current, created_at")
+        .eq("user_id", user!.id)
+        .not("avatar_url", "like", "%/scene_%")
+        .order("created_at", { ascending: false })
+        .limit(12);
+      if (error) throw error;
+      return data || [];
     },
   });
 
@@ -351,8 +275,6 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
   }, []);
 
   const startCamera = useCallback(async () => {
-    // The selfie tile lives under "create new avatar"
-    setFlowKind("avatar");
     setFailure(null);
 
     // In the native app the system camera takes the photo. The in-webview
@@ -443,8 +365,7 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
     navigate("/profile?tab=PRO");
   };
 
-  const openFilePicker = async (kind: GenerationKind) => {
-    setFlowKind(kind);
+  const openFilePicker = async () => {
     setFailure(null);
 
     // In the native app, ask the phone for the photo. iOS and Android hand
@@ -520,7 +441,7 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
   /**
    * Step out of the way once the work is plainly under way.
    *
-   * Generating a scene takes a minute and animating one takes several, and
+   * Generating a portrait takes a minute, and
    * this modal is a full-screen page — sitting on a spinner for that long is
    * the app doing nothing while the player watches. It is already built to
    * be closed mid-generation: the request is a plain promise that does not
@@ -547,9 +468,9 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
     if (autoCloseTimer.current) clearTimeout(autoCloseTimer.current);
   }, []);
 
-  // Scenes and avatars have SEPARATE budgets — see avatarStudio.ts.
+  // Only portraits are generated here now — see avatarStudio.ts for the budget.
   const quota = calculateAvatarQuota(generations, isVip);
-  const activeQuota = flowKind === "scene" ? quota.scene : quota.avatar;
+  const activeQuota = quota.avatar;
 
   const generateAvatar = async () => {
     if (!uploadedImage || !user) return;
@@ -567,8 +488,8 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
     if (decision.action === "charge") {
       const paid = await spendGems(decision.gems, {
         productType: "avatar_generation",
-        productId: flowKind,
-        valueReceived: { kind: flowKind, generations: 1 },
+        productId: "avatar",
+        valueReceived: { kind: "avatar", generations: 1 },
       });
       if (!paid) {
         const message = t("avatar.needGemsForExtra", { cost: decision.gems });
@@ -613,78 +534,30 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
 
       const imageUrl = urlData.publicUrl;
 
-      // An avatar request makes an AVATAR. Both tiles used to run the scene
-      // pipeline, so "create new avatar" produced a full-body scene and spent
-      // the scene budget — which is why one shelf filling up closed both.
-      if (flowKind === "avatar") {
-        const portraitUrl = await generatePublicPortrait(user.id, imageUrl, "portrait");
-        if (!portraitUrl) throw new Error(t("errors.generationFailed"));
-
-        // Recorded but NOT current yet — applying it is still the user's call
-        await supabase.from("avatar_generations").insert({
-          user_id: user.id,
-          avatar_url: portraitUrl,
-          source_image_url: imageUrl,
-          is_current: false,
-        });
-
-        await loadGenerations();
-        setGeneratedAvatar(portraitUrl);
-        awaitingPreview.current = true;
-        setStep("preview");
-        confetti({
-          particleCount: 80,
-          spread: 60,
-          origin: { y: 0.6 },
-          colors: ["#A855F7", "#EC4899", "#FFD700"],
-        });
-        return;
-      }
-
-      // Generate the scene via edge function
-      const { data, error } = await supabase.functions.invoke("generate-avatar", {
-        body: { imageUrl, prompt: SCENE_AVATAR_PROMPT },
-      });
-
-      if (error) throw new Error(error.message);
-      if (!data.success) throw new Error(data.error || "Failed to generate avatar");
-
-      // Persist the scene IMMEDIATELY. It used to live only in component
-      // state until the user pressed save, so any interruption — closing the
-      // modal, the auto-reopen, a re-render — silently threw the finished
-      // generation away and the scenes list looked untouched.
-      const sceneResponse = await fetch(data.avatarUrl);
-      const sceneBlob = await sceneResponse.blob();
-      const sceneFileName = `${user.id}/scene_${Date.now()}.png`;
-      const { error: sceneUploadError } = await supabase.storage
-        .from("avatars")
-        .upload(sceneFileName, sceneBlob, { upsert: true, contentType: "image/png" });
-      if (sceneUploadError) throw new Error(`Failed to store scene: ${sceneUploadError.message}`);
-
-      const storedSceneUrl = supabase.storage.from("avatars").getPublicUrl(sceneFileName).data.publicUrl;
+      // The upload makes a PORTRAIT: the circle avatar every profile
+      // placement shows. Scenes are no longer generated — the home screen
+      // is backed by the chosen mascot instead.
+      const portraitUrl = await generatePublicPortrait(user.id, imageUrl, "portrait");
+      if (!portraitUrl) throw new Error(t("errors.generationFailed"));
 
       // Recorded but NOT current yet — applying it is still the user's call
       await supabase.from("avatar_generations").insert({
         user_id: user.id,
-        avatar_url: storedSceneUrl,
+        avatar_url: portraitUrl,
         source_image_url: imageUrl,
         is_current: false,
       });
 
-      storedScene.current = { sceneUrl: storedSceneUrl, sourceUrl: imageUrl };
       await loadGenerations();
-
-      setGeneratedAvatar(storedSceneUrl);
+      setGeneratedAvatar(portraitUrl);
       awaitingPreview.current = true;
       setStep("preview");
-      
       confetti({
         particleCount: 80,
         spread: 60,
         origin: { y: 0.6 },
         colors: ["#A855F7", "#EC4899", "#FFD700"],
       });
-
     } catch (error) {
       console.error("Error generating avatar:", error);
       const message = error instanceof Error ? error.message : t("errors.generationFailed");
@@ -707,136 +580,28 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
     setIsLoading(true);
 
     try {
-      // A generated AVATAR is already the finished circle — it becomes the
-      // profile picture directly. Everything below this point is scene
-      // machinery (which scene backs the homepage, deriving its portrait),
-      // and running an avatar through it would file it as a scene.
-      if (isRequestedPortraitUrl(urlToSave)) {
-        await supabase
-          .from("avatar_generations")
-          .update({ is_current: false })
-          .eq("user_id", user.id)
-          .not("avatar_url", "like", "%/scene_%");
-        await supabase
-          .from("avatar_generations")
-          .update({ is_current: true })
-          .eq("user_id", user.id)
-          .eq("avatar_url", urlToSave);
-
-        // The old animation belongs to the previous face, so it retires with it
-        await updateProfile({
-          avatar_url: urlToSave,
-          animated_avatar_url: null,
-          has_face_photo: true,
-        });
-
-        toast.success(t("avatar.avatarSaved"));
-        finishAndClose();
-        return;
-      }
-
-      // Generation already stored this scene, so applying it just flips the
-      // current flag — no re-upload, and nothing to lose if this step never
-      // happens.
-      if (needsSceneUpload(storedScene.current?.sceneUrl, urlToSave)) {
-        const response = await fetch(urlToSave);
-        const blob = await response.blob();
-        const fileName = `${user.id}/scene_${Date.now()}.png`;
-        const { error: uploadError } = await supabase.storage
-          .from("avatars")
-          .upload(fileName, blob, { upsert: true, contentType: 'image/png' });
-        if (uploadError) {
-          throw new Error(`Failed to save avatar: ${uploadError.message}`);
-        }
-        storedScene.current = {
-          sceneUrl: supabase.storage.from("avatars").getPublicUrl(fileName).data.publicUrl,
-          sourceUrl: null,
-        };
-      }
-
-      const finalUrl = storedScene.current!.sceneUrl;
-
-      // Make this the current scene. The row already exists (generation
-      // recorded it), so this only moves the flag; a row is inserted only for
-      // the legacy path where the scene was not stored during generation.
+      // A generated portrait is already the finished circle — it becomes the
+      // profile picture directly. Only portrait rows swap their flag.
       await supabase
-        .from('avatar_generations')
+        .from("avatar_generations")
         .update({ is_current: false })
-        .eq('user_id', user.id)
-        .like('avatar_url', '%/scene_%');
+        .eq("user_id", user.id)
+        .not("avatar_url", "like", "%/scene_%");
+      await supabase
+        .from("avatar_generations")
+        .update({ is_current: true })
+        .eq("user_id", user.id)
+        .eq("avatar_url", urlToSave);
 
-      const { data: existingRow } = await supabase
-        .from('avatar_generations')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('avatar_url', finalUrl)
-        .maybeSingle();
-
-      if (existingRow) {
-        await supabase
-          .from('avatar_generations')
-          .update({ is_current: true })
-          .eq('id', existingRow.id);
-      } else {
-        await supabase.from('avatar_generations').insert({
-          user_id: user.id,
-          avatar_url: finalUrl,
-          source_image_url: storedScene.current!.sourceUrl,
-          is_current: true,
-        });
-      }
-
-      // Update profile - AI generation implies a face was present. The old
-      // animated avatar belongs to the previous face, so it retires too —
-      // surfaces that prefer the animation would otherwise keep showing
-      // the old avatar.
-      await updateProfile({ has_face_photo: true } as any);
-      queryClient.invalidateQueries({ queryKey: ["user-scene", user.id] });
+      // The old animation belongs to the previous face, so it retires with it
+      await updateProfile({
+        avatar_url: urlToSave,
+        animated_avatar_url: null,
+        has_face_photo: true,
+      });
 
       toast.success(t("avatar.avatarSaved"));
       finishAndClose();
-
-      // Background portrait generation from the SCENE — never blocks the
-      // apply. When it lands it becomes the public circle avatar and joins
-      // "my avatars" so it can be re-picked later.
-      //
-      // A scene that already has its portrait reuses it. This used to
-      // regenerate unconditionally, so every switch between two existing
-      // scenes paid for another generation AND inserted another row — the
-      // portrait shelf filled up from ordinary browsing, which is what
-      // killed the "+ new scene" tile.
-      void (async () => {
-        const { data: existing } = await supabase
-          .from("avatar_generations")
-          .select("id, avatar_url")
-          .eq("user_id", user.id)
-          .eq("source_image_url", finalUrl)
-          .not("avatar_url", "like", "%/scene_%")
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        let portraitUrl: string | null;
-        if (existing) {
-          await supabase
-            .from("avatar_generations")
-            .update({ is_current: false })
-            .eq("user_id", user.id)
-            .not("avatar_url", "like", "%/scene_%");
-          await supabase
-            .from("avatar_generations")
-            .update({ is_current: true })
-            .eq("id", existing.id);
-          portraitUrl = existing.avatar_url;
-        } else {
-          portraitUrl = await generateAndRecordPortrait(user.id, finalUrl);
-        }
-
-        if (portraitUrl) {
-          await updateProfile({ avatar_url: portraitUrl, animated_avatar_url: null } as any);
-        }
-      })();
-
     } catch (error) {
       console.error("Error saving avatar:", error);
       toast.error(error instanceof Error ? error.message : "Failed to save avatar");
@@ -890,72 +655,8 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
     }
   };
 
-  // Scene generations live in the same history table; picking one only flips
-  // is_current (the homepage scene), never the circular profile avatar.
-  const isSceneUrl = (url: string) => url.includes("/scene_");
-
-  // Horizontal scenes ticker: touch scrolls natively with momentum; mouse
-  // gets drag-to-scroll with velocity tracking and an inertia glide.
-  const scenesRowRef = useRef<HTMLDivElement | null>(null);
-  const sceneDrag = useRef({ down: false, moved: false, startX: 0, startScroll: 0, lastX: 0, lastT: 0, v: 0, raf: 0 });
-
-  const scenesPointerDown = (e: React.PointerEvent) => {
-    if (e.pointerType !== "mouse") return;
-    const el = scenesRowRef.current;
-    if (!el) return;
-    cancelAnimationFrame(sceneDrag.current.raf);
-    sceneDrag.current = {
-      down: true,
-      moved: false,
-      startX: e.clientX,
-      startScroll: el.scrollLeft,
-      lastX: e.clientX,
-      lastT: performance.now(),
-      v: 0,
-      raf: 0,
-    };
-  };
-
-  const scenesPointerMove = (e: React.PointerEvent) => {
-    const s = sceneDrag.current;
-    if (!s.down) return;
-    const el = scenesRowRef.current;
-    if (!el) return;
-    const dx = e.clientX - s.startX;
-    if (Math.abs(dx) > 4) s.moved = true;
-    el.scrollLeft = s.startScroll - dx;
-    const now = performance.now();
-    const dt = now - s.lastT;
-    if (dt > 0) {
-      s.v = (e.clientX - s.lastX) / dt;
-      s.lastX = e.clientX;
-      s.lastT = now;
-    }
-  };
-
-  const scenesPointerUp = () => {
-    const s = sceneDrag.current;
-    if (!s.down) return;
-    s.down = false;
-    const el = scenesRowRef.current;
-    if (el) {
-      let velocity = s.v * 16; // px per ~frame
-      const glide = () => {
-        if (Math.abs(velocity) < 0.5) return;
-        el.scrollLeft -= velocity;
-        velocity *= 0.95;
-        s.raf = requestAnimationFrame(glide);
-      };
-      s.raf = requestAnimationFrame(glide);
-    }
-    // Let the click that follows pointerup see the moved flag, then reset it
-    window.setTimeout(() => {
-      sceneDrag.current.moved = false;
-    }, 50);
-  };
-
   // Shared apply/delete action row, rendered directly under the section of
-  // the item the user tapped (scenes ticker or avatars grid).
+  // the item the user tapped in the avatars grid.
   const selectedGen = generations.find((g) => g.id === selectedForAction) || null;
   const renderGenActions = () =>
     selectedGen && (
@@ -974,13 +675,7 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
           <Trash2 className="w-5 h-5 text-destructive" />
         </motion.button>
         <motion.button
-          onClick={() => {
-            if (isSceneUrl(selectedGen.avatar_url)) {
-              selectScene(selectedGen);
-            } else {
-              selectPreviousAvatar(selectedGen.avatar_url);
-            }
-          }}
+          onClick={() => selectPreviousAvatar(selectedGen.avatar_url)}
           disabled={isLoading}
           className="w-12 h-12 rounded-full bg-primary/10 hover:bg-primary/20 flex items-center justify-center transition-colors disabled:opacity-50"
           whileHover={{ scale: 1.05 }}
@@ -991,39 +686,6 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
       </motion.div>
     );
 
-  // Picking the mascot tile: the homepage falls back to the default Trivia
-  // King loop; generated scenes keep their rows untouched for switching back.
-  const selectDefaultScene = () => {
-    if (!user) return;
-    localStorage.setItem(`scene_pref_${user.id}`, "default");
-    setScenePref("default");
-    queryClient.invalidateQueries({ queryKey: ["user-scene", user.id] });
-    toast.success(t("avatar.avatarUpdated"));
-  };
-
-  const selectScene = async (gen: AvatarGeneration) => {
-    if (!user) return;
-    setIsLoading(true);
-    try {
-      // Only scene rows swap their flag — the current portrait keeps its own
-      await supabase.from("avatar_generations").update({ is_current: false }).eq("user_id", user.id).like("avatar_url", "%/scene_%");
-      const { error } = await supabase.from("avatar_generations").update({ is_current: true }).eq("id", gen.id);
-      if (error) throw error;
-      localStorage.setItem(`scene_pref_${user.id}`, "generated");
-      setScenePref("generated");
-      queryClient.invalidateQueries({ queryKey: ["user-scene", user.id] });
-      setSelectedForAction(null);
-      toast.success(t("avatar.avatarUpdated"));
-      await new Promise((resolve) => setTimeout(resolve, 100));
-      finishAndClose();
-    } catch (error) {
-      console.error("Error selecting scene:", error);
-      toast.error(t("errors.generic"));
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const selectPreviousAvatar = async (avatarUrl: string) => {
     if (!user) return;
     
@@ -1032,7 +694,7 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
       // Find the generation record to get its animated_avatar_url
       const generation = generations.find(g => g.avatar_url === avatarUrl);
       
-      // Update portraits to not current — scene rows keep their selection
+      // Only portrait rows swap their flag
       await supabase.from('avatar_generations').update({ is_current: false }).eq('user_id', user.id).not('avatar_url', 'like', '%/scene_%');
 
       // Set selected as current
@@ -1082,9 +744,7 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
         await updateProfile({ avatar_url: null, animated_avatar_url: null });
       }
       
-      // Refresh the list and the homepage scene (a current scene may be gone)
       await loadGenerations();
-      queryClient.invalidateQueries({ queryKey: ["user-scene", user.id] });
       setSelectedForAction(null);
       toast.success(t("avatar.avatarDeleted"));
     } catch (error) {
@@ -1095,109 +755,26 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
     }
   };
 
-  const selectDefaultAvatar = async (avatarBundledUrl: string) => {
+  // Picking a mascot changes the HOME SCREEN only: its scene replaces the
+  // Trivia King loop there. The circle avatar — the selfie, the upload, the
+  // generated portrait — is a separate choice and is what every other
+  // profile placement shows.
+  const chooseMascot = async (id: MascotId) => {
     if (!user) return;
-    
     setIsLoading(true);
     try {
-      // Convert bundled URL to canonical path for stable storage across builds
-      const canonicalPath = BUNDLED_TO_CANONICAL[avatarBundledUrl] || avatarBundledUrl;
-      
-      // Update profile - clear animated_avatar_url since default avatars don't have animations
-      // Mascots are not faces, so set has_face_photo to false
-      const result = await updateProfile({ 
-        avatar_url: canonicalPath,
-        animated_avatar_url: null,
-        has_face_photo: false,
-      } as any);
-      
-      if (result?.error) {
-        throw result.error;
-      }
-      
-      toast.success(t("avatar.avatarUpdated"));
-      
+      await setMascot(id);
+      toast.success(t("avatar.mascotUpdated"));
       // Small delay to ensure state propagates before modal closes
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
+      await new Promise((resolve) => setTimeout(resolve, 100));
       finishAndClose();
-    } catch (error) {
-      console.error("Error updating avatar:", error);
-      toast.error(t("errors.generationFailed"));
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Animate the current homepage scene into a seamless idle-loop video
-  // (Kling v2.5 turbo pro via the animate-avatar edge function). The loop
-  // replaces the static scene on the homepage; the still stays as poster.
-  const animateScene = async () => {
-    if (!user) return;
-    // Resolve the scene fresh from the DB (same pick order as the homepage:
-    // explicitly selected first, else newest) — component state can lag
-    // right after a new scene is saved.
-    const { data: scene } = await supabase
-      .from("avatar_generations")
-      .select("avatar_url")
-      .eq("user_id", user.id)
-      .like("avatar_url", "%/scene_%")
-      .order("is_current", { ascending: false })
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if (!scene?.avatar_url) {
-      toast.error(t("errors.noAvatarToAnimate"));
-      return;
-    }
-
-    setIsAnimating(true);
-    // Kling takes minutes, and the poll below runs on this component whether
-    // or not it is on screen. Reported and closed like a generation, with
-    // the scene as the bubble's thumbnail — but as an "animation", so the
-    // modal does not reappear several minutes later: the finished loop
-    // becomes the homepage background on its own.
-    generationInFlight.current = true;
-    onGeneratingChange?.(true, scene.avatar_url, "animation");
-    scheduleAutoClose();
-
-    try {
-      // The two-call protocol, the eight-minute budget and the retry on a
-      // failed poll all live in useAnimateAvatar now — the profile reel
-      // animates through the same code, and a second copy of a poll this
-      // long is a second set of timings to keep in step.
-      const videoUrl = await runAnimation({
-        mode: "scene",
-        imageUrl: scene.avatar_url,
-        userId: user.id,
-        promptOverride: SCENE_ANIMATION_PROMPT,
-      });
-
-      if (videoUrl) {
-        toast.success(t("avatar.avatarAnimated"), { duration: 5000 });
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 },
-          colors: ["#A855F7", "#EC4899", "#3B82F6"],
-        });
-        // The homepage picks the loop up through the scene query
-        queryClient.invalidateQueries({ queryKey: ["user-scene", user.id] });
-        loadGenerations();
-      }
-    } finally {
-      setIsAnimating(false);
-      generationInFlight.current = false;
-      onGeneratingChange?.(false);
-    }
-  };
-
   // Content based on step
   const renderContent = () => {
-    // The scene the animate button would bring to life (selected, else newest).
-    const sceneRows = generations.filter((g) => g.avatar_url.includes("/scene_"));
-    const currentScene = sceneRows.find((g) => g.is_current) || sceneRows[0] || null;
-
     if (step === "gallery") {
       return (
         <div className="space-y-4">
@@ -1222,46 +799,6 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
               </div>
             </div>
             <p className="text-sm text-muted-foreground">{t("avatar.uploadEncouragement")}</p>
-            
-            {/* Animate Scene Button - PRO gated; turns the current homepage
-                scene into a seamless idle-loop video */}
-            {currentScene && (
-              isVip ? (
-                <motion.button
-                  onClick={animateScene}
-                  disabled={isAnimating}
-                  className="mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-primary/20 to-accent/20 border border-primary/30 text-xs font-medium text-primary hover:from-primary/30 hover:to-accent/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  {isAnimating ? (
-                    <>
-                      <Loader2 className="w-3 h-3 animate-spin" />
-                      <span>{t("avatar.animating")}</span>
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-3 h-3" />
-                      <span>{currentScene?.animated_avatar_url ? t("avatar.reAnimate") : t("avatar.animateAvatar")}</span>
-                    </>
-                  )}
-                </motion.button>
-              ) : (
-                <motion.button
-                  onClick={() => {
-                    onClose();
-                    navigate("/profile?tab=PRO");
-                  }}
-                  className="mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/50 border border-border text-xs font-medium text-muted-foreground"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <Lock className="w-3 h-3" />
-                  <span>{t("avatar.animationPro")}</span>
-                  <img src={crownIcon} alt="" className="w-3.5 h-3.5 object-contain" />
-                </motion.button>
-              )
-            )}
           </div>
 
           {/* Generate New Section - MOVED UP */}
@@ -1285,7 +822,7 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
 
                 <button
                   type="button"
-                  onClick={() => openFilePicker("avatar")}
+                  onClick={() => openFilePicker()}
                   disabled={isProcessingFile}
                   className={`relative flex-1 aspect-square max-w-[100px] rounded-2xl border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-1 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer ${isProcessingFile ? 'opacity-50' : ''}`}
                 >
@@ -1316,7 +853,7 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
           </div>
 
           {/* The one file input in the modal, opened by ref from the tiles
-              above and from "+ new scene" below. Every tile used to carry its
+              above. Every tile used to carry its
               own transparent full-size input instead — a pattern that depends
               on hit-testing an invisible control inside a transform-animated
               dialog, which WebKit and the Capacitor WebView do not reliably
@@ -1356,11 +893,11 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
               </div>
             </div>
           )}
-          {generations.some((g) => !isSceneUrl(g.avatar_url)) && (
+          {generations.length > 0 && (
             <div>
               <p className="text-sm font-medium text-foreground mb-2">{t("avatar.myAvatars")}</p>
               <div className="grid grid-cols-5 gap-2">
-                {generations.filter((g) => !isSceneUrl(g.avatar_url)).slice(0, 10).map((gen) => (
+                {generations.slice(0, 10).map((gen) => (
                   <motion.button
                     key={gen.id}
                     onClick={() => setSelectedForAction(
@@ -1397,146 +934,44 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
               </div>
 
               {/* Apply/delete for the tapped avatar - right under the grid */}
-              {selectedGen && !isSceneUrl(selectedGen.avatar_url) && renderGenActions()}
+              {selectedGen && renderGenActions()}
             </div>
           )}
 
-          {/* My Scenes - homepage scene generations. Picking one makes it the
-              active homepage scene; the plus tile starts a new generation
-              from a different selfie/photo. This used to be hidden below
-              768px because the scene hero was desktop-only — the mobile home
-              redesign gave phones the same hero, so hiding the picker there
-              left tapping the scene with nowhere to go. */}
+          {/* Mascots — the home-screen scene. One tile per mascot; the chosen
+              one is what the home screen paints behind the widgets (the King
+              keeps its idle loop). This replaced "my scenes", where a scene
+              was generated from a photo, and the preset-avatar grid under
+              it: the face tiles here are the mascots' own. */}
           <div>
-            <p className="text-sm font-medium text-foreground mb-2">{t("avatar.myScenes")}</p>
-            {/* Wrapping grid — every tile always fully visible, no cropped
-                scroll row. First the new-scene tile, then the default mascot
-                scene, then the generated ones. */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => openFilePicker("scene")}
-                disabled={isLoading || isProcessingFile}
-                className={`relative aspect-video rounded-xl border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-1 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer ${isLoading || isProcessingFile ? "opacity-50" : ""}`}
-              >
-                {isProcessingFile ? (
-                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                ) : (
-                  <Plus className="w-6 h-6 text-primary" />
-                )}
-                <span className="text-xs text-muted-foreground">
-                  {isProcessingFile ? t("common.processing") || "Processing..." : t("avatar.newScene")}
-                </span>
-                {/* Priced, not locked — the tile still opens the picker and
-                    the charge is spelled out before anything is spent. */}
-                {quota.scene.isLimitReached && (
-                  // White pill rather than a tinted one: the diamond is
-                  // purple artwork, and on the lavender tile it sat on a
-                  // near-matching wash and disappeared.
-                  <span className="absolute top-1 right-1 inline-flex items-center gap-1 rounded-full bg-white px-2 py-0.5 text-[11px] font-bold text-primary shadow-sm">
-                    <img src={gemIcon} alt="" className="w-3 h-3 object-contain" />
-                    {EXTRA_GENERATION_GEM_COST}
-                  </span>
-                )}
-              </button>
-              <motion.button
-                onClick={selectDefaultScene}
-                disabled={isLoading}
-                className={`relative aspect-video rounded-xl overflow-hidden border-2 transition-all ${
-                  scenePref === "default"
-                    ? "border-primary ring-2 ring-primary/30"
-                    : "border-border hover:border-primary/50"
-                } disabled:opacity-50`}
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-              >
-                <BackgroundVideo
-                  src="/videos/trivia-king-scene.mp4"
-                  still={heroScene}
-                  className="absolute inset-0 pointer-events-none"
-                />
-                <span className="absolute bottom-1 left-1 rounded-full bg-black/40 px-2 py-0.5 text-[10px] font-bold text-white">
-                  MyTrivia
-                </span>
-                {scenePref === "default" && (
-                  <div className="absolute top-1 right-1 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow">
-                    <Check className="w-3 h-3 text-white" />
-                  </div>
-                )}
-              </motion.button>
-              {/* Same reason as the avatars shelf: hold the slots while the
-                  rows are still in flight, so a scene fades into a space that
-                  was already there. */}
-              {generationsLoading &&
-                [0, 1].map((i) => (
-                  <div key={`s${i}`} className="aspect-video rounded-xl bg-muted/60 animate-pulse" />
-                ))}
-              {generations.filter((g) => isSceneUrl(g.avatar_url)).map((gen) => (
-                <motion.button
-                  key={gen.id}
-                  onClick={() => setSelectedForAction(selectedForAction === gen.id ? null : gen.id)}
-                  disabled={isLoading}
-                  className={`relative aspect-video rounded-xl overflow-hidden border-2 transition-all ${
-                    selectedForAction === gen.id
-                      ? "border-primary ring-2 ring-primary/30"
-                      : gen.is_current && scenePref !== "default"
-                        ? "border-primary"
-                        : "border-border hover:border-primary/50"
-                  } disabled:opacity-50`}
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                >
-                  <img src={gen.avatar_url} alt="Scene" className="w-full h-full object-cover pointer-events-none" draggable={false} />
-                  {gen.is_current && scenePref !== "default" && selectedForAction !== gen.id && (
-                    <div className="absolute top-1 right-1 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow">
-                      <Check className="w-3 h-3 text-white" />
-                    </div>
-                  )}
-                  {selectedForAction === gen.id && (
-                    <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
-                      <Check className="w-5 h-5 text-primary" />
-                    </div>
-                  )}
-                </motion.button>
-              ))}
-            </div>
-
-            {/* Apply/delete for the tapped scene - right under the ticker */}
-            {selectedGen && isSceneUrl(selectedGen.avatar_url) && renderGenActions()}
-
-            {/* Under the shelf it describes. Scenes have their own budget,
-                separate from avatars — a full scene shelf used to close the
-                avatar tiles too. */}
-            <QuotaNote quota={quota.scene} isVip={isVip} gems={gems} onGetPro={goToPro} />
-          </div>
-
-          {/* Default Avatars */}
-          <div>
-            <p className="text-sm font-medium text-foreground mb-2">{t("avatar.avatarsList")}</p>
+            <p className="text-sm font-medium text-foreground">{t("avatar.mascots")}</p>
+            <p className="mb-2 text-xs text-muted-foreground">{t("avatar.mascotsHint")}</p>
             <div className="grid grid-cols-4 gap-2">
-              {DEFAULT_AVATARS.map((avatar, index) => {
-                // Check against both bundled URL and canonical path for selection indicator
-                const canonicalPath = DEFAULT_AVATAR_PATHS[index];
-                const isSelected = profile?.avatar_url === avatar || profile?.avatar_url === canonicalPath;
+              {MASCOTS.map((mascot) => {
+                const isSelected = mascot.id === mascotId;
                 return (
                   <motion.button
-                    key={index}
-                    onClick={() => selectDefaultAvatar(avatar)}
+                    key={mascot.id}
+                    type="button"
+                    onClick={() => chooseMascot(mascot.id)}
                     disabled={isLoading}
+                    aria-label={t(`avatar.mascotNames.${mascot.id}`)}
+                    aria-pressed={isSelected}
                     className={`relative aspect-square rounded-xl overflow-hidden border-2 transition-all ${
-                      isSelected ? "border-amber-500" : "border-border hover:border-amber-400/50"
+                      isSelected ? "border-primary ring-2 ring-primary/30" : "border-border hover:border-primary/50"
                     } disabled:opacity-50`}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <img 
-                      src={avatar} 
-                      alt={`Default avatar ${index + 1}`} 
-                      className="w-full h-full object-cover"
+                    <img
+                      src={mascot.thumb}
+                      alt=""
+                      draggable={false}
+                      className="w-full h-full object-cover pointer-events-none"
                     />
                     {isSelected && (
-                      <div className="absolute inset-0 bg-amber-500/20 flex items-center justify-center">
-                        <Check className="w-4 h-4 text-amber-500" />
+                      <div className="absolute top-1 right-1 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow">
+                        <Check className="w-3 h-3 text-white" />
                       </div>
                     )}
                   </motion.button>
@@ -1719,7 +1154,7 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
                 setGeneratedAvatar(null);
                 setUploadedImage(null);
               }}
-              disabled={isLoading || isAnimating}
+              disabled={isLoading}
               className="w-full"
               icon={<img src={iconScissors} alt="" className="w-5 h-5 object-contain shrink-0" />}
             >
@@ -1729,45 +1164,12 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
               variant="success"
               size="md"
               onClick={() => saveAvatar()}
-              disabled={isLoading || isAnimating}
+              disabled={isLoading}
               className="w-full"
               icon={isLoading ? <Loader2 className="w-4 h-4 animate-spin shrink-0" /> : <Check className="w-4 h-4 shrink-0" />}
             >
               {t("avatar.useAsProfile")}
             </ChunkyButton>
-            
-            {/* Animate button - save + animate in one tap */}
-            {isVip ? (
-              <ChunkyButton
-                variant="primary"
-                size="md"
-                onClick={async () => {
-                  await saveAvatar();
-                  animateScene();
-                }}
-                disabled={isLoading || isAnimating}
-                className="w-full"
-                icon={isAnimating ? <Loader2 className="w-4 h-4 animate-spin shrink-0" /> : <Sparkles className="w-4 h-4 shrink-0" />}
-              >
-                {isAnimating ? t("avatar.animating") : t("extra.avatarAnimateEmoji")}
-              </ChunkyButton>
-            ) : (
-              <ChunkyButton
-                variant="outline"
-                size="md"
-                onClick={() => {
-                  onClose();
-                  navigate("/profile?tab=PRO");
-                }}
-                className="w-full"
-                icon={<Lock className="w-4 h-4 shrink-0" />}
-              >
-                <span className="flex items-center gap-1.5">
-                  {t("extra.avatarAnimatePro")}
-                  <img src={crownIcon} alt="" className="w-4 h-4 object-contain" />
-                </span>
-              </ChunkyButton>
-            )}
           </div>
         </div>
       );

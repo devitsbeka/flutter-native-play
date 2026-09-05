@@ -75,19 +75,16 @@ const SCENE_WASH =
   "linear-gradient(180deg, #d1c8f3 3.1744%, rgba(244,216,253,0) 22.768%)";
 
 interface MobileSceneBackgroundProps {
-  /** Generated still for this user, when they have one. */
+  /** The chosen mascot's portrait scene, when it is not the King. */
   sceneUrl: string | null;
-  /** Matching idle-loop video for the generated scene. */
-  sceneVideoUrl: string | null;
   /** Fall back to the shared Trivia King loop. */
   showDefaultScene: boolean;
-  /** The Trivia King idle loop, played when there is no generated scene. */
+  /** The Trivia King idle loop, played when the King is the mascot. */
   defaultVideoSrc: string;
 }
 
 export function MobileSceneBackground({
   sceneUrl,
-  sceneVideoUrl,
   showDefaultScene,
   defaultVideoSrc,
 }: MobileSceneBackgroundProps) {
@@ -99,17 +96,21 @@ export function MobileSceneBackground({
   // The full-bleed rewrite gave both `size-full object-cover`, which fits to
   // whichever edge is proportionally longer — on any phone taller than the
   // frame's 0.558 that means filling the height, blowing the art up and
-  // cropping it. Fitting both to the screen width instead fixed that for the
-  // portrait scene and broke the default one: the Trivia King loop is 16:9, so
-  // at 100vw it is only 0.56 screens tall and sat as a shallow strip along the
-  // bottom with the page empty above it.
+  // cropping it. Both are anchored to the bottom instead and fade out at the
+  // top into the page's wash.
   //
-  // The frame's own measures, which is what this looked like when it was
-  // right: the generated portrait spans 154.94vw from -22.06vw, and the 16:9
-  // loop 227.2vw from -47.8vw — far wider than the screen precisely so that a
-  // landscape clip is tall enough to fill the space above the nav. Both are
-  // anchored to the bottom and fade out at the top into the page's wash.
-  const portraitBox = "absolute left-[-22.06vw] w-[154.94vw] max-w-none";
+  // The mascot stills are portrait (their sky already cropped, see
+  // src/assets/mascots) with the character in the lower two thirds. Bottom-
+  // anchored, the width alone decides where the head lands: at 106vw it
+  // clears the friends reel and the feet sit on the profile card, which is
+  // where the King's do. The frame's 154.94vw was measured for the old
+  // generated scenes, where the face filled the picture; at that width an
+  // animal's head disappears under the header.
+  //
+  // The King's loop is 16:9, so it spans 227.2vw from -47.8vw as in the
+  // frame — far wider than the screen precisely so that a landscape clip
+  // is tall enough to fill the space above the nav.
+  const portraitBox = "absolute left-[-3vw] w-[106vw] max-w-none";
   const style: React.CSSProperties = { bottom: NAV_H, ...SCENE_TOP_FADE };
 
   return (
@@ -120,23 +121,7 @@ export function MobileSceneBackground({
       className={`md:hidden absolute inset-0 ${SCENE_Z} select-none pointer-events-none overflow-hidden`}
     >
       {sceneUrl ? (
-        sceneVideoUrl ? (
-          // BackgroundVideo, not <video autoplay>: Low Power Mode paints a
-          // play glyph over a suspended autoplay video and CSS cannot hide
-          // it. The still renders until playback truly starts.
-          //
-          // `intrinsic` so the wrapper takes its height from the video rather
-          // than from the box — the same width-led sizing as the still.
-          <BackgroundVideo
-            src={sceneVideoUrl}
-            still={sceneUrl}
-            layout="intrinsic"
-            className={portraitBox}
-            style={style}
-          />
-        ) : (
-          <img src={sceneUrl} alt="" draggable={false} className={portraitBox} style={style} />
-        )
+        <img src={sceneUrl} alt="" draggable={false} className={portraitBox} style={style} />
       ) : (
         // The default scene is the Trivia King idle loop, not a still of it.
         // The full-bleed rewrite dropped the video and rendered the home-scene
