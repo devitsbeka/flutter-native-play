@@ -88,6 +88,14 @@ export function MobileHomeScroll({
   };
 
   return (
+    // The scroller is `absolute inset-0` of this positioned, flex-filled root
+    // — NOT `h-full`. A flex item's grown height is not a resolvable base for a
+    // percentage-height child, so an `h-full` scroller collapsed to a short
+    // "little window" in the top third of the screen (the card anchored to its
+    // bottom landed mid-screen, and the feed scrolled in a cramped box).
+    // Positioning the scroller against this root gives it a real pixel height,
+    // so the hero is a true full screen and the feed's floor is one real
+    // viewport.
     <div className="relative z-10 min-h-0 flex-1">
       {/* Compact identity + balances, fading in once the scene has gone. */}
       <div
@@ -129,7 +137,7 @@ export function MobileHomeScroll({
         </div>
       </div>
 
-      <div className="h-full overflow-y-auto overscroll-contain" onScroll={onScroll}>
+      <div className="absolute inset-0 overflow-y-auto overscroll-contain" onScroll={onScroll}>
         {/* ── Hero: transparent over the page-level scene, scrolls away ──
             Exactly one screenful, so at rest it is pixel-for-pixel the old
             home: the scene shows through, the reel sits at the top and the
@@ -158,16 +166,15 @@ export function MobileHomeScroll({
         </section>
 
         {/* ── Feed: light, chunky rails revealed on scroll ──────────────────
-            min-h-[100dvh]: the feed is the solid ground the scroll lands on.
-            The scene behind it is a FIXED, full-screen backdrop (page-level
+            min-h-full: the feed is the solid ground the scroll lands on. The
+            scene behind it is a FIXED, full-screen backdrop (page-level
             `absolute inset-0`), so the feed's opaque panel has to cover the
             whole viewport once you scroll into it — otherwise, when the rails
             are shorter than a screen, the fixed scene shows through beneath
-            them and you get a scene stuck in the lower half. Guaranteeing at
-            least a screenful of panel means the scene only ever shows behind
-            the transparent hero (the intended at-rest look), never below the
-            feed. */}
-        <div className="relative z-10 min-h-[100dvh] rounded-t-[28px] bg-[#faf6ff] pb-[calc(104px_+_var(--safe-bottom))] shadow-[0_-10px_28px_rgba(60,30,90,0.14)]">
+            them. `min-h-full` is exactly one scroller viewport (the scroller
+            now has a real height); `100dvh` overshot it by the safe-area
+            insets and padded a whole empty screen below the rails. */}
+        <div className="relative z-10 min-h-full rounded-t-[28px] bg-[#faf6ff] pb-[calc(104px_+_var(--safe-bottom))] shadow-[0_-10px_28px_rgba(60,30,90,0.14)]">
           <div className="flex justify-center pt-2">
             <span className="h-[5px] w-[44px] rounded-full bg-[rgba(90,60,130,0.22)]" />
           </div>
