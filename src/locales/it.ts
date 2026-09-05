@@ -2040,6 +2040,8 @@ export const it: KaTranslations = {
     whatToPlay: "Cosa vuoi giocare?",
     railRooms: "Stanze",
     railRoomsDesc: "Torna a giocare",
+    railCategories: "Categorie",
+    railCategoriesDesc: "Scegli un tema",
     railPlay: "Gioca",
     railPlayDesc: "Scegli una modalità",
     railMyTrivias: "I miei Trivia",
