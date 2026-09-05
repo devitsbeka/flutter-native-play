@@ -69,8 +69,12 @@ interface ProBannerReelProps {
    * "pro" keeps the two subscription tiers and drops the timed package
    * deals. Packages are the shop's business; carrying them on the profile
    * made a two-offer reel look like a four-offer one.
+   *
+   * "deals" is the mirror image — only the daily and hourly packages — so
+   * the home can show offers in this same full-card, arrowed reel rather
+   * than a cramped strip that cut the second card off.
    */
-  slides?: "all" | "pro";
+  slides?: "all" | "pro" | "deals";
 }
 
 export function ProBannerReel({ purchasedItems, isPurchasing, onItemClick, slides = "all" }: ProBannerReelProps) {
@@ -159,6 +163,7 @@ export function ProBannerReel({ purchasedItems, isPurchasing, onItemClick, slide
     // to see what they are on, and dropping the one they own would leave a
     // subscriber's own plan page showing only the tier above it.
     if (slides === "pro") return ALL_SLIDES.filter((s) => s.type !== "deal");
+    if (slides === "deals") return ALL_SLIDES.filter((s) => s.type === "deal");
     // The shop is a list of things to buy. A tier the player is already on is
     // not one, and it was taking a full-width slide — with a gold button —
     // to say so.
@@ -418,8 +423,11 @@ export function ProBannerReel({ purchasedItems, isPurchasing, onItemClick, slide
       </div>
 
       {/* Required beside any surface that can start a subscription purchase
-          (guideline 3.1.2) — this reel always carries the two PRO tiers. */}
-      <SubscriptionTerms className="relative z-10 mt-3 px-6 text-center" />
+          (guideline 3.1.2). Only when the PRO tiers are in the reel — a
+          deals-only reel sells coin/power packages, not a subscription. */}
+      {slides !== "deals" && (
+        <SubscriptionTerms className="relative z-10 mt-3 px-6 text-center" />
+      )}
     </div>
   );
 }
