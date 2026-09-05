@@ -275,9 +275,10 @@ describe("the King's duel keeps its one action at the bottom", () => {
     // Figma 1072:6642. It used to be the game screens' periwinkle, which
     // made every label on the screen white text floating on purple.
     expect(king).toMatch(/bg-\[#f7e2f7\] flex flex-col/);
-    // Nothing is drawn for a dark ground any more — the two survivors are
-    // the white tick on the green chip and the number on the blue clock.
-    expect(king.match(/text-white/g) ?? []).toHaveLength(2);
+    // Nothing is drawn for a dark ground any more — the three survivors are
+    // the white tick on the green chip, the white cross on the red one, and
+    // the number on the blue clock.
+    expect(king.match(/text-white/g) ?? []).toHaveLength(3);
     expect(king).not.toMatch(/text-white\/70/);
     expect(king).not.toMatch(/text-emerald-300|text-red-300|text-amber-300/);
   });
@@ -313,10 +314,11 @@ describe("the King's duel keeps its one action at the bottom", () => {
   });
 
   it("the reveal reads as rows, and the host still dresses the team", () => {
-    // The correct row is the frame's filled green chip with a white tick;
-    // a miss keeps the app's 3D cross at the same size, so the rows line up.
-    expect(king).toMatch(/rounded-\[16px\] bg-\[#34d399\]/);
-    expect(king).toMatch(/answer-wrong-3d\.png/);
+    // Both rows now carry the SAME chip in two colours — the 3D cross that
+    // used to mark a miss sat next to a flat disc and made the two rows
+    // look like different kinds of statement. See kingReveal.test.ts.
+    expect(king).toMatch(/tone === "right" \? "bg-\[#34d399\]" : "bg-\[#ff4606\]"/);
+    expect(king).not.toMatch(/answer-wrong-3d\.png/);
     expect(king).not.toMatch(/answer-correct-3d\.png/);
     expect(king).toMatch(/<RoomIconPickerModal[^]*?autoName=\{false\}/);
     expect(king).toMatch(/size=\{68\}/);

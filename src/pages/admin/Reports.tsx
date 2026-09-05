@@ -54,6 +54,11 @@ const REPORT_TYPE_LABELS: Record<string, { label: string; color: string }> = {
   harassment: { label: "შეურაცხყოფა", color: "bg-red-100 text-red-800" },
   inappropriate: { label: "შეუსაბამო", color: "bg-orange-100 text-orange-800" },
   cheating: { label: "თაღლითობა", color: "bg-purple-100 text-purple-800" },
+  // Not a person: the flag under a King reveal, filed by a player who spotted
+  // a bad puzzle. The reporter stands in as reported_user_id because that
+  // column is NOT NULL — read the description, not the pair of avatars.
+  king_question: { label: "King კითხვა", color: "bg-indigo-100 text-indigo-800" },
+  words_word: { label: "Words სიტყვა", color: "bg-teal-100 text-teal-800" },
   other: { label: "სხვა", color: "bg-gray-100 text-gray-800" },
 };
 
@@ -236,6 +241,8 @@ export default function AdminReports() {
               <SelectItem value="harassment">შეურაცხყოფა</SelectItem>
               <SelectItem value="inappropriate">შეუსაბამო</SelectItem>
               <SelectItem value="cheating">თაღლითობა</SelectItem>
+              <SelectItem value="king_question">King კითხვა</SelectItem>
+              <SelectItem value="words_word">Words სიტყვა</SelectItem>
               <SelectItem value="other">სხვა</SelectItem>
             </SelectContent>
           </Select>

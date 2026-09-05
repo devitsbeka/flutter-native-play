@@ -3,14 +3,13 @@ import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import type { Tables } from "@/integrations/supabase/types";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, ChevronLeft, Crown } from "lucide-react";
+import { Check, ChevronLeft, Crown, Flag, X } from "lucide-react";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { containsBlockedText } from "@/utils/contentFilter";
 import iconKingMascot from "@/assets/play-chooser/icon-king.webp";
 import { dealtRoomIcon } from "@/utils/roomCrests";
 import { useRoomIconPool } from "@/hooks/useRoomIconPool";
 import crownIconAsset from "@/assets/crown-icon.png";
-import iconAnswerWrong from "@/assets/answer-wrong-3d.png";
 import { resolveAvatarUrl } from "@/utils/avatarUtils";
 import { supabase } from "@/integrations/supabase/client";
 import { roomVisibilityFields } from "@/utils/roomVisibility";
@@ -20,6 +19,11 @@ import { useServerDeadline } from "@/hooks/useServerDeadline";
 import { useGameInvitations } from "@/hooks/useGameInvitations";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import { readAppLanguage } from "@/utils/appLanguage";
+import {
+  kingReportFallbackRow,
+  kingReportRow,
+  type KingReportInput,
+} from "@/utils/kingQuestionReport";
 import { toast } from "@/lib/toast";
 import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
 import { RoomIconPickerModal } from "@/components/team/RoomIconPickerModal";
@@ -176,9 +180,12 @@ function DuelQuestionNo({ label }: { label: string }) {
 /**
  * One line of the reveal: a label, then a 36px status chip beside the text.
  *
- * The frame gives the correct answer a filled green chip with a white tick
- * and a miss the 3D cross the rest of the app uses, at the same size — so
- * the two rows line up whatever they say.
+ * The two chips are the SAME object in two colours — 36px, radius 16, a
+ * white glyph centred in it — because they are read as a pair, one under
+ * the other, and a matched pair is read in one glance. The miss used to be
+ * the 3D cross the rest of the app uses: a lit sphere beside a flat disc,
+ * which made the two rows look like different kinds of statement rather
+ * than the same statement twice. Both colours are the frame's.
  */
 function RevealRow({
   label,
@@ -195,17 +202,118 @@ function RevealRow({
         {label}
       </p>
       <div className="mt-1.5 flex items-center gap-3">
-        {tone === "right" ? (
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-[16px] bg-[#34d399]">
+        <span
+          className={`flex size-9 shrink-0 items-center justify-center rounded-[16px] ${
+            tone === "right" ? "bg-[#34d399]" : "bg-[#ff4606]"
+          }`}
+        >
+          {tone === "right" ? (
             <Check className="size-5 text-white" strokeWidth={3} />
-          </span>
-        ) : (
-          <img alt="" src={iconAnswerWrong} className="size-9 shrink-0 object-contain" />
-        )}
+          ) : (
+            <X className="size-5 text-white" strokeWidth={3} />
+          )}
+        </span>
         <span className="min-w-0 font-[Nunito] text-[14px] font-medium leading-5 tracking-[-0.16px] text-[#402666]">
           {text}
         </span>
       </div>
+    </div>
+  );
+}
+
+/**
+ * "This question is wrong" — the flag under the explanation.
+ *
+ * The pool is seeded, not authored in the app, so a bad puzzle is a data
+ * bug that only the person reading the reveal is ever in a position to
+ * catch. One tap files it and the row turns into its own receipt: there is
+ * nothing to confirm, and a report you cannot tell you sent gets sent four
+ * times.
+ *
+ * It writes twice on purpose. king_question_reports is the structured
+ * record, and it may not exist yet — migrations reach this database by hand
+ * — so the same report also goes to user_reports, which is the table the
+ * admin Reports page actually reads. A report nobody can read is not a
+ * report.
+ */
+function ReportQuestionRow({ input }: { input: KingReportInput }) {
+  const { t } = useLanguage();
+  const [sent, setSent] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  // A new question is a new report; the receipt must not carry over.
+  useEffect(() => {
+    setSent(false);
+  }, [input.questionText]);
+
+  const file = async () => {
+    if (busy || sent) return;
+    setBusy(true);
+    try {
+      await supabase.from("king_question_reports" as never).insert(
+        kingReportRow(input) as never,
+      );
+      const fallback = kingReportFallbackRow(input);
+      if (fallback) await supabase.from("user_reports").insert(fallback);
+    } catch (e) {
+      // Reporting is a courtesy, not a transaction — never block the reveal.
+      console.warn("[King] report failed", e);
+    } finally {
+      setBusy(false);
+      setSent(true);
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={() => void file()}
+      disabled={busy || sent}
+      className="mt-2 flex h-[33px] w-full items-center justify-center gap-2 font-[Nunito] text-[14px] leading-[26px] tracking-[-0.16px] text-[#ff615d] disabled:opacity-70"
+    >
+      {sent ? <Check className="size-[13px]" strokeWidth={3} /> : <Flag className="size-[13px]" />}
+      {sent ? t("king.reportThanks") : t("king.reportQuestion")}
+    </button>
+  );
+}
+
+/**
+ * "+ 1 point to Brave Bats" — who the round went to, under the card.
+ *
+ * The scoreline at the top already moved, but it moves silently and it is
+ * two numbers; this says the same thing in words, next to the crest, at the
+ * moment it happened. The frame puts it below the card rather than inside
+ * it because it is about the MATCH, not about the question.
+ *
+ * The recipient's name carries its own grammar — Georgian wants a case
+ * ending on the team name and none on the King — so the two halves are
+ * separate keys rather than one interpolated sentence.
+ */
+function PointAwardRow({
+  toKing,
+  teamName,
+  teamIcon,
+}: {
+  toKing: boolean;
+  teamName: string;
+  teamIcon?: string | null;
+}) {
+  const { t } = useLanguage();
+  return (
+    <div className="flex items-center justify-center gap-2.5">
+      <span className="font-[Nunito] text-[18px] font-extrabold uppercase leading-[26px] tracking-[-0.16px] text-[#1eb880]">
+        {t("king.plusPoint")}
+      </span>
+      <span className="flex min-w-0 items-center">
+        <img
+          alt=""
+          src={toKing ? iconKingMascot : (teamIcon ?? "")}
+          className="size-10 shrink-0 object-contain"
+        />
+        <span className="truncate font-[Nunito] text-[18px] font-extrabold uppercase leading-[26px] tracking-[-0.16px] text-[#402666]/90">
+          {toKing ? t("king.pointToKing") : t("king.pointToTeam", { name: teamName })}
+        </span>
+      </span>
     </div>
   );
 }
@@ -441,6 +549,13 @@ export default function KingPage() {
   // What THIS device sent, for the reveal's "you picked" row — the server
   // reveal carries only the truth, and a timeout locked nothing.
   const [myPick, setMyPick] = useState<string | null>(null);
+
+  // The question as it was ASKED, held for the report flag. The state the
+  // reveal is built from is the post-submit one, whose `question` the
+  // server is free to have dropped — and a report that names no question
+  // is a row nobody can act on.
+  const askedRef = useRef<string>("");
+  if (state?.question?.question_text) askedRef.current = state.question.question_text;
   const submit = useCallback(
     async (answer: string) => {
       const matchId = matchIdRef.current;
@@ -1250,6 +1365,18 @@ export default function KingPage() {
               <p className="mt-1.5 font-[Nunito] text-[16px] leading-[26px] tracking-[-0.16px] text-[#402666]/90">
                 {reveal.explanation}
               </p>
+              <ReportQuestionRow
+                input={{
+                  userId: user?.id ?? null,
+                  language: readAppLanguage("en"),
+                  mode: "solo",
+                  matchId: reveal.match_id,
+                  roomId: null,
+                  questionNumber: reveal.question_number,
+                  questionText: askedRef.current,
+                  correctAnswer: reveal.correct_answer ?? null,
+                }}
+              />
             </div>
           </div>
         )}
@@ -1553,7 +1680,24 @@ function KingTeamDuel({
                   </p>
                 </>
               )}
+              <ReportQuestionRow
+                input={{
+                  userId: meId,
+                  language: readAppLanguage("en"),
+                  mode: "team",
+                  matchId: view.match_id,
+                  roomId: view.room_id,
+                  questionNumber: view.question_number,
+                  questionText: view.last_result.question_text,
+                  correctAnswer: view.last_result.correct_answer,
+                }}
+              />
             </div>
+            <PointAwardRow
+              toKing={!view.last_result.correct}
+              teamName={teamName || t("king.teamLabel")}
+              teamIcon={teamIcon}
+            />
             {!isCaptain && (
               <p className="text-sm text-[#402666]/70 text-center">
                 {t("king.captainNextHint")}

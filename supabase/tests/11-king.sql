@@ -639,3 +639,94 @@ BEGIN
 END $$;
 
 \echo 'ok: the King has 24 short puzzles in every language and deals them first'
+
+-- ══ a bad puzzle can be reported, and only as yourself (20261003100000) ════
+--
+-- The pool is seeded, so a wrong answer key is a data bug the player at the
+-- reveal is the only one positioned to catch. The flag under the
+-- explanation files one row here. Run as the real client roles rather than
+-- as postgres: a superuser bypasses RLS, so a policy asserted from there
+-- passes whatever it says.
+
+DO $$
+DECLARE
+  alice uuid := 'dd000000-0000-0000-0000-0000000000a1';
+  mal   uuid := 'dd000000-0000-0000-0000-0000000000b1';
+  n int;
+BEGIN
+  INSERT INTO auth.users (id, email) VALUES (alice,'a@kr.test'),(mal,'m@kr.test')
+    ON CONFLICT (id) DO NOTHING;
+
+  PERFORM pg_temp.as_user(alice);
+  SET LOCAL ROLE authenticated;
+
+  INSERT INTO public.king_question_reports (user_id, language, mode, question_text)
+    VALUES (alice, 'ka', 'team', 'a bad puzzle');
+  RAISE NOTICE 'ok: a signed-in player reports a puzzle as themselves';
+
+  BEGIN
+    INSERT INTO public.king_question_reports (user_id, language, mode, question_text)
+      VALUES (mal, 'ka', 'team', 'framed');
+    RAISE EXCEPTION 'FAIL: filed a report in another user''s name';
+  EXCEPTION WHEN insufficient_privilege THEN
+    RAISE NOTICE 'ok: nobody reports in somebody else''s name';
+  END;
+
+  BEGIN
+    INSERT INTO public.king_question_reports (user_id, language, mode, question_text)
+      VALUES (alice, 'ka', 'whatever', 'x');
+    RAISE EXCEPTION 'FAIL: took an unknown mode';
+  EXCEPTION WHEN check_violation THEN
+    RAISE NOTICE 'ok: mode is solo or team, nothing else';
+  END;
+
+  -- Reports are write-only from a client; triage uses the service role.
+  -- Refused on the GRANT, before RLS gets a say — the table hands clients
+  -- INSERT and nothing else, so this is not "you see zero rows", it is
+  -- "reading is not a thing you can do".
+  BEGIN
+    SELECT count(*) INTO n FROM public.king_question_reports;
+    RAISE EXCEPTION 'FAIL: a client read % report rows', n;
+  EXCEPTION WHEN insufficient_privilege THEN
+    RAISE NOTICE 'ok: the reporter cannot read reports back';
+  END;
+
+  BEGIN
+    UPDATE public.king_question_reports SET question_text = 'edited';
+    RAISE EXCEPTION 'FAIL: a client edited a filed report';
+  EXCEPTION WHEN insufficient_privilege THEN
+    RAISE NOTICE 'ok: a filed report cannot be edited from a client';
+  END;
+
+  BEGIN
+    DELETE FROM public.king_question_reports;
+    RAISE EXCEPTION 'FAIL: a client deleted a filed report';
+  EXCEPTION WHEN insufficient_privilege THEN
+    RAISE NOTICE 'ok: a filed report cannot be deleted from a client';
+  END;
+
+  RESET ROLE;
+  PERFORM pg_temp.as_user(NULL);
+  SET LOCAL ROLE anon;
+
+  INSERT INTO public.king_question_reports (user_id, language, mode, question_text)
+    VALUES (NULL, 'en', 'solo', 'anon puzzle');
+  RAISE NOTICE 'ok: a signed-out player can still report';
+
+  BEGIN
+    INSERT INTO public.king_question_reports (user_id, language, mode, question_text)
+      VALUES (alice, 'en', 'solo', 'guest framing alice');
+    RAISE EXCEPTION 'FAIL: a guest filed a report as a named user';
+  EXCEPTION WHEN insufficient_privilege THEN
+    RAISE NOTICE 'ok: a guest cannot report in a named user''s name';
+  END;
+
+  RESET ROLE;
+  PERFORM pg_temp.as_user(NULL);
+  SELECT count(*) INTO n FROM public.king_question_reports;
+  PERFORM pg_temp.must_equal(n, 2, 'both reports are on record for triage');
+
+  DELETE FROM public.king_question_reports;
+END $$;
+
+\echo 'ok: King puzzle reports are write-only, and only in your own name'
