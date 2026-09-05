@@ -2358,6 +2358,8 @@ export const en: KaTranslations = {
     whatToPlay: "What will you play?",
     railRooms: "Rooms",
     railRoomsDesc: "jump back in",
+    heroStreak: "Streak",
+    heroQuest: "Quest",
     railCategories: "Categories",
     railCategoriesDesc: "pick a topic",
     railFirstRoom: "Create your first room",

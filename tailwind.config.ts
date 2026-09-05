@@ -152,6 +152,13 @@ export default {
           'Arial',
           'sans-serif'
         ],
+        // Section headings on the phone home (Figma 1076:2116).
+        georgian: [
+          'Noto Sans Georgian',
+          'Google Sans',
+          'Nunito',
+          'sans-serif'
+        ],
         hero: [
           'Slackey',
           'TASolivare',

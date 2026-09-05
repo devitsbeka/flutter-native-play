@@ -117,13 +117,12 @@ function RailHeader({
   return (
     <div className="mb-[10px] flex items-end justify-between gap-2 px-4">
       <div className="min-w-0">
-        <h2 className="font-hero text-[19px] capitalize leading-[22px] tracking-[-0.16px] text-[#402666]">
+        {/* Figma 1076:2116 / 2119: an 18px semibold Georgian sans heading
+            with a 12px medium Nunito line under it. */}
+        <h2 className="font-georgian text-[18px] font-semibold leading-[22px] text-[#402666]">
           {title}
         </h2>
-        {/* Regular weight, lighter ink: it is a subtitle under a display
-            face, and at medium it competed with the heading instead of
-            sitting under it. */}
-        <p className="mt-[2px] font-[Nunito] text-[12px] font-normal leading-[15px] tracking-[-0.16px] text-[#6b5b86]/85">
+        <p className="mt-[2px] font-[Nunito] text-[12px] font-medium leading-[15px] tracking-[-0.16px] text-[#6b5b86]">
           {desc}
         </p>
       </div>

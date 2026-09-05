@@ -32,10 +32,9 @@ import { AvatarCircle } from "@/components/home/AvatarCircle";
 import { SceneHero } from "@/components/home/SceneHero";
 import { SceneSidebar } from "@/components/home/SceneSidebar";
 import { DesktopGuestLanding, DesktopGuestSceneBackground } from "@/components/home/DesktopGuestLanding";
-import { MobileSceneBackground, MobileMascotScene, MobileProfileCard, MobileGuestHero } from "@/components/home/MobileHome";
+import { MobileSceneBackground, MobileMascotScene, MobileGuestHero } from "@/components/home/MobileHome";
 import { MobileHomeScroll } from "@/components/home/MobileHomeScroll";
 import { useHomeMascot } from "@/hooks/useHomeMascot";
-import { useMyLeaderboardRank, defaultScopeFor } from "@/hooks/useMyLeaderboardRank";
 import { DesktopActionCards } from "@/components/home/DesktopActionCards";
 import { LoggedInHomeV2 } from "@/pages/LoggedInHomeV2";
 import { DesktopPlayButtonLarge } from "@/components/home/DesktopPlayButtonLarge";
@@ -273,7 +272,7 @@ export default function Index() {
   const { coins, gems, addCoins } = useCurrency();
   const { powerUps } = useUserPowerUps();
   const { totalStars } = useTotalStars();
-  const { canClaimDaily, canClaimChest } = useRewardTimers();
+  const { canClaimDaily, canClaimChest, dailySecondsLeft } = useRewardTimers();
   const { missions, completedCount, totalCount } = useMissions();
   const { playsRemaining, maxPlays, canPlay, isVip, loading: vipLoading, regenPlayAvailable, timeUntilNextPlay, useRegenPlay, freeGamesExhausted } = usePlayLimit();
   const { subscription } = useVipStatus();
@@ -745,16 +744,11 @@ export default function Index() {
   const showDefaultScene = !sceneUrl && !(user && mascotLoading);
   const showAnimatePrompt = !isAnimatingFromHome && !!profile?.avatar_url && profile.avatar_url.includes('supabase.co/storage') && profile.has_face_photo === true && !profile?.animated_avatar_url;
 
-  // The phone profile card carries the player's flag and their place on the
-  // board. Only the phone shows it, so the count is only fetched there.
-  const myCountry = profile?.country_code || null;
-  const { data: myRank } = useMyLeaderboardRank(
-    defaultScopeFor(myCountry),
-    myCountry,
-    profile?.coins ?? 0,
-    user?.id,
-    isMobileViewport
-  );
+  // Under the gift tab on the phone home: how long today's reward can still
+  // be claimed ("3h 21m", Figma 1076:3591), or the call to claim it.
+  const giftLabel = canClaimDaily
+    ? t("dailyRewards.claim")
+    : `${Math.floor(dailySecondsLeft / 3600)}h ${Math.floor((dailySecondsLeft % 3600) / 60)}m`;
 
   // /dev/v2 previews the 3D world-map homepage for logged-in users; the
   // regular responsive homepage below serves the main route.
@@ -1182,16 +1176,19 @@ export default function Index() {
               ) : null
             }
             nickname={profile?.nickname || t("game.guest")}
-            countryCode={myCountry}
-            rank={myRank}
+            avatarUrl={profile?.avatar_url}
+            animatedAvatarUrl={profile?.animated_avatar_url}
             coins={coins}
             gems={gems}
+            giftLabel={giftLabel}
+            onAvatarClick={() => openAvatarModal()}
             onNameClick={() => setShowChangeNameModal(true)}
-            onRankClick={() => navigate("/leaderboards")}
             onCoinsClick={() => navigate("/power-ups?section=coins")}
             onGemsClick={() => navigate("/power-ups?section=gems-lari")}
             onGiftClick={() => setIsDailyRewardsOpen(true)}
+            // The flame opens the streak page (Figma 1069:18), not a sheet over the home screen.
             onStreakClick={() => navigate("/streak")}
+            onQuestClick={() => { setMissionsDate(null); setShowMissionsModal(true); }}
             onAddFriend={() => setShowAddFriendModal(true)}
           />
         )}
@@ -1212,29 +1209,6 @@ export default function Index() {
               />
             </div>
           </div>
-        )}
-
-        {/* Phone profile card (Figma 991:948) — flag, nickname and rank, the
-            chunky coin/gem pills, and the purse and flame tabs for daily
-            rewards and the streak. It positions itself just above the bottom
-            nav, so it is placed here for reading order rather than for where
-            it lands. Desktop keeps SceneHero's stack. On the phone home the
-            identity moved up into MobileHomeFeed. */}
-        {user && !showHomeFeed && (
-          <MobileProfileCard
-            nickname={profile?.nickname || t("game.guest")}
-            countryCode={myCountry}
-            rank={myRank}
-            coins={coins}
-            gems={gems}
-            onNameClick={() => setShowChangeNameModal(true)}
-            onRankClick={() => navigate("/leaderboards")}
-            onCoinsClick={() => navigate("/power-ups?section=coins")}
-            onGemsClick={() => navigate("/power-ups?section=gems-lari")}
-            onGiftClick={() => setIsDailyRewardsOpen(true)}
-            // The flame opens the streak page (Figma 1069:18), not a sheet over the home screen.
-            onStreakClick={() => navigate("/streak")}
-          />
         )}
 
         {/* Add Friend Modal for the friends strip */}

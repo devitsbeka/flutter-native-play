@@ -2363,6 +2363,8 @@ export const ka = {
     whatToPlay: "რას ითამაშებთ?",
     railRooms: "ოთახები",
     railRoomsDesc: "ითამაშე ონლაინ",
+    heroStreak: "სტრიკი",
+    heroQuest: "ქვესტი",
     railCategories: "კატეგორიები",
     railCategoriesDesc: "აირჩიე თემა",
     railFirstRoom: "შექმენი შენი პირველი ოთახი",

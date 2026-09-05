@@ -7,10 +7,10 @@ import myTriviaLogo from "@/assets/mytrivia-logo.svg";
 import guestGeoMap from "@/assets/figma-home/guest-geo-map.webp";
 import coinChunky from "@/assets/figma-home/coin-chunky.png";
 import gemChunky from "@/assets/figma-home/gem-chunky.png";
-import dailyRewardBag from "@/assets/figma-home/daily-reward-bag.png";
+import giftDaily from "@/assets/figma-home/gift-daily.png";
+import chestDaily from "@/assets/figma-home/chest-daily.png";
 import streakFire from "@/assets/figma-home/streak-fire.png";
-import flagGeRound from "@/assets/figma-home/flag-ge-round.svg";
-import { getCountryFlag } from "@/data/opponents";
+import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { BackgroundVideo } from "@/components/shared/BackgroundVideo";
 import heroScene from "@/assets/figma-landing/hero-scene.png";
 
@@ -21,8 +21,7 @@ import heroScene from "@/assets/figma-landing/hero-scene.png";
 // are expressed as a share of the frame width (vw) so the artwork keeps its
 // designed proportions on any phone.
 
-const CARD_SHADOW = "0px 2px 8px 0px rgba(102,51,153,0.06), 0px 8px 24px 0px rgba(102,51,153,0.12)";
-const STAT_SHADOW = "0px 2.94px 0px 0px #d8d0e8, 0px 4.409px 11.758px 0px rgba(0,0,0,0.1)";
+const STAT_SHADOW = "0px 2.745px 0px 0px #d8d0e8, 0px 4.116px 10.978px 0px rgba(0,0,0,0.1)";
 const STAT_GRADIENT = "linear-gradient(to bottom, rgba(255,255,255,0.5), rgba(254,254,254,0.5))";
 const AUTH_SHADOW = "0px 3.72px 0px 0px #d8d0e8, 0px 5.58px 14.881px 0px rgba(0,0,0,0.1)";
 const AUTH_GRADIENT = STAT_GRADIENT;
@@ -158,20 +157,17 @@ export function MobileMascotScene({ sceneUrl }: MobileMascotSceneProps) {
  * Profile card (logged-in states)
  * ------------------------------------------------------------------ */
 
-// Floor width for a stat pill, stepped by how long the value reads: one
-// character ("6") stays narrow, two ("42") sit in the middle, three or more
-// ("999", "1.2K") get the frame's own 84px floor. Anything longer just
-// grows past the floor, so the number is never clipped.
+// Chunky coin / gem pill — nodes 1076:2088 (coins, 87×40) and 1076:2095
+// (gems, 75×40). The frame froze each pill at one width for its sample
+// value, which leaves short balances with a hole between the icon and the
+// number; icon and value sit in a flex row instead, and the width steps with
+// how long the value reads so nothing is ever clipped.
 function statPillMinWidth(value: string): number {
-  if (value.length <= 1) return 64;
-  if (value.length === 2) return 74;
-  return 84;
+  if (value.length <= 1) return 58;
+  if (value.length === 2) return 66;
+  return 75;
 }
 
-// Chunky coin / gem pill — node 991:957 and 991:962. The frame froze each
-// pill at one width for its sample value, which leaves short balances with a
-// hole between the icon and the number; icon and value sit in a flex row
-// instead, and the width steps with how long the value reads.
 function StatPill({
   icon,
   value,
@@ -188,7 +184,7 @@ function StatPill({
       type="button"
       onClick={onClick}
       aria-label={label}
-      className="relative flex h-[43.07px] shrink-0 items-center gap-[4px] rounded-[14.616px] border border-solid border-[#e8e0f5] pl-[7px] pr-[13px]"
+      className="relative flex h-[40px] shrink-0 items-center gap-[2px] rounded-[33px] border-[0.934px] border-solid border-[#e8e0f5] pl-[3.6px] pr-[11px]"
       style={{ boxShadow: STAT_SHADOW, minWidth: statPillMinWidth(value) }}
     >
       <span aria-hidden className="absolute inset-0 rounded-[inherit]" style={{ background: STAT_GRADIENT }} />
@@ -196,76 +192,48 @@ function StatPill({
         src={icon}
         alt=""
         draggable={false}
-        className="relative size-[32.305px] shrink-0 object-cover"
+        className="relative size-[29.876px] shrink-0 object-cover"
       />
       <span className="relative flex-1 text-center font-['Nunito'] text-[16.159px] font-black leading-[25.132px] tracking-[-0.1462px] text-[#334155] whitespace-nowrap">
         {value}
       </span>
-      <span aria-hidden className="absolute inset-0 rounded-[inherit] shadow-[inset_0px_1.47px_0px_0px_white]" />
+      <span aria-hidden className="absolute inset-0 rounded-[inherit] shadow-[inset_0px_1.372px_0px_0px_white]" />
     </button>
   );
 }
 
-// The frame draws the Georgian flag as a 30px disc (node 992:5607). Every
-// other country gets its emoji flag cropped into the same disc, scaled up so
-// the glyph's own margins fall outside the circle.
-function RoundFlag({ code }: { code: string }) {
-  if (code.toUpperCase() === "GE") {
-    return <img src={flagGeRound} alt="" draggable={false} className="size-[30px] shrink-0" />;
-  }
-  // getCountryFlag falls back to a blank white flag for a code it doesn't
-  // know, which says less than showing nothing at all.
-  const emoji = getCountryFlag(code);
-  if (!emoji || emoji === "🏳️") return null;
-  return (
-    <span
-      aria-hidden
-      className="flex size-[30px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-white"
-    >
-      <span className="block text-[30px] leading-none" style={{ transform: "scale(1.5)" }}>
-        {emoji}
-      </span>
-    </span>
-  );
-}
-
-// The frame is 500 wide with 24px either side of the card, so the card is
-// 452 and everything inside it is placed in the frame's own pixels — the
-// balances from the left, the two reward tabs from the right. A 393px phone
-// gives the card 345, and at 1:1 the tabs land on the balances. So the card
-// is laid out at its design width and scaled down uniformly to whatever
-// width the phone has: every size, gap and radius stays the frame's own,
-// only smaller. On anything at least as wide as the frame it renders 1:1
-// and the right-anchored tabs simply follow the wider card.
-const CARD_DESIGN_W = 452;
-const CARD_H = 123;
-const CARD_INSET = 24;
+// Figma 1076:2066. The card is 464 wide on the 500 frame — 17px from the left
+// edge, 19 from the right — and 83 tall, with its bottom edge at 789: 49px
+// clear of the nav's 88px of chrome on the 926 frame. Everything inside it is
+// placed in the frame's own pixels: the avatar and the name from the left,
+// the two balances from the right.
+const CARD_H = 83;
+const CARD_LEFT = 17;
+const CARD_RIGHT = 19;
+// Narrower than this and the name has no room left between the avatar and
+// the balances (avatar 67 + name floor 60 + pills 168 + insets), so the card
+// is scaled down uniformly instead of squeezed: every size, gap and radius
+// stays the frame's own, only smaller. Every current phone is wider.
+const CARD_MIN_W = 340;
+const PROFILE_CARD_SHADOW =
+  "0px 1.867px 7.469px 0px rgba(102,51,153,0.06), 0px 7.469px 22.407px 0px rgba(102,51,153,0.12)";
 
 // The bottom nav's real height: 88px of chrome (20px of padding around 48px
 // items) plus the padding it adds for the home indicator. The card floats
-// 53px clear of it, as in the frame (nav at 854, card bottom at 801).
-// Exported: the scroll-reveal home's feed pulls itself up over exactly this
-// strip and clears the nav by it, so the card and the feed cannot disagree
-// about where the nav is.
+// 49px clear of it, as in the frame. Exported: the scroll-reveal home's feed
+// pulls itself up over exactly this strip and clears the nav by it, so the
+// card and the feed cannot disagree about where the nav is.
 export const NAV_CHROME = "calc(88px + max(0.25rem, var(--safe-bottom) / 2))";
-const CARD_GAP_ABOVE_NAV = 53;
+const CARD_GAP_ABOVE_NAV = 49;
 
-// Reward tabs — nodes 991:1027 (purse) and 994:5637 (flame). The flame tab
-// is the purse tab turned 180°, so its gradient and corners are written
-// here already turned rather than rotated in CSS: a rotated element would
-// carry its hard shadow to its top edge, while the frame keeps both shadows
-// on the bottom.
-const TAB_SHADOW = "0px 2.277px 6.831px 0px rgba(0,0,0,0.06), 0px 2.277px 0px 0px #cbc3d4";
-const TAB_BORDER = "3.415px solid rgba(255,255,255,0.65)";
-const PURSE_TAB_RADIUS = "12.57px 25.046px 105.877px 20px";
-const FLAME_TAB_RADIUS = "105.877px 20px 12.57px 25.046px";
-const PURSE_TAB_GRADIENT = "linear-gradient(to bottom, #e0cdf5, #ffedee)";
-const FLAME_TAB_GRADIENT = "linear-gradient(to bottom, #f5cdcd, #fff3ed)";
+// The avatar's ring — the same gradient the friends reel draws around
+// whoever is online, which on your own card is always you.
+const AVATAR_RING = "linear-gradient(135deg, #9333EA 0%, #EC4899 50%, #F97316 100%)";
 
 function useCardScale() {
   const ref = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(() =>
-    typeof window === "undefined" ? CARD_DESIGN_W : Math.max(0, window.innerWidth - CARD_INSET * 2)
+    typeof window === "undefined" ? CARD_MIN_W : Math.max(0, window.innerWidth - CARD_LEFT - CARD_RIGHT)
   );
   useLayoutEffect(() => {
     const el = ref.current;
@@ -276,48 +244,40 @@ function useCardScale() {
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
+  const scale = Math.min(1, width / CARD_MIN_W);
   return {
     ref,
-    scale: Math.min(1, width / CARD_DESIGN_W),
-    designWidth: Math.max(CARD_DESIGN_W, width),
+    scale,
+    designWidth: scale > 0 ? width / scale : width,
   };
 }
 
 interface MobileProfileCardProps {
   nickname: string;
-  /** ISO-2 of the country the player is ranked in; flag sits before the name. */
-  countryCode?: string | null;
-  /** Place on that country's board (global when we have no country). */
-  rank?: number | null;
+  avatarUrl?: string | null;
+  animatedAvatarUrl?: string | null;
   coins: number;
   gems: number;
+  /** The avatar disc: the mascot / avatar picker. */
+  onAvatarClick: () => void;
   onNameClick: () => void;
-  /** The rank badge is a shortcut into the board it came from. */
-  onRankClick: () => void;
   onCoinsClick: () => void;
   onGemsClick: () => void;
-  /** The purse tab: daily rewards. */
-  onGiftClick: () => void;
-  /** The flame tab: the play streak. */
-  onStreakClick: () => void;
 }
 
-// node 991:948. Flag, nickname and rank on the first row, the coin and gem
-// pills under them, and the two reward tabs tucked into the top-right —
-// the purse for daily rewards, the flame for the streak. Anchored above the
-// bottom nav, so the scene it floats on is not covered by it.
+// node 1076:2066. The avatar in its gradient ring, the nickname beside it and
+// the coin and gem pills on the right, all on one 83px frosted bar anchored
+// above the bottom nav so the scene it floats on is not covered by it.
 export function MobileProfileCard({
   nickname,
-  countryCode,
-  rank,
+  avatarUrl,
+  animatedAvatarUrl,
   coins,
   gems,
+  onAvatarClick,
   onNameClick,
-  onRankClick,
   onCoinsClick,
   onGemsClick,
-  onGiftClick,
-  onStreakClick,
 }: MobileProfileCardProps) {
   const { ref, scale, designWidth } = useCardScale();
 
@@ -327,8 +287,10 @@ export function MobileProfileCard({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.15, type: "spring", stiffness: 260, damping: 26 }}
-      className="md:hidden absolute inset-x-6 z-20"
+      className="md:hidden absolute z-20"
       style={{
+        left: CARD_LEFT,
+        right: CARD_RIGHT,
         bottom: `calc(${NAV_CHROME} + ${CARD_GAP_ABOVE_NAV}px)`,
         height: CARD_H * scale,
       }}
@@ -339,41 +301,47 @@ export function MobileProfileCard({
       >
         <div
           // Frosted AND nearly opaque: the mascot wallpaper runs under the
-          // card now. The blur turns whatever is behind it into a wash, and
-          // the fill keeps that wash pale enough that the name and the
-          // balances sit on white rather than on the character's hoodie.
-          className="relative size-full overflow-hidden border-2 border-solid border-white bg-[rgba(252,247,255,0.9)] backdrop-blur-2xl"
-          style={{ borderRadius: "24px 24px 54px 24px", boxShadow: CARD_SHADOW }}
+          // card. The blur turns whatever is behind it into a wash, and the
+          // fill keeps that wash pale enough that the name and the balances
+          // sit on white rather than on the character's hoodie.
+          className="relative size-full overflow-hidden rounded-[33.41px] border-[1.867px] border-solid border-white bg-[rgba(252,247,255,0.82)] backdrop-blur-[37px]"
+          style={{ boxShadow: PROFILE_CARD_SHADOW }}
         >
-          {/* Flag, name, rank. The name is bounded by the flame tab and
-              truncates; the flag and the badge never shrink, so a long name
-              gives up its own characters rather than pushing them out. */}
-          <div className="absolute left-[24px] right-[163px] top-[12px] flex h-[48px] items-center">
-            {countryCode && (
-              <span className="relative -top-[3px] mr-[14px] flex shrink-0">
-                <RoundFlag code={countryCode} />
+          {/* Avatar — node 1076:3548: a 52px disc, 2.5px gradient ring, 1.6px
+              white ring, 44px picture, 14.6px in from the card's edge. */}
+          <button
+            type="button"
+            onClick={onAvatarClick}
+            aria-label={t("extra.changeScene")}
+            className="absolute left-[14.64px] top-[14px] size-[52.364px] rounded-full p-[2.455px]"
+            style={{ background: AVATAR_RING }}
+          >
+            <span className="block size-full rounded-full bg-white p-[1.636px]">
+              <span className="block size-full overflow-hidden rounded-full">
+                <SmartAvatar
+                  avatarUrl={avatarUrl}
+                  animatedAvatarUrl={animatedAvatarUrl}
+                  fallback={nickname}
+                  size="lg"
+                  showSparkle={false}
+                  className="size-full object-cover"
+                />
               </span>
-            )}
-            <button
-              type="button"
-              onClick={onNameClick}
-              className="min-w-0 truncate text-left font-slackey text-[32px] capitalize leading-[48px] tracking-[-0.16px] text-[#402666]"
-            >
-              {nickname}
-            </button>
-            {!!rank && (
-              <button
-                type="button"
-                onClick={onRankClick}
-                aria-label={`${t("leaderboard.yourRank")} #${rank}`}
-                className="ml-[9px] shrink-0 rounded-full border-[1.435px] border-solid border-[#402666] px-[6.698px] py-[1.914px] text-center font-['Nunito'] text-[13px] font-extrabold leading-[13.396px] tracking-[-0.1531px] text-[#402666] whitespace-nowrap"
-              >
-                #{rank}
-              </button>
-            )}
-          </div>
+            </span>
+          </button>
 
-          <div className="absolute left-[13px] top-[61px] flex gap-[6.6px]">
+          {/* The name is bounded by the balances and truncates; the pills
+              never shrink, so a long name gives up its own characters rather
+              than pushing them out. */}
+          <button
+            type="button"
+            onClick={onNameClick}
+            className="absolute left-[77px] right-[196px] top-[17px] h-[44.814px] truncate text-left font-slackey text-[26px] capitalize leading-[44.814px] tracking-[-0.1494px] text-[#402666]"
+          >
+            {nickname}
+          </button>
+
+          <div className="absolute right-[20px] top-[17px] flex gap-[6.162px]">
             <StatPill
               icon={coinChunky}
               value={formatCompactNumber(coins)}
@@ -387,58 +355,150 @@ export function MobileProfileCard({
               onClick={onGemsClick}
             />
           </div>
-
-          {/* Flame tab — the streak. The flame itself is a sibling laid
-              over the tab, as in the frame; taps fall through it. */}
-          <button
-            type="button"
-            aria-label={t("dailyRewards.streak")}
-            onClick={onStreakClick}
-            className="absolute right-[85px] top-[6px] h-[104px] w-[70px]"
-            style={{
-              background: FLAME_TAB_GRADIENT,
-              border: TAB_BORDER,
-              borderRadius: FLAME_TAB_RADIUS,
-              boxShadow: TAB_SHADOW,
-            }}
-          />
-          <span
-            aria-hidden
-            className="pointer-events-none absolute right-[97px] top-[37px] h-[47px] w-[38px] overflow-hidden opacity-[0.99]"
-          >
-            <img
-              src={streakFire}
-              alt=""
-              draggable={false}
-              className="absolute left-[-22.05%] top-[-9.91%] h-[118.8%] w-[143.81%] max-w-none"
-            />
-          </span>
-
-          {/* Purse tab — daily rewards. */}
-          <button
-            type="button"
-            aria-label={t("extra.dailyRewards")}
-            onClick={onGiftClick}
-            className="absolute right-[7px] top-[6px] h-[104px] w-[70px]"
-            style={{
-              background: PURSE_TAB_GRADIENT,
-              border: TAB_BORDER,
-              borderRadius: PURSE_TAB_RADIUS,
-              boxShadow: TAB_SHADOW,
-            }}
-          >
-            <span className="pointer-events-none absolute left-[12.59px] top-[27.59px] h-[42px] w-[37px] overflow-hidden">
-              <img
-                src={dailyRewardBag}
-                alt=""
-                draggable={false}
-                className="absolute left-[-20.41%] top-[-10.71%] h-[126.79%] w-[144.9%] max-w-none"
-              />
-            </span>
-          </button>
         </div>
       </div>
     </motion.div>
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ * Hero widgets — the reward tabs floating on the scene
+ * ------------------------------------------------------------------ */
+
+// Figma 1076:3587 (gift), 1076:3577 (streak) and 1076:3581 (quest): three
+// frosted tabs on the scene between the friends reel and the profile card —
+// the daily-reward gift with its countdown on the left, the streak flame and
+// the missions chest on the right. Each is an 80px glass card whose outer
+// top corner swells to 62px, with its artwork spilling over the top edge.
+const WIDGET_GLASS =
+  "linear-gradient(180deg, rgba(188,223,248,0.5) 0%, rgba(212,201,220,0.5) 15.385%, rgba(255,209,150,0.5) 37.981%, rgba(255,255,255,0.5) 71.056%, rgba(255,255,255,0.5) 100%)";
+const WIDGET_SHADOW =
+  "0px 1.867px 7.469px 0px rgba(102,51,153,0.06), 0px 7.469px 22.407px 0px rgba(102,51,153,0.12)";
+const WIDGET_BORDER = "1.867px solid #ffffff";
+// The big corner is the outer top one: top-right on the left-hand gift,
+// top-left on the right-hand pair.
+const GIFT_RADIUS = "22.41px 62.41px 23px 22.407px";
+const RIGHT_RADIUS = "62.41px 22.41px 23px 22.407px";
+
+// The frame measures every widget from the top of a frame whose header is
+// 69px tall. The header here reports its own height on the home column, so
+// the widgets hang off that instead and keep the frame's gaps under a header
+// that measures differently.
+const FRAME_HEADER_H = 69;
+function belowHeader(frameY: number): string {
+  return `calc(var(--home-header-h, ${FRAME_HEADER_H}px) + ${frameY - FRAME_HEADER_H}px)`;
+}
+
+const WIDGET_LABEL =
+  "pointer-events-none absolute text-center font-['Nunito'] text-[14px] font-extrabold leading-[16px] tracking-[-0.16px] text-[rgba(0,0,0,0.91)]";
+
+interface MobileHeroWidgetsProps {
+  /** Under the gift: the time left to claim today's reward, or the call to claim it. */
+  giftLabel: string;
+  onGiftClick: () => void;
+  onStreakClick: () => void;
+  onQuestClick: () => void;
+}
+
+export function MobileHeroWidgets({ giftLabel, onGiftClick, onStreakClick, onQuestClick }: MobileHeroWidgetsProps) {
+  return (
+    <div className="md:hidden pointer-events-none absolute inset-0 z-20">
+      {/* Gift — card at (18, 223.8) 80×90; the box leans 5.88° over its top edge. */}
+      <button
+        type="button"
+        onClick={onGiftClick}
+        aria-label={t("extra.dailyRewards")}
+        className="pointer-events-auto absolute left-[18px] h-[90px] w-[80px] backdrop-blur-[37px]"
+        style={{
+          top: belowHeader(223.8),
+          background: WIDGET_GLASS,
+          border: WIDGET_BORDER,
+          borderRadius: GIFT_RADIUS,
+          boxShadow: WIDGET_SHADOW,
+        }}
+      />
+      <span
+        aria-hidden
+        className="absolute left-[30.76px] flex h-[72px] w-[68.432px] items-center justify-center"
+        style={{ top: belowHeader(211) }}
+      >
+        <span className="block h-[66px] w-[62px] overflow-hidden" style={{ transform: "rotate(5.88deg)" }}>
+          <img
+            src={giftDaily}
+            alt=""
+            draggable={false}
+            className="absolute left-[-17.86%] top-[-16.95%] h-[128.81%] w-[135.71%] max-w-none"
+          />
+        </span>
+      </span>
+      <span className={WIDGET_LABEL} style={{ top: belowHeader(223.8 + 63), left: 18, width: 80 }}>
+        {giftLabel}
+      </span>
+
+      {/* Streak — card at (401, 218) 80×96; the flame leans -8.95° over it. */}
+      <button
+        type="button"
+        onClick={onStreakClick}
+        aria-label={t("extra.heroStreak")}
+        className="pointer-events-auto absolute right-[19px] h-[96px] w-[80px] backdrop-blur-[37px]"
+        style={{
+          top: belowHeader(218),
+          background: WIDGET_GLASS,
+          border: WIDGET_BORDER,
+          borderRadius: RIGHT_RADIUS,
+          boxShadow: WIDGET_SHADOW,
+        }}
+      />
+      <span
+        aria-hidden
+        className="absolute right-[8.78px] flex h-[79.416px] w-[103.022px] items-center justify-center"
+        style={{ top: belowHeader(207.53) }}
+      >
+        <img
+          src={streakFire}
+          alt=""
+          draggable={false}
+          className="block h-[65.595px] w-[93.96px] max-w-none object-cover"
+          style={{ transform: "rotate(-8.95deg)" }}
+        />
+      </span>
+      <span className={WIDGET_LABEL} style={{ top: belowHeader(218 + 70), right: 19, width: 80 }}>
+        {t("extra.heroStreak")}
+      </span>
+
+      {/* Quest — card at (400, 339) 80×90; the chest sits inside it, leaning
+          -7.57° and poking 14px above the top edge. */}
+      <button
+        type="button"
+        onClick={onQuestClick}
+        aria-label={t("extra.heroQuest")}
+        className="pointer-events-auto absolute right-[20px] h-[90px] w-[80px] backdrop-blur-[37px]"
+        style={{
+          top: belowHeader(339),
+          background: WIDGET_GLASS,
+          border: WIDGET_BORDER,
+          borderRadius: RIGHT_RADIUS,
+          boxShadow: WIDGET_SHADOW,
+        }}
+      />
+      <span
+        aria-hidden
+        className="absolute right-[22.7px] flex h-[81.945px] w-[80.173px] items-center justify-center"
+        style={{ top: belowHeader(339 - 13.87) }}
+      >
+        <span className="block h-[73.207px] w-[71.144px] overflow-hidden" style={{ transform: "rotate(-7.57deg)" }}>
+          <img
+            src={chestDaily}
+            alt=""
+            draggable={false}
+            className="absolute left-[-8.24%] top-[-13.04%] h-[113.04%] w-[115.03%] max-w-none"
+          />
+        </span>
+      </span>
+      <span className={WIDGET_LABEL} style={{ top: belowHeader(339 + 63), right: 20, width: 80 }}>
+        {t("extra.heroQuest")}
+      </span>
+    </div>
   );
 }
 
