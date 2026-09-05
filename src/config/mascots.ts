@@ -7,19 +7,15 @@
  * circle avatar — the selfie, the upload, the generated portrait — is a
  * separate choice and is what every OTHER profile placement shows.
  *
- * The Trivia King keeps the idle-loop video the home screen has always
- * played, so a player who never picks stays exactly where they were. The
- * seven animals are stills, cropped so the character sits where the King
- * does on the phone.
+ * A player who has not picked yet sees what they always did: the Trivia
+ * King idle loop, which the home screen plays on its own (see Index). The
+ * King is not one of the choices here — this list is the animals.
  *
  * Adding a mascot means: an id here, a scene and a face thumb under
  * `src/assets/mascots`, a name in every locale's `avatar.mascotNames`, and
  * the id in the `profiles.home_mascot` CHECK (see the migration that added
  * the column) — the database refuses ids it does not know.
  */
-import kingThumb from "@/assets/avatars/mascot-avatar-1.png";
-import kingScene from "@/assets/figma-home/home-scene.webp";
-import kingStill from "@/assets/figma-landing/hero-scene.png";
 import owlScene from "@/assets/mascots/owl.webp";
 import owlThumb from "@/assets/mascots/thumbs/owl.webp";
 import pandaScene from "@/assets/mascots/panda.webp";
@@ -36,7 +32,6 @@ import giraffeScene from "@/assets/mascots/giraffe.webp";
 import giraffeThumb from "@/assets/mascots/thumbs/giraffe.webp";
 
 export const MASCOT_IDS = [
-  "king",
   "owl",
   "panda",
   "wolf",
@@ -48,32 +43,24 @@ export const MASCOT_IDS = [
 
 export type MascotId = (typeof MASCOT_IDS)[number];
 
+/**
+ * Width over height of every scene under `src/assets/mascots` (1080 x 1497:
+ * the shared 1152 x 2048 renders with the top 22% of empty sky cut off,
+ * then scaled). The phone home screen sizes the picture's box from this so
+ * its edge fade hugs the picture. Regenerate the assets at the same crop,
+ * or update this with them.
+ */
+export const MASCOT_SCENE_ASPECT = "1080 / 1497";
+
 export interface Mascot {
   id: MascotId;
   /** Square face crop — the tile in the studio. */
   thumb: string;
-  /** Portrait scene the phone home screen paints, bottom-anchored. */
+  /** Portrait scene the home screen paints. */
   scene: string;
-  /**
-   * The idle loop, when the mascot has one. The home screen plays it in
-   * place of the still, with `still` as the frame that holds until playback
-   * starts. Only the King is animated today.
-   */
-  video?: string;
-  /** 16:9 frame for the video's poster and the desktop full-bleed. */
-  still?: string;
 }
 
-export const DEFAULT_MASCOT_ID: MascotId = "king";
-
 export const MASCOTS: readonly Mascot[] = [
-  {
-    id: "king",
-    thumb: kingThumb,
-    scene: kingScene,
-    video: "/videos/trivia-king-scene.mp4",
-    still: kingStill,
-  },
   { id: "owl", thumb: owlThumb, scene: owlScene },
   { id: "panda", thumb: pandaThumb, scene: pandaScene },
   { id: "wolf", thumb: wolfThumb, scene: wolfScene },
@@ -90,6 +77,7 @@ export const isMascotId = (value: unknown): value is MascotId =>
 export const parseMascotId = (value: unknown): MascotId | null =>
   isMascotId(value) ? value : null;
 
-export function mascotById(id: MascotId | null | undefined): Mascot {
-  return MASCOTS.find((m) => m.id === id) ?? MASCOTS[0];
+/** The mascot for a stored id; null when nothing (valid) was chosen. */
+export function mascotById(id: MascotId | null | undefined): Mascot | null {
+  return MASCOTS.find((m) => m.id === id) ?? null;
 }

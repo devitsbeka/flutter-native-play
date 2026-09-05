@@ -756,7 +756,7 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
   };
 
   // Picking a mascot changes the HOME SCREEN only: its scene replaces the
-  // Trivia King loop there. The circle avatar — the selfie, the upload, the
+  // Trivia King loop there (which stays the default until a pick is made). The circle avatar — the selfie, the upload, the
   // generated portrait — is a separate choice and is what every other
   // profile placement shows.
   const chooseMascot = async (id: MascotId) => {
@@ -939,8 +939,9 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
           )}
 
           {/* Mascots — the home-screen scene. One tile per mascot; the chosen
-              one is what the home screen paints behind the widgets (the King
-              keeps its idle loop). This replaced "my scenes", where a scene
+              one is what the home screen paints behind the widgets. Until a
+              pick is made the home screen plays the Trivia King loop, which
+              is not itself a choice. This replaced "my scenes", where a scene
               was generated from a photo, and the preset-avatar grid under
               it: the face tiles here are the mascots' own. */}
           <div>

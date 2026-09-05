@@ -32,7 +32,7 @@ import { AvatarCircle } from "@/components/home/AvatarCircle";
 import { SceneHero } from "@/components/home/SceneHero";
 import { SceneSidebar } from "@/components/home/SceneSidebar";
 import { DesktopGuestLanding, DesktopGuestSceneBackground } from "@/components/home/DesktopGuestLanding";
-import { MobileSceneBackground, MobileProfileCard, MobileGuestHero } from "@/components/home/MobileHome";
+import { MobileSceneBackground, MobileMascotScene, MobileProfileCard, MobileGuestHero } from "@/components/home/MobileHome";
 import { useHomeMascot } from "@/hooks/useHomeMascot";
 import { useMyLeaderboardRank, defaultScopeFor } from "@/hooks/useMyLeaderboardRank";
 import { DesktopActionCards } from "@/components/home/DesktopActionCards";
@@ -709,14 +709,13 @@ export default function Index() {
   const currentStreak = profile?.current_streak || 0;
   const levelInfo = calculateLevel(profile?.total_points || 0);
 
-  // The home-screen scene is the chosen mascot's. The King (the default)
-  // has an idle loop and plays it full-bleed, as the home screen always
-  // has; the animal mascots are portrait stills painted the way a generated
-  // scene used to be. Guests get the King.
+  // The home-screen scene is the chosen mascot's, a portrait still. With no
+  // pick yet the Trivia King idle loop plays full-bleed, as the home screen
+  // always has. Guests get the King.
   const { mascot, isLoading: mascotLoading } = useHomeMascot(user?.id);
   const isSceneViewport = useIsSceneViewport();
   const isMobileViewport = useIsMobileViewport();
-  const sceneUrl = user && !mascot.video ? mascot.scene : null;
+  const sceneUrl = user && mascot ? mascot.scene : null;
   // Nothing is painted until the choice is known — a King that swaps to an
   // owl a moment later reads as a glitch, not a load.
   const showDefaultScene = !sceneUrl && !(user && mascotLoading);
@@ -897,16 +896,14 @@ export default function Index() {
         disableScroll
       >
         <div className="h-full flex flex-col w-full relative overflow-hidden md:overflow-visible">
-        {/* Phone scene layer (Figma 626:201 / 628:437) — the mascot's scene,
-            framed the way the mobile design does: anchored just above the
-            bottom nav. Guests get their own artwork inside MobileGuestHero
-            instead. */}
-        {user && isMobileViewport && (
-          <MobileSceneBackground
-            sceneUrl={sceneUrl}
-            showDefaultScene={showDefaultScene}
-            defaultVideoSrc={DEFAULT_SCENE_VIDEO}
-          />
+        {/* Phone default scene (Figma 626:201 / 628:437) — the Trivia King
+            loop, framed the way the mobile design does: far wider than the
+            screen and anchored just above the bottom nav. A chosen mascot is
+            painted inside the content area below instead, where it fits
+            between the friends strip and the profile card. Guests get their
+            own artwork inside MobileGuestHero. */}
+        {user && isMobileViewport && showDefaultScene && (
+          <MobileSceneBackground defaultVideoSrc={DEFAULT_SCENE_VIDEO} />
         )}
         {/* The mascot's scene (or the default Trivia King loop) as the
             full-bleed page background (xl+); the header, friends strip and
@@ -1217,6 +1214,11 @@ export default function Index() {
                 in here, first, exactly as SceneHero does it on md+: later
                 children keep their own clicks, and what is left over is the
                 scene. */}
+            {/* The chosen mascot's scene. It lives in this column, not at the
+                page root like the King loop, because the column starts where
+                the friends strip ends: that is the top of the band the scene
+                has to fit in, and the profile card marks its bottom. */}
+            {user && isMobileViewport && sceneUrl && <MobileMascotScene sceneUrl={sceneUrl} />}
             {user && isMobileViewport && (
               <button
                 type="button"

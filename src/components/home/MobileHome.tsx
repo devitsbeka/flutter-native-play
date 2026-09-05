@@ -13,6 +13,7 @@ import flagGeRound from "@/assets/figma-home/flag-ge-round.svg";
 import { getCountryFlag } from "@/data/opponents";
 import { BackgroundVideo } from "@/components/shared/BackgroundVideo";
 import heroScene from "@/assets/figma-landing/hero-scene.png";
+import { MASCOT_SCENE_ASPECT } from "@/config/mascots";
 
 // Figma: Hom — the mobile home states, all drawn on a 500x946 frame:
 //   632:296  Logged out / guest
@@ -75,42 +76,19 @@ const SCENE_WASH =
   "linear-gradient(180deg, #d1c8f3 3.1744%, rgba(244,216,253,0) 22.768%)";
 
 interface MobileSceneBackgroundProps {
-  /** The chosen mascot's portrait scene, when it is not the King. */
-  sceneUrl: string | null;
-  /** Fall back to the shared Trivia King loop. */
-  showDefaultScene: boolean;
-  /** The Trivia King idle loop, played when the King is the mascot. */
+  /** The Trivia King idle loop, played while no mascot is chosen. */
   defaultVideoSrc: string;
 }
 
-export function MobileSceneBackground({
-  sceneUrl,
-  showDefaultScene,
-  defaultVideoSrc,
-}: MobileSceneBackgroundProps) {
-  if (!sceneUrl && !showDefaultScene) return null;
-
-  // Each scene gets the width its own aspect needs. They are not the same
-  // picture and cannot take the same box.
-  //
-  // The full-bleed rewrite gave both `size-full object-cover`, which fits to
-  // whichever edge is proportionally longer — on any phone taller than the
-  // frame's 0.558 that means filling the height, blowing the art up and
-  // cropping it. Both are anchored to the bottom instead and fade out at the
-  // top into the page's wash.
-  //
-  // The mascot stills are portrait (their sky already cropped, see
-  // src/assets/mascots) with the character in the lower two thirds. Bottom-
-  // anchored, the width alone decides where the head lands: at 106vw it
-  // clears the friends reel and the feet sit on the profile card, which is
-  // where the King's do. The frame's 154.94vw was measured for the old
-  // generated scenes, where the face filled the picture; at that width an
-  // animal's head disappears under the header.
-  //
-  // The King's loop is 16:9, so it spans 227.2vw from -47.8vw as in the
-  // frame — far wider than the screen precisely so that a landscape clip
-  // is tall enough to fill the space above the nav.
-  const portraitBox = "absolute left-[-3vw] w-[106vw] max-w-none";
+// The default scene: the Trivia King loop at the page root, behind the
+// header and the friends strip, exactly as the home screen has always
+// played it. A chosen mascot is a different picture with different needs
+// and is painted by MobileMascotScene instead.
+export function MobileSceneBackground({ defaultVideoSrc }: MobileSceneBackgroundProps) {
+  // The loop is 16:9, so it spans 227.2vw from -47.8vw as in the frame —
+  // far wider than the screen precisely so that a landscape clip is tall
+  // enough to fill the space above the nav. Bottom-anchored, fading out at
+  // the top into the page's wash.
   const style: React.CSSProperties = { bottom: NAV_H, ...SCENE_TOP_FADE };
 
   return (
@@ -120,32 +98,86 @@ export function MobileSceneBackground({
       transition={{ duration: 0.6 }}
       className={`md:hidden absolute inset-0 ${SCENE_Z} select-none pointer-events-none overflow-hidden`}
     >
-      {sceneUrl ? (
-        <img src={sceneUrl} alt="" draggable={false} className={portraitBox} style={style} />
-      ) : (
-        // The default scene is the Trivia King idle loop, not a still of it.
-        // The full-bleed rewrite dropped the video and rendered the home-scene
-        // artwork on its own, so the character simply stopped moving;
-        // `heroScene` is the exported frame that holds until playback starts.
+      {/* The default scene is the Trivia King idle loop, not a still of it.
+          The full-bleed rewrite dropped the video and rendered the home-scene
+          artwork on its own, so the character simply stopped moving;
+          `heroScene` is the exported frame that holds until playback starts. */}
+      <div className="absolute left-[-47.8vw] w-[227.2vw] aspect-video" style={style}>
+        <BackgroundVideo
+          src={defaultVideoSrc}
+          still={heroScene}
+          className="absolute inset-0 size-full"
+        />
+        {/* The loop's own foot, dissolved into the page so the clip does not
+            end on a visible edge above the nav. */}
         <div
-          className="absolute left-[-47.8vw] w-[227.2vw] aspect-video"
-          style={style}
-        >
-          <BackgroundVideo
-            src={defaultVideoSrc}
-            still={heroScene}
-            className="absolute inset-0 size-full"
-          />
-          {/* The loop's own foot, dissolved into the page so the clip does not
-              end on a visible edge above the nav. */}
-          <div
-            aria-hidden
-            className="absolute inset-0"
-            style={{ background: "linear-gradient(to bottom, rgba(246,222,255,0) 55.7%, #f6deff 88.4%)" }}
-          />
-        </div>
-      )}
+          aria-hidden
+          className="absolute inset-0"
+          style={{ background: "linear-gradient(to bottom, rgba(246,222,255,0) 55.7%, #f6deff 88.4%)" }}
+        />
+      </div>
       <div aria-hidden className="absolute inset-0" style={{ backgroundImage: SCENE_WASH }} />
+    </motion.div>
+  );
+}
+
+// Feathers every edge of the fitted mascot still into the page, the bottom
+// only lightly — the rug grounds the picture there. Both masks intersect so
+// each edge fades on its own. Applied to a box the size of the PICTURE, not
+// the band: a mask on the band fades the band's edges, which the fitted
+// picture never reaches, and the picture keeps its hard rectangle.
+const MASCOT_EDGE_FADE: React.CSSProperties = {
+  maskImage:
+    "linear-gradient(to right, transparent 0, black 14%, black 86%, transparent 100%), linear-gradient(to bottom, transparent 0, black 18%, black 94%, transparent 100%)",
+  WebkitMaskImage:
+    "linear-gradient(to right, transparent 0, black 14%, black 86%, transparent 100%), linear-gradient(to bottom, transparent 0, black 18%, black 94%, transparent 100%)",
+  maskComposite: "intersect",
+  WebkitMaskComposite: "source-in",
+};
+
+interface MobileMascotSceneProps {
+  /** The chosen mascot's portrait scene. */
+  sceneUrl: string;
+}
+
+// The chosen mascot, fitted whole into the band between the friends strip
+// and the profile card. It mounts inside the home's content column — which
+// starts where the friends strip ends — so the top of the band is simply
+// the column's top; the bottom is the card's top edge, computed from the
+// same measures the card positions itself with.
+//
+// Fitted, not filled: the first cut bled the still to 106vw and bottom-
+// anchored it at the nav, which on a real phone put the character's head
+// under the friends strip and its feet under the card. Nothing here is
+// cropped and nothing sits behind another element.
+export function MobileMascotScene({ sceneUrl }: MobileMascotSceneProps) {
+  // The card is CARD_H tall at its design width and scales down uniformly
+  // on narrower phones — see useCardScale. 12px of air above it.
+  const cardTop = `calc(${NAV_CHROME} + ${CARD_GAP_ABOVE_NAV}px + min(${CARD_H}px, (100vw - ${CARD_INSET * 2}px) * ${(CARD_H / CARD_DESIGN_W).toFixed(4)}) + 12px)`;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      className={`md:hidden absolute inset-x-0 top-0 ${SCENE_Z} select-none pointer-events-none overflow-hidden`}
+      style={{ bottom: cardTop }}
+    >
+      {/* The picture's own box: as tall as the band, at the stills' aspect,
+          centred and grounded at the bottom. On a phone too narrow for that
+          height it is capped at the band's width and the image letterboxes
+          inside it. */}
+      <div
+        className="absolute bottom-0 left-1/2 h-full max-w-full -translate-x-1/2"
+        style={{ aspectRatio: MASCOT_SCENE_ASPECT, ...MASCOT_EDGE_FADE }}
+      >
+        <img
+          src={sceneUrl}
+          alt=""
+          draggable={false}
+          className="absolute inset-0 size-full object-contain object-bottom"
+        />
+      </div>
     </motion.div>
   );
 }

@@ -1,13 +1,7 @@
 import { useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  DEFAULT_MASCOT_ID,
-  mascotById,
-  parseMascotId,
-  type Mascot,
-  type MascotId,
-} from "@/config/mascots";
+import { mascotById, parseMascotId, type Mascot, type MascotId } from "@/config/mascots";
 
 /**
  * Which mascot backs the signed-in player's home screen.
@@ -57,8 +51,9 @@ export function resolveStoredMascot(
 const queryKey = (userId: string | undefined) => ["home-mascot", userId] as const;
 
 export interface HomeMascotState {
-  mascotId: MascotId;
-  mascot: Mascot;
+  /** The chosen mascot, or null when the player has not picked one. */
+  mascotId: MascotId | null;
+  mascot: Mascot | null;
   /** True until the first answer — from the cache or the database. */
   isLoading: boolean;
   setMascot: (id: MascotId) => Promise<void>;
@@ -108,7 +103,7 @@ export function useHomeMascot(userId: string | undefined): HomeMascotState {
     [userId, queryClient],
   );
 
-  const mascotId = query.data ?? DEFAULT_MASCOT_ID;
+  const mascotId = query.data ?? null;
   return {
     mascotId,
     mascot: mascotById(mascotId),
