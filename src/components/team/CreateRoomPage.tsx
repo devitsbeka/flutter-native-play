@@ -22,7 +22,7 @@ import { createNotification, useNotifications } from "@/hooks/useNotifications";
 // Room names are AI-generated via edge function during room creation
 import { TVPlayModal } from "@/components/team/TVPlayModal";
 import { isPartyCategory } from "@/config/partyCategories";
-import { POPULAR_IMAGE_CATEGORY_IDS } from "@/config/popularImageCategories";
+import { POPULAR_IMAGE_CATEGORY_IDS, popularCategoryIcon } from "@/config/popularImageCategories";
 import { GuessPickerScreen } from "@/components/team/GuessPickerScreen";
 import { CategorySelectorModal } from "@/components/team/CategorySelectorModal";
 import { CategoryPickerModal } from "@/components/team/CategoryPickerModal";
@@ -222,7 +222,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   // over this screen first — you and the one friend you pick — and its
   // Start is what presses Create. The quick game goes straight to the VS
   // spin (owner's call): no lobby for a duel against a bot.
-  const [preLobby, setPreLobby] = useState<"words" | null>(null);
+  const [preLobby, setPreLobby] = useState<"words" | "guess" | null>(null);
   const [friendPickOpen, setFriendPickOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
@@ -624,9 +624,11 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     if (mode === "my-trivias") {
       const hasAny = await hasAnyCreatedTriviasOrCollections();
       if (!hasAny) {
-        // No content yet → take user directly to Create Trivia (screen #2)
+        // Nothing made yet: ask what to make — trivia, collection or a My
+        // Trivia Party (Figma 1065:1019) — rather than dropping the player
+        // straight into the trivia editor without a word.
         onClose();
-        navigate("/team", { state: { openTrivia: true } });
+        navigate("/team", { state: { openCreateChooser: true } });
         return;
       }
       setShowMyTriviasModal(true);
@@ -1098,24 +1100,22 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         walkInCode = room?.room_code ?? null;
 
         /**
-         * A Guess tile is "play this": the round starts HERE, before the
-         * screen changes, so /team opens a room that is already playing and
-         * never renders a lobby at all.
+         * A Guess round played ALONE starts HERE, before the screen changes,
+         * so /team opens a room that is already playing and never renders a
+         * lobby: the room lobby will not let a lone host start (a room is two
+         * people), and a solo picture game is a real game. With friends
+         * invited from the pre-lobby the round waits — the walk-in below
+         * lands on the lobby, which starts once the second player is in.
          *
-         * This used to be done from the other end — the create screen sent
-         * ?autostart=1 and the lobby pressed its own Start when it saw it —
-         * and that is a race with several ways to lose: the lobby has to
-         * mount, read the flag back out of a URL that three effects rewrite,
-         * and find the room, the seat, the host flag and the category all
-         * settled in the same render. Miss any one and it waits for a
-         * condition that has already passed. Starting it here needs none of
-         * that to line up.
-         *
-         * If it fails, the room is left in "waiting" and the walk-in below
-         * lands on the lobby with a working Start button — which is the right
-         * thing to fall back to.
+         * Started here rather than by a flag the lobby read back off the
+         * URL: that was a race with several ways to lose (the lobby has to
+         * mount, read the flag out of a URL three effects rewrite, and find
+         * room, seat, host and category settled in one render). If it fails,
+         * the room is left "waiting" and the walk-in lands on the lobby with
+         * a working Start — the right thing to fall back to.
          */
-        if (gameChoice === "guess" && room) {
+        const guessSolo = invitees.length === 0 && selectedFriends.size === 0;
+        if (gameChoice === "guess" && room && guessSolo) {
           await startGame(false, room);
         }
       }
@@ -1249,7 +1249,10 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   const pickGuessCategory = (cat: Category) => {
     setSelectedCategory(cat);
     setSelectionMode("library");
-    autoStart.current = true;
+    // Owner's ask: a picture game is 2-10 players, so the pick opens the
+    // pre-lobby — invite friends, or press Start and play it alone — rather
+    // than arming a one-seat round that started on its own.
+    setPreLobby("guess");
   };
 
   const pickedDetail = (
@@ -1682,9 +1685,9 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                 // Quick Game leads and Classic Trivia (the library) follows —
                 // the two most-played, first in reach. Guess and the rest keep
                 // their order behind them.
-                { key: "quick", art: featuredQuick, artTop: -1.71, descW: 273, players: "1-10", title: t("extra.modeQuickTitle"), desc: t("extra.modeQuickDesc") },
-                { key: "library", art: featuredLibrary, artTop: -2.86, descW: 273, players: null, title: t("extra.modeLibraryTitle"), desc: t("extra.libraryDesc") },
-                { key: "guess", art: featuredGuess, artTop: 0.05, descW: 273, players: "1-10", title: t("extra.modeGuessTitle"), desc: t("extra.modeGuessDesc") },
+                { key: "quick", art: featuredQuick, artTop: -1.71, descW: 273, players: "1", title: t("extra.modeQuickTitle"), desc: t("extra.modeQuickDesc") },
+                { key: "library", art: featuredLibrary, artTop: -2.86, descW: 273, players: "2-10", title: t("extra.modeLibraryTitle"), desc: t("extra.libraryDesc") },
+                { key: "guess", art: featuredGuess, artTop: 0.05, descW: 273, players: "2-10", title: t("extra.modeGuessTitle"), desc: t("extra.modeGuessDesc") },
                 // The King and Battle posters are developer-only until the
                 // modes are promoted — see DEVELOPER_ONLY_GAME_TYPES.
                 ...(developerMode
@@ -1907,11 +1910,12 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
             transition={{ duration: 0.2 }}
           >
             <UniversalLobby
-              sceneArt={LOBBY_SCENES.words}
-              roomName={t("gameTypes.wordsTitle")}
+              sceneArt={LOBBY_SCENES[preLobby]}
+              roomName={preLobby === "guess" ? selectedCategory?.name ?? t("extra.modeGuessTitle") : t("gameTypes.wordsTitle")}
               // The board's own sign, like the arena's crate and the King's
-              // crown: every lobby says which game it is above the card.
-              icon={iconWordsBoard}
+              // crown: every lobby says which game it is above the card. A
+              // picture game wears its own category's art.
+              icon={preLobby === "guess" ? popularCategoryIcon(selectedCategory?.category_id) : iconWordsBoard}
               onBack={() => setPreLobby(null)}
               unreadCount={unreadCount}
               onBell={() => navigate("/notifications")}
@@ -1928,14 +1932,17 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
               // or with the one friend picked on the players tab.
               rules={[]}
               rulesText={[
-                { key: "rules", heading: t("lobby.rulesHeading"), body: t("lobby.rulesWords") },
-                { key: "time", heading: t("lobby.timeHeading"), body: t("lobby.timeWords") },
+                // Words: one board, alone or with the one friend. A picture
+                // game plays as a classic room, so its rules are the room's.
+                { key: "rules", heading: t("lobby.rulesHeading"), body: t(preLobby === "guess" ? "lobby.rulesClassic" : "lobby.rulesWords") },
+                { key: "time", heading: t("lobby.timeHeading"), body: t(preLobby === "guess" ? "lobby.timeClassic" : "lobby.timeWords") },
               ]}
-              // One board seats two: you and the one friend.
+              // One board seats two: you and the one friend. A picture game
+              // is a room of up to ten.
               capacity={{
                 min: 1,
-                max: 2,
-                taken: 1 + Math.min(1, collectInvitees().length),
+                max: preLobby === "guess" ? 10 : 2,
+                taken: 1 + Math.min(preLobby === "guess" ? 9 : 1, collectInvitees().length),
                 fullLabel: t("extra.mpRoomFull"),
               }}
               players={[
@@ -1946,10 +1953,10 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                   isHost: true,
                   isYou: true,
                 },
-                // Words seats one friend; the first pick rides along and is
-                // invited the moment the board's room exists.
+                // Words seats one friend; a picture game seats nine. The
+                // picks ride along and are invited the moment the room exists.
                 ...collectInvitees()
-                  .slice(0, 1)
+                  .slice(0, preLobby === "guess" ? 9 : 1)
                   .map<LobbyPlayer>((f) => ({
                     id: f.id,
                     name: f.nickname,
@@ -2014,6 +2021,16 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                                 key={f.friendId}
                                 type="button"
                                 onClick={() => {
+                                  if (preLobby === "guess") {
+                                    // Several may come: toggle, and stay open.
+                                    setSelectedFriends((prev) => {
+                                      const next = new Set(prev);
+                                      if (picked) next.delete(f.friendId);
+                                      else next.add(f.friendId);
+                                      return next;
+                                    });
+                                    return;
+                                  }
                                   setSelectedFriends(picked ? new Set() : new Set([f.friendId]));
                                   setFriendPickOpen(false);
                                 }}
@@ -2043,6 +2060,15 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                             );
                           })}
                       </div>
+                      {preLobby === "guess" && (
+                        <button
+                          type="button"
+                          onClick={() => setFriendPickOpen(false)}
+                          className="mt-3 h-[48px] w-full shrink-0 rounded-[16px] bg-[#7126d5] font-[Nunito] text-[15px] font-bold text-white active:scale-[0.98]"
+                        >
+                          {t("common.done")}
+                        </button>
+                      )}
                     </motion.div>
                   </motion.div>
                 )}

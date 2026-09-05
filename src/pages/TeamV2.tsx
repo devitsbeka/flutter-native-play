@@ -165,6 +165,13 @@ function TeamContentV2() {
       setShowCreateCollectionModal(true);
       navigate(location.pathname, { replace: true, state: {} });
     }
+    // The play chooser's My Trivias tile, with nothing made yet: ask what
+    // to make (Figma 1065:1019) rather than opening the trivia editor cold.
+    if (location.state?.openCreateChooser) {
+      setCreateChooserForTrivias(true);
+      setShowCreateTypeModal(true);
+      navigate(location.pathname, { replace: true, state: {} });
+    }
   }, [location.state, navigate, setShowCreateModal]);
 
   // Push-notification deep links. A tapped push navigates with a URL, not
@@ -413,6 +420,10 @@ function TeamContentV2() {
   const [showCreateQuizModal, setShowCreateQuizModal] = useState(false);
   const [showCreateCollectionModal, setShowCreateCollectionModal] = useState(false);
   const [showCreateTypeModal, setShowCreateTypeModal] = useState(false);
+  // True while the chooser is open because the play chooser's My Trivias
+  // tile sent the player here with nothing made yet: the owner's frame for
+  // that entry (1065:1019) has no room card. The hub's + keeps it.
+  const [createChooserForTrivias, setCreateChooserForTrivias] = useState(false);
   const [showBlindTriviaModal, setShowBlindTriviaModal] = useState(false);
   const [showPersonalTriviaModal, setShowPersonalTriviaModal] = useState(false);
   const [collectionInitialSubject, setCollectionInitialSubject] = useState<string>("");
@@ -1441,7 +1452,10 @@ function TeamContentV2() {
       />
       <CreateTriviaTypeModal
         open={showCreateTypeModal}
-        onOpenChange={setShowCreateTypeModal}
+        onOpenChange={(open) => {
+          setShowCreateTypeModal(open);
+          if (!open) setCreateChooserForTrivias(false);
+        }}
         onSelectSingle={(draftId) => {
           if (draftId) {
             setEditingDraftId(draftId);
@@ -1459,6 +1473,7 @@ function TeamContentV2() {
           setShowPersonalTriviaModal(true);
         }}
         onSelectGameRoom={() => void createPrivateRoomAndOpen()}
+        hideGameRoom={createChooserForTrivias}
       />
       <GameStylePersonalTrivia
         isOpen={showPersonalTriviaModal}

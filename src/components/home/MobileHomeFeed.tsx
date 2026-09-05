@@ -169,9 +169,9 @@ export function MobileHomeFeed() {
   // opens the chooser with that mode already started, as tapping the card
   // there would.
   const playCards: { key: GameChoice; art: string; players: string | null; title: string; desc: string }[] = [
-    { key: "quick", art: featuredQuick, players: "1-10", title: t("extra.modeQuickTitle"), desc: t("extra.modeQuickDesc") },
-    { key: "library", art: featuredLibrary, players: null, title: t("extra.modeLibraryTitle"), desc: t("extra.libraryDesc") },
-    { key: "guess", art: featuredGuess, players: "1-10", title: t("extra.modeGuessTitle"), desc: t("extra.modeGuessDesc") },
+    { key: "quick", art: featuredQuick, players: "1", title: t("extra.modeQuickTitle"), desc: t("extra.modeQuickDesc") },
+    { key: "library", art: featuredLibrary, players: "2-10", title: t("extra.modeLibraryTitle"), desc: t("extra.libraryDesc") },
+    { key: "guess", art: featuredGuess, players: "2-10", title: t("extra.modeGuessTitle"), desc: t("extra.modeGuessDesc") },
     ...(developerMode
       ? [
           { key: "king" as const, art: featuredKing, players: "1-10", title: t("extra.modeKingTitle"), desc: t("lobby.kingCardDesc") },

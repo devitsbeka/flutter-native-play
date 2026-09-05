@@ -54,8 +54,8 @@ export function DraftsList({ onResumeDraft, onClose }: DraftsListProps) {
     // any draft past the fold.
     <div className="pt-4 h-full flex flex-col min-h-0">
       <div className="flex items-center gap-2 mb-3 px-1 shrink-0">
-        <FileText className="w-[18px] h-[18px] text-white/60" />
-        <span className="text-[14px] font-medium text-white/60">{t("extra.draftsSavedDrafts")}</span>
+        <FileText className="w-[16px] h-[16px] text-[#6b5b86]" />
+        <span className="font-[Nunito] text-[12px] font-bold uppercase tracking-[0.06em] text-[#6b5b86]">{t("extra.draftsSavedDrafts")}</span>
       </div>
 
       <div className="space-y-2 flex-1 min-h-0 overflow-y-auto pr-1">
@@ -70,7 +70,7 @@ export function DraftsList({ onResumeDraft, onClose }: DraftsListProps) {
               key={draft.id}
               initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex items-center gap-3 p-3.5 min-h-[84px] sm:p-3 sm:min-h-0 bg-white/10 rounded-xl hover:bg-white/15 transition-colors group"
+              className="flex items-center gap-3 p-3.5 min-h-[84px] sm:p-3 sm:min-h-0 rounded-[18px] border-[1.5px] border-white/80 bg-[rgba(255,255,255,0.6)] shadow-[0px_6px_18px_0px_rgba(88,50,160,0.10)] hover:bg-white/75 transition-colors group"
             >
               {/* Draft Preview - Different icon for personal vs trivia */}
               <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
@@ -87,11 +87,11 @@ export function DraftsList({ onResumeDraft, onClose }: DraftsListProps) {
               
               {/* Draft Info */}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">
+                <p className="text-sm font-semibold text-[#402666] truncate">
                   {displayTitle}
                 </p>
                 {/* Mobile: 3 rows (title / count / date). Desktop: single meta row. */}
-                <div className="mt-[3px] flex flex-col gap-[6px] text-xs text-white/60 sm:mt-0 sm:flex-row sm:items-center sm:gap-2 sm:whitespace-nowrap">
+                <div className="mt-[3px] flex flex-col gap-[6px] text-xs text-[#6b5b86] sm:mt-0 sm:flex-row sm:items-center sm:gap-2 sm:whitespace-nowrap">
                   <div className="flex items-center gap-1.5 sm:gap-2">
                     <span className="shrink-0">{t("extra.draftsQuestionCount", { count: questionCount })}</span>
                   </div>
@@ -113,7 +113,7 @@ export function DraftsList({ onResumeDraft, onClose }: DraftsListProps) {
                     deleteTriviaDraft(draft.id);
                   }}
                   disabled={isDeletingDraft}
-                  className="p-1.5 text-red-400 hover:bg-red-500/20 rounded-lg opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
+                  className="p-1.5 text-[#e05a5a] hover:bg-red-500/10 rounded-lg opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -123,7 +123,7 @@ export function DraftsList({ onResumeDraft, onClose }: DraftsListProps) {
                     onClose();
                     onResumeDraft(draft.id, isPersonal ? "personal" : "trivia");
                   }}
-                  className="px-3 py-1.5 text-xs font-medium text-white bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
+                  className="px-3 py-1.5 text-xs font-bold text-[#7126d5] bg-[#7126d5]/10 hover:bg-[#7126d5]/15 rounded-lg transition-colors"
                 >
                   {t("extra.draftsContinueBtn")}
                 </button>
@@ -144,7 +144,7 @@ export function DraftsList({ onResumeDraft, onClose }: DraftsListProps) {
               key={draft.id}
               initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex items-center gap-3 p-3.5 min-h-[84px] sm:p-3 sm:min-h-0 bg-white/10 rounded-xl hover:bg-white/15 transition-colors group"
+              className="flex items-center gap-3 p-3.5 min-h-[84px] sm:p-3 sm:min-h-0 rounded-[18px] border-[1.5px] border-white/80 bg-[rgba(255,255,255,0.6)] shadow-[0px_6px_18px_0px_rgba(88,50,160,0.10)] hover:bg-white/75 transition-colors group"
             >
               {/* Draft Preview - Collection icon or cover */}
               <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500/30 to-blue-600/30 flex items-center justify-center flex-shrink-0 overflow-hidden">
@@ -165,11 +165,11 @@ export function DraftsList({ onResumeDraft, onClose }: DraftsListProps) {
               
               {/* Draft Info */}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">
+                <p className="text-sm font-semibold text-[#402666] truncate">
                   {displayTitle}
                 </p>
                 {/* Mobile: 3 rows (title / count / date). Desktop: single meta row. */}
-                <div className="mt-[3px] flex flex-col gap-[6px] text-xs text-white/60 sm:mt-0 sm:flex-row sm:items-center sm:gap-2 sm:whitespace-nowrap">
+                <div className="mt-[3px] flex flex-col gap-[6px] text-xs text-[#6b5b86] sm:mt-0 sm:flex-row sm:items-center sm:gap-2 sm:whitespace-nowrap">
                   <div className="flex items-center gap-1.5 sm:gap-2">
                     <Layers className="w-3 h-3 shrink-0" />
                     <span className="shrink-0">{t("extra.draftsRoundCount", { count: roundCount })}</span>
@@ -192,7 +192,7 @@ export function DraftsList({ onResumeDraft, onClose }: DraftsListProps) {
                     deleteCollectionDraft(draft.id);
                   }}
                   disabled={isDeletingDraft}
-                  className="p-1.5 text-red-400 hover:bg-red-500/20 rounded-lg opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
+                  className="p-1.5 text-[#e05a5a] hover:bg-red-500/10 rounded-lg opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -202,7 +202,7 @@ export function DraftsList({ onResumeDraft, onClose }: DraftsListProps) {
                     onClose();
                     onResumeDraft(draft.id, "collection");
                   }}
-                  className="px-3 py-1.5 text-xs font-medium text-white bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
+                  className="px-3 py-1.5 text-xs font-bold text-[#7126d5] bg-[#7126d5]/10 hover:bg-[#7126d5]/15 rounded-lg transition-colors"
                 >
                   {t("extra.draftsContinueBtn")}
                 </button>
