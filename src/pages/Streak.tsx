@@ -16,6 +16,7 @@ import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import SpotlightSearch from "@/components/search/SpotlightSearch";
 import { MyTriviaLiveLogo } from "@/components/shared/MyTriviaLiveLogo";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import coinImg from "@/assets/streak/coin.png";
 import flameImg from "@/assets/streak/flame.png";
 import chestImg from "@/assets/streak/chest.png";
@@ -85,6 +86,8 @@ export default function Streak() {
   const today = todayKey();
   const [selected, setSelected] = useState(today);
   const day = useDailyMissionsFor(selected);
+  /** The row opened for its full text. */
+  const [detail, setDetail] = useState<DayRow | null>(null);
 
   // The week (1069:345): today sits in the fourth slot with three days
   // either side. A day behind today is kept while the recorded streak
@@ -127,9 +130,16 @@ export default function Streak() {
         completed: false,
       }));
     }
-    // Ledger rows (the day bonus) are not missions to do.
+    // Ledger rows (the day bonus) are not missions to do. The rows come
+    // back in no particular order; the ladder's is easiest first.
+    const ladder = dailyPoolForDate(selected).map((m) => m.mission_id);
+    const rank = (id: string) => {
+      const i = ladder.indexOf(id);
+      return i === -1 ? ladder.length : i;
+    };
     return day.missions
       .filter((m) => m.mission_id !== "day_bonus" && m.mission_id !== "week_bonus")
+      .sort((a, b) => rank(a.mission_id) - rank(b.mission_id))
       .map((m) => ({
         id: m.id,
         missionId: m.mission_id,
@@ -307,19 +317,33 @@ export default function Streak() {
                     <div key={i} className={cn(ROW, "animate-pulse", CARD_SHADOW)} aria-hidden />
                   ))
                 : rows.map((row) => {
-                    const canWork = !!user && selectedSlot.state === "today" && !row.completed;
                     const past = selectedSlot.state === "kept" || selectedSlot.state === "missed";
                     const muted = !row.completed && (past || selectedSlot.state === "ahead");
-                    const body = (
-                      <>
+                    // One line, cut short if it must: the tap opens the full
+                    // text. The chip is a flex sibling, so a wide one never
+                    // runs over the words.
+                    return (
+                      <button
+                        key={row.id}
+                        type="button"
+                        onClick={() => setDetail(row)}
+                        className={cn(ROW, "w-full gap-[10px] text-left active:scale-[0.99]", CARD_SHADOW)}
+                      >
                         <img
                           alt=""
                           src={MISSION_ICONS[getMissionIcon(row.missionId)]}
-                          className={cn("mr-[10px] size-[34px] shrink-0 object-contain", muted && "mix-blend-luminosity opacity-60")}
+                          className={cn(
+                            "size-[34px] shrink-0 object-contain",
+                            (muted || row.completed) && "mix-blend-luminosity opacity-60",
+                          )}
                         />
                         <span
-                          className={cn(LABEL, "line-clamp-3 min-w-0 flex-1 pr-[88px] text-left leading-[18px]", muted && "opacity-50")}
-                          title={row.title}
+                          className={cn(
+                            LABEL,
+                            "min-w-0 flex-1 truncate",
+                            muted && "opacity-50",
+                            row.completed && "text-[#6b7280] line-through opacity-60",
+                          )}
                         >
                           {row.description}
                           {row.target > 1 && !row.completed && row.progress > 0 ? ` · ${row.progress}/${row.target}` : ""}
@@ -327,21 +351,20 @@ export default function Streak() {
 
                         {row.completed ? (
                           <span
-                            className={cn(REWARD_BUTTON, "absolute right-[15px] flex items-center gap-[3px] pl-[7px] pr-[10px] opacity-70")}
+                            className={cn(REWARD_BUTTON, "flex w-[45px] shrink-0 items-center justify-center opacity-70")}
                             aria-label={t("missions.completedLabel")}
                           >
-                            <Check className="size-[18px] text-[#10b981]" strokeWidth={3} />
-                            <span className={CHIP_TEXT}>{t("missions.completedLabel")}</span>
+                            <Check className="size-[22px] text-[#9ca3af]" strokeWidth={3} />
                             <span aria-hidden className={CHIP_GLOSS} />
                           </span>
                         ) : past ? (
-                          <span className={cn(REWARD_BUTTON, "absolute right-[15px] flex w-[45px] items-center justify-center")}>
+                          <span className={cn(REWARD_BUTTON, "flex w-[45px] shrink-0 items-center justify-center")}>
                             <img alt="" src={lockImg} className="size-[32px] object-contain mix-blend-luminosity" />
                             <span aria-hidden className={CHIP_GLOSS} />
                           </span>
                         ) : (
                           <span
-                            className={cn(REWARD_BUTTON, "absolute right-[15px] flex items-center gap-[3px] pl-[7px] pr-[10px]")}
+                            className={cn(REWARD_BUTTON, "flex shrink-0 items-center gap-[3px] pl-[7px] pr-[10px]")}
                             aria-label={t("extra.streakCoinsReward", { count: row.coins })}
                           >
                             <img
@@ -353,21 +376,7 @@ export default function Streak() {
                             <span aria-hidden className={CHIP_GLOSS} />
                           </span>
                         )}
-                      </>
-                    );
-                    return canWork ? (
-                      <button
-                        key={row.id}
-                        type="button"
-                        onClick={() => openMission(row.missionId)}
-                        className={cn(ROW, "w-full text-left active:scale-[0.99]", CARD_SHADOW)}
-                      >
-                        {body}
                       </button>
-                    ) : (
-                      <div key={row.id} className={cn(ROW, CARD_SHADOW)}>
-                        {body}
-                      </div>
                     );
                   })}
             </div>
@@ -424,6 +433,64 @@ export default function Streak() {
           </section>
         </div>
       </div>
+
+      {/* The full mission, for a row that was cut short — and the way to
+          go and do it, when it is today's and still open. */}
+      <Dialog open={detail !== null} onOpenChange={(open) => !open && setDetail(null)}>
+        <DialogContent className="w-[calc(100%-48px)] max-w-[360px] rounded-[24px] border-2 border-[rgba(255,255,255,0.7)] bg-[#fbfaf8] p-6">
+          {detail && (
+            <div className="flex flex-col items-center text-center">
+              <img
+                alt=""
+                src={MISSION_ICONS[getMissionIcon(detail.missionId)]}
+                className={cn("size-[64px] object-contain", detail.completed && "mix-blend-luminosity opacity-60")}
+              />
+              <DialogTitle className="mt-3 font-[Nunito] text-[18px] font-bold leading-[24px] tracking-[-0.16px] text-[#402666]">
+                {detail.title}
+              </DialogTitle>
+              <p
+                className={cn(
+                  "mt-1 font-[Nunito] text-[15px] font-semibold leading-[22px] tracking-[-0.16px] text-[#0f1729]",
+                  detail.completed && "text-[#6b7280] line-through",
+                )}
+              >
+                {detail.description}
+              </p>
+              <div className="mt-4 flex items-center gap-3">
+                {detail.completed ? (
+                  <span className="flex items-center gap-1 font-[Nunito] text-[13px] font-bold text-[#6b7280]">
+                    <Check className="size-[16px]" strokeWidth={3} />
+                    {t("missions.completedLabel")}
+                  </span>
+                ) : (
+                  <>
+                    {detail.target > 1 && (
+                      <span className="font-[Nunito] text-[13px] font-bold text-[#6b7280]">
+                        {detail.progress}/{detail.target}
+                      </span>
+                    )}
+                    <span className="flex items-center gap-1 font-[Nunito] text-[13px] font-bold text-[#334155]">
+                      <img alt="" src={coinImg} className="size-[22px] object-contain" />+{detail.coins}
+                    </span>
+                  </>
+                )}
+              </div>
+              {!!user && selectedSlot.state === "today" && !detail.completed && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDetail(null);
+                    openMission(detail.missionId);
+                  }}
+                  className="mt-5 h-[44px] w-full rounded-[14px] bg-[#402666] font-[Nunito] text-[15px] font-bold text-white active:scale-[0.98]"
+                >
+                  {t("missions.startBtn")}
+                </button>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
