@@ -123,7 +123,12 @@ type SelectionMode = "random" | "library" | "create" | "my-trivias" | null;
  * My Trivia — as cards of their own (the old "classic friends room" card that
  * hid all three sources behind one more tap is gone).
  */
-type GameChoice = "quick" | "guess" | "king" | "battle" | "words" | "library" | "mytrivias";
+export type GameChoice = "quick" | "guess" | "king" | "battle" | "words" | "library" | "mytrivias";
+// The same set as a runtime list, so the home's Play rail can deep-link a
+// mode (`/create-room?mode=`) and the route wrapper can validate the param
+// against the real choices. Typed from the union above so the two cannot
+// drift — adding a choice to one without the other is a type error.
+export const GAME_CHOICES: readonly GameChoice[] = ["quick", "guess", "king", "battle", "words", "library", "mytrivias"];
 
 /** A person to seat as "invited" — a friend, or a member of a picked room. */
 type InvitePerson = {
@@ -148,6 +153,13 @@ interface CreateRoomPageProps {
   onClose: () => void;
   challengeUserId?: string | null;
   defaultChallengeType?: "random" | "library" | "my-trivias" | "create" | null;
+  /**
+   * A mode to start on, as if its card had just been tapped here — the
+   * home's Play rail arrives with one. Runs `startMode` once on mount, so
+   * Quick auto-starts, Guess unfolds its picture games, Library opens the
+   * category picker, exactly as a tap on the card would.
+   */
+  initialMode?: GameChoice;
   autoOpenPersonalTrivia?: boolean;
   preSelectedCategory?: {
     id: string;
@@ -171,7 +183,7 @@ interface CreateRoomPageProps {
   enterInstantly?: boolean;
 }
 
-export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType, autoOpenPersonalTrivia, preSelectedCategory, enterInstantly = false }: CreateRoomPageProps) {
+export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType, initialMode, autoOpenPersonalTrivia, preSelectedCategory, enterInstantly = false }: CreateRoomPageProps) {
   const { user, profile } = useAuth();
   const { t } = useLanguage();
   const bubbleVideo = useResponsiveVideo("/videos/floating-blob.mp4");
@@ -548,6 +560,18 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     if (key === "library" && !(selectionMode === "library" && selectedCategory)) setShowCategoriesModal(true);
     if (key === "mytrivias" && !challengeTrivia) void handleOptionClick("my-trivias");
   };
+
+  // A card tapped on the home's Play rail lands here with a mode: run the
+  // same startMode a tap on that card in this chooser would — once, on
+  // mount, and after the tap it mirrors, not before it (a seeded initial
+  // state would let the autoStart watcher run before the flag was set).
+  const seededMode = useRef(false);
+  useEffect(() => {
+    if (!initialMode || seededMode.current) return;
+    seededMode.current = true;
+    startMode(initialMode);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialMode]);
 
   const handleLibraryCategorySelect = (category: { id: string; category_id: string; name: string; icon?: string; icon_slug?: string | null; color: string; image_url?: string | null; total_levels: number }) => {
     // Use the category directly from the modal - it already has category_id

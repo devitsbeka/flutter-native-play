@@ -1,18 +1,26 @@
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Users, Tv, Swords, Crown, SpellCheck, ChevronRight } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { MyRoomsSection } from "@/components/team/MyRoomsSection";
-import { useGameTypes } from "@/hooks/useGameTypes";
+import { useDeveloperMode } from "@/contexts/DeveloperModeContext";
+import type { GameChoice } from "@/components/team/CreateRoomPage";
+
+import playersIcon from "@/assets/play-chooser/players.svg";
+import featuredQuick from "@/assets/play-chooser/featured-quick.webp";
+import featuredLibrary from "@/assets/play-chooser/featured-library.webp";
+import featuredGuess from "@/assets/play-chooser/featured-random.webp";
+import featuredKing from "@/assets/play-chooser/featured-king.webp";
+import featuredBattle from "@/assets/play-chooser/featured-battle.webp";
+import featuredWords from "@/assets/play-chooser/featured-words.webp";
+import featuredMyTrivias from "@/assets/play-chooser/featured-mytrivias.webp";
 import { useCategories } from "@/hooks/useCategories";
 import { useVipStatus } from "@/hooks/useVipStatus";
 import { AirbnbCategoryCard } from "@/components/discover/AirbnbCategoryCard";
 import { ProBannerReel } from "@/components/shop/MobileProCarousel";
-import { useLiveDeals, DealBannerCard } from "@/components/shop/DailyDealsRow";
 
 /**
  * The feature rails revealed BELOW the home hero when the player scrolls
@@ -24,14 +32,6 @@ import { useLiveDeals, DealBannerCard } from "@/components/shop/DailyDealsRow";
  * profile card) and the scroller both live in MobileHomeScroll. Reordering
  * the home is moving a block here, not rewiring it.
  */
-
-const MODE_ICONS: Record<string, LucideIcon> = {
-  users: Users,
-  tv: Tv,
-  swords: Swords,
-  crown: Crown,
-  "spell-check": SpellCheck,
-};
 
 // The reel marks bought deals; the home doesn't buy from the rail itself.
 const EMPTY_PURCHASES: Set<string> = new Set();
@@ -80,7 +80,7 @@ function RailHeader({
 /** The scroller every card rail shares — full-width, 16px inset, snaps. */
 function Rail({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-4 px-4 pb-1 scrollbar-hide">
+    <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-4 px-4 pb-3 pt-1 scrollbar-hide">
       {children}
     </div>
   );
@@ -90,10 +90,27 @@ export function MobileHomeFeed() {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { user } = useAuth();
-  const gameTypes = useGameTypes();
+  const { developerMode } = useDeveloperMode();
+
+  // The play chooser's own cards — same art, same order, same gating (King
+  // and Battle are developer-only until promoted) — at a compact size. A tap
+  // opens the chooser with that mode already started, as tapping the card
+  // there would.
+  const playCards: { key: GameChoice; art: string; players: string | null; title: string; desc: string }[] = [
+    { key: "quick", art: featuredQuick, players: "1-10", title: t("extra.modeQuickTitle"), desc: t("extra.modeQuickDesc") },
+    { key: "library", art: featuredLibrary, players: null, title: t("extra.modeLibraryTitle"), desc: t("extra.libraryDesc") },
+    { key: "guess", art: featuredGuess, players: "1-10", title: t("extra.modeGuessTitle"), desc: t("extra.modeGuessDesc") },
+    ...(developerMode
+      ? [
+          { key: "king" as const, art: featuredKing, players: "1-10", title: t("extra.modeKingTitle"), desc: t("lobby.kingCardDesc") },
+          { key: "battle" as const, art: featuredBattle, players: "4-10", title: t("extra.modeBattleTitle"), desc: t("gameTypes.teamBattleDesc") },
+        ]
+      : []),
+    { key: "words", art: featuredWords, players: "1-2", title: t("gameTypes.wordsTitle"), desc: t("extra.modeWordsDesc") },
+    { key: "mytrivias", art: featuredMyTrivias, players: null, title: t("extra.myTriviaOption"), desc: t("extra.myTriviaDesc") },
+  ];
   const { categories } = useCategories();
   const { isVip } = useVipStatus();
-  const { dailyDeal, hourlyDeal, dailyRemaining, hourlyRemaining } = useLiveDeals();
 
   // The first dozen categories as a rail — the app's richest, always-present
   // "what to play" content, and what keeps the feed taller than a screen so
@@ -133,30 +150,56 @@ export function MobileHomeFeed() {
         />
       </section>
 
-      {/* ── Play modes ────────────────────────────────────────────────── */}
+      {/* ── Play modes: the chooser's cards, compact ─────────────────────
+          The same poster card the play chooser shows on the main button —
+          the render up top with its foot dissolving into the lavender wash,
+          the peach players pill, the title and blurb — at about half the
+          chooser's height so a few sit in reach across the rail. The still
+          stands in for the chooser's looping video: a rail of loops is a
+          rail of decoders. */}
       <section>
         <RailHeader title={t("extra.railPlay")} desc={t("extra.railPlayDesc")} />
         <Rail>
-          {gameTypes.map((gt) => {
-            const Icon = MODE_ICONS[gt.icon] ?? Users;
-            return (
-              <button
-                key={gt.key}
-                type="button"
-                onClick={() => gt.launch?.(navigate)}
-                className="relative flex h-[132px] w-[150px] shrink-0 snap-start flex-col justify-end overflow-hidden rounded-[22px] p-3 text-left"
-                style={{ background: gt.tileBg, boxShadow: gt.tileShadow }}
-              >
-                <Icon className="absolute right-3 top-3 h-6 w-6 text-white/85" strokeWidth={2.2} />
-                <p className="font-hero text-[16px] capitalize leading-[19px] text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)]">
-                  {t(gt.titleKey)}
+          {playCards.map((card) => (
+            <button
+              key={card.key}
+              type="button"
+              onClick={() => navigate(`/create-room?mode=${card.key}`)}
+              className="relative isolate block h-[258px] w-[196px] shrink-0 snap-start overflow-clip rounded-[24px] bg-[#e9d8ff] text-left shadow-[0px_0px_0px_1px_rgba(0,0,0,0.06),0px_8px_24px_0px_rgba(15,23,41,0.1)] transition-transform active:scale-[0.97]"
+            >
+              {/* The render: a 3:4 still across the top, its foot masked out
+                  over the same stretch the wash fades in. */}
+              <div className="absolute left-0 top-0 z-0 aspect-[3/4] w-full overflow-hidden [-webkit-mask-image:linear-gradient(to_bottom,black_50%,transparent_100%)] [mask-image:linear-gradient(to_bottom,black_50%,transparent_100%)]">
+                <img
+                  alt=""
+                  src={card.art}
+                  draggable={false}
+                  loading="lazy"
+                  className="absolute inset-0 size-full object-cover object-top"
+                />
+              </div>
+              {/* The lavender wash over the lower 55%. */}
+              <div className="absolute inset-x-0 bottom-0 z-10 h-[55%] bg-[linear-gradient(to_top,#f3e6ff_0%,#f3e6ff_50%,rgba(243,230,255,0)_100%)]" />
+              {/* How many play: the peach pill, top right. */}
+              {card.players && (
+                <div className="absolute right-[8px] top-[8px] z-20 flex items-center gap-[4px] rounded-[14px] border-[2px] border-solid border-white/65 bg-gradient-to-b from-[#fff3ed] to-[#f5cdcd] px-[9px] py-[1px] shadow-[0px_2px_6px_0px_rgba(151,64,64,0.06),0px_2px_0px_0px_#d6c7c4]">
+                  <img alt="" src={playersIcon} className="h-[13px] w-[10px]" />
+                  <span className="whitespace-nowrap bg-gradient-to-b from-[#522b28] to-[#99665f] bg-clip-text font-hero text-[13px] capitalize leading-[20px] tracking-[-0.16px] text-transparent">
+                    {card.players}
+                  </span>
+                </div>
+              )}
+              {/* Title and blurb, at the chooser's share of the height. */}
+              <div className="absolute left-[16px] right-[12px] top-[calc(78.86%_-_14px)] z-20">
+                <p className="overflow-hidden text-ellipsis whitespace-nowrap font-hero text-[16px] capitalize leading-[20px] tracking-[-0.16px] text-[#402666]">
+                  {card.title}
                 </p>
-                <p className="mt-0.5 line-clamp-2 font-[Nunito] text-[11px] font-semibold leading-[14px] text-white/85">
-                  {t(gt.descKey)}
+                <p className="mt-[4px] line-clamp-2 font-[Nunito] text-[11px] leading-[14px] tracking-[-0.16px] text-[#4b5563]">
+                  {card.desc}
                 </p>
-              </button>
-            );
-          })}
+              </div>
+            </button>
+          ))}
         </Rail>
       </section>
 
@@ -234,33 +277,18 @@ export function MobileHomeFeed() {
         />
       </section>
 
-      {/* ── Daily offers ──────────────────────────────────────────────── */}
+      {/* ── Daily offers — the same full-card, arrowed reel as Pro ──────
+          One deal fully in view at a time with arrows and dots, exactly as
+          the Pro reel above. The old 300px strip cut the second card and
+          its Purchase button off at the screen edge. */}
       <section>
         <RailHeader title={t("extra.railOffers")} desc={t("extra.railOffersDesc")} />
-        <Rail>
-          <div className="w-[300px] shrink-0 snap-start">
-            <DealBannerCard
-              deal={dailyDeal}
-              label={t("shop.dailyDeal")}
-              remainingLabel={dailyRemaining}
-              daily
-              isPurchased={false}
-              isLoading={false}
-              onBuy={() => navigate("/power-ups")}
-            />
-          </div>
-          <div className="w-[300px] shrink-0 snap-start">
-            <DealBannerCard
-              deal={hourlyDeal}
-              label={t("shop.hourlyDeal")}
-              remainingLabel={hourlyRemaining}
-              daily={false}
-              isPurchased={false}
-              isLoading={false}
-              onBuy={() => navigate("/power-ups")}
-            />
-          </div>
-        </Rail>
+        <ProBannerReel
+          slides="deals"
+          purchasedItems={EMPTY_PURCHASES}
+          isPurchasing={null}
+          onItemClick={() => navigate("/power-ups")}
+        />
       </section>
     </div>
   );

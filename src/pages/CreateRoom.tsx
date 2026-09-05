@@ -1,5 +1,6 @@
 import { MultiplayerProviderV2 } from "@/contexts/MultiplayerContextV2";
-import { CreateRoomPage } from "@/components/team/CreateRoomPage";
+import { useSearchParams } from "react-router-dom";
+import { CreateRoomPage, GAME_CHOICES, type GameChoice } from "@/components/team/CreateRoomPage";
 
 /**
  * The create screen, on a route of its own.
@@ -27,9 +28,19 @@ import { CreateRoomPage } from "@/components/team/CreateRoomPage";
  * for.
  */
 export default function CreateRoom() {
+  // The home's Play rail arrives with `?mode=quick` and the like — the card
+  // it showed, to be started here as if tapped. Validated against the real
+  // set; anything else starts on nothing picked, as before.
+  const [searchParams] = useSearchParams();
+  const modeParam = searchParams.get("mode");
+  const initialMode = (GAME_CHOICES as readonly string[]).includes(modeParam ?? "")
+    ? (modeParam as GameChoice)
+    : undefined;
+
   return (
     <MultiplayerProviderV2>
       <CreateRoomPage
+        initialMode={initialMode}
         // This screen IS the destination here, so it never fades in over
         // whatever happened to be behind it.
         enterInstantly
