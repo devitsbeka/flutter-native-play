@@ -2,9 +2,10 @@
  * Discover's section titles wear the app's heading, not their own.
  *
  * "კლასიკური ტრივია", "გართობა" and the rest were set in a semibold slate
- * sans, while every rail on the home feed uses font-hero at 19px in the
- * app's aubergine. Scrolling from one browsing surface to the other changed
- * typeface for no reason a reader could name.
+ * sans, while every rail on the home feed uses the home frame's heading —
+ * an 18px semibold Georgian sans in the app's aubergine (Figma 1076:2116).
+ * Scrolling from one browsing surface to the other changed typeface for no
+ * reason a reader could name.
  *
  * One component carries all twelve of Discover's titles, so this is one
  * change rather than twelve — and the test pins the two headings to each
@@ -24,7 +25,7 @@ const tailwind = read("tailwind.config.ts");
 
 /** The heading class list, from whichever file we pull it out of. */
 const headingClass = (src: string): string | undefined =>
-  /<h2 className="(font-hero[^"]*)"/.exec(src)?.[1];
+  /<h2 className="(font-georgian[^"]*)"/.exec(src)?.[1];
 
 describe("the two surfaces share one heading", () => {
   it("Discover's title is character-for-character the home rail's", () => {
@@ -35,9 +36,9 @@ describe("the two surfaces share one heading", () => {
     expect(disc).toBe(home);
   });
 
-  it("which is font-hero at 19px in the app's aubergine", () => {
+  it("which is the frame's 18px semibold Georgian sans in the app's aubergine", () => {
     expect(headingClass(header)).toBe(
-      "font-hero text-[19px] capitalize leading-[22px] tracking-[-0.16px] text-[#402666]",
+      "font-georgian text-[18px] font-semibold leading-[22px] text-[#402666]",
     );
   });
 
@@ -46,9 +47,9 @@ describe("the two surfaces share one heading", () => {
   });
 
   it("the subtitle under it matches too", () => {
-    // Left alone it would have been a 14px slate sans under a display face.
+    // Left alone it would have been a 14px slate sans under the heading.
     expect(header).toMatch(
-      /font-\[Nunito\] text-\[12px\] font-normal leading-\[15px\] tracking-\[-0\.16px\] text-\[#6b5b86\]\/85/,
+      /font-\[Nunito\] text-\[12px\] font-medium leading-\[15px\] tracking-\[-0\.16px\] text-\[#6b5b86\]"/,
     );
     expect(header).not.toMatch(/text-sm mt-0\.5 text-slate-600/);
   });
@@ -62,11 +63,10 @@ describe("one component, every title", () => {
   });
 });
 
-describe("font-hero is the right token for Georgian", () => {
-  it("Slackey carries no Georgian, so TASolivare stands behind it", () => {
-    // That is why the home rails already render Georgian titles in
-    // TASolivare — the same face this now brings to Discover. A bare
-    // font-slackey would have fallen through to a system sans instead.
-    expect(tailwind).toMatch(/hero: \[\s*\n\s*'Slackey',\s*\n\s*'TASolivare',\s*\n\s*'Nunito',/);
+describe("font-georgian is the right token for Georgian", () => {
+  it("leads with Noto Sans Georgian, with Google Sans behind it", () => {
+    // The frame's heading face carries Georgian itself; Google Sans, which
+    // the app already loads with Georgian support, stands behind it.
+    expect(tailwind).toMatch(/georgian: \[\s*\n\s*'Noto Sans Georgian',\s*\n\s*'Google Sans',/);
   });
 });
