@@ -880,24 +880,43 @@ function useFitOneLine(text: string, basePx: number, minPx: number) {
     const el = ref.current;
     if (!el) return;
     const fit = () => {
+      const parent = el.parentElement;
+      if (!parent) return;
+      // AVAILABLE width comes from the PARENT, not the h1's own clientWidth.
+      // The h1 is a flex item with the default `min-width: auto`, so it will
+      // not shrink below its own text — its clientWidth stays equal to the
+      // text and "is it cut off?" always reads false, which is why a long
+      // name never shrank and just ellipsised. The parent is the full-width
+      // (w-full) box and does not depend on the text, so it is the honest
+      // ceiling.
+      const avail = parent.clientWidth;
+      if (avail <= 0) return;
+      // NATURAL width is the text at the base size with the box constraint
+      // lifted (`max-content`), so scrollWidth is the real one-line width
+      // rather than whatever the flex row happened to give it.
+      const savedWidth = el.style.width;
+      el.style.width = "max-content";
+      el.style.fontSize = `${basePx}px`;
+      const natural = el.scrollWidth;
       let size = basePx;
-      el.style.fontSize = `${size}px`;
-      // Bounded: the first pass jumps most of the way, the rest walk the last
-      // pixel or two, and the guard means a pathological measurement costs a
-      // few reflows rather than the frame.
-      for (let guard = 0; guard < 64; guard++) {
-        const avail = el.clientWidth;
-        const natural = el.scrollWidth;
-        if (avail <= 0 || natural <= avail || size <= minPx) break;
-        const estimate = Math.floor((size * avail) / natural);
-        size = Math.max(minPx, estimate < size ? estimate : size - 1);
+      if (natural > avail) {
+        // One measured jump, then a few corrective steps: the fixed negative
+        // tracking does not scale with the type and advances round to whole
+        // pixels, so the estimate lands a hair over and the walk settles it.
+        size = Math.max(minPx, Math.floor((basePx * avail) / natural));
         el.style.fontSize = `${size}px`;
+        for (let guard = 0; guard < 12 && size > minPx && el.scrollWidth > avail; guard++) {
+          size -= 1;
+          el.style.fontSize = `${size}px`;
+        }
       }
+      el.style.width = savedWidth;
       setPx(size);
     };
     fit();
+    // Watch the parent (its width is the ceiling); the h1's own size changing
+    // as the font shrinks must not itself trigger a re-fit.
     const ro = new ResizeObserver(fit);
-    ro.observe(el);
     if (el.parentElement) ro.observe(el.parentElement);
     // The heading is set in a heavy display face (Slackey) that loads after
     // first paint. Measured against the fallback the name looks like it fits;
@@ -942,15 +961,15 @@ function RoomTitle({
   // The box is the width it HAS, not the frame's 321px. That number came off
   // a 375pt mock, where it is the content width; hard-coded, it threw away
   // 40px of a modern phone and shrank — or cut off — names that had the room
-  // to be drawn in full. The floor is 20px rather than 16: below that the
-  // "heading" is smaller than the count under it, and a name that far over
-  // is better ellipsised than whispered.
+  // to be drawn in full. The floor is 16px: the owner would rather read a
+  // long name whole and small than have it ellipsised, so it shrinks that far
+  // before it ever cuts.
   //
   // The pencil rides on the emblem's shoulder — one control, whichever half
   // is tapped, opening the sheet that sets both the name and the face. It is
   // never a child of the h1, so the chip's round edge and its shadow are never
   // clipped by the heading's overflow.
-  const { ref: headingRef, px: headingPx } = useFitOneLine(name, 43.656, 20);
+  const { ref: headingRef, px: headingPx } = useFitOneLine(name, 43.656, 16);
   const chip = (
     <span className="flex size-[22px] shrink-0 items-center justify-center rounded-full bg-white drop-shadow-[0px_2px_2px_rgba(0,0,0,0.18)]">
       <Pencil className="size-3 text-[#523b76]" />
@@ -960,7 +979,7 @@ function RoomTitle({
     <h1
       ref={headingRef}
       style={{ fontSize: headingPx, lineHeight: 1.176 }}
-      className="w-full overflow-hidden text-ellipsis whitespace-nowrap text-center font-hero capitalize tracking-[-0.2054px] text-[#402666]"
+      className="w-full min-w-0 max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-center font-hero capitalize tracking-[-0.2054px] text-[#402666]"
     >
       {name}
     </h1>
