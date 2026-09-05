@@ -4,7 +4,11 @@ import { CategoryArtwork } from "@/components/shared/CategoryArtwork";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useLocalizedCategoryName } from "@/utils/categoryDisplayName";
 import { getCategoryIconSlug } from "@/data/categoryIconMap";
-import { isUndecidedRound, UNDECIDED_ICON_SLUG } from "@/utils/undecidedRound";
+import {
+  isUndecidedRound,
+  undecidedRoundKind,
+  UNDECIDED_ICON_SLUG,
+} from "@/utils/undecidedRound";
 
 interface RoundCountdownProps {
   /**
@@ -36,7 +40,15 @@ interface RoundCountdownProps {
 export function RoundCountdown({ number, categoryId, categoryName, iconSlug }: RoundCountdownProps) {
   const { t } = useLanguage();
   const localizeCategory = useLocalizedCategoryName();
-  const title = localizeCategory(categoryName || "") || t("extra.categoryType");
+  // An undecided round is named in the language of whoever picked it, and
+  // useLocalizedCategoryName cannot translate it: "mixed" is not a row in
+  // `categories`, so the stored string passes through untouched. That is how
+  // an English host saw "სხვადასხვა" on the screen before their own game.
+  // Say it in the viewer's language instead.
+  const undecided = undecidedRoundKind(categoryId, categoryName);
+  const title = undecided
+    ? t(undecided === "mixed" ? "extra.mixedCategory" : "extra.cpRandomTitle")
+    : localizeCategory(categoryName || "") || t("extra.categoryType");
 
   // Both slugs, best first. DynamicIcon takes a comma-separated list and tries
   // them in order, which is what this needs: the database's icon_slug is the

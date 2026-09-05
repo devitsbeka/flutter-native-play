@@ -26,14 +26,20 @@ export const UNDECIDED_ICON_SLUG = "mystery-box";
 /** The ids the pickers use when no real category has been chosen. */
 const UNDECIDED_IDS = new Set(["__mixed__", "__random__", "mixed", "random"]);
 
+/** "Mixed", as every picker in every language stores it. */
+const MIXED_NAMES = [
+  "__mixed__",
+  "Mixed", "სხვადასხვა", "შერეული", "Gemischt", "Mixto", "Mixte", "Misto",
+].map((s) => s.toLowerCase());
+
+/** "Random", likewise. */
+const RANDOM_NAMES = [
+  "__random__",
+  "Random", "შემთხვევითი", "Zufällig", "Aleatorio", "Aléatoire", "Casuale", "Aleatório",
+].map((s) => s.toLowerCase());
+
 /** "Mixed" and "Random", as every picker in every language stores them. */
-const UNDECIDED_NAMES = new Set(
-  [
-    "__mixed__", "__random__",
-    "Mixed", "სხვადასხვა", "შერეული", "Gemischt", "Mixto", "Mixte", "Misto",
-    "Random", "შემთხვევითი", "Zufällig", "Aleatorio", "Aléatoire", "Casuale", "Aleatório",
-  ].map((s) => s.toLowerCase()),
-);
+const UNDECIDED_NAMES = new Set([...MIXED_NAMES, ...RANDOM_NAMES]);
 
 /** Is this round's category still a mystery? */
 export function isUndecidedRound(
@@ -43,4 +49,35 @@ export function isUndecidedRound(
   if (categoryId && UNDECIDED_IDS.has(categoryId.toLowerCase())) return true;
   const name = categoryName?.trim().toLowerCase();
   return !!name && UNDECIDED_NAMES.has(name);
+}
+
+/**
+ * Which kind of undecided round this is, or null if it is a real category.
+ *
+ * The picture is the same for both (above), but the WORD is not, and the
+ * word has to be the viewer's own. A round like this denormalizes its
+ * category_name at pick time, in the language of whoever picked it, and
+ * useLocalizedCategoryName cannot help: it maps names through the
+ * `categories` table, and "mixed" is not a row there — it is a pseudo-
+ * category the pickers invent, so the stored string passes straight through.
+ *
+ * That is how an English host who started a game saw "სხვადასხვა" on the
+ * countdown: a Georgian client had written the name, and every reader after
+ * that printed it verbatim. The public room card already solved this by
+ * matching the words and printing its own label; this puts that decision
+ * next to the icon's, so the next screen to announce a round does not have
+ * to work it out again.
+ */
+export function undecidedRoundKind(
+  categoryId?: string | null,
+  categoryName?: string | null,
+): "mixed" | "random" | null {
+  const id = categoryId?.trim().toLowerCase();
+  if (id === "__mixed__" || id === "mixed") return "mixed";
+  if (id === "__random__" || id === "random") return "random";
+  const name = categoryName?.trim().toLowerCase();
+  if (!name) return null;
+  if (MIXED_NAMES.includes(name)) return "mixed";
+  if (RANDOM_NAMES.includes(name)) return "random";
+  return null;
 }

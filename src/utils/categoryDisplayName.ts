@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { readAppLanguage } from "@/utils/appLanguage";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { undecidedRoundKind } from "@/utils/undecidedRound";
 
 /**
  * Translate a stored category name into the viewer's language.
@@ -15,7 +17,19 @@ import { readAppLanguage } from "@/utils/appLanguage";
  * out to the viewer's language, using `categories` (Georgian base names)
  * plus the whole `category_translations` table — 45 categories × a handful
  * of languages, fetched once per tab per language. A name that isn't a
- * library category (custom trivia titles, "Random") passes through as-is.
+ * library category (a custom trivia title) passes through as-is.
+ *
+ * "Mixed" and "Random" are the exception, and used to be the hole. They are
+ * pseudo-categories the pickers invent — no row in `categories`, so nothing
+ * to map through — and the stored string passed straight out. An English
+ * host who started a game therefore read "სხვადასხვა" on the countdown
+ * before their own round, because a Georgian client had written the name.
+ * Sixteen call sites shared that blind spot, so the answer lives here rather
+ * than in each of them: undecidedRoundKind matches the words in all seven
+ * languages, and the viewer's own label is returned instead. (Checked
+ * against production: none of the 742 real category names, base or
+ * translated, is "Mixed" or "Random" in any language, so nothing real is
+ * caught by this.)
  */
 
 type NameMap = Map<string, string>;
@@ -124,6 +138,7 @@ export function useLocalizedCategoryName(): (
   stored: string | null | undefined,
 ) => string | undefined {
   const lang = readAppLanguage();
+  const { t } = useLanguage();
   const [map, setMap] = useState<NameMap | null>(
     cached && cached.lang === lang ? cached.map.names : null,
   );
@@ -141,8 +156,12 @@ export function useLocalizedCategoryName(): (
   return useCallback(
     (stored: string | null | undefined) => {
       if (!stored) return undefined;
+      // Not a category, so the map below can never answer for it: say it in
+      // the viewer's language rather than the picker's.
+      const kind = undecidedRoundKind(null, stored);
+      if (kind) return t(kind === "mixed" ? "extra.mixedCategory" : "extra.cpRandomTitle");
       return map?.get(stored) ?? stored;
     },
-    [map],
+    [map, t],
   );
 }
