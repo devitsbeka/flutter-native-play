@@ -1,4 +1,4 @@
-import { useRef, useState, type RefObject } from "react";
+import { useRef, useState, type ReactNode } from "react";
 
 import { FriendsStoriesBar } from "@/components/team/FriendsStoriesBar";
 import { MobileProfileCard } from "@/components/home/MobileHome";
@@ -11,29 +11,35 @@ import gemNew from "@/assets/figma-home/gem-new.png";
 /**
  * The phone home as a scroll-reveal (owner's ask).
  *
- * At rest it IS the old home: the mascot scene fills the screen (rendered at
- * the page level so it is never cropped), the friends reel rides the top, the
- * profile card sits above the nav — nothing moved.
+ * At rest it IS the old home: the mascot scene fills the first screen, the
+ * friends reel rides the top, the profile card sits above the nav — nothing
+ * moved. Scrolling lifts that whole hero — scene included — up and out of
+ * view, revealing a light, chunky feed of feature rails beneath it. Once the
+ * hero is gone a compact header — the player's face, name and balances —
+ * fades in and stays, so the identity the scene used to carry is still there
+ * while you browse.
  *
- * Scrolling fades the scene out and lifts the hero content away, revealing a
- * light, chunky feed of feature rails whose panel peeks a little at rest as a
- * cue. Once the scene is gone a compact header — the player's face, name and
- * balances — fades in and stays, so the identity the scene used to carry is
- * still there while you browse.
+ * The scene lives INSIDE the hero, in the scroll flow, on purpose. It used to
+ * be a page-level fixed backdrop that the feed panel had to paint over, and
+ * on iOS that never worked: the scene's <video> is promoted to its own
+ * compositing layer and painted above the feed regardless of z-index, so the
+ * mascot punched through the lower half of the feed. A scene that scrolls
+ * away with the hero is simply off-screen once the feed is up — there is
+ * nothing left to composite over it.
  *
- * The scene lives in Index (behind the header) and is faded through
- * `sceneFadeRef` so this scroller never has to reproduce its full-bleed
- * geometry. It owns its own vertical scroller (CLAUDE.md rule 4b).
+ * It owns its own vertical scroller (CLAUDE.md rule 4b).
  */
 
-// Pixels of scroll over which the scene fades fully out.
-const SCENE_FADE_PX = 240;
 // Scroll past this and the compact identity header is shown.
 const HEADER_AT_PX = 72;
 
 export interface MobileHomeScrollProps {
-  /** The page-level scene wrapper this scroller fades as the hero leaves. */
-  sceneFadeRef: RefObject<HTMLDivElement>;
+  /**
+   * The mascot scene (or the default Trivia King loop), rendered inside the
+   * hero so it scrolls away with it. The scene components are `absolute
+   * inset-0`, so they fill the hero — one full screen at rest.
+   */
+  scene: ReactNode;
   // Identity
   nickname: string;
   avatarUrl: string | null;
@@ -54,7 +60,7 @@ export interface MobileHomeScrollProps {
 }
 
 export function MobileHomeScroll({
-  sceneFadeRef,
+  scene,
   nickname,
   avatarUrl,
   countryCode,
@@ -79,9 +85,6 @@ export function MobileHomeScroll({
     if (ticking.current) return;
     ticking.current = true;
     requestAnimationFrame(() => {
-      // Fade the page-level scene straight off the scroll — no React re-render.
-      const scene = sceneFadeRef.current;
-      if (scene) scene.style.opacity = String(Math.max(0, 1 - top / SCENE_FADE_PX));
       setScrolled(top > HEADER_AT_PX);
       ticking.current = false;
     });
@@ -89,15 +92,10 @@ export function MobileHomeScroll({
 
   return (
     // The scroller is `absolute inset-0` of this positioned, flex-filled root
-    // — NOT `h-full`. A flex item's grown height is not a resolvable base for a
-    // percentage-height child, so an `h-full` scroller collapsed to a short
-    // "little window" in the top third of the screen (the card anchored to its
-    // bottom landed mid-screen, and the feed scrolled in a cramped box).
-    // Positioning the scroller against this root gives it a real pixel height,
-    // so the hero is a true full screen and the feed's floor is one real
-    // viewport.
+    // rather than `h-full`, so it takes a real pixel height from the root and
+    // the hero's `h-full` resolves to exactly one screen.
     <div className="relative z-10 min-h-0 flex-1">
-      {/* Compact identity + balances, fading in once the scene has gone. */}
+      {/* Compact identity + balances, fading in once the hero has gone. */}
       <div
         className={`absolute inset-x-0 top-0 z-40 flex items-center gap-3 border-b border-white/50 bg-[rgba(250,246,255,0.86)] px-4 py-2 backdrop-blur-xl transition-opacity duration-200 ${
           scrolled ? "opacity-100" : "pointer-events-none opacity-0"
@@ -138,12 +136,14 @@ export function MobileHomeScroll({
       </div>
 
       <div className="absolute inset-0 overflow-y-auto overscroll-contain" onScroll={onScroll}>
-        {/* ── Hero: transparent over the page-level scene, scrolls away ──
-            Exactly one screenful, so at rest it is pixel-for-pixel the old
-            home: the scene shows through, the reel sits at the top and the
-            card above the nav, and the feed waits entirely below the fold —
-            nothing of it is seen until the scroll starts. */}
-        <section className="relative h-full">
+        {/* ── Hero: exactly one screenful, scrolls away as a whole ─────────
+            The scene fills it (absolute inset-0 behind the reel and card),
+            so at rest it is pixel-for-pixel the old home, and the feed waits
+            entirely below the fold. `overflow-hidden` keeps the scene's
+            oversized default-loop frame from widening the scroller. */}
+        <section className="relative h-full overflow-hidden">
+          {scene}
+
           {/* Friends reel, riding the top of the hero as it always did. */}
           <div className="relative z-20 px-4 lg:pl-[26px]">
             <FriendsStoriesBar onAddFriendClick={onAddFriend} />
@@ -166,14 +166,9 @@ export function MobileHomeScroll({
         </section>
 
         {/* ── Feed: light, chunky rails revealed on scroll ──────────────────
-            min-h-full: the feed is the solid ground the scroll lands on. The
-            scene behind it is a FIXED, full-screen backdrop (page-level
-            `absolute inset-0`), so the feed's opaque panel has to cover the
-            whole viewport once you scroll into it — otherwise, when the rails
-            are shorter than a screen, the fixed scene shows through beneath
-            them. `min-h-full` is exactly one scroller viewport (the scroller
-            now has a real height); `100dvh` overshot it by the safe-area
-            insets and padded a whole empty screen below the rails. */}
+            `min-h-full` — at least one scroller viewport — so the hero can
+            scroll fully off (the feed has to be at least a screen tall for
+            that) and the feed lands as solid ground rather than trailing off. */}
         <div className="relative z-10 min-h-full rounded-t-[28px] bg-[#faf6ff] pb-[calc(104px_+_var(--safe-bottom))] shadow-[0_-10px_28px_rgba(60,30,90,0.14)]">
           <div className="flex justify-center pt-2">
             <span className="h-[5px] w-[44px] rounded-full bg-[rgba(90,60,130,0.22)]" />
