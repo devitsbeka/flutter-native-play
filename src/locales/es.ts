@@ -2054,6 +2054,7 @@ export const es: KaTranslations = {
     railFirstRoom: "Crea tu primera sala",
     railFirstRoomDesc: "Invita a tus amigos y jugad juntos",
     railFirstTrivia: "Crea tu primer trivia",
+    railFirstTriviaDesc: "Escribe preguntas y reta a tus amigos",
     railPlay: "Jugar",
     railPlayDesc: "Elige un modo",
     railMyTrivias: "Mis Trivias",

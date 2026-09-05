@@ -2368,6 +2368,7 @@ export const ka = {
     railFirstRoom: "შექმენი შენი პირველი ოთახი",
     railFirstRoomDesc: "მოიწვიე მეგობრები და ითამაშეთ ერთად",
     railFirstTrivia: "შექმენი შენი პირველი ტრივია",
+    railFirstTriviaDesc: "დაწერე კითხვები და დაუპირისპირდი მეგობრებს",
     railPlay: "თამაშები",
     railPlayDesc: "აირჩიე თამაშის ტიპი",
     railMyTrivias: "ტრივიები",

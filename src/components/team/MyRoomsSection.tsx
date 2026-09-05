@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
 import { AnimatePresence, motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
@@ -53,6 +53,14 @@ interface MyRoomsSectionProps {
    * page), one age badge rather than two, avatars on the right.
    */
   homeRail?: boolean;
+  /**
+   * Tells the parent whether this rail has anything in it.
+   *
+   * The heading above it lives in MobileHomeFeed and has to swap "see all"
+   * for a + when there is nothing to see. Reported up rather than having the
+   * feed run the same rooms query a second time.
+   */
+  onEmptyChange?: (empty: boolean) => void;
   filter?: RoomFilter;
   searchQuery?: string;
   onNavigateToTab?: (tab: string) => void;
@@ -81,6 +89,7 @@ export function MyRoomsSection({
   onShowAllRooms, 
   vertical = false,
   homeRail = false,
+  onEmptyChange,
   filter = "all",
   searchQuery = "",
   onNavigateToTab,
@@ -291,6 +300,18 @@ export function MyRoomsSection({
   // Check if user has seen feature onboarding
   const [hasSeenOnboarding, setHasSeenOnboarding] = useState(() => hasSeenFeatureOnboarding());
 
+  // Above the early return below, so it runs on every render — a hook after
+  // a conditional return is called in a different order on the loading pass
+  // than on the loaded one, which is the rule React cannot recover from.
+  //
+  // Reported only once the query has answered: while loading, `rooms` is
+  // empty too, and announcing that would flash a + over a rail about to
+  // fill. A search with no hits is its own state, not an empty rail.
+  const isEmpty = !loading && rooms.length === 0 && searchQuery.trim().length === 0;
+  useEffect(() => {
+    onEmptyChange?.(isEmpty);
+  }, [isEmpty, onEmptyChange]);
+
   if (loading) {
     // Reserve space to prevent layout jump
     return <div className="min-h-[200px]" />;
@@ -314,7 +335,7 @@ export function MyRoomsSection({
         // below is full width and centred, which in a row of horizontal
         // cards reads as something having gone wrong rather than as an
         // invitation — and the rail loses its shape entirely.
-        <div className="flex gap-3 overflow-x-auto px-4 pb-4 scrollbar-hide">
+        <div className="px-4 pb-4">
           <StartHereCard
             variant="room"
             title={t("extra.railFirstRoom")}

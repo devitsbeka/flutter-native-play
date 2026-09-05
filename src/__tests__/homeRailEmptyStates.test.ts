@@ -32,7 +32,8 @@ describe("the trivias rail no longer disappears", () => {
   });
 
   it("and an empty one offers the way to make the first", () => {
-    expect(feed).toMatch(/\{trivias\.length === 0 && \(\s*\n\s*<StartHereCard\s*\n\s*variant="trivia"/);
+    expect(feed).toMatch(/\{trivias\.length === 0 && \(\s*\n\s*<div className="px-4 pb-3 pt-1">/);
+    expect(feed).toMatch(/<StartHereCard\s*\n\s*variant="trivia"/);
     expect(feed).toMatch(/title=\{t\("extra\.railFirstTrivia"\)\}/);
     // Straight to the create sheet, not to a list the player would then
     // have to find it in.
@@ -63,33 +64,85 @@ describe("the rooms rail keeps its shape when empty", () => {
   });
 });
 
-describe("the card itself", () => {
-  it("matches the shape of what it stands in for", () => {
-    // Room: the rail's own card width. Trivia: the 132px cover square.
-    expect(card).toMatch(/w-\[70vw\] max-w-\[280px\]/);
-    expect(card).toMatch(/h-\[132px\] w-full items-center justify-center rounded-\[18px\]/);
-    expect(card).toMatch(/w-\[132px\]/);
+describe("the panel itself", () => {
+  it("takes the whole width, with the words inside it", () => {
+    // A card-shaped placeholder left most of the row blank, which reads as
+    // a rail that failed to load rather than one waiting to be filled.
+    expect(card).toMatch(/flex w-full flex-col items-center justify-center/);
+    expect(card).toMatch(/border-2 border-dashed/);
+    // Both rails hand it a full-width box rather than a scroller.
+    expect(feed).toMatch(/<div className="px-4 pb-3 pt-1">\s*\n\s*<StartHereCard/);
+    expect(rooms).toMatch(/<div className="px-4 pb-4">\s*\n\s*<StartHereCard/);
   });
 
-  it("reads as an outline of a card that does not exist yet", () => {
-    expect(card.match(/border-2 border-dashed/g) ?? []).toHaveLength(2);
-    expect(card).toMatch(/<Plus /);
+  it("wears the picture of the rail it stands in", () => {
+    // Each surface's own icon, not a generic plus — that said only
+    // "something goes here".
+    expect(card).toMatch(/import danceFloorIcon from "@\/assets\/dance-floor\.png";/);
+    expect(card).toMatch(/import triviaBuzzerIcon from "@\/assets\/trivia-buzzer\.png";/);
+    expect(card).toMatch(/variant === "room" \? danceFloorIcon : triviaBuzzerIcon/);
+    expect(card).not.toMatch(/<Plus /);
   });
 
-  it("only the room card carries a second line", () => {
-    // The trivia tile's label sits under a 132px square; a subtitle there
-    // would push the rail out of alignment for one word.
-    expect(card).toMatch(/desc\?: string;/);
-    expect(card).toMatch(/\{desc && \(/);
+  it("the words sit below the icon, title over subtitle", () => {
+    const icon = card.indexOf("src={variant ===");
+    const title = card.indexOf("{title}");
+    const desc = card.indexOf("{desc && (");
+    expect(icon).toBeLessThan(title);
+    expect(title).toBeLessThan(desc);
+    // Subtitle in regular weight, matching the rail headers.
+    expect(card).toMatch(/text-\[12px\] font-normal leading-\[16px\] text-\[#6b5b86\]/);
   });
 
   it("in all seven languages", () => {
     for (const lang of ["en", "ka", "de", "es", "fr", "it", "pt"]) {
       const locale = read(`src/locales/${lang}.ts`);
-      for (const key of ["railFirstRoom", "railFirstRoomDesc", "railFirstTrivia"]) {
+      for (const key of [
+        "railFirstRoom", "railFirstRoomDesc", "railFirstTrivia", "railFirstTriviaDesc",
+      ]) {
         expect(locale, `${lang}.${key}`).toMatch(new RegExp(`\\n\\s+${key}: "..`));
       }
     }
+  });
+});
+
+describe("the rail headers", () => {
+  it("subtitles are regular weight and lighter ink", () => {
+    // They were medium, which competed with the display heading above.
+    expect(feed).toMatch(/text-\[12px\] font-normal leading-\[15px\] tracking-\[-0\.16px\] text-\[#6b5b86\]\/85/);
+    expect(feed).not.toMatch(/text-\[12px\] font-medium leading-\[15px\]/);
+  });
+
+  it("an empty rail swaps 'see all' for a +", () => {
+    // "See all trivias" leads to an empty list when there are none; the
+    // only useful thing in that corner is the way to make the first.
+    expect(feed).toMatch(/kind\?: "link" \| "add"/);
+    expect(feed).toMatch(/action\.kind === "add" \? \(/);
+    expect(feed).toMatch(/<Plus className="h-5 w-5" strokeWidth=\{2\.75\} \/>/);
+    // Still announced, since the glyph carries no words.
+    expect(feed).toMatch(/aria-label=\{action\.label\}/);
+  });
+
+  it("on both rails, from the real counts", () => {
+    expect(feed).toMatch(/roomsEmpty\s*\n?\s*\? \{ label: t\("extra\.railFirstRoom"\)[^}]*kind: "add" \}/);
+    expect(feed).toMatch(/trivias\.length === 0\s*\n\s*\? \{/);
+  });
+
+  it("and the rooms count is reported up, not fetched twice", () => {
+    expect(rooms).toMatch(/onEmptyChange\?: \(empty: boolean\) => void;/);
+    // Not while loading: `rooms` is empty then too, and a + would flash
+    // over a rail that is about to fill.
+    expect(rooms).toMatch(
+      /const isEmpty = !loading && rooms\.length === 0 && searchQuery\.trim\(\)\.length === 0;/,
+    );
+    // And ABOVE the `if (loading)` early return — a hook after a
+    // conditional return is called in a different order on the loading
+    // pass than on the loaded one.
+    const effect = rooms.indexOf("onEmptyChange?.(isEmpty);");
+    const earlyReturn = rooms.indexOf("if (loading) {");
+    expect(effect).toBeGreaterThan(-1);
+    expect(effect).toBeLessThan(earlyReturn);
+    expect(feed).toMatch(/onEmptyChange=\{setRoomsEmpty\}/);
   });
 });
 

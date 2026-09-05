@@ -2363,6 +2363,7 @@ export const en: KaTranslations = {
     railFirstRoom: "Create your first room",
     railFirstRoomDesc: "Invite friends and play together",
     railFirstTrivia: "Create your first trivia",
+    railFirstTriviaDesc: "Write questions and challenge your friends",
     railPlay: "Play",
     railPlayDesc: "pick a mode",
     railMyTrivias: "My Trivias",

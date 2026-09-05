@@ -1,7 +1,7 @@
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Plus } from "lucide-react";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -105,7 +105,14 @@ function RailHeader({
 }: {
   title: string;
   desc: string;
-  action?: { label: string; onPress: () => void };
+  /**
+   * `kind: "add"` turns the link into a round +.
+   *
+   * "See all trivias" is a promise the rail cannot keep when there are none
+   * — it leads to an empty list. With nothing to see, the only useful thing
+   * in that corner is the way to make the first one.
+   */
+  action?: { label: string; onPress: () => void; kind?: "link" | "add" };
 }) {
   return (
     <div className="mb-[10px] flex items-end justify-between gap-2 px-4">
@@ -113,11 +120,23 @@ function RailHeader({
         <h2 className="font-hero text-[19px] capitalize leading-[22px] tracking-[-0.16px] text-[#402666]">
           {title}
         </h2>
-        <p className="mt-[2px] font-[Nunito] text-[12px] font-medium leading-[15px] tracking-[-0.16px] text-[#6b5b86]">
+        {/* Regular weight, lighter ink: it is a subtitle under a display
+            face, and at medium it competed with the heading instead of
+            sitting under it. */}
+        <p className="mt-[2px] font-[Nunito] text-[12px] font-normal leading-[15px] tracking-[-0.16px] text-[#6b5b86]/85">
           {desc}
         </p>
       </div>
-      {action && (
+      {action && (action.kind === "add" ? (
+        <button
+          type="button"
+          onClick={action.onPress}
+          aria-label={action.label}
+          className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#7126d5] text-white shadow-[0_4px_10px_rgba(113,38,213,0.28)] active:scale-95"
+        >
+          <Plus className="h-5 w-5" strokeWidth={2.75} />
+        </button>
+      ) : (
         <button
           type="button"
           onClick={action.onPress}
@@ -126,7 +145,7 @@ function RailHeader({
           {action.label}
           <ChevronRight className="h-4 w-4" />
         </button>
-      )}
+      ))}
     </div>
   );
 }
@@ -172,6 +191,11 @@ export function MobileHomeFeed() {
   const seed = useRef(Math.floor(Math.random() * 0x7fffffff));
   const railCategories = useMemo(() => dealMixed(categories, seed.current, 12), [categories]);
 
+  // MyRoomsSection owns the rooms query; the header above it needs only the
+  // count, to know whether "see all" has anything to show. Reported up
+  // rather than fetched twice.
+  const [roomsEmpty, setRoomsEmpty] = useState(false);
+
   const { data: trivias = [] } = useQuery({
     queryKey: ["home-feed-my-trivias", user?.id],
     queryFn: async () => {
@@ -194,7 +218,11 @@ export function MobileHomeFeed() {
         <RailHeader
           title={t("extra.railRooms")}
           desc={t("extra.railRoomsDesc")}
-          action={{ label: t("extra.viewAllRooms"), onPress: () => navigate("/team") }}
+          action={
+            roomsEmpty
+              ? { label: t("extra.railFirstRoom"), onPress: () => navigate("/create-room"), kind: "add" }
+              : { label: t("extra.viewAllRooms"), onPress: () => navigate("/team") }
+          }
         />
         {/* MyRoomsSection brings its own full-width px-4 scroller. */}
         <MyRoomsSection
@@ -203,6 +231,7 @@ export function MobileHomeFeed() {
           filter="all"
           onCreateRoom={() => navigate("/create-room")}
           onShowAllRooms={() => navigate("/team")}
+          onEmptyChange={setRoomsEmpty}
         />
       </section>
 
@@ -303,16 +332,30 @@ export function MobileHomeFeed() {
           <RailHeader
             title={t("extra.railMyTrivias")}
             desc={t("extra.railMyTriviasDesc")}
-            action={{ label: t("extra.allTriviasBtn"), onPress: () => navigate("/team") }}
+            action={
+              trivias.length === 0
+                ? {
+                    label: t("extra.railFirstTrivia"),
+                    onPress: () => navigate("/team", { state: { openTrivia: true } }),
+                    kind: "add",
+                  }
+                : { label: t("extra.allTriviasBtn"), onPress: () => navigate("/team") }
+            }
           />
-          <Rail>
-            {trivias.length === 0 && (
+          {/* Outside the scroller: the panel is the full width of the page,
+              and a full-width child of a horizontal flex row would be sized
+              by its content instead. */}
+          {trivias.length === 0 && (
+            <div className="px-4 pb-3 pt-1">
               <StartHereCard
                 variant="trivia"
                 title={t("extra.railFirstTrivia")}
+                desc={t("extra.railFirstTriviaDesc")}
                 onPress={() => navigate("/team", { state: { openTrivia: true } })}
               />
-            )}
+            </div>
+          )}
+          <Rail>
             {trivias.map((tr) => (
               <button
                 key={tr.id}
