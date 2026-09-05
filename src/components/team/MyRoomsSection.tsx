@@ -539,6 +539,57 @@ function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = false, i
         is_host: false
       }))
     : [...room.participants].sort((a, b) => Number(b.is_host) - Number(a.is_host));
+
+  // The players' faces — one cluster, shared by the top row (rooms page)
+  // and the home rail's bottom bar, so the two cannot drift apart.
+  const avatarCluster = (
+                <div className="flex -space-x-2">
+                  {displayPlayers.slice(0, ROOM_CARD_FACES).map((p, idx) => {
+                    // Check if this participant is online
+                    const isOnline = room.online_participants.some(op => op.user_id === p.user_id);
+                    
+                    return (
+                      // Descending z-index so the first avatar sits on top of
+                      // the ones behind it — the negative margin alone would
+                      // put the last one in front.
+                      <div
+                        key={p.user_id || idx}
+                        className="relative flex-shrink-0"
+                        style={{ zIndex: displayPlayers.length - idx }}
+                      >
+                        <div
+                          className={`w-9 h-9 rounded-full overflow-hidden bg-white/20 shadow-md ${
+                            isOnline
+                              ? "ring-2 ring-green-500 ring-offset-1 ring-offset-transparent"
+                              : "ring-2 ring-slate-400/70 ring-offset-1 ring-offset-transparent"
+                          }`}
+                        >
+                          <SafeAvatarImage
+                            avatarUrl={p.avatar_url}
+                            fallback={p.nickname || "?"}
+                            className="w-full h-full object-cover"
+                            containerClassName="w-full h-full"
+                          />
+                        </div>
+                        {p.is_host && (
+                          <img
+                            src={crownIcon}
+                            alt=""
+                            className="pointer-events-none absolute -top-2 -left-1 w-4 h-4 object-contain drop-shadow"
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
+                  {displayPlayers.length > ROOM_CARD_FACES && (
+                    <div className="w-9 h-9 rounded-full bg-white/20 backdrop-blur-sm border-2 border-white/40 flex items-center justify-center shadow-md">
+                      <span className="text-xs font-bold text-white">
+                        +{displayPlayers.length - ROOM_CARD_FACES}
+                      </span>
+                    </div>
+                  )}
+                </div>
+  );
   
   // Always use the placeholder image
   
@@ -644,57 +695,12 @@ function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = false, i
               </div>
             )}
             {/* Top row - Avatars left, Status badge + menu right. On the
-                home rail the row runs the other way: avatars on the right
-                where the badge sat, the age badge on the left. */}
+                home rail the faces move down into the bottom bar (owner's
+                ask) and only the age badge stays up here. */}
             <div className="relative z-10 px-2 pb-4">
-              <div className={`flex items-start justify-between mb-8 ${homeRail ? "flex-row-reverse" : ""}`}>
+              <div className="flex items-start justify-between mb-8">
                 {/* Top left - Avatars (use TV players when active) */}
-                <div className="flex -space-x-2">
-                  {displayPlayers.slice(0, ROOM_CARD_FACES).map((p, idx) => {
-                    // Check if this participant is online
-                    const isOnline = room.online_participants.some(op => op.user_id === p.user_id);
-                    
-                    return (
-                      // Descending z-index so the first avatar sits on top of
-                      // the ones behind it — the negative margin alone would
-                      // put the last one in front.
-                      <div
-                        key={p.user_id || idx}
-                        className="relative flex-shrink-0"
-                        style={{ zIndex: displayPlayers.length - idx }}
-                      >
-                        <div
-                          className={`w-9 h-9 rounded-full overflow-hidden bg-white/20 shadow-md ${
-                            isOnline
-                              ? "ring-2 ring-green-500 ring-offset-1 ring-offset-transparent"
-                              : "ring-2 ring-slate-400/70 ring-offset-1 ring-offset-transparent"
-                          }`}
-                        >
-                          <SafeAvatarImage
-                            avatarUrl={p.avatar_url}
-                            fallback={p.nickname || "?"}
-                            className="w-full h-full object-cover"
-                            containerClassName="w-full h-full"
-                          />
-                        </div>
-                        {p.is_host && (
-                          <img
-                            src={crownIcon}
-                            alt=""
-                            className="pointer-events-none absolute -top-2 -left-1 w-4 h-4 object-contain drop-shadow"
-                          />
-                        )}
-                      </div>
-                    );
-                  })}
-                  {displayPlayers.length > ROOM_CARD_FACES && (
-                    <div className="w-9 h-9 rounded-full bg-white/20 backdrop-blur-sm border-2 border-white/40 flex items-center justify-center shadow-md">
-                      <span className="text-xs font-bold text-white">
-                        +{displayPlayers.length - ROOM_CARD_FACES}
-                      </span>
-                    </div>
-                  )}
-                </div>
+                {!homeRail && avatarCluster}
 
                 {/* Top right - Status badge + menu (desktop/tablet) */}
                 <div className="flex items-center gap-2">
@@ -769,8 +775,16 @@ function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = false, i
                   {playedOnTV && (
                     <img src={retroTv3d} alt="TV" className="w-6 h-6 object-contain drop-shadow select-none" draggable={false} />
                   )}
-                  <Users className="w-4 h-4 text-white/80" />
-                  <span className="text-sm font-bold text-white">{displayPlayerCount}</span>
+                  {/* Who is playing: the faces themselves on the home rail,
+                      the icon and a count on the rooms page. */}
+                  {homeRail ? (
+                    avatarCluster
+                  ) : (
+                    <>
+                      <Users className="w-4 h-4 text-white/80" />
+                      <span className="text-sm font-bold text-white">{displayPlayerCount}</span>
+                    </>
+                  )}
                 </div>
                 {/* The age, again — the badge up top already says it, so the
                     home rail shows it once. */}
