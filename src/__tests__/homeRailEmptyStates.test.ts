@@ -107,10 +107,13 @@ describe("the panel itself", () => {
 });
 
 describe("the rail headers", () => {
-  it("subtitles are regular weight and lighter ink", () => {
-    // They were medium, which competed with the display heading above.
-    expect(feed).toMatch(/text-\[12px\] font-normal leading-\[15px\] tracking-\[-0\.16px\] text-\[#6b5b86\]\/85/);
-    expect(feed).not.toMatch(/text-\[12px\] font-medium leading-\[15px\]/);
+  it("are the frame's 18px semibold sans over a 12px medium line (Figma 1076:2116)", () => {
+    // The heading used to be the 19px display face with a regular-weight
+    // subtitle; the home frame draws a plain Georgian sans heading and a
+    // medium Nunito line under it.
+    expect(feed).toMatch(/font-georgian text-\[18px\] font-semibold leading-\[22px\] text-\[#402666\]/);
+    expect(feed).toMatch(/text-\[12px\] font-medium leading-\[15px\] tracking-\[-0\.16px\] text-\[#6b5b86\]"/);
+    expect(feed).not.toMatch(/font-hero text-\[19px\]/);
   });
 
   it("an empty rail swaps 'see all' for a +", () => {

@@ -174,6 +174,7 @@ const ShopCancel = lazy(() => import("./pages/shop/Cancel"));
 const INCLUDE_DEV_PAGES = import.meta.env.DEV || import.meta.env.VITE_INCLUDE_DEV_PAGES === 'true';
 // The universal lobby fed mock rooms, for screenshot passes (src/dev/LobbyShot.tsx).
 const LobbyShot = INCLUDE_DEV_PAGES ? lazy(() => import("./dev/LobbyShot")) : null;
+const HomeShot = INCLUDE_DEV_PAGES ? lazy(() => import("./dev/HomeShot")) : null;
 
 const Styleguide = INCLUDE_DEV_PAGES ? lazy(() => import("./pages/Styleguide")) : null;
 const AllButtons = INCLUDE_DEV_PAGES ? lazy(() => import("./pages/AllButtons")) : null;
@@ -402,6 +403,7 @@ const App = () => (
                 {INCLUDE_DEV_PAGES && ModalsShowcase && <Route path="/modals" element={<ModalsShowcase />} />}
                 {INCLUDE_DEV_PAGES && TVScreensShowcase && <Route path="/tv-showcase" element={<TVScreensShowcase />} />}
                 {INCLUDE_DEV_PAGES && LobbyShot && <Route path="/dev/lobby" element={<LobbyShot />} />}
+                {INCLUDE_DEV_PAGES && HomeShot && <Route path="/dev/home" element={<HomeShot />} />}
                 {INCLUDE_DEV_PAGES && Docs && <Route path="/docs" element={<Docs />} />}
                 {INCLUDE_DEV_PAGES && OnboardingPreview && <Route path="/onboarding-preview" element={<OnboardingPreview />} />}
                 {INCLUDE_DEV_PAGES && SampleDemoTV && <Route path="/sampledemotv" element={<SampleDemoTV />} />}

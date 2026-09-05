@@ -1,18 +1,18 @@
 import type { ReactNode } from "react";
 
 import { FriendsStoriesBar } from "@/components/team/FriendsStoriesBar";
-import { MobileProfileCard, NAV_CHROME } from "@/components/home/MobileHome";
+import { MobileHeroWidgets, MobileProfileCard, NAV_CHROME } from "@/components/home/MobileHome";
 import { MobileHomeFeed } from "@/components/home/MobileHomeFeed";
 
 /**
  * The phone home as a scroll-reveal (owner's ask).
  *
- * At rest it IS the old home: the mascot scene fills the first screen, the
- * friends reel rides the top, the profile card sits above the nav — nothing
- * moved. Scrolling lifts that whole hero — scene included — up and out of
- * view, revealing a light, chunky feed of feature rails beneath it. The
- * identity stays exactly where it always was, on the profile card; there is
- * deliberately no second name/balances bar.
+ * At rest it IS the home (Figma 1076:1881): the mascot scene fills the first
+ * screen, the friends reel rides the top, the reward tabs float on the scene
+ * and the profile card sits above the nav. Scrolling lifts that whole hero —
+ * scene included — up and out of view, revealing a light, chunky feed of
+ * feature rails beneath it. The identity stays where it always was, on the
+ * profile card; there is deliberately no second name/balances bar.
  *
  * The scene lives INSIDE the hero, in the scroll flow, on purpose. It used to
  * be a page-level fixed backdrop that the feed panel had to paint over, and
@@ -34,33 +34,38 @@ export interface MobileHomeScrollProps {
   scene: ReactNode;
   // Identity, for the profile card
   nickname: string;
-  countryCode?: string | null;
-  rank?: number | null;
+  avatarUrl?: string | null;
+  animatedAvatarUrl?: string | null;
   coins: number;
   gems: number;
+  /** Under the gift tab: time left to claim today's reward, or the call to claim it. */
+  giftLabel: string;
   // Handlers
+  onAvatarClick: () => void;
   onNameClick: () => void;
-  onRankClick: () => void;
   onCoinsClick: () => void;
   onGemsClick: () => void;
   onGiftClick: () => void;
   onStreakClick: () => void;
+  onQuestClick: () => void;
   onAddFriend: () => void;
 }
 
 export function MobileHomeScroll({
   scene,
   nickname,
-  countryCode,
-  rank,
+  avatarUrl,
+  animatedAvatarUrl,
   coins,
   gems,
+  giftLabel,
+  onAvatarClick,
   onNameClick,
-  onRankClick,
   onCoinsClick,
   onGemsClick,
   onGiftClick,
   onStreakClick,
+  onQuestClick,
   onAddFriend,
 }: MobileHomeScrollProps) {
   return (
@@ -86,19 +91,26 @@ export function MobileHomeScroll({
             <FriendsStoriesBar onAddFriendClick={onAddFriend} />
           </div>
 
+          {/* The reward tabs on the scene: gift + countdown left, streak and
+              quest right, hung off the header's measured height. */}
+          <MobileHeroWidgets
+            giftLabel={giftLabel}
+            onGiftClick={onGiftClick}
+            onStreakClick={onStreakClick}
+            onQuestClick={onQuestClick}
+          />
+
           {/* The profile card, anchored above the nav (its own absolute pos). */}
           <MobileProfileCard
             nickname={nickname}
-            countryCode={countryCode}
-            rank={rank}
+            avatarUrl={avatarUrl}
+            animatedAvatarUrl={animatedAvatarUrl}
             coins={coins}
             gems={gems}
+            onAvatarClick={onAvatarClick}
             onNameClick={onNameClick}
-            onRankClick={onRankClick}
             onCoinsClick={onCoinsClick}
             onGemsClick={onGemsClick}
-            onGiftClick={onGiftClick}
-            onStreakClick={onStreakClick}
           />
         </section>
 

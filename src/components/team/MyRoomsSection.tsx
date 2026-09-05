@@ -82,6 +82,11 @@ const EXIT_MS = 320;
  * the total either way.
  */
 const ROOM_CARD_FACES = 5;
+const HOME_RAIL_FIRST_GRADIENT = [
+  { color: "rgba(238,174,202,1)", stop: "40%" },
+  { color: "rgba(202,179,214,1)", stop: "65%" },
+  { color: "rgba(148,201,233,1)", stop: "100%" },
+];
 
 export function MyRoomsSection({ 
   hideTV = false, 
@@ -469,7 +474,7 @@ export function MyRoomsSection({
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: rooms.length * 0.05 }}
-                className="flex-shrink-0 w-[70vw] max-w-[280px] snap-start rounded-2xl border-2 border-dashed border-muted-foreground/30 flex flex-col items-center justify-center gap-2 hover:bg-muted/50 transition-colors"
+                className={`flex-shrink-0 snap-start border-2 border-dashed border-muted-foreground/30 flex flex-col items-center justify-center gap-2 hover:bg-muted/50 transition-colors ${homeRail ? "w-[280px] rounded-[20px]" : "w-[70vw] max-w-[280px] rounded-2xl"}`}
                 style={{
                   boxShadow: "0 4px 0 0 hsl(var(--border)), 0 6px 20px -4px rgba(0,0,0,0.1)",
                 }}
@@ -500,7 +505,7 @@ interface RoomCardProps {
   homeRail?: boolean;
 }
 
-function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = false, isJoining = false, homeRail = false }: RoomCardProps) {
+export function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = false, isJoining = false, homeRail = false }: RoomCardProps) {
   const { t, language } = useLanguage();
   const localizeCategory = useLocalizedCategoryName();
   const isMobile = useIsMobile();
@@ -630,6 +635,10 @@ function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = false, i
   
   // Get gradient preset based on index
   const gradientPreset = ROOM_GRADIENT_PRESETS[index % ROOM_GRADIENT_PRESETS.length];
+  // On the home rail the frame draws the first card without the preset's
+  // orange foot — only its pink-to-blue tail (Figma 1076:2133).
+  const railColors =
+    homeRail && index % ROOM_GRADIENT_PRESETS.length === 0 ? HOME_RAIL_FIRST_GRADIENT : gradientPreset.colors;
 
   const handleDragEnd = (_: any, info: PanInfo) => {
     // Commit on distance OR a quick flick — half the old travel, and the
@@ -707,14 +716,95 @@ function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = false, i
           onPointerMove={isMobile ? handlePointerMove : undefined}
           onClick={handleClick}
           style={{
-            boxShadow: "0 4px 0 0 hsl(var(--border)), 0 6px 20px -4px rgba(0,0,0,0.1)",
+            // The frame's lip: a hard 4px light-grey edge under the card and
+            // a soft drop beneath that (Figma 1076:2132).
+            boxShadow: homeRail
+              ? "0 4px 0 0 #e5e7eb, 0 6px 20px -4px rgba(0,0,0,0.1)"
+              : "0 4px 0 0 hsl(var(--border)), 0 6px 20px -4px rgba(0,0,0,0.1)",
             ...(isMobile ? { x } : {}),
           }}
-          className={`${fullWidth ? "w-full" : "flex-shrink-0 w-[70vw] max-w-[280px] snap-start"} rounded-2xl overflow-hidden cursor-pointer ${!isMobile ? "transition-transform duration-200 hover:scale-[1.02]" : ""} active:scale-[0.98] ${
+          className={`${
+            fullWidth
+              ? "w-full rounded-2xl"
+              : homeRail
+                ? "flex-shrink-0 w-[280px] snap-start rounded-[20px]"
+                : "flex-shrink-0 w-[70vw] max-w-[280px] snap-start rounded-2xl"
+          } overflow-hidden cursor-pointer ${!isMobile ? "transition-transform duration-200 hover:scale-[1.02]" : ""} active:scale-[0.98] ${
             room.has_unread_activity ? "ring-2 ring-primary ring-offset-2" : ""
           }`}
         >
-          {/* Full card with dynamic gradient background */}
+          {homeRail ? (
+            // Figma 1076:2132 — the home rail card. 280×212 with everything
+            // at the frame's own offsets: the age badge top-left, the game's
+            // icon and name centred, a hairline across at 156, then the seat
+            // count on the left and the players' faces on the right.
+            <GradientBackground
+              colors={railColors}
+              gradientSize="125% 125%"
+              gradientOrigin="bottom-middle"
+              enableNoise={false}
+              className="relative h-[212px] rounded-[20px]"
+            >
+              {isJoining && (
+                <div className="absolute inset-0 z-20 flex items-center justify-center rounded-[20px] bg-black/35 backdrop-blur-[1px]">
+                  <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-white/40 border-t-white" />
+                </div>
+              )}
+              <div className="absolute left-[18px] right-[18px] top-[16px] z-10 flex items-start justify-between">
+                <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-black/25 px-2.5 py-1 font-[Nunito] text-xs font-bold leading-4 tracking-[-0.16px] text-white backdrop-blur-[4px]">
+                  <span
+                    className={`h-1.5 w-1.5 shrink-0 animate-pulse rounded-full ${
+                      someoneInRoom || allPlayersOnline ? "bg-green-400" : "bg-amber-400"
+                    }`}
+                  />
+                  {createdAgo || t("extra.roomStatusWaiting")}
+                </span>
+                {showTVBadge && (
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/20 backdrop-blur-sm">
+                    <QuizCategoryIcon iconSlug="retro-tv" size={24} className="h-6 w-6" />
+                  </div>
+                )}
+              </div>
+              {(room.room_icon || lounge) && (
+                <img
+                  src={room.room_icon ?? lounge?.icon}
+                  alt=""
+                  className="absolute left-1/2 top-[58px] h-10 w-10 -translate-x-1/2 object-contain drop-shadow-lg"
+                />
+              )}
+              <h3 className="absolute inset-x-[18px] top-[113px] truncate text-center font-display text-[18px] leading-[22.5px] tracking-[-0.16px] text-white">
+                {displayName}
+              </h3>
+              <span aria-hidden className="absolute left-[18px] right-[17px] top-[156px] h-px bg-white/30" />
+              <p className="absolute left-[20px] top-[176px] font-[Nunito] text-xs font-bold leading-4 tracking-[-0.16px] text-white">
+                {room.max_players
+                  ? t("extra.roomPlayersOf", { count: displayPlayerCount, max: room.max_players })
+                  : t("extra.roomPlayersCount", { count: displayPlayerCount })}
+              </p>
+              {/* 31px faces with a 2px peach ring, each overlapping the last
+                  by 7px; the later one sits on top, as in the frame. */}
+              <div className="absolute right-[17px] top-[169px] flex -space-x-[7px]">
+                {displayPlayers.slice(0, ROOM_CARD_FACES).map((p, idx) => (
+                  <div
+                    key={p.user_id || idx}
+                    className="h-[31px] w-[31px] shrink-0 overflow-hidden rounded-full border-2 border-[#f2ac91] bg-white/20"
+                  >
+                    <SafeAvatarImage
+                      avatarUrl={p.avatar_url}
+                      fallback={p.nickname || "?"}
+                      className="h-full w-full object-cover"
+                      containerClassName="h-full w-full"
+                    />
+                  </div>
+                ))}
+                {displayPlayers.length > ROOM_CARD_FACES && (
+                  <div className="flex h-[31px] w-[31px] shrink-0 items-center justify-center rounded-full border-2 border-[#f2ac91] bg-white/20 backdrop-blur-sm">
+                    <span className="text-[11px] font-bold text-white">+{displayPlayers.length - ROOM_CARD_FACES}</span>
+                  </div>
+                )}
+              </div>
+            </GradientBackground>
+          ) : (
           <GradientBackground
             colors={gradientPreset.colors}
             gradientSize="125% 125%"
@@ -735,7 +825,7 @@ function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = false, i
             <div className="relative z-10 px-2 pb-4">
               <div className="flex items-start justify-between mb-8">
                 {/* Top left - Avatars (use TV players when active) */}
-                {!homeRail && avatarCluster}
+                {avatarCluster}
 
                 {/* Top right - Status badge + menu (desktop/tablet) */}
                 <div className="flex items-center gap-2">
@@ -759,10 +849,8 @@ function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = false, i
                   
                   {/* The way out, in the open on every device — the same
                       trash (host) / log-out (guest) the public tab wears.
-                      It used to hide in a desktop-only 3-dot menu. Not on
-                      the home rail: leaving a room is the rooms page's job. */}
-                  {!homeRail && (
-                    <button
+                      It used to hide in a desktop-only 3-dot menu. */}
+                  <button
                       type="button"
                       aria-label={room.is_host ? t("extra.rlDeleteRoom") : t("extra.rlLeaveRoom")}
                       onClick={(e) => {
@@ -777,7 +865,6 @@ function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = false, i
                         <LogOut className="w-4 h-4 text-white" />
                       )}
                     </button>
-                  )}
                 </div>
               </div>
               
@@ -810,21 +897,10 @@ function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = false, i
                   {playedOnTV && (
                     <img src={retroTv3d} alt="TV" className="w-6 h-6 object-contain drop-shadow select-none" draggable={false} />
                   )}
-                  {/* Who is playing: the faces themselves on the home rail,
-                      the icon and a count on the rooms page. */}
-                  {homeRail ? (
-                    avatarCluster
-                  ) : (
-                    <>
-                      <Users className="w-4 h-4 text-white/80" />
-                      <span className="text-sm font-bold text-white">{displayPlayerCount}</span>
-                    </>
-                  )}
+                  <Users className="w-4 h-4 text-white/80" />
+                  <span className="text-sm font-bold text-white">{displayPlayerCount}</span>
                 </div>
-                {/* The age, again — the badge up top already says it, so the
-                    home rail shows it once. */}
-                {!homeRail && (
-                  <p className="text-xs text-white/60">
+                <p className="text-xs text-white/60">
                     {formatDistanceToNow(new Date(room.created_at), { 
                       addSuffix: true, 
                       // Was `ka` unconditionally: "3 დღის წინ" under a room card
@@ -832,10 +908,10 @@ function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = false, i
                       locale: dateLocaleFor(language) 
                     })}
                   </p>
-                )}
               </div>
             </div>
           </GradientBackground>
+          )}
         </motion.div>
       </div>
 

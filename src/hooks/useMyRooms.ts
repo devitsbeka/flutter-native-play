@@ -14,6 +14,8 @@ export interface MyRoom {
   room_code: string;
   room_name: string | null;
   room_icon: string | null;
+  /** Seats in the room, for the "2/10 players" line on the home rail. */
+  max_players: number | null;
   category_name: string | null;
   category_id: string | null;
   status: string;
@@ -304,6 +306,7 @@ async function fetchRoomsForUser(userId: string, options?: FetchRoomsOptions): P
       room_code: room.room_code,
       room_name: room.room_name,
       room_icon: room.room_icon || null,
+      max_players: room.max_players ?? null,
       category_name: room.category_name,
       category_id: room.category_id,
       status: room.status || "waiting",
