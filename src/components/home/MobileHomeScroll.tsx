@@ -157,8 +157,17 @@ export function MobileHomeScroll({
           />
         </section>
 
-        {/* ── Feed: light, chunky rails revealed on scroll ──────────────── */}
-        <div className="relative z-10 rounded-t-[28px] bg-[#faf6ff] pb-[calc(104px_+_var(--safe-bottom))] shadow-[0_-10px_28px_rgba(60,30,90,0.14)]">
+        {/* ── Feed: light, chunky rails revealed on scroll ──────────────────
+            min-h-[100dvh]: the feed is the solid ground the scroll lands on.
+            The scene behind it is a FIXED, full-screen backdrop (page-level
+            `absolute inset-0`), so the feed's opaque panel has to cover the
+            whole viewport once you scroll into it — otherwise, when the rails
+            are shorter than a screen, the fixed scene shows through beneath
+            them and you get a scene stuck in the lower half. Guaranteeing at
+            least a screenful of panel means the scene only ever shows behind
+            the transparent hero (the intended at-rest look), never below the
+            feed. */}
+        <div className="relative z-10 min-h-[100dvh] rounded-t-[28px] bg-[#faf6ff] pb-[calc(104px_+_var(--safe-bottom))] shadow-[0_-10px_28px_rgba(60,30,90,0.14)]">
           <div className="flex justify-center pt-2">
             <span className="h-[5px] w-[44px] rounded-full bg-[rgba(90,60,130,0.22)]" />
           </div>
