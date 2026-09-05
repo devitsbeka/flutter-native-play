@@ -33,6 +33,7 @@ import { SceneHero } from "@/components/home/SceneHero";
 import { SceneSidebar } from "@/components/home/SceneSidebar";
 import { DesktopGuestLanding, DesktopGuestSceneBackground } from "@/components/home/DesktopGuestLanding";
 import { MobileSceneBackground, MobileMascotScene, MobileProfileCard, MobileGuestHero } from "@/components/home/MobileHome";
+import { MobileHomeFeed } from "@/components/home/MobileHomeFeed";
 import { useHomeMascot } from "@/hooks/useHomeMascot";
 import { useMyLeaderboardRank, defaultScopeFor } from "@/hooks/useMyLeaderboardRank";
 import { DesktopActionCards } from "@/components/home/DesktopActionCards";
@@ -715,6 +716,10 @@ export default function Index() {
   const { mascot, isLoading: mascotLoading } = useHomeMascot(user?.id);
   const isSceneViewport = useIsSceneViewport();
   const isMobileViewport = useIsMobileViewport();
+  // The scrollable phone home: a logged-in player on a phone gets the feed of
+  // feature rails, which brings its own blob background, mascot strip, friends
+  // reel and profile identity — so the old absolute mobile layers stand down.
+  const showHomeFeed = !!user && isMobileViewport;
   const sceneUrl = user && mascot ? mascot.scene : null;
   // Nothing is painted until the choice is known — a King that swaps to an
   // owl a moment later reads as a glitch, not a load.
@@ -902,8 +907,8 @@ export default function Index() {
             King loop, framed the way the mobile design does: far wider than
             the screen and anchored just above the bottom nav. Guests get
             their own artwork inside MobileGuestHero. */}
-        {user && isMobileViewport && sceneUrl && <MobileMascotScene sceneUrl={sceneUrl} />}
-        {user && isMobileViewport && showDefaultScene && (
+        {user && isMobileViewport && !showHomeFeed && sceneUrl && <MobileMascotScene sceneUrl={sceneUrl} />}
+        {user && isMobileViewport && !showHomeFeed && showDefaultScene && (
           <MobileSceneBackground defaultVideoSrc={DEFAULT_SCENE_VIDEO} />
         )}
         {/* The mascot's scene (or the default Trivia King loop) as the
@@ -1127,14 +1132,30 @@ export default function Index() {
           />
         )}
 
+        {/* The scrollable phone home: its own mascot strip, friends reel and
+            feature rails over the blob wash. Fills the space under the header
+            and owns its own scroller (CLAUDE.md rule 4b). */}
+        {showHomeFeed && (
+          <MobileHomeFeed
+            nickname={profile?.nickname || t("game.guest")}
+            avatarUrl={profile?.avatar_url ?? null}
+            coins={coins}
+            gems={gems}
+            onAvatar={() => openAvatarModal(() => {})}
+            onShop={() => setIsGemShopOpen(true)}
+            onAddFriend={() => setShowAddFriendModal(true)}
+          />
+        )}
+
         {/* Friends strip - logged-in users, horizontally scrollable (mobile + desktop).
             Right padding on lg+ keeps it clear of the fixed action cards panel.
             On lg+ the logo lives in the sidebar, leaving the header row empty, so the
             strip is pulled up into it; pointer-events pass through the padded right
             zone so the header's search/bell buttons stay clickable. The -mt is tuned
             so the avatars land 16px below the page top — the same offset the reel
-            has inside the rooms page header, keeping the two pages in sync. */}
-        {user && (
+            has inside the rooms page header, keeping the two pages in sync.
+            On the phone home this reel lives inside MobileHomeFeed instead. */}
+        {user && !showHomeFeed && (
           <div className="relative z-20 px-4 lg:pl-[26px]">
             <div className="lg:pointer-events-auto">
               <FriendsStoriesBar
@@ -1148,8 +1169,9 @@ export default function Index() {
             chunky coin/gem pills, and the purse and flame tabs for daily
             rewards and the streak. It positions itself just above the bottom
             nav, so it is placed here for reading order rather than for where
-            it lands. Desktop keeps SceneHero's stack. */}
-        {user && (
+            it lands. Desktop keeps SceneHero's stack. On the phone home the
+            identity moved up into MobileHomeFeed. */}
+        {user && !showHomeFeed && (
           <MobileProfileCard
             nickname={profile?.nickname || t("game.guest")}
             countryCode={myCountry}
