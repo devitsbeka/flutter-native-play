@@ -463,16 +463,23 @@ export function CategoryPickerModal({
                         {isPicked(MIXED_ITEM(t)) && (
                           <Check className="absolute right-2 top-2 w-4 h-4 text-[#7126d5]" />
                         )}
-                        <div
-                          className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden"
-                          style={{ background: "linear-gradient(135deg, #9333ea, #ec4899)" }}
-                        >
-                          <DynamicIcon slug="mystery-box" size={22} />
+                        {/* The same row the category cards below wear — it
+                            is the first tile in their grid, so a stacked one
+                            here would read as a different kind of thing. */}
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="w-[46px] h-[46px] shrink-0 rounded-lg flex items-center justify-center overflow-hidden"
+                            style={{ background: "linear-gradient(135deg, #9333ea, #ec4899)" }}
+                          >
+                            <DynamicIcon slug="mystery-box" size={25} />
+                          </div>
+                          <div className="min-w-0 flex-1 pr-5">
+                            <p className="font-medium text-foreground text-sm leading-snug break-words line-clamp-2">
+                              {t("extra.cpMixedCategory")}
+                            </p>
+                            <p className="text-muted-foreground text-xs">{t("extra.cpMixedDesc")}</p>
+                          </div>
                         </div>
-                        <p className="mt-2 font-medium text-foreground text-sm leading-snug break-words">
-                          {t("extra.cpMixedCategory")}
-                        </p>
-                        <p className="text-muted-foreground text-xs">{t("extra.cpMixedDesc")}</p>
                       </motion.button>
                     )}
 
@@ -497,27 +504,45 @@ export function CategoryPickerModal({
                         {isPicked({ type: "category", id: cat.id }) && (
                           <Check className="absolute right-2 top-2 w-4 h-4 text-[#7126d5]" />
                         )}
-                        {/* Icon on its own line, name underneath. The two used
-                            to sit side by side, which left the name a sliver
-                            of a half-width card and most of them ended in an
-                            ellipsis — a category you cannot read is one you
-                            cannot choose. */}
-                        <div
-                          className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden"
-                          style={{ backgroundColor: `${cat.color}40` }}
-                        >
-                          {popularCategoryIcon(cat.categoryId) ? (
-                            <img src={popularCategoryIcon(cat.categoryId)!} alt="" className="w-[26px] h-[26px] object-contain" />
-                          ) : cat.icon_slug ? (
-                            <DynamicIcon slug={cat.icon_slug} size={22} />
-                          ) : (
-                            <span className="text-xl">{cat.icon}</span>
-                          )}
+                        {/* Icon left, name right (owner's ask).
+                            This was a stack — icon on its own line, name
+                            under it — because side by side the name got a
+                            sliver of a half-width card and most of them
+                            ended in an ellipsis. A row is fine as long as
+                            the name is allowed to WRAP rather than truncate,
+                            which is the part that was missing: the icon is a
+                            fixed shrink-0 tile, the text column is min-w-0
+                            so it can be narrower than its content wants, and
+                            the name takes two lines when it needs them.
+                            Georgian names are the long ones and the reason
+                            this matters.
+
+                            The tile and its contents are 15% larger than
+                            they were (40 → 46, 26 → 30, 22 → 25): at the old
+                            size the art was smaller than the text beside it.
+
+                            pr-5 keeps the second line clear of the tick in
+                            the corner. */}
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="w-[46px] h-[46px] shrink-0 rounded-lg flex items-center justify-center overflow-hidden"
+                            style={{ backgroundColor: `${cat.color}40` }}
+                          >
+                            {popularCategoryIcon(cat.categoryId) ? (
+                              <img src={popularCategoryIcon(cat.categoryId)!} alt="" className="w-[30px] h-[30px] object-contain" />
+                            ) : cat.icon_slug ? (
+                              <DynamicIcon slug={cat.icon_slug} size={25} />
+                            ) : (
+                              <span className="text-[23px]">{cat.icon}</span>
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1 pr-5">
+                            <p className="font-medium text-foreground text-sm leading-snug break-words line-clamp-2">
+                              {cat.name}
+                            </p>
+                            <p className="text-muted-foreground text-xs">{t("extra.cpLevels", { count: cat.total_levels })}</p>
+                          </div>
                         </div>
-                        <p className="mt-2 font-medium text-foreground text-sm leading-snug break-words">
-                          {cat.name}
-                        </p>
-                        <p className="text-muted-foreground text-xs">{t("extra.cpLevels", { count: cat.total_levels })}</p>
                       </motion.button>
                     ))}
                   </div>

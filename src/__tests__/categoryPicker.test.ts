@@ -90,3 +90,34 @@ describe("the Add button counts only when the count is news", () => {
     expect(modal).toMatch(/selectedItems\.length > 1/);
   });
 });
+
+describe("a library card reads left to right", () => {
+  const modal = readFileSync(
+    join(process.cwd(), "src/components/team/CategoryPickerModal.tsx"),
+    "utf8",
+  );
+
+  it("icon left, name right", () => {
+    expect(modal).toMatch(/<div className="flex items-center gap-3">/);
+    expect(modal).toMatch(/w-\[46px\] h-\[46px\] shrink-0 rounded-lg/);
+  });
+
+  it("and the name wraps instead of truncating", () => {
+    // This card was a STACK because side by side the name got a sliver of a
+    // half-width card and most ended in an ellipsis. A row only works if
+    // the name may take a second line: min-w-0 lets the text column be
+    // narrower than its content wants, line-clamp-2 gives it the room.
+    // Georgian names are the long ones and the reason this matters.
+    expect(modal).toMatch(/<div className="min-w-0 flex-1 pr-5">/);
+    expect(modal).toMatch(/text-sm leading-snug break-words line-clamp-2/);
+  });
+
+  it("the art is 15% larger than it was", () => {
+    // 40 -> 46 tile, 26 -> 30 image, 22 -> 25 glyph. At the old size the
+    // icon was smaller than the words next to it.
+    expect(modal).toMatch(/w-\[30px\] h-\[30px\] object-contain/);
+    expect(modal).toMatch(/<DynamicIcon slug=\{cat\.icon_slug\} size=\{25\} \/>/);
+    expect(modal).toMatch(/text-\[23px\]/);
+    expect(modal).not.toMatch(/w-10 h-10 rounded-lg flex items-center/);
+  });
+});
