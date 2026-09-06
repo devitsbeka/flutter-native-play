@@ -119,14 +119,18 @@ export default function HomeShot() {
   }
   if (params.get("view") === "rounds") {
     // The lobby's round list with more rounds than the panel can show.
-    const names = ["Guess the Logo", "Economics", "Guess the Celebrity", "Guess the City", "Guess the Athlete", "Mathematics", "Space", "Nature"];
+    const names = ["Guess the Logo", "Economics", "Guess the Celebrity", "Guess the City", "Guess the Athlete", "Mathematics", "Space", "Nature", "History", "Geography", "Music", "Cinema"];
     const items = names.map((name, i): QueueItem => ({
       id: `q${i}`, room_id: "r", position: i, source_type: "category", category_id: `c${i}`,
       category_name: name, user_trivia_id: null, icon_slug: "atom", created_at: "",
     }));
     return (
-      <div className="h-[100dvh] w-full bg-[#b9a3cf] p-4 pt-[140px]">
-        <div className="mx-auto flex max-h-[calc(100dvh_-_var(--safe-top,0px)_-_var(--safe-bottom,0px)_-_172px)] max-w-[700px] flex-col overflow-hidden rounded-[22px] border border-white/80 bg-[rgba(252,247,255,0.94)] shadow-[0_18px_48px_rgba(60,30,90,0.28)]">
+      // An iPhone's insets, so the panel's ceiling is the one the app gets.
+      <div
+        className="h-[100dvh] w-full bg-[#b9a3cf] p-4 pt-[188px]"
+        style={{ ["--safe-top" as string]: "59px", ["--safe-bottom" as string]: "34px" }}
+      >
+        <div className="mx-auto flex max-h-[calc(100dvh_-_var(--safe-top,0px)_-_var(--safe-bottom,0px)_-_145px)] max-w-[700px] flex-col overflow-hidden rounded-[22px] border border-white/80 bg-[rgba(252,247,255,0.94)] shadow-[0_18px_48px_rgba(60,30,90,0.28)]">
           <RoundOrderModal
             open
             onClose={noop}

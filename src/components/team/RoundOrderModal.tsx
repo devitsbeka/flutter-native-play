@@ -41,6 +41,8 @@ import type { QueueItem } from "@/hooks/useRoomCategoryQueue";
 
 /** A row's height plus the gap under it — what the arrows page by. */
 const ROW_STRIDE = 58 + 8;
+/** How many rows the list shows before it scrolls: 6 × 58 + 5 × 8 + 12 = 400px. */
+export const LIST_MAX_ROWS = 6;
 
 /** The round the room itself is holding, as a row of the list. */
 export interface HeldEntry {
@@ -194,8 +196,14 @@ export function RoundOrderModal({
         {/* No close button of its own: the + beside the chip turns into an
             X while this list is open, and the backdrop closes it too. Two
             X's, one above the other, was one too many (owner). */}
-        <div className="flex items-center justify-center px-4 pb-1 pt-3">
+        <div className="flex flex-col items-center px-4 pb-2 pt-3">
           <h2 className="text-lg font-display text-primary">{t("lobby.uRoundsTitle")}</h2>
+          {/* The hint lives up here, not in the scroller, so it does not
+              scroll away and the scroller holds rows only — which is what
+              its six-row cap is measured in. */}
+          <p className="mt-1 text-center text-sm text-muted-foreground">
+            {canEdit ? t("lobby.uRoundsHint") : t("lobby.uRoundsHintGuest")}
+          </p>
         </div>
 
         {/* A flex column, so the scroller inside is sized by flex rather
@@ -203,11 +211,10 @@ export function RoundOrderModal({
             which makes "100%" indefinite and let the scroller grow to its
             content, past the panel's edge. */}
         <div className="relative flex min-h-0 flex-1 flex-col">
-        <div ref={scrollerRef} className="min-h-0 flex-1 overflow-y-auto px-4 pb-3">
+        {/* Six rows at most (owner's ask), then the rest scrolls — under a
+            finger between the grips, or by the arrows. */}
+        <div ref={scrollerRef} className="min-h-0 max-h-[400px] flex-1 overflow-y-auto px-4 pb-3">
           <div className="mx-auto w-full max-w-[520px]">
-            <p className="mb-3 text-center text-sm text-muted-foreground">
-              {canEdit ? t("lobby.uRoundsHint") : t("lobby.uRoundsHintGuest")}
-            </p>
 
             {/* The room's own round, when it has one: round 1, fixed. */}
             <Reorder.Group
@@ -226,6 +233,7 @@ export function RoundOrderModal({
                   onDragEnd={handleDrop}
                   onRemove={isHeld(entry) ? undefined : () => void onRemove(entry.id)}
                   roundLabel={t("lobby.uRoundLabel", { count: index + 1 })}
+                  gripLabel={t("lobby.uRoundsDrag")}
                 />
               ))}
             </Reorder.Group>
@@ -266,10 +274,13 @@ export function RoundOrderModal({
 }
 
 /**
- * One round. The whole row is the handle on a phone — a 20px grip is a target
- * most thumbs miss — so the drag is started from the row and the grip is there
- * to say that it can be. The held round is a row like the others, numbered
- * and draggable; it just has no X, because there is no queue row to delete.
+ * One round. The GRIP is the handle, and only the grip: the whole row used to
+ * be, with touch-action: none on all of it, which made the list impossible to
+ * scroll with a finger — every touch was a drag (owner). Now a finger on the
+ * name or the number scrolls the list as any list scrolls, and the grip — a
+ * 40px target, not the 20px glyph — starts the drag. The held round is a row
+ * like the others, numbered and draggable; it just has no X, because there
+ * is no queue row to delete.
  */
 function RoundRow({
   entry,
@@ -279,6 +290,7 @@ function RoundRow({
   onDragEnd,
   onRemove,
   roundLabel,
+  gripLabel,
 }: {
   entry: RoundEntry;
   number: number;
@@ -287,6 +299,7 @@ function RoundRow({
   onDragEnd: () => void;
   onRemove?: () => void;
   roundLabel: string;
+  gripLabel: string;
 }) {
   const controls = useDragControls();
   const name = isHeld(entry) ? entry.name : entry.category_name;
@@ -300,11 +313,7 @@ function RoundRow({
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
       whileDrag={{ scale: 1.02, boxShadow: "0 12px 28px rgba(102,51,153,0.18)" }}
-      className="flex min-h-[58px] items-center gap-3 rounded-xl border border-border/50 bg-white/70 px-3 py-2"
-      onPointerDown={(e) => {
-        if (canEdit) controls.start(e);
-      }}
-      style={{ touchAction: canEdit ? "none" : undefined }}
+      className="flex min-h-[58px] items-center gap-3 rounded-xl border border-border/50 bg-white/70 py-2 pl-3 pr-1"
     >
       <span className="w-6 shrink-0 text-center font-[Nunito] text-[13px] font-bold text-muted-foreground">
         {number}
@@ -335,7 +344,15 @@ function RoundRow({
           ) : (
             <span className="h-9 w-9 shrink-0" />
           )}
-          <GripVertical className="h-5 w-5 shrink-0 text-muted-foreground/60" />
+          <span
+            role="button"
+            aria-label={gripLabel}
+            onPointerDown={(e) => controls.start(e)}
+            style={{ touchAction: "none" }}
+            className="flex h-10 w-10 shrink-0 cursor-grab items-center justify-center rounded-full text-muted-foreground/60 active:cursor-grabbing"
+          >
+            <GripVertical className="h-5 w-5" />
+          </span>
         </>
       )}
     </Reorder.Item>

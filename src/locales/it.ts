@@ -1586,6 +1586,7 @@ export const it: KaTranslations = {
     uRoundsHint: "Trascina un tema per cambiare in quale round si gioca.",
     uRoundsMoreBelow: "Altri round sotto",
     uRoundsMoreAbove: "Altri round sopra",
+    uRoundsDrag: "Trascina per riordinare",
     uRoundsHintGuest: "L'host decide l'ordine dei round.",
     uRoundLabel: "Round {count}",
     uAddRounds: "Aggiungi categorie",

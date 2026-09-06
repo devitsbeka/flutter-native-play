@@ -93,7 +93,7 @@ describe("what a drop means", () => {
 
 describe("the way to add more never scrolls away", () => {
   it("Add sits under the scroller, not inside it", () => {
-    const scroller = modal.indexOf("min-h-0 flex-1 overflow-y-auto");
+    const scroller = modal.indexOf("min-h-0 max-h-[400px] flex-1 overflow-y-auto");
     const add = modal.indexOf('t("lobby.uAddRounds")');
     const scrollerEnd = modal.indexOf("</Reorder.Group>");
     expect(scroller).toBeGreaterThan(-1);
@@ -104,18 +104,38 @@ describe("the way to add more never scrolls away", () => {
   });
 
   it("and the rounds are what scrolls", () => {
-    expect(modal).toMatch(/min-h-0 flex-1 overflow-y-auto/);
+    expect(modal).toMatch(/min-h-0 max-h-\[400px\] flex-1 overflow-y-auto/);
   });
 });
 
 describe("a list longer than the panel says so", () => {
   it("the panel is as tall as the screen allows, not 60dvh", () => {
     const universal = read("src/components/lobby/UniversalLobby.tsx");
-    expect(universal).toMatch(/max-h-\[calc\(100dvh_-_var\(--safe-top,0px\)_-_var\(--safe-bottom,0px\)_-_172px\)\] flex-col overflow-hidden rounded-\[22px\]/);
+    expect(universal).toMatch(/max-h-\[calc\(100dvh_-_var\(--safe-top,0px\)_-_var\(--safe-bottom,0px\)_-_145px\)\] flex-col overflow-hidden rounded-\[22px\]/);
     expect(universal).not.toMatch(/max-h-\[60dvh\]/);
   });
 
-  it("and pages with arrows, because the rows are drag handles and will not scroll under a finger", () => {
+  it("six rows, then it scrolls", () => {
+    expect(modal).toMatch(/export const LIST_MAX_ROWS = 6;/);
+    expect(modal).toMatch(/className="min-h-0 max-h-\[400px\] flex-1 overflow-y-auto px-4 pb-3"/);
+    // The hint is in the fixed header, so the scroller holds rows only.
+    const header = modal.slice(modal.indexOf('{t("lobby.uRoundsTitle")}'), modal.indexOf("<div ref={scrollerRef}"));
+    expect(header).toMatch(/uRoundsHint/);
+  });
+
+  it("the grip is the handle, so a finger elsewhere scrolls", () => {
+    // touch-action: none on the whole row made every touch a drag and the
+    // list impossible to scroll (owner). Only the grip starts a drag now.
+    const row = modal.slice(modal.indexOf("<Reorder.Item"), modal.indexOf("</Reorder.Item>"));
+    expect(row).not.toMatch(/touchAction: canEdit/);
+    expect(row).toMatch(/onPointerDown=\{\(e\) => controls\.start\(e\)\}\s*\n\s*style=\{\{ touchAction: "none" \}\}/);
+    expect(row).toMatch(/h-10 w-10 shrink-0 cursor-grab/);
+    for (const lang of ["en", "ka", "de", "es", "fr", "it", "pt"]) {
+      expect(read(`src/locales/${lang}.ts`), lang).toMatch(/uRoundsDrag: "/);
+    }
+  });
+
+  it("and pages with arrows too", () => {
     expect(modal).toMatch(/const \[more, setMore\] = useState\(\{ up: false, down: false \}\);/);
     expect(modal).toMatch(/el\.addEventListener\("scroll", measure, \{ passive: true \}\);/);
     expect(modal).toMatch(/new ResizeObserver\(measure\)/);

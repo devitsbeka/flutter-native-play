@@ -1583,6 +1583,7 @@ export const de: KaTranslations = {
     uRoundsHint: "Zieh ein Thema, um seine Runde zu ändern.",
     uRoundsMoreBelow: "Weitere Runden unten",
     uRoundsMoreAbove: "Weitere Runden oben",
+    uRoundsDrag: "Zum Sortieren ziehen",
     uRoundsHintGuest: "Die Reihenfolge der Runden legt der Host fest.",
     uRoundLabel: "Runde {count}",
     uAddRounds: "Kategorien hinzufügen",
