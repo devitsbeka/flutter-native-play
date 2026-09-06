@@ -340,7 +340,7 @@ export const es: KaTranslations = {
     currentStreak: "Racha",
     bestStreak: "Mejor racha",
     totalPoints: "Puntos totales",
-    title: "Perfil",
+    title: "Mi cuenta",
     signInToView: "Inicia sesión para ver tu perfil",
     signIn: "Iniciar sesión",
     points: "Puntos",

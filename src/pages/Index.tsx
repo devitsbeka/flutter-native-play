@@ -1202,7 +1202,6 @@ export default function Index() {
             onGiftClick={handleGiftClick}
             // The flame opens the streak page (Figma 1069:18), not a sheet over the home screen.
             onStreakClick={() => navigate("/streak")}
-            onQuestClick={() => { setMissionsDate(null); setShowMissionsModal(true); }}
             onAddFriend={() => setShowAddFriendModal(true)}
             onSceneClick={() => openAvatarModal()}
           />
