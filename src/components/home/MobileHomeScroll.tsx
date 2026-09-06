@@ -6,6 +6,7 @@ import { FriendsStoriesBar } from "@/components/team/FriendsStoriesBar";
 import { MobileHeroWidgets, MobileProfileCard, NAV_CHROME } from "@/components/home/MobileHome";
 import { MobileHomeFeed } from "@/components/home/MobileHomeFeed";
 import { useWaveStrip } from "@/components/home/wave";
+import { scrollTapGuard } from "@/utils/scrollTapGuard";
 
 /**
  * The phone home as a scroll-reveal (owner's ask).
@@ -87,7 +88,11 @@ export function MobileHomeScroll({
     // the ONLY flex-1 child of the home column: a sibling flex-1 splits the
     // height with it and turns the home into a half-screen window.
     <div className="relative z-10 min-h-0 flex-1">
-      <div className="absolute inset-0 overflow-y-auto overscroll-contain">
+      {/* A thumb put down to stop the scroll must not open the card it lands
+          on — the feed is a wall of cards and the hero is one big button.
+          See scrollTapGuard: it judges the clicks in here, nothing below it
+          has to. */}
+      <div className="absolute inset-0 overflow-y-auto overscroll-contain" {...scrollTapGuard()}>
         {/* ── Hero: exactly one screenful, scrolls away as a whole ─────────
             The scene fills it (absolute inset-0 behind the reel and card),
             so at rest it is pixel-for-pixel the old home, and the feed waits

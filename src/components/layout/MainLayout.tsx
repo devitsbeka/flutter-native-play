@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { UnifiedDesktopNav } from "./UnifiedDesktopNav";
 import { UniversalBottomNav } from "./UniversalBottomNav";
 import { useInGameShell } from "./GameShellContext";
+import { scrollTapGuard } from "@/utils/scrollTapGuard";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -39,7 +40,10 @@ export function MainLayout({
   if (embedded) {
     return (
       <div className={`h-full w-full ${className}`}>
-        <main className="h-full w-full overflow-y-auto overflow-x-hidden scrollbar-hide bg-transparent">
+        <main
+          className="h-full w-full overflow-y-auto overflow-x-hidden scrollbar-hide bg-transparent"
+          {...scrollTapGuard()}
+        >
           {children}
         </main>
       </div>
@@ -71,8 +75,13 @@ export function MainLayout({
         showPlayButton={showPlayButton}
       />
 
-      {/* Main Content Area */}
-      <main 
+      {/* Main Content Area.
+          The page scroller judges its own clicks (scrollTapGuard): a finger
+          that lands to stop a fling, or slides while it is down, must not
+          press the card it happens to be over. Every page of cards in the
+          app scrolls in here. */}
+      <main
+        {...scrollTapGuard()}
         id="main-scroll-container"
         className={`flex-1 relative bg-transparent scrollbar-hide overflow-x-hidden ${
           disableScroll 
