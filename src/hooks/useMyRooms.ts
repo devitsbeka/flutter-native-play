@@ -6,6 +6,8 @@ import { presenceForUsers } from "@/utils/presence";
 import { useAuth } from "@/contexts/AuthContext";
 import { matchesQuery } from "@/utils/searchMatch";
 import { useNotifications } from "@/hooks/useNotifications";
+import { isDeveloperOnlyGameType } from "@/game-types/registry";
+import { useDeveloperMode } from "@/contexts/DeveloperModeContext";
 
 export type RoomFilter = "all" | "my_rooms" | "friends_rooms" | "king" | "team_battle";
 
@@ -420,6 +422,7 @@ interface UseMyRoomsOptions {
 
 export function useMyRooms(options?: UseMyRoomsOptions) {
   const { user } = useAuth();
+  const { developerMode } = useDeveloperMode();
   const queryClient = useQueryClient();
   const { notifications } = useNotifications();
 
@@ -509,6 +512,13 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
       result = result.filter((room) => !room.is_public);
     }
 
+    // An unreleased mode's rooms are the admin's alone, the same rule the
+    // chooser and the public list follow. Without this, hiding the filter
+    // chip would still leave a Battle lounge sitting under "all".
+    if (!developerMode) {
+      result = result.filter((room) => !isDeveloperOnlyGameType(room.game_type_key));
+    }
+
     // Apply filter
     switch (filter) {
       case "my_rooms":
@@ -570,7 +580,7 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
     );
 
     return result;
-  }, [activeRooms, filter, friendIds, searchQuery, invitedRoomIds, visibility]);
+  }, [activeRooms, filter, friendIds, searchQuery, invitedRoomIds, visibility, developerMode]);
 
   return {
     rooms: filteredRooms.slice(0, limit),

@@ -227,23 +227,26 @@ describe("the public list", () => {
     };
     // Versus King is friends-only: a king room never reaches the public
     // list, whatever filter is asked for — even one an older build
-    // managed to publish.
-    expect(filterPublicRooms(rooms, "all", "", ctx).map((r) => r.id)).toEqual(["b", "c", "d"]);
+    // managed to publish. The arena (b) is Trivia Battle, an unreleased
+    // mode: it is listed for an admin with developer mode on, and for
+    // nobody else, so these pass `true`.
+    const dev = true;
+    expect(filterPublicRooms(rooms, "all", "", ctx, dev).map((r) => r.id)).toEqual(["b", "c", "d"]);
     // A started game is not a room to join: it leaves the Public tab for
     // its players' Private tab.
     const started = [...rooms, room({ id: "e", room_name: "Running", host_user_id: "far", status: "playing" })];
-    expect(filterPublicRooms(started, "all", "", ctx).map((r) => r.id)).toEqual(["b", "c", "d"]);
+    expect(filterPublicRooms(started, "all", "", ctx, dev).map((r) => r.id)).toEqual(["b", "c", "d"]);
     // Active: somebody seated (the host counts) is in the app right now.
     // The arena's host is away but a player on it is here; the ghost town's
     // whole couch has left.
-    expect(filterPublicRooms(rooms, "active", "", ctx).map((r) => r.id)).toEqual(["b", "c"]);
+    expect(filterPublicRooms(rooms, "active", "", ctx, dev).map((r) => r.id)).toEqual(["b", "c"]);
     // Mine: the rooms I created, as on the Private tab.
-    expect(filterPublicRooms(rooms, "my_rooms", "", ctx).map((r) => r.id)).toEqual(["c"]);
+    expect(filterPublicRooms(rooms, "my_rooms", "", ctx, dev).map((r) => r.id)).toEqual(["c"]);
     // My friends': hosted by a friend.
-    expect(filterPublicRooms(rooms, "friends_rooms", "", ctx).map((r) => r.id)).toEqual(["b"]);
-    expect(filterPublicRooms(rooms, "all", "arena", ctx).map((r) => r.id)).toEqual(["b"]);
+    expect(filterPublicRooms(rooms, "friends_rooms", "", ctx, dev).map((r) => r.id)).toEqual(["b"]);
+    expect(filterPublicRooms(rooms, "all", "arena", ctx, dev).map((r) => r.id)).toEqual(["b"]);
     // The category is the thing people are shopping for on this tab.
-    expect(filterPublicRooms(rooms, "all", "history", ctx).length).toBe(3);
+    expect(filterPublicRooms(rooms, "all", "history", ctx, dev).length).toBe(3);
   });
 
   it("a card offers the way out to the people who are in, and calls an unpicked round mixed", () => {
@@ -418,12 +421,29 @@ describe("the public list", () => {
       room({ id: "classic", game_type_key: null, host_user_id: "h2" }),
       room({ id: "words", game_type_key: "words", game_mode: "words", host_user_id: "h3" }),
     ];
-    expect(filterPublicRooms(rooms, "battles", "").map((r) => r.id)).toEqual(["arena"]);
+    expect(filterPublicRooms(rooms, "battles", "", undefined, true).map((r) => r.id)).toEqual(["arena"]);
     expect(filterPublicRooms(rooms, "rooms", "").map((r) => r.id)).toEqual(["classic", "words"]);
-    // And the dropdown offers both, between the people-filters and "all".
+    // And the dropdown offers both, between the people-filters and "all" —
+    // the battles chip only for an admin with developer mode on.
     const bar = read("src/components/team/UnifiedFiltersBar.tsx");
-    expect(bar).toMatch(/\{ value: "battles", labelKey: "teamBattle\.title" \}/);
+    expect(bar).toMatch(/\{ value: "battles", labelKey: "teamBattle\.title", devOnly: true \}/);
     expect(bar).toMatch(/\{ value: "rooms", labelKey: "extra\.filterRooms" \}/);
+  });
+
+  it("hides an unreleased mode's rooms unless developer mode is on", () => {
+    // Taking the chip off the menu is not enough on its own: "all" would
+    // still list the rooms behind it. Default off, so a caller that forgets
+    // the flag hides them — the safe way round for an unreleased mode.
+    const rooms = [
+      room({ id: "arena", game_type_key: "team_battle", host_user_id: "h1" }),
+      room({ id: "classic", game_type_key: null, host_user_id: "h2" }),
+    ];
+    expect(filterPublicRooms(rooms, "all", "").map((r) => r.id)).toEqual(["classic"]);
+    expect(filterPublicRooms(rooms, "all", "", undefined, false).map((r) => r.id)).toEqual(["classic"]);
+    expect(filterPublicRooms(rooms, "all", "", undefined, true).map((r) => r.id)).toEqual(["arena", "classic"]);
+    // Asking for the battles filter without the mode yields nothing rather
+    // than everything.
+    expect(filterPublicRooms(rooms, "battles", "")).toEqual([]);
   });
 
   it("a room with nobody online sinks to the very back", () => {
