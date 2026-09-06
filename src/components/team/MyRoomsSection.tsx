@@ -26,7 +26,7 @@ import danceFloorIcon from "@/assets/dance-floor.png";
 import crownIcon from "@/assets/crown-icon.png";
 import retroTv3d from "@/assets/retro-tv-3d.png";
 import { GradientBackground, ROOM_GRADIENT_PRESETS } from "@/components/ui/noisy-gradient-backgrounds";
-import { useWaveMask } from "@/components/home/wave";
+import { useWavyRect } from "@/components/home/wave";
 import { useRoomAge } from "@/hooks/useRoomAge";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "@/lib/toast";
@@ -89,11 +89,14 @@ const HOME_RAIL_FIRST_GRADIENT = [
   { color: "rgba(148,201,233,1)", stop: "100%" },
 ];
 
-// How far the home-rail card's hills reach past its lines (Figma 1076:3672
-// – 3676): 3px above the top edge, 10px below the bottom, from 10px strips.
-const RAIL_WAVE_TOP = 3;
-const RAIL_WAVE_BOTTOM = 10;
-const RAIL_WAVE_STRIP = 10;
+// Peak-to-trough of the home-rail card's waves (Figma 1076:3672 – 3676),
+// centred on the edges they replace: the card keeps its 212px and the
+// crests reach half of this beyond either end.
+const RAIL_WAVE = 8;
+const RAIL_WAVE_HALF = RAIL_WAVE / 2;
+const RAIL_CARD_H = 212;
+const RAIL_CARD_W = 280;
+const RAIL_RADIUS = 20;
 
 export function MyRoomsSection({ 
   hideTV = false, 
@@ -647,8 +650,14 @@ export function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = f
     homeRail && index % ROOM_GRADIENT_PRESETS.length === 0 ? HOME_RAIL_FIRST_GRADIENT : gradientPreset.colors;
   // The rail card's edges roll: its gradient is masked to a wave of its
   // own, dealt fresh on every visit, so the colour simply continues into
-  // the hills. Every card has the hook; only the rail card wears the mask.
-  const railWave = useWaveMask({ top: RAIL_WAVE_STRIP, bottom: RAIL_WAVE_STRIP, width: 280 });
+  // the hills. Every card has the hook; only the rail card wears it.
+  const railWave = useWavyRect({
+    width: RAIL_CARD_W,
+    height: RAIL_CARD_H + RAIL_WAVE,
+    radius: RAIL_RADIUS,
+    top: RAIL_WAVE,
+    bottom: RAIL_WAVE,
+  });
 
   const handleDragEnd = (_: any, info: PanInfo) => {
     // Commit on distance OR a quick flick — half the old travel, and the
@@ -751,23 +760,22 @@ export function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = f
             // badge top-left, the game's icon and name centred, a hairline
             // across at 156, then the seat count on the left and the
             // players' faces on the right. The gradient body reaches
-            // RAIL_WAVE_TOP above that line and RAIL_WAVE_BOTTOM below it,
-            // and the mask rolls both edges, so the offsets below carry
-            // RAIL_WAVE_TOP.
+            // half a wave above that line and half below it, and the mask
+            // rolls both edges, so the offsets below carry RAIL_WAVE_HALF.
             <GradientBackground
               colors={railColors}
               gradientSize="125% 125%"
               gradientOrigin="bottom-middle"
               enableNoise={false}
               className="rounded-[20px]"
-              style={{ position: "absolute", left: 0, right: 0, top: -RAIL_WAVE_TOP, bottom: -RAIL_WAVE_BOTTOM, ...railWave }}
+              style={{ position: "absolute", left: 0, right: 0, top: -RAIL_WAVE_HALF, bottom: -RAIL_WAVE_HALF, ...railWave.mask }}
             >
               {isJoining && (
                 <div className="absolute inset-0 z-20 flex items-center justify-center rounded-[20px] bg-black/35 backdrop-blur-[1px]">
                   <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-white/40 border-t-white" />
                 </div>
               )}
-              <div className="absolute left-[18px] right-[18px] top-[19px] z-10 flex items-start justify-between">
+              <div className="absolute left-[18px] right-[18px] top-[20px] z-10 flex items-start justify-between">
                 <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-black/25 px-2.5 py-1 font-[Nunito] text-xs font-bold leading-4 tracking-[-0.16px] text-white backdrop-blur-[4px]">
                   <span
                     className={`h-1.5 w-1.5 shrink-0 animate-pulse rounded-full ${
@@ -786,21 +794,21 @@ export function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = f
                 <img
                   src={room.room_icon ?? lounge?.icon}
                   alt=""
-                  className="absolute left-1/2 top-[61px] h-10 w-10 -translate-x-1/2 object-contain drop-shadow-lg"
+                  className="absolute left-1/2 top-[62px] h-10 w-10 -translate-x-1/2 object-contain drop-shadow-lg"
                 />
               )}
-              <h3 className="absolute inset-x-[18px] top-[116px] truncate text-center font-display text-[18px] leading-[22.5px] tracking-[-0.16px] text-white">
+              <h3 className="absolute inset-x-[18px] top-[117px] truncate text-center font-display text-[18px] leading-[22.5px] tracking-[-0.16px] text-white">
                 {displayName}
               </h3>
-              <span aria-hidden className="absolute left-[18px] right-[17px] top-[159px] h-px bg-white/30" />
-              <p className="absolute left-[20px] top-[179px] font-[Nunito] text-xs font-bold leading-4 tracking-[-0.16px] text-white">
+              <span aria-hidden className="absolute left-[18px] right-[17px] top-[160px] h-px bg-white/30" />
+              <p className="absolute left-[20px] top-[180px] font-[Nunito] text-xs font-bold leading-4 tracking-[-0.16px] text-white">
                 {room.max_players
                   ? t("extra.roomPlayersOf", { count: displayPlayerCount, max: room.max_players })
                   : t("extra.roomPlayersCount", { count: displayPlayerCount })}
               </p>
               {/* 31px faces with a 2px peach ring, each overlapping the last
                   by 7px; the later one sits on top, as in the frame. */}
-              <div className="absolute right-[17px] top-[172px] flex -space-x-[7px]">
+              <div className="absolute right-[17px] top-[173px] flex -space-x-[7px]">
                 {displayPlayers.slice(0, ROOM_CARD_FACES).map((p, idx) => (
                   <div
                     key={p.user_id || idx}

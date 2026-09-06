@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { FriendsStoriesBar } from "@/components/team/FriendsStoriesBar";
 import { MobileHeroWidgets, MobileProfileCard, NAV_CHROME } from "@/components/home/MobileHome";
 import { MobileHomeFeed } from "@/components/home/MobileHomeFeed";
-import { useWaveMask } from "@/components/home/wave";
+import { useWaveStrip } from "@/components/home/wave";
 
 /**
  * The phone home as a scroll-reveal (owner's ask).
@@ -25,6 +25,10 @@ import { useWaveMask } from "@/components/home/wave";
  *
  * It owns its own vertical scroller (CLAUDE.md rule 4b).
  */
+
+// Peak-to-trough of the feed panel's lip. Gentle: the wave is an edge
+// treatment, and a deep one reads as a tear rather than a curve.
+const FEED_WAVE = 12;
 
 export interface MobileHomeScrollProps {
   /**
@@ -70,9 +74,9 @@ export function MobileHomeScroll({
   onAddFriend,
 }: MobileHomeScrollProps) {
   // The panel's top edge rolls (Figma 1076:3281): a lip in the panel's own
-  // colour, its hills dealt fresh on every visit, rising 14px above the
-  // straight edge and overlapping it by two so the two are one surface.
-  const lip = useWaveMask({ top: 16, width: 500 });
+  // colour, its hills dealt fresh on every visit, centred on the edge so it
+  // rises half a band above the panel and overlaps it by the other half.
+  const lip = useWaveStrip(500, FEED_WAVE, "top");
   return (
     // The scroller is `absolute inset-0` of this positioned, flex-filled root
     // rather than `h-full`, so it takes a real pixel height from the root and
@@ -139,7 +143,11 @@ export function MobileHomeScroll({
           className="relative z-10 min-h-full rounded-t-[28px] bg-[#faf6ff]"
           style={{ marginTop: `calc(-1 * (${NAV_CHROME}))`, paddingBottom: `calc(${NAV_CHROME} + 92px)` }}
         >
-          <div aria-hidden className="absolute inset-x-0 top-[-14px] h-[18px] bg-[#faf6ff]" style={lip} />
+          <div
+            aria-hidden
+            className="absolute inset-x-0 bg-[#faf6ff]"
+            style={{ top: -FEED_WAVE / 2, height: FEED_WAVE, ...lip }}
+          />
           <div className="flex justify-center pt-2">
             <span className="h-[5px] w-[44px] rounded-full bg-[rgba(90,60,130,0.22)]" />
           </div>
