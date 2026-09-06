@@ -17,6 +17,39 @@ import { PUBLIC_SHARING_ENABLED } from "@/config/features";
 export interface FilterOption<T extends string> {
   value: T;
   labelKey: string;
+  /**
+   * An unreleased mode's filter (registry: DEVELOPER_ONLY_GAME_TYPES). Off
+   * the menu for everyone but an admin with developer mode on — a filter
+   * for a game nobody can see is a promise of something that is not there.
+   */
+  devOnly?: boolean;
+}
+
+/**
+ * The options a given viewer may choose from: everything, less the
+ * unreleased modes when developer mode is off.
+ *
+ * Paired with `visibleFilter` below — dropping an option the filter is
+ * currently set to would leave the bar naming a filter that is not in its
+ * own menu, and the list beneath it filtered by a game nobody can see.
+ */
+export function visibleFilterOptions<T extends string>(
+  options: FilterOption<T>[],
+  developerMode: boolean,
+): FilterOption<T>[] {
+  return developerMode ? options : options.filter((o) => !o.devOnly);
+}
+
+/** The filter to actually apply: `fallback` when the chosen one is hidden. */
+export function visibleFilter<T extends string>(
+  filter: T,
+  options: FilterOption<T>[],
+  developerMode: boolean,
+  fallback: T,
+): T {
+  return visibleFilterOptions(options, developerMode).some((o) => o.value === filter)
+    ? filter
+    : fallback;
 }
 
 export interface SortOption<T extends string> {
@@ -203,8 +236,8 @@ export const privateFilterOptions: FilterOption<PrivateFilter>[] = [
   { value: "all", labelKey: "extra.filterAll" },
   { value: "my_rooms", labelKey: "extra.filterMyRooms" },
   { value: "friends_rooms", labelKey: "extra.filterFriendsRooms" },
-  { value: "king", labelKey: "lobby.vkTitle" },
-  { value: "team_battle", labelKey: "teamBattle.title" },
+  { value: "king", labelKey: "lobby.vkTitle", devOnly: true },
+  { value: "team_battle", labelKey: "teamBattle.title", devOnly: true },
   { value: "trivias", labelKey: "extra.filterTrivias" },
   { value: "collections", labelKey: "extra.filterCollections" },
   { value: "personal", labelKey: "extra.myTriviaPartyLabel" },
@@ -219,7 +252,7 @@ export const publicRoomFilterOptions: FilterOption<PublicRoomsFilter>[] = [
   { value: "my_rooms", labelKey: "extra.filterMyRooms" },
   { value: "friends_rooms", labelKey: "extra.filterFriendsRooms" },
   // By game (owner's ask): the Battle arenas, and the ordinary rooms.
-  { value: "battles", labelKey: "teamBattle.title" },
+  { value: "battles", labelKey: "teamBattle.title", devOnly: true },
   { value: "rooms", labelKey: "extra.filterRooms" },
   { value: "all", labelKey: "extra.filterAll" },
 ];
@@ -229,8 +262,8 @@ export const roomFilterOptions: FilterOption<RoomFilter>[] = [
   { value: "all", labelKey: "extra.filterAll" },
   { value: "my_rooms", labelKey: "extra.filterMyRooms" },
   { value: "friends_rooms", labelKey: "extra.filterFriendsRooms" },
-  { value: "king", labelKey: "lobby.vkTitle" },
-  { value: "team_battle", labelKey: "teamBattle.title" },
+  { value: "king", labelKey: "lobby.vkTitle", devOnly: true },
+  { value: "team_battle", labelKey: "teamBattle.title", devOnly: true },
 ];
 
 // Room sort options removed - always sort by last activity

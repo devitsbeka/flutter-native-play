@@ -46,6 +46,15 @@ export const DEVELOPER_ONLY_GAME_TYPES: ReadonlySet<GameTypeKey> = new Set<GameT
 ]);
 
 /**
+ * Is this key one of the unreleased modes? Takes the raw, nullable
+ * `game_type_key` a room row carries, so a list of rooms can be gated with
+ * the same set the chooser uses rather than a second copy of the names.
+ */
+export function isDeveloperOnlyGameType(key: string | null | undefined): boolean {
+  return !!key && (DEVELOPER_ONLY_GAME_TYPES as ReadonlySet<string>).has(key);
+}
+
+/**
  * Applies developer mode to a resolved list of modes.
  *
  * With it OFF a developer-only mode is dropped outright — not a "coming

@@ -60,6 +60,8 @@ import {
   UnifiedFiltersBar,
   roomFilterOptions,
   privateFilterOptions,
+  visibleFilter,
+  visibleFilterOptions,
   publicRoomFilterOptions,
   myTriviaFilterOptions,
   exploreFilterOptions,
@@ -76,6 +78,7 @@ import { instantTouchProps } from "@/utils/instantTouch";
 import { generateRoomIdentity } from "@/utils/roomNameGenerator";
 import { readAppLanguage } from "@/utils/appLanguage";
 import { toast } from "@/lib/toast";
+import { useDeveloperMode } from "@/contexts/DeveloperModeContext";
 
 function TeamContentV2() {
   const navigate = useNavigate();
@@ -444,6 +447,17 @@ function TeamContentV2() {
   const [exploreSort, setExploreSort] = useState<ExploreSort>("recent");
   const [exploreSearchQuery, setExploreSearchQuery] = useState("");
 
+  // The unreleased modes (registry: DEVELOPER_ONLY_GAME_TYPES) are an
+  // admin's alone. Their chips come off the filter menus, and a filter left
+  // set to one — from a session before developer mode was switched off —
+  // falls back to "all" rather than filtering the list by a game the viewer
+  // cannot see anywhere else.
+  const { developerMode } = useDeveloperMode();
+  const publicFilterOptionsShown = visibleFilterOptions(publicRoomFilterOptions, developerMode);
+  const privateFilterOptionsShown = visibleFilterOptions(privateFilterOptions, developerMode);
+  const publicFilterApplied = visibleFilter(publicFilter, publicRoomFilterOptions, developerMode, "all");
+  const privateFilterApplied = visibleFilter(privateFilter, privateFilterOptions, developerMode, "all");
+
   // Switching a filter/sort keeps the old scroll offset, which leaves the
   // first result's header hidden under the sticky friends/tabs/filter stack —
   // reset the scroll so refiltered content starts fully visible
@@ -490,14 +504,16 @@ function TeamContentV2() {
   // list underneath it would make the filter look like it had done nothing.
   const ROOM_ONLY_FILTERS: PrivateFilter[] = ["my_rooms", "friends_rooms", "king", "team_battle"];
   const TRIVIA_ONLY_FILTERS: PrivateFilter[] = ["trivias", "collections", "personal"];
-  const showsPrivateRooms = privateFilter === "all" || ROOM_ONLY_FILTERS.includes(privateFilter);
-  const showsPrivateTrivias = privateFilter === "all" || TRIVIA_ONLY_FILTERS.includes(privateFilter);
+  const showsPrivateRooms =
+    privateFilterApplied === "all" || ROOM_ONLY_FILTERS.includes(privateFilterApplied);
+  const showsPrivateTrivias =
+    privateFilterApplied === "all" || TRIVIA_ONLY_FILTERS.includes(privateFilterApplied);
   // The two sections underneath each speak their own dialect of the filter.
-  const privateRoomFilter: RoomFilter = ROOM_ONLY_FILTERS.includes(privateFilter)
-    ? (privateFilter as RoomFilter)
+  const privateRoomFilter: RoomFilter = ROOM_ONLY_FILTERS.includes(privateFilterApplied)
+    ? (privateFilterApplied as RoomFilter)
     : "all";
-  const privateTriviaFilter: MyTriviaFilter = TRIVIA_ONLY_FILTERS.includes(privateFilter)
-    ? (privateFilter as MyTriviaFilter)
+  const privateTriviaFilter: MyTriviaFilter = TRIVIA_ONLY_FILTERS.includes(privateFilterApplied)
+    ? (privateFilterApplied as MyTriviaFilter)
     : "all";
   const hasTrivias = (myPosts?.length || 0) > 0 || (myCollections?.length || 0) > 0;
   // Guest auth modal
@@ -1216,9 +1232,9 @@ function TeamContentV2() {
                     {activeTab === "public" && (
                       <UnifiedFiltersBar<PublicRoomsFilter, string>
                         compact
-                        filter={publicFilter}
+                        filter={publicFilterApplied}
                         onFilterChange={(f) => setPublicFilter(f)}
-                        filterOptions={publicRoomFilterOptions}
+                        filterOptions={publicFilterOptionsShown}
                         searchQuery={publicSearchQuery}
                         onSearchQueryChange={setPublicSearchQuery}
                       />
@@ -1226,9 +1242,9 @@ function TeamContentV2() {
                     {activeTab === "private" && (hasRooms || hasTrivias) && (
                       <UnifiedFiltersBar<PrivateFilter, string>
                         compact
-                        filter={privateFilter}
+                        filter={privateFilterApplied}
                         onFilterChange={(f) => setPrivateFilter(f)}
-                        filterOptions={privateFilterOptions}
+                        filterOptions={privateFilterOptionsShown}
                         searchQuery={privateSearchQuery}
                         onSearchQueryChange={setPrivateSearchQuery}
                       />
@@ -1259,9 +1275,9 @@ function TeamContentV2() {
               <div key={activeTab} id="sticky-filter-bar" className="md:hidden border-b border-border/50">
                 {activeTab === "public" && (
                   <UnifiedFiltersBar<PublicRoomsFilter, string>
-                    filter={publicFilter}
+                    filter={publicFilterApplied}
                     onFilterChange={(f) => setPublicFilter(f)}
-                    filterOptions={publicRoomFilterOptions}
+                    filterOptions={publicFilterOptionsShown}
                     searchQuery={publicSearchQuery}
                     onSearchQueryChange={setPublicSearchQuery}
                     onAddClick={() => setShowCreateModal(true)}
@@ -1271,9 +1287,9 @@ function TeamContentV2() {
 
                 {activeTab === "private" && (
                   <UnifiedFiltersBar<PrivateFilter, string>
-                    filter={privateFilter}
+                    filter={privateFilterApplied}
                     onFilterChange={(f) => setPrivateFilter(f)}
-                    filterOptions={privateFilterOptions}
+                    filterOptions={privateFilterOptionsShown}
                     searchQuery={privateSearchQuery}
                     onSearchQueryChange={setPrivateSearchQuery}
                     onAddClick={() => setShowCreateTypeModal(true)}
@@ -1289,7 +1305,7 @@ function TeamContentV2() {
                   It brings its own padding, because its cards run edge to
                   edge the way the games list's do. */}
               {activeTab === "public" && (
-                <PublicRoomsSection filter={publicFilter} searchQuery={publicSearchQuery} />
+                <PublicRoomsSection filter={publicFilterApplied} searchQuery={publicSearchQuery} />
               )}
 
               {/* Private: my rooms and my trivias, under one filter. Both
@@ -1298,7 +1314,7 @@ function TeamContentV2() {
                   nobody found. */}
               {activeTab === "private" && (
                 <div className="px-4 pt-4 space-y-2">
-                  {showsPrivateRooms && (privateFilter !== "all" || hasRooms || !hasTrivias) && (
+                  {showsPrivateRooms && (privateFilterApplied !== "all" || hasRooms || !hasTrivias) && (
                     <MyRoomsSection
                       hideTV
                       onCreateRoom={() => setShowCreateModal(true)}
@@ -1316,7 +1332,7 @@ function TeamContentV2() {
                       "create something" pitch, reads as a broken page. A
                       person with neither still gets one — the rooms one,
                       which is the thing this page is for. */}
-                  {showsPrivateTrivias && (privateFilter !== "all" || hasTrivias) && (
+                  {showsPrivateTrivias && (privateFilterApplied !== "all" || hasTrivias) && (
                     <MyTriviaTab
                       onCreateQuiz={() => setShowCreateTypeModal(true)}
                       onPlay={(post, collectionPosts) => {

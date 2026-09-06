@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { matchesQuery } from "@/utils/searchMatch";
+import { isDeveloperOnlyGameType } from "@/game-types/registry";
 
 /**
  * The rooms anyone may find.
@@ -270,11 +271,21 @@ export function filterPublicRooms(
   filter: PublicRoomFilter,
   searchQuery: string,
   ctx?: PublicRoomContext,
+  /**
+   * An admin with developer mode on sees the unreleased modes' rooms. It
+   * defaults to off, so a caller that forgets it hides them — the safe way
+   * round for a mode that is not released.
+   */
+  developerMode = false,
 ): PublicRoom[] {
   return rooms.filter((room) => {
     // Versus King is friends-only: its lounges are never listed, even when
     // an older build managed to publish one.
     if (room.game_type_key === "king") return false;
+    // Nor is an unreleased mode's arena, unless the viewer is the admin who
+    // can see the mode at all. Hiding the filter chip is not enough on its
+    // own: "all" would still list the rooms behind it.
+    if (!developerMode && isDeveloperOnlyGameType(room.game_type_key)) return false;
     // A game that has started is not a room to join: its card said
     // "waiting" over a match already running. Only rooms whose host has
     // not pressed Start are listed; a started room stays on the Private
