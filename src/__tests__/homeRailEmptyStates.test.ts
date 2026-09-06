@@ -204,4 +204,22 @@ describe("a room card on the home rail can be tapped", () => {
     expect(rooms).toMatch(/drag=\{isMobile \? "x" : false\}/);
     expect(rooms).toMatch(/onClick=\{handleClick\}/);
   });
+
+  it("and the tap reaches a lobby the home screen can show", () => {
+    // enterRoom only moves the multiplayer context to "lobby", and the lobby
+    // is drawn by the /team page. On the rooms page that is the page
+    // underneath, so the join shows at once; on the home screen nothing
+    // renders it, and the tap joined the room with no change on screen.
+    // The home rail goes through the route every other entry already uses.
+    expect(rooms).toMatch(
+      /if \(homeRail\) \{\s*\n\s*navigate\(`\/team\?join=\$\{roomCode\}`, \{ state: \{ entering: true \} \}\);/,
+    );
+    // Every join on the card's path goes through that switch — the plain
+    // context join survives only inside it.
+    expect(rooms).toMatch(/await enterClassicRoom\(room\.room_code\)/);
+    expect(rooms.match(/await enterRoom\(/g)).toHaveLength(1);
+    // And TeamV2 still honours the flag the route carries.
+    const team = read("src/pages/TeamV2.tsx");
+    expect(team).toMatch(/entering\?: boolean/);
+  });
 });
