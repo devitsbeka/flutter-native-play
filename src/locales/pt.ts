@@ -1591,6 +1591,7 @@ export const pt: KaTranslations = {
     uRoundsHint: "Arraste um tema para mudar em que rodada ele é jogado.",
     uRoundsMoreBelow: "Mais rondas abaixo",
     uRoundsMoreAbove: "Mais rondas acima",
+    uRoundsDrag: "Arraste para reordenar",
     uRoundsHintGuest: "O anfitrião define a ordem das rodadas.",
     uRoundLabel: "Rodada {count}",
     uAddRounds: "Adicionar categorias",

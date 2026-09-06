@@ -1891,6 +1891,7 @@ export const ka = {
     uRoundsHint: "გადაათრიე თემა, რომ შეცვალო რომელ რაუნდზე ითამაშება.",
     uRoundsMoreBelow: "კიდევ რაუნდები ქვემოთ",
     uRoundsMoreAbove: "კიდევ რაუნდები ზემოთ",
+    uRoundsDrag: "გადაათრიე გადასალაგებლად",
     uRoundsHintGuest: "რაუნდების თანმიმდევრობას ჰოსტი განსაზღვრავს.",
     uRoundLabel: "რაუნდი {count}",
     uAddRounds: "კატეგორიების დამატება",

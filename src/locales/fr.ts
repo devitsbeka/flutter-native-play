@@ -1581,6 +1581,7 @@ export const fr: KaTranslations = {
     uRoundsHint: "Fais glisser un thème pour changer sa manche.",
     uRoundsMoreBelow: "Plus de manches en dessous",
     uRoundsMoreAbove: "Plus de manches au-dessus",
+    uRoundsDrag: "Glisser pour réordonner",
     uRoundsHintGuest: "L'hôte décide de l'ordre des manches.",
     uRoundLabel: "Manche {count}",
     uAddRounds: "Ajouter des catégories",
