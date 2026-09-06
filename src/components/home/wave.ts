@@ -116,11 +116,28 @@ export function wavyRectPath(seed: number, { width, height, radius, top = 0, bot
  * unknown height, say — laid over its straight edge with half the strip
  * either side of it.
  */
-export function waveStripPath(seed: number, width: number, band: number, edge: "top" | "bottom"): string {
+/**
+ * A strip whose one edge is a wave and whose other edge is straight.
+ *
+ * `depth` is solid body past the wave — the strip is `band + depth` tall,
+ * the wave lives in the `band` at the wavy edge, and the rest is filled.
+ * A lip laid over another element's straight edge needs that body: with
+ * the wave alone, every trough left the element's own edge uncovered, and
+ * an antialiased edge showed through as a hairline (the home feed's).
+ */
+export function waveStripPath(
+  seed: number,
+  width: number,
+  band: number,
+  edge: "top" | "bottom",
+  depth = 0,
+): string {
   const rand = seeded(seed);
-  const pts = wavePoints(rand, 0, width, band / 2, band);
-  const d = `M0 ${px(band / 2)}${curveThrough(pts)}`;
-  return edge === "top" ? `${d}L${px(width)} ${px(band)}L0 ${px(band)}Z` : `${d}L${px(width)} 0L0 0Z`;
+  const yMid = edge === "top" ? band / 2 : depth + band / 2;
+  const pts = wavePoints(rand, 0, width, yMid, band);
+  const d = `M0 ${px(yMid)}${curveThrough(pts)}`;
+  const h = band + depth;
+  return edge === "top" ? `${d}L${px(width)} ${px(h)}L0 ${px(h)}Z` : `${d}L${px(width)} 0L0 0Z`;
 }
 
 /** A path as a mask that stretches to whatever box it is put on. */
@@ -164,10 +181,15 @@ export function useWavyRect(rect: WavyRect): WavyRectShape {
 }
 
 /** A wavy strip's mask, dealt once per mount. */
-export function useWaveStrip(width: number, band: number, edge: "top" | "bottom"): CSSProperties {
+export function useWaveStrip(
+  width: number,
+  band: number,
+  edge: "top" | "bottom",
+  depth = 0,
+): CSSProperties {
   const seed = useSeed();
   return useMemo(
-    () => maskFromPath(waveStripPath(seed, width, band, edge), width, band),
-    [seed, width, band, edge],
+    () => maskFromPath(waveStripPath(seed, width, band, edge, depth), width, band + depth),
+    [seed, width, band, edge, depth],
   );
 }
