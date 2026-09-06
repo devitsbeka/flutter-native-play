@@ -11,6 +11,7 @@
 import { useSearchParams } from "react-router-dom";
 import { MobileHeroWidgets, MobileProfileCard } from "@/components/home/MobileHome";
 import { RoomCard } from "@/components/team/MyRoomsSection";
+import { AirbnbCategoryCard } from "@/components/discover/AirbnbCategoryCard";
 import type { MyRoom } from "@/hooks/useMyRooms";
 import homeScene from "@/assets/figma-home/home-scene.webp";
 import iconBattleLounge from "@/assets/play-chooser/icon-crate.png";
@@ -56,6 +57,38 @@ export default function HomeShot() {
   const [params] = useSearchParams();
   const scene = params.get("scene") ?? homeScene;
   const noop = () => undefined;
+  if (params.get("view") === "categories") {
+    // The home rail's own width and gap, with the two shapes that used to
+    // disagree: a name that wraps and one that does not, and a card whose
+    // art is a bundled render beside ones drawn by DynamicIcon.
+    const cats = [
+      { id: "guess_city", categoryId: "guess_city", name: "Erraten die Stadt", slug: null, levels: 19 },
+      { id: "physik", categoryId: "physik", name: "Physik", slug: "atom", levels: 18 },
+      { id: "kultur", categoryId: "kultur", name: "Deutsche Kultur", slug: "castle", levels: 19 },
+      { id: "guess_flag", categoryId: "guess_flag", name: "Erraten die Flagge", slug: null, levels: 12 },
+    ];
+    return (
+      <div className="min-h-[100dvh] w-full bg-[#faf6ff] pt-6">
+        <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-4 px-4 pb-3 pt-1 scrollbar-hide">
+          {cats.map((c) => (
+            <div key={c.id} className="w-[min(52vw,208px)] shrink-0 snap-start">
+              <AirbnbCategoryCard
+                id={c.id}
+                categoryId={c.categoryId}
+                iconSlug={c.slug}
+                name={c.name}
+                icon="🎯"
+                color="#a78bfa"
+                totalLevels={c.levels}
+                onClick={noop}
+                variant="compact"
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
   if (params.get("view") === "rooms") {
     const rooms = [
       sampleRoom({}),
