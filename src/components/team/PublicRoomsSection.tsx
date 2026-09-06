@@ -66,7 +66,16 @@ const LOUNGES: Record<string, { icon: string; labelKey: string }> = {
  * over deep purple, a dark wash, an inner shadow) rather than switching
  * the text to dark — the owner's call, and one ink is one less seam.
  */
+/**
+ * Two moods for one card, so a room you have been in reads apart from one
+ * you have not (owner's ask): the entered room sits DARK, an inner shade
+ * pulling its edges in, with white ink; the untouched room sits WHITISH, a
+ * pale wash over the same gradient, its chips light and its ink dark. The
+ * same gradient under both, and only the wash and the ink differ, so the
+ * two sit together on the list rather than looking like two designs.
+ */
 const INK = {
+  /** White ink: the entered room's, on its dark ground. */
   light: {
     text: "text-white",
     muted: "text-white/70",
@@ -76,6 +85,19 @@ const INK = {
     pill: "bg-black/25 border-white/25",
     ring: "border-white/60",
     more: "bg-white/30 text-white",
+    titleShadow: "drop-shadow-md",
+    dotRing: "border-[#2E1065]/70",
+  },
+  /** Dark ink: the untouched room's, on its whitish wash. */
+  dark: {
+    text: "text-[#2b1a4a]",
+    muted: "text-[#2b1a4a]/70",
+    faint: "text-[#2b1a4a]/60",
+    pill: "bg-white/65 border-white/80",
+    ring: "border-white/90",
+    more: "bg-white/70 text-[#2b1a4a]",
+    titleShadow: "",
+    dotRing: "border-white",
   },
 } as const;
 
@@ -209,7 +231,8 @@ function PublicRoomCard({
   const scene = room.game_type_key === "team_battle" ? sceneArena : null;
   // The scene is DARKENED under the ink (reduced opacity over deep purple,
   // a dark wash, an inner shadow), so every card writes in the same white.
-  const ink = INK.light;
+  // Been in it (host or seated): the dark card. Never been: the whitish one.
+  const ink = inside ? INK.light : INK.dark;
 
   const enter = () => navigate(publicRoomPath(room));
 
@@ -254,6 +277,13 @@ function PublicRoomCard({
               className="w-full h-full"
             />
           </div>
+        )}
+        {/* The mood, over whichever ground: an inner dark shade on a room
+            you have entered, a pale wash on one you have not. See INK. */}
+        {inside ? (
+          <div className="absolute inset-0 rounded-2xl bg-black/15 shadow-[inset_0_0_56px_rgba(20,8,45,0.55)]" />
+        ) : (
+          <div className="absolute inset-0 rounded-2xl bg-white/55" />
         )}
         {/* Top: who runs it, who already joined, and how full it is */}
         <div className="relative z-10 flex items-start justify-between gap-2">
@@ -346,7 +376,7 @@ function PublicRoomCard({
             ) : (
               <span className="w-[53px] h-[53px] rounded-full bg-white/10 border border-white/20 shrink-0" />
             )}
-            <h3 className={`min-w-0 max-w-[58%] text-center font-display text-lg leading-tight line-clamp-2 drop-shadow-md ${ink.text}`}>
+            <h3 className={`min-w-0 max-w-[58%] text-center font-display text-lg leading-tight line-clamp-2 ${ink.titleShadow} ${ink.text}`}>
               {lounge ? t(lounge.labelKey) : room.room_name || t("extra.gameRoomDefault")}
             </h3>
             {crests?.b ? (
@@ -376,7 +406,7 @@ function PublicRoomCard({
                 nobody chose over the one thing a player is scanning for. The
                 classic rooms keep their own name, which somebody did choose. */}
             <div className="min-w-0 flex-1">
-              <h3 className={`font-display text-lg leading-tight line-clamp-2 drop-shadow-md ${ink.text}`}>
+              <h3 className={`font-display text-lg leading-tight line-clamp-2 ${ink.titleShadow} ${ink.text}`}>
                 {lounge ? t(lounge.labelKey) : room.room_name || t("extra.gameRoomDefault")}
               </h3>
               {!lounge && (
@@ -415,7 +445,7 @@ function PublicRoomCard({
                     />
                   </span>
                   {online.has(person.user_id) && (
-                    <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#2E1065]/70" />
+                    <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 ${ink.dotRing}`} />
                   )}
                 </span>
               ) : (
@@ -930,11 +960,14 @@ export function PublicRoomsSection({
             <AlertDialogTitle>
               {removing?.my_state === "host" ? t("extra.rlDeleteRoom") : t("extra.rlLeaveRoom")}
             </AlertDialogTitle>
-            <AlertDialogDescription>
-              {removing?.my_state === "host"
-                ? t("extra.rlDeleteRoomConfirm")
-                : t("extra.rlLeaveRoomConfirm")}
-            </AlertDialogDescription>
+            {/* The host's delete has a consequence worth a line. A guest's
+                leave has none to state: the room is public and stays on
+                this list — the old line promised it would vanish, and it
+                did not (owner: it disappears if the host blocks me, not
+                if I leave). */}
+            {removing?.my_state === "host" && (
+              <AlertDialogDescription>{t("extra.rlDeleteRoomConfirm")}</AlertDialogDescription>
+            )}
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-row gap-3">
             <AlertDialogCancel className="flex-1 mt-0">{t("extra.rlCancel")}</AlertDialogCancel>
