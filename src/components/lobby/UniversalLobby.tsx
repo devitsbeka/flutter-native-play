@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { useLayoutEffect, useRef, useState, type ReactNode, useEffect } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { ArrowLeft, Bell, BellRing, Check, Loader2, Pencil, Play, Plus, UserPlus } from "lucide-react";
 import SpotlightSearch from "@/components/search/SpotlightSearch";
@@ -68,6 +68,12 @@ export interface LobbyPlayer {
   /** For the row's tap: a profile, a seat menu. */
   onPress?: () => void;
   /**
+   * A moment's note beside the name — "joined" as somebody arrives, "left"
+   * as somebody goes (a departed player's row stays a few seconds to say
+   * so). Animated in, so the eye is drawn to the change.
+   */
+  note?: "joined" | "left";
+  /**
    * Not a friend yet: the + on the row that asks to be. Absent for friends,
    * for yourself, and wherever the mode has nobody real to befriend. People
    * meet in a room; this is where they become friends without leaving it.
@@ -135,7 +141,23 @@ export interface UniversalLobbyProps {
     trailing?: string;
     onPress?: () => void;
     onAdd?: () => void;
+    /**
+     * How many rounds the room has. When it goes up, the chip flashes its
+     * ring and the "+N" pops, so a player notices a round being added.
+     */
+    rounds?: number;
+    /**
+     * The host's ring: a gradient stroke drifting around the chip and the
+     * +, so the way to add a round is found without looking (owner's ask).
+     */
+    glow?: boolean;
   };
+  /**
+   * What opens under the chip when it is tapped — the round list — as a
+   * dropdown over a blurred lobby rather than a page of its own, so it
+   * closes with a tap anywhere and nobody leaves the lobby to read it.
+   */
+  categoryMenu?: { open: boolean; onClose: () => void; children: ReactNode };
   /** Play on TV — rendered as a row inside the Game Rules tab, host only. */
   tv?: { label: string; onPress?: () => void };
   /** Copy for the two tabs. */
@@ -155,6 +177,9 @@ export interface UniversalLobbyProps {
     /** Read out for the + that asks to be friends, and for the tick once asked. */
     addFriend?: string;
     friendRequested?: string;
+    /** The note beside a name for a moment: somebody arrived, somebody left. */
+    joined?: string;
+    left?: string;
   };
   /**
    * How the benches are laid out.
@@ -274,6 +299,7 @@ export function UniversalLobby({
   unreadCount = 0,
   onBell,
   category,
+  categoryMenu,
   tv,
   labels,
   playersLayout = "stack",
@@ -392,17 +418,38 @@ export function UniversalLobby({
         </div>
       </motion.header>
 
-      {/* Body (1018:6818): chips, the name, the card. Scrolls itself — the
-          document never does on the device. */}
-      <div className="relative z-10 min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
-        <div className="mx-auto flex min-h-full w-full max-w-[700px] flex-col px-4 md:max-w-[520px]">
-          {category && (
-            <motion.div {...arrive(0.24)} className="mt-[9px] shrink-0 pl-[9px] pr-[3px]">
-              {/* Just the FIRST round — its category's icon and name, with a
-                  "(+N)" when more rounds are queued (owner's ask; the list of
-                  them read as clutter under the chip). Tapping the chip opens
-                  the round list; the + queues another. */}
-              <div className="flex h-[52px] items-stretch gap-2">
+      {/* The round list's backdrop: the lobby blurred, and a tap anywhere
+          on it closes the list. Under the chip row (z-40) and over the
+          body (z-10). */}
+      <AnimatePresence>
+        {categoryMenu?.open && (
+          <motion.button
+            type="button"
+            aria-label="close"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
+            onClick={categoryMenu.onClose}
+            className="absolute inset-0 z-30 bg-[rgba(60,30,90,0.22)] backdrop-blur-[6px]"
+          />
+        )}
+      </AnimatePresence>
+
+      {/* The category row, OUTSIDE the scroller so it stays put while the
+          body scrolls (owner's ask): it scrolled under the header's edge
+          and was clipped there. Just the FIRST round — its category's icon
+          and name, with a "(+N)" when more rounds are queued (owner's ask;
+          the list of them read as clutter under the chip). Tapping the chip
+          opens the round list under it; the + queues another. */}
+      {category && (
+        <motion.div
+          {...arrive(0.24)}
+          className="relative z-40 mx-auto mt-[9px] w-full max-w-[700px] shrink-0 px-4 md:max-w-[520px]"
+        >
+          <div className="pl-[9px] pr-[3px]">
+            <div className="flex h-[52px] items-stretch gap-2">
+              <Ring on={!!category.glow} flashKey={category.rounds} className="min-w-0 flex-1">
                 <Chip
                   icon={chipQuestion}
                   iconSlug={category.iconSlug}
@@ -410,7 +457,9 @@ export function UniversalLobby({
                   trailing={category.trailing}
                   onPress={category.onPress}
                 />
-                {category.onAdd && (
+              </Ring>
+              {category.onAdd && (
+                <Ring on={!!category.glow} className="shrink-0">
                   <motion.button
                     type="button"
                     whileTap={{ scale: 0.94 }}
@@ -423,10 +472,32 @@ export function UniversalLobby({
                   >
                     <Plus className="h-6 w-6 text-[#402666]" strokeWidth={2.4} />
                   </motion.button>
-                )}
-              </div>
-            </motion.div>
-          )}
+                </Ring>
+              )}
+            </div>
+          </div>
+
+          {/* The round list, dropped under the chip. */}
+          <AnimatePresence>
+            {categoryMenu?.open && (
+              <motion.div
+                initial={reduceMotion ? false : { opacity: 0, y: -8, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                transition={{ type: "spring", stiffness: 420, damping: 34 }}
+                className="absolute left-4 right-4 top-full z-40 mt-2 flex max-h-[60dvh] flex-col overflow-hidden rounded-[22px] border border-white/80 bg-[rgba(252,247,255,0.94)] shadow-[0_18px_48px_rgba(60,30,90,0.28)] backdrop-blur-xl"
+              >
+                {categoryMenu.children}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      )}
+
+      {/* Body (1018:6818): the name, the card. Scrolls itself — the
+          document never does on the device. */}
+      <div className="relative z-10 min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
+        <div className="mx-auto flex min-h-full w-full max-w-[700px] flex-col px-4 md:max-w-[520px]">
 
           {/* The room, said once and centred: its face, its name, how full
               it is (Figma 1059:532). 39px of air above the emblem and every
@@ -628,6 +699,8 @@ export function UniversalLobby({
                               callLabel={labels.call ?? "Call"}
                               addFriendLabel={labels.addFriend ?? "Add friend"}
                               friendRequestedLabel={labels.friendRequested ?? "Sent"}
+                              joinedLabel={labels.joined ?? "joined"}
+                              leftLabel={labels.left ?? "left"}
                               compact
                             />
                           ))}
@@ -658,6 +731,8 @@ export function UniversalLobby({
                             callLabel={labels.call ?? "Call"}
                             addFriendLabel={labels.addFriend ?? "Add friend"}
                             friendRequestedLabel={labels.friendRequested ?? "Sent"}
+                            joinedLabel={labels.joined ?? "joined"}
+                            leftLabel={labels.left ?? "left"}
                           />
                         ))}
                         {group.footer}
@@ -1105,12 +1180,71 @@ function Chip({
       <span className="min-w-0 flex-1 truncate font-[Nunito] text-[16px] font-medium leading-[19.5px] tracking-[-0.16px] text-[#402666]">
         {label}
       </span>
-      {trailing && (
-        <span className="ml-2 shrink-0 font-[Nunito] text-[16px] font-bold leading-[19.5px] tracking-[-0.16px] text-[#402666]/60">
-          {trailing}
-        </span>
-      )}
+      {/* The "+N" pops as it changes: keyed by its value, so a new count
+          mounts a new span that springs in — the eye is drawn to a round
+          being added. */}
+      <AnimatePresence mode="popLayout" initial={false}>
+        {trailing && (
+          <motion.span
+            key={trailing}
+            initial={{ opacity: 0, scale: 0.5, y: -8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.6, y: 8 }}
+            transition={{ type: "spring", stiffness: 520, damping: 22 }}
+            className="ml-2 shrink-0 font-[Nunito] text-[16px] font-bold leading-[19.5px] tracking-[-0.16px] text-[#402666]/60"
+          >
+            {trailing}
+          </motion.span>
+        )}
+      </AnimatePresence>
     </Tag>
+  );
+}
+
+/**
+ * The attention ring around a chip: a gradient stroke drifting around it.
+ *
+ * `on` keeps it lit (the host's chip and +, so the way to add a round is
+ * found without looking). `flashKey` lights it once, for a moment, each
+ * time the key changes after mount — the round count, so a player sees a
+ * round being added. Drawn as a masked gradient behind the child (see
+ * .lobby-ring in index.css), rounded a hair wider than the chip.
+ */
+function Ring({
+  on,
+  flashKey,
+  className,
+  children,
+}: {
+  on: boolean;
+  flashKey?: number;
+  className?: string;
+  children: ReactNode;
+}) {
+  const [flash, setFlash] = useState(0);
+  const seen = useRef<number | undefined>(undefined);
+  useEffect(() => {
+    if (seen.current === undefined) {
+      seen.current = flashKey;
+      return;
+    }
+    if (flashKey !== seen.current) {
+      seen.current = flashKey;
+      if (flashKey !== undefined) setFlash((n) => n + 1);
+    }
+  }, [flashKey]);
+  return (
+    <div className={cn("relative", className)}>
+      {on && <span aria-hidden className="lobby-ring pointer-events-none absolute -inset-[2px] rounded-[22px]" />}
+      {!on && flash > 0 && (
+        <span
+          key={flash}
+          aria-hidden
+          className="lobby-ring lobby-ring-flash pointer-events-none absolute -inset-[2px] rounded-[22px]"
+        />
+      )}
+      {children}
+    </div>
   );
 }
 
@@ -1198,6 +1332,8 @@ function PlayerRow({
   callLabel,
   addFriendLabel,
   friendRequestedLabel,
+  joinedLabel,
+  leftLabel,
   compact = false,
 }: {
   player: LobbyPlayer;
@@ -1207,6 +1343,8 @@ function PlayerRow({
   callLabel: string;
   addFriendLabel: string;
   friendRequestedLabel: string;
+  joinedLabel: string;
+  leftLabel: string;
   /** Half the width to work in: two benches share the card. */
   compact?: boolean;
 }) {
@@ -1292,6 +1430,25 @@ function PlayerRow({
       >
         {player.isYou ? youLabel : player.name}
       </span>
+      {/* "joined" / "left", for a moment, springing in beside the name so
+          the change is noticed (owner's ask). */}
+      <AnimatePresence initial={false}>
+        {player.note && (
+          <motion.span
+            key={player.note}
+            initial={{ opacity: 0, x: -8, scale: 0.8 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ type: "spring", stiffness: 480, damping: 26 }}
+            className={cn(
+              "ml-2 shrink-0 rounded-full px-2 py-0.5 font-[Nunito] text-[11px] font-bold leading-4",
+              player.note === "joined" ? "bg-[#10b981]/15 text-[#10b981]" : "bg-[#402666]/10 text-[#402666]/60",
+            )}
+          >
+            {player.note === "joined" ? joinedLabel : leftLabel}
+          </motion.span>
+        )}
+      </AnimatePresence>
       {player.score !== undefined && (
         <span className="ml-2 flex shrink-0 items-center gap-1">
           <span className="font-[Nunito] text-[16px] font-bold leading-6 tracking-[-0.16px] text-[#402666]">{player.score}</span>

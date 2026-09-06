@@ -126,6 +126,9 @@ export function RoomLobbyV2() {
   const [showHostObserverWarning, setShowHostObserverWarning] = useState(false);
   const [willBeObserver, setWillBeObserver] = useState(false); // Pre-calculate if host will be observer
   const prevParticipantsRef = useRef<string[]>([]);
+  // The faces of whoever was seated last render, so a departed player's row
+  // can still wear their name and picture while it says "left".
+  const prevFacesRef = useRef<Map<string, { name: string; avatarUrl: string | null }>>(new Map());
   const { friends, sendFriendRequest } = useFriends();
   // Who this player has asked to be friends from this lobby, this visit:
   // the + on their row becomes a tick until the friends list catches up.
@@ -253,20 +256,56 @@ export function RoomLobbyV2() {
   const localizeQueueCategory = useLocalizedCategoryName();
   const iconForCategoryName = useCategoryIconByName();
 
+  // Who just arrived, who just left: a note beside the name for a moment,
+  // and a departed player's row kept a moment longer to carry "left"
+  // (owner's ask). The first snapshot is the room as found, not arrivals.
+  const [seatNotes, setSeatNotes] = useState<Map<string, "joined" | "left">>(() => new Map());
+  const [departed, setDeparted] = useState<{ id: string; name: string; avatarUrl: string | null }[]>([]);
+  const SEAT_NOTE_MS = 3500;
+
   // Play sound when new participant joins
   useEffect(() => {
     const currentIds = participants.map(p => p.user_id);
     const prevIds = prevParticipantsRef.current;
-    
+    const timers: number[] = [];
+
     if (prevIds.length > 0) {
       const newParticipants = currentIds.filter(id => !prevIds.includes(id));
       if (newParticipants.length > 0 && newParticipants[0] !== user?.id) {
         playSound("room-join");
         toast.success(t("team.newPlayerJoined"));
       }
+      const gone = prevIds.filter((id) => !currentIds.includes(id) && id !== user?.id);
+      if (newParticipants.length > 0 || gone.length > 0) {
+        setSeatNotes((prev) => {
+          const next = new Map(prev);
+          newParticipants.forEach((id) => next.set(id, "joined"));
+          gone.forEach((id) => next.set(id, "left"));
+          return next;
+        });
+        if (gone.length > 0) {
+          const faces = prevFacesRef.current;
+          setDeparted((prev) => [
+            ...prev.filter((d) => !gone.includes(d.id)),
+            ...gone.map((id) => ({ id, name: faces.get(id)?.name ?? "", avatarUrl: faces.get(id)?.avatarUrl ?? null })),
+          ]);
+        }
+        timers.push(
+          window.setTimeout(() => {
+            setSeatNotes((prev) => {
+              const next = new Map(prev);
+              [...newParticipants, ...gone].forEach((id) => next.delete(id));
+              return next;
+            });
+            setDeparted((prev) => prev.filter((d) => !gone.includes(d.id)));
+          }, SEAT_NOTE_MS),
+        );
+      }
     }
-    
+
     prevParticipantsRef.current = currentIds;
+    prevFacesRef.current = new Map(participants.map((p) => [p.user_id, { name: p.nickname, avatarUrl: p.avatar_url }]));
+    return () => timers.forEach((id) => window.clearTimeout(id));
   }, [participants, user?.id, playSound]);
 
   // Pre-calculate if host will be observer for current trivia selection
@@ -830,6 +869,7 @@ export function RoomLobbyV2() {
     avatarUrl: p.avatar_url,
     isHost: p.is_host,
     isYou: p.user_id === user?.id,
+    note: seatNotes.get(p.user_id),
     score: p.total_score || 0,
     rounds: p.total_rounds_played || 0,
     pending: (p.status as string) === "invited",
@@ -845,6 +885,17 @@ export function RoomLobbyV2() {
             ? () => void handleResendInvitation(p.user_id)
             : () => void handleInvitePlayer(p.user_id)
           : undefined,
+  }));
+  // A departed player's row, kept a moment to say "left": faded, no tally,
+  // no tap.
+  const departedPlayers: LobbyPlayer[] = departed.map((d) => ({
+    id: `left-${d.id}`,
+    name: d.name,
+    avatarUrl: d.avatarUrl,
+    isHost: false,
+    isYou: false,
+    pending: true,
+    note: "left" as const,
   }));
   const inviteFaces = [...friends]
     .filter((f) => f.status === "accepted")
@@ -982,8 +1033,34 @@ export function RoomLobbyV2() {
                 ? () => { setStartAfterPick(false); setShowCategoryPicker(true); }
                 : undefined,
           onAdd: isHost ? () => { setStartAfterPick(false); setShowCategoryPicker(true); } : undefined,
+          // The host's chip and + wear the drifting ring; everyone's chip
+          // flashes it as the round count changes.
+          rounds,
+          glow: isHost,
         };
       })()}
+      categoryMenu={{
+        open: showRoundOrder,
+        onClose: () => setShowRoundOrder(false),
+        children: (
+          <RoundOrderModal
+            open={showRoundOrder}
+            onClose={() => setShowRoundOrder(false)}
+            items={queue}
+            // The same round the chip names — so the list's "1" and the chip
+            // cannot disagree about which category opens the game.
+            current={heldRound}
+            canEdit={isHost}
+            onReorder={reorderQueue}
+            onRemove={removeFromQueue}
+            onAdd={() => {
+              setShowRoundOrder(false);
+              setStartAfterPick(false);
+              setShowCategoryPicker(true);
+            }}
+          />
+        ),
+      }}
       tv={isHost ? { label: t("lobby.uPlayOnTv"), onPress: () => setIsTVModeEnabled(true) } : undefined}
       labels={{
         rules: t("lobby.uGameRules"),
@@ -994,13 +1071,15 @@ export function RoomLobbyV2() {
         notifications: t("extra.notifications"),
         addFriend: t("extra.lobbyAddFriend"),
         friendRequested: t("extra.lobbyFriendRequested"),
+        joined: t("lobby.uJoinedNote"),
+        left: t("lobby.uLeftNote"),
       }}
       rules={lobbyRules}
       rulesText={[
         { key: "rules", heading: t("lobby.rulesHeading"), body: t("lobby.rulesClassic") },
         { key: "time", heading: t("lobby.timeHeading"), body: t("lobby.timeClassic") },
       ]}
-      players={lobbyPlayers}
+      players={[...lobbyPlayers, ...departedPlayers]}
       // No playersHint here: the footer caption below the Start button says
       // exactly this, word for word, and the two were on screen together —
       // once under the player rows and once under the CTA. The arena keeps
@@ -1234,23 +1313,8 @@ export function RoomLobbyV2() {
         onConfirm={handleUpdateRoomIconAndName}
       />
 
-      {/* The rounds, in the order they play. */}
-      <RoundOrderModal
-        open={showRoundOrder}
-        onClose={() => setShowRoundOrder(false)}
-        items={queue}
-        // The same round the chip names — so the list's "1" and the chip
-        // cannot disagree about which category opens the game.
-        current={heldRound}
-        canEdit={isHost}
-        onReorder={reorderQueue}
-        onRemove={removeFromQueue}
-        onAdd={() => {
-          setShowRoundOrder(false);
-          setStartAfterPick(false);
-          setShowCategoryPicker(true);
-        }}
-      />
+      {/* The rounds, in the order they play, drop under the chip: see the
+          categoryMenu handed to UniversalLobby above. */}
 
       {/* Category Picker Modal */}
       <CategoryPickerModal

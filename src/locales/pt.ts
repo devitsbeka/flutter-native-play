@@ -1596,6 +1596,8 @@ export const pt: KaTranslations = {
     // The universal lobby (Figma 1018:5815 / 1018:4416)
     uGameRules: "Regras do jogo",
     uPlayersTab: "Jogadores",
+    uJoinedNote: "entrou",
+    uLeftNote: "saiu",
     uQuestionsPerRound: "Perguntas por ronda",
     uVisibility: "Visibilidade",
     uJoining: "Entrada",
