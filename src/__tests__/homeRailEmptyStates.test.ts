@@ -238,4 +238,21 @@ describe("a room card on the home rail can be tapped", () => {
     // deadline rather than waiting for something else to.
     expect(team).toMatch(/window\.setTimeout\(\(\) => enteringTick\(\(n\) => n \+ 1\), Math\.max\(0, left\) \+ 20\)/);
   });
+
+  it("and the same room can be opened again from the rooms page", () => {
+    // The join-by-code effect attempts each code once, and used to remember
+    // that for the life of the page: open a room, back out, tap its Play —
+    // /team?join=CODE again — and the join bailed as already attempted,
+    // never opening the room and never stripping the param, so the joining
+    // wash held the screen with nothing behind it. The memory is spent as
+    // soon as the URL carries no code...
+    const team = read("src/pages/TeamV2.tsx");
+    expect(team).toMatch(
+      /if \(!joinCode\) \{[^}]*attemptedJoinCodeRef\.current = null;\s*\n\s*return;\s*\n\s*\}/,
+    );
+    // ...and a code that did not open drops ?room= too, so the wash lifts
+    // instead of holding over a lobby that will never appear.
+    expect(team).toMatch(/opened = await enterRoom\(joinCode\);/);
+    expect(team).toMatch(/if \(!opened\) next\.delete\("room"\);/);
+  });
 });
