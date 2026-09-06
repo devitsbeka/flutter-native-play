@@ -181,7 +181,9 @@ describe("what the host's invite sends", () => {
     // The universal lobby's rows carry the two nudges the scoreboard's
     // paper-plane used to: "come and play" to a seated player, and the
     // invitation again to a placeholder who never arrived. Host-side only.
-    expect(lobby).toMatch(/isHost && p\.user_id !== user\?\.id/);
+    // Your own row is the way out instead (setShowLeaveConfirm); the host's
+    // nudges are the branch after it, so they never land on the host's own row.
+    expect(lobby).toMatch(/p\.user_id === user\?\.id\s*\n\s*\? \(\) => setShowLeaveConfirm\(true\)\s*\n\s*: isHost/);
     expect(lobby).toMatch(/handleInvitePlayer\(p\.user_id\)/);
     expect(lobby).toMatch(/handleResendInvitation\(p\.user_id\)/);
   });

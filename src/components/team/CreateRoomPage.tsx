@@ -123,6 +123,9 @@ type SelectionMode = "random" | "library" | "create" | "my-trivias" | null;
  * My Trivia — as cards of their own (the old "classic friends room" card that
  * hid all three sources behind one more tap is gone).
  */
+/** How long the chooser will hold on a card's handoff before giving up. */
+const HANDOFF_MAX_MS = 10000;
+
 export type GameChoice = "quick" | "guess" | "king" | "battle" | "words" | "library" | "mytrivias";
 // The same set as a runtime list, so the home's Play rail can deep-link a
 // mode (`/create-room?mode=`) and the route wrapper can validate the param
@@ -540,6 +543,43 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   // the deal for Random; after the picker for the library and My Trivia.
   const autoStart = useRef(false);
 
+  /**
+   * A card has taken over: stop painting this screen.
+   *
+   * The chooser is a place you make ONE decision and leave. Once a card has
+   * started its game there is nothing left to decide here, but the page
+   * stayed on screen for the whole round trip — the modal closing off the
+   * picked category, then the chooser with a spinner on one card, then the
+   * lobby. About half a second of a screen the player had already left, and
+   * it read as the app going back before it went forward.
+   *
+   * A ref would not do: this decides what renders, and `autoStart` is
+   * cleared by the effect that presses Create — a frame before `isCreating`
+   * turns on. That gap is exactly the frame the chooser was painting in.
+   *
+   * Cleared wherever the handoff ends without leaving: a create that failed,
+   * a picker dismissed without a pick.
+   */
+  const [handingOff, setHandingOff] = useState(false);
+
+  /**
+   * A handoff that never lands gives the screen back.
+   *
+   * Every path out of `handleCreate` either navigates or toasts, so this
+   * should not fire. It is here because the cost of being wrong is a player
+   * looking at a spinner with no way off the screen — the back arrow is
+   * inside the body this hides. Ten seconds is well past the slowest create
+   * seen on a phone and far short of "the app has frozen".
+   */
+  useEffect(() => {
+    if (!handingOff) return;
+    const t = setTimeout(() => {
+      autoStart.current = false;
+      setHandingOff(false);
+    }, HANDOFF_MAX_MS);
+    return () => clearTimeout(t);
+  }, [handingOff]);
+
   const startMode = (key: GameChoice) => {
     if (isCreating) return;
     rememberLobbyScene(key);
@@ -557,6 +597,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       return;
     }
     autoStart.current = true;
+    setHandingOff(true);
     if (key === "library" && !(selectionMode === "library" && selectedCategory)) setShowCategoriesModal(true);
     if (key === "mytrivias" && !challengeTrivia) void handleOptionClick("my-trivias");
   };
@@ -573,7 +614,18 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialMode]);
 
+  /**
+   * Whether the category picker is closing because something was PICKED.
+   *
+   * It calls `onSelect` and then `onOpenChange(false)`, so its close handler
+   * sees the same thing either way — and reading `selectedCategory` there is
+   * no help, since the pick's state update has not committed yet. Without
+   * this the handoff would be cancelled by the very pick that starts it.
+   */
+  const pickedFromPicker = useRef(false);
+
   const handleLibraryCategorySelect = (category: { id: string; category_id: string; name: string; icon?: string; icon_slug?: string | null; color: string; image_url?: string | null; total_levels: number }) => {
+    pickedFromPicker.current = true;
     // Use the category directly from the modal - it already has category_id
     setSelectedCategory({
       id: category.id,
@@ -642,6 +694,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   };
 
   const handleMyTriviaSelect = (item: { id: string; title: string; type: "trivia" | "collection" }) => {
+    pickedFromPicker.current = true;
     setChallengeTrivia(item);
     setSelectionMode("my-trivias");
   };
@@ -1211,6 +1264,9 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         description: t("extra.mpRoomCreateFailed"),
         variant: "destructive",
       });
+      // The handoff is off: nothing is going to navigate, so the player gets
+      // the chooser back rather than a spinner that never resolves.
+      setHandingOff(false);
     } finally {
       setIsCreating(false);
     }
@@ -1588,6 +1644,22 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
           create button still centre their own column, so nothing stretches
           on a wide screen. Fixed height, so only the middle scrolls and the
           button never moves. */}
+      {/* A card has taken over — hold, do not paint the chooser.
+
+          Picking a category used to hand the player back this screen for the
+          length of the create: the picker closed, the chooser showed for
+          about half a second with a spinner on the card, and then the lobby
+          arrived. The app appeared to go backwards before it went forwards.
+
+          The same spinner the lobby holds on (see TeamV2), so the two are
+          one wait rather than two screens. The pickers below stay mounted
+          through this — they are children of this component, and one of them
+          may still be open. */}
+      {handingOff ? (
+      <div className="relative flex h-full w-full items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+      ) : (
       <div className="relative flex h-full w-full flex-col overflow-hidden">
 
       {/* Header — the home page's own (Figma 1013:1377): the wordmark centred
@@ -1669,7 +1741,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
             unfolds its detail underneath — the random roll, the library
             preview, which side of the arena, the chosen trivia. */}
         <div className="flex min-h-0 flex-1 flex-col">
-          <h2 className="shrink-0 pb-[13px] pt-[7px] font-[Nunito] text-[24px] leading-[28px] tracking-[-0.3px] text-[#3a2260]">{t("extra.whatToPlay")}</h2>
+          <h2 className="shrink-0 pb-[13px] pt-[7px] font-display text-[24px] leading-[28px] text-[#3a2260]">{t("extra.whatToPlay")}</h2>
 
           {/* The cards are the row's own items so they stretch to its
               height: a percentage height would not resolve through the
@@ -1891,6 +1963,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
 
       {/* End of frosted popup panel */}
       </div>
+      )}
 
       {/* The pre-room lobby (Figma 1018:5815) for the modes that have no
           room until they start: it grows out of the tapped card like every
@@ -2113,7 +2186,18 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       {/* Category Selector Modal */}
       <CategorySelectorModal
         open={showCategoriesModal}
-        onOpenChange={setShowCategoriesModal}
+        onOpenChange={(open) => {
+          setShowCategoriesModal(open);
+          if (open) return;
+          if (pickedFromPicker.current) {
+            // A pick: the handoff carries on into the create.
+            pickedFromPicker.current = false;
+            return;
+          }
+          // Backed out without picking — this screen is the player's again.
+          autoStart.current = false;
+          setHandingOff(false);
+        }}
         onSelect={handleLibraryCategorySelect}
         selectedCategoryId={selectedCategory?.id}
         allowParty={!publishRoom}
@@ -2149,9 +2233,23 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       {/* My Trivias Picker Modal */}
       <MyTriviasPickerModal
         open={showMyTriviasModal}
-        onOpenChange={setShowMyTriviasModal}
+        onOpenChange={(open) => {
+          setShowMyTriviasModal(open);
+          if (open) return;
+          if (pickedFromPicker.current) {
+            pickedFromPicker.current = false;
+            return;
+          }
+          // Backed out without picking — this screen is the player's again.
+          autoStart.current = false;
+          setHandingOff(false);
+        }}
         onSelect={handleMyTriviaSelect}
         onCreateTrivia={() => {
+          // Going off to MAKE one: the handoff this card armed is over, and
+          // the trivia editor opens over this screen either way.
+          autoStart.current = false;
+          setHandingOff(false);
           setShowMyTriviasModal(false);
           setShowCreateTriviaModal(true);
         }}

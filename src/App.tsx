@@ -40,6 +40,7 @@ import { isLegalLanguage } from "@/utils/legalLanguage";
 import { OfflineBanner } from "./components/shared/OfflineBanner";
 import { GlobalJoinRequestGate } from "@/components/team/JoinRequestGate";
 import { GlobalGameInviteGate } from "@/components/team/GameInviteGate";
+import { GlobalFriendRequestGate } from "@/components/team/FriendRequestGate";
 import { Toaster } from "sonner";
 import { useFreshBuildGuard } from "@/hooks/useFreshBuildGuard";
 
@@ -261,6 +262,9 @@ const App = () => (
             {/* And the same card the other way round: a friend inviting this
                 player into their room. */}
             <GlobalGameInviteGate />
+            {/* And somebody asking to be friends: accept, decline, block, or
+                close it for now and find it in the bell later. */}
+            <GlobalFriendRequestGate />
             
             {/* Global persistent background with particles */}
             <GlobalSplineBackground />

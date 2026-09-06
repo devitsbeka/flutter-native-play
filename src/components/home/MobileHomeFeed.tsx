@@ -21,6 +21,9 @@ import featuredKing from "@/assets/play-chooser/featured-king.webp";
 import featuredBattle from "@/assets/play-chooser/featured-battle.webp";
 import featuredWords from "@/assets/play-chooser/featured-words.webp";
 import featuredMyTrivias from "@/assets/play-chooser/featured-mytrivias.webp";
+import triviaBuzzer from "@/assets/trivia-buzzer.png";
+import iconCollections from "@/assets/icon-collections.png";
+import iconGroupOfPeople from "@/assets/group-of-people.png";
 import { useCategories } from "@/hooks/useCategories";
 import { useVipStatus } from "@/hooks/useVipStatus";
 import { AirbnbCategoryCard } from "@/components/discover/AirbnbCategoryCard";
@@ -75,12 +78,32 @@ function dealMixed<T extends { id: string; category_id?: string; type?: string }
   return out;
 }
 
+/** What a card on the My Trivias rail stands for, and the face it wears. */
+type TriviaKind = "trivia" | "party" | "collection";
+
 interface Trivia {
   id: string;
   title: string;
   cover_image: string | null;
   cover_gradient: string | null;
+  kind: TriviaKind;
+  created_at: string | null;
 }
+
+// The three things a player makes, each with the icon the create chooser
+// offers it under (owner's ask: a card says what it is). A party is a post
+// whose subject is "personal"; a collection is its own table.
+const KIND_ICON: Record<TriviaKind, string> = {
+  trivia: triviaBuzzer,
+  party: iconGroupOfPeople,
+  collection: iconCollections,
+};
+
+const KIND_ROUTE: Record<TriviaKind, (id: string) => string> = {
+  trivia: (id) => `/trivia/${id}`,
+  party: (id) => `/trivia/${id}`,
+  collection: (id) => `/collection/${id}`,
+};
 
 /** A rail's title, with an optional "see all". */
 function RailHeader({
@@ -180,17 +203,48 @@ export function MobileHomeFeed() {
   // rather than fetched twice.
   const [roomsEmpty, setRoomsEmpty] = useState(false);
 
+  // Everything the player has made, newest first: standalone trivias and
+  // parties from the posts, and collections from their own table. The rail
+  // used to carry the posts alone, so a collection never appeared here.
   const { data: trivias = [] } = useQuery({
     queryKey: ["home-feed-my-trivias", user?.id],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("user_quiz_posts")
-        .select("id, title, cover_image, cover_gradient")
-        .eq("user_id", user!.id)
-        .is("collection_id", null)
-        .order("created_at", { ascending: false })
-        .limit(10);
-      return (data || []) as Trivia[];
+      const [{ data: posts }, { data: collections }] = await Promise.all([
+        supabase
+          .from("user_quiz_posts")
+          .select("id, title, cover_image, cover_gradient, subject, created_at")
+          .eq("user_id", user!.id)
+          .is("collection_id", null)
+          .order("created_at", { ascending: false })
+          .limit(10),
+        supabase
+          .from("quiz_collections")
+          .select("id, title, cover_image, cover_gradient, created_at")
+          .eq("user_id", user!.id)
+          .order("created_at", { ascending: false })
+          .limit(10),
+      ]);
+      const made: Trivia[] = [
+        ...(posts || []).map((p) => ({
+          id: p.id,
+          title: p.title,
+          cover_image: p.cover_image,
+          cover_gradient: p.cover_gradient,
+          kind: (p.subject === "personal" ? "party" : "trivia") as TriviaKind,
+          created_at: p.created_at,
+        })),
+        ...(collections || []).map((c) => ({
+          id: c.id,
+          title: c.title,
+          cover_image: c.cover_image,
+          cover_gradient: c.cover_gradient,
+          kind: "collection" as TriviaKind,
+          created_at: c.created_at,
+        })),
+      ];
+      return made
+        .sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? ""))
+        .slice(0, 10);
     },
     enabled: !!user?.id,
   });
@@ -270,11 +324,11 @@ export function MobileHomeFeed() {
           />
           <Rail>
             {railCategories.map((cat) => (
-              // Half the screen each, to a cap: a card and most of the next,
-              // so the rail plainly scrolls while the art is big enough to
-              // read. At the old 164px the icon was barely wider than the
-              // progress pill under it.
-              <div key={cat.id} className="w-[min(52vw,208px)] shrink-0 snap-start">
+              // The room card's width (MyRoomsSection's home rail, 280px), so
+              // the two rails' cards line up one above the other (owner's
+              // ask). A card and the edge of the next on a phone, so the
+              // rail still plainly scrolls.
+              <div key={cat.id} className="w-[280px] shrink-0 snap-start">
                 <AirbnbCategoryCard
                   id={cat.id}
                   categoryId={cat.category_id || cat.id}
@@ -327,19 +381,38 @@ export function MobileHomeFeed() {
           <Rail>
             {trivias.map((tr) => (
               <button
-                key={tr.id}
+                key={`${tr.kind}-${tr.id}`}
                 type="button"
-                onClick={() => navigate(`/trivia/${tr.id}`)}
+                onClick={() => navigate(KIND_ROUTE[tr.kind](tr.id))}
                 className="flex w-[132px] shrink-0 snap-start flex-col gap-2 text-left"
               >
+                {/* The card says what it is. A bare gradient carries its
+                    kind's icon large in the middle; a cover keeps the
+                    picture and wears the icon as a small badge in the
+                    corner, so the icon is visible either way. */}
                 <div
-                  className="h-[132px] w-full rounded-[18px] border-2 border-white bg-cover bg-center shadow-[0_4px_10px_rgba(88,50,160,0.16)]"
+                  className="relative h-[132px] w-full overflow-hidden rounded-[18px] border-2 border-white bg-cover bg-center shadow-[0_4px_10px_rgba(88,50,160,0.16)]"
                   style={{
                     background: tr.cover_image
                       ? `url(${tr.cover_image}) center/cover`
                       : tr.cover_gradient || "linear-gradient(135deg,#EC4899 0%,#8B5CF6 100%)",
                   }}
-                />
+                >
+                  {tr.cover_image ? (
+                    <span className="absolute bottom-1.5 right-1.5 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 shadow-[0_2px_6px_rgba(60,30,90,0.25)]">
+                      <img src={KIND_ICON[tr.kind]} alt="" className="h-5 w-5 object-contain" draggable={false} />
+                    </span>
+                  ) : (
+                    <span className="absolute inset-0 flex items-center justify-center">
+                      <img
+                        src={KIND_ICON[tr.kind]}
+                        alt=""
+                        className="h-[56%] w-[56%] object-contain drop-shadow-[0_4px_10px_rgba(60,30,90,0.35)]"
+                        draggable={false}
+                      />
+                    </span>
+                  )}
+                </div>
                 <p className="line-clamp-2 px-0.5 font-[Nunito] text-[13px] font-bold leading-[16px] text-[#402666]">
                   {tr.title}
                 </p>

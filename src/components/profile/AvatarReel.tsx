@@ -6,6 +6,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useAvatarModal } from "@/contexts/AvatarModalContext";
 import { supabase } from "@/integrations/supabase/client";
 import { resolveAvatarUrl } from "@/utils/avatarUtils";
+import { MASCOT_AVATARS } from "@/config/mascotAvatars";
 import { AvatarViewer } from "@/components/profile/AvatarViewer";
 
 interface ReelItem {
@@ -24,11 +25,20 @@ interface ReelItem {
 // not made one yet, had no way in from this screen at all. It leads the reel.
 const CREATE_ITEM: ReelItem = { id: "create-new", path: "", kind: "create" };
 
-// Canonical /src/assets paths — stable across builds, resolveAvatarUrl()
-// maps them to the bundled URLs at runtime (same scheme as AvatarModal).
-const REEL_AVATARS: ReelItem[] = [1, 2, 3, 4, 5, 6, 7, 8].map((n) => ({
-  id: `mascot-avatar-${n}`,
-  path: `/src/assets/avatars/mascot-avatar-${n}.png`,
+// MyTrivia's own characters, by canonical /src/assets path — stable across
+// builds, resolveAvatarUrl() maps them to the bundled URLs at runtime (same
+// scheme as the studio's grid, and the same shared list, so the two surfaces
+// cannot drift apart).
+//
+// This reel offered the animals for one release. The owner's answer was that
+// an animal face reads as stock illustration rather than as anything of
+// ours; the animals are the home screen's SCENE again and nothing else.
+//
+// The blue King is not in the list: he is the home screen's own mascot, and
+// this reel was how a player ended up wearing him.
+const REEL_AVATARS: ReelItem[] = MASCOT_AVATARS.map((face) => ({
+  id: face.id,
+  path: face.path,
   kind: "preset" as const,
 }));
 

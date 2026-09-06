@@ -282,7 +282,7 @@ describe("the public list", () => {
     const section = read("src/components/team/PublicRoomsSection.tsx");
     expect(section).toMatch(/import sceneArena from "@\/assets\/tb-lobby\/scene-arena\.webp"/);
     expect(section).toMatch(/const scene = room\.game_type_key === "team_battle" \? sceneArena : null;/);
-    expect(section).toMatch(/const ink = INK\.light;/);
+    expect(section).toMatch(/const ink = INK\.pale;/);
     expect(section).toMatch(/object-cover opacity-\d+/);
     expect(section).toMatch(/bg-gradient-to-t from-\[#2E1065\]/);
     expect(section).toMatch(/shadow-\[inset_/);
@@ -337,7 +337,8 @@ describe("the public list", () => {
     expect(button).toMatch(/mint: "bg-\[#81f0c3\] border-\[#2bc889\] text-\[#320c69\]"/);
     expect(section).toMatch(/tone=\{ready \? "mint" : "white"\}/);
     expect(section).not.toMatch(/from-\[#34d399\]/);
-    expect(section).toMatch(/border-dashed border-white\/40/);
+    // Open seats on the pale ground: a dark dashed ring, not a white one.
+    expect(section).toMatch(/border-dashed border-\[#2b1a4a\]\/30/);
     expect(section).toMatch(/online\.has\(person\.user_id\)/);
     // Who is online is said by the seats — a face each, each with its own
     // dot — not by a dot on the button, which said it for the whole room at
@@ -412,7 +413,9 @@ describe("the public list", () => {
     expect(section).toMatch(/navigate\(publicRoomPath\(target\)\)/);
     // Mobile is ~10% taller than the first pass (owner's ask — the strip
     // read too small on a phone); desktop keeps its ratio.
-    expect(section).toMatch(/min-h-\[202px\] aspect-\[1\.55\/1\] md:aspect-\[1\.35\/1\]/);
+    // The private tab's proportions exactly (owner: make them like the
+    // private rooms) — the 15%-shorter variant is gone.
+    expect(section).toMatch(/aspect-\[1\.45\/1\] md:aspect-\[1\.15\/1\]/);
   });
 
   it("filters by game too: battles are the arenas, rooms are everything else", () => {
@@ -831,9 +834,10 @@ describe("the cards read on every gradient, and every card shows its way out", (
     // gradients — the owner's screenshot of "21 საათის წინ" was a white
     // whisper on pale orange.
     const pub = read("src/components/team/PublicRoomsSection.tsx");
-    expect(pub).toMatch(/pill: "bg-black\/25 border-white\/25"/);
+    // The pale card's pill: white, with dark type (publicCardMatchesPrivate.test.ts).
+    expect(pub).toMatch(/pill: "bg-white\/60 backdrop-blur-sm"/);
     const mine = read("src/components/team/MyRoomsSection.tsx");
-    expect(mine).toMatch(/bg-black\/25 backdrop-blur-sm text-white font-bold text-xs/);
+    expect(mine).toMatch(/bg-white\/60 backdrop-blur-sm text-\[#2b1a4a\] font-bold text-xs/);
     expect(mine).not.toMatch(/bg-white\/20 backdrop-blur-sm text-white font-bold/);
   });
 
@@ -843,8 +847,9 @@ describe("the cards read on every gradient, and every card shows its way out", (
     const mine = read("src/components/team/MyRoomsSection.tsx");
     expect(mine).not.toMatch(/MoreHorizontal/);
     expect(mine).not.toMatch(/DropdownMenu/);
-    expect(mine).toMatch(/<LogOut className="w-4 h-4 text-white" \/>/);
-    const trashButtons = mine.match(/setShowDeleteConfirm\(true\);\s*\n\s*\}\}\s*\n\s*className="w-8 h-8 rounded-full bg-black\/25/g) ?? [];
+    // Dark on the pale card (publicCardMatchesPrivate.test.ts).
+    expect(mine).toMatch(/<LogOut className="w-4 h-4 text-\[#2b1a4a\]" \/>/);
+    const trashButtons = mine.match(/setShowDeleteConfirm\(true\);\s*\n\s*\}\}\s*\n\s*className="w-8 h-8 rounded-full bg-(black\/25|white\/60)/g) ?? [];
     expect(trashButtons.length).toBe(2);
   });
 

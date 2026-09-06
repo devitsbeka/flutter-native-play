@@ -42,7 +42,7 @@ import { generatePublicPortrait } from "@/utils/portraitAvatar";
 import { MASCOTS, type MascotId } from "@/config/mascots";
 import kingMascotThumb from "@/assets/play-chooser/icon-king.webp";
 import { useHomeMascot } from "@/hooks/useHomeMascot";
-import { mascotAvatarUrl, mascotIdFromAvatarUrl } from "@/utils/avatarUtils";
+import { MASCOT_AVATARS, mascotAvatarByPath } from "@/config/mascotAvatars";
 
 interface AvatarModalProps {
   isOpen: boolean;
@@ -720,15 +720,20 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
     );
 
   /**
-   * Wear a mascot's face as the profile picture.
+   * Wear one of MyTrivia's own characters as the profile picture.
    *
-   * Stored as `mascot:<id>` (see mascotAvatarUrl) rather than the bundled
-   * file's hashed URL, which would stop resolving at the next build. The
-   * generated portraits give up their "current" flag, exactly as picking one
-   * of them from the shelf does — otherwise the shelf keeps a tick on a face
-   * the player is no longer wearing.
+   * These are the round mascots, not the animals: the animal faces were
+   * offered here for a while and, cropped into a 64px circle, read as stock
+   * illustration rather than as anything of ours. The animals stay what they
+   * were before — the home screen's scene, picked in the grid below this one.
+   *
+   * Stored as the canonical `/src/assets/...` path, which is what the profile
+   * reel has always stored, rather than the bundled file's hashed URL — that
+   * URL stops resolving at the next build. The generated portraits give up
+   * their "current" flag, exactly as picking one of them from the shelf does,
+   * or the shelf keeps a tick on a face the player is no longer wearing.
    */
-  const chooseMascotAvatar = async (id: MascotId) => {
+  const chooseMascotAvatar = async (path: string) => {
     if (!user) return;
     setIsLoading(true);
     try {
@@ -738,7 +743,7 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
         .eq("user_id", user.id)
         .not("avatar_url", "like", "%/scene_%");
 
-      const result = await updateProfile({ avatar_url: mascotAvatarUrl(id), animated_avatar_url: null });
+      const result = await updateProfile({ avatar_url: path, animated_avatar_url: null });
       if (result?.error) throw result.error;
 
       setSelectedForAction(null);
@@ -1019,23 +1024,27 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
             </div>
           )}
 
-          {/* The mascots' faces, worn as the profile picture. The grid below
-              this one picks the same animal for the HOME SCREEN, which is a
-              different choice about a different surface — hence two grids of
-              the same faces, each saying which one it sets. */}
+          {/* MyTrivia's own characters, worn as the profile picture. The
+              grid below this one picks an ANIMAL for the home screen, which
+              is a different choice about a different surface — these two
+              grids show different art for that reason.
+
+              The blue King is not among them: he is the home screen's own
+              mascot, and a player wearing him reads as the app's furniture
+              rather than as a person. */}
           <div>
-            <p className="text-sm font-medium text-foreground">{t("avatar.animalAvatars")}</p>
-            <p className="mb-2 text-xs text-muted-foreground">{t("avatar.animalAvatarsHint")}</p>
+            <p className="text-sm font-medium text-foreground">{t("avatar.mascotFaces")}</p>
+            <p className="mb-2 text-xs text-muted-foreground">{t("avatar.mascotFacesHint")}</p>
             <div className="grid grid-cols-4 gap-2">
-              {MASCOTS.map((mascot) => {
-                const isWorn = mascotIdFromAvatarUrl(profile?.avatar_url) === mascot.id;
+              {MASCOT_AVATARS.map((face) => {
+                const isWorn = mascotAvatarByPath(profile?.avatar_url)?.id === face.id;
                 return (
                   <motion.button
-                    key={mascot.id}
+                    key={face.id}
                     type="button"
-                    onClick={() => chooseMascotAvatar(mascot.id)}
+                    onClick={() => chooseMascotAvatar(face.path)}
                     disabled={isLoading}
-                    aria-label={t(`avatar.mascotNames.${mascot.id}`)}
+                    aria-label={t("avatar.mascotFaces")}
                     aria-pressed={isWorn}
                     className={`relative aspect-square overflow-hidden rounded-full border-2 transition-all ${
                       isWorn ? "border-primary ring-2 ring-primary/30" : "border-border hover:border-primary/50"
@@ -1044,7 +1053,7 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
                     whileTap={{ scale: 0.95 }}
                   >
                     <img
-                      src={mascot.thumb}
+                      src={face.url}
                       alt=""
                       draggable={false}
                       className="pointer-events-none h-full w-full object-cover"

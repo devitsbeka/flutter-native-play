@@ -66,18 +66,29 @@ const LOUNGES: Record<string, { icon: string; labelKey: string }> = {
  * over deep purple, a dark wash, an inner shadow) rather than switching
  * the text to dark — the owner's call, and one ink is one less seam.
  */
+/**
+ * The pale card (owner's design): the gradient under a white wash, dark
+ * type on it, white pills, a white bar — "dark texts on white, it is more
+ * visible". One style for every room on both tabs; the private card
+ * (MyRoomsSection) wears the same values, so the tabs match. Whether the
+ * viewer has been in a room is said by the leave icon on its top-right,
+ * which only a room they are in carries.
+ */
 const INK = {
-  light: {
-    text: "text-white",
-    muted: "text-white/70",
-    faint: "text-white/60",
-    // A dark scrim, not a white one: white/15 with white type on it
-    // disappeared over the light gradients (owner's screenshot).
-    pill: "bg-black/25 border-white/25",
-    ring: "border-white/60",
-    more: "bg-white/30 text-white",
+  pale: {
+    text: "text-[#2b1a4a]",
+    muted: "text-[#2b1a4a]/70",
+    faint: "text-[#2b1a4a]/60",
+    pill: "bg-white/60 backdrop-blur-sm",
+    ring: "border-white",
+    more: "bg-white/60 text-[#2b1a4a]",
   },
 } as const;
+
+/** The white wash over the gradient, under everything the card says. */
+const WASH = "absolute inset-0 bg-white/55 pointer-events-none";
+/** The bottom bar: white, rounded like the pills' family. */
+const BAR = "bg-white/60 backdrop-blur-md";
 
 /**
  * The mixed pseudo-category as every picker in every language stores it.
@@ -209,7 +220,7 @@ function PublicRoomCard({
   const scene = room.game_type_key === "team_battle" ? sceneArena : null;
   // The scene is DARKENED under the ink (reduced opacity over deep purple,
   // a dark wash, an inner shadow), so every card writes in the same white.
-  const ink = INK.light;
+  const ink = INK.pale;
 
   const enter = () => navigate(publicRoomPath(room));
 
@@ -218,16 +229,16 @@ function PublicRoomCard({
       layout
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="relative rounded-2xl overflow-hidden shadow-lg"
+      className="relative rounded-2xl overflow-hidden"
+      // The private card's lip: a hard 4px edge under the card and a soft
+      // drop beneath it, so the two tabs' cards sit on the page the same way.
+      style={{ boxShadow: "0 4px 0 0 hsl(var(--border)), 0 6px 20px -4px rgba(0,0,0,0.1)" }}
       onClick={() => (inside ? enter() : onAsk(room))}
       aria-disabled={blocked || undefined}
     >
-      {/* The private tab's card proportions (MyRoomsSection): the same
-          shape on both tabs, and taller than the strip this used to be. */}
-      {/* 15% shorter than the private tab's proportions (owner's call): the
-          height is set by the aspect ratio, so the ratio grows by 1/0.85 and
-          the floor comes down with it. */}
-      <div className="relative p-3 min-h-[202px] aspect-[1.55/1] md:aspect-[1.35/1] flex flex-col rounded-2xl overflow-hidden">
+      {/* The private tab's card proportions (MyRoomsSection), exactly: the
+          same shape on both tabs (owner: make them like the private rooms). */}
+      <div className="relative p-3 aspect-[1.45/1] md:aspect-[1.15/1] flex flex-col rounded-2xl overflow-hidden">
         {scene ? (
           <>
             {/* The arena, dimmed to a backdrop: the pale lilac scene at
@@ -255,6 +266,7 @@ function PublicRoomCard({
             />
           </div>
         )}
+        <div className={WASH} aria-hidden />
         {/* Top: who runs it, who already joined, and how full it is */}
         <div className="relative z-10 flex items-start justify-between gap-2">
           <div className="flex items-center gap-1.5 min-w-0">
@@ -264,7 +276,7 @@ function PublicRoomCard({
                 e.stopPropagation();
                 openProfile(room.host_user_id);
               }}
-              className={`flex items-center gap-2 min-w-0 rounded-full backdrop-blur-md border pl-1 pr-2.5 py-1 ${ink.pill}`}
+              className={`flex items-center gap-2 min-w-0 rounded-full pl-1 pr-2.5 py-1 ${ink.pill}`}
             >
               <div className="relative w-6 h-6 rounded-full overflow-hidden shrink-0">
                 <SafeAvatarImage
@@ -297,7 +309,7 @@ function PublicRoomCard({
                 <span className="text-xs font-bold text-white">{knocks}</span>
               </span>
             )}
-            <div className={`flex items-center gap-1 rounded-full backdrop-blur-md border px-2.5 py-1 ${ink.pill}`}>
+            <div className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 ${ink.pill}`}>
               <Users className={`w-3.5 h-3.5 ${ink.text}`} />
               <span className={`text-xs font-bold ${ink.text}`}>
                 {effectiveSeats ? `${room.player_count}/${effectiveSeats}` : room.player_count}
@@ -314,7 +326,7 @@ function PublicRoomCard({
                   e.stopPropagation();
                   onRemove(room);
                 }}
-                className={`w-7 h-7 rounded-full backdrop-blur-md border flex items-center justify-center active:scale-95 transition-transform ${ink.pill} ${ink.text}`}
+                className={`w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/80 active:scale-95 transition ${ink.pill} ${ink.text}`}
               >
                 {room.my_state === "host" ? (
                   <Trash2 className="w-3.5 h-3.5" />
@@ -346,7 +358,7 @@ function PublicRoomCard({
             ) : (
               <span className="w-[53px] h-[53px] rounded-full bg-white/10 border border-white/20 shrink-0" />
             )}
-            <h3 className={`min-w-0 max-w-[58%] text-center font-display text-lg leading-tight line-clamp-2 drop-shadow-md ${ink.text}`}>
+            <h3 className={`min-w-0 max-w-[58%] text-center font-display text-lg leading-tight line-clamp-2 ${ink.text}`}>
               {lounge ? t(lounge.labelKey) : room.room_name || t("extra.gameRoomDefault")}
             </h3>
             {crests?.b ? (
@@ -368,7 +380,7 @@ function PublicRoomCard({
               <img
                 src={roomFace}
                 alt=""
-                className="w-14 h-14 object-contain drop-shadow-lg shrink-0"
+                className="w-14 h-14 md:w-16 md:h-16 object-contain drop-shadow-lg shrink-0"
               />
             )}
             {/* A lounge IS its game: an arena called "Search Trail" with
@@ -376,7 +388,7 @@ function PublicRoomCard({
                 nobody chose over the one thing a player is scanning for. The
                 classic rooms keep their own name, which somebody did choose. */}
             <div className="min-w-0 flex-1">
-              <h3 className={`font-display text-lg leading-tight line-clamp-2 drop-shadow-md ${ink.text}`}>
+              <h3 className={`font-display text-lg leading-tight line-clamp-2 ${ink.text}`}>
                 {lounge ? t(lounge.labelKey) : room.room_name || t("extra.gameRoomDefault")}
               </h3>
               {!lounge && (
@@ -406,7 +418,7 @@ function PublicRoomCard({
                   : players[i - 1];
               return person ? (
                 <span key={person.user_id} className="relative shrink-0">
-                  <span className={`block w-7 h-7 rounded-full overflow-hidden border-2 ${ink.ring}`}>
+                  <span className={`block w-8 h-8 rounded-full overflow-hidden border-2 ${ink.ring}`}>
                     <SafeAvatarImage
                       avatarUrl={person.avatar_url}
                       fallback={person.nickname || "?"}
@@ -415,13 +427,13 @@ function PublicRoomCard({
                     />
                   </span>
                   {online.has(person.user_id) && (
-                    <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#2E1065]/70" />
+                    <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-white" />
                   )}
                 </span>
               ) : (
                 <span
                   key={`open-${i}`}
-                  className="w-7 h-7 rounded-full border-2 border-dashed border-white/40 bg-white/10 shrink-0"
+                  className="w-8 h-8 rounded-full border-2 border-dashed border-[#2b1a4a]/30 bg-white/30 shrink-0"
                 />
               );
             })}
@@ -429,7 +441,7 @@ function PublicRoomCard({
         )}
 
         {/* Bottom: the first round on the left, the way in on the right */}
-        <div className={`relative z-10 backdrop-blur-md border rounded-xl px-3 py-2.5 flex items-center justify-between gap-2 ${ink.pill}`}>
+        <div className={`relative z-10 rounded-2xl px-3 py-2.5 flex items-center justify-between gap-2 ${BAR}`}>
           <div className="flex items-center gap-2 min-w-0">
             {/* Just the category: its icon and its name. The "FIRST ROUND"
                 caption above it was noise (owner's call) — a picked round
@@ -497,7 +509,7 @@ function PublicRoomCard({
                   e.stopPropagation();
                   onWithdraw(room);
                 }}
-                className={`w-8 h-8 rounded-lg backdrop-blur-md border flex items-center justify-center active:scale-95 transition-transform ${ink.pill} ${ink.text}`}
+                className={`w-8 h-8 rounded-lg flex items-center justify-center active:scale-95 transition-transform ${ink.pill} ${ink.text}`}
               >
                 <X className="w-4 h-4" />
               </button>
@@ -528,6 +540,27 @@ export function PublicRoomsSection({
   const { user } = useAuth();
   const { friends } = useFriends();
   const friendIds = useMemo(() => new Set(friends.map((f) => f.friendId)), [friends]);
+
+  // Who is on each couch changes the moment somebody sits down or gets up,
+  // and the cards used to learn it on the next 25-second poll — join a room,
+  // come back to the list, and your own face was not on the card yet
+  // (owner: "we need instant show who joined, who left"). A seat is a row in
+  // room_participants, which is in the realtime publication; any change to
+  // one refreshes the faces and the counts right away. My Rooms already
+  // listens the same way.
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel("public-rooms-seats")
+      .on("postgres_changes", { event: "*", schema: "public", table: "room_participants" }, () => {
+        void queryClient.invalidateQueries({ queryKey: ["public-room-players"] });
+        void queryClient.invalidateQueries({ queryKey: PUBLIC_ROOMS_KEY });
+      })
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [user, queryClient]);
 
   // Who is on each couch. The public_rooms RPC carries only the host and a
   // count; the card wants to show WHO joined, and the Active filter wants
@@ -561,13 +594,29 @@ export function PublicRoomsSection({
         // same seed, so the card and the arena wear the same pair.
         fetchCrestPool(),
       ]);
+      // The face on the card is the one on the PROFILE, not the snapshot the
+      // seat took when the person sat down. room_participants.avatar_url is
+      // copied at join time and never again, so a player who changed their
+      // picture since — or whose snapshot is a build-hashed path that stopped
+      // resolving — wore a fallback mascot on every card while their real
+      // face showed everywhere else (owner: "it shows the blue mascot
+      // instead of the avatar I have"). Same refresh My Rooms does.
+      const seatedIds = [...new Set((rows ?? []).map((p) => p.user_id))];
+      const { data: freshProfiles } = seatedIds.length
+        ? await supabase.from("profiles").select("user_id, avatar_url").in("user_id", seatedIds)
+        : { data: [] as { user_id: string; avatar_url: string | null }[] };
+      const profileFace = new Map((freshProfiles ?? []).map((p) => [p.user_id, p.avatar_url]));
       const faces = new Map<string, CardPlayer[]>();
       const seated = new Map<string, string[]>();
       (rows ?? []).forEach((p) => {
         seated.set(p.room_id, [...(seated.get(p.room_id) ?? []), p.user_id]);
         if (p.is_host) return;
         const arr = faces.get(p.room_id) ?? [];
-        arr.push({ user_id: p.user_id, nickname: p.nickname, avatar_url: p.avatar_url });
+        arr.push({
+          user_id: p.user_id,
+          nickname: p.nickname,
+          avatar_url: profileFace.has(p.user_id) ? profileFace.get(p.user_id) ?? null : p.avatar_url,
+        });
         faces.set(p.room_id, arr);
       });
       // What the captains set wins; a side nobody dressed gets dealt a crest
@@ -893,11 +942,14 @@ export function PublicRoomsSection({
             <AlertDialogTitle>
               {removing?.my_state === "host" ? t("extra.rlDeleteRoom") : t("extra.rlLeaveRoom")}
             </AlertDialogTitle>
-            <AlertDialogDescription>
-              {removing?.my_state === "host"
-                ? t("extra.rlDeleteRoomConfirm")
-                : t("extra.rlLeaveRoomConfirm")}
-            </AlertDialogDescription>
+            {/* The host's delete has a consequence worth a line. A guest's
+                leave has none to state: the room is public and stays on
+                this list — the old line promised it would vanish, and it
+                did not (owner: it disappears if the host blocks me, not
+                if I leave). */}
+            {removing?.my_state === "host" && (
+              <AlertDialogDescription>{t("extra.rlDeleteRoomConfirm")}</AlertDialogDescription>
+            )}
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-row gap-3">
             <AlertDialogCancel className="flex-1 mt-0">{t("extra.rlCancel")}</AlertDialogCancel>
