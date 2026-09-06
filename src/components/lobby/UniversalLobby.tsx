@@ -491,7 +491,12 @@ export function UniversalLobby({
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -8, scale: 0.98 }}
                 transition={{ type: "spring", stiffness: 420, damping: 34 }}
-                className="absolute left-4 right-4 top-full z-40 mt-2 flex max-h-[60dvh] flex-col overflow-hidden rounded-[22px] border border-white/80 bg-[rgba(252,247,255,0.94)] shadow-[0_18px_48px_rgba(60,30,90,0.28)] backdrop-blur-xl"
+                // As tall as the screen allows: the chip row sits ~130px
+                // under the top inset, and the panel stops 40px short of
+                // the bottom one. 60dvh showed four rounds of eight (owner's
+                // screenshot); this shows six or seven, and the list pages
+                // the rest with its own arrows.
+                className="absolute left-4 right-4 top-full z-40 mt-2 flex max-h-[calc(100dvh_-_var(--safe-top,0px)_-_var(--safe-bottom,0px)_-_172px)] flex-col overflow-hidden rounded-[22px] border border-white/80 bg-[rgba(252,247,255,0.94)] shadow-[0_18px_48px_rgba(60,30,90,0.28)] backdrop-blur-xl"
               >
                 {categoryMenu.children}
               </motion.div>

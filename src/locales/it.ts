@@ -1584,6 +1584,8 @@ export const it: KaTranslations = {
     uCategoriesCount: "{count} categorie",
     uRoundsTitle: "Round",
     uRoundsHint: "Trascina un tema per cambiare in quale round si gioca.",
+    uRoundsMoreBelow: "Altri round sotto",
+    uRoundsMoreAbove: "Altri round sopra",
     uRoundsHintGuest: "L'host decide l'ordine dei round.",
     uRoundLabel: "Round {count}",
     uAddRounds: "Aggiungi categorie",

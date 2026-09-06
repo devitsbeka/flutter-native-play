@@ -107,3 +107,40 @@ describe("the way to add more never scrolls away", () => {
     expect(modal).toMatch(/min-h-0 flex-1 overflow-y-auto/);
   });
 });
+
+describe("a list longer than the panel says so", () => {
+  it("the panel is as tall as the screen allows, not 60dvh", () => {
+    const universal = read("src/components/lobby/UniversalLobby.tsx");
+    expect(universal).toMatch(/max-h-\[calc\(100dvh_-_var\(--safe-top,0px\)_-_var\(--safe-bottom,0px\)_-_172px\)\] flex-col overflow-hidden rounded-\[22px\]/);
+    expect(universal).not.toMatch(/max-h-\[60dvh\]/);
+  });
+
+  it("and pages with arrows, because the rows are drag handles and will not scroll under a finger", () => {
+    expect(modal).toMatch(/const \[more, setMore\] = useState\(\{ up: false, down: false \}\);/);
+    expect(modal).toMatch(/el\.addEventListener\("scroll", measure, \{ passive: true \}\);/);
+    expect(modal).toMatch(/new ResizeObserver\(measure\)/);
+    expect(modal).toMatch(/\{more\.down && \(\s*\n\s*<PageArrow dir=\{1\}/);
+    expect(modal).toMatch(/\{more\.up && \(\s*\n\s*<PageArrow dir=\{-1\}/);
+    expect(modal).toMatch(/scrollBy\(\{ top: dir \* ROW_STRIDE \* 3, behavior: "smooth" \}\)/);
+    for (const lang of ["en", "ka", "de", "es", "fr", "it", "pt"]) {
+      const src = read(`src/locales/${lang}.ts`);
+      expect(src, lang).toMatch(/uRoundsMoreBelow: "/);
+      expect(src, lang).toMatch(/uRoundsMoreAbove: "/);
+    }
+  });
+});
+
+describe("a category icon that fails cannot blank the app", () => {
+  it("DynamicIcon calls every hook before its first early return", () => {
+    // handleImageError's useCallback sat AFTER the direct-slug <img> branch.
+    // A direct asset that 404ed changed the number of hooks between renders,
+    // React threw, and the error boundary blanked the whole lobby over one
+    // icon — found by rendering the round list in the sandbox.
+    const icon = read("src/components/shared/DynamicIcon.tsx");
+    const hook = icon.indexOf("const handleImageError = React.useCallback(");
+    const firstReturn = icon.indexOf("\n  if (directUrl) {");
+    expect(hook).toBeGreaterThan(-1);
+    expect(firstReturn).toBeGreaterThan(-1);
+    expect(hook).toBeLessThan(firstReturn);
+  });
+});
