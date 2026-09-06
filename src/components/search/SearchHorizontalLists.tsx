@@ -1,6 +1,6 @@
 import React from "react";
 import { Users, Gamepad2, Sparkles, Folder, Crown } from "lucide-react";
-import { FriendMiniCard, RoomMiniCard, TriviaMiniCard, CollectionMiniCard } from "./SearchMiniCards";
+import { AddMiniCard, FriendMiniCard, RoomMiniCard, TriviaMiniCard, CollectionMiniCard } from "./SearchMiniCards";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { Friend } from "@/hooks/useFriends";
 import type { MyRoom } from "@/hooks/useMyRooms";
@@ -10,9 +10,11 @@ interface HorizontalSectionProps {
   icon: React.ElementType;
   children: React.ReactNode;
   isEmpty?: boolean;
+  /** Space between the tiles: the stroked room containers want more. */
+  gap?: "tight" | "loose";
 }
 
-function HorizontalSection({ title, icon: Icon, children, isEmpty }: HorizontalSectionProps) {
+function HorizontalSection({ title, icon: Icon, children, isEmpty, gap = "tight" }: HorizontalSectionProps) {
   if (isEmpty) return null;
   
   return (
@@ -21,7 +23,7 @@ function HorizontalSection({ title, icon: Icon, children, isEmpty }: HorizontalS
         <Icon className="w-4 h-4 text-muted-foreground" />
         <h3 className="text-sm font-semibold text-muted-foreground">{title}</h3>
       </div>
-      <div className="flex gap-1 overflow-x-auto px-2 pb-2 scrollbar-hide">
+      <div className={`flex overflow-x-auto pb-2 scrollbar-hide ${gap === "loose" ? "gap-2 px-4" : "gap-1 px-2"}`}>
         {children}
       </div>
     </div>
@@ -49,6 +51,10 @@ interface SearchHorizontalListsProps {
   onSelectRoom: (code: string) => void;
   onSelectTrivia: (id: string) => void;
   onSelectCollection: (id: string) => void;
+  /** The + at the head of the friends row. */
+  onAddFriend: () => void;
+  /** The + at the head of the rooms row. */
+  onCreateRoom: () => void;
 }
 
 export function SearchHorizontalLists({
@@ -60,6 +66,8 @@ export function SearchHorizontalLists({
   onSelectRoom,
   onSelectTrivia,
   onSelectCollection,
+  onAddFriend,
+  onCreateRoom,
 }: SearchHorizontalListsProps) {
   const { t } = useLanguage();
   // Filter host rooms for "My Trivia Parties"
@@ -68,12 +76,14 @@ export function SearchHorizontalLists({
 
   return (
     <div className="space-y-4 py-4">
-      {/* Friends Section */}
+      {/* Friends Section — the + leads the row and the row is always
+          there: a player with no friends yet is exactly who needs the way
+          to add one. */}
       <HorizontalSection 
         title={t("extra.ssFriends")} 
         icon={Users}
-        isEmpty={friends.length === 0}
       >
+        <AddMiniCard variant="friend" label={t("extra.ssAddFriend")} onClick={onAddFriend} />
         {friends.map((friend) => (
           <FriendMiniCard 
             key={friend.id} 
@@ -83,12 +93,14 @@ export function SearchHorizontalLists({
         ))}
       </HorizontalSection>
 
-      {/* Rooms Section */}
+      {/* Rooms Section — same shape: the + first, the row always shown,
+          every room in its own stroked container. */}
       <HorizontalSection 
         title={t("extra.shRooms")} 
         icon={Gamepad2}
-        isEmpty={allRooms.length === 0}
+        gap="loose"
       >
+        <AddMiniCard variant="room" label={t("extra.ssAddRoom")} onClick={onCreateRoom} />
         {allRooms.map((room) => (
           <RoomMiniCard 
             key={room.id} 

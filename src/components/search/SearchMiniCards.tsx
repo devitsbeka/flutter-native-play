@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Gamepad2, Users, Crown, Sparkles, Folder } from "lucide-react";
+import { Gamepad2, Users, Crown, Sparkles, Folder, Plus } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ResolvedAvatarImage } from "@/components/ui/resolved-avatar-image";
 import type { Friend } from "@/hooks/useFriends";
@@ -8,6 +8,53 @@ import type { MyRoom } from "@/hooks/useMyRooms";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useRoomIconPool } from "@/hooks/useRoomIconPool";
 import { dealtRoomIcon } from "@/utils/roomCrests";
+
+// Add Mini Card — the way to make the row longer, drawn in the shape of
+// the row it leads: a dashed circle among the friends' faces, a dashed
+// tile in a stroked container among the rooms. It goes FIRST, so the way to
+// add is where a thumb lands before it scrolls, and it is there whether the
+// row has anything in it yet or not — an empty row used to vanish, and with
+// it the only hint that the feature existed.
+interface AddMiniCardProps {
+  variant: "friend" | "room";
+  label: string;
+  onClick: () => void;
+}
+
+export function AddMiniCard({ variant, label, onClick }: AddMiniCardProps) {
+  const isFriend = variant === "friend";
+  return (
+    <motion.button
+      type="button"
+      onClick={onClick}
+      whileTap={{ scale: 0.95 }}
+      aria-label={label}
+      className={
+        isFriend
+          ? "flex flex-col items-center gap-2 min-w-[72px] p-2"
+          : ROOM_TILE_CLASS
+      }
+    >
+      <div
+        className={`flex items-center justify-center border-2 border-dashed border-primary/40 bg-primary/5 text-primary ${
+          isFriend ? "w-14 h-14 rounded-full" : "w-16 h-16 rounded-2xl"
+        }`}
+      >
+        <Plus className="w-6 h-6" strokeWidth={2.5} />
+      </div>
+      <span className={`text-xs font-medium text-foreground truncate ${isFriend ? "max-w-[64px]" : "max-w-[90px]"}`}>
+        {label}
+      </span>
+    </motion.button>
+  );
+}
+
+/**
+ * A room tile sits in its own container with a light stroke (owner's ask),
+ * so each room reads as a card on the strip rather than a loose icon.
+ */
+export const ROOM_TILE_CLASS =
+  "flex flex-col items-center gap-2 min-w-[104px] rounded-[18px] border border-[#e7def6] bg-white/70 px-3 py-2.5";
 
 // Friend Mini Card
 interface FriendMiniCardProps {
@@ -58,7 +105,7 @@ export function RoomMiniCard({ room, onClick, isParty }: RoomMiniCardProps) {
     <motion.button
       onClick={onClick}
       whileTap={{ scale: 0.95 }}
-      className="flex flex-col items-center gap-2 min-w-[100px] p-2"
+      className={ROOM_TILE_CLASS}
     >
       <div 
         className="w-16 h-16 rounded-2xl flex items-center justify-center overflow-hidden"
