@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { AmbientBlobBackdrop, AMBIENT_HEADER_CLASS } from "@/components/shared/AmbientBlobBackdrop";
 import { Mail, Globe, User, Lock, HelpCircle, Shield, Trash2, ChevronRight, Loader2, Check } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -105,8 +106,10 @@ export default function Settings() {
 
   return (
     <MainLayout showPlayButton={false}>
-      <div className="min-h-full bg-background">
-        <PageHeader title={t("settings.title")} />
+      <div className="relative min-h-full">
+        <AmbientBlobBackdrop />
+        <div className="relative z-10">
+        <PageHeader title={t("settings.title")} className={AMBIENT_HEADER_CLASS} />
 
         <div className="p-4 pb-12 space-y-2 max-w-[700px] md:max-w-[600px] mx-auto">
           {/* Email Row */}
@@ -356,6 +359,7 @@ export default function Settings() {
             currentCountryCode={profile.country_code}
           />
         )}
+        </div>
       </div>
     </MainLayout>
   );
