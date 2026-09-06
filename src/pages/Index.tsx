@@ -35,6 +35,7 @@ import { DesktopGuestLanding, DesktopGuestSceneBackground } from "@/components/h
 import { MobileSceneBackground, MobileMascotScene, MobileGuestHero } from "@/components/home/MobileHome";
 import { MobileHomeScroll } from "@/components/home/MobileHomeScroll";
 import { useHomeMascot } from "@/hooks/useHomeMascot";
+import { useQuickDailyClaim } from "@/hooks/useQuickDailyClaim";
 import { DesktopActionCards } from "@/components/home/DesktopActionCards";
 import { LoggedInHomeV2 } from "@/pages/LoggedInHomeV2";
 import { DesktopPlayButtonLarge } from "@/components/home/DesktopPlayButtonLarge";
@@ -744,6 +745,19 @@ export default function Index() {
   const showDefaultScene = !sceneUrl && !(user && mascotLoading);
   const showAnimatePrompt = !isAnimatingFromHome && !!profile?.avatar_url && profile.avatar_url.includes('supabase.co/storage') && profile.has_face_photo === true && !profile?.animated_avatar_url;
 
+  // The gift tab claims where it is tapped rather than opening the rewards
+  // sheet — the tab already says "claim", and a carousel with a second claim
+  // button in it asks for the same yes twice. With nothing to claim the tap
+  // still opens the sheet, which is where the week is read.
+  const { claimNow: claimDailyNow } = useQuickDailyClaim();
+  const handleGiftClick = useCallback(() => {
+    if (canClaimDaily) {
+      void claimDailyNow();
+      return;
+    }
+    setIsDailyRewardsOpen(true);
+  }, [canClaimDaily, claimDailyNow]);
+
   // Under the gift tab on the phone home: how long today's reward can still
   // be claimed ("3h 21m", Figma 1076:3591), or the call to claim it.
   const giftLabel = canClaimDaily
@@ -1185,7 +1199,7 @@ export default function Index() {
             onNameClick={() => setShowChangeNameModal(true)}
             onCoinsClick={() => navigate("/power-ups?section=coins")}
             onGemsClick={() => navigate("/power-ups?section=gems-lari")}
-            onGiftClick={() => setIsDailyRewardsOpen(true)}
+            onGiftClick={handleGiftClick}
             // The flame opens the streak page (Figma 1069:18), not a sheet over the home screen.
             onStreakClick={() => navigate("/streak")}
             onQuestClick={() => { setMissionsDate(null); setShowMissionsModal(true); }}
