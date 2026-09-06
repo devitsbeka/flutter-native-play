@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+import { t } from "@/lib/i18n";
+
 import { FriendsStoriesBar } from "@/components/team/FriendsStoriesBar";
 import { MobileHeroWidgets, MobileProfileCard, NAV_CHROME } from "@/components/home/MobileHome";
 import { MobileHomeFeed } from "@/components/home/MobileHomeFeed";
@@ -54,6 +56,8 @@ export interface MobileHomeScrollProps {
   onStreakClick: () => void;
   onQuestClick: () => void;
   onAddFriend: () => void;
+  /** A tap on the wallpaper itself: the avatar and mascot picker. */
+  onSceneClick: () => void;
 }
 
 export function MobileHomeScroll({
@@ -72,6 +76,7 @@ export function MobileHomeScroll({
   onStreakClick,
   onQuestClick,
   onAddFriend,
+  onSceneClick,
 }: MobileHomeScrollProps) {
   // The panel's top edge rolls (Figma 1076:3281): a lip in the panel's own
   // colour, its hills dealt fresh on every visit, centred on the edge so it
@@ -92,6 +97,18 @@ export function MobileHomeScroll({
             oversized default-loop frame from widening the scroller. */}
         <section className="relative h-full overflow-hidden">
           {scene}
+
+          {/* The wallpaper is the way into the picker, as it is on the
+              desktop hero: a tap anywhere the scene shows opens the avatar
+              and mascot studio. Above the scene (z-[4]) and below the reel,
+              the reward tabs and the profile card, which sit at z-20 and
+              keep their own taps. A button does not swallow the scroll. */}
+          <button
+            type="button"
+            aria-label={t("extra.changeScene")}
+            onClick={onSceneClick}
+            className="absolute inset-0 z-[5] cursor-pointer"
+          />
 
           {/* Friends reel, riding the top of the hero as it always did — padded
               down by the floating header's measured height so it sits below
