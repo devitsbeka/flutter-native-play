@@ -91,37 +91,41 @@ describe("the Add button counts only when the count is news", () => {
   });
 });
 
-describe("a library card reads left to right", () => {
+describe("a library card is a stack: art on top, name and count centred under it", () => {
   const modal = readFileSync(
     join(process.cwd(), "src/components/team/CategoryPickerModal.tsx"),
     "utf8",
   );
+  // The Library grid only: the other views keep their own rows.
+  const grid = modal.slice(
+    modal.indexOf("{/* Mixed Category - First in grid */}"),
+    modal.indexOf('{view === "my-trivias" && ('),
+  );
 
-  it("icon left, name right", () => {
-    expect(modal).toMatch(/<div className="flex items-center gap-3">/);
-    expect(modal).toMatch(/w-\[55px\] h-\[55px\] shrink-0 rounded-xl/);
+  it("both tiles in the grid wear the same card", () => {
+    // The Mixed tile and every category go through one component, so the
+    // first tile cannot drift into a different shape from the rest.
+    expect(grid.match(/<LibraryCard\b/g) ?? []).toHaveLength(2);
+    expect(modal).toMatch(/export function LibraryCard\(/);
+    expect(grid).not.toMatch(/flex items-center gap-3/);
   });
 
-  it("and the name wraps instead of truncating", () => {
-    // This card was a STACK because side by side the name got a sliver of a
-    // half-width card and most ended in an ellipsis. A row only works if
-    // the name may take a second line: min-w-0 lets the text column be
-    // narrower than its content wants, line-clamp-2 gives it the room.
-    // Georgian names are the long ones and the reason this matters.
-    expect(modal).toMatch(/<div className="min-w-0 flex-1 pr-5">/);
-    expect(modal).toMatch(/text-sm leading-snug break-words line-clamp-2/);
+  it("the name has the whole card's width, on up to two lines", () => {
+    // Side by side, the name column on a half-width card was about 90px and
+    // ტექნოლოგიები broke mid-word. Stacked and centred it gets the card.
+    expect(modal).toMatch(/flex flex-col items-center rounded-xl px-3 pb-3 pt-4 text-center/);
+    expect(modal).toMatch(/font-medium text-foreground break-words line-clamp-2/);
+    // Two lines tall whether it uses one or two, so the level count lands
+    // on the same line across a row.
+    expect(modal).toMatch(/min-h-\[2\.75em\] w-full items-center justify-center/);
   });
 
-  it("the art grew twice: 15%, then another 20%", () => {
-    // 40 -> 46 -> 55 tile, 26 -> 30 -> 36 image, 22 -> 25 -> 30 glyph.
-    // At the original size the icon was smaller than the words next to it,
-    // and the first pass was still shy of them.
-    expect(modal).toMatch(/w-\[36px\] h-\[36px\] object-contain/);
-    expect(modal).toMatch(/<DynamicIcon slug=\{cat\.icon_slug\} size=\{30\} \/>/);
-    expect(modal).toMatch(/<DynamicIcon slug="mystery-box" size=\{30\} \/>/);
-    expect(modal).toMatch(/text-\[28px\]/);
-    expect(modal).not.toMatch(/w-10 h-10 rounded-lg flex items-center/);
-    // Both tiles in the grid, at the same size.
-    expect(modal.match(/w-\[55px\] h-\[55px\] shrink-0 rounded-xl/g) ?? []).toHaveLength(2);
+  it("the art is 15% larger than the row's was", () => {
+    // 55 -> 63 tile, 36 -> 41 image, 30 -> 35 glyph, 28 -> 32 emoji.
+    expect(modal).toMatch(/w-\[63px\] h-\[63px\] shrink-0 rounded-xl/);
+    expect(modal).toMatch(/w-\[41px\] h-\[41px\] object-contain/);
+    expect(modal).toMatch(/const LIBRARY_GLYPH = 35;/);
+    expect(modal).toMatch(/text-\[32px\]/);
+    expect(modal).not.toMatch(/w-\[55px\] h-\[55px\]/);
   });
 });
