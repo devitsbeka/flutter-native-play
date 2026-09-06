@@ -6,6 +6,7 @@ import { BlockedPlayersSection } from "@/components/social/BlockedPlayersSection
 import { useNavigate } from "react-router-dom";
 import { Shield, FileText, Download, Trash2, ChevronRight, Loader2, AlertTriangle } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { AmbientBlobBackdrop, AMBIENT_HEADER_CLASS } from "@/components/shared/AmbientBlobBackdrop";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { PROFILE_SELECT_COLUMNS } from "@/integrations/supabase/profileColumns";
@@ -106,8 +107,12 @@ export default function SettingsPrivacy() {
   ];
 
   return (
-    <div className="h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] overflow-y-auto bg-background">
-      <PageHeader title={t("menu.privacy")} />
+    <div className="relative h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] overflow-hidden">
+      <AmbientBlobBackdrop />
+      {/* The page owns its scrolling (CLAUDE.md 4b); the backdrop stays put
+          beneath it. */}
+      <div className="absolute inset-0 z-10 overflow-y-auto">
+      <PageHeader title={t("menu.privacy")} className={AMBIENT_HEADER_CLASS} />
 
       <div className="p-4 pb-12 space-y-6 max-w-[700px] md:max-w-[600px] mx-auto">
         {/* Policy Links */}
@@ -235,6 +240,7 @@ export default function SettingsPrivacy() {
             )}
           </motion.div>
         )}
+      </div>
       </div>
     </div>
   );

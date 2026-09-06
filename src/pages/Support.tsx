@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { AmbientBlobBackdrop, AMBIENT_HEADER_CLASS } from "@/components/shared/AmbientBlobBackdrop";
 import { HelpCircle, Mail, MessageCircle, Bug, Lightbulb, ChevronRight, ExternalLink } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -39,8 +40,12 @@ export default function Support() {
   ];
 
   return (
-    <div className="h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] overflow-y-auto bg-background">
-      <PageHeader title={t("extra.supportTitle")} />
+    <div className="relative h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] overflow-hidden">
+      <AmbientBlobBackdrop />
+      {/* The page owns its scrolling (CLAUDE.md 4b); the backdrop stays put
+          beneath it. */}
+      <div className="absolute inset-0 z-10 overflow-y-auto">
+      <PageHeader title={t("extra.supportTitle")} className={AMBIENT_HEADER_CLASS} />
 
       <div className="p-4 pb-12 space-y-6 max-w-[700px] md:max-w-[600px] mx-auto">
         {/* Hero */}
@@ -137,6 +142,7 @@ export default function Support() {
             © 2025 MyTrivia. {t("extra.allRightsReserved")}
           </p>
         </motion.div>
+      </div>
       </div>
     </div>
   );
