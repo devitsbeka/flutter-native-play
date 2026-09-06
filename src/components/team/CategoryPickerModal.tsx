@@ -452,8 +452,7 @@ export function CategoryPickerModal({
                       <LibraryCard
                         picked={isPicked(MIXED_ITEM(t))}
                         onClick={() => togglePick(MIXED_ITEM(t))}
-                        tileStyle={{ background: "linear-gradient(135deg, #9333ea, #ec4899)" }}
-                        art={<DynamicIcon slug="mystery-box" size={LIBRARY_GLYPH} />}
+                        art={<DynamicIcon slug="mystery-box" size={LIBRARY_ART} shadow={false} />}
                         title={t("extra.cpMixedCategory")}
                         subtitle={t("extra.cpMixedDesc")}
                         delay={0}
@@ -470,14 +469,13 @@ export function CategoryPickerModal({
                           name: cat.name,
                           iconSlug: cat.icon_slug,
                         })}
-                        tileStyle={{ backgroundColor: `${cat.color}40` }}
                         art={
                           popularCategoryIcon(cat.categoryId) ? (
-                            <img src={popularCategoryIcon(cat.categoryId)!} alt="" className="w-[41px] h-[41px] object-contain" />
+                            <img src={popularCategoryIcon(cat.categoryId)!} alt="" className="w-[49px] h-[49px] object-contain" />
                           ) : cat.icon_slug ? (
-                            <DynamicIcon slug={cat.icon_slug} size={LIBRARY_GLYPH} />
+                            <DynamicIcon slug={cat.icon_slug} size={LIBRARY_ART} shadow={false} />
                           ) : (
-                            <span className="text-[32px]">{cat.icon}</span>
+                            <span className="text-[38px]">{cat.icon}</span>
                           )
                         }
                         title={cat.name}
@@ -629,8 +627,17 @@ export function CategoryPickerModal({
   );
 }
 
-/** The glyph size inside a Library tile; the image variant is 41px. */
-const LIBRARY_GLYPH = 35;
+/**
+ * How big the art is in a Library tile — one number for all three kinds.
+ *
+ * The tile used to draw a glyph at 35, a picture at 41 and an emoji at 32,
+ * so a row of cards showed three different sizes (owner: "make sure icons
+ * are the same sizes"). They are one size now, and 20% larger than the
+ * largest of the three was: at 35 in a 63px tile the art read as a stamp
+ * on a card the width of a thumb (owner: "icons are too small, increase
+ * by 20%").
+ */
+const LIBRARY_ART = 49;
 
 /**
  * One tile of the Library grid: the art on top, the name and its level
@@ -655,7 +662,6 @@ const LIBRARY_GLYPH = 35;
 export function LibraryCard({
   picked,
   onClick,
-  tileStyle,
   art,
   title,
   subtitle,
@@ -663,7 +669,6 @@ export function LibraryCard({
 }: {
   picked: boolean;
   onClick: () => void;
-  tileStyle: React.CSSProperties;
   art: React.ReactNode;
   title: string;
   subtitle: string;
@@ -683,10 +688,13 @@ export function LibraryCard({
       }`}
     >
       {picked && <Check className="absolute right-2 top-2 w-4 h-4 text-[#7126d5]" />}
-      <div
-        className="w-[63px] h-[63px] shrink-0 rounded-xl flex items-center justify-center overflow-hidden"
-        style={tileStyle}
-      >
+      {/* A box of one size so the art lines up from card to card, and
+          nothing drawn in it. It used to be filled with the category's
+          own colour at 25% — a pale square that read as a smudge behind
+          the icon on a white card, and as a grey plate behind the pale
+          ones (owner: "some of them still have a dark colour layer
+          behind"). The card carries the colour; the art sits on it. */}
+      <div className="flex h-[63px] w-[63px] shrink-0 items-center justify-center">
         {art}
       </div>
       {/* Two lines tall whether the name needs one or two — see above. */}

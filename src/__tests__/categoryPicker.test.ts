@@ -120,12 +120,24 @@ describe("a library card is a stack: art on top, name and count centred under it
     expect(modal).toMatch(/min-h-\[2\.75em\] w-full items-center justify-center/);
   });
 
-  it("the art is 15% larger than the row's was", () => {
-    // 55 -> 63 tile, 36 -> 41 image, 30 -> 35 glyph, 28 -> 32 emoji.
-    expect(modal).toMatch(/w-\[63px\] h-\[63px\] shrink-0 rounded-xl/);
-    expect(modal).toMatch(/w-\[41px\] h-\[41px\] object-contain/);
-    expect(modal).toMatch(/const LIBRARY_GLYPH = 35;/);
-    expect(modal).toMatch(/text-\[32px\]/);
-    expect(modal).not.toMatch(/w-\[55px\] h-\[55px\]/);
+  it("the art is one size for every kind of tile, 20% larger", () => {
+    // A glyph at 35, a picture at 41 and an emoji at 32 put three sizes in
+    // one row (owner: "make sure icons are the same sizes"), and all three
+    // read as small (owner: "increase by 20%"). 41 x 1.2 = 49, for all.
+    expect(modal).toMatch(/const LIBRARY_ART = 49;/);
+    expect(modal).toMatch(/w-\[49px\] h-\[49px\] object-contain/);
+    expect(modal).toMatch(/text-\[38px\]/);
+    expect(modal).not.toMatch(/LIBRARY_GLYPH/);
+    expect(modal).not.toMatch(/w-\[41px\] h-\[41px\]/);
+    expect(modal).toMatch(/h-\[63px\] w-\[63px\] shrink-0/);
+  });
+
+  it("has nothing drawn behind the art", () => {
+    // The box was filled with the category's colour at 25% — a plate that
+    // read as a grey smudge behind the icon on a white card.
+    expect(modal).not.toMatch(/tileStyle/);
+    expect(modal).not.toMatch(/\$\{cat\.color\}40/);
+    // And the icon does not bring a shadow of its own to stand in for it.
+    expect(modal.match(/<DynamicIcon [^>]*shadow=\{false\}/g) ?? []).toHaveLength(2);
   });
 });
