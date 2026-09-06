@@ -104,8 +104,7 @@ export default function HomeShot() {
               key={name}
               picked={i === 1}
               onClick={noop}
-              tileStyle={{ backgroundColor: "#a78bfa40" }}
-              art={<DynamicIcon slug="atom" size={35} />}
+              art={<DynamicIcon slug="atom" size={49} shadow={false} />}
               title={name}
               subtitle={`${17 + i} დონე`}
               delay={0}
