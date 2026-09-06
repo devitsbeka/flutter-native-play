@@ -198,6 +198,23 @@ export function DynamicIcon({
 
   // The direct name, before any of the gates below: no catalogue, no
   // skeleton, the image element the moment there is a slug to name it.
+  // Above the first early return, not below it. It sat after the
+  // direct-slug <img> branch, so a direct asset that 404ed changed the
+  // number of hooks between renders and React threw — and the error
+  // boundary blanked the WHOLE app over one category icon.
+  const handleImageError = React.useCallback(() => {
+    if (retryCount < maxRetries) {
+      // Retry by incrementing count (triggers re-render with same URL)
+      setRetryCount(prev => prev + 1);
+    } else {
+      // After max retries, mark as failed with timestamp
+      if (iconUrl) {
+        failedIconUrls.set(iconUrl, Date.now());
+      }
+      setImageError(true);
+    }
+  }, [iconUrl, retryCount]);
+
   if (directUrl) {
     return (
       <img
@@ -221,19 +238,6 @@ export function DynamicIcon({
       />
     );
   }
-
-  const handleImageError = React.useCallback(() => {
-    if (retryCount < maxRetries) {
-      // Retry by incrementing count (triggers re-render with same URL)
-      setRetryCount(prev => prev + 1);
-    } else {
-      // After max retries, mark as failed with timestamp
-      if (iconUrl) {
-        failedIconUrls.set(iconUrl, Date.now());
-      }
-      setImageError(true);
-    }
-  }, [iconUrl, retryCount]);
 
   // Show skeleton while loading icons library or resolving specific icon
   if (!isLoaded || (isResolvingIcon && !asyncIconUrl)) {

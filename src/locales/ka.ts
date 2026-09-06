@@ -1889,6 +1889,8 @@ export const ka = {
     uCategoriesCount: "{count} კატეგორია",
     uRoundsTitle: "რაუნდები",
     uRoundsHint: "გადაათრიე თემა, რომ შეცვალო რომელ რაუნდზე ითამაშება.",
+    uRoundsMoreBelow: "კიდევ რაუნდები ქვემოთ",
+    uRoundsMoreAbove: "კიდევ რაუნდები ზემოთ",
     uRoundsHintGuest: "რაუნდების თანმიმდევრობას ჰოსტი განსაზღვრავს.",
     uRoundLabel: "რაუნდი {count}",
     uAddRounds: "კატეგორიების დამატება",

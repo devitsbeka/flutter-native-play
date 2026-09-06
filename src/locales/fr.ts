@@ -1579,6 +1579,8 @@ export const fr: KaTranslations = {
     uCategoriesCount: "{count} catégories",
     uRoundsTitle: "Manches",
     uRoundsHint: "Fais glisser un thème pour changer sa manche.",
+    uRoundsMoreBelow: "Plus de manches en dessous",
+    uRoundsMoreAbove: "Plus de manches au-dessus",
     uRoundsHintGuest: "L'hôte décide de l'ordre des manches.",
     uRoundLabel: "Manche {count}",
     uAddRounds: "Ajouter des catégories",

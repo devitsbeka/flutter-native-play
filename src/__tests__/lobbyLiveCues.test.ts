@@ -64,7 +64,7 @@ describe("the round list drops under the chip", () => {
   it("over a blurred lobby that closes on a tap, not on a page of its own", () => {
     expect(universal).toMatch(/categoryMenu\?: \{ open: boolean; onClose: \(\) => void; children: ReactNode \};/);
     expect(universal).toMatch(/onClick=\{categoryMenu\.onClose\}\s*\n\s*className="absolute inset-0 z-30 bg-\[rgba\(60,30,90,0\.22\)\] backdrop-blur-\[6px\]"/);
-    expect(universal).toMatch(/className="absolute left-4 right-4 top-full z-40 mt-2 flex max-h-\[60dvh\] flex-col overflow-hidden rounded-\[22px\]/);
+    expect(universal).toMatch(/className="absolute left-4 right-4 top-full z-40 mt-2 flex max-h-\[calc\(100dvh_-_var\(--safe-top,0px\)_-_var\(--safe-bottom,0px\)_-_172px\)\] flex-col overflow-hidden rounded-\[22px\]/);
     expect(modal).not.toMatch(/fixed inset-0 safe-screen z-\[120\]/);
     expect(room).toMatch(/categoryMenu=\{\{\s*\n\s*open: showRoundOrder,/);
   });
