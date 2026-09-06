@@ -1423,7 +1423,7 @@ export const es: KaTranslations = {
     minutes: "~{min} min",
     badgeNew: "Nuevo",
     badgeBeta: "Beta",
-    classicTitle: "Trivia clásica",
+    classicTitle: "Clásico",
     classicDesc: "Crea una sala y compite con tus amigos",
     tvTitle: "Fiesta TV",
     tvDesc: "Una gran pantalla, los móviles como mandos",
@@ -2076,7 +2076,7 @@ export const es: KaTranslations = {
     // The create screen's mode cards (Figma 1013:1405)
     modeGuessTitle: "Adivina",
     modeQuickTitle: "Partida rápida",
-    modeLibraryTitle: "Trivia clásico",
+    modeLibraryTitle: "Clásico",
     modeKingTitle: "vs. King",
     modeBattleTitle: "Batalla de equipos",
     modeGuessDesc: "Adivina el logo, la bandera, la ciudad: una imagen, cuatro respuestas.",

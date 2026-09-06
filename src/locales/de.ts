@@ -1413,7 +1413,7 @@ export const de: KaTranslations = {
     minutes: "~{min} Min.",
     badgeNew: "Neu",
     badgeBeta: "Beta",
-    classicTitle: "Klassisches Trivia",
+    classicTitle: "Klassisch",
     classicDesc: "Erstelle einen Raum und tritt gegen Freunde an",
     tvTitle: "TV-Party",
     tvDesc: "Ein großer Bildschirm, Handys als Controller",
@@ -2059,7 +2059,7 @@ export const de: KaTranslations = {
     // The create screen's mode cards (Figma 1013:1405)
     modeGuessTitle: "Rate-Spiel",
     modeQuickTitle: "Schnelles Spiel",
-    modeLibraryTitle: "Klassisches Trivia",
+    modeLibraryTitle: "Klassisch",
     modeKingTitle: "vs. King",
     modeBattleTitle: "Team-Battle",
     modeGuessDesc: "Rate das Logo, die Flagge, die Stadt — ein Bild, vier Antworten.",

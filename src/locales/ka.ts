@@ -1705,7 +1705,7 @@ export const ka = {
     minutes: "~{min} წთ",
     badgeNew: "ახალი",
     badgeBeta: "ბეტა",
-    classicTitle: "კლასიკური ტრივია",
+    classicTitle: "კლასიკური",
     classicDesc: "შექმენი ოთახი და შეეჯიბრე მეგობრებს",
     tvTitle: "TV წვეულება",
     tvDesc: "ერთი დიდი ეკრანი, ტელეფონები — პულტები",
@@ -2393,7 +2393,7 @@ export const ka = {
     // The create screen's mode cards (Figma 1013:1405)
     modeGuessTitle: "გამოიცანი",
     modeQuickTitle: "სწრაფი თამაში",
-    modeLibraryTitle: "კლასიკური ტრივია",
+    modeLibraryTitle: "კლასიკური",
     modeKingTitle: "ვერსუს King",
     modeBattleTitle: "გუნდური ბრძოლა",
     modeGuessDesc: "გამოიცანი ლოგო, დროშა, ქალაქი — ერთი სურათი, ოთხი პასუხი.",

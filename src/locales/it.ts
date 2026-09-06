@@ -1416,7 +1416,7 @@ export const it: KaTranslations = {
     minutes: "~{min} min",
     badgeNew: "Nuovo",
     badgeBeta: "Beta",
-    classicTitle: "Trivia classico",
+    classicTitle: "Classico",
     classicDesc: "Crea una stanza e sfida i tuoi amici",
     tvTitle: "Festa TV",
     tvDesc: "Un grande schermo, i telefoni come controller",
@@ -2067,7 +2067,7 @@ export const it: KaTranslations = {
     // The create screen's mode cards (Figma 1013:1405)
     modeGuessTitle: "Indovina",
     modeQuickTitle: "Partita rapida",
-    modeLibraryTitle: "Trivia classico",
+    modeLibraryTitle: "Classico",
     modeKingTitle: "vs. King",
     modeBattleTitle: "Battaglia a squadre",
     modeGuessDesc: "Indovina il logo, la bandiera, la città: una foto, quattro risposte.",
