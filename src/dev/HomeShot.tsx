@@ -11,6 +11,8 @@
 import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { TVSetupInline } from "@/components/team/TVSetupInline";
+import { LibraryCard } from "@/components/team/CategoryPickerModal";
+import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { MobileHeroWidgets, MobileProfileCard } from "@/components/home/MobileHome";
 import { RoomCard } from "@/components/team/MyRoomsSection";
 import { AirbnbCategoryCard } from "@/components/discover/AirbnbCategoryCard";
@@ -86,6 +88,28 @@ export default function HomeShot() {
                 variant="compact"
               />
             </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+  if (params.get("view") === "library") {
+    // The Library grid at phone width, with the names that fit worst.
+    const names = ["შერეული", "ტექნოლოგიები", "კოსმოსი", "მედიცინა და ჯანმრთელობა", "მსოფლიო სამზარეულო", "მათემატიკა"];
+    return (
+      <div className="min-h-[100dvh] w-full bg-[#f3e8ff] p-4">
+        <div className="grid grid-cols-2 gap-3">
+          {names.map((name, i) => (
+            <LibraryCard
+              key={name}
+              picked={i === 1}
+              onClick={noop}
+              tileStyle={{ backgroundColor: "#a78bfa40" }}
+              art={<DynamicIcon slug="atom" size={35} />}
+              title={name}
+              subtitle={`${17 + i} დონე`}
+              delay={0}
+            />
           ))}
         </div>
       </div>

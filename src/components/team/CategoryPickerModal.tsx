@@ -449,105 +449,41 @@ export function CategoryPickerModal({
                   <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-5">
                     {/* Mixed Category - First in grid */}
                     {(!search.trim() || t("extra.cpMixedCategory").toLowerCase().includes(search.toLowerCase())) && (
-                      <motion.button
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0 }}
+                      <LibraryCard
+                        picked={isPicked(MIXED_ITEM(t))}
                         onClick={() => togglePick(MIXED_ITEM(t))}
-                        className={`relative p-3 rounded-xl transition-all text-left ${
-                          isPicked(MIXED_ITEM(t))
-                            ? "bg-white border-2 border-[#7126d5]"
-                            : "bg-white/70 border border-border/50 hover:bg-white"
-                        }`}
-                      >
-                        {isPicked(MIXED_ITEM(t)) && (
-                          <Check className="absolute right-2 top-2 w-4 h-4 text-[#7126d5]" />
-                        )}
-                        {/* The same row the category cards below wear — it
-                            is the first tile in their grid, so a stacked one
-                            here would read as a different kind of thing. */}
-                        <div className="flex items-center gap-3">
-                          <div
-                            className="w-[55px] h-[55px] shrink-0 rounded-xl flex items-center justify-center overflow-hidden"
-                            style={{ background: "linear-gradient(135deg, #9333ea, #ec4899)" }}
-                          >
-                            <DynamicIcon slug="mystery-box" size={30} />
-                          </div>
-                          <div className="min-w-0 flex-1 pr-5">
-                            <p className="font-medium text-foreground text-sm leading-snug break-words line-clamp-2">
-                              {t("extra.cpMixedCategory")}
-                            </p>
-                            <p className="text-muted-foreground text-xs">{t("extra.cpMixedDesc")}</p>
-                          </div>
-                        </div>
-                      </motion.button>
+                        tileStyle={{ background: "linear-gradient(135deg, #9333ea, #ec4899)" }}
+                        art={<DynamicIcon slug="mystery-box" size={LIBRARY_GLYPH} />}
+                        title={t("extra.cpMixedCategory")}
+                        subtitle={t("extra.cpMixedDesc")}
+                        delay={0}
+                      />
                     )}
 
                     {filteredCategories.map((cat, index) => (
-                      <motion.button
+                      <LibraryCard
                         key={cat.id}
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: (index + 1) * 0.02 }}
+                        picked={isPicked({ type: "category", id: cat.id })}
                         onClick={() => togglePick({
                           type: "category",
                           id: cat.id,
                           name: cat.name,
                           iconSlug: cat.icon_slug,
                         })}
-                        className={`relative p-3 rounded-xl transition-all text-left ${
-                          isPicked({ type: "category", id: cat.id })
-                            ? "bg-white border-2 border-[#7126d5]"
-                            : "bg-white/70 border border-border/50 hover:bg-white"
-                        }`}
-                      >
-                        {isPicked({ type: "category", id: cat.id }) && (
-                          <Check className="absolute right-2 top-2 w-4 h-4 text-[#7126d5]" />
-                        )}
-                        {/* Icon left, name right (owner's ask).
-                            This was a stack — icon on its own line, name
-                            under it — because side by side the name got a
-                            sliver of a half-width card and most of them
-                            ended in an ellipsis. A row is fine as long as
-                            the name is allowed to WRAP rather than truncate,
-                            which is the part that was missing: the icon is a
-                            fixed shrink-0 tile, the text column is min-w-0
-                            so it can be narrower than its content wants, and
-                            the name takes two lines when it needs them.
-                            Georgian names are the long ones and the reason
-                            this matters.
-
-                            The tile and its contents have grown twice, 15%
-                            and then another 20% (40 → 46 → 55, 26 → 30 → 36,
-                            22 → 25 → 30): at the original size the art was
-                            smaller than the text beside it, and the first
-                            pass was still shy of it. The radius went up with
-                            the box — rounded-lg on 55px reads sharper than
-                            it did on 40.
-
-                            pr-5 keeps the second line clear of the tick in
-                            the corner. */}
-                        <div className="flex items-center gap-3">
-                          <div
-                            className="w-[55px] h-[55px] shrink-0 rounded-xl flex items-center justify-center overflow-hidden"
-                            style={{ backgroundColor: `${cat.color}40` }}
-                          >
-                            {popularCategoryIcon(cat.categoryId) ? (
-                              <img src={popularCategoryIcon(cat.categoryId)!} alt="" className="w-[36px] h-[36px] object-contain" />
-                            ) : cat.icon_slug ? (
-                              <DynamicIcon slug={cat.icon_slug} size={30} />
-                            ) : (
-                              <span className="text-[28px]">{cat.icon}</span>
-                            )}
-                          </div>
-                          <div className="min-w-0 flex-1 pr-5">
-                            <p className="font-medium text-foreground text-sm leading-snug break-words line-clamp-2">
-                              {cat.name}
-                            </p>
-                            <p className="text-muted-foreground text-xs">{t("extra.cpLevels", { count: cat.total_levels })}</p>
-                          </div>
-                        </div>
-                      </motion.button>
+                        tileStyle={{ backgroundColor: `${cat.color}40` }}
+                        art={
+                          popularCategoryIcon(cat.categoryId) ? (
+                            <img src={popularCategoryIcon(cat.categoryId)!} alt="" className="w-[41px] h-[41px] object-contain" />
+                          ) : cat.icon_slug ? (
+                            <DynamicIcon slug={cat.icon_slug} size={LIBRARY_GLYPH} />
+                          ) : (
+                            <span className="text-[32px]">{cat.icon}</span>
+                          )
+                        }
+                        title={cat.name}
+                        subtitle={t("extra.cpLevels", { count: cat.total_levels })}
+                        delay={(index + 1) * 0.02}
+                      />
                     ))}
                   </div>
                 </>
@@ -690,5 +626,74 @@ export function CategoryPickerModal({
         )}
       </motion.div>
     </AnimatePresence>
+  );
+}
+
+/** The glyph size inside a Library tile; the image variant is 41px. */
+const LIBRARY_GLYPH = 35;
+
+/**
+ * One tile of the Library grid: the art on top, the name and its level
+ * count centred under it.
+ *
+ * This card has been a row (icon left, name right) and a stack before, and
+ * the row lost: on a half-width card the name column is about 90px, and a
+ * Georgian name like ტექნოლოგიები does not fit that on one line, so it
+ * broke mid-word — "ტექნოლოგიებ / ი" (owner's screenshot). Stacked, the
+ * name has the whole card's width, which is enough for every name in the
+ * catalogue on one line and leaves two for the compound ones.
+ *
+ * The name sits in a box two lines tall whether it uses one or two, so the
+ * level count lands on the same line in every card of a row and the grid
+ * stays even. The tile is 15% larger than the row's was (55 → 63; image
+ * 36 → 41, glyph 30 → 35, emoji 28 → 32): centred over the text it is the
+ * card's face, and at the old size it read as an afterthought.
+ *
+ * The Mixed tile wears the same card, so the first tile in the grid is not
+ * a different kind of thing from the rest.
+ */
+export function LibraryCard({
+  picked,
+  onClick,
+  tileStyle,
+  art,
+  title,
+  subtitle,
+  delay,
+}: {
+  picked: boolean;
+  onClick: () => void;
+  tileStyle: React.CSSProperties;
+  art: React.ReactNode;
+  title: string;
+  subtitle: string;
+  delay: number;
+}) {
+  return (
+    <motion.button
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay }}
+      onClick={onClick}
+      aria-pressed={picked}
+      className={`relative flex flex-col items-center rounded-xl px-3 pb-3 pt-4 text-center transition-all ${
+        picked
+          ? "bg-white border-2 border-[#7126d5]"
+          : "bg-white/70 border border-border/50 hover:bg-white"
+      }`}
+    >
+      {picked && <Check className="absolute right-2 top-2 w-4 h-4 text-[#7126d5]" />}
+      <div
+        className="w-[63px] h-[63px] shrink-0 rounded-xl flex items-center justify-center overflow-hidden"
+        style={tileStyle}
+      >
+        {art}
+      </div>
+      {/* Two lines tall whether the name needs one or two — see above. */}
+      <div className="mt-2 flex min-h-[2.75em] w-full items-center justify-center text-sm leading-snug">
+        <p className="font-medium text-foreground break-words line-clamp-2">{title}</p>
+      </div>
+      <p className="text-muted-foreground text-xs">{subtitle}</p>
+    </motion.button>
   );
 }
