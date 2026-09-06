@@ -361,7 +361,11 @@ describe("the public list", () => {
     expect(section).not.toMatch(/from\("user_presence"\)/);
   });
 
-  it("orders the room I'm waiting on first, then mine, then friends', then the rest", () => {
+  it("orders the room I'm waiting on first, then mine, then the owner's bands", () => {
+    // The tail of this order changed on the owner's ask: just-created and
+    // filling-up rooms now come BEFORE a friend's, because a friend's empty
+    // stale room is still empty. See publicRoomOrder.test.ts for the bands
+    // themselves; this one guards what sits above them.
     const rooms = [
       room({ id: "old-stranger", host_user_id: "s1", created_at: "2026-01-01T00:00:00Z" }),
       room({ id: "new-stranger", host_user_id: "s2", created_at: "2026-06-01T00:00:00Z" }),
@@ -375,8 +379,10 @@ describe("the public list", () => {
       "waiting-on",
       "im-in", // rooms I sit in count as mine, newest of the two
       "mine",
-      "friends",
+      // All three below are empty, long past the just-created window, so
+      // they fall to the friend band and then the rest, newest first.
       "new-stranger",
+      "friends",
       "old-stranger",
     ]);
   });

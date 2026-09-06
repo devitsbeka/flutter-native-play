@@ -116,8 +116,14 @@ function RailHeader({
     // Figma 1076:2113: the display face at 26px in the deep aubergine, on a
     // 29px row with the link centred against it; the rail follows 20px
     // below. The frame's rails carry no line under the title.
-    <div className="mb-5 flex h-[29px] items-center justify-between gap-2 px-4">
-      <h2 className="min-w-0 truncate font-display text-[26px] leading-[22.5px] tracking-[-0.16px] text-[#552d7a]">
+    <div className="mb-5 flex min-h-[29px] items-center justify-between gap-2 px-4">
+      {/* 34px of line, not 22.5.
+          `truncate` sets overflow:hidden, so the line box IS the clip box —
+          and at 26px the frame's 22.5px leading is shorter than the type.
+          Latin survives that; Georgian does not, because ჟ, ე, ი and friends
+          hang below the baseline, and "ოთახები" came out sliced along the
+          bottom. The row grows instead of being pinned to 29px. */}
+      <h2 className="min-w-0 truncate font-display text-[26px] leading-[34px] tracking-[-0.16px] text-[#552d7a]">
         {title}
       </h2>
       {action && (action.kind === "add" ? (

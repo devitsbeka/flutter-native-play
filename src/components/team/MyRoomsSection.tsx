@@ -693,8 +693,9 @@ export function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = f
   return (
     <>
       <div className="relative">
-        {/* Delete indicator background (mobile only) */}
-        {isMobile && (
+        {/* Delete indicator background (mobile only, and never on the home
+            rail — nothing there can swipe to reveal it) */}
+        {isMobile && !homeRail && (
           <motion.div 
             className="absolute inset-0 bg-destructive rounded-2xl flex items-center justify-end pr-6"
             style={{ opacity: deleteOpacity }}
@@ -713,7 +714,13 @@ export function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = f
           // animations too, so having them here made the whole grid reshuffle
           // in a staggered ripple every time one card left.
           transition={{ delay: index * 0.05, type: "spring", stiffness: 400, damping: 30 }}
-          drag={isMobile ? "x" : false}
+          // Not on the home rail. This drag exists for ONE thing — swipe left
+          // to reveal "delete this room" — and the home rail deliberately
+          // offers no delete. What it does offer there is a horizontal
+          // gesture inside a horizontal scroller: framer takes the pointer,
+          // the tap never becomes a click, and the card just sits there when
+          // pressed. Tapping a room on the home screen did nothing.
+          drag={isMobile && !homeRail ? "x" : false}
           // The card follows the finger for real (constraints used to be
           // 0..0, so a 100px swipe moved it ~20px of pure elastic while the
           // commit threshold still wanted 100px — "needed several swipes").
@@ -721,9 +728,9 @@ export function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = f
           dragElastic={0.15}
           dragSnapToOrigin
           dragDirectionLock
-          onDragEnd={isMobile ? handleDragEnd : undefined}
-          onPointerDown={isMobile ? handlePointerDown : undefined}
-          onPointerMove={isMobile ? handlePointerMove : undefined}
+          onDragEnd={isMobile && !homeRail ? handleDragEnd : undefined}
+          onPointerDown={isMobile && !homeRail ? handlePointerDown : undefined}
+          onPointerMove={isMobile && !homeRail ? handlePointerMove : undefined}
           onClick={handleClick}
           style={{
             // The frame's lip: a hard 4px light-grey edge under the card and

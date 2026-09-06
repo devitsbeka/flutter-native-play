@@ -110,7 +110,7 @@ describe("the panel itself", () => {
 
 describe("the rail headers", () => {
   it("are the frame's display face at 26px, with no line under them (Figma 1076:2116)", () => {
-    expect(feed).toMatch(/font-display text-\[26px\] leading-\[22\.5px\] tracking-\[-0\.16px\] text-\[#552d7a\]/);
+    expect(feed).toMatch(/font-display text-\[26px\] leading-\[34px\] tracking-\[-0\.16px\] text-\[#552d7a\]/);
     expect(feed).not.toMatch(/font-hero text-\[19px\]/);
     expect(feed).not.toMatch(/desc=\{/);
   });
@@ -162,5 +162,30 @@ describe("the categories rail shows there is more to the right", () => {
     expect(category).toMatch(/isFull \? "line-clamp-1" : "line-clamp-2 min-h-\[2\.2em\]"/);
     // The full-size card is unchanged — it was never short of room.
     expect(category).not.toMatch(/className="font-bold tracking-wider line-clamp-1 text-left"/);
+  });
+});
+
+describe("a room card on the home rail can be tapped", () => {
+  it("the swipe-to-delete drag is off there", () => {
+    // It exists for one thing — swipe left to reveal "delete this room" —
+    // and the home rail offers no delete. What it DID offer there was a
+    // horizontal gesture inside a horizontal scroller: framer takes the
+    // pointer, the tap never becomes a click, and pressing a room did
+    // nothing at all.
+    expect(rooms).toMatch(/drag=\{isMobile && !homeRail \? "x" : false\}/);
+    expect(rooms).toMatch(/onDragEnd=\{isMobile && !homeRail \? handleDragEnd : undefined\}/);
+    expect(rooms).toMatch(/onPointerDown=\{isMobile && !homeRail \? handlePointerDown : undefined\}/);
+    expect(rooms).toMatch(/onPointerMove=\{isMobile && !homeRail \? handlePointerMove : undefined\}/);
+  });
+
+  it("and the red delete plate under it is not drawn", () => {
+    // Nothing there can swipe to reveal it.
+    expect(rooms).toMatch(/\{isMobile && !homeRail && \(/);
+  });
+
+  it("but the rooms page keeps its swipe", () => {
+    // Only the home rail's card was changed; the page's card is untouched.
+    expect(rooms).toMatch(/drag=\{isMobile \? "x" : false\}/);
+    expect(rooms).toMatch(/onClick=\{handleClick\}/);
   });
 });

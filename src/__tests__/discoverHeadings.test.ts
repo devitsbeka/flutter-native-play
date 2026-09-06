@@ -38,8 +38,24 @@ describe("the two surfaces share one heading", () => {
 
   it("which is the frame's display face at 26px in its deep aubergine", () => {
     expect(headingClass(header)).toBe(
-      "font-display text-[26px] leading-[22.5px] tracking-[-0.16px] text-[#552d7a]",
+      "font-display text-[26px] leading-[34px] tracking-[-0.16px] text-[#552d7a]",
     );
+  });
+
+  it("with room under the baseline for Georgian", () => {
+    // `truncate` is overflow:hidden, so the line box IS the clip box. At the
+    // frame's 22.5px it is shorter than the 26px type, and the tails in
+    // "ოთახები" and "კლასიკური ტრივია" were sliced along the bottom. Latin
+    // survives that; Georgian does not.
+    for (const [name, src] of [["home", feed], ["discover", header]] as const) {
+      const cls = headingClass(src) ?? "";
+      const lead = Number(/leading-\[(\d+(?:\.\d+)?)px\]/.exec(cls)?.[1]);
+      const size = Number(/text-\[(\d+)px\]/.exec(cls)?.[1]);
+      expect(lead, `${name} leading`).toBeGreaterThan(size);
+    }
+    // And the home row is allowed to grow to hold it.
+    expect(feed).toMatch(/min-h-\[29px\] items-center/);
+    expect(feed).not.toMatch(/flex h-\[29px\] items-center/);
   });
 
   it("and the slate sans it used to set is gone", () => {
