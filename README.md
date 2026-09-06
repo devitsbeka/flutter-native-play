@@ -28,6 +28,7 @@ server-side actually deploys (through Lovable, not the CLI).
 | Backend | `supabase/` — migrations, edge functions, SQL tests |
 | Web edge | `worker/` — the Cloudflare Worker in front of the static build |
 | Release state | `docs/IOS_APP_REVIEW_AUDIT.md` — the audit passes and the pre-submission action ledger |
+| Whole-product briefing | `docs/knowledge/` — seven documents covering the product, code, backend, economy, release and rules, written to be uploaded into an AI assistant's project knowledge |
 
 ## Deploys
 
