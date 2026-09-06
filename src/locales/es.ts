@@ -482,8 +482,8 @@ export const es: KaTranslations = {
     myAvatars: "Mis avatares",
     mascots: "Mascotas",
     mascotsHint: "Elige una mascota — vivirá en tu pantalla de inicio",
-    animalAvatars: "Avatares de animales",
-    animalAvatarsHint: "Usa la cara de una mascota como tu foto",
+    mascotFaces: "Personajes de MyTrivia",
+    mascotFacesHint: "Usa uno de nuestros personajes como tu foto",
     mascotUpdated: "¡Mascota actualizada!",
     mascotNames: {
       king: "Trivia King",

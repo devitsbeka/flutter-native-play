@@ -1,5 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { isValidAvatarUrl, resolveAvatarUrl } from "@/utils/avatarUtils";
+import { isValidAvatarUrl, resolveAvatarUrl, retiredPresetFromAvatarUrl } from "@/utils/avatarUtils";
+import { MASCOT_AVATARS } from "@/config/mascotAvatars";
+
+/** One of MyTrivia's own round characters — what a retired preset now draws. */
+const isOurFace = (url: string | undefined) => !!url && MASCOT_AVATARS.some((a) => a.url === url);
 
 // Avatars come from four different eras of this app: bundled assets, dev
 // paths that leaked into the database, build-hashed paths that stop
@@ -40,14 +44,19 @@ describe("resolveAvatarUrl — remote urls", () => {
   });
 });
 
-describe("resolveAvatarUrl — bundled assets", () => {
-  it("maps a dev-server asset path to a real bundled asset", () => {
-    // The exact string is build-dependent — Vite emits a hashed filename in
-    // production and the source path under test — so this asserts it
-    // resolved to something loadable rather than to a specific url.
+describe("resolveAvatarUrl — the retired presets", () => {
+  // The drawn people (bot-avatar-N) are retired as profile pictures: a stored
+  // one draws one of MyTrivia's own round characters instead.
+  //
+  // mascot-avatar-N is NOT retired any more. It was, for one release — the
+  // animals were dealt in its place — and the owner's answer on seeing that
+  // was that an animal reads as stock art rather than as anything of ours.
+  // Those resolve to their own art again, which is what the assertions here
+  // that used to expect an animal now say.
+  it("maps a dev-server preset path to one of our faces", () => {
     const resolved = resolveAvatarUrl("/src/assets/avatars/bot-avatar-4.png");
-    expect(typeof resolved).toBe("string");
-    expect(resolved).toMatch(/bot-avatar-4/);
+    expect(isOurFace(resolved)).toBe(true);
+    expect(resolved).not.toMatch(/bot-avatar-4/);
   });
 
   it("maps a relative asset path the same way", () => {
@@ -56,23 +65,43 @@ describe("resolveAvatarUrl — bundled assets", () => {
     );
   });
 
-  it("resolves every bot and mascot avatar in the set", () => {
+  it("resolves every drawn person to one of ours", () => {
     for (let n = 1; n <= 10; n++) {
-      expect(resolveAvatarUrl(`/src/assets/avatars/bot-avatar-${n}.png`), `bot ${n}`).toBeDefined();
-    }
-    for (let n = 1; n <= 8; n++) {
-      expect(
-        resolveAvatarUrl(`/src/assets/avatars/mascot-avatar-${n}.png`),
-        `mascot ${n}`
-      ).toBeDefined();
+      expect(isOurFace(resolveAvatarUrl(`/src/assets/avatars/bot-avatar-${n}.png`)), `bot ${n}`).toBe(true);
     }
   });
 
-  it("gives each avatar a distinct url", () => {
-    const urls = [1, 2, 3, 4, 5].map((n) =>
-      resolveAvatarUrl(`/src/assets/avatars/bot-avatar-${n}.png`)
+  it("and every one of our own faces to its own art, the King included", () => {
+    // He is not offered as a choice, but a player already wearing him has
+    // that path stored: resolving it to something else would swap their
+    // picture out from under them.
+    for (let n = 1; n <= 8; n++) {
+      const resolved = resolveAvatarUrl(`/src/assets/avatars/mascot-avatar-${n}.png`);
+      expect(resolved, `mascot ${n}`).toBeDefined();
+      expect(isOurFace(resolved) || n === 1, `mascot ${n}`).toBe(true);
+    }
+    // Eight distinct pictures, not one dealt face repeated.
+    const urls = new Set<string | undefined>();
+    for (let n = 1; n <= 8; n++) urls.add(resolveAvatarUrl(`/src/assets/avatars/mascot-avatar-${n}.png`));
+    expect(urls.size).toBe(8);
+  });
+
+  it("deals the same drawn person the same face every time, and spreads them", () => {
+    expect(resolveAvatarUrl("/src/assets/avatars/bot-avatar-3.png")).toBe(
+      resolveAvatarUrl("/src/assets/avatars/bot-avatar-3.png")
     );
-    expect(new Set(urls).size).toBe(urls.length);
+    const urls = new Set<string | undefined>();
+    for (let n = 1; n <= 10; n++) urls.add(resolveAvatarUrl(`/src/assets/avatars/bot-avatar-${n}.png`));
+    expect(urls.size).toBeGreaterThan(1);
+  });
+
+  it("names the preset a stored value refers to, in the three forms it was stored in", () => {
+    expect(retiredPresetFromAvatarUrl("/src/assets/avatars/bot-avatar-4.png")).toBe("bot-avatar-4");
+    // Not a retired preset any more — it names one of ours, which resolves.
+    expect(retiredPresetFromAvatarUrl("src/assets/avatars/mascot-avatar-2.png")).toBeNull();
+    expect(retiredPresetFromAvatarUrl("/assets/bot-avatar-4-uiIFWm1y.png")).toBe("bot-avatar-4");
+    expect(retiredPresetFromAvatarUrl("https://x/y/bot-avatar-4.png")).toBeNull();
+    expect(retiredPresetFromAvatarUrl(null)).toBeNull();
   });
 
   it("returns undefined for an asset path that is not in the set", () => {
@@ -83,13 +112,13 @@ describe("resolveAvatarUrl — bundled assets", () => {
 describe("resolveAvatarUrl — stale build-hashed paths", () => {
   // These were written to the database by an earlier deploy and stop
   // resolving the moment the next build changes the hash.
-  it("recovers a hashed bot avatar back to the bundled asset", () => {
+  it("recovers a hashed bot avatar to the same animal as its dev path", () => {
     expect(resolveAvatarUrl("/assets/bot-avatar-4-uiIFWm1y.png")).toBe(
       resolveAvatarUrl("/src/assets/avatars/bot-avatar-4.png")
     );
   });
 
-  it("recovers a hashed mascot avatar back to the bundled asset", () => {
+  it("recovers a hashed mascot avatar to the same animal as its dev path", () => {
     expect(resolveAvatarUrl("/assets/mascot-avatar-3-A1b2C3d4.png")).toBe(
       resolveAvatarUrl("/src/assets/avatars/mascot-avatar-3.png")
     );
