@@ -12,6 +12,8 @@ interface DynamicIconProps {
   className?: string;
   hideIfEmpty?: boolean; // Don't render anything if no icon found
   fallbackEmoji?: string; // Emoji to show when icon fails to load
+  /** The soft drop shadow under the icon. Off where the icon sits on a pale card and the shadow read as a dark box. */
+  shadow?: boolean;
 }
 
 const ICON_STORAGE_URL = 'https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library';
@@ -46,7 +48,8 @@ export function DynamicIcon({
   size = 128,
   className,
   hideIfEmpty = false,
-  fallbackEmoji
+  fallbackEmoji,
+  shadow = true,
 }: DynamicIconProps) {
   const [imageError, setImageError] = React.useState(false);
   const [retryCount, setRetryCount] = React.useState(0);
@@ -214,9 +217,7 @@ export function DynamicIcon({
           directLoaded ? "opacity-100" : "opacity-0",
           className
         )}
-        style={{
-          filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.2))",
-        }}
+        style={shadow ? { filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.2))" } : undefined}
       />
     );
   }
@@ -293,9 +294,7 @@ export function DynamicIcon({
         imageLoaded ? "opacity-100" : "opacity-0",
         className
       )}
-      style={{ 
-        filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.2))",
-      }}
+      style={shadow ? { filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.2))" } : undefined}
     />
   );
 }

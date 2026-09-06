@@ -13,6 +13,11 @@ interface CategoryArtworkProps {
   iconSlug?: string | null;
   size?: number;
   className?: string;
+  /**
+   * No shadow at all. On a pale card the two shadows — this wrapper's and
+   * the icon's own — blurred into a dark box behind a small icon.
+   */
+  flat?: boolean;
 }
 
 /**
@@ -24,7 +29,7 @@ interface CategoryArtworkProps {
  * art carries its own shadow rather than relying on contrast with whatever is
  * behind it.
  */
-export function CategoryArtwork({ categoryId, iconSlug, size = 96, className }: CategoryArtworkProps) {
+export function CategoryArtwork({ categoryId, iconSlug, size = 96, className, flat = false }: CategoryArtworkProps) {
   const popularIcon = (POPULAR_IMAGE_CATEGORY_IDS as readonly string[]).includes(categoryId ?? "")
     ? POPULAR_CATEGORY_ICONS[categoryId as PopularImageCategoryId]
     : null;
@@ -36,15 +41,15 @@ export function CategoryArtwork({ categoryId, iconSlug, size = 96, className }: 
         alt=""
         width={size}
         height={size}
-        className={cn("object-contain drop-shadow-[0_4px_12px_rgba(0,0,0,0.35)]", className)}
+        className={cn("object-contain", !flat && "drop-shadow-[0_4px_12px_rgba(0,0,0,0.35)]", className)}
         style={{ width: size, height: size }}
       />
     );
   }
 
   return (
-    <div className={cn("drop-shadow-[0_4px_12px_rgba(0,0,0,0.35)]", className)}>
-      <DynamicIcon categoryId={categoryId ?? undefined} slug={iconSlug ?? undefined} size={size} />
+    <div className={cn(!flat && "drop-shadow-[0_4px_12px_rgba(0,0,0,0.35)]", className)}>
+      <DynamicIcon categoryId={categoryId ?? undefined} slug={iconSlug ?? undefined} size={size} shadow={!flat} />
     </div>
   );
 }

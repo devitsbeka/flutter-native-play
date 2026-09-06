@@ -250,23 +250,24 @@ export function CategorySelectorModal({
                       background: `linear-gradient(135deg, #8B5CF6, #EC4899)`,
                     }}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                  {/* The pale wash every card wears (owner: the cards were
+                      too dark) — the colour shows through, the type is dark. */}
+                  <div className="absolute inset-0 bg-white/45" />
                 </div>
 
                 {/* Icon, drawn like every other card's — same size, same
-                    place, full strength. At 30% over a magenta gradient the
-                    box simply was not there: the one card in the grid with
-                    nothing on it, and the one card that is not a category. */}
+                    place, full strength, and flat: no shadow to darken the
+                    card behind it. */}
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <DynamicIcon slug="mystery-box" size={56} />
+                  <DynamicIcon slug="mystery-box" size={56} shadow={false} />
                 </div>
 
                 {/* Content */}
                 <div className="absolute inset-0 p-3 flex flex-col justify-end">
-                  <span className="text-sm font-semibold text-white truncate drop-shadow-lg" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>
+                  <span className="text-sm font-semibold text-[#2b1a4a] truncate">
                     {mixedCategoryName}
                   </span>
-                  <p className="text-xs text-white/90 mt-0.5" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
+                  <p className="text-xs text-[#2b1a4a]/70 mt-0.5">
                     {t("extra.csmMixedQuestions")}
                   </p>
                 </div>
@@ -320,19 +321,22 @@ export function CategorySelectorModal({
                         categoryId={category.category_id}
                         iconSlug={category.icon_slug}
                         size={56}
+                        flat
                       />
                     </div>
-                    {/* Deep enough for a label to sit on: these gradients
-                        include pale yellows. */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-transparent" />
+                    {/* A pale wash, not a dark foot (owner: the cards were
+                        too dark, and the art wore a dark box). The colour
+                        shows through it and the type below is dark, which
+                        reads on every gradient, pale yellows included. */}
+                    <div className="absolute inset-0 bg-white/45" />
                   </div>
 
                   {/* Content */}
                   <div className="absolute inset-0 p-3 flex flex-col justify-end">
-                    <span className="text-sm font-semibold text-white truncate drop-shadow-lg" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>
+                    <span className="text-sm font-semibold text-[#2b1a4a] truncate">
                       {category.name}
                     </span>
-                    <p className="text-xs text-white/90 mt-0.5" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
+                    <p className="text-xs text-[#2b1a4a]/70 mt-0.5">
                       {t("extra.csmLevels", { count: category.total_levels })}
                     </p>
                   </div>
