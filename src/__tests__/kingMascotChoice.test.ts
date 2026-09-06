@@ -24,10 +24,17 @@ const hook = read("src/hooks/useHomeMascot.ts");
 
 describe("the King leads the grid", () => {
   it("his tile is the first one, before the animals", () => {
-    const king = modal.indexOf('onClick={() => chooseMascot(null)}');
-    const animals = modal.indexOf("{MASCOTS.map((mascot) => {");
+    // Scoped to the SCENE grid. The same faces appear twice in this modal
+    // now — once as avatars to wear, once as scenes to live on the home
+    // screen — so "the first MASCOTS.map in the file" is the other grid,
+    // and the King belongs only to this one.
+    const king = modal.indexOf("onClick={() => chooseMascot(null)}");
     expect(king).toBeGreaterThan(-1);
-    expect(king).toBeLessThan(animals);
+    const animals = modal.indexOf("{MASCOTS.map((mascot) => {", king);
+    expect(animals).toBeGreaterThan(king);
+    // And he is in the scene grid rather than the avatar gallery: the tile
+    // above him sets the home screen.
+    expect(modal.slice(king - 800, king)).toMatch(/avatar\.mascotsHint/);
   });
 
   it("and picking him clears the choice rather than storing an id", () => {

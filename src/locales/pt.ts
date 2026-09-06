@@ -481,6 +481,8 @@ export const pt: KaTranslations = {
     myAvatars: "Meus avatares",
     mascots: "Mascotes",
     mascotsHint: "Escolhe uma mascote — ela vai viver no teu ecrã inicial",
+    animalAvatars: "Avatares de animais",
+    animalAvatarsHint: "Use o rosto de um mascote como sua foto",
     mascotUpdated: "Mascote atualizada!",
     mascotNames: {
       king: "Trivia King",

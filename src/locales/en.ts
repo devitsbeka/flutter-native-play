@@ -578,6 +578,8 @@ export const en: KaTranslations = {
     myAvatars: "My Avatars",
     mascots: "Mascots",
     mascotsHint: "Pick a mascot — it lives on your home screen",
+    animalAvatars: "Animal avatars",
+    animalAvatarsHint: "Wear a mascot's face as your picture",
     mascotUpdated: "Mascot updated!",
     mascotNames: {
       king: "Trivia King",
