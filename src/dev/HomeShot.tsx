@@ -8,7 +8,9 @@
  *   /dev/home?scene=<image url>   — the hero chrome over a scene still
  *   /dev/home?view=rooms          — the rooms rail's cards (Figma 1076:2132)
  */
+import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
+import { TVSetupInline } from "@/components/team/TVSetupInline";
 import { MobileHeroWidgets, MobileProfileCard } from "@/components/home/MobileHome";
 import { RoomCard } from "@/components/team/MyRoomsSection";
 import { AirbnbCategoryCard } from "@/components/discover/AirbnbCategoryCard";
@@ -89,6 +91,12 @@ export default function HomeShot() {
       </div>
     );
   }
+  if (params.get("view") === "tv") {
+    // The lobby's Play-on-TV sheet, with the native keyboard simulated:
+    // `?kb=336` sets --keyboard-height the way nativeShell does on
+    // keyboardWillShow, so the sheet's lift can be seen without a device.
+    return <TVSheetShot keyboard={Number(params.get("kb") ?? 0)} />;
+  }
   if (params.get("view") === "rooms") {
     const rooms = [
       sampleRoom({}),
@@ -124,6 +132,32 @@ export default function HomeShot() {
         onCoinsClick={noop}
         onGemsClick={noop}
       />
+    </div>
+  );
+}
+
+function TVSheetShot({ keyboard }: { keyboard: number }) {
+  useEffect(() => {
+    document.documentElement.style.setProperty("--keyboard-height", `${keyboard}px`);
+    return () => document.documentElement.style.setProperty("--keyboard-height", "0px");
+  }, [keyboard]);
+  const noop = () => undefined;
+  return (
+    <div className="h-[100dvh] w-full bg-[#e9dcf7]">
+      {/* Same classes as RoomLobbyV2's sheet — keep them in step. */}
+      <div className="fixed inset-0 z-[120] flex items-end justify-center bg-[rgba(64,38,102,0.35)] backdrop-blur-[6px] p-4 pt-[calc(1rem_+_var(--safe-top))] pb-[calc(1rem_+_var(--safe-bottom)_+_var(--keyboard-height,0px))] transition-[padding] duration-200">
+        <div className="w-full max-w-[468px] max-h-full overflow-y-auto rounded-[24px] border-2 border-white/60 bg-[rgba(252,247,255,0.92)] p-2 shadow-[0px_8px_24px_0px_rgba(102,51,153,0.18)]">
+          <TVSetupInline onComplete={noop} onCancel={noop} />
+        </div>
+      </div>
+      {keyboard > 0 && (
+        <div
+          className="fixed inset-x-0 bottom-0 z-[200] bg-[#2b2b2d] text-white/60 flex items-start justify-center pt-3 text-sm"
+          style={{ height: keyboard }}
+        >
+          simulated keypad ({keyboard}px)
+        </div>
+      )}
     </div>
   );
 }

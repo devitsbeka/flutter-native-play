@@ -341,11 +341,13 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
 
   return (
     <motion.div
-      // Margin animates with the height — leaving it static (mb-6) made the
-      // content below jump by 24px at the start/end of the reveal
-      initial={{ opacity: 0, height: 0, marginBottom: 0 }}
-      animate={{ opacity: 1, height: 'auto', marginBottom: 24 }}
-      exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+      // This panel lives in its own sheet over the lobby now, with nothing
+      // below it. The 24px bottom margin it animated when it sat inline in
+      // the lobby column is dead space inside a sheet — a blank band under
+      // the Connect button in every screenshot.
+      initial={{ opacity: 0, height: 0 }}
+      animate={{ opacity: 1, height: 'auto' }}
+      exit={{ opacity: 0, height: 0 }}
       transition={{ duration: 0.3, ease: "easeInOut" }}
       className="w-full max-w-md mx-auto overflow-hidden"
     >
