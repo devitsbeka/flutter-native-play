@@ -54,7 +54,6 @@ export interface MobileHomeScrollProps {
   onGemsClick: () => void;
   onGiftClick: () => void;
   onStreakClick: () => void;
-  onQuestClick: () => void;
   onAddFriend: () => void;
   /** A tap on the wallpaper itself: the avatar and mascot picker. */
   onSceneClick: () => void;
@@ -74,7 +73,6 @@ export function MobileHomeScroll({
   onGemsClick,
   onGiftClick,
   onStreakClick,
-  onQuestClick,
   onAddFriend,
   onSceneClick,
 }: MobileHomeScrollProps) {
@@ -117,13 +115,13 @@ export function MobileHomeScroll({
             <FriendsStoriesBar onAddFriendClick={onAddFriend} />
           </div>
 
-          {/* The reward tabs on the scene: gift + countdown left, streak and
-              quest right, hung off the header's measured height. */}
+          {/* The reward tabs on the scene: the gift and its countdown on
+              the left, the streak on the right, hung off the header's
+              measured height. */}
           <MobileHeroWidgets
             giftLabel={giftLabel}
             onGiftClick={onGiftClick}
             onStreakClick={onStreakClick}
-            onQuestClick={onQuestClick}
           />
 
           {/* The profile card, anchored above the nav (its own absolute pos). */}

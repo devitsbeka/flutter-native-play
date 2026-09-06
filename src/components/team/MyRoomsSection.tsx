@@ -114,6 +114,23 @@ export function MyRoomsSection({
   const roomLimit = isMobile ? 10 : 15;
   const { rooms, loading, filter: activeFilter, refreshRooms } = useMyRooms({ filter, searchQuery, limit: roomLimit, visibility });
   const { enterRoom } = useMultiplayerV2();
+
+  // Opening a classic room from the home rail goes through the route, not the
+  // context. enterRoom only moves the multiplayer context to "lobby" — and
+  // the lobby is drawn by the /team page. On the rooms page that is the page
+  // underneath, so the join shows at once; on the home screen nothing renders
+  // it, and a tap joined the room without anything on screen changing (owner:
+  // "can't open rooms from main page"). /team?join=CODE is where every other
+  // entry — invites, notifications, the create flow — already converges, and
+  // `entering` keeps TeamV2's loading gate up so the rooms page never flashes
+  // beneath the join.
+  const enterClassicRoom = async (roomCode: string) => {
+    if (homeRail) {
+      navigate(`/team?join=${roomCode}`, { state: { entering: true } });
+      return;
+    }
+    await enterRoom(roomCode);
+  };
   const navigate = useNavigate();
   const { t } = useLanguage();
   const [showTVModal, setShowTVModal] = useState(false);
@@ -218,7 +235,7 @@ export function MyRoomsSection({
       // no room. Try the room anyway: none of that cleanup is what makes the
       // lobby openable.
       console.error("[MyRoomsSection] Join preparation failed, entering anyway:", error);
-      await enterRoom(room.room_code);
+      await enterClassicRoom(room.room_code);
     } finally {
       setJoiningRoomId(null);
     }
@@ -269,7 +286,7 @@ export function MyRoomsSection({
           .eq("id", room.id);
 
         // Continue to lobby instead of erroring out
-        await enterRoom(room.room_code);
+        await enterClassicRoom(room.room_code);
         return;
       }
       
@@ -309,7 +326,7 @@ export function MyRoomsSection({
     }
     
     // Standard room join - goes to lobby
-    await enterRoom(room.room_code);
+    await enterClassicRoom(room.room_code);
   };
 
   // Check if user has seen feature onboarding
@@ -447,7 +464,17 @@ export function MyRoomsSection({
           </AnimatePresence>
         </div>
       ) : (
-        <div className="overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory scroll-smooth">
+        // `scroll-px-4` matches the row's own inset: without it a snap
+        // aligns the card with the SCROLLER's edge, so the first card slid
+        // under the screen edge on the smallest nudge and the rail lost the
+        // 16px it shares with the heading above it. The home rail also takes
+        // the feed's vertical padding, so its cards sit on the same rhythm
+        // as the rails below it.
+        <div
+          className={`overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-px-4 scroll-smooth ${
+            homeRail ? "pb-3 pt-1" : "pb-4"
+          }`}
+        >
           <div className="flex gap-3 px-4">
             <AnimatePresence initial={false}>
               {rooms

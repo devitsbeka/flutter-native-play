@@ -8,7 +8,6 @@ import guestGeoMap from "@/assets/figma-home/guest-geo-map.webp";
 import coinChunky from "@/assets/figma-home/coin-chunky.png";
 import gemChunky from "@/assets/figma-home/gem-chunky.png";
 import giftDaily from "@/assets/figma-home/gift-daily.png";
-import chestDaily from "@/assets/figma-home/chest-daily.png";
 import streakFire from "@/assets/figma-home/streak-fire.png";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { useWavyRect } from "@/components/home/wave";
@@ -410,11 +409,15 @@ export function MobileProfileCard({
  * Hero widgets — the reward tabs floating on the scene
  * ------------------------------------------------------------------ */
 
-// Figma 1076:3587 (gift), 1076:3577 (streak) and 1076:3581 (quest): three
-// frosted tabs on the scene between the friends reel and the profile card —
-// the daily-reward gift with its countdown on the left, the streak flame and
-// the missions chest on the right. Each is an 80px glass card whose outer
-// top corner swells to 62px, with its artwork spilling over the top edge.
+// Figma 1076:3587 (gift) and 1076:3577 (streak): two frosted tabs on the
+// scene between the friends reel and the profile card — the daily-reward
+// gift with its countdown on the left, the streak flame on the right. Each
+// is an 80px glass card whose outer top corner swells to 62px, with its
+// artwork spilling over the top edge.
+//
+// The frame drew a third, a chest for the daily missions (1076:3581). It is
+// gone: the streak page it sat beside lists those missions itself, so the
+// chest was a second door onto one room.
 const WIDGET_GLASS =
   "linear-gradient(180deg, rgba(188,223,248,0.5) 0%, rgba(212,201,220,0.5) 15.385%, rgba(255,209,150,0.5) 37.981%, rgba(255,255,255,0.5) 71.056%, rgba(255,255,255,0.5) 100%)";
 const WIDGET_SHADOW =
@@ -442,10 +445,9 @@ interface MobileHeroWidgetsProps {
   giftLabel: string;
   onGiftClick: () => void;
   onStreakClick: () => void;
-  onQuestClick: () => void;
 }
 
-export function MobileHeroWidgets({ giftLabel, onGiftClick, onStreakClick, onQuestClick }: MobileHeroWidgetsProps) {
+export function MobileHeroWidgets({ giftLabel, onGiftClick, onStreakClick }: MobileHeroWidgetsProps) {
   return (
     <div className="md:hidden pointer-events-none absolute inset-0 z-20">
       {/* Gift — card at (18, 223.8) 80×90; the box leans 5.88° over its top edge. */}
@@ -511,38 +513,6 @@ export function MobileHeroWidgets({ giftLabel, onGiftClick, onStreakClick, onQue
         {t("extra.heroStreak")}
       </span>
 
-      {/* Quest — card at (400, 339) 80×90; the chest sits inside it, leaning
-          -7.57° and poking 14px above the top edge. */}
-      <button
-        type="button"
-        onClick={onQuestClick}
-        aria-label={t("extra.heroQuest")}
-        className="pointer-events-auto absolute right-[20px] h-[90px] w-[80px] backdrop-blur-[37px]"
-        style={{
-          top: belowHeader(339),
-          background: WIDGET_GLASS,
-          border: WIDGET_BORDER,
-          borderRadius: RIGHT_RADIUS,
-          boxShadow: WIDGET_SHADOW,
-        }}
-      />
-      <span
-        aria-hidden
-        className="absolute right-[22.7px] flex h-[81.945px] w-[80.173px] items-center justify-center"
-        style={{ top: belowHeader(339 - 13.87) }}
-      >
-        <span className="block h-[73.207px] w-[71.144px] overflow-hidden" style={{ transform: "rotate(-7.57deg)" }}>
-          <img
-            src={chestDaily}
-            alt=""
-            draggable={false}
-            className="absolute left-[-8.24%] top-[-13.04%] h-[113.04%] w-[115.03%] max-w-none"
-          />
-        </span>
-      </span>
-      <span className={WIDGET_LABEL} style={{ top: belowHeader(339 + 63), right: 20, width: 80 }}>
-        {t("extra.heroQuest")}
-      </span>
     </div>
   );
 }

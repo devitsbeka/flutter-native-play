@@ -336,7 +336,7 @@ export const de: KaTranslations = {
     currentStreak: "Serie",
     bestStreak: "Beste Serie",
     totalPoints: "Gesamtpunkte",
-    title: "Profil",
+    title: "Mein Konto",
     signInToView: "Melde dich an, um dein Profil zu sehen",
     signIn: "Anmelden",
     points: "Punkte",

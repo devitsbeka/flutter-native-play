@@ -149,19 +149,35 @@ describe("the rail headers", () => {
 });
 
 describe("the categories rail shows there is more to the right", () => {
-  it("two cards and the edge of a third", () => {
-    // Was /1.9 with a 212px floor, which is two cards and nothing after
-    // them on a phone.
-    expect(feed).toMatch(/w-\[max\(164px,calc\(\(100vw_-_56px\)\/2\.35\)\)\]/);
-    expect(feed).not.toMatch(/calc\(\(100vw_-_56px\)\/1\.9\)/);
+  it("a card and most of the next, so the rail plainly scrolls", () => {
+    // Half the screen each to a cap. At the old 164px floor the art was
+    // barely wider than the progress pill under it.
+    expect(feed).toMatch(/w-\[min\(52vw,208px\)\]/);
+    expect(feed).not.toMatch(/w-\[max\(164px/);
   });
 
-  it("and the width it gave up comes back as a second line", () => {
-    // #543 widened these BECAUSE Georgian names truncated at one line.
-    // Narrowing them again without this would just reintroduce that.
-    expect(category).toMatch(/isFull \? "line-clamp-1" : "line-clamp-2 min-h-\[2\.2em\]"/);
+  it("and a name that wraps does not make its card taller", () => {
+    // #543 widened these BECAUSE Georgian names truncated at one line, so
+    // the second line stays. But `min-h` of 2.2em is SHORTER than two lines
+    // of normal leading, so a wrapped name pushed its own card down and the
+    // rail lost its shared bottom edge — fixed leading, two of them tall.
+    expect(category).toMatch(/isFull \? "line-clamp-1" : "line-clamp-2 h-\[2\.4em\] leading-\[1\.2\]"/);
+    expect(category).not.toMatch(/min-h-\[2\.2em\]/);
     // The full-size card is unchanged — it was never short of room.
     expect(category).not.toMatch(/className="font-bold tracking-wider line-clamp-1 text-left"/);
+  });
+
+  it("every card's art fills one box, whichever way it is drawn", () => {
+    // The bundled 3D renders sized to 53% of the card's width and the icon
+    // library's PNGs to a flat 128px, so one rail carried two icon sizes —
+    // and on a narrow card the 128px one ran under the progress bar.
+    expect(category).toMatch(/const ICON_BOX =/);
+    expect(category).toMatch(/h-\[62%\] w-\[62%\] -translate-y-\[7%\]/);
+    expect(category).toMatch(/\[&_img\]:h-full \[&_img\]:w-full \[&_img\]:object-contain/);
+    // DynamicIcon's non-image states set 128px inline; the child cap keeps
+    // them inside the box.
+    expect(category).toMatch(/\[&>\*\]:max-h-full \[&>\*\]:max-w-full/);
+    expect(category).not.toMatch(/w-\[53%\] max-h-\[63%\]/);
   });
 });
 
@@ -187,5 +203,56 @@ describe("a room card on the home rail can be tapped", () => {
     // Only the home rail's card was changed; the page's card is untouched.
     expect(rooms).toMatch(/drag=\{isMobile \? "x" : false\}/);
     expect(rooms).toMatch(/onClick=\{handleClick\}/);
+  });
+
+  it("and the tap reaches a lobby the home screen can show", () => {
+    // enterRoom only moves the multiplayer context to "lobby", and the lobby
+    // is drawn by the /team page. On the rooms page that is the page
+    // underneath, so the join shows at once; on the home screen nothing
+    // renders it, and the tap joined the room with no change on screen.
+    // The home rail goes through the route every other entry already uses.
+    expect(rooms).toMatch(
+      /if \(homeRail\) \{\s*\n\s*navigate\(`\/team\?join=\$\{roomCode\}`, \{ state: \{ entering: true \} \}\);/,
+    );
+    // Every join on the card's path goes through that switch — the plain
+    // context join survives only inside it.
+    expect(rooms).toMatch(/await enterClassicRoom\(room\.room_code\)/);
+    expect(rooms.match(/await enterRoom\(/g)).toHaveLength(1);
+    // And TeamV2 still honours the flag the route carries.
+    const team = read("src/pages/TeamV2.tsx");
+    expect(team).toMatch(/entering\?: boolean/);
+  });
+
+  it("and backing out of that lobby gives the rooms page back", () => {
+    // The "entering" claim used to stand on its eight-second timer alone.
+    // Leave the lobby inside that window and the page came back to a claim
+    // still standing with no room: the spinner, and nothing to ever render
+    // past it. The claim ends when the room opens...
+    const team = read("src/pages/TeamV2.tsx");
+    expect(team).toMatch(
+      /if \(enteringSinceRef\.current !== null && \(phase !== "idle" \|\| currentRoom\)\) \{\s*\n\s*enteringSinceRef\.current = null;\s*\n\s*enteringSettledRef\.current = true;/,
+    );
+    // ...is never re-armed by a lingering location state once spent...
+    expect(team).toMatch(/enteringSinceRef\.current === null &&\s*\n\s*!enteringSettledRef\.current/);
+    // ...and a join that never opens a room re-renders the page at the
+    // deadline rather than waiting for something else to.
+    expect(team).toMatch(/window\.setTimeout\(\(\) => enteringTick\(\(n\) => n \+ 1\), Math\.max\(0, left\) \+ 20\)/);
+  });
+
+  it("and the same room can be opened again from the rooms page", () => {
+    // The join-by-code effect attempts each code once, and used to remember
+    // that for the life of the page: open a room, back out, tap its Play —
+    // /team?join=CODE again — and the join bailed as already attempted,
+    // never opening the room and never stripping the param, so the joining
+    // wash held the screen with nothing behind it. The memory is spent as
+    // soon as the URL carries no code...
+    const team = read("src/pages/TeamV2.tsx");
+    expect(team).toMatch(
+      /if \(!joinCode\) \{[^}]*attemptedJoinCodeRef\.current = null;\s*\n\s*return;\s*\n\s*\}/,
+    );
+    // ...and a code that did not open drops ?room= too, so the wash lifts
+    // instead of holding over a lobby that will never appear.
+    expect(team).toMatch(/opened = await enterRoom\(joinCode\);/);
+    expect(team).toMatch(/if \(!opened\) next\.delete\("room"\);/);
   });
 });

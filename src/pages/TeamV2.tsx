@@ -604,11 +604,43 @@ function TeamContentV2() {
    */
   const ENTERING_MAX_MS = 8000;
   const enteringSinceRef = useRef<number | null>(null);
-  if ((location.state as { entering?: boolean } | null)?.entering && enteringSinceRef.current === null) {
+  // Once the claim has been honoured it is spent; a lingering `entering` in
+  // the location state must not re-arm it after the room has been left.
+  const enteringSettledRef = useRef(false);
+  if (
+    (location.state as { entering?: boolean } | null)?.entering &&
+    enteringSinceRef.current === null &&
+    !enteringSettledRef.current
+  ) {
     enteringSinceRef.current = Date.now();
   }
   const enteringRoom =
     enteringSinceRef.current !== null && Date.now() - enteringSinceRef.current < ENTERING_MAX_MS;
+
+  // The claim ends when the room opens, not when the clock runs out. It
+  // used to stand on the timer alone: arrive through /team?join= — the home
+  // rail's way in — and back out of the lobby inside eight seconds, and the
+  // page came back to a claim still standing, phase idle, no room: the
+  // spinner, and nothing to ever render past it (owner: "click back and I
+  // see a white page with endless loading").
+  useEffect(() => {
+    if (enteringSinceRef.current !== null && (phase !== "idle" || currentRoom)) {
+      enteringSinceRef.current = null;
+      enteringSettledRef.current = true;
+    }
+  }, [phase, currentRoom]);
+
+  // And when the join never opens a room, the deadline itself re-renders the
+  // page. A clock read at render time needs something to run that render;
+  // without this the bound only ever applied to a page something ELSE had
+  // reason to redraw.
+  const [, enteringTick] = useState(0);
+  useEffect(() => {
+    if (!enteringRoom || enteringSinceRef.current === null) return;
+    const left = ENTERING_MAX_MS - (Date.now() - enteringSinceRef.current);
+    const id = window.setTimeout(() => enteringTick((n) => n + 1), Math.max(0, left) + 20);
+    return () => window.clearTimeout(id);
+  }, [enteringRoom]);
 
   const wasInRoomRef = useRef(false);
   const lastRoomCodeRef = useRef<string | null>(null);
@@ -650,7 +682,17 @@ function TeamContentV2() {
   const [classicJoinCode, setClassicJoinCode] = useState<string | null>(null);
   useEffect(() => {
     const joinCode = searchParams.get("join") || searchParams.get("room");
-    if (!joinCode) return;
+    if (!joinCode) {
+      // The URL carries no code, so the attempt it remembers is spent. It
+      // used to be remembered for the life of the page: open a room, back
+      // out, and tap the same room's Play — /team?join=CODE again — and
+      // the join bailed here as "already attempted", never opening the room
+      // and never stripping the param, so the joining wash below held the
+      // screen with nothing behind it (owner: "click Play and I see a blank
+      // page"). Once-per-code only has to hold while the code is in the URL.
+      attemptedJoinCodeRef.current = null;
+      return;
+    }
 
     // Every invite path in the app converges on /team?join=CODE — including
     // room-invite notifications for the new game types. A Team Battle room
@@ -724,12 +766,18 @@ function TeamContentV2() {
       if (attemptedJoinCodeRef.current === joinCode) return;
       attemptedJoinCodeRef.current = joinCode;
       (async () => {
+        let opened = false;
         try {
-          await enterRoom(joinCode);
+          opened = await enterRoom(joinCode);
         } finally {
           const next = new URLSearchParams(searchParams);
           next.delete("join");
           next.delete("tv");
+          // ?room= stays for a refresh mid-lobby to rejoin — but only a
+          // lobby that exists. A code that did not open has nothing to
+          // rejoin, and leaving it would hold the joining wash over a
+          // room that is never going to appear.
+          if (!opened) next.delete("room");
           setSearchParams(next, { replace: true });
         }
       })();

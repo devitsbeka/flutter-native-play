@@ -72,6 +72,22 @@ function preloadCategoryPage() {
  * box and almost none of these cards actually change. The props are all
  * primitives apart from the two callbacks, which the carousel keeps stable.
  */
+/**
+ * The icon's box inside the media area: a well lifted a little above centre
+ * so the progress bar along the foot never crosses the art. Any <img> in it
+ * — the bundled render, or the one DynamicIcon draws — fills it and keeps
+ * its own aspect, so every card in a rail shows its art at one size.
+ */
+const ICON_BOX =
+  "flex h-[62%] w-[62%] -translate-y-[7%] items-center justify-center " +
+  // The art fills the box; DynamicIcon's own <img> is reached through the
+  // descendant selector. The direct-child cap catches its non-image states
+  // — the loading square, the emoji, the error glyph — which set width and
+  // height inline at a flat 128px and would otherwise sit outside the box
+  // on a card narrower than that.
+  "[&_img]:h-full [&_img]:w-full [&_img]:object-contain " +
+  "[&>*]:max-h-full [&>*]:max-w-full";
+
 function AirbnbCategoryCardComponent({
   id,
   categoryId,
@@ -209,22 +225,35 @@ function AirbnbCategoryCardComponent({
               className="absolute inset-0 flex items-center justify-center"
               style={isLocked ? { filter: "grayscale(0.85)", opacity: 0.55 } : undefined}
             >
-              {POPULAR_CATEGORY_ICONS[(categoryId ?? id) as keyof typeof POPULAR_CATEGORY_ICONS] ? (
-                <img
-                  src={POPULAR_CATEGORY_ICONS[(categoryId ?? id) as keyof typeof POPULAR_CATEGORY_ICONS]}
-                  alt=""
-                  draggable={false}
-                  className="w-[53%] max-h-[63%] object-contain drop-shadow-lg"
-                  loading="lazy"
-                />
-              ) : (
-                <DynamicIcon
-                  slug={iconSlug || undefined}
-                  categoryId={categoryId}
-                  size={iconSize}
-                  className="drop-shadow-lg filter brightness-110"
-                />
-              )}
+              {/* One box for either kind of art, so a rail of cards has one
+                  icon size rather than two.
+
+                  The bundled 3D renders and the icon library's PNGs used to
+                  size themselves — the first to 53% of the card's width, the
+                  second to a flat 128px — so the same rail carried icons of
+                  visibly different sizes, and on a narrow card the 128px one
+                  ran under the progress bar. Both fill this box now
+                  (`[&_img]` reaches the img DynamicIcon draws), and the box
+                  sits clear of the bar rather than centred on a media area
+                  whose foot the bar covers. */}
+              <div className={ICON_BOX}>
+                {POPULAR_CATEGORY_ICONS[(categoryId ?? id) as keyof typeof POPULAR_CATEGORY_ICONS] ? (
+                  <img
+                    src={POPULAR_CATEGORY_ICONS[(categoryId ?? id) as keyof typeof POPULAR_CATEGORY_ICONS]}
+                    alt=""
+                    draggable={false}
+                    className="drop-shadow-lg"
+                    loading="lazy"
+                  />
+                ) : (
+                  <DynamicIcon
+                    slug={iconSlug || undefined}
+                    categoryId={categoryId}
+                    size={iconSize}
+                    className="drop-shadow-lg filter brightness-110"
+                  />
+                )}
+              </div>
             </div>
             </div>
 
@@ -442,12 +471,17 @@ function AirbnbCategoryCardComponent({
                 wide enough to fit "მსოფლიო გეოგრაფია" — Georgian category
                 names run long, and at one line the only way to show them was
                 more width, which cost the rail its third card. Wrapping buys
-                the same room vertically. The min-height reserves the second
-                line whether or not it is used, so a rail of one- and
-                two-line names still has one baseline. */}
+                the same room vertically.
+
+                The block is exactly two lines TALL, not merely at least: a
+                `min-h` of 2.2em is shorter than two lines of normal leading
+                ever are, so a two-line name pushed its own card taller and a
+                rail of one- and two-line names had no shared bottom edge.
+                Fixed leading, and a height of two of them, is the same box
+                either way. */}
             <h3
               className={`font-bold tracking-wider text-left ${
-                isFull ? "line-clamp-1" : "line-clamp-2 min-h-[2.2em]"
+                isFull ? "line-clamp-1" : "line-clamp-2 h-[2.4em] leading-[1.2]"
               }`}
               style={{
                 fontFamily: "'Google Sans', sans-serif",

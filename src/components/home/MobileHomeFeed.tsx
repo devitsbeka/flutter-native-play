@@ -270,12 +270,11 @@ export function MobileHomeFeed() {
           />
           <Rail>
             {railCategories.map((cat) => (
-              // Two cards and the edge of a third, so the rail reads as a
-              // rail rather than a pair. #543 widened these to 1.9 because
-              // Georgian names were truncating at one line — the card's
-              // title now wraps to two instead, which buys the same room
-              // back without the width.
-              <div key={cat.id} className="w-[max(164px,calc((100vw_-_56px)/2.35))] shrink-0 snap-start">
+              // Half the screen each, to a cap: a card and most of the next,
+              // so the rail plainly scrolls while the art is big enough to
+              // read. At the old 164px the icon was barely wider than the
+              // progress pill under it.
+              <div key={cat.id} className="w-[min(52vw,208px)] shrink-0 snap-start">
                 <AirbnbCategoryCard
                   id={cat.id}
                   categoryId={cat.category_id || cat.id}
