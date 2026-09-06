@@ -222,4 +222,20 @@ describe("a room card on the home rail can be tapped", () => {
     const team = read("src/pages/TeamV2.tsx");
     expect(team).toMatch(/entering\?: boolean/);
   });
+
+  it("and backing out of that lobby gives the rooms page back", () => {
+    // The "entering" claim used to stand on its eight-second timer alone.
+    // Leave the lobby inside that window and the page came back to a claim
+    // still standing with no room: the spinner, and nothing to ever render
+    // past it. The claim ends when the room opens...
+    const team = read("src/pages/TeamV2.tsx");
+    expect(team).toMatch(
+      /if \(enteringSinceRef\.current !== null && \(phase !== "idle" \|\| currentRoom\)\) \{\s*\n\s*enteringSinceRef\.current = null;\s*\n\s*enteringSettledRef\.current = true;/,
+    );
+    // ...is never re-armed by a lingering location state once spent...
+    expect(team).toMatch(/enteringSinceRef\.current === null &&\s*\n\s*!enteringSettledRef\.current/);
+    // ...and a join that never opens a room re-renders the page at the
+    // deadline rather than waiting for something else to.
+    expect(team).toMatch(/window\.setTimeout\(\(\) => enteringTick\(\(n\) => n \+ 1\), Math\.max\(0, left\) \+ 20\)/);
+  });
 });
