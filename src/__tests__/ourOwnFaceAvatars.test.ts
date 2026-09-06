@@ -1,25 +1,23 @@
 /**
- * The profile picture is one of OUR characters again, and it fits the circle.
+ * The profile picture is one of OUR characters again.
  *
- * Two complaints, one screen. The avatar studio had started offering the
- * animal mascots' faces as profile pictures; cropped into a 64px circle an
- * elephant reads as stock illustration rather than as anything of MyTrivia's.
- * And the app's own round characters — the ones the reel has always carried —
- * were framed so tightly that crowns and hat brims were sliced off.
- *
- * The second was in the art, not the CSS. The source renders are 397x334 with
- * the character filling the frame; every placement in the app is a circle
- * with `object-cover`, which squares them (losing the sides) and then masks
- * the corners. No amount of class fiddling gets back pixels the file never
- * had, so the files were reframed: 512x512, character at 80%, its own
- * background blurred to fill the rest.
- *
- * Reframed IN PLACE, under the same filenames, because `avatar_url` stores
- * those paths — so every player already wearing one is fixed by the same
- * change, with no migration and no broken picture.
+ * The avatar studio had started offering the animal mascots' faces as profile
+ * pictures; cropped into a 64px circle an elephant reads as stock
+ * illustration rather than as anything of MyTrivia's. The app's own round
+ * characters are the set again, in the studio grid and the profile reel, from
+ * one shared list so the two cannot drift apart.
  *
  * The blue King is in the set but not on offer. He is the home screen's own
  * mascot: a player wearing him reads as the app's furniture.
+ *
+ * The art is the original renders. They were reframed once — squared to
+ * 512x512 with the character at 80% and its own background blurred behind it
+ * — to stop the circle's `object-cover` from slicing crowns and hat brims.
+ * The owner's answer on seeing it was that it looked wrong, and it did: the
+ * blurred ring reads as a smudge, and a face pulled that far back stops being
+ * a face at 64px. So the assertions here pin the FILENAMES and the set rather
+ * than any framing — the paths are what `avatar_url` stores, and they are
+ * what must not move.
  */
 
 import { describe, expect, it } from "vitest";
@@ -43,19 +41,20 @@ function pngSize(path: string): { w: number; h: number } {
   return { w: buf.readUInt32BE(16), h: buf.readUInt32BE(20) };
 }
 
-describe("the art fits the circle it is shown in", () => {
-  it("every face is square, so object-cover crops nothing", () => {
-    // 397x334 meant the sides were cut before the circle mask even ran.
+describe("the art is the original renders", () => {
+  it("all eight at the size they were drawn", () => {
+    // Pinned so the reframing that was tried and rejected — squaring them to
+    // 512x512 over a blurred copy of themselves — cannot come back by
+    // accident. Changing the framing is a decision about the ART.
     for (const face of ALL_MASCOT_AVATARS) {
       const { w, h } = pngSize(`src/assets/avatars/${face.id}.png`);
-      expect(w, face.id).toBe(h);
-      expect(w, face.id).toBeGreaterThanOrEqual(512);
+      expect({ id: face.id, w, h }).toEqual({ id: face.id, w: 397, h: 334 });
     }
   });
 
-  it("and the filenames did not change, so nobody's stored picture broke", () => {
-    // avatar_url holds these paths. Reframing in place fixes every player
-    // already wearing one; a new filename would have needed a migration.
+  it("under the filenames avatar_url stores, so no stored picture breaks", () => {
+    // These paths are in the database. A new filename would need a migration
+    // and would blank the picture of everyone the migration had not reached.
     for (const face of ALL_MASCOT_AVATARS) {
       expect(face.path).toBe(`/src/assets/avatars/${face.id}.png`);
     }

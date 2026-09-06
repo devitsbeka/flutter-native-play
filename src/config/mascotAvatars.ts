@@ -17,12 +17,16 @@
  * that URL carries Vite's content hash and stops resolving after the next
  * build. `resolveAvatarUrl` maps the path back to the import at runtime.
  *
- * The art was reframed rather than re-cropped in CSS. The source renders are
- * 397x334 with the character filling the frame, and every placement in the
- * app is a circle with `object-cover` — which squares them, losing the sides,
- * then masks the corners. Crowns and hat brims were being sliced off. They
- * are 512x512 now with the character at 80% and its own background, blurred,
- * filling the rest, so what the circle shows is the whole character.
+ * The art is the original 397x334 renders, untouched.
+ *
+ * They were reframed once — 512x512, the character at 80% of it, its own
+ * background cover-scaled and blurred to fill the rest — to stop the circle's
+ * `object-cover` from slicing crowns and hat brims. The owner's answer on
+ * seeing it was that the result looked wrong: the blurred ring reads as a
+ * smudge around the character rather than as a background, and a face pulled
+ * that far back stops being a face at 64px. The tight crop is the look, so
+ * these are the files as drawn, and if the framing is revisited it wants new
+ * art rather than a filter over the old.
  */
 import mascotAvatar1 from "@/assets/avatars/mascot-avatar-1.png";
 import mascotAvatar2 from "@/assets/avatars/mascot-avatar-2.png";
