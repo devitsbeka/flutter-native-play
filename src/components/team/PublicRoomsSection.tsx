@@ -67,27 +67,28 @@ const LOUNGES: Record<string, { icon: string; labelKey: string }> = {
  * the text to dark — the owner's call, and one ink is one less seam.
  */
 /**
- * One ink for every public card, and it is the private card's (owner's
- * call, after a dark-versus-whitish pair was tried and turned down): white
- * type, the same dark scrim pills My Rooms wears, the same light glass bar.
- * Whether the viewer has been in a room is said by the leave icon on its
- * top-right, which only a room they are in carries — not by a second look.
+ * The pale card (owner's design): the gradient under a white wash, dark
+ * type on it, white pills, a white bar — "dark texts on white, it is more
+ * visible". One style for every room on both tabs; the private card
+ * (MyRoomsSection) wears the same values, so the tabs match. Whether the
+ * viewer has been in a room is said by the leave icon on its top-right,
+ * which only a room they are in carries.
  */
 const INK = {
-  light: {
-    text: "text-white",
-    muted: "text-white/70",
-    faint: "text-white/60",
-    // The private card's pill: a dark scrim, no border.
-    pill: "bg-black/25 backdrop-blur-sm",
-    // The private card's face ring.
-    ring: "border-white/40",
-    more: "bg-white/30 text-white",
+  pale: {
+    text: "text-[#2b1a4a]",
+    muted: "text-[#2b1a4a]/70",
+    faint: "text-[#2b1a4a]/60",
+    pill: "bg-white/60 backdrop-blur-sm",
+    ring: "border-white",
+    more: "bg-white/60 text-[#2b1a4a]",
   },
 } as const;
 
-/** The private card's bottom bar: light glass with a hairline. */
-const BAR = "bg-white/15 backdrop-blur-md border border-white/20";
+/** The white wash over the gradient, under everything the card says. */
+const WASH = "absolute inset-0 bg-white/55 pointer-events-none";
+/** The bottom bar: white, rounded like the pills' family. */
+const BAR = "bg-white/60 backdrop-blur-md";
 
 /**
  * The mixed pseudo-category as every picker in every language stores it.
@@ -219,7 +220,7 @@ function PublicRoomCard({
   const scene = room.game_type_key === "team_battle" ? sceneArena : null;
   // The scene is DARKENED under the ink (reduced opacity over deep purple,
   // a dark wash, an inner shadow), so every card writes in the same white.
-  const ink = INK.light;
+  const ink = INK.pale;
 
   const enter = () => navigate(publicRoomPath(room));
 
@@ -265,6 +266,7 @@ function PublicRoomCard({
             />
           </div>
         )}
+        <div className={WASH} aria-hidden />
         {/* Top: who runs it, who already joined, and how full it is */}
         <div className="relative z-10 flex items-start justify-between gap-2">
           <div className="flex items-center gap-1.5 min-w-0">
@@ -324,7 +326,7 @@ function PublicRoomCard({
                   e.stopPropagation();
                   onRemove(room);
                 }}
-                className={`w-8 h-8 rounded-full flex items-center justify-center hover:bg-black/35 active:scale-95 transition ${ink.pill} ${ink.text}`}
+                className={`w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/80 active:scale-95 transition ${ink.pill} ${ink.text}`}
               >
                 {room.my_state === "host" ? (
                   <Trash2 className="w-3.5 h-3.5" />
@@ -356,7 +358,7 @@ function PublicRoomCard({
             ) : (
               <span className="w-[53px] h-[53px] rounded-full bg-white/10 border border-white/20 shrink-0" />
             )}
-            <h3 className={`min-w-0 max-w-[58%] text-center font-display text-lg leading-tight line-clamp-2 drop-shadow-md ${ink.text}`}>
+            <h3 className={`min-w-0 max-w-[58%] text-center font-display text-lg leading-tight line-clamp-2 ${ink.text}`}>
               {lounge ? t(lounge.labelKey) : room.room_name || t("extra.gameRoomDefault")}
             </h3>
             {crests?.b ? (
@@ -386,7 +388,7 @@ function PublicRoomCard({
                 nobody chose over the one thing a player is scanning for. The
                 classic rooms keep their own name, which somebody did choose. */}
             <div className="min-w-0 flex-1">
-              <h3 className={`font-display text-lg leading-tight line-clamp-2 drop-shadow-md ${ink.text}`}>
+              <h3 className={`font-display text-lg leading-tight line-clamp-2 ${ink.text}`}>
                 {lounge ? t(lounge.labelKey) : room.room_name || t("extra.gameRoomDefault")}
               </h3>
               {!lounge && (
@@ -425,13 +427,13 @@ function PublicRoomCard({
                     />
                   </span>
                   {online.has(person.user_id) && (
-                    <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#2E1065]/70" />
+                    <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-white" />
                   )}
                 </span>
               ) : (
                 <span
                   key={`open-${i}`}
-                  className="w-8 h-8 rounded-full border-2 border-dashed border-white/40 bg-white/10 shrink-0"
+                  className="w-8 h-8 rounded-full border-2 border-dashed border-[#2b1a4a]/30 bg-white/30 shrink-0"
                 />
               );
             })}
@@ -439,7 +441,7 @@ function PublicRoomCard({
         )}
 
         {/* Bottom: the first round on the left, the way in on the right */}
-        <div className={`relative z-10 rounded-xl px-3 py-2.5 flex items-center justify-between gap-2 ${BAR}`}>
+        <div className={`relative z-10 rounded-2xl px-3 py-2.5 flex items-center justify-between gap-2 ${BAR}`}>
           <div className="flex items-center gap-2 min-w-0">
             {/* Just the category: its icon and its name. The "FIRST ROUND"
                 caption above it was noise (owner's call) — a picked round

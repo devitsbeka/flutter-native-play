@@ -1183,6 +1183,10 @@ function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, isJoining = fals
             enableNoise={false}
             className="relative w-full h-full p-3 flex flex-col"
           >
+            {/* The pale card (owner's design, shared with the Public tab —
+                see PublicRoomsSection's INK): a white wash over the
+                gradient, dark type on it, white pills, a white bar. */}
+            <div className="absolute inset-0 bg-white/55 pointer-events-none" aria-hidden />
             {/* Opening a room means several writes before the screen changes.
                 Say so on the card that was tapped, or it reads as ignored. */}
             {isJoining && (
@@ -1202,7 +1206,7 @@ function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, isJoining = fals
                 {/* The badge is always the age. "Waiting", "online" and "new"
                     read the same on every card; the dot carries that state
                     instead — green when someone is there, amber when empty. */}
-                <span className="inline-flex items-center gap-1.5 whitespace-nowrap px-2.5 py-1 rounded-full bg-black/25 backdrop-blur-sm text-white font-bold text-xs">
+                <span className="inline-flex items-center gap-1.5 whitespace-nowrap px-2.5 py-1 rounded-full bg-white/60 backdrop-blur-sm text-[#2b1a4a] font-bold text-xs">
                   <span
                     className={`w-1.5 h-1.5 shrink-0 rounded-full animate-pulse ${
                       someoneInRoom || allPlayersOnline ? "bg-green-400" : "bg-amber-400"
@@ -1219,9 +1223,9 @@ function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, isJoining = fals
                   way in; the count is a fact about the room, and it reads as
                   one beside the room's age. */}
               <div className="flex items-center gap-2">
-                <div className="flex flex-shrink-0 items-center gap-1.5 rounded-full bg-black/25 backdrop-blur-sm px-2.5 py-1">
-                  <Users className="w-3.5 h-3.5 text-white" />
-                  <span className="text-white font-bold text-xs">{displayPlayerCount}</span>
+                <div className="flex flex-shrink-0 items-center gap-1.5 rounded-full bg-white/60 backdrop-blur-sm px-2.5 py-1">
+                  <Users className="w-3.5 h-3.5 text-[#2b1a4a]" />
+                  <span className="text-[#2b1a4a] font-bold text-xs">{displayPlayerCount}</span>
                 </div>
 
               {/* The way out, in the open on every device — the same
@@ -1234,12 +1238,12 @@ function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, isJoining = fals
                   e.stopPropagation();
                   setShowDeleteConfirm(true);
                 }}
-                className="w-8 h-8 rounded-full bg-black/25 backdrop-blur-sm flex items-center justify-center hover:bg-black/35 active:scale-95 transition"
+                className="w-8 h-8 rounded-full bg-white/60 backdrop-blur-sm flex items-center justify-center hover:bg-white/80 active:scale-95 transition"
               >
                 {room.is_host ? (
-                  <Trash2 className="w-4 h-4 text-white" />
+                  <Trash2 className="w-4 h-4 text-[#2b1a4a]" />
                 ) : (
-                  <LogOut className="w-4 h-4 text-white" />
+                  <LogOut className="w-4 h-4 text-[#2b1a4a]" />
                 )}
               </button>
               </div>
@@ -1256,11 +1260,11 @@ function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, isJoining = fals
                   />
                 )}
                 <div className="min-w-0 flex-1">
-                  <h3 className="font-display text-white text-lg leading-tight line-clamp-2 drop-shadow-md">
+                  <h3 className="font-display text-[#2b1a4a] text-lg leading-tight line-clamp-2">
                     {displayName}
                   </h3>
                   {(room.category_name || (lounge && room.room_name)) && (
-                    <p className="text-white/70 text-sm truncate mt-0.5">
+                    <p className="text-[#2b1a4a]/70 text-sm truncate mt-0.5">
                       {room.category_name ? localizeCategory(room.category_name) : lounge!.label}
                     </p>
                   )}
@@ -1271,7 +1275,7 @@ function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, isJoining = fals
             {/* Bottom: Glass container — who is in the room on the left, the
                 way into it on the right. */}
             <div className="relative z-10">
-              <div className="bg-white/15 backdrop-blur-md border border-white/20 rounded-xl px-3 py-2.5 flex items-center justify-between gap-2">
+              <div className="bg-white/60 backdrop-blur-md rounded-2xl px-3 py-2.5 flex items-center justify-between gap-2">
                 {/* Left: TV marker (played or live on TV, no container) +
                     player count (TV active players if available) + the faces
                     of who is in there, which belong beside the number they
@@ -1336,8 +1340,8 @@ function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, isJoining = fals
                       );
                     })}
                     {displayPlayers.length > avatarLimit && (
-                      <div className="w-8 h-8 rounded-full border-2 border-white/40 bg-white/30 backdrop-blur-sm flex items-center justify-center flex-shrink-0 shadow-md">
-                        <span className="text-white text-[10px] font-bold">
+                      <div className="w-8 h-8 rounded-full border-2 border-white bg-white/60 backdrop-blur-sm flex items-center justify-center flex-shrink-0 shadow-md">
+                        <span className="text-[#2b1a4a] text-[10px] font-bold">
                           +{displayPlayers.length - avatarLimit}
                         </span>
                       </div>
