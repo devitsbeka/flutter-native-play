@@ -54,6 +54,31 @@ export function DynamicIcon({
   const [isResolvingIcon, setIsResolvingIcon] = React.useState(false);
   const [imageLoaded, setImageLoaded] = React.useState(false);
   const maxRetries = 2;
+
+  // The direct path: a slug names its file.
+  //
+  // Every one of the 9,002 icons in the shipped index is stored as
+  // `<slug>.png`, so a card that arrives with a slug does not need the
+  // 1.3 MB catalogue to know where its icon is — and it used to wait for
+  // exactly that. Discover mounts sixty cards at once; each drew a blank
+  // until the whole catalogue had downloaded and been parsed, then sixty
+  // icons were requested in one burst (owner: "why do category icons need
+  // that much time, empty cards while scrolling"). Now the icon is asked
+  // for the moment the card mounts. The catalogue is consulted only if
+  // storage refuses the direct name — a slug the library does not carry,
+  // or one uploaded under another file name — and the lookup below then
+  // proceeds exactly as before.
+  const directSlug = React.useMemo(() => {
+    const first = slug ? (slug.includes(',') ? slug.split(',')[0].trim() : slug.trim()) : '';
+    return /^[a-z0-9][a-z0-9_-]*$/i.test(first) ? first : null;
+  }, [slug]);
+  const [directFailed, setDirectFailed] = React.useState(false);
+  // Its own loaded flag, not the shared one below: that one is reset when
+  // the catalogue arrives (isLoaded flips), and an image that had already
+  // loaded would fade out and never fade back — onLoad does not fire twice.
+  const [directLoaded, setDirectLoaded] = React.useState(false);
+  const directUrl =
+    directSlug && !directFailed ? `${ICON_STORAGE_URL}/${directSlug}.png` : null;
   
   const { findIcon, getIconBySlug, fetchIconBySlug, getIconForCategory, getRandomIconForCategory, isLoaded } = useIconLibrary();
 
@@ -121,6 +146,12 @@ export function DynamicIcon({
     return null;
   }, [slug, categoryId, isLoaded, stableSeed, hideIfEmpty, findIcon, getIconBySlug, getIconForCategory, getRandomIconForCategory]);
 
+  // A new slug gets its own direct attempt.
+  React.useEffect(() => {
+    setDirectFailed(false);
+    setDirectLoaded(false);
+  }, [directSlug]);
+
   // Reset error when URL changes or slug changes
   React.useEffect(() => {
     setImageError(false);
@@ -137,6 +168,9 @@ export function DynamicIcon({
 
   // Async fallback: if iconUrl doesn't match the requested slug, try direct DB lookup
   React.useEffect(() => {
+    // Not while the direct name is still standing: the database is the
+    // last resort, after storage has refused the slug's own file.
+    if (directUrl) return;
     if (slug && isLoaded) {
       const slugs = slug.includes(',') ? slug.split(',').map(s => s.trim()) : [slug];
       const firstSlug = slugs[0];
@@ -157,7 +191,35 @@ export function DynamicIcon({
         });
       }
     }
-  }, [iconUrl, slug, isLoaded, fetchIconBySlug]);
+  }, [iconUrl, slug, isLoaded, fetchIconBySlug, directUrl]);
+
+  // The direct name, before any of the gates below: no catalogue, no
+  // skeleton, the image element the moment there is a slug to name it.
+  if (directUrl) {
+    return (
+      <img
+        src={directUrl}
+        alt="Category icon"
+        width={size}
+        height={size}
+        loading="eager"
+        decoding="async"
+        onLoad={() => setDirectLoaded(true)}
+        onError={() => {
+          setDirectLoaded(false);
+          setDirectFailed(true);
+        }}
+        className={cn(
+          "object-contain transition-opacity duration-200",
+          directLoaded ? "opacity-100" : "opacity-0",
+          className
+        )}
+        style={{
+          filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.2))",
+        }}
+      />
+    );
+  }
 
   const handleImageError = React.useCallback(() => {
     if (retryCount < maxRetries) {

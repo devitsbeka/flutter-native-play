@@ -1064,14 +1064,23 @@ export function RoomLobbyV2() {
         roomCode={currentRoom.room_code}
       />
 
-      {/* Play on TV: the pairing code entry, as a sheet over the lobby. */}
+      {/* Play on TV: the pairing code entry, as a sheet over the lobby.
+
+          The sheet sits on the bottom edge and its code boxes take focus on
+          open, which raises the numeric keypad — and on iOS the webview is
+          NOT resized for the keyboard (KeyboardResize.None, see
+          nativeShell.ts), so a bottom-anchored sheet stays exactly where it
+          was: underneath the keys. The native shell publishes the keyboard's
+          height as --keyboard-height for this reason; the padding below
+          lifts the sheet by it, and the sheet scrolls itself if what is left
+          of the screen is shorter than it is. */}
       <AnimatePresence>
         {isTVModeEnabled && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[120] flex items-end justify-center bg-[rgba(64,38,102,0.35)] backdrop-blur-[6px] p-4 pb-[calc(1rem_+_var(--safe-bottom))]"
+            className="fixed inset-0 z-[120] flex items-end justify-center bg-[rgba(64,38,102,0.35)] backdrop-blur-[6px] p-4 pt-[calc(1rem_+_var(--safe-top))] pb-[calc(1rem_+_var(--safe-bottom)_+_var(--keyboard-height,0px))] transition-[padding] duration-200"
             onClick={() => setIsTVModeEnabled(false)}
           >
             <motion.div
@@ -1079,7 +1088,7 @@ export function RoomLobbyV2() {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 40, opacity: 0 }}
               transition={{ type: "spring", stiffness: 380, damping: 32 }}
-              className="w-full max-w-[468px] rounded-[24px] border-2 border-white/60 bg-[rgba(252,247,255,0.92)] p-2 shadow-[0px_8px_24px_0px_rgba(102,51,153,0.18)]"
+              className="w-full max-w-[468px] max-h-full overflow-y-auto rounded-[24px] border-2 border-white/60 bg-[rgba(252,247,255,0.92)] p-2 shadow-[0px_8px_24px_0px_rgba(102,51,153,0.18)]"
               onClick={(e) => e.stopPropagation()}
             >
               <TVSetupInline
