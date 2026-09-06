@@ -113,7 +113,7 @@ export default function HomeShot() {
       style={{ "--home-header-h": "69px" } as React.CSSProperties}
     >
       <img src={scene} alt="" className="absolute inset-x-0 top-0 w-full" draggable={false} />
-      <MobileHeroWidgets giftLabel="3h 21m" onGiftClick={noop} onStreakClick={noop} onQuestClick={noop} />
+      <MobileHeroWidgets giftLabel="3h 21m" onGiftClick={noop} onStreakClick={noop} />
       <MobileProfileCard
         nickname="Beka"
         avatarUrl={FACE}
