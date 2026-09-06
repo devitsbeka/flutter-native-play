@@ -651,3 +651,37 @@
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-1.2%); }
 }
+
+/* The lobby's attention ring: a gradient stroke that drifts slowly around
+   the category chip and the + (for the host, so the way to add a round is
+   found without looking), and flashes once on everyone's chip when a round
+   is added. A ring, not a fill: the gradient is masked to a 2px band by
+   punching the content box out of it. Still under Reduce Motion. */
+@keyframes lobby-ring-drift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+@keyframes lobby-ring-flash {
+  0% { opacity: 0; }
+  20% { opacity: 1; }
+  100% { opacity: 0; }
+}
+.lobby-ring {
+  padding: 2px;
+  background: linear-gradient(120deg, #c084fc, #f472b6, #7dd3fc, #a78bfa, #c084fc);
+  background-size: 300% 300%;
+  animation: lobby-ring-drift 3.6s ease-in-out infinite;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  box-shadow: 0 0 14px rgba(168, 85, 247, 0.35);
+}
+.lobby-ring-flash {
+  animation: lobby-ring-drift 3.6s ease-in-out infinite, lobby-ring-flash 1.6s ease-out forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .lobby-ring { animation: none; }
+  .lobby-ring-flash { animation: lobby-ring-flash 1.6s ease-out forwards; }
+}

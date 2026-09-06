@@ -1878,6 +1878,8 @@ export const ka = {
     // The universal lobby (Figma 1018:5815 / 1018:4416)
     uGameRules: "თამაშის წესები",
     uPlayersTab: "მოთამაშეები",
+    uJoinedNote: "შემოგვიერთდა",
+    uLeftNote: "გავიდა",
     uQuestionsPerRound: "კითხვები რაუნდში",
     uVisibility: "ხილვადობა",
     uJoining: "შემოსვლა",

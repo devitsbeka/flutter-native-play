@@ -52,8 +52,9 @@ describe("the way to add more never scrolls away", () => {
     const scrollerEnd = modal.indexOf("</Reorder.Group>");
     expect(scroller).toBeGreaterThan(-1);
     expect(add).toBeGreaterThan(scrollerEnd);
-    // Its own row, outside the scrolling box, clear of the home indicator.
-    expect(modal).toMatch(/className="shrink-0 px-4 pb-\[calc\(1rem_\+_var\(--safe-bottom\)\)\] pt-2"/);
+    // Its own row, outside the scrolling box. (No home-indicator clearance
+    // any more: the list is a panel under the chip, not a page.)
+    expect(modal).toMatch(/className="shrink-0 px-4 pb-4 pt-2"/);
   });
 
   it("and the rounds are what scrolls", () => {

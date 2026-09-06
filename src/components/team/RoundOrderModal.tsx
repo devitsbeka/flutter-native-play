@@ -74,39 +74,26 @@ export function RoundOrderModal({
 
   if (!open) return null;
 
+  // A panel, not a page: the lobby drops it under the category chip over a
+  // blurred backdrop (UniversalLobby's categoryMenu), so it closes with a
+  // tap anywhere and nobody leaves the lobby to read it. It used to be a
+  // full screen of its own (owner: "shouldn't be a separate page").
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 safe-screen z-[120] flex flex-col bg-background"
-      >
-        {/* The same lilac wash the picker wears, so the two read as one place. */}
-        <div
-          aria-hidden
-          className="absolute inset-0 -z-10 pointer-events-none"
-          style={{
-            background:
-              "linear-gradient(180deg, rgba(249,219,255,0.55) 0%, rgba(249,219,255,0.3) 45%, rgba(249,219,255,0.55) 100%)",
-          }}
-        />
-
-        <div className="flex items-center justify-between p-4">
+    <>
+        <div className="flex items-center justify-between px-4 pb-1 pt-3">
           <div className="w-10" />
           <h2 className="text-lg font-display text-primary">{t("lobby.uRoundsTitle")}</h2>
           <motion.button
             type="button"
             onClick={onClose}
-            whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-muted transition-colors hover:bg-muted/80"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-black/5 transition-colors hover:bg-black/10"
           >
             <X className="h-5 w-5 text-foreground" />
           </motion.button>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-3">
           <div className="mx-auto w-full max-w-[520px]">
             <p className="mb-3 text-center text-sm text-muted-foreground">
               {canEdit ? t("lobby.uRoundsHint") : t("lobby.uRoundsHintGuest")}
@@ -159,11 +146,11 @@ export function RoundOrderModal({
         </div>
 
         {/* Add sits UNDER the scroller, not in it.
-            A twelve-round room pushed it off the bottom of the screen, so the
-            one control this sheet exists to offer was the one thing you had to
+            A twelve-round room pushed it off the bottom of the panel, so the
+            one control this list exists to offer was the one thing you had to
             scroll a list of twelve to reach. The rounds scroll; this does not. */}
         {canEdit && (
-          <div className="shrink-0 px-4 pb-[calc(1rem_+_var(--safe-bottom))] pt-2">
+          <div className="shrink-0 px-4 pb-4 pt-2">
             <div className="mx-auto w-full max-w-[520px]">
               <motion.button
                 type="button"
@@ -177,8 +164,7 @@ export function RoundOrderModal({
             </div>
           </div>
         )}
-      </motion.div>
-    </AnimatePresence>
+    </>
   );
 }
 
