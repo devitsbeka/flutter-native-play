@@ -149,19 +149,35 @@ describe("the rail headers", () => {
 });
 
 describe("the categories rail shows there is more to the right", () => {
-  it("two cards and the edge of a third", () => {
-    // Was /1.9 with a 212px floor, which is two cards and nothing after
-    // them on a phone.
-    expect(feed).toMatch(/w-\[max\(164px,calc\(\(100vw_-_56px\)\/2\.35\)\)\]/);
-    expect(feed).not.toMatch(/calc\(\(100vw_-_56px\)\/1\.9\)/);
+  it("a card and most of the next, so the rail plainly scrolls", () => {
+    // Half the screen each to a cap. At the old 164px floor the art was
+    // barely wider than the progress pill under it.
+    expect(feed).toMatch(/w-\[min\(52vw,208px\)\]/);
+    expect(feed).not.toMatch(/w-\[max\(164px/);
   });
 
-  it("and the width it gave up comes back as a second line", () => {
-    // #543 widened these BECAUSE Georgian names truncated at one line.
-    // Narrowing them again without this would just reintroduce that.
-    expect(category).toMatch(/isFull \? "line-clamp-1" : "line-clamp-2 min-h-\[2\.2em\]"/);
+  it("and a name that wraps does not make its card taller", () => {
+    // #543 widened these BECAUSE Georgian names truncated at one line, so
+    // the second line stays. But `min-h` of 2.2em is SHORTER than two lines
+    // of normal leading, so a wrapped name pushed its own card down and the
+    // rail lost its shared bottom edge — fixed leading, two of them tall.
+    expect(category).toMatch(/isFull \? "line-clamp-1" : "line-clamp-2 h-\[2\.4em\] leading-\[1\.2\]"/);
+    expect(category).not.toMatch(/min-h-\[2\.2em\]/);
     // The full-size card is unchanged — it was never short of room.
     expect(category).not.toMatch(/className="font-bold tracking-wider line-clamp-1 text-left"/);
+  });
+
+  it("every card's art fills one box, whichever way it is drawn", () => {
+    // The bundled 3D renders sized to 53% of the card's width and the icon
+    // library's PNGs to a flat 128px, so one rail carried two icon sizes —
+    // and on a narrow card the 128px one ran under the progress bar.
+    expect(category).toMatch(/const ICON_BOX =/);
+    expect(category).toMatch(/h-\[62%\] w-\[62%\] -translate-y-\[7%\]/);
+    expect(category).toMatch(/\[&_img\]:h-full \[&_img\]:w-full \[&_img\]:object-contain/);
+    // DynamicIcon's non-image states set 128px inline; the child cap keeps
+    // them inside the box.
+    expect(category).toMatch(/\[&>\*\]:max-h-full \[&>\*\]:max-w-full/);
+    expect(category).not.toMatch(/w-\[53%\] max-h-\[63%\]/);
   });
 });
 
