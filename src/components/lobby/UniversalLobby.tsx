@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState, type ReactNode, useEffect } from "react";
+import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { ArrowLeft, Bell, BellRing, Check, Loader2, Pencil, Play, Plus, UserPlus, X } from "lucide-react";
 import SpotlightSearch from "@/components/search/SpotlightSearch";
@@ -142,13 +142,11 @@ export interface UniversalLobbyProps {
     onPress?: () => void;
     onAdd?: () => void;
     /**
-     * How many rounds the room has. When it goes up, the chip flashes its
-     * ring and the "+N" pops, so a player notices a round being added.
-     */
-    rounds?: number;
-    /**
-     * The host's ring: a gradient stroke drifting around the chip and the
-     * +, so the way to add a round is found without looking (owner's ask).
+     * The host's ring: a gradient stroke travelling around the chip and
+     * the +, so the way to add a round is found without looking (owner's
+     * ask). Lit only while there is still a category to pick; once the
+     * host has one it stops. The "+N" pops on its own as rounds are added,
+     * for everyone.
      */
     glow?: boolean;
   };
@@ -449,7 +447,7 @@ export function UniversalLobby({
         >
           <div className="pl-[9px] pr-[3px]">
             <div className="flex h-[52px] items-stretch gap-2">
-              <Ring on={!!category.glow} flashKey={category.rounds} className="min-w-0 flex-1">
+              <Ring on={!!category.glow} className="min-w-0 flex-1">
                 <Chip
                   icon={chipQuestion}
                   iconSlug={category.iconSlug}
@@ -1210,52 +1208,36 @@ function Chip({
 }
 
 /**
- * The attention ring around a chip: a gradient stroke drifting around it.
+ * The attention ring around a chip: a gradient stroke travelling around it.
  *
- * `on` keeps it lit (the host's chip and +, so the way to add a round is
- * found without looking). `flashKey` lights it once, for a moment, each
- * time the key changes after mount — the round count, so a player sees a
- * round being added. Drawn as a masked gradient behind the child (see
- * .lobby-ring in index.css), rounded a hair wider than the chip.
+ * `on` lights it — the host's chip and +, only while the host still has a
+ * category to pick, so the way to add a round is found without looking and
+ * then gets out of the way. Nobody else's chip wears it: when a round is
+ * added the "+N" on the chip pops (see Chip), and that is the cue.
+ *
+ * Drawn as a masked gradient (see .lobby-ring in index.css) laid exactly
+ * over the chip's own 1px border, so the ring is the border while it is
+ * on — the same weight as every rule box below — rather than a second,
+ * heavier band around it. The first cut was a 2px band outside the border,
+ * which read as bolder than anything else on the screen.
  */
 function Ring({
   on,
-  flashKey,
   className,
   children,
 }: {
   on: boolean;
-  flashKey?: number;
   className?: string;
   children: ReactNode;
 }) {
-  const [flash, setFlash] = useState(0);
-  const seen = useRef<number | undefined>(undefined);
-  useEffect(() => {
-    if (seen.current === undefined) {
-      seen.current = flashKey;
-      return;
-    }
-    if (flashKey !== seen.current) {
-      seen.current = flashKey;
-      if (flashKey !== undefined) setFlash((n) => n + 1);
-    }
-  }, [flashKey]);
   // A flex box, not a block: the chip inside is `flex-1`, which only means
   // something in a flex parent. As a block, the ring left the chip at its
   // content width — "Economics +3" as a short pill inside a wide ring
   // (owner's screenshot).
   return (
     <div className={cn("relative flex", className)}>
-      {on && <span aria-hidden className="lobby-ring pointer-events-none absolute -inset-[2px] rounded-[22px]" />}
-      {!on && flash > 0 && (
-        <span
-          key={flash}
-          aria-hidden
-          className="lobby-ring lobby-ring-flash pointer-events-none absolute -inset-[2px] rounded-[22px]"
-        />
-      )}
       {children}
+      {on && <span aria-hidden className="lobby-ring pointer-events-none absolute inset-0 z-10 rounded-[20px]" />}
     </div>
   );
 }

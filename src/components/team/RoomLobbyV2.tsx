@@ -1033,10 +1033,11 @@ export function RoomLobbyV2() {
                 ? () => { setStartAfterPick(false); setShowCategoryPicker(true); }
                 : undefined,
           onAdd: isHost ? () => { setStartAfterPick(false); setShowCategoryPicker(true); } : undefined,
-          // The host's chip and + wear the drifting ring; everyone's chip
-          // flashes it as the round count changes.
-          rounds,
-          glow: isHost,
+          // The host's chip and + wear the travelling ring only until a
+          // category is picked — a pointer to the thing to do, not a
+          // permanent decoration. Nobody else's chip wears it; they see
+          // the "+N" pop as rounds are added.
+          glow: isHost && needsCategorySelection,
         };
       })()}
       categoryMenu={{
