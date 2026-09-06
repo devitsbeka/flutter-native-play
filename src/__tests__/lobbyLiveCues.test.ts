@@ -26,15 +26,21 @@ describe("the ring", () => {
     // 300% in 3.6s — a shimmer.)
     expect(css).toMatch(/@property --lobby-ring-angle \{\s*\n\s*syntax: "<angle>";/);
     expect(css).toMatch(/\.lobby-ring \{[\s\S]*?conic-gradient\(\s*\n\s*from var\(--lobby-ring-angle\),[\s\S]*?animation: lobby-ring-drift 9s linear infinite;[\s\S]*?mask-composite: exclude;/);
-    const ring = css.slice(css.indexOf(".lobby-ring {"), css.indexOf(".lobby-ring-flash {"));
+    const ring = css.slice(css.indexOf(".lobby-ring {"), css.indexOf("@media (prefers-reduced-motion: reduce) {\n  .lobby-ring"));
     expect(ring).not.toMatch(/f472b6|7dd3fc|c084fc/);
     expect(ring).toMatch(/box-shadow: 0 0 10px rgba\(136, 88, 213, 0\.18\);/);
+    // 1px, laid over the chip's own border: the same weight as the rule
+    // boxes below, not a heavier band outside it.
+    expect(ring).toMatch(/padding: 1px;/);
+    expect(universal).toMatch(/className="lobby-ring pointer-events-none absolute inset-0 z-10 rounded-\[20px\]"/);
     expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\) \{\s*\n\s*\.lobby-ring \{ animation: none; \}/);
-    expect(css).toMatch(/\.lobby-ring-flash \{\s*\n\s*animation: lobby-ring-drift 9s linear infinite, lobby-ring-flash 1\.6s ease-out forwards;/);
+    // No flash variant any more: the "+N" pop is the cue for a round added.
+    expect(css).not.toMatch(/lobby-ring-flash/);
+    expect(universal).not.toMatch(/flashKey/);
   });
 
-  it("stays lit on the host's chip and +, and flashes for everyone as the round count changes", () => {
-    expect(universal).toMatch(/<Ring on=\{!!category\.glow\} flashKey=\{category\.rounds\} className="min-w-0 flex-1">\s*\n\s*<Chip/);
+  it("is lit on the host's chip and + only until a category is picked", () => {
+    expect(universal).toMatch(/<Ring on=\{!!category\.glow\} className="min-w-0 flex-1">\s*\n\s*<Chip/);
     expect(universal).toMatch(/<Ring on=\{!!category\.glow && !categoryMenu\?\.open\} className="shrink-0">/);
     // The chip fills the ring: the ring is a flex box (flex-1 on the chip
     // means nothing under a block) and the chip is w-full.
@@ -44,12 +50,12 @@ describe("the ring", () => {
     expect(universal).toMatch(/onClick=\{categoryMenu\?\.open \? categoryMenu\.onClose : category\.onAdd\}/);
     expect(universal).toMatch(/aria-label=\{categoryMenu\?\.open \? "close" : "add category"\}/);
     expect(universal).toMatch(/\{categoryMenu\?\.open \? \(\s*\n\s*<X className="h-6 w-6 text-\[#402666\]" strokeWidth=\{2\.4\} \/>/);
-    // A flash only after the first snapshot: the count as found is not an addition.
-    expect(universal).toMatch(/if \(seen\.current === undefined\) \{\s*\n\s*seen\.current = flashKey;\s*\n\s*return;/);
-    expect(room).toMatch(/rounds,\s*\n\s*glow: isHost,/);
+    // Host only, and only while there is still a category to pick.
+    expect(room).toMatch(/glow: isHost && needsCategorySelection,/);
+    expect(room).not.toMatch(/rounds,\s*\n\s*glow:/);
   });
 
-  it("and the +N pops as it changes", () => {
+  it("and the +N pops as it changes — the one cue everyone gets", () => {
     expect(universal).toMatch(/<AnimatePresence mode="popLayout" initial=\{false\}>\s*\n\s*\{trailing && \(\s*\n\s*<motion\.span\s*\n\s*key=\{trailing\}/);
   });
 });
@@ -94,5 +100,13 @@ describe("joined and left", () => {
       expect(locale, lang).toMatch(/uJoinedNote: "/);
       expect(locale, lang).toMatch(/uLeftNote: "/);
     }
+  });
+});
+
+describe("one close, not two", () => {
+  it("the round list has no X of its own — the + beside the chip is the X while it is open", () => {
+    const header = modal.slice(modal.indexOf('{t("lobby.uRoundsTitle")}') - 400, modal.indexOf('{t("lobby.uRoundsTitle")}') + 200);
+    expect(header).not.toMatch(/<X /);
+    expect(header).toMatch(/flex items-center justify-center px-4 pb-1 pt-3/);
   });
 });

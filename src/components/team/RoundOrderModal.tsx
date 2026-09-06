@@ -54,7 +54,6 @@ interface RoundOrderModalProps {
 
 export function RoundOrderModal({
   open,
-  onClose,
   items,
   current,
   canEdit,
@@ -80,17 +79,11 @@ export function RoundOrderModal({
   // full screen of its own (owner: "shouldn't be a separate page").
   return (
     <>
-        <div className="flex items-center justify-between px-4 pb-1 pt-3">
-          <div className="w-10" />
+        {/* No close button of its own: the + beside the chip turns into an
+            X while this list is open, and the backdrop closes it too. Two
+            X's, one above the other, was one too many (owner). */}
+        <div className="flex items-center justify-center px-4 pb-1 pt-3">
           <h2 className="text-lg font-display text-primary">{t("lobby.uRoundsTitle")}</h2>
-          <motion.button
-            type="button"
-            onClick={onClose}
-            whileTap={{ scale: 0.95 }}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-black/5 transition-colors hover:bg-black/10"
-          >
-            <X className="h-5 w-5 text-foreground" />
-          </motion.button>
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-3">

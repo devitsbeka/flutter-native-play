@@ -654,9 +654,11 @@
 
 /* The lobby's attention ring: a stroke that travels slowly around the
    category chip and the + (for the host, so the way to add a round is
-   found without looking), and flashes once on everyone's chip when a round
-   is added. A ring, not a fill: the gradient is masked to a 2px band by
-   punching the content box out of it.
+   found without looking, and only until one is picked). A ring, not a fill: the gradient is masked to a 2px band by
+   punching the content box out of it. It is 1px — the ring lies over the
+   chip's own border and IS the border while lit, the same weight as every
+   rule box below it; a 2px band outside the border read as bolder than
+   anything else on the screen.
 
    The colour is the lobby's own purple — the Start button's #8858d5, the
    rule border's mauve, the pale #c9b2ed — fading between its own tints,
@@ -675,13 +677,8 @@
 @keyframes lobby-ring-drift {
   to { --lobby-ring-angle: 360deg; }
 }
-@keyframes lobby-ring-flash {
-  0% { opacity: 0; }
-  20% { opacity: 1; }
-  100% { opacity: 0; }
-}
 .lobby-ring {
-  padding: 2px;
+  padding: 1px;
   background: conic-gradient(
     from var(--lobby-ring-angle),
     #8858d5 0deg,
@@ -697,10 +694,6 @@
   mask-composite: exclude;
   box-shadow: 0 0 10px rgba(136, 88, 213, 0.18);
 }
-.lobby-ring-flash {
-  animation: lobby-ring-drift 9s linear infinite, lobby-ring-flash 1.6s ease-out forwards;
-}
 @media (prefers-reduced-motion: reduce) {
   .lobby-ring { animation: none; }
-  .lobby-ring-flash { animation: lobby-ring-flash 1.6s ease-out forwards; }
 }
