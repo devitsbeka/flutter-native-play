@@ -11,7 +11,7 @@ import giftDaily from "@/assets/figma-home/gift-daily.png";
 import chestDaily from "@/assets/figma-home/chest-daily.png";
 import streakFire from "@/assets/figma-home/streak-fire.png";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
-import { useWaveMask } from "@/components/home/wave";
+import { useWavyRect } from "@/components/home/wave";
 import { BackgroundVideo } from "@/components/shared/BackgroundVideo";
 import heroScene from "@/assets/figma-landing/hero-scene.png";
 
@@ -216,10 +216,17 @@ const CARD_RIGHT = 19;
 // is scaled down uniformly instead of squeezed: every size, gap and radius
 // stays the frame's own, only smaller. Every current phone is wider.
 const CARD_MIN_W = 340;
-// How far the card's hills reach past its lines (Figma 1076:3700 / 3697):
-// 11px above the top, 10px below the bottom.
-const CARD_WAVE_TOP = 11;
-const CARD_WAVE_BOTTOM = 10;
+// Peak-to-trough of the card's top and bottom waves, centred on the edges
+// they replace — so the card keeps its size and the crests reach half of
+// this beyond either end. Gentle on purpose: this is an edge treatment, and
+// a deep wave chews into the corners instead of rolling.
+const CARD_WAVE = 8;
+const CARD_WAVE_HALF = CARD_WAVE / 2;
+const CARD_RADIUS = 33.41;
+// The frame's border, drawn as a stroke along the silhouette rather than as
+// a CSS border on the box: a border stops where the mask cuts, which leaves
+// the straight sides outlined and the wavy ones bare.
+const CARD_BORDER = 1.867;
 
 // The bottom nav's real height: 88px of chrome (20px of padding around 48px
 // items) plus the padding it adds for the home indicator. The card floats
@@ -283,10 +290,17 @@ export function MobileProfileCard({
   onGemsClick,
 }: MobileProfileCardProps) {
   const { ref, scale, designWidth } = useCardScale();
-  // The card's edges roll (Figma 1076:3700 / 3697): the frosted glass itself
-  // is masked to a wave dealt fresh on every visit, with its hills reaching
-  // 11px above the top edge and 10px below the bottom.
-  const wave = useWaveMask({ top: CARD_WAVE_TOP + 5, bottom: CARD_WAVE_BOTTOM + 6, width: designWidth });
+  // The card's edges roll (Figma 1076:3700 / 3697): one closed silhouette,
+  // dealt fresh on every visit, that both masks the frosted glass and is
+  // stroked for the card's white outline — so the border follows the wave
+  // instead of stopping where the mask cuts.
+  const shape = useWavyRect({
+    width: designWidth,
+    height: CARD_H + CARD_WAVE,
+    radius: CARD_RADIUS,
+    top: CARD_WAVE,
+    bottom: CARD_WAVE,
+  });
 
   return (
     <motion.div
@@ -306,26 +320,26 @@ export function MobileProfileCard({
         className="absolute bottom-0 left-0 origin-bottom-left"
         style={{ width: designWidth, height: CARD_H, transform: `scale(${scale})` }}
       >
-        {/* The shadow, cast by the same wavy shape: a blurred copy of the
-            card's silhouette under it. A box-shadow would trace the straight
-            box, and a mask on the card would cut a shadow of its own away. */}
+        {/* The shadow, cast by the same silhouette: a blurred copy of it
+            under the card. A box-shadow would trace the straight box, and a
+            mask on the card would cut a shadow of its own away. */}
         <div
           aria-hidden
-          className="absolute left-0 right-0 translate-y-[7px] blur-[11px]"
-          style={{ top: -CARD_WAVE_TOP, bottom: -CARD_WAVE_BOTTOM }}
+          className="absolute left-0 right-0 translate-y-[6px] blur-[10px]"
+          style={{ top: -CARD_WAVE_HALF, bottom: -CARD_WAVE_HALF }}
         >
-          <div className="size-full rounded-[33.41px] bg-[rgba(102,51,153,0.16)]" style={wave} />
+          <div className="size-full bg-[rgba(102,51,153,0.16)]" style={shape.mask} />
         </div>
         <div
           // Frosted AND nearly opaque: the mascot wallpaper runs under the
           // card. The blur turns whatever is behind it into a wash, and the
           // fill keeps that wash pale enough that the name and the balances
           // sit on white rather than on the character's hoodie. The box
-          // reaches past the card's lines by the hills' height, and the
-          // mask rolls its edges; everything inside is placed from the
-          // card's own top, CARD_WAVE_TOP further down.
-          className="absolute left-0 right-0 overflow-hidden rounded-[33.41px] border-[1.867px] border-solid border-white bg-[rgba(252,247,255,0.82)] backdrop-blur-[37px]"
-          style={{ top: -CARD_WAVE_TOP, bottom: -CARD_WAVE_BOTTOM, ...wave }}
+          // reaches half a wave past the card's lines at either end and the
+          // mask rolls those edges; everything inside is placed from the
+          // card's own top, CARD_WAVE_HALF further down.
+          className="absolute left-0 right-0 overflow-hidden bg-[rgba(252,247,255,0.82)] backdrop-blur-[37px]"
+          style={{ top: -CARD_WAVE_HALF, bottom: -CARD_WAVE_HALF, ...shape.mask }}
         >
           {/* Avatar — node 1076:3548: a 52px disc, 2.5px gradient ring, 1.6px
               white ring, 44px picture, 14.6px in from the card's edge. */}
@@ -333,7 +347,7 @@ export function MobileProfileCard({
             type="button"
             onClick={onAvatarClick}
             aria-label={t("extra.changeScene")}
-            className="absolute left-[14.64px] top-[25px] size-[52.364px] rounded-full p-[2.455px]"
+            className="absolute left-[14.64px] top-[18px] size-[52.364px] rounded-full p-[2.455px]"
             style={{ background: AVATAR_RING }}
           >
             <span className="block size-full rounded-full bg-white p-[1.636px]">
@@ -356,12 +370,12 @@ export function MobileProfileCard({
           <button
             type="button"
             onClick={onNameClick}
-            className="absolute left-[77px] right-[196px] top-[28px] h-[44.814px] truncate text-left font-slackey text-[26px] capitalize leading-[44.814px] tracking-[-0.1494px] text-[#402666]"
+            className="absolute left-[77px] right-[196px] top-[21px] h-[44.814px] truncate text-left font-slackey text-[26px] capitalize leading-[44.814px] tracking-[-0.1494px] text-[#402666]"
           >
             {nickname}
           </button>
 
-          <div className="absolute right-[20px] top-[28px] flex gap-[6.162px]">
+          <div className="absolute right-[20px] top-[21px] flex gap-[6.162px]">
             <StatPill
               icon={coinChunky}
               value={formatCompactNumber(coins)}
@@ -375,6 +389,17 @@ export function MobileProfileCard({
               onClick={onGemsClick}
             />
           </div>
+        </div>
+        {/* The outline, on the same silhouette the mask cuts: one continuous
+            stroke around the rounded sides and both waves. */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute left-0 right-0"
+          style={{ top: -CARD_WAVE_HALF, bottom: -CARD_WAVE_HALF }}
+        >
+          <svg className="size-full" viewBox={shape.viewBox} preserveAspectRatio="none" fill="none">
+            <path d={shape.path} fill="none" stroke="#ffffff" strokeWidth={CARD_BORDER} />
+          </svg>
         </div>
       </div>
     </motion.div>

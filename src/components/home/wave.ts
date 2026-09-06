@@ -10,6 +10,11 @@ import { useMemo, useState, type CSSProperties } from "react";
  * of — a flat colour, a radial gradient, frosted glass over a scene — simply
  * continues into the hills. There is no colour to guess and no seam to hide.
  *
+ * A card that carries a border needs its outline to follow the same edge, or
+ * the stroke survives only on the straight sides and the wave reads as torn
+ * rather than drawn. So a card is ONE closed silhouette — rounded sides,
+ * wavy top and bottom — and the caller both masks with it and strokes it.
+ *
  * Every mount deals its own curve from a random seed, so no two cards roll
  * alike and a reload rolls them all again, while a re-render leaves a card's
  * curve exactly where it was.
@@ -29,27 +34,35 @@ function seeded(seed: number) {
 
 const px = (n: number) => Math.round(n * 100) / 100;
 
+type Rand = () => number;
+type Point = [number, number];
+
+/** One hill about every 110px, so the hills stay long and the curve gentle. */
+const HILL_SPACING = 110;
+
 /**
- * The path of one wavy strip, `width`×`height`: a smooth random curve with
- * hills roughly a hundred pixels apart, filled down to the strip's base for
- * a top edge or up to it for a bottom edge. The curve stays inside the
- * strip, so the surface's straight edge sits `height` px in from the crests.
+ * Points for one wavy edge, from `xStart` to `xEnd` (either direction),
+ * rising and falling by at most `band`/2 either side of `yMid` and meeting
+ * both ends exactly on `yMid` so it joins the corners cleanly.
  */
-export function waveStripPath(seed: number, width: number, height: number, edge: "top" | "bottom"): string {
-  const rand = seeded(seed);
-  const hills = Math.max(2, Math.round(width / 100) + Math.floor(rand() * 2));
-  const step = width / hills;
-  const pts: [number, number][] = [];
-  for (let i = 0; i <= hills; i++) {
-    const x = i === 0 ? 0 : i === hills ? width : i * step + (rand() - 0.5) * step * 0.5;
-    // Alternate high and low so it reads as hills rather than a drift, with
-    // the heights themselves left to chance.
-    const high = i % 2 === 0;
-    const y = height * (high ? 0.1 + rand() * 0.3 : 0.6 + rand() * 0.3);
-    pts.push([x, y]);
+function wavePoints(rand: Rand, xStart: number, xEnd: number, yMid: number, band: number): Point[] {
+  const span = xEnd - xStart;
+  const hills = Math.max(2, Math.round(Math.abs(span) / HILL_SPACING));
+  const pts: Point[] = [[xStart, yMid]];
+  for (let i = 1; i < hills; i++) {
+    // Nudge each crest off its even spacing, and vary how high it reaches,
+    // so the curve reads as drawn rather than stamped.
+    const t = i / hills + (rand() - 0.5) * 0.12;
+    const dir = i % 2 === 0 ? -1 : 1;
+    pts.push([xStart + span * t, yMid + dir * (band / 2) * (0.7 + rand() * 0.3)]);
   }
-  // Catmull-Rom through the points, written as cubic Béziers.
-  let d = `M${px(pts[0][0])} ${px(pts[0][1])}`;
+  pts.push([xEnd, yMid]);
+  return pts;
+}
+
+/** Catmull-Rom through the points, written as cubic Béziers. */
+function curveThrough(pts: Point[]): string {
+  let d = "";
   for (let i = 0; i < pts.length - 1; i++) {
     const p0 = pts[i - 1] ?? pts[i];
     const p1 = pts[i];
@@ -61,69 +74,100 @@ export function waveStripPath(seed: number, width: number, height: number, edge:
     const c2y = p2[1] - (p3[1] - p1[1]) / 6;
     d += `C${px(c1x)} ${px(c1y)} ${px(c2x)} ${px(c2y)} ${px(p2[0])} ${px(p2[1])}`;
   }
-  d += edge === "top" ? `L${width} ${height}L0 ${height}Z` : `L${width} 0L0 0Z`;
   return d;
 }
 
-function stripUrl(d: string, width: number, height: number): string {
-  const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 ${width} ${height}' preserveAspectRatio='none'><path d='${d}' fill='black'/></svg>`;
-  return `url("data:image/svg+xml;utf8,${encodeURIComponent(svg)}")`;
-}
-
-export interface WaveEdges {
-  /** Height of the wavy strip along the top edge, in px; 0 or absent for a straight top. */
-  top?: number;
-  /** Height of the wavy strip along the bottom edge, in px. */
-  bottom?: number;
-  /** The surface's width in px, roughly — it sets how many hills there are. */
+export interface WavyRect {
   width: number;
+  height: number;
+  /** The rounded corners on the straight left and right sides. */
+  radius: number;
+  /** Peak-to-trough height of the top edge's wave; 0 leaves it straight. */
+  top?: number;
+  bottom?: number;
 }
 
 /**
- * The mask for a surface whose top and/or bottom edges roll: a wavy strip
- * at each edge and solid between, as layered mask images. The strips are
- * `top` and `bottom` px tall at any width, so the box the mask is put on
- * must already reach `top` px above and `bottom` px below the line where
- * the straight edge would have been.
+ * A card's whole outline: rounded left and right sides, a wavy top and a
+ * wavy bottom. Each wave is centred on the edge it replaces, so the card
+ * keeps its size and the crests reach `top`/2 and `bottom`/2 beyond it —
+ * the box this is drawn in has to be that much taller at either end.
  */
-export function waveMaskStyle(seed: number, { top = 0, bottom = 0, width }: WaveEdges): CSSProperties {
-  const images: string[] = [];
-  const sizes: string[] = [];
-  const positions: string[] = [];
-  if (top > 0) {
-    images.push(stripUrl(waveStripPath(seed, width, top, "top"), width, top));
-    sizes.push(`100% ${top}px`);
-    positions.push("0 0");
-  }
-  if (bottom > 0) {
-    images.push(stripUrl(waveStripPath(seed ^ 0x9e3779b9, width, bottom, "bottom"), width, bottom));
-    sizes.push(`100% ${bottom}px`);
-    positions.push("0 100%");
-  }
-  // The solid middle, overlapping each strip's base by a pixel so no
-  // hairline opens between the layers.
-  const above = Math.max(0, top - 1);
-  const below = Math.max(0, bottom - 1);
-  images.push("linear-gradient(#000,#000)");
-  sizes.push(`100% calc(100% - ${above + below}px)`);
-  positions.push(`0 ${above}px`);
-  const image = images.join(",");
-  const size = sizes.join(",");
-  const position = positions.join(",");
+export function wavyRectPath(seed: number, { width, height, radius, top = 0, bottom = 0 }: WavyRect): string {
+  const rand = seeded(seed);
+  const r = Math.max(0, Math.min(radius, width / 2, height / 2));
+  const yTop = top / 2;
+  const yBottom = height - bottom / 2;
+  let d = `M0 ${px(yTop + r)}`;
+  d += `Q0 ${px(yTop)} ${px(r)} ${px(yTop)}`;
+  d += top > 0 ? curveThrough(wavePoints(rand, r, width - r, yTop, top)) : `L${px(width - r)} ${px(yTop)}`;
+  d += `Q${px(width)} ${px(yTop)} ${px(width)} ${px(yTop + r)}`;
+  d += `L${px(width)} ${px(yBottom - r)}`;
+  d += `Q${px(width)} ${px(yBottom)} ${px(width - r)} ${px(yBottom)}`;
+  d += bottom > 0 ? curveThrough(wavePoints(rand, width - r, r, yBottom, bottom)) : `L${px(r)} ${px(yBottom)}`;
+  d += `Q0 ${px(yBottom)} 0 ${px(yBottom - r)}`;
+  return `${d}Z`;
+}
+
+/**
+ * The path of a wavy strip `band` px tall: the curve runs along the middle
+ * of the strip and the fill hangs below it (a top edge) or above it (a
+ * bottom edge). For a surface whose own box cannot carry the wave — one of
+ * unknown height, say — laid over its straight edge with half the strip
+ * either side of it.
+ */
+export function waveStripPath(seed: number, width: number, band: number, edge: "top" | "bottom"): string {
+  const rand = seeded(seed);
+  const pts = wavePoints(rand, 0, width, band / 2, band);
+  const d = `M0 ${px(band / 2)}${curveThrough(pts)}`;
+  return edge === "top" ? `${d}L${px(width)} ${px(band)}L0 ${px(band)}Z` : `${d}L${px(width)} 0L0 0Z`;
+}
+
+/** A path as a mask that stretches to whatever box it is put on. */
+export function maskFromPath(d: string, width: number, height: number): CSSProperties {
+  const svg =
+    `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 ${px(width)} ${px(height)}' ` +
+    `preserveAspectRatio='none'><path d='${d}' fill='black'/></svg>`;
+  const image = `url("data:image/svg+xml;utf8,${encodeURIComponent(svg)}")`;
   return {
     maskImage: image,
     WebkitMaskImage: image,
-    maskSize: size,
-    WebkitMaskSize: size,
-    maskPosition: position,
-    WebkitMaskPosition: position,
+    maskSize: "100% 100%",
+    WebkitMaskSize: "100% 100%",
     maskRepeat: "no-repeat",
     WebkitMaskRepeat: "no-repeat",
   };
 }
 
-/** A wave mask dealt once per mount: random on arrival, then held still. */
-export function useWaveMask(edges: WaveEdges): CSSProperties {
+/** A seed dealt once per mount: random on arrival, then held still. */
+function useSeed(): number {
   const [seed] = useState(() => Math.floor(Math.random() * 0x7fffffff));
-  return useMemo(() => waveMaskStyle(seed, edges), [seed, edges.top, edges.bottom, edges.width]); // eslint-disable-line react-hooks/exhaustive-deps
+  return seed;
+}
+
+export interface WavyRectShape {
+  /** The outline, for both the mask and a stroke that follows it exactly. */
+  path: string;
+  /** `viewBox` for an SVG drawn over the same box. */
+  viewBox: string;
+  mask: CSSProperties;
+}
+
+/** A card's wavy silhouette, dealt once per mount. */
+export function useWavyRect(rect: WavyRect): WavyRectShape {
+  const seed = useSeed();
+  const { width, height, radius, top = 0, bottom = 0 } = rect;
+  return useMemo(() => {
+    const path = wavyRectPath(seed, { width, height, radius, top, bottom });
+    return { path, viewBox: `0 0 ${px(width)} ${px(height)}`, mask: maskFromPath(path, width, height) };
+  }, [seed, width, height, radius, top, bottom]);
+}
+
+/** A wavy strip's mask, dealt once per mount. */
+export function useWaveStrip(width: number, band: number, edge: "top" | "bottom"): CSSProperties {
+  const seed = useSeed();
+  return useMemo(
+    () => maskFromPath(waveStripPath(seed, width, band, edge), width, band),
+    [seed, width, band, edge],
+  );
 }
