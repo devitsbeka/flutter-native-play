@@ -37,6 +37,10 @@ import giraffeScene from "@/assets/mascots/giraffe.webp";
 import giraffeThumb from "@/assets/mascots/thumbs/giraffe.webp";
 import dolphinScene from "@/assets/mascots/dolphin.webp";
 import dolphinThumb from "@/assets/mascots/thumbs/dolphin.webp";
+import bullScene from "@/assets/mascots/bull.webp";
+import bullThumb from "@/assets/mascots/thumbs/bull.webp";
+import penguinScene from "@/assets/mascots/penguin.webp";
+import penguinThumb from "@/assets/mascots/thumbs/penguin.webp";
 
 export const MASCOT_IDS = [
   "owl",
@@ -47,6 +51,8 @@ export const MASCOT_IDS = [
   "elephant",
   "giraffe",
   "dolphin",
+  "bull",
+  "penguin",
 ] as const;
 
 export type MascotId = (typeof MASCOT_IDS)[number];
@@ -68,6 +74,8 @@ export const MASCOTS: readonly Mascot[] = [
   { id: "elephant", thumb: elephantThumb, scene: elephantScene },
   { id: "giraffe", thumb: giraffeThumb, scene: giraffeScene },
   { id: "dolphin", thumb: dolphinThumb, scene: dolphinScene },
+  { id: "bull", thumb: bullThumb, scene: bullScene },
+  { id: "penguin", thumb: penguinThumb, scene: penguinScene },
 ];
 
 export const isMascotId = (value: unknown): value is MascotId =>

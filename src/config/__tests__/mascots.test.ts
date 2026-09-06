@@ -4,11 +4,11 @@ import { readFileSync, readdirSync } from "node:fs";
 import { translations, LANGUAGES } from "@/locales";
 
 describe("the mascot catalog", () => {
-  it("carries the eight animals, and no King", () => {
+  it("carries the ten animals, and no King", () => {
     // The King is the home screen's own default, not a choice: a player who
     // never picks keeps the idle loop, and the picker shows only the animals.
     expect(MASCOTS.map((m) => m.id)).toEqual([...MASCOT_IDS]);
-    expect(MASCOTS).toHaveLength(8);
+    expect(MASCOTS).toHaveLength(10);
     expect(isMascotId("king")).toBe(false);
   });
 

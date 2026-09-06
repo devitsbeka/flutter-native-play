@@ -492,6 +492,8 @@ export const pt: KaTranslations = {
       elephant: "Elefante",
       giraffe: "Girafa",
       dolphin: "Golfinho",
+      bull: "Touro",
+      penguin: "Pinguim",
     },
     createNew: "Criar novo avatar",
     uploadPhoto: "Carregar",
