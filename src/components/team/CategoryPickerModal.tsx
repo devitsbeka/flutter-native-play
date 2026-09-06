@@ -468,10 +468,10 @@ export function CategoryPickerModal({
                             here would read as a different kind of thing. */}
                         <div className="flex items-center gap-3">
                           <div
-                            className="w-[46px] h-[46px] shrink-0 rounded-lg flex items-center justify-center overflow-hidden"
+                            className="w-[55px] h-[55px] shrink-0 rounded-xl flex items-center justify-center overflow-hidden"
                             style={{ background: "linear-gradient(135deg, #9333ea, #ec4899)" }}
                           >
-                            <DynamicIcon slug="mystery-box" size={25} />
+                            <DynamicIcon slug="mystery-box" size={30} />
                           </div>
                           <div className="min-w-0 flex-1 pr-5">
                             <p className="font-medium text-foreground text-sm leading-snug break-words line-clamp-2">
@@ -517,23 +517,27 @@ export function CategoryPickerModal({
                             Georgian names are the long ones and the reason
                             this matters.
 
-                            The tile and its contents are 15% larger than
-                            they were (40 → 46, 26 → 30, 22 → 25): at the old
-                            size the art was smaller than the text beside it.
+                            The tile and its contents have grown twice, 15%
+                            and then another 20% (40 → 46 → 55, 26 → 30 → 36,
+                            22 → 25 → 30): at the original size the art was
+                            smaller than the text beside it, and the first
+                            pass was still shy of it. The radius went up with
+                            the box — rounded-lg on 55px reads sharper than
+                            it did on 40.
 
                             pr-5 keeps the second line clear of the tick in
                             the corner. */}
                         <div className="flex items-center gap-3">
                           <div
-                            className="w-[46px] h-[46px] shrink-0 rounded-lg flex items-center justify-center overflow-hidden"
+                            className="w-[55px] h-[55px] shrink-0 rounded-xl flex items-center justify-center overflow-hidden"
                             style={{ backgroundColor: `${cat.color}40` }}
                           >
                             {popularCategoryIcon(cat.categoryId) ? (
-                              <img src={popularCategoryIcon(cat.categoryId)!} alt="" className="w-[30px] h-[30px] object-contain" />
+                              <img src={popularCategoryIcon(cat.categoryId)!} alt="" className="w-[36px] h-[36px] object-contain" />
                             ) : cat.icon_slug ? (
-                              <DynamicIcon slug={cat.icon_slug} size={25} />
+                              <DynamicIcon slug={cat.icon_slug} size={30} />
                             ) : (
-                              <span className="text-[23px]">{cat.icon}</span>
+                              <span className="text-[28px]">{cat.icon}</span>
                             )}
                           </div>
                           <div className="min-w-0 flex-1 pr-5">

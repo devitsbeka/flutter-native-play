@@ -99,7 +99,7 @@ describe("a library card reads left to right", () => {
 
   it("icon left, name right", () => {
     expect(modal).toMatch(/<div className="flex items-center gap-3">/);
-    expect(modal).toMatch(/w-\[46px\] h-\[46px\] shrink-0 rounded-lg/);
+    expect(modal).toMatch(/w-\[55px\] h-\[55px\] shrink-0 rounded-xl/);
   });
 
   it("and the name wraps instead of truncating", () => {
@@ -112,12 +112,16 @@ describe("a library card reads left to right", () => {
     expect(modal).toMatch(/text-sm leading-snug break-words line-clamp-2/);
   });
 
-  it("the art is 15% larger than it was", () => {
-    // 40 -> 46 tile, 26 -> 30 image, 22 -> 25 glyph. At the old size the
-    // icon was smaller than the words next to it.
-    expect(modal).toMatch(/w-\[30px\] h-\[30px\] object-contain/);
-    expect(modal).toMatch(/<DynamicIcon slug=\{cat\.icon_slug\} size=\{25\} \/>/);
-    expect(modal).toMatch(/text-\[23px\]/);
+  it("the art grew twice: 15%, then another 20%", () => {
+    // 40 -> 46 -> 55 tile, 26 -> 30 -> 36 image, 22 -> 25 -> 30 glyph.
+    // At the original size the icon was smaller than the words next to it,
+    // and the first pass was still shy of them.
+    expect(modal).toMatch(/w-\[36px\] h-\[36px\] object-contain/);
+    expect(modal).toMatch(/<DynamicIcon slug=\{cat\.icon_slug\} size=\{30\} \/>/);
+    expect(modal).toMatch(/<DynamicIcon slug="mystery-box" size=\{30\} \/>/);
+    expect(modal).toMatch(/text-\[28px\]/);
     expect(modal).not.toMatch(/w-10 h-10 rounded-lg flex items-center/);
+    // Both tiles in the grid, at the same size.
+    expect(modal.match(/w-\[55px\] h-\[55px\] shrink-0 rounded-xl/g) ?? []).toHaveLength(2);
   });
 });
