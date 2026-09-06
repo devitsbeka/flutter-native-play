@@ -3679,6 +3679,8 @@ export const ka = {
     ssCategories: "კატეგორიები",
     ssLevels: "დონე",
     ssFriends: "მეგობრები",
+    ssAddFriend: "დამატება",
+    ssAddRoom: "ახალი ოთახი",
     ssOnline: "ონლაინ",
     ssGameRooms: "თამაშის ოთახები",
     ssPlayers: "მოთამაშე",

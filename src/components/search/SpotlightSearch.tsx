@@ -40,6 +40,9 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ResolvedAvatarImage } from "@/components/ui/resolved-avatar-image";
 import { Input } from "@/components/ui/input";
 import { SearchHorizontalLists } from "./SearchHorizontalLists";
+import { AddFriendModal } from "@/components/team/AddFriendModal";
+import { BackgroundVideo } from "@/components/shared/BackgroundVideo";
+import { useResponsiveVideo } from "@/hooks/useResponsiveVideo";
 import { usePlayGuard } from "@/contexts/PlayGuardContext";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import roomsIcon from "@/assets/icons/rooms-icon.png";
@@ -276,6 +279,23 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
     navigate(`/room/${roomCode}`);
   };
 
+  // The + at the head of each row. A room is made on the create page; a
+  // friend is found in the add-friend sheet, which the search owns itself
+  // — it is opened from every page's header, and only the home page has a
+  // sheet of its own to lend.
+  const [showAddFriend, setShowAddFriend] = useState(false);
+  // The floating-blob loop the create page and the side menu wear, so the
+  // search panel is the same room as the pages it opens over (owner's ask).
+  const blobVideo = useResponsiveVideo("/videos/floating-blob.mp4");
+  const handleAddFriend = () => {
+    handleOpenChange(false);
+    setShowAddFriend(true);
+  };
+  const handleCreateRoom = () => {
+    handleOpenChange(false);
+    navigate("/create-room");
+  };
+
   // Handle trivia select
   const handleTriviaSelect = (triviaId: string) => {
     handleOpenChange(false);
@@ -357,10 +377,31 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 safe-screen z-[100] bg-background flex flex-col"
+            className="fixed inset-0 safe-screen z-[100] bg-background flex flex-col overflow-hidden"
           >
+            {/* Blob video background, under everything and taking no taps.
+                The same soft wash the create page lays over it keeps the
+                blobs subtle behind the rows. */}
+            <div className="absolute inset-0 z-0 pointer-events-none" aria-hidden>
+              <BackgroundVideo
+                sources={[
+                  { src: blobVideo.webm, type: "video/webm" },
+                  { src: blobVideo.mp4, type: "video/mp4" },
+                ]}
+                still="/videos/floating-blob-still.jpg"
+                className="absolute inset-0"
+              />
+              <div
+                className="absolute inset-0"
+                style={{
+                  background:
+                    "linear-gradient(180deg, rgba(249,219,255,0.5) 0%, rgba(249,219,255,0.3) 45%, rgba(249,219,255,0.5) 100%)",
+                }}
+              />
+            </div>
+
             {/* Header with search bar */}
-            <div className="flex items-center gap-3 p-4 border-b border-border">
+            <div className="relative z-10 flex items-center gap-3 p-4 border-b border-white/60">
               <motion.button
                 onClick={() => handleOpenChange(false)}
                 whileTap={{ scale: 0.9 }}
@@ -392,8 +433,10 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
             </div>
 
             {/* Content with horizontal lists */}
-            <div className="flex-1 overflow-y-auto pb-[calc(80px+env(safe-area-inset-bottom))]">
+            <div className="relative z-10 flex-1 overflow-y-auto pb-[calc(80px+env(safe-area-inset-bottom))]">
               <SearchHorizontalLists
+                onAddFriend={handleAddFriend}
+                onCreateRoom={handleCreateRoom}
                 friends={filteredFriends}
                 rooms={filteredRooms}
                 trivias={filteredTrivias.map(t => ({
@@ -701,6 +744,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
           </CommandList>
         </CommandDialog>
       )}
+      <AddFriendModal isOpen={showAddFriend} onClose={() => setShowAddFriend(false)} />
     </>
   );
 };

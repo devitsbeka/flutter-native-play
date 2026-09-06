@@ -3223,6 +3223,8 @@ export const es: KaTranslations = {
     ssCategories: "Categorías",
     ssLevels: "niveles",
     ssFriends: "Amigos",
+    ssAddFriend: "Añadir",
+    ssAddRoom: "Nueva sala",
     ssOnline: "En línea",
     ssGameRooms: "Salas de juego",
     ssPlayers: "jugador(es)",
