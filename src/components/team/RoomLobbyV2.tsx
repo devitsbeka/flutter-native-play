@@ -126,7 +126,10 @@ export function RoomLobbyV2() {
   const [showHostObserverWarning, setShowHostObserverWarning] = useState(false);
   const [willBeObserver, setWillBeObserver] = useState(false); // Pre-calculate if host will be observer
   const prevParticipantsRef = useRef<string[]>([]);
-  const { friends } = useFriends();
+  const { friends, sendFriendRequest } = useFriends();
+  // Who this player has asked to be friends from this lobby, this visit:
+  // the + on their row becomes a tick until the friends list catches up.
+  const [askedIds, setAskedIds] = useState<Set<string>>(() => new Set());
   const { unreadCount } = useNotifications();
 
   // The TV entry points create the room first — mounting this lobby — and only
@@ -803,8 +806,26 @@ export function RoomLobbyV2() {
       handleStartGame();
     }
   };
+  // The + that asks to be friends, on everyone in the room who is not one
+  // yet and is not you (owner's ask: people become friends in the lobby).
+  // If they have already asked YOU, the same tap accepts — sendFriendRequest
+  // answers a pending ask from the other side — and the friends list then
+  // takes the + away on its own.
+  const friendIds = new Set(friends.map((f) => f.friendId));
+  const friendAsk = (userId: string): Pick<LobbyPlayer, "onAddFriend" | "friendRequested"> => {
+    if (!user || userId === user.id || friendIds.has(userId)) return {};
+    if (askedIds.has(userId)) return { friendRequested: true };
+    return {
+      onAddFriend: () => {
+        void sendFriendRequest(userId).then((ok) => {
+          if (ok) setAskedIds((prev) => new Set(prev).add(userId));
+        });
+      },
+    };
+  };
   const lobbyPlayers: LobbyPlayer[] = participants.map((p) => ({
     id: p.id,
+    ...friendAsk(p.user_id),
     name: p.nickname,
     avatarUrl: p.avatar_url,
     isHost: p.is_host,
@@ -967,6 +988,8 @@ export function RoomLobbyV2() {
         you: t("lobby.uYou"),
         rounds: (count) => t("lobby.uRoundsShort", { count }),
         notifications: t("extra.notifications"),
+        addFriend: t("extra.lobbyAddFriend"),
+        friendRequested: t("extra.lobbyFriendRequested"),
       }}
       rules={lobbyRules}
       rulesText={[

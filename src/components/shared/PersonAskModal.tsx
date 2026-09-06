@@ -34,6 +34,8 @@ export function PersonAskModal({
   tertiaryLabel,
   onTertiary,
   footnote,
+  closeLabel,
+  onClose,
 }: {
   /** Stable key for the presence animation. */
   motionKey: string;
@@ -53,6 +55,13 @@ export function PersonAskModal({
   onTertiary?: () => void;
   /** "and N more waiting", when there are. */
   footnote?: string;
+  /**
+   * "Close for now": no answer given. The ask stays exactly where it was —
+   * unread, in the notification list — for later. Absent on asks that must
+   * be answered on the spot.
+   */
+  closeLabel?: string;
+  onClose?: () => void;
 }) {
   return (
     <AnimatePresence>
@@ -63,6 +72,7 @@ export function PersonAskModal({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          onClick={onClose}
           style={{
             paddingBottom: "calc(var(--safe-bottom) + 1rem)",
             paddingTop: "calc(var(--safe-top) + 1rem)",
@@ -73,8 +83,19 @@ export function PersonAskModal({
             animate={{ y: 0, scale: 1 }}
             exit={{ y: 24, scale: 0.97 }}
             transition={{ type: "spring", stiffness: 420, damping: 32 }}
-            className="w-full max-w-[380px] rounded-3xl bg-card border border-border shadow-2xl p-5"
+            className="relative w-full max-w-[380px] rounded-3xl bg-card border border-border shadow-2xl p-5"
+            onClick={(e) => e.stopPropagation()}
           >
+            {onClose && (
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label={closeLabel}
+                className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-muted/70 text-muted-foreground active:scale-95 transition-transform"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
             <button
               type="button"
               onClick={onOpenProfile}
