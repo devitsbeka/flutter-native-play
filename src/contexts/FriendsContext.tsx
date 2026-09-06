@@ -52,6 +52,22 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
   const previousPendingCount = useRef(0);
   const isInitialLoad = useRef(true);
   const lastFetchedAt = useRef(0);
+  /**
+   * Presence, readable without making `fetchFriends` depend on it.
+   *
+   * It used to be a dependency, which gave `fetchFriends` a new identity
+   * every time any friend opened or closed the app — and the realtime
+   * subscription below depends on `fetchFriends`, so each of those tore the
+   * friendships channel down and resubscribed it. A request accepted during
+   * one of those gaps produced no event at all, and the new friend did not
+   * appear until the tab was backgrounded and brought back.
+   *
+   * The mapping of who is online is not lost by this: the effect further
+   * down re-marks `isOnline` on every presence change, which is the only
+   * thing that read this value.
+   */
+  const onlineUsersRef = useRef<Set<string>>(new Set());
+  onlineUsersRef.current = onlineUsers;
 
   const fetchFriends = useCallback(async () => {
     if (!user) {
@@ -112,7 +128,7 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
             countryCode: profile.country_code || null,
             status: f.status as "pending" | "accepted" | "blocked",
             isOutgoing,
-            isOnline: onlineUsers.has(friendId),
+            isOnline: onlineUsersRef.current.has(friendId),
           };
         });
 
@@ -141,7 +157,7 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [user, onlineUsers]);
+  }, [user, navigate]);
 
   useEffect(() => {
     fetchFriends();

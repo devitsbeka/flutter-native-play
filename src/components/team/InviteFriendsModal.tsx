@@ -176,6 +176,30 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
   );
 
   /**
+   * Forget who we were waiting on, once they are friends.
+   *
+   * Both sets are answers to "is a request outstanding", and a friendship
+   * settles that question. Leaving the ids in place would leave the row
+   * saying "Sent" again if the friendship were later removed while this
+   * screen stayed open — no request would exist, and the button would
+   * refuse to send one.
+   *
+   * The rendering does not wait for this: `isSent` and `isPendingOutgoing`
+   * are already read as false for a friend, which is what makes the row flip
+   * on the same paint the acceptance arrives in. This only keeps the state
+   * honest afterwards.
+   */
+  useEffect(() => {
+    if (friendIds.size === 0) return;
+    const drop = (prev: Set<string>) => {
+      const next = new Set([...prev].filter((id) => !friendIds.has(id)));
+      return next.size === prev.size ? prev : next;
+    };
+    setSentRequests(drop);
+    setPendingOutgoingIds(drop);
+  }, [friendIds]);
+
+  /**
    * Who leads the grid: the friends already picked when this screen opened.
    *
    * Taken on open rather than recomputed on every tap. Sorting live would
@@ -692,9 +716,24 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
 
                           const renderRow = (result: SearchResult) => {
                             const isFriend = friendIds.has(result.user_id);
-                            const isPendingOutgoing = pendingOutgoingIds.has(result.user_id);
+                            // "Request sent" and "pending" are what this row
+                            // says while it is WAITING on somebody. The moment
+                            // they accept they are a friend, and both readings
+                            // are answered — so a friend is never either.
+                            //
+                            // Without this the row went on saying "Sent", and
+                            // `isDisabled` went on holding the button down, on
+                            // a person who was by then sitting in the friends
+                            // section of the same list: shown as a friend,
+                            // impossible to invite. It needs no round trip to
+                            // reproduce — `sendFriendRequest` accepts outright
+                            // when the other player had already asked you, so
+                            // one tap could land you a friend and a dead
+                            // button at the same time.
+                            const isPendingOutgoing =
+                              !isFriend && pendingOutgoingIds.has(result.user_id);
                             const isLoading = sendingRequestTo === result.user_id;
-                            const isSent = sentRequests.has(result.user_id);
+                            const isSent = !isFriend && sentRequests.has(result.user_id);
                             // Already seated or invited in this room — the
                             // row says so instead of offering the invite.
                             const isSeated = isRoomInviteMode && alreadyInRoom.has(result.user_id);
