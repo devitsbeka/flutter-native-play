@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronRight, Plus } from "lucide-react";
@@ -9,6 +9,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { MyRoomsSection } from "@/components/team/MyRoomsSection";
 import { useDeveloperMode } from "@/contexts/DeveloperModeContext";
 import { POPULAR_IMAGE_CATEGORY_IDS } from "@/config/popularImageCategories";
+import { useMountSeed } from "@/hooks/useMountSeed";
+import { seededShuffle } from "@/utils/seededShuffle";
 import type { GameChoice } from "@/components/team/CreateRoomPage";
 
 import playersIcon from "@/assets/play-chooser/players.svg";
@@ -41,18 +43,6 @@ const EMPTY_PURCHASES: Set<string> = new Set();
 
 const PICTURE_GUESS = POPULAR_IMAGE_CATEGORY_IDS as readonly string[];
 
-/** mulberry32 — a tiny seeded PRNG, so one seed always deals one order. */
-function seededRandom(seed: number) {
-  let a = seed >>> 0;
-  return () => {
-    a = (a + 0x6d2b79f5) >>> 0;
-    let t = a;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
 /**
  * Deal `count` categories, mixed. The catalogue leads with the six
  * picture-guess categories, so "the first twelve" was a wall of "Guess the…"
@@ -65,12 +55,7 @@ function dealMixed<T extends { id: string; category_id?: string; type?: string }
   seed: number,
   count: number,
 ): T[] {
-  const rand = seededRandom(seed);
-  const shuffled = [...list];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(rand() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
+  const shuffled = seededShuffle(list, seed);
   const groups = new Map<string, T[]>();
   for (const c of shuffled) {
     const key = PICTURE_GUESS.includes(c.category_id ?? c.id) ? "guess" : (c.type ?? "other");
@@ -187,8 +172,8 @@ export function MobileHomeFeed() {
   // A dozen categories, mixed, dealt fresh on every visit: the seed is fixed
   // for this mount (random per refresh, stable while you browse — the cards
   // must not reshuffle under a finger when the list re-renders).
-  const seed = useRef(Math.floor(Math.random() * 0x7fffffff));
-  const railCategories = useMemo(() => dealMixed(categories, seed.current, 12), [categories]);
+  const seed = useMountSeed();
+  const railCategories = useMemo(() => dealMixed(categories, seed, 12), [categories, seed]);
 
   // MyRoomsSection owns the rooms query; the header above it needs only the
   // count, to know whether "see all" has anything to show. Reported up
