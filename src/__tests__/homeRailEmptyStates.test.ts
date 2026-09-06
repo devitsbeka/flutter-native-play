@@ -149,11 +149,10 @@ describe("the rail headers", () => {
 });
 
 describe("the categories rail shows there is more to the right", () => {
-  it("a card and most of the next, so the rail plainly scrolls", () => {
-    // Half the screen each to a cap. At the old 164px floor the art was
-    // barely wider than the progress pill under it.
-    expect(feed).toMatch(/w-\[min\(52vw,208px\)\]/);
-    expect(feed).not.toMatch(/w-\[max\(164px/);
+  it("the room card's width, so the two rails line up (owner's ask)", () => {
+    expect(feed).toMatch(/<div key=\{cat\.id\} className="w-\[280px\] shrink-0 snap-start">/);
+    expect(rooms).toMatch(/w-\[280px\] h-\[212px\] snap-start/);
+    expect(feed).not.toMatch(/w-\[min\(52vw,208px\)\]|w-\[max\(164px/);
   });
 
   it("and a name that wraps does not make its card taller", () => {
