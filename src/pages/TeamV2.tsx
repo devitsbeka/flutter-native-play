@@ -682,7 +682,17 @@ function TeamContentV2() {
   const [classicJoinCode, setClassicJoinCode] = useState<string | null>(null);
   useEffect(() => {
     const joinCode = searchParams.get("join") || searchParams.get("room");
-    if (!joinCode) return;
+    if (!joinCode) {
+      // The URL carries no code, so the attempt it remembers is spent. It
+      // used to be remembered for the life of the page: open a room, back
+      // out, and tap the same room's Play — /team?join=CODE again — and
+      // the join bailed here as "already attempted", never opening the room
+      // and never stripping the param, so the joining wash below held the
+      // screen with nothing behind it (owner: "click Play and I see a blank
+      // page"). Once-per-code only has to hold while the code is in the URL.
+      attemptedJoinCodeRef.current = null;
+      return;
+    }
 
     // Every invite path in the app converges on /team?join=CODE — including
     // room-invite notifications for the new game types. A Team Battle room
@@ -756,12 +766,18 @@ function TeamContentV2() {
       if (attemptedJoinCodeRef.current === joinCode) return;
       attemptedJoinCodeRef.current = joinCode;
       (async () => {
+        let opened = false;
         try {
-          await enterRoom(joinCode);
+          opened = await enterRoom(joinCode);
         } finally {
           const next = new URLSearchParams(searchParams);
           next.delete("join");
           next.delete("tv");
+          // ?room= stays for a refresh mid-lobby to rejoin — but only a
+          // lobby that exists. A code that did not open has nothing to
+          // rejoin, and leaving it would hold the joining wash over a
+          // room that is never going to appear.
+          if (!opened) next.delete("room");
           setSearchParams(next, { replace: true });
         }
       })();
