@@ -6,6 +6,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAvatarGenerationIndicator } from "@/contexts/AvatarModalContext";
 
 /**
  * Static placeholder component (no shimmer).
@@ -85,18 +86,26 @@ function StoryAvatarCircle({
   animatedAvatarUrl,
   fallback,
   isOnline,
+  generating = false,
+  label,
   onClick,
 }: {
   avatarUrl?: string | null;
   animatedAvatarUrl?: string | null;
   fallback: string;
   isOnline: boolean;
+  /** A new avatar is being generated for this player right now. */
+  generating?: boolean;
+  /** Accessible name — only set where the circle says something extra. */
+  label?: string;
   onClick: () => void;
 }) {
   return (
     <div
       className="relative w-16 h-16 cursor-pointer hover:scale-105 transition-transform active:scale-95"
       onClick={onClick}
+      role={label ? "button" : undefined}
+      aria-label={label}
     >
       {/* Gradient ring background */}
       <div
@@ -105,8 +114,12 @@ function StoryAvatarCircle({
       >
         {/* White inner ring */}
         <div className="w-full h-full rounded-full bg-white p-[2px]">
-          {/* Avatar container - ensures perfect circle crop */}
-          <div className="w-full h-full rounded-full overflow-hidden">
+          {/* Avatar container - ensures perfect circle crop. Faded while a
+              generation runs: the picture under the spinner is the one being
+              replaced, and at full strength it read as the finished result. */}
+          <div
+            className={`w-full h-full rounded-full overflow-hidden ${generating ? "opacity-60" : ""}`}
+          >
             <SmartAvatar
               avatarUrl={avatarUrl}
               animatedAvatarUrl={animatedAvatarUrl}
@@ -119,12 +132,29 @@ function StoryAvatarCircle({
         </div>
       </div>
 
-      {/* Online indicator dot */}
-      <div
-        className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-white ${
-          isOnline ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-slate-400"
-        }`}
-      />
+      {/* The generation's own ring, outside the gradient one rather than over
+          it: a spinner that covered the online ring would have taken away the
+          circle's usual reading for the length of the job. */}
+      {generating && (
+        <span
+          aria-hidden
+          className="pointer-events-none absolute -inset-[3px] rounded-full border-[3px] border-purple-500 border-t-transparent animate-spin"
+        />
+      )}
+
+      {/* Online indicator dot, or the hourglass that replaces it while a
+          generation runs — one badge on the circle, never two. */}
+      {generating ? (
+        <span className="absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-white text-[10px] shadow">
+          ⏳
+        </span>
+      ) : (
+        <div
+          className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-white ${
+            isOnline ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-slate-400"
+          }`}
+        />
+      )}
     </div>
   );
 }
@@ -136,6 +166,13 @@ function StoryAvatarCircle({
  * `PlayerProfileModal` every other avatar in the strip opens — which already
  * knows it is you, and leaves out the Challenge button and the
  * played-together record, neither of which means anything against yourself.
+ *
+ * This is also where a running avatar generation shows itself. The progress
+ * used to be a chip floating over the bottom-right of every screen, which
+ * said "something is being made" without saying what it was being made FOR;
+ * drawn on your own circle it needs no explaining, and while it is mounted
+ * the shell keeps the chip down. Tapping it mid-generation reopens the studio
+ * rather than your profile — the studio is what the spinner is about.
  */
 function SelfStoryAvatar({
   nickname,
@@ -150,17 +187,27 @@ function SelfStoryAvatar({
   label: string;
   onOpen: () => void;
 }) {
+  const { t } = useLanguage();
+  const { active, thumb, open } = useAvatarGenerationIndicator();
+  const press = active ? open : onOpen;
+
   return (
     <div className="flex flex-col items-center gap-2 flex-shrink-0">
       <StoryAvatarCircle
-        avatarUrl={avatarUrl}
-        animatedAvatarUrl={animatedAvatarUrl}
+        // The photo the generation was started from, so the circle answers
+        // "which avatar is being made" and not merely "something is".
+        avatarUrl={active && thumb ? thumb : avatarUrl}
+        // A loop playing under the spinner is the old avatar looking alive
+        // while it is being replaced.
+        animatedAvatarUrl={active ? null : animatedAvatarUrl}
         fallback={nickname}
         isOnline
-        onClick={onOpen}
+        generating={active}
+        label={active ? t("avatar.generating") : undefined}
+        onClick={press}
       />
       <button
-        onClick={onOpen}
+        onClick={press}
         className="text-xs font-semibold text-slate-700 truncate max-w-[64px] hover:text-primary transition-colors"
       >
         {label}

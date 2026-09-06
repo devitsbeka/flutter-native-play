@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useRef } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence, useMotionValue } from "framer-motion";
 import { AvatarModal } from "@/components/home/AvatarModal";
 import { t } from "@/lib/i18n";
@@ -20,6 +20,17 @@ interface AvatarModalContextType {
     thumb?: string | null,
     kind?: "generation" | "animation",
   ) => void;
+  /** Whether a generation is running, and the photo it was started from. */
+  generating: { active: boolean; thumb: string | null };
+  /**
+   * Claim the job of showing that a generation is running.
+   *
+   * A surface that draws the progress on the player's own avatar calls this
+   * on mount and drops the returned handle on unmount. While at least one is
+   * mounted the shell keeps its floating bubble down — two indicators for one
+   * job is one too many, and the avatar is the one the owner asked for.
+   */
+  registerSelfIndicator: () => () => void;
 }
 
 const AvatarModalContext = createContext<AvatarModalContextType | null>(null);
@@ -33,6 +44,8 @@ export function useAvatarModal() {
       closeAvatarModal: () => {},
       isOpen: false,
       reportGenerating: () => {},
+      generating: { active: false, thumb: null },
+      registerSelfIndicator: () => () => {},
     };
   }
   return context;
@@ -67,6 +80,15 @@ export function AvatarModalProvider({ children }: { children: React.ReactNode })
   const bubbleY = useMotionValue(0);
   const dragBounds = useRef<HTMLDivElement>(null);
   const draggedRef = useRef(false);
+  // How many surfaces are drawing the progress on the player's own avatar.
+  // The bubble is the fallback for screens that have none, not the primary
+  // indicator: see `registerSelfIndicator`.
+  const [selfIndicators, setSelfIndicators] = useState(0);
+
+  const registerSelfIndicator = useCallback(() => {
+    setSelfIndicators((n) => n + 1);
+    return () => setSelfIndicators((n) => Math.max(0, n - 1));
+  }, []);
 
   const handleGeneratingChange = useCallback(
     (active: boolean, thumb?: string | null, kind: "generation" | "animation" = "generation") => {
@@ -98,7 +120,14 @@ export function AvatarModalProvider({ children }: { children: React.ReactNode })
 
   return (
     <AvatarModalContext.Provider
-      value={{ openAvatarModal, closeAvatarModal, isOpen, reportGenerating: handleGeneratingChange }}
+      value={{
+        openAvatarModal,
+        closeAvatarModal,
+        isOpen,
+        reportGenerating: handleGeneratingChange,
+        generating,
+        registerSelfIndicator,
+      }}
     >
       {children}
       <AvatarModal
@@ -110,6 +139,14 @@ export function AvatarModalProvider({ children }: { children: React.ReactNode })
       {/* Floating mini circle while a generation keeps running behind a
           closed modal — tapping it brings the modal back.
 
+          The fallback, not the indicator. A generation is news about YOUR
+          avatar, so where the player's own avatar is on screen the progress
+          is drawn on it (`useAvatarGenerationIndicator`) and this stays down:
+          a chip in the corner made the player hunt for what it referred to,
+          and it sat over the bottom nav to do it. On a screen that shows no
+          avatar of yours nothing else could carry the news, so the bubble
+          still appears there.
+
           It used to sit at `bottom-6 right-6`, which is on top of the last
           item of the bottom nav: the thing that says "still working" covered
           the button for online games, on every screen, for the length of the
@@ -117,7 +154,7 @@ export function AvatarModalProvider({ children }: { children: React.ReactNode })
           be dragged anywhere inside the safe area if it is still in the way
           of something. */}
       <AnimatePresence>
-        {generating.active && !isOpen && (
+        {generating.active && !isOpen && selfIndicators === 0 && (
           /* The fade lives on this wrapper, not on the button. Only a direct
              motion child of AnimatePresence gets to run its exit, and the
              button has to stay the draggable element. */
@@ -165,4 +202,31 @@ export function AvatarModalProvider({ children }: { children: React.ReactNode })
       </AnimatePresence>
     </AvatarModalContext.Provider>
   );
+}
+
+/**
+ * Draw "your new avatar is being made" on the player's own avatar.
+ *
+ * Mounting this claims the job from the shell's floating bubble, which is
+ * why it registers rather than merely reading: two indicators for one
+ * generation is one too many, and the owner's ask was that the news appear
+ * on the avatar it is about rather than in a corner of the screen.
+ *
+ * `thumb` is the photo the generation was started from. Showing it in place
+ * of the current avatar answers "which one is being made" for the minute the
+ * work takes, and it is the same picture the bubble used to carry.
+ */
+export function useAvatarGenerationIndicator() {
+  const context = useContext(AvatarModalContext);
+  const register = context?.registerSelfIndicator;
+  const openAvatarModal = context?.openAvatarModal;
+
+  useEffect(() => register?.(), [register]);
+
+  return {
+    active: context?.generating.active ?? false,
+    thumb: context?.generating.thumb ?? null,
+    /** Tapping a running indicator reopens the studio it belongs to. */
+    open: useCallback(() => openAvatarModal?.(), [openAvatarModal]),
+  };
 }
