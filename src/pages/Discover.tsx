@@ -9,6 +9,8 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { useUserCategoryRanks } from "@/hooks/useUserCategoryRanks";
 import { useNewCategories } from "@/hooks/useNewCategories";
 import { useVipStatus } from "@/hooks/useVipStatus";
+import { useMountSeed } from "@/hooks/useMountSeed";
+import { seededShuffle } from "@/utils/seededShuffle";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { IconTabBar } from "@/components/shared/IconTabBar";
 import { SectionHeader } from "@/components/discover/SectionHeader";
@@ -303,15 +305,22 @@ export default function Discover() {
   }, [categories, deferredQuery, activeTab]);
 
   // Group categories by type
+  // Each rail deals its cards in a fresh order on every visit (owner's ask).
+  // In catalogue order the same three led every time — Maths first on
+  // Educational, the celebrities first on Popular — and a player who never
+  // scrolled a rail never met the rest of it. The seed is fixed for the
+  // mount, so the order holds while the page is browsed. Search results,
+  // the tab views, favourites and recently-viewed keep their own orders.
+  const railSeed = useMountSeed();
   const classicCategories = useMemo(
-    () => categories.filter((cat) => cat.type === "classic"),
-    [categories]
+    () => seededShuffle(categories.filter((cat) => cat.type === "classic"), railSeed),
+    [categories, railSeed]
   );
   // Fun shows what Popular is not already showing — see funRowCategories.
-  const funCategories = useMemo(() => funRowCategories(categories), [categories]);
+  const funCategories = useMemo(() => seededShuffle(funRowCategories(categories), railSeed), [categories, railSeed]);
   const educationalCategories = useMemo(
-    () => categories.filter((cat) => cat.type === "educational"),
-    [categories]
+    () => seededShuffle(categories.filter((cat) => cat.type === "educational"), railSeed),
+    [categories, railSeed]
   );
 
   // Get favorite categories - match by uuid, sorted by priority
@@ -346,7 +355,7 @@ export default function Discover() {
   // Popular categories — a curated dozen of the topics people actually
   // search and play the most (cinema, TV, music, sports...), in that order.
   // Replaces the old daily shuffle that surfaced niche picks like geology.
-  const popularCategories = useMemo(() => orderByPopularity(categories), [categories]);
+  const popularCategories = useMemo(() => seededShuffle(orderByPopularity(categories), railSeed), [categories, railSeed]);
 
   // Recently viewed from localStorage, newest first.
   const recentlyViewed = useMemo(() => {
