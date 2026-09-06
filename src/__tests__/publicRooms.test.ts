@@ -282,9 +282,7 @@ describe("the public list", () => {
     const section = read("src/components/team/PublicRoomsSection.tsx");
     expect(section).toMatch(/import sceneArena from "@\/assets\/tb-lobby\/scene-arena\.webp"/);
     expect(section).toMatch(/const scene = room\.game_type_key === "team_battle" \? sceneArena : null;/);
-    // White ink is the ENTERED card's; a room the viewer has not been in
-    // wears the whitish wash and dark ink instead (publicCardMood.test.ts).
-    expect(section).toMatch(/const ink = inside \? INK\.light : INK\.dark;/);
+    expect(section).toMatch(/const ink = INK\.light;/);
     expect(section).toMatch(/object-cover opacity-\d+/);
     expect(section).toMatch(/bg-gradient-to-t from-\[#2E1065\]/);
     expect(section).toMatch(/shadow-\[inset_/);
@@ -414,7 +412,9 @@ describe("the public list", () => {
     expect(section).toMatch(/navigate\(publicRoomPath\(target\)\)/);
     // Mobile is ~10% taller than the first pass (owner's ask — the strip
     // read too small on a phone); desktop keeps its ratio.
-    expect(section).toMatch(/min-h-\[202px\] aspect-\[1\.55\/1\] md:aspect-\[1\.35\/1\]/);
+    // The private tab's proportions exactly (owner: make them like the
+    // private rooms) — the 15%-shorter variant is gone.
+    expect(section).toMatch(/aspect-\[1\.45\/1\] md:aspect-\[1\.15\/1\]/);
   });
 
   it("filters by game too: battles are the arenas, rooms are everything else", () => {
@@ -833,7 +833,8 @@ describe("the cards read on every gradient, and every card shows its way out", (
     // gradients — the owner's screenshot of "21 საათის წინ" was a white
     // whisper on pale orange.
     const pub = read("src/components/team/PublicRoomsSection.tsx");
-    expect(pub).toMatch(/pill: "bg-black\/25 border-white\/25"/);
+    // The private card's pill, borderless (publicCardMatchesPrivate.test.ts).
+    expect(pub).toMatch(/pill: "bg-black\/25 backdrop-blur-sm"/);
     const mine = read("src/components/team/MyRoomsSection.tsx");
     expect(mine).toMatch(/bg-black\/25 backdrop-blur-sm text-white font-bold text-xs/);
     expect(mine).not.toMatch(/bg-white\/20 backdrop-blur-sm text-white font-bold/);

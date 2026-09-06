@@ -67,39 +67,27 @@ const LOUNGES: Record<string, { icon: string; labelKey: string }> = {
  * the text to dark — the owner's call, and one ink is one less seam.
  */
 /**
- * Two moods for one card, so a room you have been in reads apart from one
- * you have not (owner's ask): the entered room sits DARK, an inner shade
- * pulling its edges in, with white ink; the untouched room sits WHITISH, a
- * pale wash over the same gradient, its chips light and its ink dark. The
- * same gradient under both, and only the wash and the ink differ, so the
- * two sit together on the list rather than looking like two designs.
+ * One ink for every public card, and it is the private card's (owner's
+ * call, after a dark-versus-whitish pair was tried and turned down): white
+ * type, the same dark scrim pills My Rooms wears, the same light glass bar.
+ * Whether the viewer has been in a room is said by the leave icon on its
+ * top-right, which only a room they are in carries — not by a second look.
  */
 const INK = {
-  /** White ink: the entered room's, on its dark ground. */
   light: {
     text: "text-white",
     muted: "text-white/70",
     faint: "text-white/60",
-    // A dark scrim, not a white one: white/15 with white type on it
-    // disappeared over the light gradients (owner's screenshot).
-    pill: "bg-black/25 border-white/25",
-    ring: "border-white/60",
+    // The private card's pill: a dark scrim, no border.
+    pill: "bg-black/25 backdrop-blur-sm",
+    // The private card's face ring.
+    ring: "border-white/40",
     more: "bg-white/30 text-white",
-    titleShadow: "drop-shadow-md",
-    dotRing: "border-[#2E1065]/70",
-  },
-  /** Dark ink: the untouched room's, on its whitish wash. */
-  dark: {
-    text: "text-[#2b1a4a]",
-    muted: "text-[#2b1a4a]/70",
-    faint: "text-[#2b1a4a]/60",
-    pill: "bg-white/65 border-white/80",
-    ring: "border-white/90",
-    more: "bg-white/70 text-[#2b1a4a]",
-    titleShadow: "",
-    dotRing: "border-white",
   },
 } as const;
+
+/** The private card's bottom bar: light glass with a hairline. */
+const BAR = "bg-white/15 backdrop-blur-md border border-white/20";
 
 /**
  * The mixed pseudo-category as every picker in every language stores it.
@@ -231,8 +219,7 @@ function PublicRoomCard({
   const scene = room.game_type_key === "team_battle" ? sceneArena : null;
   // The scene is DARKENED under the ink (reduced opacity over deep purple,
   // a dark wash, an inner shadow), so every card writes in the same white.
-  // Been in it (host or seated): the dark card. Never been: the whitish one.
-  const ink = inside ? INK.light : INK.dark;
+  const ink = INK.light;
 
   const enter = () => navigate(publicRoomPath(room));
 
@@ -241,16 +228,16 @@ function PublicRoomCard({
       layout
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="relative rounded-2xl overflow-hidden shadow-lg"
+      className="relative rounded-2xl overflow-hidden"
+      // The private card's lip: a hard 4px edge under the card and a soft
+      // drop beneath it, so the two tabs' cards sit on the page the same way.
+      style={{ boxShadow: "0 4px 0 0 hsl(var(--border)), 0 6px 20px -4px rgba(0,0,0,0.1)" }}
       onClick={() => (inside ? enter() : onAsk(room))}
       aria-disabled={blocked || undefined}
     >
-      {/* The private tab's card proportions (MyRoomsSection): the same
-          shape on both tabs, and taller than the strip this used to be. */}
-      {/* 15% shorter than the private tab's proportions (owner's call): the
-          height is set by the aspect ratio, so the ratio grows by 1/0.85 and
-          the floor comes down with it. */}
-      <div className="relative p-3 min-h-[202px] aspect-[1.55/1] md:aspect-[1.35/1] flex flex-col rounded-2xl overflow-hidden">
+      {/* The private tab's card proportions (MyRoomsSection), exactly: the
+          same shape on both tabs (owner: make them like the private rooms). */}
+      <div className="relative p-3 aspect-[1.45/1] md:aspect-[1.15/1] flex flex-col rounded-2xl overflow-hidden">
         {scene ? (
           <>
             {/* The arena, dimmed to a backdrop: the pale lilac scene at
@@ -278,13 +265,6 @@ function PublicRoomCard({
             />
           </div>
         )}
-        {/* The mood, over whichever ground: an inner dark shade on a room
-            you have entered, a pale wash on one you have not. See INK. */}
-        {inside ? (
-          <div className="absolute inset-0 rounded-2xl bg-black/15 shadow-[inset_0_0_56px_rgba(20,8,45,0.55)]" />
-        ) : (
-          <div className="absolute inset-0 rounded-2xl bg-white/55" />
-        )}
         {/* Top: who runs it, who already joined, and how full it is */}
         <div className="relative z-10 flex items-start justify-between gap-2">
           <div className="flex items-center gap-1.5 min-w-0">
@@ -294,7 +274,7 @@ function PublicRoomCard({
                 e.stopPropagation();
                 openProfile(room.host_user_id);
               }}
-              className={`flex items-center gap-2 min-w-0 rounded-full backdrop-blur-md border pl-1 pr-2.5 py-1 ${ink.pill}`}
+              className={`flex items-center gap-2 min-w-0 rounded-full pl-1 pr-2.5 py-1 ${ink.pill}`}
             >
               <div className="relative w-6 h-6 rounded-full overflow-hidden shrink-0">
                 <SafeAvatarImage
@@ -327,7 +307,7 @@ function PublicRoomCard({
                 <span className="text-xs font-bold text-white">{knocks}</span>
               </span>
             )}
-            <div className={`flex items-center gap-1 rounded-full backdrop-blur-md border px-2.5 py-1 ${ink.pill}`}>
+            <div className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 ${ink.pill}`}>
               <Users className={`w-3.5 h-3.5 ${ink.text}`} />
               <span className={`text-xs font-bold ${ink.text}`}>
                 {effectiveSeats ? `${room.player_count}/${effectiveSeats}` : room.player_count}
@@ -344,7 +324,7 @@ function PublicRoomCard({
                   e.stopPropagation();
                   onRemove(room);
                 }}
-                className={`w-7 h-7 rounded-full backdrop-blur-md border flex items-center justify-center active:scale-95 transition-transform ${ink.pill} ${ink.text}`}
+                className={`w-8 h-8 rounded-full flex items-center justify-center hover:bg-black/35 active:scale-95 transition ${ink.pill} ${ink.text}`}
               >
                 {room.my_state === "host" ? (
                   <Trash2 className="w-3.5 h-3.5" />
@@ -376,7 +356,7 @@ function PublicRoomCard({
             ) : (
               <span className="w-[53px] h-[53px] rounded-full bg-white/10 border border-white/20 shrink-0" />
             )}
-            <h3 className={`min-w-0 max-w-[58%] text-center font-display text-lg leading-tight line-clamp-2 ${ink.titleShadow} ${ink.text}`}>
+            <h3 className={`min-w-0 max-w-[58%] text-center font-display text-lg leading-tight line-clamp-2 drop-shadow-md ${ink.text}`}>
               {lounge ? t(lounge.labelKey) : room.room_name || t("extra.gameRoomDefault")}
             </h3>
             {crests?.b ? (
@@ -398,7 +378,7 @@ function PublicRoomCard({
               <img
                 src={roomFace}
                 alt=""
-                className="w-14 h-14 object-contain drop-shadow-lg shrink-0"
+                className="w-14 h-14 md:w-16 md:h-16 object-contain drop-shadow-lg shrink-0"
               />
             )}
             {/* A lounge IS its game: an arena called "Search Trail" with
@@ -406,7 +386,7 @@ function PublicRoomCard({
                 nobody chose over the one thing a player is scanning for. The
                 classic rooms keep their own name, which somebody did choose. */}
             <div className="min-w-0 flex-1">
-              <h3 className={`font-display text-lg leading-tight line-clamp-2 ${ink.titleShadow} ${ink.text}`}>
+              <h3 className={`font-display text-lg leading-tight line-clamp-2 drop-shadow-md ${ink.text}`}>
                 {lounge ? t(lounge.labelKey) : room.room_name || t("extra.gameRoomDefault")}
               </h3>
               {!lounge && (
@@ -436,7 +416,7 @@ function PublicRoomCard({
                   : players[i - 1];
               return person ? (
                 <span key={person.user_id} className="relative shrink-0">
-                  <span className={`block w-7 h-7 rounded-full overflow-hidden border-2 ${ink.ring}`}>
+                  <span className={`block w-8 h-8 rounded-full overflow-hidden border-2 ${ink.ring}`}>
                     <SafeAvatarImage
                       avatarUrl={person.avatar_url}
                       fallback={person.nickname || "?"}
@@ -445,13 +425,13 @@ function PublicRoomCard({
                     />
                   </span>
                   {online.has(person.user_id) && (
-                    <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 ${ink.dotRing}`} />
+                    <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#2E1065]/70" />
                   )}
                 </span>
               ) : (
                 <span
                   key={`open-${i}`}
-                  className="w-7 h-7 rounded-full border-2 border-dashed border-white/40 bg-white/10 shrink-0"
+                  className="w-8 h-8 rounded-full border-2 border-dashed border-white/40 bg-white/10 shrink-0"
                 />
               );
             })}
@@ -459,7 +439,7 @@ function PublicRoomCard({
         )}
 
         {/* Bottom: the first round on the left, the way in on the right */}
-        <div className={`relative z-10 backdrop-blur-md border rounded-xl px-3 py-2.5 flex items-center justify-between gap-2 ${ink.pill}`}>
+        <div className={`relative z-10 rounded-xl px-3 py-2.5 flex items-center justify-between gap-2 ${BAR}`}>
           <div className="flex items-center gap-2 min-w-0">
             {/* Just the category: its icon and its name. The "FIRST ROUND"
                 caption above it was noise (owner's call) — a picked round
@@ -527,7 +507,7 @@ function PublicRoomCard({
                   e.stopPropagation();
                   onWithdraw(room);
                 }}
-                className={`w-8 h-8 rounded-lg backdrop-blur-md border flex items-center justify-center active:scale-95 transition-transform ${ink.pill} ${ink.text}`}
+                className={`w-8 h-8 rounded-lg flex items-center justify-center active:scale-95 transition-transform ${ink.pill} ${ink.text}`}
               >
                 <X className="w-4 h-4" />
               </button>
