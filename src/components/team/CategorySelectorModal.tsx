@@ -20,6 +20,18 @@ import {
   readRecentlyViewedIds,
 } from "@/utils/categoryTabs";
 
+/**
+ * Where the card's art goes, the same on every card.
+ *
+ * ART_BAND is the space above the label (the label block is ~3rem tall:
+ * p-3, a title line and a caption), and the art is centred in it — so the
+ * icon sits up, clear of the title. ART_BOX is one fixed box for every icon
+ * so a 3D picture and a library glyph come out the same size.
+ */
+const ART_SIZE = 60;
+const ART_BAND = "absolute inset-x-0 top-0 bottom-12 flex items-center justify-center";
+const ART_BOX = "flex size-[60px] items-center justify-center";
+
 // Mixed category constants (name is set dynamically via t())
 const MIXED_CATEGORY_BASE = {
   id: "__mixed__",
@@ -255,11 +267,15 @@ export function CategorySelectorModal({
                   <div className="absolute inset-0 bg-white/45" />
                 </div>
 
-                {/* Icon, drawn like every other card's — same size, same
-                    place, full strength, and flat: no shadow to darken the
-                    card behind it. */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <DynamicIcon slug="mystery-box" size={56} shadow={false} />
+                {/* Icon, drawn like every other card's: ABOVE the wash, so it
+                    keeps its full colour (the wash used to cover it, and it
+                    read as faded), in a box of one size for every card, and
+                    centred in the band above the label so it never touches
+                    the title. Flat: no shadow to darken the card behind it. */}
+                <div className={ART_BAND}>
+                  <div className={ART_BOX}>
+                    <DynamicIcon slug="mystery-box" size={ART_SIZE} shadow={false} />
+                  </div>
                 </div>
 
                 {/* Content */}
@@ -313,22 +329,28 @@ export function CategorySelectorModal({
                       leave. The video belongs on the category's own page,
                       where it is one video and the point of the header. */}
                   <div className="absolute inset-0">
-                    <div
-                      className="absolute inset-0 flex items-center justify-center"
-                      style={{ background: categoryGradient(bgColor) }}
-                    >
-                      <CategoryArtwork
-                        categoryId={category.category_id}
-                        iconSlug={category.icon_slug}
-                        size={56}
-                        flat
-                      />
-                    </div>
+                    <div className="absolute inset-0" style={{ background: categoryGradient(bgColor) }} />
                     {/* A pale wash, not a dark foot (owner: the cards were
                         too dark, and the art wore a dark box). The colour
                         shows through it and the type below is dark, which
                         reads on every gradient, pale yellows included. */}
                     <div className="absolute inset-0 bg-white/45" />
+                  </div>
+
+                  {/* The art is drawn OVER the wash, not under it. It used to
+                      sit in the gradient layer, so the wash that lightened
+                      the card lightened the icon with it (owner: "something
+                      is covering them"). Same box as the Mixed card's, and
+                      clear of the title. */}
+                  <div className={ART_BAND}>
+                    <div className={ART_BOX}>
+                      <CategoryArtwork
+                        categoryId={category.category_id}
+                        iconSlug={category.icon_slug}
+                        size={ART_SIZE}
+                        flat
+                      />
+                    </div>
                   </div>
 
                   {/* Content */}
