@@ -99,7 +99,9 @@ describe("Guess replaced Random on the create screen", () => {
     // The code the room GOT, not the one that was planned — createRoom falls
     // back to a fresh code on a collision.
     expect(create).toMatch(/walkInCode = room\?\.room_code \?\? null;/);
-    expect(create).toMatch(/if \(walkInCode\) \{\s*\n\s*onClose\(\);/);
+    // Navigate first, close second: closing first paints the chooser
+    // underneath for the whole join round trip.
+    expect(create).toMatch(/if \(walkInCode\) \{\s*\n\s*navigate\(/);
     expect(create).toMatch(/navigate\(`\/team\?join=\$\{walkInCode\}/);
     // And it goes last, so the invitations are sent before the screen leaves.
     const walkIn = create.indexOf("if (walkInCode) {");
@@ -151,7 +153,9 @@ describe("Guess replaced Random on the create screen", () => {
     // No flag on the URL (the comments above still name it — that is the
     // history, not the mechanism), and nothing in the lobby waiting for one.
     expect(create).not.toMatch(/&autostart=1/);
-    expect(create).toMatch(/navigate\(`\/team\?join=\$\{walkInCode\}`\);/);
+    expect(create).toMatch(
+      /navigate\(`\/team\?join=\$\{walkInCode\}`, \{ state: \{ entering: true \} \}\);/,
+    );
     expect(read("src/components/team/RoomLobbyV2.tsx")).not.toMatch(/autostart|autoStarting/);
   });
 

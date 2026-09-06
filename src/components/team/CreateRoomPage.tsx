@@ -1022,9 +1022,17 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         // Persist any queued rounds before navigating to lobby
         await persistQueuedRounds(createdRoom.id);
         
-        // Close modal and navigate to room after creation
+        // Navigate BEFORE closing, and say we are entering.
+        //
+        // Closing first unmounts this screen, which paints the page
+        // underneath — the "what will you play?" chooser, with the category
+        // just picked still under the card — and it stays there for the
+        // whole join round trip. That is the flash between picking a
+        // category and landing in the lobby: not a dropped frame, the
+        // better part of a second of the wrong screen. `entering` lets the
+        // destination hold its loader from the first paint.
+        navigate(`/team?join=${roomCode}`, { state: { entering: true } });
         onClose();
-        navigate(`/team?join=${roomCode}`);
       } else if (selectionMode === "create" && customTriviaQuestions) {
         // Create room with custom trivia questions
         // If we have a createdTriviaId, link the room to the persisted trivia
@@ -1070,8 +1078,8 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
           room = createdRoom;
           await persistQueuedRounds(createdRoom.id);
           
+          navigate(`/team?join=${roomCode}`, { state: { entering: true } });
           onClose();
-          navigate(`/team?join=${roomCode}`);
         } else {
           // Fallback to old behavior if no persisted trivia ID
           room = await createRoom(
@@ -1191,8 +1199,8 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
 
       // Last, so the invitations above are sent before this screen goes.
       if (walkInCode) {
+        navigate(`/team?join=${walkInCode}`, { state: { entering: true } });
         onClose();
-        navigate(`/team?join=${walkInCode}`);
       }
     } catch (error) {
       console.error("Error creating room:", error);

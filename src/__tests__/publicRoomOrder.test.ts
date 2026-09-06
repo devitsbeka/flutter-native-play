@@ -181,3 +181,31 @@ describe("'most full' stops one short of full", () => {
     expect(order(rooms, ctxFor(rooms))).toEqual([nearly.id, half.id, full.id]);
   });
 });
+
+describe("no flash of the chooser between picking a category and the lobby", () => {
+  const create = read("src/components/team/CreateRoomPage.tsx");
+  const team = read("src/pages/TeamV2.tsx");
+
+  it("the create flow navigates before it closes", () => {
+    // Closing first unmounts the create screen, which paints the page
+    // underneath for the whole join round trip — the better part of a
+    // second of the wrong screen, not a dropped frame.
+    for (const m of create.matchAll(/navigate\(`\/team\?join=\$\{\w+\}`[^\n]*\n\s*onClose\(\);/g)) {
+      expect(m[0]).toMatch(/entering: true/);
+    }
+    expect(create.match(/entering: true/g) ?? []).toHaveLength(3);
+    expect(create).not.toMatch(/onClose\(\);\s*\n\s*navigate\(`\/team\?join=/);
+  });
+
+  it("and the destination holds its loader from the first paint", () => {
+    // `phase` is still idle on that first render: the join starts in an
+    // effect, which runs after it.
+    expect(team).toMatch(/if \(\(phase !== "idle" \|\| enteringRoom\) && !currentRoom\) \{/);
+    expect(team).toMatch(/entering\?: boolean/);
+  });
+
+  it("bounded, so a join that fails gives the page back", () => {
+    expect(team).toMatch(/const ENTERING_MAX_MS = 8000;/);
+    expect(team).toMatch(/Date\.now\(\) - enteringSinceRef\.current < ENTERING_MAX_MS/);
+  });
+});

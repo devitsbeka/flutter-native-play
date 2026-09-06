@@ -580,6 +580,20 @@ function TeamContentV2() {
   // arrived while the player had room state this session was eaten, and the
   // tap "opened the games tab" doing nothing. Only the code of the room
   // actually left is lingering state; any other code is a fresh invite.
+  /**
+   * How long the create flow's "I am entering a room" claim is honoured.
+   *
+   * Long enough for a slow join, short enough that a failed one gives the
+   * page back instead of leaving a spinner with no way out.
+   */
+  const ENTERING_MAX_MS = 8000;
+  const enteringSinceRef = useRef<number | null>(null);
+  if ((location.state as { entering?: boolean } | null)?.entering && enteringSinceRef.current === null) {
+    enteringSinceRef.current = Date.now();
+  }
+  const enteringRoom =
+    enteringSinceRef.current !== null && Date.now() - enteringSinceRef.current < ENTERING_MAX_MS;
+
   const wasInRoomRef = useRef(false);
   const lastRoomCodeRef = useRef<string | null>(null);
   useEffect(() => {
@@ -1017,8 +1031,18 @@ function TeamContentV2() {
     return <div className="h-[100dvh] w-full safe-bleed" style={{ background: "#f5d9ff" }} />;
   }
 
-  // Show loading when phase is set but room isn't ready yet
-  if (phase !== "idle" && !currentRoom) {
+  // Show loading when phase is set but room isn't ready yet — or when the
+  // create flow has just handed us a room to enter.
+  //
+  // `phase` is still "idle" on the first paint after that navigate: the join
+  // starts in an effect, which runs after this render. Without the second
+  // half of this condition the chooser paints for the whole round trip,
+  // which is the flash a host sees between picking a category and reaching
+  // the lobby.
+  //
+  // Bounded, because a join can fail: past ENTERING_MAX_MS the page comes
+  // back rather than spinning forever on a room that is never going to open.
+  if ((phase !== "idle" || enteringRoom) && !currentRoom) {
     return (
       <div className="h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] flex items-center justify-center">
         <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
