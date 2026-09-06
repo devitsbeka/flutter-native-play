@@ -634,7 +634,12 @@ export function CategoryPickerModal({
           )}
         </div>
 
-        {/* One action, and it says how much it is about to add. */}
+        {/* One action. It says HOW MANY only when that is news.
+            The button appears the moment something is picked, so "(1)"
+            never told anyone anything they had not just done — and on the
+            first screen, where the four tiles are one choice, it was always
+            (1). The Library and My Trivias views do take several, and there
+            the number is worth having. */}
         {selectedItems.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -648,7 +653,8 @@ export function CategoryPickerModal({
                 className="w-full"
                 onClick={handleAddPicked}
               >
-                {t("extra.cpAddBtn")} ({selectedItems.length})
+                {t("extra.cpAddBtn")}
+                {selectedItems.length > 1 ? ` (${selectedItems.length})` : ""}
               </ChunkyButton>
             </div>
           </motion.div>

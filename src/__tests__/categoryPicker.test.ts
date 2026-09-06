@@ -1,4 +1,6 @@
 import { describe, it, expect } from "vitest";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { selectionKey, togglePicked, type SelectedItem } from "@/components/team/CategoryPickerModal";
 
 /**
@@ -65,5 +67,26 @@ describe("toggling picks", () => {
     const picked = [cat("a"), cat("b")].reduce(togglePicked, [] as SelectedItem[]);
     const emptied = [cat("a"), cat("b")].reduce(togglePicked, picked);
     expect(emptied).toEqual([]);
+  });
+});
+
+describe("the Add button counts only when the count is news", () => {
+  const modal = readFileSync(
+    join(process.cwd(), "src/components/team/CategoryPickerModal.tsx"),
+    "utf8",
+  );
+
+  it("no (1) — the button only appears once something is picked", () => {
+    // On the first screen the four tiles are one choice, so it was always
+    // "(1)": a number telling the player what they had just done.
+    expect(modal).toMatch(/\{selectedItems\.length > 1 \? ` \(\$\{selectedItems\.length\}\)` : ""\}/);
+    expect(modal).not.toMatch(/cpAddBtn"\)\} \(\{selectedItems\.length\}\)/);
+  });
+
+  it("but it still counts a real multi-pick", () => {
+    // Library and My Trivias take several, and there the number is worth
+    // having — so this is not "drop the count", it is "drop the 1".
+    expect(modal.match(/togglePick\(/g)?.length ?? 0).toBeGreaterThan(2);
+    expect(modal).toMatch(/selectedItems\.length > 1/);
   });
 });
