@@ -7,6 +7,14 @@
  *  - "I set my avatar but the room card shows the blue mascot";
  *  - joining and leaving must show on the cards at once, not on the poll;
  *  - tapping your own row in the lobby opens a leave-room sheet.
+ *
+ * The FIRST of those was reversed a release later, on seeing it: an animal
+ * face cropped into a 64px circle reads as stock illustration rather than as
+ * anything of MyTrivia's, so the round characters are the profile picture
+ * again and the animals go back to being the home screen's scene. What that
+ * left standing is what this file now pins — the drawn people (bot-avatar-N)
+ * are still retired, and the other three asks are untouched. The reversal
+ * itself is pinned by ourOwnFaceAvatars.test.ts.
  */
 
 import { describe, expect, it } from "vitest";
@@ -19,30 +27,24 @@ const reel = read("src/components/profile/AvatarReel.tsx");
 const pub = read("src/components/team/PublicRoomsSection.tsx");
 const room = read("src/components/team/RoomLobbyV2.tsx");
 
-describe("the old presets are retired", () => {
-  it("a stored preset resolves to an animal, dealt by the preset's name", () => {
-    expect(utils).toMatch(/const RETIRED_PRESET_PATTERN = \/\(bot-avatar\|mascot-avatar\)-\(\\d\+\)\//);
-    expect(utils).toMatch(/const retired = retiredPresetFromAvatarUrl\(avatarUrl\);\s*\n\s*if \(retired\) return animalAvatarFor\(retired\);/);
-    expect(utils).toMatch(/return MASCOTS\[hashSeed\(seed\) % MASCOTS\.length\]\.thumb;/);
+describe("the drawn people are still retired", () => {
+  it("a stored one resolves to a face of ours, dealt by the preset's name", () => {
+    // Was: dealt an animal. Reversed — see the note at the top of this file.
+    expect(utils).toMatch(/const RETIRED_PRESET_PATTERN = \/\(bot-avatar\)-\(\\d\+\)\//);
+    expect(utils).toMatch(/const retired = retiredPresetFromAvatarUrl\(avatarUrl\);\s*\n\s*if \(retired\) return ourFaceAvatarFor\(retired\);/);
   });
 
-  it("the fallback face is an animal too, not a blue King", () => {
-    expect(utils).toMatch(/export function fallbackAvatarFor\(seed: string \| null \| undefined\): string \{\s*\n\s*return animalAvatarFor\(seed \|\| ''\);/);
-    expect(utils).not.toMatch(/const MASCOT_AVATARS/);
+  it("and so is the fallback for a player with no picture", () => {
+    expect(utils).toMatch(/export function fallbackAvatarFor\(seed: string \| null \| undefined\): string \{\s*\n\s*return ourFaceAvatarFor\(seed \|\| ''\);/);
   });
 
-  it("the reel offers the animals by id, not the blue Kings by file", () => {
-    expect(reel).toMatch(/const REEL_AVATARS: ReelItem\[\] = MASCOTS\.map\(\(m\) => \(\{\s*\n\s*id: `mascot-\$\{m\.id\}`,\s*\n\s*path: mascotAvatarUrl\(m\.id\),/);
-    expect(reel).not.toMatch(/mascot-avatar-\$\{n\}/);
-  });
-
-  it("and the database rewrite deals each player one, by their id", () => {
+  it("the first migration is left in place, applied and spent", () => {
+    // It ran; 20261012100000 rewrites what it dealt. Deleting it would make
+    // the history lie about what the database has actually had done to it.
     const p = "supabase/migrations/20261011100000_retire_preset_avatars.sql";
     expect(existsSync(join(process.cwd(), p))).toBe(true);
     const sql = read(p);
-    expect(sql).toMatch(/UPDATE public\.profiles\s*\n\s*SET avatar_url = 'mascot:' \|\| \(ARRAY\['owl','panda','tiger','monkey','elephant','giraffe','bull','penguin'\]\)/);
     expect(sql).toMatch(/md5\(user_id::text\)/);
-    expect(sql).toMatch(/WHERE avatar_url ~ '\(bot-avatar\|mascot-avatar\)-\[0-9\]\+'/);
     expect(sql).toMatch(/UPDATE public\.room_participants rp\s*\n\s*SET avatar_url = p\.avatar_url/);
   });
 });

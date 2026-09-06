@@ -56,12 +56,14 @@ describe("a mascot worn as an avatar", () => {
 });
 
 describe("the picker", () => {
-  it("offers the faces as a gallery, and saves the id", () => {
-    expect(modal).toMatch(/t\("avatar\.animalAvatars"\)/);
-    expect(modal).toMatch(/onClick=\{\(\) => chooseMascotAvatar\(mascot\.id\)\}/);
-    expect(modal).toMatch(/avatar_url: mascotAvatarUrl\(id\)/);
-    // The tick follows what is actually worn, read back through the same id.
-    expect(modal).toMatch(/mascotIdFromAvatarUrl\(profile\?\.avatar_url\) === mascot\.id/);
+  it("no longer offers the animal faces as pictures", () => {
+    // They read as stock illustration once cropped into a 64px circle. The
+    // resolution above stays, so nobody wearing one loses their picture —
+    // only the way to newly pick one is gone. See ourOwnFaceAvatars.test.ts
+    // for what took its place.
+    expect(modal).not.toMatch(/t\("avatar\.animalAvatars"\)/);
+    expect(modal).not.toMatch(/chooseMascotAvatar\(mascot\.id\)/);
+    expect(modal).not.toMatch(/avatar_url: mascotAvatarUrl\(id\)/);
   });
 
   it("hands the generated portraits' current flag back", () => {

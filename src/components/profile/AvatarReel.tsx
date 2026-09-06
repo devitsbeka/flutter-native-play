@@ -5,8 +5,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAvatarModal } from "@/contexts/AvatarModalContext";
 import { supabase } from "@/integrations/supabase/client";
-import { mascotAvatarUrl, resolveAvatarUrl } from "@/utils/avatarUtils";
-import { MASCOTS } from "@/config/mascots";
+import { resolveAvatarUrl } from "@/utils/avatarUtils";
+import { MASCOT_AVATARS } from "@/config/mascotAvatars";
 import { AvatarViewer } from "@/components/profile/AvatarViewer";
 
 interface ReelItem {
@@ -25,13 +25,20 @@ interface ReelItem {
 // not made one yet, had no way in from this screen at all. It leads the reel.
 const CREATE_ITEM: ReelItem = { id: "create-new", path: "", kind: "create" };
 
-// The eight animals, stored by id (`mascot:owl`) the way the studio stores
-// them — never a bundled file's URL, whose build hash goes stale on the
-// next deploy. The eight blue Kings this reel used to offer are retired
-// (owner's ask); anyone still wearing one is dealt an animal.
-const REEL_AVATARS: ReelItem[] = MASCOTS.map((m) => ({
-  id: `mascot-${m.id}`,
-  path: mascotAvatarUrl(m.id),
+// MyTrivia's own characters, by canonical /src/assets path — stable across
+// builds, resolveAvatarUrl() maps them to the bundled URLs at runtime (same
+// scheme as the studio's grid, and the same shared list, so the two surfaces
+// cannot drift apart).
+//
+// This reel offered the animals for one release. The owner's answer was that
+// an animal face reads as stock illustration rather than as anything of
+// ours; the animals are the home screen's SCENE again and nothing else.
+//
+// The blue King is not in the list: he is the home screen's own mascot, and
+// this reel was how a player ended up wearing him.
+const REEL_AVATARS: ReelItem[] = MASCOT_AVATARS.map((face) => ({
+  id: face.id,
+  path: face.path,
   kind: "preset" as const,
 }));
 

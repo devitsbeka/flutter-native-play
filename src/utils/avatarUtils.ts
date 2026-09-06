@@ -18,15 +18,8 @@ import friendGiga from "@/assets/figma-home/friend-giga.png";
 import friendGiorgi from "@/assets/figma-home/friend-giorgi.png";
 import friendTrivia from "@/assets/figma-home/friend-trivia.png";
 import botAvatar10 from '@/assets/avatars/bot-avatar-10.png';
-import mascotAvatar1 from '@/assets/avatars/mascot-avatar-1.png';
-import mascotAvatar2 from '@/assets/avatars/mascot-avatar-2.png';
-import mascotAvatar3 from '@/assets/avatars/mascot-avatar-3.png';
-import mascotAvatar4 from '@/assets/avatars/mascot-avatar-4.png';
-import mascotAvatar5 from '@/assets/avatars/mascot-avatar-5.png';
-import mascotAvatar6 from '@/assets/avatars/mascot-avatar-6.png';
-import mascotAvatar7 from '@/assets/avatars/mascot-avatar-7.png';
-import mascotAvatar8 from '@/assets/avatars/mascot-avatar-8.png';
 import { MASCOTS } from "@/config/mascots";
+import { ALL_MASCOT_AVATARS, MASCOT_AVATARS } from "@/config/mascotAvatars";
 
 // Known local asset avatar patterns that need special handling
 const LOCAL_ASSET_PATTERN = /^\/src\/assets\//;
@@ -93,14 +86,9 @@ const BOT_AVATAR_MAP: Record<string, string> = {
   'bot-avatar-8.png': botAvatar8,
   'bot-avatar-9.png': botAvatar9,
   'bot-avatar-10.png': botAvatar10,
-  'mascot-avatar-1.png': mascotAvatar1,
-  'mascot-avatar-2.png': mascotAvatar2,
-  'mascot-avatar-3.png': mascotAvatar3,
-  'mascot-avatar-4.png': mascotAvatar4,
-  'mascot-avatar-5.png': mascotAvatar5,
-  'mascot-avatar-6.png': mascotAvatar6,
-  'mascot-avatar-7.png': mascotAvatar7,
-  'mascot-avatar-8.png': mascotAvatar8,
+  // All eight of ours, the King included: he is not offered as a choice, but
+  // anyone already wearing him has that path stored and it must resolve.
+  ...Object.fromEntries(ALL_MASCOT_AVATARS.map((a) => [`${a.id}.png`, a.url])),
 };
 
 /**
@@ -124,19 +112,24 @@ export function mascotIdFromAvatarUrl(avatarUrl: string | null | undefined): str
 }
 
 /**
- * The preset faces of two earlier eras — the ten drawn people
- * (`bot-avatar-N`) and the eight blue Kings (`mascot-avatar-N`) — are
- * retired as profile pictures (owner's ask: the animals instead, one dealt
- * to each). The database rewrite (migration 20261011100000) deals each
- * PLAYER an animal by their id; this is the client's half, for any row the
- * rewrite has not reached — a snapshot in room_participants, a cache — so
- * an old preset never draws again. Dealt by the preset's own name, so the
- * same old face turns into the same animal everywhere it is still stored.
+ * The drawn people (`bot-avatar-N`) are retired as profile pictures.
  *
- * The bots keep their drawn faces (botAvatarFor): those are AI players, not
+ * `mascot-avatar-N` — MyTrivia's own round characters — is NOT retired. It
+ * was, for one release: the animals were dealt out in its place, and the
+ * owner's answer on seeing it was that an animal face reads as stock art
+ * rather than as anything of ours. So those resolve to their own art again
+ * and are the set the studio offers; only the drawn people stay retired,
+ * and what they are dealt now is one of ours rather than an animal.
+ *
+ * This is the client's half of migration 20261012100000, for any row the
+ * rewrite has not reached — a snapshot in room_participants, a cache. Dealt
+ * by the preset's own name, so the same old face turns into the same new one
+ * everywhere it is still stored.
+ *
+ * The AI players keep their drawn faces (botAvatarFor): those are bots, not
  * people, and nobody picked them.
  */
-const RETIRED_PRESET_PATTERN = /(bot-avatar|mascot-avatar)-(\d+)/;
+const RETIRED_PRESET_PATTERN = /(bot-avatar)-(\d+)/;
 
 /** The preset name a stored avatar refers to ("bot-avatar-4"), or null. */
 export function retiredPresetFromAvatarUrl(avatarUrl: string | null | undefined): string | null {
@@ -169,6 +162,16 @@ export function animalAvatarFor(seed: string): string {
 }
 
 /**
+ * One of MyTrivia's own characters, dealt by a seed — the King excluded.
+ *
+ * He is the home screen's own mascot, so handing him to a player who set no
+ * picture made one in eight of them look like the app's furniture.
+ */
+export function ourFaceAvatarFor(seed: string): string {
+  return MASCOT_AVATARS[hashSeed(seed) % MASCOT_AVATARS.length].url;
+}
+
+/**
  * Resolves an avatar URL to a valid, loadable URL
  * Handles:
  * - Local asset paths (/src/assets/...) that need to be converted to imported module URLs
@@ -183,9 +186,9 @@ export function resolveAvatarUrl(avatarUrl: string | null | undefined): string |
   const mascotId = mascotIdFromAvatarUrl(avatarUrl);
   if (mascotId) return MASCOTS.find((m) => m.id === mascotId)?.thumb;
 
-  // A retired preset, in any of the forms it was stored in: an animal.
+  // A retired drawn person, in any of the forms it was stored in: one of ours.
   const retired = retiredPresetFromAvatarUrl(avatarUrl);
-  if (retired) return animalAvatarFor(retired);
+  if (retired) return ourFaceAvatarFor(retired);
   
   // Try to recover Vite-hashed asset paths by extracting avatar number
   if (VITE_HASHED_ASSET_PATTERN.test(avatarUrl)) {
@@ -249,15 +252,17 @@ export function botAvatarFor(seed: string | null | undefined): string {
  * request, on every render, for a flat cartoon face that looks nothing like
  * anything else in the app. 84 of 656 accounts have no avatar_url, so it was
  * not a rare edge: it was one player in eight wearing a stranger's art style.
- * Then it was one of the eight blue Kings; those are retired now too.
+ * It was then one of the animals, for a release; the owner's answer on
+ * seeing those was that they read as stock illustration.
  *
- * One of the eight animals, picked from the seed so the same person keeps
- * the same face everywhere — the property that made the seeded URL worth
- * using in the first place. Bundled, so it also works offline and costs no
- * network round trip.
+ * One of MyTrivia's own characters, picked from the seed so the same person
+ * keeps the same face everywhere — the property that made the seeded URL
+ * worth using in the first place. Bundled, so it also works offline and
+ * costs no network round trip. The blue King is not among them: he is the
+ * home screen's mascot, not a person.
  */
 export function fallbackAvatarFor(seed: string | null | undefined): string {
-  return animalAvatarFor(seed || '');
+  return ourFaceAvatarFor(seed || '');
 }
 
 /**
