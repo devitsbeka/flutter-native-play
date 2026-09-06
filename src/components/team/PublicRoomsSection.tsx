@@ -529,6 +529,27 @@ export function PublicRoomsSection({
   const { friends } = useFriends();
   const friendIds = useMemo(() => new Set(friends.map((f) => f.friendId)), [friends]);
 
+  // Who is on each couch changes the moment somebody sits down or gets up,
+  // and the cards used to learn it on the next 25-second poll — join a room,
+  // come back to the list, and your own face was not on the card yet
+  // (owner: "we need instant show who joined, who left"). A seat is a row in
+  // room_participants, which is in the realtime publication; any change to
+  // one refreshes the faces and the counts right away. My Rooms already
+  // listens the same way.
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel("public-rooms-seats")
+      .on("postgres_changes", { event: "*", schema: "public", table: "room_participants" }, () => {
+        void queryClient.invalidateQueries({ queryKey: ["public-room-players"] });
+        void queryClient.invalidateQueries({ queryKey: PUBLIC_ROOMS_KEY });
+      })
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [user, queryClient]);
+
   // Who is on each couch. The public_rooms RPC carries only the host and a
   // count; the card wants to show WHO joined, and the Active filter wants
   // to know whether any of them is still here — so the seated participants
@@ -561,13 +582,29 @@ export function PublicRoomsSection({
         // same seed, so the card and the arena wear the same pair.
         fetchCrestPool(),
       ]);
+      // The face on the card is the one on the PROFILE, not the snapshot the
+      // seat took when the person sat down. room_participants.avatar_url is
+      // copied at join time and never again, so a player who changed their
+      // picture since — or whose snapshot is a build-hashed path that stopped
+      // resolving — wore a fallback mascot on every card while their real
+      // face showed everywhere else (owner: "it shows the blue mascot
+      // instead of the avatar I have"). Same refresh My Rooms does.
+      const seatedIds = [...new Set((rows ?? []).map((p) => p.user_id))];
+      const { data: freshProfiles } = seatedIds.length
+        ? await supabase.from("profiles").select("user_id, avatar_url").in("user_id", seatedIds)
+        : { data: [] as { user_id: string; avatar_url: string | null }[] };
+      const profileFace = new Map((freshProfiles ?? []).map((p) => [p.user_id, p.avatar_url]));
       const faces = new Map<string, CardPlayer[]>();
       const seated = new Map<string, string[]>();
       (rows ?? []).forEach((p) => {
         seated.set(p.room_id, [...(seated.get(p.room_id) ?? []), p.user_id]);
         if (p.is_host) return;
         const arr = faces.get(p.room_id) ?? [];
-        arr.push({ user_id: p.user_id, nickname: p.nickname, avatar_url: p.avatar_url });
+        arr.push({
+          user_id: p.user_id,
+          nickname: p.nickname,
+          avatar_url: profileFace.has(p.user_id) ? profileFace.get(p.user_id) ?? null : p.avatar_url,
+        });
         faces.set(p.room_id, arr);
       });
       // What the captains set wins; a side nobody dressed gets dealt a crest

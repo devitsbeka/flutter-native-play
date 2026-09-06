@@ -833,14 +833,18 @@ export function RoomLobbyV2() {
     score: p.total_score || 0,
     rounds: p.total_rounds_played || 0,
     pending: (p.status as string) === "invited",
-    // The host's tap on somebody else: "come and play" for a seated player,
-    // the invitation again for a placeholder who never arrived.
+    // Your own row opens the way out (owner's ask: a leave-room button
+    // behind your name). The host's tap on somebody else: "come and play"
+    // for a seated player, the invitation again for a placeholder who never
+    // arrived.
     onPress:
-      isHost && p.user_id !== user?.id
-        ? (p.status as string) === "invited"
-          ? () => void handleResendInvitation(p.user_id)
-          : () => void handleInvitePlayer(p.user_id)
-        : undefined,
+      p.user_id === user?.id
+        ? () => setShowLeaveConfirm(true)
+        : isHost
+          ? (p.status as string) === "invited"
+            ? () => void handleResendInvitation(p.user_id)
+            : () => void handleInvitePlayer(p.user_id)
+          : undefined,
   }));
   const inviteFaces = [...friends]
     .filter((f) => f.status === "accepted")
