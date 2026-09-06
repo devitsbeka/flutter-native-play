@@ -63,7 +63,7 @@ export function GuessPickerScreen({
 }) {
   return (
     <div className="mx-auto flex w-full max-w-[700px] flex-col px-4 py-3 md:max-w-[520px]">
-      <h2 className="shrink-0 pb-[13px] pt-[7px] font-[Nunito] text-[24px] leading-[28px] tracking-[-0.3px] text-[#3a2260]">
+      <h2 className="shrink-0 pb-[13px] pt-[7px] font-display text-[24px] leading-[28px] text-[#3a2260]">
         {title}
       </h2>
 
