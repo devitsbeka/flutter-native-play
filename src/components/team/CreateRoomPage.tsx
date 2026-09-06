@@ -1669,7 +1669,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
             unfolds its detail underneath — the random roll, the library
             preview, which side of the arena, the chosen trivia. */}
         <div className="flex min-h-0 flex-1 flex-col">
-          <h2 className="shrink-0 pb-[13px] pt-[7px] font-[Nunito] text-[24px] leading-[28px] tracking-[-0.3px] text-[#3a2260]">{t("extra.whatToPlay")}</h2>
+          <h2 className="shrink-0 pb-[13px] pt-[7px] font-display text-[24px] leading-[28px] text-[#3a2260]">{t("extra.whatToPlay")}</h2>
 
           {/* The cards are the row's own items so they stretch to its
               height: a percentage height would not resolve through the
