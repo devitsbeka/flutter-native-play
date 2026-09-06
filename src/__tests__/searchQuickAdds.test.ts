@@ -57,6 +57,16 @@ describe("the search screen's rows lead with a +", () => {
   });
 });
 
+describe("the rooms row lists the rooms the player created", () => {
+  it("the rooms page's created-by-me filter, not every seat they hold", () => {
+    expect(search).toMatch(/useMyRooms\(\{ limit: 20, filter: "my_rooms" \}\)/);
+    expect(search).not.toMatch(/useMyRooms\(\{ limit: 20 \}\)/);
+    // And that filter is host-only.
+    const hook = read("src/hooks/useMyRooms.ts");
+    expect(hook).toMatch(/case "my_rooms":\s*\n\s*result = result\.filter\(\(room\) => room\.is_host\);/);
+  });
+});
+
 describe("the search panel wears the floating-blob loop", () => {
   it("under everything, taking no taps, with the create page's wash over it", () => {
     expect(search).toMatch(/const blobVideo = useResponsiveVideo\("\/videos\/floating-blob\.mp4"\);/);
