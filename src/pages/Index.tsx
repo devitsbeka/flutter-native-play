@@ -1204,6 +1204,7 @@ export default function Index() {
             onStreakClick={() => navigate("/streak")}
             onQuestClick={() => { setMissionsDate(null); setShowMissionsModal(true); }}
             onAddFriend={() => setShowAddFriendModal(true)}
+            onSceneClick={() => openAvatarModal()}
           />
         )}
 
@@ -1272,21 +1273,10 @@ export default function Index() {
 
           {/* Main content area */}
           <div className="flex-1 relative overflow-hidden">
-            {/* Phone scene click-catcher.
-                The scene layer itself sits at z-0 outside this column, and
-                this column is a later sibling — so it paints over the scene
-                and swallowed every tap meant for it. The catcher has to live
-                in here, first, exactly as SceneHero does it on md+: later
-                children keep their own clicks, and what is left over is the
-                scene. */}
-            {user && isMobileViewport && (
-              <button
-                type="button"
-                aria-label={t("extra.changeScene")}
-                onClick={() => openAvatarModal()}
-                className="md:hidden absolute inset-0 cursor-pointer"
-              />
-            )}
+            {/* The phone's scene click-catcher lives in MobileHomeScroll's
+                hero now. One that rendered here could never be tapped: it
+                asked for `user && isMobileViewport`, which is exactly when
+                this column is `hidden`. */}
 
             {/* ===== CENTER: AVATAR WITH ORBITING BUTTONS ===== */}
            <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
