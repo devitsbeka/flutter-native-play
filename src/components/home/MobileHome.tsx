@@ -85,9 +85,10 @@ interface MobileSceneBackgroundProps {
 export function MobileSceneBackground({ defaultVideoSrc }: MobileSceneBackgroundProps) {
   // The loop is 16:9, so it spans 227.2vw from -47.8vw as in the frame —
   // far wider than the screen precisely so that a landscape clip is tall
-  // enough to fill the space above the nav. Bottom-anchored, fading out at
-  // the top into the page's wash.
-  const style: React.CSSProperties = { bottom: NAV_H, ...SCENE_TOP_FADE };
+  // enough to fill the space above the nav. Bottom-anchored on the nav's
+  // top edge — the same measure the feed's lip and the profile card use
+  // (see NAV_CHROME) — fading out at the top into the page's wash.
+  const style: React.CSSProperties = { bottom: NAV_CHROME, ...SCENE_TOP_FADE };
 
   return (
     <motion.div
@@ -227,12 +228,26 @@ const CARD_RADIUS = 33.41;
 // the straight sides outlined and the wavy ones bare.
 const CARD_BORDER = 1.867;
 
-// The bottom nav's real height: 88px of chrome (20px of padding around 48px
-// items) plus the padding it adds for the home indicator. The card floats
-// 49px clear of it, as in the frame. Exported: the scroll-reveal home's feed
-// pulls itself up over exactly this strip and clears the nav by it, so the
-// card and the feed cannot disagree about where the nav is.
-export const NAV_CHROME = "calc(88px + max(0.25rem, var(--safe-bottom) / 2))";
+// How much of the bottom nav lies over the home's scroller.
+//
+// The nav is fixed to the SCREEN's bottom edge and stands 88px of chrome
+// (20px of padding around 48px items) plus half the home indicator's inset
+// tall. The scroller is not: #root pads the whole inset, so the scroller
+// ends a full inset above the screen's edge. What the hero has to keep
+// clear is the nav's height minus that inset — on the web (inset 0) the
+// nav's whole 92px, on the phone 88 + 17 - 34 = 71px.
+//
+// This used to be the nav's height alone, measured from the scroller's
+// bottom as if the two edges were the same edge. On the web they are; in
+// the app they are 34px apart, so the feed's lip and the profile card sat
+// 34px higher above the nav than on the web (owner: "different main page
+// heights on web and in the TestFlight app"), and the default scene, on a
+// third formula again, ended 9px short of the feed — the pale band that
+// showed between the card and the feed's lip on scroll. One measure now:
+// the scene's foot, the feed's lip and the card's clearance all count from
+// it. The card floats 49px clear of the nav, as in the frame.
+export const NAV_CHROME =
+  "calc(88px + max(0.25rem, var(--safe-bottom) / 2) - var(--safe-bottom))";
 const CARD_GAP_ABOVE_NAV = 49;
 
 // The avatar's ring — the same gradient the friends reel draws around
