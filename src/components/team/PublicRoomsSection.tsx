@@ -42,6 +42,7 @@ import { useRoomIconPool } from "@/hooks/useRoomIconPool";
 import iconWordsLounge from "@/assets/play-chooser/icon-words.webp";
 import crownIcon from "@/assets/crown-icon.png";
 import sceneArena from "@/assets/tb-lobby/scene-arena.webp";
+import { useDeveloperMode } from "@/contexts/DeveloperModeContext";
 
 /**
  * The Public tab: rooms anyone can find, and ask to be let into.
@@ -517,6 +518,7 @@ export function PublicRoomsSection({
 }) {
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const { developerMode } = useDeveloperMode();
   const { data, isLoading, refetch } = usePublicRooms();
   const queryClient = useQueryClient();
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -696,7 +698,7 @@ export function PublicRoomsSection({
     friendIds,
   };
   const rooms = sortPublicRooms(
-    filterPublicRooms(data ?? [], filter, searchQuery, roomsCtx),
+    filterPublicRooms(data ?? [], filter, searchQuery, roomsCtx, developerMode),
     friendIds,
     roomsCtx,
   );
