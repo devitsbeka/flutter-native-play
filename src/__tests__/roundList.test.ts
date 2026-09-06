@@ -11,6 +11,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { HELD_ID, planDrop, roundEntries } from "@/components/team/RoundOrderModal";
 
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 const lobby = read("src/components/team/RoomLobbyV2.tsx");
@@ -29,19 +30,64 @@ describe("one answer to what plays first", () => {
     expect(lobby).not.toMatch(/const hasCurrent = !!\(currentRoom\.category_id/);
   });
 
-  it("the room's held round is round 1, and the queue follows it", () => {
+  it("the room's held round is round 1 of the SAME list, and the numbers run 1..N", () => {
     expect(modal).toMatch(/current\?: \{ name: string; iconSlug\?: string \| null \} \| null;/);
-    // Numbered after the pinned row, so the list never shows two round 1s.
-    expect(modal).toMatch(
-      /roundLabel=\{t\("lobby\.uRoundLabel", \{ count: index \+ 1 \+ \(current \? 1 : 0\) \}\)\}/,
-    );
+    // One list: the held round is an entry of it, not a pinned row above it.
+    // Pinned, the list read 1, 1, 2, 3 (owner's screenshot).
+    expect(modal).toMatch(/useState<RoundEntry\[\]>\(\(\) => roundEntries\(current, items\)\)/);
+    expect(modal).toMatch(/number=\{index \+ 1\}/);
+    expect(modal).toMatch(/roundLabel=\{t\("lobby\.uRoundLabel", \{ count: index \+ 1 \}\)\}/);
+    expect(modal).not.toMatch(/count: index \+ 1 \+ \(current \? 1 : 0\)/);
   });
 
-  it("and it is pinned, not dragged — there is no queue row to move", () => {
-    // It lives on the room, not in room_category_queue: a drag or an X would
-    // have nothing to write.
-    const pinned = modal.slice(modal.indexOf("{current && ("), modal.indexOf("<Reorder.Group"));
-    expect(pinned).not.toMatch(/onRemove|GripVertical|dragControls/);
+  it("and it can be dragged past — a queued round dropped above it is promoted", () => {
+    // The held round is a row like the others: draggable, no X (there is no
+    // queue row to delete).
+    expect(modal).toMatch(/onRemove=\{isHeld\(entry\) \? undefined : \(\) => void onRemove\(entry\.id\)\}/);
+    expect(modal).toMatch(/onPromote\?: \(item: QueueItem, queueIds: string\[\]\) => void \| Promise<unknown>;/);
+    expect(lobby).toMatch(/onPromote=\{handlePromoteToFirst\}/);
+    // The lobby gives the room the promoted round and writes the old held
+    // round into the promoted row, in place, so the new order can name it.
+    expect(lobby).toMatch(/await replaceQueueItem\(item\.id, wasHolding\);/);
+    expect(lobby).toMatch(/await reorderQueue\(next\);/);
+    expect(read("src/hooks/useRoomCategoryQueue.ts")).toMatch(/const replaceQueueItem = useCallback\(async \(/);
+  });
+});
+
+describe("what a drop means", () => {
+  const q = (id: string) => ({ id, category_name: id }) as unknown as import("@/hooks/useRoomCategoryQueue").QueueItem;
+  const held = { id: HELD_ID, kind: "held", name: "Economics", iconSlug: null } as const;
+
+  it("head still the held round: a plain reorder of the queue rows", () => {
+    const plan = planDrop([held, q("b"), q("a")]);
+    expect(plan.kind).toBe("reorder");
+    if (plan.kind === "reorder") expect(plan.queue.map((x) => x.id)).toEqual(["b", "a"]);
+  });
+
+  it("no held round: the same", () => {
+    const plan = planDrop([q("b"), q("a")]);
+    expect(plan).toEqual({ kind: "reorder", queue: [q("b"), q("a")] });
+  });
+
+  it("a queued round on top: promote it, and the old held round takes its row", () => {
+    const plan = planDrop([q("a"), held, q("b")]);
+    expect(plan.kind).toBe("promote");
+    if (plan.kind === "promote") {
+      expect(plan.item.id).toBe("a");
+      // The old held round is named by a's id — a's row is rewritten to hold it.
+      expect(plan.queueIds).toEqual(["a", "b"]);
+    }
+  });
+
+  it("dragged to the very bottom too", () => {
+    const plan = planDrop([q("a"), q("b"), held]);
+    if (plan.kind === "promote") expect(plan.queueIds).toEqual(["b", "a"]);
+    else throw new Error("expected promote");
+  });
+
+  it("the entries are the held round then the queue", () => {
+    expect(roundEntries({ name: "Economics" }, [q("a")]).map((e) => e.id)).toEqual([HELD_ID, "a"]);
+    expect(roundEntries(null, [q("a")]).map((e) => e.id)).toEqual(["a"]);
   });
 });
 
