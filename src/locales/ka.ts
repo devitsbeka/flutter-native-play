@@ -576,6 +576,8 @@ export const ka = {
     myAvatars: "ჩემი ავატარები",
     mascots: "მასკოტები",
     mascotsHint: "აირჩიე მასკოტი — ის შენს მთავარ ეკრანზე იცხოვრებს",
+    animalAvatars: "ცხოველების ავატარები",
+    animalAvatarsHint: "აირჩიე მასკოტის სახე პროფილის სურათად",
     mascotUpdated: "მასკოტი შეიცვალა!",
     mascotNames: {
       king: "Trivia King",
