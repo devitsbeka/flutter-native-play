@@ -32,6 +32,16 @@ import { scrollTapGuard } from "@/utils/scrollTapGuard";
 // Peak-to-trough of the feed panel's lip. Gentle: the wave is an edge
 // treatment, and a deep one reads as a tear rather than a curve.
 const FEED_WAVE = 12;
+// The lip's solid body past the wave: how far it reaches down into the
+// panel, over the panel's own top edge. The wave used to straddle that edge
+// (6px above, 6px below), so at every trough the lip was transparent
+// exactly where the panel's edge sat — and the edge, antialiased because
+// the panel's corners were rounded, showed through as a hairline just
+// under the wave on scroll (owner: "still seeing this line here"). Now the
+// whole wave sits above the edge, 2px of solid lip separate the deepest
+// trough from it, and 16px more of the same colour lie over it.
+const LIP_CLEAR = 2;
+const LIP_DEPTH = 16;
 
 export interface MobileHomeScrollProps {
   /**
@@ -80,7 +90,7 @@ export function MobileHomeScroll({
   // The panel's top edge rolls (Figma 1076:3281): a lip in the panel's own
   // colour, its hills dealt fresh on every visit, centred on the edge so it
   // rises half a band above the panel and overlaps it by the other half.
-  const lip = useWaveStrip(500, FEED_WAVE, "top");
+  const lip = useWaveStrip(500, FEED_WAVE, "top", LIP_CLEAR + LIP_DEPTH);
   return (
     // The scroller is `absolute inset-0` of this positioned, flex-filled root
     // rather than `h-full`, so it takes a real pixel height from the root and
@@ -158,15 +168,18 @@ export function MobileHomeScroll({
             chevron, which sits 36px above the nav on top of the play button
             — the reel's dots and Purchase button used to end up behind it.
             No shadow above it: the frame's panel is flat, and a shadow cast
-            from the straight edge would show through the lip's troughs. */}
+            from the straight edge would show through the lip's troughs. No
+            rounded corners either: the wave is the panel's edge, and a
+            rounded rect is drawn antialiased along its whole outline — the
+            hairline the lip now covers. */}
         <div
-          className="relative z-10 min-h-full rounded-t-[28px] bg-[#faf6ff]"
+          className="relative z-10 min-h-full bg-[#faf6ff]"
           style={{ marginTop: `calc(-1 * (${NAV_CHROME}))`, paddingBottom: `calc(${NAV_CHROME} + 92px)` }}
         >
           <div
             aria-hidden
             className="absolute inset-x-0 bg-[#faf6ff]"
-            style={{ top: -FEED_WAVE / 2, height: FEED_WAVE, ...lip }}
+            style={{ top: -(FEED_WAVE + LIP_CLEAR), height: FEED_WAVE + LIP_CLEAR + LIP_DEPTH, ...lip }}
           />
           <div className="flex justify-center pt-2">
             <span className="h-[5px] w-[44px] rounded-full bg-[rgba(90,60,130,0.22)]" />
