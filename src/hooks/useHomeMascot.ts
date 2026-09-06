@@ -56,7 +56,16 @@ export interface HomeMascotState {
   mascot: Mascot | null;
   /** True until the first answer — from the cache or the database. */
   isLoading: boolean;
-  setMascot: (id: MascotId) => Promise<void>;
+  /**
+   * Choose a mascot, or `null` for the Trivia King.
+   *
+   * The King is the home screen's own default and has no scene of its own —
+   * it plays an idle loop — so "the King" IS the absence of a pick. Passing
+   * null clears the column, which is what a player who never picked has.
+   * Without this there was no way back: pick any animal once and the blue
+   * mascot was gone for good.
+   */
+  setMascot: (id: MascotId | null) => Promise<void>;
 }
 
 export function useHomeMascot(userId: string | undefined): HomeMascotState {
@@ -84,7 +93,7 @@ export function useHomeMascot(userId: string | undefined): HomeMascotState {
   });
 
   const setMascot = useCallback(
-    async (id: MascotId) => {
+    async (id: MascotId | null) => {
       if (!userId) return;
       // Locally first: the home screen changes on the next paint, whatever
       // the network does.

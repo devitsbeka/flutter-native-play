@@ -40,6 +40,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { generatePublicPortrait } from "@/utils/portraitAvatar";
 import { MASCOTS, type MascotId } from "@/config/mascots";
+import kingMascotThumb from "@/assets/play-chooser/icon-king.webp";
 import { useHomeMascot } from "@/hooks/useHomeMascot";
 
 interface AvatarModalProps {
@@ -756,10 +757,16 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
   };
 
   // Picking a mascot changes the HOME SCREEN only: its scene replaces the
-  // Trivia King loop there (which stays the default until a pick is made). The circle avatar — the selfie, the upload, the
+  // Trivia King loop there. The circle avatar — the selfie, the upload, the
   // generated portrait — is a separate choice and is what every other
   // profile placement shows.
-  const chooseMascot = async (id: MascotId) => {
+  //
+  // `null` is the King. He has no scene of his own — the home screen plays
+  // his idle loop when nothing is picked — so choosing him is clearing the
+  // choice. He was left out of this grid as "the default, not a choice",
+  // which made him a one-way door: pick any animal once and the blue mascot
+  // was gone with no way back.
+  const chooseMascot = async (id: MascotId | null) => {
     if (!user) return;
     setIsLoading(true);
     try {
@@ -948,6 +955,35 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
             <p className="text-sm font-medium text-foreground">{t("avatar.mascots")}</p>
             <p className="mb-2 text-xs text-muted-foreground">{t("avatar.mascotsHint")}</p>
             <div className="grid grid-cols-4 gap-2">
+              {/* The King leads, because he is the one every player starts
+                  with and the only way back to him. Selected when nothing is
+                  picked. `contain` on a soft ground, not `cover`: his art is
+                  a full character on transparency, where the animals' tiles
+                  are square face crops. */}
+              <motion.button
+                type="button"
+                onClick={() => chooseMascot(null)}
+                disabled={isLoading}
+                aria-label={t("avatar.mascotNames.king")}
+                aria-pressed={mascotId === null}
+                className={`relative aspect-square overflow-hidden rounded-xl border-2 bg-[linear-gradient(160deg,#efe7ff_0%,#e2d4ff_100%)] transition-all ${
+                  mascotId === null ? "border-primary ring-2 ring-primary/30" : "border-border hover:border-primary/50"
+                } disabled:opacity-50`}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <img
+                  src={kingMascotThumb}
+                  alt=""
+                  draggable={false}
+                  className="pointer-events-none h-full w-full object-contain p-1"
+                />
+                {mascotId === null && (
+                  <div className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary shadow">
+                    <Check className="h-3 w-3 text-white" />
+                  </div>
+                )}
+              </motion.button>
               {MASCOTS.map((mascot) => {
                 const isSelected = mascot.id === mascotId;
                 return (
