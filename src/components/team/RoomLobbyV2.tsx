@@ -43,6 +43,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { UniversalLobby, type LobbyPlayer, type LobbyRuleRow } from "@/components/lobby/UniversalLobby";
 import { RoundOrderModal } from "@/components/team/RoundOrderModal";
+import type { QueueItem } from "@/hooks/useRoomCategoryQueue";
 import { classicLobbyScene } from "@/utils/lobbyScene";
 import { gameRoomsHasApproval, roomVisibilityFields } from "@/utils/roomVisibility";
 import { dealtRoomIcon, fetchCrestPool } from "@/utils/roomCrests";
@@ -247,7 +248,7 @@ export function RoomLobbyV2() {
   }, [currentRoom?.tv_session_id, isHost, navigate]);
 
   const { matches } = useRoomMatchHistory(currentRoom?.id || null);
-  const { queue, addToQueue, removeFromQueue, reorderQueue } = useRoomCategoryQueue(currentRoom?.id || null);
+  const { queue, addToQueue, removeFromQueue, reorderQueue, replaceQueueItem } = useRoomCategoryQueue(currentRoom?.id || null);
   // The queue, made visible. More than one category has always been queueable
   // — the picker takes several at once and each becomes a round — but the chip
   // showed the room's single category_name, so three queued topics read as
@@ -760,6 +761,61 @@ export function RoomLobbyV2() {
     }
   };
 
+  /**
+   * A queued round dragged to round 1.
+   *
+   * Round 1 lives on the room (game_rooms.category_id / user_trivia_id),
+   * the rest in room_category_queue, so "move this above the first" is two
+   * writes: the room takes the dragged round, the way picking it alone
+   * would (same fields handleSelectCategory / handleSelectTrivia /
+   * handleSelectRandom write), and the round the room WAS holding goes
+   * into the dragged round's own queue row — rewritten in place, so its id
+   * is known and the new order can place it.
+   */
+  const handlePromoteToFirst = async (item: QueueItem, queueIds: string[]) => {
+    if (!currentRoom || !heldRound) return;
+    const wasHolding = {
+      source_type: currentRoom.user_trivia_id ? ("user_trivia" as const) : ("category" as const),
+      category_id: currentRoom.user_trivia_id ? null : currentRoom.category_id,
+      category_name: currentRoom.category_name,
+      user_trivia_id: currentRoom.user_trivia_id,
+      icon_slug: heldRound.iconSlug ?? null,
+    };
+    try {
+      let totalQuestions: number | undefined;
+      if (item.source_type === "user_trivia" && item.user_trivia_id) {
+        const { data } = await supabase
+          .from("user_quiz_posts")
+          .select("questions")
+          .eq("id", item.user_trivia_id)
+          .single();
+        const questions = data?.questions;
+        if (Array.isArray(questions)) totalQuestions = questions.length;
+      }
+      await supabase.from("room_questions").delete().eq("room_id", currentRoom.id);
+      await supabase
+        .from("game_rooms")
+        .update({
+          category_id: item.source_type === "category" ? item.category_id : null,
+          category_name:
+            item.category_name || (item.source_type === "random" ? t("extra.randomCategoryName") : null),
+          user_trivia_id: item.source_type === "user_trivia" ? item.user_trivia_id : null,
+          ...(totalQuestions !== undefined ? { total_questions: totalQuestions } : {}),
+        })
+        .eq("id", currentRoom.id);
+      await replaceQueueItem(item.id, wasHolding);
+      const byId = new Map(queue.map((q) => [q.id, q]));
+      const next = queueIds
+        .map((id) => (id === item.id ? { ...item, ...wasHolding } : byId.get(id)))
+        .filter((q): q is QueueItem => !!q);
+      await reorderQueue(next);
+      setMadeNewSelection(true);
+    } catch (error) {
+      console.error("Error promoting round:", error);
+      toast.error(t("extra.categoryChangeFailed"));
+    }
+  };
+
   const handleAddToQueue = async (item: {
     source_type: "category" | "random" | "user_trivia";
     category_id?: string | null;
@@ -1053,6 +1109,7 @@ export function RoomLobbyV2() {
             current={heldRound}
             canEdit={isHost}
             onReorder={reorderQueue}
+            onPromote={handlePromoteToFirst}
             onRemove={removeFromQueue}
             onAdd={() => {
               setShowRoundOrder(false);

@@ -168,6 +168,49 @@ export function useRoomCategoryQueue(roomId: string | null) {
     }
   }, [roomId]);
 
+  /**
+   * Swap what a queue row holds, keeping the row.
+   *
+   * Used when a queued round is dragged to round 1: the room takes that
+   * round (it lives on game_rooms, not in this table) and the round the room
+   * WAS holding needs a queue row. Rather than delete one and insert
+   * another — whose id nobody knows until the realtime refetch, so the new
+   * order could not name it — the promoted row is rewritten in place to
+   * carry the old round. Same id, so `reorderQueue` can place it.
+   */
+  const replaceQueueItem = useCallback(async (
+    itemId: string,
+    round: {
+      source_type: "category" | "random" | "user_trivia";
+      category_id?: string | null;
+      category_name?: string | null;
+      user_trivia_id?: string | null;
+      icon_slug?: string | null;
+    },
+  ) => {
+    if (!roomId) return false;
+    const patch = {
+      source_type: round.source_type,
+      category_id: round.category_id || null,
+      category_name: round.category_name || null,
+      user_trivia_id: round.user_trivia_id || null,
+      icon_slug: round.icon_slug || null,
+    };
+    setQueue((prev) => prev.map((q) => (q.id === itemId ? { ...q, ...patch } : q)));
+    try {
+      const { error } = await supabase
+        .from("room_category_queue")
+        .update(patch)
+        .eq("id", itemId);
+      if (error) throw error;
+      return true;
+    } catch (e) {
+      console.error("Error replacing queue item:", e);
+      fetchQueue();
+      return false;
+    }
+  }, [roomId, fetchQueue]);
+
   // Reorder queue items (for drag-and-drop)
   const reorderQueue = useCallback(async (newOrder: QueueItem[]) => {
     if (!roomId) return false;
@@ -198,6 +241,7 @@ export function useRoomCategoryQueue(roomId: string | null) {
     queue,
     loading,
     addToQueue,
+    replaceQueueItem,
     removeFromQueue,
     popFromQueue,
     clearQueue,

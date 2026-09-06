@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion, Reorder, useDragControls } from "framer-motion";
+import { motion, Reorder, useDragControls } from "framer-motion";
 import { GripVertical, Plus, X } from "lucide-react";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -27,7 +27,62 @@ import type { QueueItem } from "@/hooks/useRoomCategoryQueue";
  *
  * A guest sees the same list and cannot move it — the order is the host's, the
  * same as every other rule in the lobby.
+ *
+ * ## Round 1 is in the list too
+ *
+ * The round the room is HOLDING (game_rooms.category_id / user_trivia_id) is
+ * not a queue row, and the first cut pinned it above the list — which left
+ * the list numbered 1, 1, 2, 3 and made round 1 the one thing that could not
+ * be changed by dragging (owner's screenshot). It is a row of the same list
+ * now, numbered with the rest; drag any queued round above it and the lobby
+ * promotes that round to the room and writes the old one into the queue
+ * (`onPromote`).
  */
+
+/** The round the room itself is holding, as a row of the list. */
+export interface HeldEntry {
+  id: typeof HELD_ID;
+  kind: "held";
+  name: string;
+  iconSlug: string | null;
+}
+export const HELD_ID = "__held__";
+export type RoundEntry = QueueItem | HeldEntry;
+export const isHeld = (e: RoundEntry): e is HeldEntry => e.id === HELD_ID;
+
+/** Queue rows plus the held round at the head, the way the room plays them. */
+export function roundEntries(
+  current: { name: string; iconSlug?: string | null } | null | undefined,
+  items: QueueItem[],
+): RoundEntry[] {
+  const held: HeldEntry[] = current
+    ? [{ id: HELD_ID, kind: "held", name: current.name, iconSlug: current.iconSlug ?? null }]
+    : [];
+  return [...held, ...items];
+}
+
+/**
+ * What a drop means.
+ *
+ * Head still the held round (or no held round): a plain reorder of the
+ * queue rows. Otherwise the new head is promoted to the room, and the queue
+ * order names the old held round by the promoted row's id — that row is
+ * rewritten in place to carry it (see useRoomCategoryQueue.replaceQueueItem).
+ */
+export function planDrop(order: RoundEntry[]):
+  | { kind: "reorder"; queue: QueueItem[] }
+  | { kind: "promote"; item: QueueItem; queueIds: string[] } {
+  const head = order[0];
+  const hasHeld = order.some(isHeld);
+  if (!hasHeld || !head || isHeld(head)) {
+    return { kind: "reorder", queue: order.filter((e): e is QueueItem => !isHeld(e)) };
+  }
+  return {
+    kind: "promote",
+    item: head,
+    queueIds: order.slice(1).map((e) => (isHeld(e) ? head.id : e.id)),
+  };
+}
 
 interface RoundOrderModalProps {
   open: boolean;
@@ -37,16 +92,20 @@ interface RoundOrderModalProps {
    * The round the room is already holding, when that is what plays first.
    *
    * It is not a queue row — it lives on the room itself — so the list used to
-   * leave it out entirely and number the queue from 1. That made the lobby's
-   * chip and this list disagree about which category opens the game, and
-   * about how many rounds there are: the chip counted this one, the list did
-   * not. Pinned at the top, not draggable and not removable, because there is
-   * no queue row to move or delete.
+   * leave it out entirely and number the queue from 1. It is round 1 of this
+   * list: numbered with the rest, draggable, but with no X — there is no
+   * queue row to delete.
    */
   current?: { name: string; iconSlug?: string | null } | null;
   /** The host orders the rounds; everyone else reads them. */
   canEdit: boolean;
   onReorder: (next: QueueItem[]) => void | Promise<unknown>;
+  /**
+   * A queued round was dropped above the held one: make it the room's, and
+   * put the old held round in the queue where the drag left it. `queueIds`
+   * is the queue in its new order, naming the old held round by `item.id`.
+   */
+  onPromote?: (item: QueueItem, queueIds: string[]) => void | Promise<unknown>;
   onRemove: (id: string) => void | Promise<unknown>;
   /** Opens the picker, which already takes more than one at a time. */
   onAdd: () => void;
@@ -58,18 +117,29 @@ export function RoundOrderModal({
   current,
   canEdit,
   onReorder,
+  onPromote,
   onRemove,
   onAdd,
 }: RoundOrderModalProps) {
   const { t } = useLanguage();
-  const [order, setOrder] = useState<QueueItem[]>(items);
+  const [order, setOrder] = useState<RoundEntry[]>(() => roundEntries(current, items));
   const [dragging, setDragging] = useState(false);
 
   // Follow the room while nobody is dragging. Adopting a realtime update
   // mid-drag would pull the row out from under the finger.
+  const currentName = current?.name ?? null;
+  const currentIcon = current?.iconSlug ?? null;
   useEffect(() => {
-    if (!dragging) setOrder(items);
-  }, [items, dragging]);
+    if (!dragging) setOrder(roundEntries(currentName ? { name: currentName, iconSlug: currentIcon } : null, items));
+  }, [items, dragging, currentName, currentIcon]);
+
+  const handleDrop = () => {
+    setDragging(false);
+    const plan = planDrop(order);
+    if (plan.kind === "reorder") void onReorder(plan.queue);
+    else if (onPromote) void onPromote(plan.item, plan.queueIds);
+    else void onReorder(plan.queueIds.map((id) => order.find((e) => e.id === id)).filter((e): e is QueueItem => !!e && !isHeld(e)));
+  };
 
   if (!open) return null;
 
@@ -93,44 +163,22 @@ export function RoundOrderModal({
             </p>
 
             {/* The room's own round, when it has one: round 1, fixed. */}
-            {current && (
-              <div className="mb-2 flex items-center gap-3 rounded-xl bg-card px-3 py-3 shadow-sm">
-                <span className="w-5 shrink-0 text-center text-sm font-bold tabular-nums text-muted-foreground">
-                  1
-                </span>
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted">
-                  <DynamicIcon slug={current.iconSlug ?? undefined} size={26} />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[15px] font-bold text-foreground">
-                    {current.name}
-                  </span>
-                  <span className="block text-xs text-muted-foreground">
-                    {t("lobby.uRoundLabel", { count: 1 })}
-                  </span>
-                </span>
-              </div>
-            )}
-
             <Reorder.Group
               axis="y"
               values={order}
               onReorder={canEdit ? setOrder : () => {}}
               className="flex flex-col gap-2"
             >
-              {order.map((item, index) => (
+              {order.map((entry, index) => (
                 <RoundRow
-                  key={item.id}
-                  item={item}
-                  index={index}
+                  key={entry.id}
+                  entry={entry}
+                  number={index + 1}
                   canEdit={canEdit}
                   onDragStart={() => setDragging(true)}
-                  onDragEnd={() => {
-                    setDragging(false);
-                    void onReorder(order);
-                  }}
-                  onRemove={() => void onRemove(item.id)}
-                  roundLabel={t("lobby.uRoundLabel", { count: index + 1 + (current ? 1 : 0) })}
+                  onDragEnd={handleDrop}
+                  onRemove={isHeld(entry) ? undefined : () => void onRemove(entry.id)}
+                  roundLabel={t("lobby.uRoundLabel", { count: index + 1 })}
                 />
               ))}
             </Reorder.Group>
@@ -164,30 +212,33 @@ export function RoundOrderModal({
 /**
  * One round. The whole row is the handle on a phone — a 20px grip is a target
  * most thumbs miss — so the drag is started from the row and the grip is there
- * to say that it can be.
+ * to say that it can be. The held round is a row like the others, numbered
+ * and draggable; it just has no X, because there is no queue row to delete.
  */
 function RoundRow({
-  item,
-  index,
+  entry,
+  number,
   canEdit,
   onDragStart,
   onDragEnd,
   onRemove,
   roundLabel,
 }: {
-  item: QueueItem;
-  index: number;
+  entry: RoundEntry;
+  number: number;
   canEdit: boolean;
   onDragStart: () => void;
   onDragEnd: () => void;
-  onRemove: () => void;
+  onRemove?: () => void;
   roundLabel: string;
 }) {
   const controls = useDragControls();
+  const name = isHeld(entry) ? entry.name : entry.category_name;
+  const iconSlug = (isHeld(entry) ? entry.iconSlug : entry.icon_slug) || "mystery-box";
 
   return (
     <Reorder.Item
-      value={item}
+      value={entry}
       dragListener={false}
       dragControls={controls}
       onDragStart={onDragStart}
@@ -200,34 +251,34 @@ function RoundRow({
       style={{ touchAction: canEdit ? "none" : undefined }}
     >
       <span className="w-6 shrink-0 text-center font-[Nunito] text-[13px] font-bold text-muted-foreground">
-        {index + 1}
+        {number}
       </span>
 
       <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-primary/10">
-        {item.icon_slug ? (
-          <DynamicIcon slug={item.icon_slug} size={22} />
-        ) : (
-          <DynamicIcon slug="mystery-box" size={22} />
-        )}
+        <DynamicIcon slug={iconSlug} size={22} />
       </span>
 
       <span className="min-w-0 flex-1">
         <span className="block truncate text-[15px] font-semibold text-foreground">
-          {item.category_name}
+          {name}
         </span>
         <span className="block text-xs text-muted-foreground">{roundLabel}</span>
       </span>
 
       {canEdit && (
         <>
-          <button
-            type="button"
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={onRemove}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted"
-          >
-            <X className="h-[18px] w-[18px]" />
-          </button>
+          {onRemove ? (
+            <button
+              type="button"
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={onRemove}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted"
+            >
+              <X className="h-[18px] w-[18px]" />
+            </button>
+          ) : (
+            <span className="h-9 w-9 shrink-0" />
+          )}
           <GripVertical className="h-5 w-5 shrink-0 text-muted-foreground/60" />
         </>
       )}
