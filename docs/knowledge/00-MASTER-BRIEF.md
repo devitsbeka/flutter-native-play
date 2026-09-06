@@ -58,6 +58,23 @@ and no Dart. It is React 18 + TypeScript + Vite, wrapped in Capacitor 8. The
 name is left over from an abandoned start and nobody has renamed it; do not
 infer a Flutter codebase from it.
 
+## 2a. The goal
+
+**$100,000 MRR** — subscriptions only; gems and rewarded ads fund the business
+but do not count toward it.
+
+That is **~30,000 paying subscribers** and, at 2–5% conversion, **550,000 to
+1.5 million monthly actives**. Georgia has ~3.7 million people, so the goal
+**cannot be reached in the home market** — it selects international expansion as
+the strategy rather than leaving it as a later phase. The product is unusually
+ready for that (six non-Georgian languages populated at ~9,400 questions each)
+and two known items move onto the critical path as a result: the non-Georgian
+banks have had no human audit, and the annual plan — the highest-LTV product —
+does not yet exist in App Store Connect.
+
+Working, levers and sequencing: **`07-GROWTH-AND-GO-TO-MARKET.md`**.
+Live state, open threads and the run log: **`docs/OPERATIONS.md`** in the repo.
+
 ## 3. Stage
 
 **Pre-launch, and post-first-rejection.** The web app is live and deploys on

@@ -1,13 +1,18 @@
 # MyTrivia — Claude Project knowledge pack
 
-Seven files that, together, describe MyTrivia end to end: what the product is,
+Eight files that, together, describe MyTrivia end to end: what the product is,
 what is in the repository, how the backend is built and defended, how the money
-works, how anything reaches production, and the rules that were learned the hard
-way.
+works, how anything reaches production, what the $100k MRR goal costs in units,
+and the rules that were learned the hard way.
 
-**Upload all seven into the project's knowledge.** They are written to be read
+**Upload all eight into the project's knowledge.** They are written to be read
 in any order and to survive being retrieved one at a time — each carries enough
 context to stand alone, at the cost of some deliberate repetition between them.
+
+They are the *briefing* — durable facts about the product. Live state (goals,
+loops, open threads, the run log) lives in **`docs/OPERATIONS.md`** in the repo,
+which is read at the start of a scheduled run and updated at the end. Do not
+upload that one; it changes too often to be knowledge.
 
 | File | Read it for |
 |---|---|
@@ -18,6 +23,7 @@ context to stand alone, at the cost of some deliberate repetition between them.
 | `04-ECONOMY-AND-MONETIZATION.md` | Coins, gems, play limits, PRO tiers and seats, the IAP catalog, prices in every currency, ads. |
 | `05-PLATFORMS-DEPLOY-AND-RELEASE.md` | Web/Cloudflare, Supabase-through-Lovable, iOS/Capacitor, CI, environment, the App Review record. |
 | `06-RULES-GOTCHAS-AND-HISTORY.md` | The traps. What has broken before, what the invariant tests defend, and the conventions of the repo. |
+| `07-GROWTH-AND-GO-TO-MARKET.md` | The goal in units, why it forces international expansion, content readiness per market, the levers ranked, sequencing, and what is not yet known. |
 
 ## How these were produced
 
@@ -48,6 +54,8 @@ Facts are of three kinds and the documents distinguish them:
 - Prices. They live in `src/config/pricing.ts` and are a one-line change.
 - The dark-launched game modes (Team Battle, King), which go live by a single
   `UPDATE game_types SET is_live = true` and not by a release.
+- Everything in `07-GROWTH-AND-GO-TO-MARKET.md` marked *Unknown*, which is most
+  of the funnel. It stops being unknown thirty days after launch.
 
 When something in here contradicts the code, **the code wins** — and these files
 name the file to check for each claim so that is always a short trip.
