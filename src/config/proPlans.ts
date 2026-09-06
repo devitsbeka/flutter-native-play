@@ -177,6 +177,26 @@ export function defaultPlan(plans: ProPlan[]): ProPlan | undefined {
 }
 
 /**
+ * The locale key for the word after the price — "month" or "year".
+ *
+ * Keyed off how long the plan is bought for, NOT off its id. It was
+ * `paywall.period_${plan.id}` until the third row arrived: `friends` had no
+ * such key, so the footnote under the button read
+ * "9.99 ₾ / paywall.period_friends" — a raw translation key, on the screen
+ * App Review reads the price off. Deriving it means a fourth row cannot
+ * reintroduce that, because there is no new key to forget.
+ *
+ * Shared by every surface that prints a plan's price: the paywall footnote
+ * and the Discover cover. The cover used to say "/ month" in its own locale
+ * string while quoting the YEARLY total of the plan it opens on — a price
+ * twelve times what the store charges per month, on the first screen a
+ * reviewer sees the offer.
+ */
+export function periodKeyFor(plan: ProPlan): string {
+  return plan.months >= 12 ? "paywall.period_annual" : "paywall.period_monthly";
+}
+
+/**
  * What a multi-month plan saves against paying monthly for the same tier, in
  * whole currency units, or null when there is nothing to compare it with.
  */
