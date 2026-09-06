@@ -5,7 +5,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAvatarModal } from "@/contexts/AvatarModalContext";
 import { supabase } from "@/integrations/supabase/client";
-import { resolveAvatarUrl } from "@/utils/avatarUtils";
+import { mascotAvatarUrl, resolveAvatarUrl } from "@/utils/avatarUtils";
+import { MASCOTS } from "@/config/mascots";
 import { AvatarViewer } from "@/components/profile/AvatarViewer";
 
 interface ReelItem {
@@ -24,11 +25,13 @@ interface ReelItem {
 // not made one yet, had no way in from this screen at all. It leads the reel.
 const CREATE_ITEM: ReelItem = { id: "create-new", path: "", kind: "create" };
 
-// Canonical /src/assets paths — stable across builds, resolveAvatarUrl()
-// maps them to the bundled URLs at runtime (same scheme as AvatarModal).
-const REEL_AVATARS: ReelItem[] = [1, 2, 3, 4, 5, 6, 7, 8].map((n) => ({
-  id: `mascot-avatar-${n}`,
-  path: `/src/assets/avatars/mascot-avatar-${n}.png`,
+// The eight animals, stored by id (`mascot:owl`) the way the studio stores
+// them — never a bundled file's URL, whose build hash goes stale on the
+// next deploy. The eight blue Kings this reel used to offer are retired
+// (owner's ask); anyone still wearing one is dealt an animal.
+const REEL_AVATARS: ReelItem[] = MASCOTS.map((m) => ({
+  id: `mascot-${m.id}`,
+  path: mascotAvatarUrl(m.id),
   kind: "preset" as const,
 }));
 

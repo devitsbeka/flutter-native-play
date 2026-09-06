@@ -124,6 +124,51 @@ export function mascotIdFromAvatarUrl(avatarUrl: string | null | undefined): str
 }
 
 /**
+ * The preset faces of two earlier eras — the ten drawn people
+ * (`bot-avatar-N`) and the eight blue Kings (`mascot-avatar-N`) — are
+ * retired as profile pictures (owner's ask: the animals instead, one dealt
+ * to each). The database rewrite (migration 20261011100000) deals each
+ * PLAYER an animal by their id; this is the client's half, for any row the
+ * rewrite has not reached — a snapshot in room_participants, a cache — so
+ * an old preset never draws again. Dealt by the preset's own name, so the
+ * same old face turns into the same animal everywhere it is still stored.
+ *
+ * The bots keep their drawn faces (botAvatarFor): those are AI players, not
+ * people, and nobody picked them.
+ */
+const RETIRED_PRESET_PATTERN = /(bot-avatar|mascot-avatar)-(\d+)/;
+
+/** The preset name a stored avatar refers to ("bot-avatar-4"), or null. */
+export function retiredPresetFromAvatarUrl(avatarUrl: string | null | undefined): string | null {
+  if (!avatarUrl) return null;
+  const m = avatarUrl.match(RETIRED_PRESET_PATTERN);
+  if (!m) return null;
+  // Only the three places presets were ever stored: the dev path, the
+  // relative dev path, and a build-hashed /assets/ path.
+  if (
+    LOCAL_ASSET_PATTERN.test(avatarUrl) ||
+    RELATIVE_ASSET_PATTERN.test(avatarUrl) ||
+    VITE_HASHED_ASSET_PATTERN.test(avatarUrl)
+  ) {
+    return `${m[1]}-${m[2]}`;
+  }
+  return null;
+}
+
+function hashSeed(seed: string): number {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = (hash * 31 + seed.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash);
+}
+
+/** One of the eight animals, dealt by a seed: the same seed, the same face. */
+export function animalAvatarFor(seed: string): string {
+  return MASCOTS[hashSeed(seed) % MASCOTS.length].thumb;
+}
+
+/**
  * Resolves an avatar URL to a valid, loadable URL
  * Handles:
  * - Local asset paths (/src/assets/...) that need to be converted to imported module URLs
@@ -137,6 +182,10 @@ export function resolveAvatarUrl(avatarUrl: string | null | undefined): string |
   // the initial-letter fallback — the same place a deleted upload lands.
   const mascotId = mascotIdFromAvatarUrl(avatarUrl);
   if (mascotId) return MASCOTS.find((m) => m.id === mascotId)?.thumb;
+
+  // A retired preset, in any of the forms it was stored in: an animal.
+  const retired = retiredPresetFromAvatarUrl(avatarUrl);
+  if (retired) return animalAvatarFor(retired);
   
   // Try to recover Vite-hashed asset paths by extracting avatar number
   if (VITE_HASHED_ASSET_PATTERN.test(avatarUrl)) {
@@ -174,11 +223,6 @@ export function resolveAvatarUrl(avatarUrl: string | null | undefined): string |
   return avatarUrl;
 }
 
-const MASCOT_AVATARS: string[] = [
-  mascotAvatar1, mascotAvatar2, mascotAvatar3, mascotAvatar4,
-  mascotAvatar5, mascotAvatar6, mascotAvatar7, mascotAvatar8,
-];
-
 const BOT_AVATARS: string[] = [
   botAvatar1, botAvatar2, botAvatar3, botAvatar4, botAvatar5,
   botAvatar6, botAvatar7, botAvatar8, botAvatar9, botAvatar10,
@@ -198,25 +242,22 @@ export function botAvatarFor(seed: string | null | undefined): string {
 }
 
 /**
- * The avatar to show for someone who has not set one.
+ * The avatar to show for someone who has not set one, or whose stored one
+ * cannot be loaded.
  *
  * This used to be api.dicebear.com, seeded by user id — a third-party
  * request, on every render, for a flat cartoon face that looks nothing like
  * anything else in the app. 84 of 656 accounts have no avatar_url, so it was
  * not a rare edge: it was one player in eight wearing a stranger's art style.
+ * Then it was one of the eight blue Kings; those are retired now too.
  *
- * One of the eight mascots instead, picked from the id so the same person
- * keeps the same face everywhere — the property that made the seeded URL
- * worth using in the first place. Bundled, so it also works offline and
- * costs no network round trip.
+ * One of the eight animals, picked from the seed so the same person keeps
+ * the same face everywhere — the property that made the seeded URL worth
+ * using in the first place. Bundled, so it also works offline and costs no
+ * network round trip.
  */
 export function fallbackAvatarFor(seed: string | null | undefined): string {
-  const key = seed || '';
-  let hash = 0;
-  for (let i = 0; i < key.length; i++) {
-    hash = (hash * 31 + key.charCodeAt(i)) | 0;
-  }
-  return MASCOT_AVATARS[Math.abs(hash) % MASCOT_AVATARS.length];
+  return animalAvatarFor(seed || '');
 }
 
 /**
