@@ -27,8 +27,32 @@ describe("the pale card", () => {
   });
 
   it("and its art is flat", () => {
-    expect(modal).toMatch(/size=\{56\}\s*\n\s*flat\s*\n\s*\/>/);
-    expect(modal).toMatch(/<DynamicIcon slug="mystery-box" size=\{56\} shadow=\{false\} \/>/);
+    expect(modal).toMatch(/size=\{ART_SIZE\}\s*\n\s*flat\s*\n\s*\/>/);
+    expect(modal).toMatch(/<DynamicIcon slug="mystery-box" size=\{ART_SIZE\} shadow=\{false\} \/>/);
+  });
+});
+
+/**
+ * Owner, on the pale cards: "icons are lighter, something is covering them;
+ * put them in front, same sizes, and move them up so they don't touch the
+ * titles". The wash was over the art. Now the art is a layer of its own
+ * above the wash, in one fixed box on every card, centred in the band above
+ * the label.
+ */
+describe("the art on the pale card", () => {
+  it("is drawn above the wash, not under it", () => {
+    // On both cards the wash's div closes before the art layer opens.
+    const washThenArt = /bg-white\/45" \/>\s*\n\s*<\/div>[\s\S]*?<div className=\{ART_BAND\}>/g;
+    expect(modal.match(washThenArt) ?? []).toHaveLength(2);
+    // And the gradient layer no longer holds the artwork.
+    expect(modal).not.toMatch(/style=\{\{ background: categoryGradient\(bgColor\) \}\}\s*>\s*<CategoryArtwork/);
+  });
+
+  it("sits in one box of one size on every card, clear of the title", () => {
+    expect(modal).toMatch(/const ART_SIZE = 60;/);
+    expect(modal).toMatch(/const ART_BAND = "absolute inset-x-0 top-0 bottom-12 flex items-center justify-center";/);
+    expect(modal).toMatch(/const ART_BOX = "flex size-\[60px\] items-center justify-center";/);
+    expect(modal.match(/<div className=\{ART_BAND\}>\s*\n\s*<div className=\{ART_BOX\}>/g) ?? []).toHaveLength(2);
   });
 });
 
