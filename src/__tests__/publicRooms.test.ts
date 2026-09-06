@@ -282,7 +282,9 @@ describe("the public list", () => {
     const section = read("src/components/team/PublicRoomsSection.tsx");
     expect(section).toMatch(/import sceneArena from "@\/assets\/tb-lobby\/scene-arena\.webp"/);
     expect(section).toMatch(/const scene = room\.game_type_key === "team_battle" \? sceneArena : null;/);
-    expect(section).toMatch(/const ink = INK\.light;/);
+    // White ink is the ENTERED card's; a room the viewer has not been in
+    // wears the whitish wash and dark ink instead (publicCardMood.test.ts).
+    expect(section).toMatch(/const ink = inside \? INK\.light : INK\.dark;/);
     expect(section).toMatch(/object-cover opacity-\d+/);
     expect(section).toMatch(/bg-gradient-to-t from-\[#2E1065\]/);
     expect(section).toMatch(/shadow-\[inset_/);
