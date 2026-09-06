@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { ArrowLeft, Bell, BellRing, Loader2, Pencil, Play, Plus } from "lucide-react";
+import { ArrowLeft, Bell, BellRing, Check, Loader2, Pencil, Play, Plus, UserPlus } from "lucide-react";
 import SpotlightSearch from "@/components/search/SpotlightSearch";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { cn } from "@/lib/utils";
@@ -67,6 +67,14 @@ export interface LobbyPlayer {
   onCall?: () => void;
   /** For the row's tap: a profile, a seat menu. */
   onPress?: () => void;
+  /**
+   * Not a friend yet: the + on the row that asks to be. Absent for friends,
+   * for yourself, and wherever the mode has nobody real to befriend. People
+   * meet in a room; this is where they become friends without leaving it.
+   */
+  onAddFriend?: () => void;
+  /** Asked already, this visit: the + is a tick and takes no tap. */
+  friendRequested?: boolean;
 }
 
 export interface LobbyRuleRow {
@@ -144,6 +152,9 @@ export interface UniversalLobbyProps {
     notifications?: string;
     /** Read out for the bell on an absent player's row. */
     call?: string;
+    /** Read out for the + that asks to be friends, and for the tick once asked. */
+    addFriend?: string;
+    friendRequested?: string;
   };
   /**
    * How the benches are laid out.
@@ -615,6 +626,8 @@ export function UniversalLobby({
                               roundsLabel={labels.rounds}
                               captainLabel={labels.captain ?? "Captain"}
                               callLabel={labels.call ?? "Call"}
+                              addFriendLabel={labels.addFriend ?? "Add friend"}
+                              friendRequestedLabel={labels.friendRequested ?? "Sent"}
                               compact
                             />
                           ))}
@@ -643,6 +656,8 @@ export function UniversalLobby({
                             roundsLabel={labels.rounds}
                             captainLabel={labels.captain ?? "Captain"}
                             callLabel={labels.call ?? "Call"}
+                            addFriendLabel={labels.addFriend ?? "Add friend"}
+                            friendRequestedLabel={labels.friendRequested ?? "Sent"}
                           />
                         ))}
                         {group.footer}
@@ -1181,6 +1196,8 @@ function PlayerRow({
   roundsLabel,
   captainLabel,
   callLabel,
+  addFriendLabel,
+  friendRequestedLabel,
   compact = false,
 }: {
   player: LobbyPlayer;
@@ -1188,6 +1205,8 @@ function PlayerRow({
   roundsLabel: (count: number) => string;
   captainLabel: string;
   callLabel: string;
+  addFriendLabel: string;
+  friendRequestedLabel: string;
   /** Half the width to work in: two benches share the card. */
   compact?: boolean;
 }) {
@@ -1329,6 +1348,32 @@ function PlayerRow({
       </motion.button>
     ) : null;
 
+  // The way to become friends, on the row of somebody who is not one yet:
+  // a + beside their score, a tick once it has been sent. A sibling of the
+  // row's body, not inside it — the body is itself a button on the rows the
+  // host can tap, and a button in a button is not a thing.
+  const addFriendClass = cn(
+    "shrink-0 flex items-center justify-center rounded-full",
+    compact ? "ml-1 h-7 w-7" : "ml-2 h-9 w-9",
+    RULE_BORDER,
+  );
+  const addFriendIcon = compact ? "h-3.5 w-3.5" : "h-4 w-4";
+  const addFriend = player.friendRequested ? (
+    <span aria-label={friendRequestedLabel} className={cn(addFriendClass, "bg-[#10b981]/15 text-[#10b981]")}>
+      <Check className={addFriendIcon} strokeWidth={2.75} />
+    </span>
+  ) : player.onAddFriend ? (
+    <motion.button
+      type="button"
+      whileTap={{ scale: 0.94 }}
+      onClick={player.onAddFriend}
+      aria-label={addFriendLabel}
+      className={cn(addFriendClass, "bg-white/60 text-[#8858d5]")}
+    >
+      <UserPlus className={addFriendIcon} strokeWidth={2.5} />
+    </motion.button>
+  ) : null;
+
   return (
     <div
       className={cn(
@@ -1339,6 +1384,7 @@ function PlayerRow({
       )}
     >
       {Body}
+      {addFriend}
       {call}
       {armband}
     </div>
