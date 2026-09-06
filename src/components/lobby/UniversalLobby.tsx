@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState, type ReactNode, useEffect } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { ArrowLeft, Bell, BellRing, Check, Loader2, Pencil, Play, Plus, UserPlus } from "lucide-react";
+import { ArrowLeft, Bell, BellRing, Check, Loader2, Pencil, Play, Plus, UserPlus, X } from "lucide-react";
 import SpotlightSearch from "@/components/search/SpotlightSearch";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { cn } from "@/lib/utils";
@@ -459,18 +459,26 @@ export function UniversalLobby({
                 />
               </Ring>
               {category.onAdd && (
-                <Ring on={!!category.glow} className="shrink-0">
+                <Ring on={!!category.glow && !categoryMenu?.open} className="shrink-0">
+                  {/* While the round list is open under the chip this button
+                      is the way to close it, and says so: an X, not a +
+                      (owner's ask). The list is closed first, then the
+                      picker can be opened from the list's own Add row. */}
                   <motion.button
                     type="button"
                     whileTap={{ scale: 0.94 }}
-                    onClick={category.onAdd}
-                    aria-label="add category"
+                    onClick={categoryMenu?.open ? categoryMenu.onClose : category.onAdd}
+                    aria-label={categoryMenu?.open ? "close" : "add category"}
                     className={cn(
                       "flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-[20px] bg-[rgba(252,247,255,0.6)]",
                       RULE_BORDER,
                     )}
                   >
-                    <Plus className="h-6 w-6 text-[#402666]" strokeWidth={2.4} />
+                    {categoryMenu?.open ? (
+                      <X className="h-6 w-6 text-[#402666]" strokeWidth={2.4} />
+                    ) : (
+                      <Plus className="h-6 w-6 text-[#402666]" strokeWidth={2.4} />
+                    )}
                   </motion.button>
                 </Ring>
               )}
@@ -1161,7 +1169,7 @@ function Chip({
       whileTap={onPress ? { scale: 0.96 } : undefined}
       onClick={onPress}
       className={cn(
-        "relative flex h-[52px] min-w-0 flex-1 items-center gap-2 rounded-[20px] bg-[rgba(252,247,255,0.6)] px-3 text-left",
+        "relative flex h-[52px] w-full min-w-0 flex-1 items-center gap-2 rounded-[20px] bg-[rgba(252,247,255,0.6)] px-3 text-left",
         RULE_BORDER,
       )}
     >
@@ -1233,8 +1241,12 @@ function Ring({
       if (flashKey !== undefined) setFlash((n) => n + 1);
     }
   }, [flashKey]);
+  // A flex box, not a block: the chip inside is `flex-1`, which only means
+  // something in a flex parent. As a block, the ring left the chip at its
+  // content width — "Economics +3" as a short pill inside a wide ring
+  // (owner's screenshot).
   return (
-    <div className={cn("relative", className)}>
+    <div className={cn("relative flex", className)}>
       {on && <span aria-hidden className="lobby-ring pointer-events-none absolute -inset-[2px] rounded-[22px]" />}
       {!on && flash > 0 && (
         <span

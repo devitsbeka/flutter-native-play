@@ -21,14 +21,29 @@ const css = read("src/index.css");
 
 describe("the ring", () => {
   it("is a masked, drifting gradient stroke, still under Reduce Motion", () => {
-    expect(css).toMatch(/\.lobby-ring \{[\s\S]*?background-size: 300% 300%;[\s\S]*?animation: lobby-ring-drift 3\.6s ease-in-out infinite;[\s\S]*?mask-composite: exclude;/);
+    // All purple, turning slowly: a conic gradient of the lobby's own
+    // purples, one turn in 9s, faint halo. (It was pink and sky blue at
+    // 300% in 3.6s — a shimmer.)
+    expect(css).toMatch(/@property --lobby-ring-angle \{\s*\n\s*syntax: "<angle>";/);
+    expect(css).toMatch(/\.lobby-ring \{[\s\S]*?conic-gradient\(\s*\n\s*from var\(--lobby-ring-angle\),[\s\S]*?animation: lobby-ring-drift 9s linear infinite;[\s\S]*?mask-composite: exclude;/);
+    const ring = css.slice(css.indexOf(".lobby-ring {"), css.indexOf(".lobby-ring-flash {"));
+    expect(ring).not.toMatch(/f472b6|7dd3fc|c084fc/);
+    expect(ring).toMatch(/box-shadow: 0 0 10px rgba\(136, 88, 213, 0\.18\);/);
     expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\) \{\s*\n\s*\.lobby-ring \{ animation: none; \}/);
-    expect(css).toMatch(/\.lobby-ring-flash \{\s*\n\s*animation: lobby-ring-drift 3\.6s ease-in-out infinite, lobby-ring-flash 1\.6s ease-out forwards;/);
+    expect(css).toMatch(/\.lobby-ring-flash \{\s*\n\s*animation: lobby-ring-drift 9s linear infinite, lobby-ring-flash 1\.6s ease-out forwards;/);
   });
 
   it("stays lit on the host's chip and +, and flashes for everyone as the round count changes", () => {
     expect(universal).toMatch(/<Ring on=\{!!category\.glow\} flashKey=\{category\.rounds\} className="min-w-0 flex-1">\s*\n\s*<Chip/);
-    expect(universal).toMatch(/<Ring on=\{!!category\.glow\} className="shrink-0">\s*\n\s*<motion\.button/);
+    expect(universal).toMatch(/<Ring on=\{!!category\.glow && !categoryMenu\?\.open\} className="shrink-0">/);
+    // The chip fills the ring: the ring is a flex box (flex-1 on the chip
+    // means nothing under a block) and the chip is w-full.
+    expect(universal).toMatch(/<div className=\{cn\("relative flex", className\)\}>/);
+    expect(universal).toMatch(/"relative flex h-\[52px\] w-full min-w-0 flex-1 items-center gap-2 rounded-\[20px\]/);
+    // While the round list is open the + is an X that closes it.
+    expect(universal).toMatch(/onClick=\{categoryMenu\?\.open \? categoryMenu\.onClose : category\.onAdd\}/);
+    expect(universal).toMatch(/aria-label=\{categoryMenu\?\.open \? "close" : "add category"\}/);
+    expect(universal).toMatch(/\{categoryMenu\?\.open \? \(\s*\n\s*<X className="h-6 w-6 text-\[#402666\]" strokeWidth=\{2\.4\} \/>/);
     // A flash only after the first snapshot: the count as found is not an addition.
     expect(universal).toMatch(/if \(seen\.current === undefined\) \{\s*\n\s*seen\.current = flashKey;\s*\n\s*return;/);
     expect(room).toMatch(/rounds,\s*\n\s*glow: isHost,/);
