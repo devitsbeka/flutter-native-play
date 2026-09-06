@@ -111,7 +111,11 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
   // Data hooks
   const { categories } = useCategories();
   const { friends } = useFriends();
-  const { rooms } = useMyRooms({ limit: 20 });
+  // The rooms the player CREATED (owner's ask) — the rooms page's "created
+  // by me" filter, not every room they hold a seat in. A guest seat in
+  // somebody else's room is not one of "my rooms" here, and the list was
+  // showing those ahead of the player's own.
+  const { rooms } = useMyRooms({ limit: 20, filter: "my_rooms" });
   const { data: trivias = [] } = useMyQuizPosts();
   const { data: collections = [] } = useMyCollections();
   

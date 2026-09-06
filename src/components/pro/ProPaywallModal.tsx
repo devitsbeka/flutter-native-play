@@ -7,7 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useInAppPurchases } from "@/hooks/useInAppPurchases";
 import { useStorePrice } from "@/hooks/useStorePrice";
 import { useProPurchase } from "@/hooks/useProPurchase";
-import { ProPlan, availablePlans, defaultPlan, friendSeats } from "@/config/proPlans";
+import { ProPlan, availablePlans, defaultPlan, friendSeats, periodKeyFor } from "@/config/proPlans";
 import { PRICES, currencyForLanguage, formatMoney } from "@/config/pricing";
 import { GLASS_SHEEN, SKIN_WHITE } from "@/components/shop/ProBannerCard";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -33,20 +33,6 @@ const SUBTITLE_INK = "#6B5A85";
 
 /** The cover art the offer was tapped on, carried into the paywall. */
 const COVER_ART = "/images/bgs.png";
-
-/**
- * The word for the billing period in the price footnote — "month" or "year".
- *
- * Keyed off how long the plan is bought for, NOT off its id. It was
- * `paywall.period_${plan.id}` until the third row arrived: `friends` had no
- * such key, so the footnote under the button read
- * "9.99 ₾ / paywall.period_friends" — a raw translation key, on the screen
- * App Review reads the price off. Deriving it means a fourth row cannot
- * reintroduce that, because there is no new key to forget.
- */
-function periodKeyFor(plan: ProPlan): string {
-  return plan.months >= 12 ? "paywall.period_annual" : "paywall.period_monthly";
-}
 
 interface ProPaywallModalProps {
   isOpen: boolean;

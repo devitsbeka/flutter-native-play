@@ -26,6 +26,7 @@ import mascotAvatar5 from '@/assets/avatars/mascot-avatar-5.png';
 import mascotAvatar6 from '@/assets/avatars/mascot-avatar-6.png';
 import mascotAvatar7 from '@/assets/avatars/mascot-avatar-7.png';
 import mascotAvatar8 from '@/assets/avatars/mascot-avatar-8.png';
+import { MASCOTS } from "@/config/mascots";
 
 // Known local asset avatar patterns that need special handling
 const LOCAL_ASSET_PATTERN = /^\/src\/assets\//;
@@ -103,6 +104,26 @@ const BOT_AVATAR_MAP: Record<string, string> = {
 };
 
 /**
+ * A mascot's face, worn as the profile picture.
+ *
+ * Stored as `mascot:panda` rather than the bundled file's URL on purpose:
+ * that URL carries Vite's content hash, which changes on the next build —
+ * and an avatar_url pointing at last release's hash resolves to nothing
+ * (see recoverViteHashedAvatar, which exists because that already happened
+ * once). An id is stable for as long as the mascot is.
+ */
+const MASCOT_AVATAR_PREFIX = "mascot:";
+
+/** The value to store for a mascot's face. */
+export const mascotAvatarUrl = (id: string): string => `${MASCOT_AVATAR_PREFIX}${id}`;
+
+/** The mascot a stored avatar names, or null when it names something else. */
+export function mascotIdFromAvatarUrl(avatarUrl: string | null | undefined): string | null {
+  if (!avatarUrl?.startsWith(MASCOT_AVATAR_PREFIX)) return null;
+  return avatarUrl.slice(MASCOT_AVATAR_PREFIX.length) || null;
+}
+
+/**
  * Resolves an avatar URL to a valid, loadable URL
  * Handles:
  * - Local asset paths (/src/assets/...) that need to be converted to imported module URLs
@@ -111,6 +132,11 @@ const BOT_AVATAR_MAP: Record<string, string> = {
  */
 export function resolveAvatarUrl(avatarUrl: string | null | undefined): string | undefined {
   if (!avatarUrl) return undefined;
+
+  // A mascot's face, by id. A retired mascot resolves to nothing, which is
+  // the initial-letter fallback — the same place a deleted upload lands.
+  const mascotId = mascotIdFromAvatarUrl(avatarUrl);
+  if (mascotId) return MASCOTS.find((m) => m.id === mascotId)?.thumb;
   
   // Try to recover Vite-hashed asset paths by extracting avatar number
   if (VITE_HASHED_ASSET_PATTERN.test(avatarUrl)) {

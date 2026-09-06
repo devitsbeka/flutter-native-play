@@ -396,6 +396,9 @@ const App = () => (
                 {INCLUDE_ADMIN && AdminRoute && OnboardingWelcomePreview && (
                   <Route path="/onboarding" element={<AdminRoute><OnboardingWelcomePreview /></AdminRoute>} />
                 )}
+                {/* The shop is the power-ups page; anything that still says
+                    /shop (an old link, a typed URL) lands there, not on 404. */}
+                <Route path="/shop" element={<Navigate to="/power-ups" replace />} />
                 <Route path="/shop/success" element={<ShopSuccess />} />
                 <Route path="/shop/cancel" element={<ShopCancel />} />
                 {INCLUDE_DEV_PAGES && Styleguide && <Route path="/styleguide" element={<Styleguide />} />}

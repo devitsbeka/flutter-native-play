@@ -42,6 +42,7 @@ import { generatePublicPortrait } from "@/utils/portraitAvatar";
 import { MASCOTS, type MascotId } from "@/config/mascots";
 import kingMascotThumb from "@/assets/play-chooser/icon-king.webp";
 import { useHomeMascot } from "@/hooks/useHomeMascot";
+import { mascotAvatarUrl, mascotIdFromAvatarUrl } from "@/utils/avatarUtils";
 
 interface AvatarModalProps {
   isOpen: boolean;
@@ -168,6 +169,37 @@ function FailureNote({ failure }: { failure: PhotoError }) {
         )}
       </div>
     </div>
+  );
+}
+
+/**
+ * The photo tile: a <label> for the file input on the web, a <button> in the
+ * native app (where the tile opens the system photo sheet, not an input).
+ */
+function NativeOrLabel({
+  htmlFor,
+  onClick,
+  disabled,
+  className,
+  children,
+}: {
+  htmlFor: string;
+  onClick: () => void;
+  disabled?: boolean;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  if (isNativePhotoPickerAvailable()) {
+    return (
+      <button type="button" onClick={onClick} disabled={disabled} className={className}>
+        {children}
+      </button>
+    );
+  }
+  return (
+    <label htmlFor={htmlFor} aria-disabled={disabled} className={className}>
+      {children}
+    </label>
   );
 }
 
@@ -687,6 +719,40 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
       </motion.div>
     );
 
+  /**
+   * Wear a mascot's face as the profile picture.
+   *
+   * Stored as `mascot:<id>` (see mascotAvatarUrl) rather than the bundled
+   * file's hashed URL, which would stop resolving at the next build. The
+   * generated portraits give up their "current" flag, exactly as picking one
+   * of them from the shelf does — otherwise the shelf keeps a tick on a face
+   * the player is no longer wearing.
+   */
+  const chooseMascotAvatar = async (id: MascotId) => {
+    if (!user) return;
+    setIsLoading(true);
+    try {
+      await supabase
+        .from("avatar_generations")
+        .update({ is_current: false })
+        .eq("user_id", user.id)
+        .not("avatar_url", "like", "%/scene_%");
+
+      const result = await updateProfile({ avatar_url: mascotAvatarUrl(id), animated_avatar_url: null });
+      if (result?.error) throw result.error;
+
+      setSelectedForAction(null);
+      toast.success(t("avatar.avatarUpdated"));
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      finishAndClose();
+    } catch (error) {
+      console.error("Error choosing mascot avatar:", error);
+      toast.error(t("errors.generic"));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const selectPreviousAvatar = async (avatarUrl: string) => {
     if (!user) return;
     
@@ -827,9 +893,17 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
                   <span className="text-xs text-muted-foreground">{t("avatar.takeSelfie")}</span>
                 </motion.button>
 
-                <button
-                  type="button"
-                  onClick={() => openFilePicker()}
+                {/* A LABEL on the web, a button in the app.
+                    Safari opens a file input from a label's own activation
+                    without any script; `input.click()` from a handler has to
+                    stay inside the gesture to be honoured, and inside an
+                    animated dialog it is the kind of thing WebKit quietly
+                    declines — which looks exactly like a tile that does
+                    nothing. The native build has no input to open: it goes
+                    to the system sheet instead, so there it stays a button. */}
+                <NativeOrLabel
+                  htmlFor="avatar-file-input"
+                  onClick={openFilePicker}
                   disabled={isProcessingFile}
                   className={`relative flex-1 aspect-square max-w-[100px] rounded-2xl border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-1 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer ${isProcessingFile ? 'opacity-50' : ''}`}
                 >
@@ -848,7 +922,7 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
                       <span className="text-xs text-muted-foreground">{t("avatar.uploadPhoto")}</span>
                     </>
                   )}
-                </button>
+                </NativeOrLabel>
               </div>
             </>
             {/* Under the tiles, not over them: the allowance describes what
@@ -944,6 +1018,47 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
               {selectedGen && renderGenActions()}
             </div>
           )}
+
+          {/* The mascots' faces, worn as the profile picture. The grid below
+              this one picks the same animal for the HOME SCREEN, which is a
+              different choice about a different surface — hence two grids of
+              the same faces, each saying which one it sets. */}
+          <div>
+            <p className="text-sm font-medium text-foreground">{t("avatar.animalAvatars")}</p>
+            <p className="mb-2 text-xs text-muted-foreground">{t("avatar.animalAvatarsHint")}</p>
+            <div className="grid grid-cols-4 gap-2">
+              {MASCOTS.map((mascot) => {
+                const isWorn = mascotIdFromAvatarUrl(profile?.avatar_url) === mascot.id;
+                return (
+                  <motion.button
+                    key={mascot.id}
+                    type="button"
+                    onClick={() => chooseMascotAvatar(mascot.id)}
+                    disabled={isLoading}
+                    aria-label={t(`avatar.mascotNames.${mascot.id}`)}
+                    aria-pressed={isWorn}
+                    className={`relative aspect-square overflow-hidden rounded-full border-2 transition-all ${
+                      isWorn ? "border-primary ring-2 ring-primary/30" : "border-border hover:border-primary/50"
+                    } disabled:opacity-50`}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <img
+                      src={mascot.thumb}
+                      alt=""
+                      draggable={false}
+                      className="pointer-events-none h-full w-full object-cover"
+                    />
+                    {isWorn && (
+                      <div className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary shadow">
+                        <Check className="h-3 w-3 text-white" />
+                      </div>
+                    )}
+                  </motion.button>
+                );
+              })}
+            </div>
+          </div>
 
           {/* Mascots — the home-screen scene. One tile per mascot; the chosen
               one is what the home screen paints behind the widgets. Until a

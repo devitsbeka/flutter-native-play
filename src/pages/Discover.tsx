@@ -24,7 +24,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { ProPaywallModal } from "@/components/pro/ProPaywallModal";
 import { useInAppPurchases } from "@/hooks/useInAppPurchases";
 import { useStorePrice } from "@/hooks/useStorePrice";
-import { availablePlans, defaultPlan } from "@/config/proPlans";
+import { availablePlans, defaultPlan, periodKeyFor } from "@/config/proPlans";
 import { PRICES } from "@/config/pricing";
 import { matchesQuery } from "@/utils/searchMatch";
 import { orderByPopularity, readRecentlyViewedIds, RECENTLY_VIEWED_KEY } from "@/utils/categoryTabs";
@@ -151,19 +151,25 @@ export default function Discover() {
   // was the 9.99 GEL web price wearing a dollar sign.
   const { products } = useInAppPurchases();
   const resolvePrice = useStorePrice();
-  const offerNote = useMemo(() => {
+  const offer = useMemo(() => {
     const plan = defaultPlan(
       availablePlans(products.map((p) => p.productId), Capacitor.isNativePlatform()),
     );
-    if (!plan) return "";
+    if (!plan) return { note: "", hasTrial: false };
     const price = resolvePrice(plan.productId, PRICES[plan.priceKey].USD, plan.priceKey).display;
     // The trial is whatever the store product actually carries, not a figure
     // from the bundle — promising free days App Store Connect does not grant
-    // is the same 2.3.1 problem here as on the paywall itself.
+    // is the same 2.3.1 problem here as on the paywall itself. The button
+    // follows the same answer: "Try for free" only over a product that has
+    // a free period, "Get PRO" otherwise, as the paywall's own button does.
     const trialDays = products.find((p) => p.productId === plan.productId)?.introFreeDays;
-    return (trialDays ? t("discover.promoNoteTrial") : t("discover.promoNote"))
+    const note = (trialDays ? t("discover.promoNoteTrial") : t("discover.promoNote"))
       .replace("{days}", String(trialDays ?? 0))
-      .replace("{price}", price);
+      .replace("{price}", price)
+      // The plan it opens on is the year, so this reads "/ year" — the
+      // yearly total was printed as a monthly price here for a while.
+      .replace("{period}", t(periodKeyFor(plan)));
+    return { note, hasTrial: Boolean(trialDays) };
   }, [products, resolvePrice, t]);
 
   useEffect(() => {
@@ -564,7 +570,7 @@ export default function Discover() {
               onClick={() => setPaywallOpen(true)}
               className="pointer-events-auto absolute left-1/2 -translate-x-1/2 top-[calc(78px_+_min(192px,38.4vw,24dvh))] h-[min(53px,10.6vw,6.8dvh)] w-[min(192px,38.4vw)] rounded-[min(18.386px,3.68vw)] border-[1.532px] border-solid border-[#e8e0f5] bg-white/80 text-[#5d247f] text-[min(16px,3.2vw)] font-bold uppercase tracking-[-0.16px] [text-shadow:none] shadow-[0px_3.698px_0px_0px_#d8d0e8,0px_5.546px_14.79px_0px_rgba(0,0,0,0.1)] active:translate-y-[2px] active:shadow-[0px_1.5px_0px_0px_#d8d0e8,0px_2px_8px_0px_rgba(0,0,0,0.1)] transition-all"
             >
-              {t("discover.promoCta")}
+              {t(offer.hasTrial ? "discover.promoCta" : "paywall.ctaSubscribe")}
             </button>
 
             {/* Hangs off the BUTTON, not off either edge of the cover. The
@@ -579,7 +585,7 @@ export default function Discover() {
                 offer shrinks with whichever axis is tighter and this line
                 stays inside the cover. */}
             <p className="absolute top-[calc(78px_+_min(192px,38.4vw,24dvh)_+_min(53px,10.6vw,6.8dvh)_+_min(8px,1.6vw,1dvh))] left-1/2 -translate-x-1/2 w-full px-6 text-[min(14px,2.8vw)] leading-[min(20.7px,4.14vw)] tracking-[-0.16px]">
-              {offerNote}
+              {offer.note}
             </p>
           </div>
 
