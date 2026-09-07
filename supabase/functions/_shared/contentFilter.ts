@@ -17,7 +17,7 @@
  * functions and the database to run the SAME list rather than a second one
  * that drifts. The third runtime, Postgres, cannot import TypeScript: its
  * copy is the `blocked_terms` table seeded by
- * `supabase/migrations/20261014100000_server_side_content_filter.sql`, and
+ * `supabase/migrations/20261014110000_server_side_content_filter.sql`, and
  * `src/__tests__/blocklistIsOneList.test.ts` fails if the two ever disagree.
  *
  * Scope is deliberate: this blocks slurs and hard profanity in the app's two

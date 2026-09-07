@@ -10,7 +10,7 @@ import {
 const src = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 
 const SHARED = "supabase/functions/_shared/contentFilter.ts";
-const MIGRATION = "supabase/migrations/20261014100000_server_side_content_filter.sql";
+const MIGRATION = "supabase/migrations/20261014110000_server_side_content_filter.sql";
 
 /**
  * One blocklist, three runtimes.
