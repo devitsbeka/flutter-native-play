@@ -883,7 +883,14 @@ export function RoomLobbyV2() {
    */
   const heldRound = (currentRoom.category_id || currentRoom.user_trivia_id)
     ? {
-        name: currentRoom.category_name || t("extra.categoryType"),
+        // Through the same resolver the queue rows use. The room's own
+        // round was the one name on this screen still drawn exactly as
+        // stored, so a room set up in Georgian kept saying so under an
+        // English UI — next to a queued round that had been translated.
+        name:
+          localizeQueueCategory(currentRoom.category_name)
+          || currentRoom.category_name
+          || t("extra.categoryType"),
         iconSlug:
           iconForCategoryName(currentRoom.category_name)
           || getCategoryIconSlug(currentRoom.category_id ?? "")

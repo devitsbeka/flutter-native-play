@@ -37,6 +37,7 @@ import {
 } from "@/services/questionTracker";
 import type { Json } from "@/integrations/supabase/types";
 import { readAppLanguage } from "@/utils/appLanguage";
+import { filterCategoriesForLanguage } from "@/utils/languageCategoryFilter";
 import { questionImageSrc } from "@/utils/questionImage";
 
 // ============================================================================
@@ -992,11 +993,24 @@ async function getMultiCategoryVSQuestions(
   const mediaSeenIds = getMediaSeenIds();
   const mediaSeenSet = new Set(mediaSeenIds);
   
-  // Get all active categories
-  const { data: categories } = await supabase
+  // Get all active categories the player may be asked about.
+  //
+  // This pool had no language rule at all, and it is the one list of
+  // categories in the app that did not. A language-specific category is one
+  // country's own subject — Georgian History, Cocina española — and
+  // filterCategoriesForLanguage keeps it out of every picker. It reached
+  // the questions anyway, because this pool draws on the QUESTION's
+  // language and a few of those rows carry a handful of questions
+  // translated into other languages: georgian_history has 196 questions in
+  // Georgian and two in English. So a player in the USA, on a random round,
+  // could be asked one of those two and read that category's name over it
+  // (owner: "I saw the Georgian history category while I had chosen USA").
+  const { data: allCategories } = await supabase
     .from('categories')
-    .select('id, name, category_id, icon_slug')
+    .select('id, name, category_id, icon_slug, is_language_specific, language')
     .eq('is_active', true);
+
+  const categories = filterCategoriesForLanguage(allCategories || [], language);
   
   if (!categories || categories.length === 0) {
     return {
