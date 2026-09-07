@@ -6,15 +6,21 @@
  * Press back and it is one card among many, with nothing to say it is yours
  * and no way to fill it without entering it first.
  *
- * Three answers, one condition between them:
+ * Three answers:
  *  - it leads the list;
  *  - it wears a turning gradient ring, so you can pick it out;
  *  - its seats row carries a "+" that opens the invite sheet in place.
  *
- * And one rule against all three: ten minutes. If nobody has come by then it
- * stops leading — other rooms are better cards than an empty one nobody came
- * to — and the ring goes with it. A week of that and it stops being listed at
- * all (migration 20261013100000).
+ * The first and the third last ten minutes. The RING lasts three seconds
+ * (owner's ask): it answers "which one is mine", which is a question you ask
+ * on arrival and not again, and a permanent ring would just become part of
+ * how the card looks. The position answers "what should I do next", which is
+ * a live question for as long as the room is worth going back to — so the two
+ * are on different clocks on purpose.
+ *
+ * After ten minutes with nobody in it the card stops leading: other rooms are
+ * better than an empty one nobody came to. A week of that and it stops being
+ * listed at all (migration 20261013100000).
  */
 
 import { describe, expect, it } from "vitest";
@@ -128,10 +134,34 @@ describe("it leads the list, then stops leading", () => {
 });
 
 describe("the ring on the card", () => {
-  it("is drawn on exactly the condition that puts it first", () => {
+  it("is armed by the same condition that puts the card first", () => {
     expect(section).toMatch(/const freshlyMine = room\.player_count <= 1 && isFreshOwnRoom\(room\);/);
-    expect(section).toMatch(/\{freshlyMine && \(/);
     expect(section).toMatch(/className="fresh-room-ring pointer-events-none absolute inset-0 z-30 rounded-2xl"/);
+  });
+
+  it("but lives three seconds, not the ten minutes the position does", () => {
+    // Superseded: the ring used to be drawn for as long as the card led the
+    // list. It is a greeting, not a status — left up it becomes part of how
+    // the card looks and stops meaning "this one is new".
+    expect(section).toMatch(/const FRESH_RING_MS = 3000;/);
+    expect(section).toMatch(/setTimeout\(\(\) => setRingUp\(false\), FRESH_RING_MS\)/);
+    expect(section).toMatch(/\{ringUp && \(/);
+    expect(section).not.toMatch(/\{freshlyMine && \(\s*\n\s*<span/);
+  });
+
+  it("re-arms on a fresh mount, which is the moment it is for", () => {
+    // Pressing back onto this page and looking for the room you just made.
+    expect(section).toMatch(/const \[ringUp, setRingUp\] = useState\(freshlyMine\);/);
+    expect(section).toMatch(/\}, \[freshlyMine, room\.id\]\);/);
+  });
+
+  it("fades out and unmounts rather than blinking off", () => {
+    // A conic gradient turning at opacity 0 behind every card for the rest
+    // of the ten minutes is work nobody can see.
+    expect(section).toMatch(/<AnimatePresence>\s*\n\s*\{ringUp && \(/);
+    expect(section).toMatch(/exit=\{\{ opacity: 0 \}\}/);
+    expect(section).toMatch(/const t = setTimeout\(/);
+    expect(section).toMatch(/return \(\) => clearTimeout\(t\);/);
   });
 
   it("built the way the lobby's ring is, so there is one idiom for it", () => {

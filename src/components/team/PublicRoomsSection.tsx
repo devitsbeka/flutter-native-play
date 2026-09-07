@@ -14,7 +14,7 @@ import {
 import { useFriends } from "@/contexts/FriendsContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { onlineUserIds } from "@/utils/presence";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Globe, Loader2, Users, Clock, Trash2, LogOut, X, UserPlus, Play, Plus } from "lucide-react";
 import { RoomCardPlayButton } from "@/components/team/RoomCardPlayButton";
 import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
@@ -111,6 +111,18 @@ interface CardPlayer {
   nickname: string | null;
   avatar_url: string | null;
 }
+
+/**
+ * How long the ring on a room you just made stays up.
+ *
+ * It is a greeting, not a status. Long enough to catch the eye of somebody
+ * who has just pressed back and is looking for their room; short enough that
+ * it never becomes part of how the card looks (owner's ask). The card keeps
+ * its place at the top of the list for the full ten minutes either way — the
+ * ring answers "which one", the position answers "what should I do next",
+ * and they are different questions with different lifespans.
+ */
+const FRESH_RING_MS = 3000;
 
 function PublicRoomCard({
   room,
@@ -240,6 +252,23 @@ function PublicRoomCard({
    * end together after ten minutes.
    */
   const freshlyMine = room.player_count <= 1 && isFreshOwnRoom(room);
+  /**
+   * The ring's own life, which is much shorter than the card's place.
+   *
+   * Shown on arrival and taken away three seconds later. It re-arms on a
+   * fresh mount, which is exactly the moment it is for: pressing back onto
+   * this page and looking for the room you just made.
+   */
+  const [ringUp, setRingUp] = useState(freshlyMine);
+  useEffect(() => {
+    if (!freshlyMine) {
+      setRingUp(false);
+      return;
+    }
+    setRingUp(true);
+    const t = setTimeout(() => setRingUp(false), FRESH_RING_MS);
+    return () => clearTimeout(t);
+  }, [freshlyMine, room.id]);
   /** The host may invite from here rather than opening the room to do it. */
   const canInvite = room.my_state === "host" && !full;
 
@@ -257,13 +286,23 @@ function PublicRoomCard({
     >
       {/* Drawn over the card, not around it: the wrapper clips to the same
           radius, so the ring sits exactly on the card's edge whatever the
-          card is painted with. z-30 clears the seats and the bottom bar. */}
-      {freshlyMine && (
-        <span
-          aria-hidden
-          className="fresh-room-ring pointer-events-none absolute inset-0 z-30 rounded-2xl"
-        />
-      )}
+          card is painted with. z-30 clears the seats and the bottom bar.
+          
+          It fades rather than blinking out, and unmounts when it has — a
+          conic gradient turning at opacity 0 behind every card on the page
+          for the rest of the ten minutes is work nobody can see. */}
+      <AnimatePresence>
+        {ringUp && (
+          <motion.span
+            aria-hidden
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.45 }}
+            className="fresh-room-ring pointer-events-none absolute inset-0 z-30 rounded-2xl"
+          />
+        )}
+      </AnimatePresence>
       {/* The private tab's card proportions (MyRoomsSection), exactly: the
           same shape on both tabs (owner: make them like the private rooms). */}
       <div className="relative p-3 aspect-[1.45/1] md:aspect-[1.15/1] flex flex-col rounded-2xl overflow-hidden">
