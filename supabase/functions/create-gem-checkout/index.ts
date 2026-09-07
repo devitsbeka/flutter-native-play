@@ -104,12 +104,6 @@ serve(async (req) => {
     const sku = `GEMS_${pack.gems}_${currency}`;
 
     // Get or create Stripe customer
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("nickname")
-      .eq("user_id", userData.user.id)
-      .single();
-
     const customers = await stripe.customers.list({
       email: userData.user.email,
       limit: 1,
@@ -119,6 +113,15 @@ serve(async (req) => {
     if (customers.data.length > 0) {
       customerId = customers.data[0].id;
     } else {
+      // Only a new customer needs a name, so the profile is read here and
+      // not on the path every returning buyer takes. See the same note in
+      // create-pro-checkout.
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("nickname")
+        .eq("user_id", userData.user.id)
+        .single();
+
       const customer = await stripe.customers.create({
         email: userData.user.email,
         name: profile?.nickname || undefined,
@@ -176,7 +179,9 @@ serve(async (req) => {
       ],
       mode: "payment",
       success_url: `${origin}/shop/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/shop/cancel`,
+      // Steps back over the checkout leg rather than stacking a page on top
+      // of it — see create-pro-checkout and src/utils/checkoutReturn.ts.
+      cancel_url: `${origin}/checkout/cancelled`,
       locale: "auto", // Auto-detect user's locale (Georgian not supported by Stripe)
       // `gems` rides along for readability in the Stripe dashboard only. The
       // webhook re-derives the grant from product_id against the same catalog

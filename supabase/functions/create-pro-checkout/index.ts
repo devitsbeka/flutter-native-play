@@ -96,7 +96,6 @@ serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     let userId: string | null = null;
     let userEmail: string | null = null;
-    let userName: string | null = null;
 
     if (authHeader) {
       const token = authHeader.replace("Bearer ", "");
@@ -105,15 +104,6 @@ serve(async (req) => {
       if (!userError && userData.user) {
         userId = userData.user.id;
         userEmail = userData.user.email || null;
-
-        // Get profile nickname
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("nickname")
-          .eq("user_id", userId)
-          .single();
-
-        userName = profile?.nickname || null;
       }
     }
 
@@ -157,9 +147,19 @@ serve(async (req) => {
       if (customers.data.length > 0) {
         customerId = customers.data[0].id;
       } else {
+        // The nickname is only ever used to NAME a new Stripe customer, so it
+        // is fetched here rather than up front. Every returning buyer was
+        // paying for that round trip — one of four the tab waits on between
+        // pressing Buy and Checkout appearing — and then not using it.
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("nickname")
+          .eq("user_id", userId)
+          .single();
+
         const customer = await stripe.customers.create({
           email: userEmail,
-          name: userName || undefined,
+          name: profile?.nickname || undefined,
           metadata: {
             user_id: userId,
           },
@@ -200,7 +200,13 @@ serve(async (req) => {
       ],
       mode: "subscription",
       success_url: `${origin}/profile?tab=PRO&subscription=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/profile?tab=PRO&subscription=cancelled`,
+      // Checkout's back arrow is a FORWARD navigation to this URL, so it
+      // cannot be a normal page: landing on one leaves the payment screen a
+      // single Back away, and the page named here used to be the account
+      // page rather than wherever Buy was pressed. /checkout/cancelled steps
+      // back over the whole checkout leg instead — see
+      // src/utils/checkoutReturn.ts.
+      cancel_url: `${origin}/checkout/cancelled`,
       locale: "auto",
       metadata: {
         user_id: userId || "guest",

@@ -5,6 +5,7 @@ import { t as tStandalone } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Capacitor } from "@capacitor/core";
 import { useInAppPurchases, IAP_PRODUCTS } from "@/hooks/useInAppPurchases";
+import { rememberCheckoutLaunch } from "@/utils/checkoutReturn";
 import { readAppLanguage } from "@/utils/appLanguage";
 
 export type ProTierId = "pro" | "pro_plus";
@@ -99,7 +100,10 @@ export function useProPurchase() {
       }
 
       if (data.url) {
-        // Redirect to Stripe Checkout
+        // Note where we are before the tab leaves for stripe.com, so the
+        // cancel page can step back over the whole checkout leg instead of
+        // stacking on top of it — see src/utils/checkoutReturn.ts.
+        rememberCheckoutLaunch();
         window.location.href = data.url;
         return { success: true };
       }

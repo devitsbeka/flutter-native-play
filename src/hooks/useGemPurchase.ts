@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { rememberCheckoutLaunch } from "@/utils/checkoutReturn";
 import { readAppLanguage } from "@/utils/appLanguage";
 import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
@@ -107,7 +108,9 @@ export function useGemPurchase() {
       }
 
       if (data.url) {
-        // Redirect to Stripe Checkout
+        // As in useProPurchase: mark the depth so Stripe's back arrow can
+        // step over the checkout leg rather than stack on top of it.
+        rememberCheckoutLaunch();
         window.location.href = data.url;
       }
     } catch (error) {
