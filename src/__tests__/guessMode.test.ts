@@ -45,15 +45,17 @@ describe("Guess replaced Random on the create screen", () => {
     const branchBody = guessBranch.slice(0, guessBranch.indexOf("autoStart.current = true;"));
     expect(branchBody).not.toMatch(/autoStart/);
     expect(create).toMatch(/extra\.guessPickTitle/);
-    // And the answer PLAYS it, in the versus flow, with no room anywhere.
-    // This went through a pre-lobby, then through a room started on the
-    // pick; both were wrong for the same reason. A picture game is one
-    // player (owner), and a room meant a row, a lobby route, a start and a
-    // walk-in before the first question — plus a room left in the player's
-    // list when the round was over.
+    // And the answer PLAYS it — the category's own solo round, with no room
+    // and no versus screen. This has been a pre-lobby, then a room started
+    // on the pick, then the versus flow; each put something between the
+    // pick and the game. A room meant a row, a lobby route, a start and a
+    // walk-in, and was left behind afterwards; the versus screen meant an
+    // opponent, a stake and a reveal to sit through (owner: "no need to
+    // show the versus game page here").
     expect(create).toMatch(
-      /const pickGuessCategory = \(cat: Category\) => \{[\s\S]*?handoff\(`\/game\?category=\$\{cat\.id\}`\);\s*\n\s*onClose\(\);\s*\n\s*\};/,
+      /const level = getCategoryProgress\(cat\.category_id \?\? cat\.id\) \|\| 1;\s*\n\s*handoff\(`\/play\/\$\{cat\.category_id \?\? cat\.id\}\/\$\{level\}`, \{ state: \{ countdown: true \} \}\);/,
     );
+    expect(create).not.toMatch(/\/game\?category=/);
     expect(create).not.toMatch(/setPreLobby\("guess"\)/);
     // Both cards say so.
     expect(create).toMatch(/key: "guess"[^}]*players: "1"/);
@@ -157,14 +159,22 @@ describe("Guess replaced Random on the create screen", () => {
     expect(create).not.toMatch(/guessSolo/);
     expect(create).not.toMatch(/gameChoice === "guess" && room/);
     expect(create).not.toMatch(/roomIsPlaying/);
-    // The versus screen has always taken a category on its URL and ignored
-    // it, spinning to a random winner. It honours it now, or the picked
-    // picture game would not be the one played.
+    // The countdown the owner asked for, on the entry that asked for it —
+    // a level opened from the category's own page still starts on the
+    // question, which is right there.
+    const quiz = read("src/pages/CategoryQuizPage.tsx");
+    expect(quiz).toMatch(/const wantsCountdown = Boolean\(\(location\.state as \{ countdown\?: boolean \} \| null\)\?\.countdown\);/);
+    expect(quiz).toMatch(/useState<number \| null>\(wantsCountdown \? 3 : null\)/);
+    // Counted only once there are questions to count down to, and the
+    // clock held until it is over.
+    expect(quiz).toMatch(/if \(countdown === null \|\| loading \|\| questions\.length === 0\) return;/);
+    expect(quiz.match(/if \(countdown !== null && countdown > 0\) return;/g) ?? []).toHaveLength(2);
+
+    // The versus screen still honours a category on its URL — that was
+    // always meant to work and never did — even though Guess no longer
+    // goes there.
     const vs = read("src/components/game/VSScreen.tsx");
-    expect(vs).toMatch(/selectedCategoryId \} = useGame\(\)/);
     expect(vs).toMatch(/const chosenCategory = useMemo\(/);
-    expect(vs).toMatch(/if \(chosenCategory\) \{\s*\n\s*setSelectedCategory\(\{ id: chosenCategory\.id, name: chosenCategory\.name \}\);/);
-    // And a re-spin would throw the choice away.
     expect(vs).toMatch(/isCategoryLocked && !chosenCategory && categorySpinsLeft > 0/);
   });
 
