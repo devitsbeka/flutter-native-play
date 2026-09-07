@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useFriends } from "@/hooks/useFriends";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useLocalizedCategoryName } from "@/utils/categoryDisplayName";
 import { toast } from "@/lib/toast";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
@@ -85,6 +86,8 @@ export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }
   const { search } = useLocation();
   const navigate = useNavigate();
   const { t, language } = useLanguage();
+  // The invited player may not read the language the room was set up in.
+  const localizeCategory = useLocalizedCategoryName();
   const { user, loading: authLoading } = useAuth();
   const { friends, sendFriendRequest, refreshFriends } = useFriends();
 
@@ -500,7 +503,9 @@ export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }
                 {preview.room_name || t("extra.inviteRoomFallback")}
               </p>
               {preview.category_name && (
-                <p className="mt-0.5 truncate text-sm text-[#5a6495]">{preview.category_name}</p>
+                <p className="mt-0.5 truncate text-sm text-[#5a6495]">
+                  {localizeCategory(preview.category_name) ?? preview.category_name}
+                </p>
               )}
             </div>
             {/* Live or finished, said on the card rather than only in the

@@ -602,6 +602,28 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     if (key === "mytrivias" && !challengeTrivia) void handleOptionClick("my-trivias");
   };
 
+  /**
+   * Leaving this screen for the game it just set up.
+   *
+   * When the chooser was DEEP-LINKED — a card tapped on the home's Play
+   * rail arrives as `/create-room?mode=…` — it is a step the player passed
+   * through, not a place they asked to be, and it must not be left behind
+   * in the history stack. It was: tapping Quick Game on the home rail
+   * pushed the chooser and then pushed `/game` on top of it, so Back from
+   * the game landed on the chooser instead of the rail (owner: "back
+   * should strictly take us where we clicked"). Worse, arriving there ran
+   * the seeded mode again and threw the player straight back into the
+   * game — a Back button that could not be escaped, and a flash of the
+   * chooser showing its first card rather than the one that was tapped.
+   *
+   * Replacing the entry makes the trip home → game, which is the trip the
+   * player took. A chooser opened deliberately (no `?mode=`) still pushes:
+   * that one IS a place they chose, and going back to it is right.
+   */
+  const cameFromRail = Boolean(initialMode);
+  const handoff = (to: string, options?: { state?: unknown }) =>
+    navigate(to, { ...options, replace: cameFromRail });
+
   // A card tapped on the home's Play rail lands here with a mode: run the
   // same startMode a tap on that card in this chooser would — once, on
   // mount, and after the tap it mirrors, not before it (a seeded initial
@@ -947,7 +969,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     // own guards (limits, stake) live centrally in the game flow.
     if (gameChoice === "quick") {
       onClose();
-      navigate("/game");
+      handoff("/game");
       return;
     }
 
@@ -959,7 +981,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       onClose();
       // Versus King is friends-only: its lounge never publishes, whatever
       // the switch said before the game type was picked.
-      navigate(gameChoice === "king" ? "/king" : "/team-battle", {
+      handoff(gameChoice === "king" ? "/king" : "/team-battle", {
         state: {
           invite,
           isPublic: publishRoom,
@@ -978,7 +1000,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     if (gameChoice === "words") {
       const invite = collectInvitees().slice(0, 1);
       onClose();
-      navigate("/words", { state: { invite } });
+      handoff("/words", { state: { invite } });
       return;
     }
 
@@ -1084,7 +1106,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         // category and landing in the lobby: not a dropped frame, the
         // better part of a second of the wrong screen. `entering` lets the
         // destination hold its loader from the first paint.
-        navigate(`/team?join=${roomCode}`, { state: { entering: true } });
+        handoff(`/team?join=${roomCode}`, { state: { entering: true } });
         onClose();
       } else if (selectionMode === "create" && customTriviaQuestions) {
         // Create room with custom trivia questions
@@ -1131,7 +1153,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
           room = createdRoom;
           await persistQueuedRounds(createdRoom.id);
           
-          navigate(`/team?join=${roomCode}`, { state: { entering: true } });
+          handoff(`/team?join=${roomCode}`, { state: { entering: true } });
           onClose();
         } else {
           // Fallback to old behavior if no persisted trivia ID
@@ -1252,7 +1274,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
 
       // Last, so the invitations above are sent before this screen goes.
       if (walkInCode) {
-        navigate(`/team?join=${walkInCode}`, { state: { entering: true } });
+        handoff(`/team?join=${walkInCode}`, { state: { entering: true } });
         onClose();
       }
     } catch (error) {

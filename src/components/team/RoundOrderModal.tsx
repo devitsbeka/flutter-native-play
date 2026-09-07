@@ -3,6 +3,7 @@ import { motion, Reorder, useDragControls } from "framer-motion";
 import { GripVertical, Plus, X } from "lucide-react";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useLocalizedCategoryName } from "@/utils/categoryDisplayName";
 import type { QueueItem } from "@/hooks/useRoomCategoryQueue";
 
 /**
@@ -125,6 +126,21 @@ export function RoundOrderModal({
   onAdd,
 }: RoundOrderModalProps) {
   const { t } = useLanguage();
+  /**
+   * What to CALL each round, in the language the reader is in now.
+   *
+   * Every round in this list carries a name that was written into the
+   * database when somebody added it, in whatever language THEY were
+   * reading: the room's own round in `game_rooms.category_name`, a queued
+   * one in `room_category_queue.category_name`. Drawn as stored, a room
+   * whose host switched country mid-setup showed one round in Georgian and
+   * the next in English — the same category, twice, in two languages
+   * (owner's screenshot). The stored string is only ever a fallback now.
+   *
+   * A custom trivia's title is not a category and passes through untouched,
+   * which is right: it is the name its author gave it.
+   */
+  const localize = useLocalizedCategoryName();
   const [order, setOrder] = useState<RoundEntry[]>(() => roundEntries(current, items));
   const [dragging, setDragging] = useState(false);
 
@@ -196,6 +212,7 @@ export function RoundOrderModal({
                   onDragEnd={handleDrop}
                   onRemove={isHeld(entry) ? undefined : () => void onRemove(entry.id)}
                   roundLabel={t("lobby.uRoundLabel", { count: index + 1 })}
+                  localize={localize}
                   gripLabel={t("lobby.uRoundsDrag")}
                   removeLabel={t("lobby.uRoundsRemove")}
                 />
@@ -247,6 +264,7 @@ function RoundRow({
   onDragEnd,
   onRemove,
   roundLabel,
+  localize,
   gripLabel,
   removeLabel,
 }: {
@@ -257,6 +275,8 @@ function RoundRow({
   onDragEnd: () => void;
   onRemove?: () => void;
   roundLabel: string;
+  /** Resolves a stored name into the reader's language — see the modal. */
+  localize: (stored: string | null | undefined) => string | undefined;
   gripLabel: string;
   removeLabel: string;
 }) {
@@ -266,7 +286,8 @@ function RoundRow({
   // scale, a purple halo, a deep shadow — under the finger and settles
   // when it is let go.
   const [lifted, setLifted] = useState(false);
-  const name = isHeld(entry) ? entry.name : entry.category_name;
+  const stored = isHeld(entry) ? entry.name : entry.category_name;
+  const name = localize(stored) ?? stored;
   const iconSlug = (isHeld(entry) ? entry.iconSlug : entry.icon_slug) || "mystery-box";
 
   return (

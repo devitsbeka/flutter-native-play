@@ -5,6 +5,7 @@ import type { Tables } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFriends } from "@/contexts/FriendsContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useLocalizedCategoryName } from "@/utils/categoryDisplayName";
 import { toast } from "@/lib/toast";
 import { getRandomGradient } from "@/config/roomGradients";
 import iconSearch from "@/assets/online-game/imgIcon.svg";
@@ -161,6 +162,9 @@ function RoomCard({
   onJoin: () => void;
 }) {
   const { t } = useLanguage();
+  // The card's round name is whatever language the host's picker was in
+  // when the room was made; say it in the reader's.
+  const localizeCategory = useLocalizedCategoryName();
   const gradient = gradientUri(GRADIENT_STOPS[hashIndex(room.id, GRADIENT_STOPS.length)]);
   const mascot = MASCOTS[hashIndex(room.id, MASCOTS.length)];
   const ago = timeAgoShort(room.last_activity_at ?? room.created_at);
@@ -203,7 +207,7 @@ function RoomCard({
                 {room.category_name && (
                   <div className="flex flex-col h-[22px] items-start overflow-clip pt-[2px] relative shrink-0 w-full">
                     <p className="font-[Nunito] font-normal leading-[20px] text-[14px] text-[rgba(255,255,255,0.7)] tracking-[-0.16px] whitespace-nowrap">
-                      {room.category_name}
+                      {localizeCategory(room.category_name) ?? room.category_name}
                     </p>
                   </div>
                 )}
