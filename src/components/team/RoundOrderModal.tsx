@@ -40,8 +40,7 @@ import type { QueueItem } from "@/hooks/useRoomCategoryQueue";
  * (`onPromote`).
  */
 
-/** How many rows the list shows before it scrolls: 6 × 58 + 5 × 8 + 12 = 400px. */
-export const LIST_MAX_ROWS = 6;
+
 
 /** The round the room itself is holding, as a row of the list. */
 export interface HeldEntry {
@@ -188,11 +187,15 @@ export function RoundOrderModal({
             which makes "100%" indefinite and let the scroller grow to its
             content, past the panel's edge. */}
         <div className="relative flex min-h-0 flex-1 flex-col">
-        {/* Six rows at most (owner's ask), then the rest scrolls under a
-            finger anywhere but the grips. (It had paging arrows for a
-            while, from when the whole row was the drag handle and could
-            not scroll; the grip-only handle made them clutter.) */}
-        <div className="min-h-0 max-h-[400px] flex-1 overflow-y-auto px-4 pb-3">
+        {/* As many rounds as the panel has room for, then the rest scrolls
+            under a finger anywhere but the grips. It was pinned at six rows
+            (400px) while the panel was allowed to be taller than that, so
+            the list stopped short of the space it had (owner). The panel
+            measures its own ceiling now — see UniversalLobby's
+            menuMaxHeight — and this fills it. (It had paging arrows for a
+            while, from when the whole row was the drag handle and could not
+            scroll; the grip-only handle made them clutter.) */}
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-3">
           <div className="mx-auto w-full max-w-[520px]">
 
             {/* The room's own round, when it has one: round 1, fixed. */}

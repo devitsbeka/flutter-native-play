@@ -157,7 +157,7 @@ export default function HomeShot() {
         className="h-[100dvh] w-full bg-[#b9a3cf] p-4 pt-[188px]"
         style={{ ["--safe-top" as string]: "59px", ["--safe-bottom" as string]: "34px" }}
       >
-        <div className="mx-auto flex max-h-[calc(100dvh_-_var(--safe-top,0px)_-_var(--safe-bottom,0px)_-_145px)] max-w-[700px] flex-col overflow-hidden rounded-[22px] border border-white/80 bg-[rgba(252,247,255,0.94)] shadow-[0_18px_48px_rgba(60,30,90,0.28)]">
+        <div className="mx-auto flex max-h-[calc(100dvh_-_188px_-_var(--safe-bottom,0px)_-_16px)] max-w-[700px] flex-col overflow-hidden rounded-[22px] border border-white/80 bg-[rgba(252,247,255,0.94)] shadow-[0_18px_48px_rgba(60,30,90,0.28)]">
           <RoundOrderModal
             open
             onClose={noop}
