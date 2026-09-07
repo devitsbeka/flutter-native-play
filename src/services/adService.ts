@@ -81,6 +81,34 @@ class AdService {
     const ids = ADMOB_CONFIG[kind];
     const configured = platform === 'ios' ? ids.ios : ids.android;
 
+    // Demo units for the whole build, for everyone on it.
+    //
+    // A new AdMob app sits at "Requires review" until the app is on the App
+    // Store, and until it clears there is no fill: the load fails, the reward
+    // gate fails open, the player gets their play, and nothing renders. That
+    // is correct and it is indistinguishable from a broken integration, which
+    // makes the flow impossible to sign off — by you or by a room full of
+    // TestFlight testers.
+    //
+    // The per-device override needs an identifier out of each tester's Xcode
+    // console, which does not scale past one person. This does: Google's demo
+    // units serve to anyone, so every tester sees a real ad render and the
+    // whole path can be verified.
+    //
+    // It earns nothing, and shipping it would be an AdMob policy breach, so
+    // verify-ios-bundle fails the build when it is set. This is for a
+    // TestFlight build you are validating, never the one you submit.
+    if (import.meta.env.VITE_ADMOB_FORCE_TEST_ADS === 'true') {
+      if (!this.warnedMissingUnits.has(`forced:${kind}`)) {
+        this.warnedMissingUnits.add(`forced:${kind}`);
+        console.warn(
+          `[ads] VITE_ADMOB_FORCE_TEST_ADS is on — serving Google's demo ` +
+          `${kind} unit. This build earns nothing and must not be submitted.`,
+        );
+      }
+      return GOOGLE_TEST_UNITS[kind];
+    }
+
     if (configured) return configured;
 
     // Falling back to a demo unit means this placement earns nothing. Say so

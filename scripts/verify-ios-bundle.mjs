@@ -134,6 +134,30 @@ if ((process.env.VITE_UMP_DEBUG_EEA ?? "").trim()) {
 // VITE_ADMOB_TEST_DEVICE turns on Google's test ads for one device. In a store
 // build that means serving test creatives as production advertising: it earns
 // nothing and it is against AdMob policy.
+// A validation build has to be buildable, or the switch is useless. The
+// acknowledgement is separate from the switch on purpose: turning on test ads
+// is one decision, and accepting that the result must never be submitted is a
+// second one, made deliberately, in the same command.
+const TEST_ADS_ON = (process.env.VITE_ADMOB_FORCE_TEST_ADS ?? "").trim() === "true";
+const TEST_ADS_OK = (process.env.ADMOB_TEST_ADS_ACKNOWLEDGED ?? "").trim() === "1";
+
+if (TEST_ADS_ON && TEST_ADS_OK) {
+  console.warn(
+    "\n  ⚠  This build serves Google's DEMO ads. It earns nothing and must not\n" +
+      "     be submitted to App Review. Build again without\n" +
+      "     VITE_ADMOB_FORCE_TEST_ADS before you submit.\n",
+  );
+}
+
+if (TEST_ADS_ON && !TEST_ADS_OK) {
+  failures.push(
+    "VITE_ADMOB_FORCE_TEST_ADS is on. Every ad in this build is one of\n" +
+      "      Google's demo units — it earns nothing and breaks AdMob policy.\n" +
+      "      Fine for a TestFlight build you are validating. Never the one you\n" +
+      "      submit. Set ADMOB_TEST_ADS_ACKNOWLEDGED=1 to build it anyway.",
+  );
+}
+
 if ((process.env.VITE_ADMOB_TEST_DEVICE ?? "").trim()) {
   failures.push(
     "VITE_ADMOB_TEST_DEVICE is set. That serves Google's test ads instead of\n" +
