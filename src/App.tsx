@@ -123,9 +123,7 @@ const SettingsPrivacy = lazy(() => import("./pages/SettingsPrivacy"));
 
 // Legal pages
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
-const PrivacyPolicyEN = lazy(() => import("./pages/PrivacyPolicyEN"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
-const TermsOfServiceEN = lazy(() => import("./pages/TermsOfServiceEN"));
 
 /**
  * The legal pages at a URL that names its language.
@@ -383,9 +381,22 @@ const App = () => (
                 <Route path="/words/:code" element={<Words />} />
                 <Route path="/notifications" element={<Notifications />} />
                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                <Route path="/privacy-policy-en" element={<PrivacyPolicyEN />} />
                 <Route path="/terms" element={<TermsOfService />} />
-                <Route path="/terms-en" element={<TermsOfServiceEN />} />
+                {/* /privacy-policy-en and /terms-en used to render a SECOND,
+                    hardcoded English copy of each document. They had drifted:
+                    one carried a Data Sharing clause the other lacked, the
+                    other a Data Security clause the first lacked. That matters
+                    because the App Store listing links /privacy-policy/en/
+                    while the app description and the review notes link
+                    /privacy-policy-en — so Apple was reading one document and
+                    the app was showing another, and a correction made in the
+                    locale files reached only one of them.
+
+                    Both addresses now render the same locale-driven page,
+                    pinned to English. One document, still at both URLs, so no
+                    link anybody has already published breaks. */}
+                <Route path="/privacy-policy-en" element={<PrivacyPolicy lang="en" />} />
+                <Route path="/terms-en" element={<TermsOfService lang="en" />} />
                 {/* Per-language legal URLs, for the App Store listing. */}
                 <Route path="/privacy-policy/:lang" element={<LegalByLanguage page="privacy" />} />
                 <Route path="/terms/:lang" element={<LegalByLanguage page="terms" />} />
