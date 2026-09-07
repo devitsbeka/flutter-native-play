@@ -244,7 +244,7 @@ All Deno, under `supabase/functions/`, sharing `_shared/`.
 **Images and avatars** — `generate-avatar`, `animate-avatar`,
 `batch-animate-avatars`, `batch-regenerate-avatars`, `process-existing-avatars`,
 `expand-avatar`, `detect-face`, `generate-cover-image`, `validate-cover-image`,
-`generate-question-image`, `search-question-image`, `generate-room-covers`,
+`generate-question-image`, `generate-room-covers`,
 `generate-room-name`.
 
 **Import and parsing** — `parse-quiz-url`, `parse-text-content`,

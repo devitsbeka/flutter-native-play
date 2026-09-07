@@ -814,7 +814,7 @@ bonus, first-correct-answer claims, and a dedicated "launch hardening" pass.
 - **Images / avatars** — `generate-avatar`, `animate-avatar`, `batch-animate-avatars`,
   `batch-regenerate-avatars`, `process-existing-avatars`, `expand-avatar`, `detect-face`,
   `generate-cover-image`, `validate-cover-image`, `generate-question-image`,
-  `search-question-image`, `generate-room-covers`, `generate-room-name`
+  `generate-room-covers`, `generate-room-name`
 - **Import / parsing** — `parse-quiz-url`, `parse-text-content`, `parse-wikipedia-media`,
   `fetch-url-metadata`
 - **Commerce** — `create-gem-checkout`, `create-pro-checkout`, `stripe-gem-webhook`,
