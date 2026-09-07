@@ -179,7 +179,8 @@ export function MobileHomeFeed() {
   const playCards: { key: GameChoice; art: string; players: string | null; title: string }[] = [
     { key: "quick", art: featuredQuick, players: "1", title: t("extra.modeQuickTitle") },
     { key: "library", art: featuredLibrary, players: "2-10", title: t("extra.modeLibraryTitle") },
-    { key: "guess", art: featuredGuess, players: "2-10", title: t("extra.modeGuessTitle") },
+    // Guess is played alone (owner) — one picture game, one player.
+    { key: "guess", art: featuredGuess, players: "1", title: t("extra.modeGuessTitle") },
     ...(developerMode
       ? [
           { key: "king" as const, art: featuredKing, players: "1-10", title: t("extra.modeKingTitle") },
