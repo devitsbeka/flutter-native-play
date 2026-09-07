@@ -31,6 +31,27 @@ const ADMIN_CHUNKS = [
   "UserAnalytics",
 ];
 
+/**
+ * Chunk name fragments belonging to surfaces that are built but not released.
+ *
+ * This list is the reason the previous one was not enough. It checked six
+ * hardcoded admin names, so it kept catching the leak it was written for while
+ * every unreleased surface added afterwards walked straight past it: two whole
+ * game modes (King, Team Battle), a second home screen with its own PRO
+ * paywall (HomeV3, PathDetailV3), and the 527 KB three.js world map. All of
+ * them shipped in the reviewed binary and all of them were reachable by deep
+ * link.
+ *
+ * Anything a reviewer must not find belongs here, not only the console.
+ */
+const UNRELEASED_CHUNKS = [
+  "KingPage",
+  "TeamBattlePage",
+  "HomeV3",
+  "PathDetailV3",
+  "WorldMapCanvas",
+];
+
 const failures = [];
 
 function listFiles(dir) {
@@ -76,6 +97,72 @@ if (adminChunks.length > 0) {
   failures.push(
     "The admin console is in the bundle. Build with VITE_INCLUDE_ADMIN=false.\n" +
       adminChunks.map((f) => `      ${f.replace(DIST + "/", "")}`).join("\n"),
+  );
+}
+
+// ── Unreleased surfaces must not be in the binary ──────────────────────────
+const unreleasedChunks = files.filter((f) =>
+  UNRELEASED_CHUNKS.some((name) => f.includes(name)),
+);
+
+if (unreleasedChunks.length > 0) {
+  failures.push(
+    "An unreleased surface is in the bundle. These are App Store guideline\n" +
+      "      2.3.1 (hidden features) and 2.2 (beta software) findings — a route\n" +
+      "      guard is not enough, the chunk itself must not ship. Leave\n" +
+      "      VITE_INCLUDE_UNRELEASED_MODES and VITE_INCLUDE_UI_PREVIEWS unset.\n" +
+      unreleasedChunks.map((f) => `      ${f.replace(DIST + "/", "")}`).join("\n"),
+  );
+}
+
+// ── The EEA consent debug override must never ship ────────────────────────
+//
+// VITE_UMP_DEBUG_EEA forces Google's consent SDK to treat the device as being
+// in the EEA, so the consent form can be tested from outside Europe. In a
+// production binary that would show the European consent form to every user
+// in the world, and make the app's own EEA behaviour untestable because it
+// would always be on.
+if ((process.env.VITE_UMP_DEBUG_EEA ?? "").trim()) {
+  failures.push(
+    "VITE_UMP_DEBUG_EEA is set. That forces the EEA consent form for every\n" +
+      "      user. It is a local testing switch — unset it before building.",
+  );
+}
+
+// ── Test ads must never ship ──────────────────────────────────────────────
+//
+// VITE_ADMOB_TEST_DEVICE turns on Google's test ads for one device. In a store
+// build that means serving test creatives as production advertising: it earns
+// nothing and it is against AdMob policy.
+// A validation build has to be buildable, or the switch is useless. The
+// acknowledgement is separate from the switch on purpose: turning on test ads
+// is one decision, and accepting that the result must never be submitted is a
+// second one, made deliberately, in the same command.
+const TEST_ADS_ON = (process.env.VITE_ADMOB_FORCE_TEST_ADS ?? "").trim() === "true";
+const TEST_ADS_OK = (process.env.ADMOB_TEST_ADS_ACKNOWLEDGED ?? "").trim() === "1";
+
+if (TEST_ADS_ON && TEST_ADS_OK) {
+  console.warn(
+    "\n  ⚠  This build serves Google's DEMO ads. It earns nothing and must not\n" +
+      "     be submitted to App Review. Build again without\n" +
+      "     VITE_ADMOB_FORCE_TEST_ADS before you submit.\n",
+  );
+}
+
+if (TEST_ADS_ON && !TEST_ADS_OK) {
+  failures.push(
+    "VITE_ADMOB_FORCE_TEST_ADS is on. Every ad in this build is one of\n" +
+      "      Google's demo units — it earns nothing and breaks AdMob policy.\n" +
+      "      Fine for a TestFlight build you are validating. Never the one you\n" +
+      "      submit. Set ADMOB_TEST_ADS_ACKNOWLEDGED=1 to build it anyway.",
+  );
+}
+
+if ((process.env.VITE_ADMOB_TEST_DEVICE ?? "").trim()) {
+  failures.push(
+    "VITE_ADMOB_TEST_DEVICE is set. That serves Google's test ads instead of\n" +
+      "      real ones. It is a local verification switch — unset it before\n" +
+      "      building for the store.",
   );
 }
 

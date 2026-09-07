@@ -596,7 +596,7 @@ export default function WordsGame() {
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-14">
             <div
               className="truncate text-[24px] leading-[26px] text-white [text-shadow:0_2px_8px_rgba(23,10,54,0.45)]"
-              style={{ fontFamily: "'TASolivare', 'Nunito', sans-serif" }}
+              style={{ fontFamily: "'Google Sans', 'Nunito', sans-serif" }}
             >
               {t("words.title")}
             </div>

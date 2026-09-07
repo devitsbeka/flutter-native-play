@@ -23,6 +23,12 @@ import { PUSH_META, pushMessage, type PushKind } from "../_shared/pushCopy.ts";
  *     attempts cannot turn the feature into a bullhorn
  *
  * The friend pushes are likewise once-per-friendship via the same index.
+ *
+ * Every kind that has a human sender is also checked against `user_blocks`
+ * before anything is sent. A block enforced only in the client still lets a
+ * blocked player put their nickname on the victim's lock screen — a friend
+ * request, a lobby ping, a poke — which is the part of a block that a
+ * reviewer will actually test.
  */
 
 Deno.serve(async (req: Request) => {
@@ -57,6 +63,11 @@ Deno.serve(async (req: Request) => {
     let params: Record<string, string | number>;
     let route: string;
     let detail: string;
+    // Who the push is FROM, as a user id, when there is one. Used for the
+    // block check below; `challenge_beaten` may genuinely have no account
+    // behind it (challenge links are played signed-out), and there is
+    // nothing to check in that case.
+    let senderId: string | null = null;
     // Who the push is FROM, when it is from a player. iOS then draws
     // their avatar with the app icon badged onto it instead of a bare
     // app icon. Left undefined for anything the app itself says.
@@ -94,6 +105,7 @@ Deno.serve(async (req: Request) => {
         .eq("user_id", callerId)
         .maybeSingle();
       pushKind = kind;
+      senderId = callerId;
       params = { name: caller?.nickname?.trim() || "Someone" };
       person = { name: String(params.name), avatarUrl: caller?.avatar_url };
       route = PUSH_META[kind].route;
@@ -136,6 +148,8 @@ Deno.serve(async (req: Request) => {
 
       recipientId = challenge.challenger_id;
       pushKind = "challenge_beaten";
+      // Null for a signed-out player: nobody to have been blocked.
+      senderId = callerId;
       params = { name: attempt.player_name?.trim() || "Someone" };
       // A challenge can be played by someone with no account at all, so
       // there is a name but no avatar — iOS draws their monogram.
@@ -191,6 +205,7 @@ Deno.serve(async (req: Request) => {
 
       recipientId = room.host_user_id;
       pushKind = "room_ping";
+      senderId = callerId;
       params = {
         name: caller?.nickname?.trim() || "Someone",
         room: room.room_name?.trim() || room.room_code,
@@ -253,12 +268,46 @@ Deno.serve(async (req: Request) => {
 
       recipientId = spotlight;
       pushKind = "team_poke";
+      senderId = callerId;
       params = { name: caller?.nickname?.trim() || "Someone" };
       person = { name: String(params.name), avatarUrl: caller?.avatar_url };
       route = `/team-battle?code=${encodeURIComponent(room.room_code)}`;
       detail = "";
     } else {
       return json({ error: "Unknown kind" }, 400);
+    }
+
+    // ---- Blocks -----------------------------------------------------------
+    // Last gate before the event is claimed, so a suppressed push does not
+    // burn its once-per-event slot in push_log: if the pair unblock later,
+    // a legitimate later event can still send.
+    //
+    // Both directions. The recipient having blocked the sender is the case
+    // this exists for; a sender who blocked the recipient has no business
+    // ringing their phone either. A 200 with `skipped` rather than an error:
+    // every caller is fire-and-forget, and whether a notification goes out
+    // is this endpoint's decision alone.
+    if (senderId && senderId !== recipientId) {
+      const { data: blocks, error: blockError } = await supabase
+        .from("user_blocks")
+        .select("blocker_id")
+        .or(
+          `and(blocker_id.eq.${recipientId},blocked_id.eq.${senderId}),` +
+            `and(blocker_id.eq.${senderId},blocked_id.eq.${recipientId})`,
+        );
+
+      if (blockError) {
+        // Cannot tell, so do not send.
+        console.error("send-social-push: block lookup failed:", blockError);
+        return json({ sent: 0, skipped: "block_check_failed" });
+      }
+      if ((blocks?.length ?? 0) > 0) {
+        console.log(
+          `send-social-push suppressed by block: kind=${pushKind} ` +
+            `sender=${senderId} recipient=${recipientId}`,
+        );
+        return json({ sent: 0, skipped: "blocked" });
+      }
     }
 
     // The unique (kind, detail) index is the idempotency: claim the event

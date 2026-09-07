@@ -25,6 +25,7 @@ import { routeForRoom, ROOM_KIND_COLUMNS } from "@/utils/roomRoutes";
 import { supabase } from '@/integrations/supabase/client';
 import { answerJoinRequest } from '@/hooks/useRoomJoinRequests';
 import { PUBLIC_SHARING_ENABLED } from "@/config/features";
+import { useContentModeration } from '@/hooks/useContentModeration';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -47,7 +48,7 @@ let pendingLeaveRead: ReturnType<typeof setTimeout> | null = null;
 export default function Notifications() {
   const navigate = useNavigate();
   const { language, t } = useLanguage();
-  const { notifications, unreadCount, loading, markAsRead, markAllAsRead, markManyAsRead, deleteNotification, clearAllNotifications } = useNotifications();
+  const { notifications: allNotifications, unreadCount, loading, markAsRead, markAllAsRead, markManyAsRead, deleteNotification, clearAllNotifications } = useNotifications();
   const { generationNotifications, hasActiveGenerations } = useGenerationNotifications();
   const { acceptFriendRequest, declineFriendRequest } = useFriends();
   const { acceptInvitation, declineInvitation } = useGameInvitations();
@@ -61,6 +62,22 @@ export default function Notifications() {
 
   // Tab mapping lives in config/notificationTabs.ts — this file and
   // NotificationsPanel.tsx each had their own copy of it.
+
+  // A notification about a blocked player is that player reaching you: the
+  // card carries their nickname and avatar and offers a button that acts on
+  // them (accept the request, let them into your room). Filtered before the
+  // tab split so the per-tab unread counts do not advertise a row that is
+  // not there.
+  //
+  // Fails OPEN, like every read-only list — a notifications page that is
+  // empty for the first moments of each session is worse than a blocked name
+  // showing for one render — and the actions each row offers re-check the
+  // pair against the table before they write.
+  const { isNotificationHidden } = useContentModeration();
+  const notifications = useMemo(
+    () => allNotifications.filter(n => !isNotificationHidden(n.data)),
+    [allNotifications, isNotificationHidden],
+  );
 
   // Filter notifications by active tab
   const filteredNotifications = useMemo(() => {

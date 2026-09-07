@@ -1,0 +1,18 @@
+/* InfoPlist.strings — German / Deutsch
+
+   The three system permission prompts. iOS reads these from the .lproj that
+   matches the device language; without them every prompt renders in English
+   no matter what language the app itself is showing.
+
+   The English source of truth is ios/App/App/Info.plist. Change a string
+   there and change it here, or the two drift apart silently.
+
+   Do not mention price, and do not ask for the permission as a favour —
+   App Review guideline 5.1.1(iv) forbids offering an incentive in exchange
+   for a permission grant. Describe only what the data is used for. */
+
+"NSCameraUsageDescription" = "MyTrivia verwendet die Kamera, damit du ein Profilfoto aufnehmen kannst.";
+
+"NSPhotoLibraryUsageDescription" = "MyTrivia benötigt Zugriff auf deine Fotos, damit du ein Profilbild auswählen kannst.";
+
+"NSUserTrackingUsageDescription" = "Deine Werbe-ID wird verwendet, um dir in MyTrivia relevantere Werbung zu zeigen.";

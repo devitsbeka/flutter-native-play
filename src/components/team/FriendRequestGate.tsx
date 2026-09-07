@@ -28,15 +28,31 @@ import { markNotificationActioned } from "@/utils/notificationActions";
 export function GlobalFriendRequestGate() {
   const { t } = useLanguage();
   const { openProfile } = usePlayerProfile();
-  const { blockUser } = useContentModeration();
+  // `loaded` gates the queue below: this gate reads the raw notification
+  // stream rather than the friends list, so nothing else filters it.
+  const { blockUser, isNotificationHidden, loaded: blocksLoaded } = useContentModeration();
   const { acceptFriendRequest, declineFriendRequest } = useFriends();
   const { notifications, loading } = useNotifications();
 
-  const asks = notifications.filter(
-    (n) => n.type === "friend_request" && !n.read_at && !(n.data as { action_taken?: string } | null)?.action_taken,
-  );
+  // Fails CLOSED. This is a modal that puts a stranger's face over whatever
+  // the player was doing and asks for an answer — the exact thing a block is
+  // for — so until the block set is known there is no doorstep at all. The
+  // request keeps until then: it is a notification row, and it stays unread
+  // in the list either way.
+  const asks = !blocksLoaded
+    ? []
+    : notifications.filter(
+        (n) =>
+          n.type === "friend_request" && !n.read_at &&
+          !(n.data as { action_taken?: string } | null)?.action_taken &&
+          !isNotificationHidden(n.data),
+      );
   const alreadyWaiting = useRef<Set<string> | null>(null);
-  if (!loading && alreadyWaiting.current === null) {
+  // Seeded only once BOTH are known. Seeding from an empty `asks` while the
+  // block set was still loading would mark nothing as "already waiting", and
+  // every request that had been sitting in the list since before the app
+  // opened would then pop a modal the moment the blocks arrived.
+  if (!loading && blocksLoaded && alreadyWaiting.current === null) {
     alreadyWaiting.current = new Set(asks.map((n) => n.id));
   }
   // Closed for now, or answered: off the screen for this visit either way.

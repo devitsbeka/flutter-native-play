@@ -39,6 +39,7 @@ interface PlayerFeedItemProps {
   vipLoading: boolean;
   regenPlayAvailable: boolean;
   timeUntilNextPlay: string | null;
+  resetsAt?: number | null;
   useRegenPlay: () => Promise<boolean>;
   sendFriendRequest: (friendId: string) => Promise<boolean>;
   acceptFriendRequest: (friendshipId: string) => Promise<boolean>;
@@ -77,6 +78,7 @@ function PlayerFeedItemComponent({
   vipLoading,
   regenPlayAvailable,
   timeUntilNextPlay,
+  resetsAt,
   useRegenPlay,
   sendFriendRequest,
   acceptFriendRequest,
@@ -434,6 +436,7 @@ function PlayerFeedItemComponent({
         isGuest={false}
         regenPlayAvailable={regenPlayAvailable}
         timeUntilNextPlay={timeUntilNextPlay}
+        resetsAt={resetsAt}
         onPlayWithRegen={async () => {
           const success = await useRegenPlay();
           if (success) {

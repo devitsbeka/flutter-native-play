@@ -186,8 +186,12 @@ describe("Guess replaced Random on the create screen", () => {
     expect(ctx).toMatch(/const startGame = useCallback\(async \(hostShouldObserve\?: boolean, room\?: GameRoom\) => \{/);
     expect(ctx).toMatch(/const startingRoom = room \?\? state\.currentRoom;/);
     // isHost is derived from state.currentRoom and is stale for the same
-    // reason, so the guard reads the room in hand.
-    expect(ctx).toMatch(/if \(!startingRoom \|\| !user \|\| startingRoom\.host_user_id !== user\.id\) return;/);
+    // reason, so the guard reads the room in hand. Split in two since this
+    // was written, and both halves now toast: "the round silently never
+    // starts" above was the whole complaint, and a silent guard was still
+    // one of the ways to produce it (see startSaysWhy.test.ts).
+    expect(ctx).toMatch(/if \(!startingRoom \|\| !user\) \{/);
+    expect(ctx).toMatch(/if \(startingRoom\.host_user_id !== user\.id\) \{/);
     expect(ctx).toMatch(/startGame: \(hostShouldObserve\?: boolean, room\?: GameRoom\) => Promise<void>;/);
   });
 

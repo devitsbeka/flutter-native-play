@@ -20,6 +20,7 @@ import friendTrivia from "@/assets/figma-home/friend-trivia.png";
 import botAvatar10 from '@/assets/avatars/bot-avatar-10.png';
 import { MASCOTS } from "@/config/mascots";
 import { ALL_MASCOT_AVATARS, MASCOT_AVATARS } from "@/config/mascotAvatars";
+import { LEGACY_PHOTO_AVATAR_PATTERN } from "@/config/fakeAccounts";
 
 // Known local asset avatar patterns that need special handling
 const LOCAL_ASSET_PATTERN = /^\/src\/assets\//;
@@ -189,6 +190,13 @@ export function resolveAvatarUrl(avatarUrl: string | null | undefined): string |
   // A retired drawn person, in any of the forms it was stored in: one of ours.
   const retired = retiredPresetFromAvatarUrl(avatarUrl);
   if (retired) return ourFaceAvatarFor(retired);
+
+  // `/avatars/sofia.png` and its seven siblings: studio photographs of real
+  // people, worn by the seeded content accounts and shipped in the app
+  // bundle. The files are deleted; the rows that name them are still in the
+  // database, and resolve to one of MyTrivia's own characters instead. Dealt
+  // by the stored path, so a given account keeps one face everywhere.
+  if (LEGACY_PHOTO_AVATAR_PATTERN.test(avatarUrl)) return ourFaceAvatarFor(avatarUrl);
   
   // Try to recover Vite-hashed asset paths by extracting avatar number
   if (VITE_HASHED_ASSET_PATTERN.test(avatarUrl)) {

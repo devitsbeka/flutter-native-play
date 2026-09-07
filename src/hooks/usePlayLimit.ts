@@ -109,6 +109,7 @@ export function usePlayLimit() {
     regenPlayAvailable,
     canPlay,
     timeUntilNextPlay,
+    resetsAt,
   } = resolvePlayLimit({
     now,
     isVip,
@@ -266,6 +267,14 @@ export function usePlayLimit() {
     loading: vipLoading || (!!user && windowSupported === null),
     regenPlayAvailable,
     timeUntilNextPlay,
+    /**
+     * When the window rolls over, as a timestamp.
+     *
+     * `timeUntilNextPlay` is a string this hook re-formats once a minute,
+     * which is fine for a line of body text and useless for a clock. The
+     * limit modal counts down in seconds and needs the instant itself.
+     */
+    resetsAt,
     useRegenPlay,
     consumePlay,
     buyExtraPlays,

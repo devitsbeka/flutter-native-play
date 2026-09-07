@@ -29,7 +29,14 @@ export interface KingReportInput {
   correctAnswer: string | null;
 }
 
-/** The report_type filed against user_reports; also the admin page's label key. */
+/**
+ * The report_type filed against user_reports; also the admin page's label key.
+ *
+ * It has to be one of the values in that column's CHECK constraint or the
+ * insert comes back 23514 and the report is not filed at all. It was not one
+ * of them until 20261013120000_moderation_actions.sql, which is why the call
+ * site now reads the error instead of thanking the player regardless.
+ */
 export const KING_REPORT_TYPE = "king_question";
 
 /** Longest description we will send — user_reports.description is free text. */

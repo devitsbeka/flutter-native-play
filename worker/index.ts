@@ -281,7 +281,14 @@ async function proxyImage(request: Request, url: URL, ctx: ExecutionContext): Pr
  * malformed header falls back to the spec-permitted full 200, which is
  * exactly what happened before this handler existed.
  */
-const VIDEO_PATH = /^\/videos\/[A-Za-z0-9._-]+\.(mp4|webm)$/;
+// `/videos/foo.mp4` and `/videos/mobile/foo.mp4`. The `mobile/` segment is not
+// optional decoration: the iOS build streams the mobile variants exclusively,
+// and while this pattern excluded `/` those requests missed serveVideo entirely
+// and fell through to the assets binding — which, under
+// not_found_handling = "single-page-application", answers a missing file with
+// index.html at HTTP 200. Every phone asking for a video got an HTML document
+// with a 200, so nothing anywhere raised.
+const VIDEO_PATH = /^\/videos\/(?:mobile\/)?[A-Za-z0-9._-]+\.(mp4|webm)$/;
 
 import { parseRange } from "./range";
 
@@ -290,6 +297,23 @@ async function serveVideo(request: Request, env: Env): Promise<Response> {
   // forward its Range header to a binding that mishandles it.
   const asset = await env.ASSETS.fetch(new Request(request.url, { method: "GET" }));
   if (!asset.ok) return asset;
+
+  // A missing video does not arrive here as a 404. The assets binding is
+  // configured single-page-application, so it answers anything it cannot find
+  // with index.html at HTTP 200 — and `asset.ok` is then true. Serving that
+  // through as video/mp4 is what made 63 absent files invisible: the player
+  // got a 200 with an HTML body and simply showed nothing, on every device,
+  // with no failed request to find in a log.
+  //
+  // A video route has no legitimate HTML response, so treat one as the miss it
+  // is and say so loudly.
+  const assetType = asset.headers.get("content-type") ?? "";
+  if (assetType.includes("text/html")) {
+    return new Response("video not found", {
+      status: 404,
+      headers: { "content-type": "text/plain", "cache-control": "no-store" },
+    });
+  }
 
   const body = await asset.arrayBuffer();
   const size = body.byteLength;

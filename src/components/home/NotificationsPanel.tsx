@@ -18,6 +18,7 @@ import { CompactNotificationCard } from '@/components/notifications/CompactNotif
 import { NotificationDetailModal } from '@/components/notifications/NotificationDetailModal';
 import { CompactGenerationCard } from '@/components/notifications/CompactGenerationCard';
 import { NotificationTabs } from '@/components/notifications/NotificationTabs';
+import { useContentModeration } from '@/hooks/useContentModeration';
 
 // Language-aware time formatter
 const formatTimeAgo = (date: Date, t: (key: string, params?: Record<string, string | number>) => string) => {
@@ -57,7 +58,17 @@ interface NotificationsPanelProps {
 export function NotificationsPanel({ isOpen, onClose, defaultTab }: NotificationsPanelProps) {
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const { notifications, unreadCount, loading, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
+  const { notifications: allNotifications, unreadCount, loading, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
+  // Blocked players do not get to knock. Same filter as the /notifications
+  // page, fail-open for the same reason: this is a read-only list, and the
+  // buttons on each card re-check the pair before they act. Closing the
+  // panel still marks everything read, hidden rows included, so the bell's
+  // badge cannot be left lit by a row nobody can see.
+  const { isNotificationHidden } = useContentModeration();
+  const notifications = useMemo(
+    () => allNotifications.filter(n => !isNotificationHidden(n.data)),
+    [allNotifications, isNotificationHidden],
+  );
   const { generationNotifications } = useGenerationNotifications();
   const { acceptFriendRequest, declineFriendRequest } = useFriends();
   const { acceptInvitation, declineInvitation } = useGameInvitations();

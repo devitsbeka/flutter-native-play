@@ -10,6 +10,7 @@ import chipQuestion from "@/assets/lobby/chip-question.webp";
 import chipTv from "@/assets/lobby/chip-tv.webp";
 import crownIcon from "@/assets/lobby/crown.png";
 import { resolveAvatarUrl, fallbackAvatarFor } from "@/utils/avatarUtils";
+import { useContentModeration } from "@/hooks/useContentModeration";
 
 /**
  * The one lobby every game mode opens into — Figma 1018:5815 (Game Rules)
@@ -338,6 +339,36 @@ export function UniversalLobby({
   const [tab, setTab] = useState<LobbyTab>(initialTab);
   const reduceMotion = useReducedMotion();
 
+  /**
+   * How tall the round list may be: everything between the chip row and the
+   * bottom inset.
+   *
+   * It used to be `100dvh` less the insets less a flat 145px — a guess at
+   * where the chip row ends, made once against one phone. A guess has to be
+   * generous to be safe, and this one cost the list two rows it had the room
+   * for: six rounds on screen with the panel stopping well clear of the
+   * lobby's own footer (owner's screenshot). Measuring the row is exact on
+   * every screen, and the arithmetic that is genuinely CSS's — the home
+   * indicator's inset — stays in the calc where env() can do it.
+   */
+  const categoryRowRef = useRef<HTMLDivElement>(null);
+  const [menuMaxHeight, setMenuMaxHeight] = useState<string | null>(null);
+  const menuOpen = !!categoryMenu?.open;
+  useLayoutEffect(() => {
+    if (!menuOpen) return;
+    const measure = () => {
+      const el = categoryRowRef.current;
+      if (!el) return;
+      // + 8 for the panel's own mt-2, - 16 so it never sits ON the inset.
+      const top = Math.round(el.getBoundingClientRect().bottom) + 8;
+      setMenuMaxHeight(`calc(100dvh - ${top}px - var(--safe-bottom, 0px) - 16px)`);
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [menuOpen]);
+
+
   // Each piece of chrome steps in a beat after the one above it; the scene
   // itself is already moving. Under Reduce Motion everything is simply there.
   const arrive = (delay: number) =>
@@ -349,9 +380,27 @@ export function UniversalLobby({
           transition: { ...ARRIVE, delay },
         };
 
+  /**
+   * A blocked player is not drawn in the roster.
+   *
+   * Only the picture changes. The seat is still theirs — the room's capacity,
+   * who may start and every score still counts them, because they really are
+   * in the game and a lobby that lied about how many people were in it would
+   * break the thing it was trying to protect. What blocking buys is that the
+   * viewer does not have to look at their name and face for the length of a
+   * match.
+   *
+   * Fails OPEN: this is a rendered list, and emptying every lobby for the
+   * first moments of a session would be a far worse bug than a blocked name
+   * showing for one render.
+   */
+  const { hiddenIds } = useContentModeration();
+  const visible = (list: LobbyPlayer[]) =>
+    hiddenIds.size === 0 ? list : list.filter((p) => !hiddenIds.has(p.id));
+
   const groups: LobbyPlayerGroup[] = isGrouped(players)
-    ? players
-    : [{ key: "all", players: players as LobbyPlayer[] }];
+    ? players.map((g) => ({ ...g, players: visible(g.players) }))
+    : [{ key: "all", players: visible(players as LobbyPlayer[]) }];
 
   // A disabled Start has to say WHY, and say it where the reason cannot be
   // pushed under the fold: above the button rather than below it. The owner
@@ -508,6 +557,7 @@ export function UniversalLobby({
           opens the round list under it; the + queues another. */}
       {category && (
         <motion.div
+          ref={categoryRowRef}
           {...arrive(0.24)}
           className="relative z-40 mx-auto mt-[9px] w-full max-w-[700px] shrink-0 px-4 md:max-w-[520px]"
         >
@@ -557,12 +607,14 @@ export function UniversalLobby({
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -8, scale: 0.98 }}
                 transition={{ type: "spring", stiffness: 420, damping: 34 }}
-                // As tall as the screen allows: the chip row ends ~129px
-                // under the top inset, and the panel stops 16px short of
-                // the bottom one. 60dvh showed four rounds of eight (owner's
-                // screenshot); the list inside caps itself at six rows and
-                // pages or scrolls the rest, and this ceiling only matters
-                // on a screen too short for even those.
+                // Every pixel between the chip row and the bottom inset —
+                // see the note on menuMaxHeight. The class is the fallback
+                // for the frame before the measurement lands (and for a
+                // browser that refuses it); the inline value wins whenever
+                // there is one, and is the reason the list can show nine
+                // rounds on a tall phone rather than the six a guessed
+                // ceiling left room for.
+                style={menuMaxHeight ? { maxHeight: menuMaxHeight } : undefined}
                 className="absolute left-4 right-4 top-full z-40 mt-2 flex max-h-[calc(100dvh_-_var(--safe-top,0px)_-_var(--safe-bottom,0px)_-_145px)] flex-col overflow-hidden rounded-[22px] border border-white/80 bg-[rgba(252,247,255,0.94)] shadow-[0_18px_48px_rgba(60,30,90,0.28)] backdrop-blur-xl"
               >
                 {categoryMenu.children}

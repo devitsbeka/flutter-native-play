@@ -17,7 +17,7 @@ function GameContent() {
   const [searchParams] = useSearchParams();
   const categoryId = searchParams.get("category");
   const { user, profile, loading: authLoading } = useAuth();
-  const { canPlay, isVip, freeGamesExhausted, regenPlayAvailable, timeUntilNextPlay, useRegenPlay, consumePlay, loading: playLimitLoading } = usePlayLimit();
+  const { canPlay, isVip, freeGamesExhausted, regenPlayAvailable, timeUntilNextPlay, resetsAt, useRegenPlay, consumePlay, loading: playLimitLoading } = usePlayLimit();
   const { hasEnoughCoins } = useGameStake();
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [showStakeModal, setShowStakeModal] = useState(false);
@@ -139,6 +139,7 @@ function GameContent() {
         isGuest={false}
         regenPlayAvailable={regenPlayAvailable}
         timeUntilNextPlay={timeUntilNextPlay}
+        resetsAt={resetsAt}
         onPlayWithRegen={async () => {
           const success = await useRegenPlay();
           if (success) {

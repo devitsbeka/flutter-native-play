@@ -17,6 +17,12 @@
  * A caller who forges another player's id gets 403, and one who invents an
  * invitation gets 404. The worst an authorised caller can do is make their
  * own name appear on a friend's phone, which is the feature.
+ *
+ * Unless the friend has blocked them. A push is the one part of an
+ * invitation that reaches someone who is not looking at the app, so a block
+ * that is only enforced in the client still lets the blocked player put
+ * their nickname on the victim's lock screen. `user_blocks` is consulted
+ * here, with the service role, before anything is sent.
  */
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -72,6 +78,36 @@ Deno.serve(async (req: Request) => {
     if (invite.status !== "pending") {
       // Already accepted, declined or expired — nothing to call anyone about.
       return json({ sent: 0, skipped: "not_pending" });
+    }
+
+    // A blocked player does not get to ring the phone of the person who
+    // blocked them. Checked in both directions: the receiver blocking the
+    // sender is the case that matters, and a sender who blocked the receiver
+    // has no business announcing themselves to them either.
+    //
+    // The reply is a 200 with `skipped`, not an error. The caller is a
+    // fire-and-forget `.invoke()` in useGameInvitations, and the invitation
+    // row itself is the client's business — this endpoint only decides
+    // whether a notification goes out.
+    const { data: blocks, error: blockError } = await supabase
+      .from("user_blocks")
+      .select("blocker_id")
+      .or(
+        `and(blocker_id.eq.${invite.receiver_id},blocked_id.eq.${invite.sender_id}),` +
+          `and(blocker_id.eq.${invite.sender_id},blocked_id.eq.${invite.receiver_id})`,
+      );
+
+    if (blockError) {
+      // Cannot tell — so do not send. A push is not worth guessing about.
+      console.error("Game invite push: block lookup failed:", blockError);
+      return json({ sent: 0, skipped: "block_check_failed" });
+    }
+    if ((blocks?.length ?? 0) > 0) {
+      console.log(
+        `Game invite push suppressed by block: invitation=${invite.id} ` +
+          `sender=${invite.sender_id} receiver=${invite.receiver_id}`,
+      );
+      return json({ sent: 0, skipped: "blocked" });
     }
 
     const [{ data: sender }, { data: room }, { data: receiver }] = await Promise.all([

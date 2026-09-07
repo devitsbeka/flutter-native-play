@@ -438,7 +438,7 @@ export function VSScreen() {
           <span 
             className="text-[180px] font-black text-white/[0.06]"
             style={{ 
-              fontFamily: "'TASolivare', sans-serif",
+              fontFamily: "'Google Sans', sans-serif",
               letterSpacing: "-0.05em"
             }}
           >
@@ -518,7 +518,7 @@ export function VSScreen() {
                 <h3
                   className="text-2xl font-black text-white"
                   style={{
-                    fontFamily: "'TASolivare', sans-serif",
+                    fontFamily: "'Google Sans', sans-serif",
                     textShadow: "0 2px 10px rgba(0,0,0,0.4)",
                   }}
                 >
@@ -617,7 +617,7 @@ export function VSScreen() {
                 <h3
                   className="text-2xl font-black text-white"
                   style={{
-                    fontFamily: "'TASolivare', sans-serif",
+                    fontFamily: "'Google Sans', sans-serif",
                     textShadow: "0 2px 10px rgba(0,0,0,0.4)",
                   }}
                 >

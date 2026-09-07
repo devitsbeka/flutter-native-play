@@ -63,10 +63,14 @@
          the real request then ignores — two downloads instead of none. -->
     <link rel="preload" as="fetch" type="application/json" href="/data/icon-index-slim.json" />
 
-    <!-- Google Sans Font with Georgian support -->
+    <!-- Google Sans, weights 300-600. Weight 700 is self-hosted in
+         src/index.css as the display face, so it is deliberately absent
+         here: two @font-face rules for the same family and weight would
+         race, and the whole point of self-hosting is that titles do not
+         wait on a third-party request. -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@300;400;500;600;700&family=Noto+Sans+Georgian:wght@600&family=Slackey&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@300;400;500;600&family=Noto+Sans+Georgian:wght@600&family=Slackey&display=swap" rel="stylesheet">
 
     <!-- Meta Pixel Code -->
     <!-- native:strip:start -->

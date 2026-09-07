@@ -10,7 +10,13 @@ import { useRewards } from "@/hooks/useRewards";
 import { useRewardTimers, useDailyRewardsClaim } from "@/hooks/useRewardTimers";
 import { useSound } from "@/contexts/SoundContext";
 import { useNotificationModal } from "@/hooks/useNotificationModal";
-import { REWARDS, getRandomChestCoins, getChestGems } from "@/config/rewardConfig";
+import {
+  REWARDS,
+  getRandomChestCoins,
+  getChestGems,
+  CHEST_COIN_OUTCOMES,
+  CHEST_COIN_CHANCE_PERCENT,
+} from "@/config/rewardConfig";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
 import { FlyingCurrency } from "@/components/shared/FlyingCurrency";
@@ -30,6 +36,49 @@ interface ChestReward {
   gradient: string;
   label?: string;
 }
+
+/**
+ * What the chest can pay, and how likely each amount is.
+ *
+ * The chest is a randomised reward — `getRandomChestCoins` draws a whole
+ * number between 50 and 250 — and it disclosed nothing. App Store guideline
+ * 3.1.1 asks for the odds; `LuckySpinModal` already publishes its own, and
+ * this is the same disclosure in the same shape.
+ *
+ * NOTE: these strings are inline English on purpose — `src/locales/` is owned
+ * elsewhere this cycle. They are listed for translation in the review notes.
+ */
+const ChestOdds = () => (
+  <details className="mt-3">
+    <summary className="cursor-pointer text-center text-xs text-muted-foreground hover:text-foreground">
+      📊 What the chest can contain
+    </summary>
+    <div className="mt-2 space-y-1.5 rounded-xl bg-muted/50 p-3 text-xs text-muted-foreground">
+      <div className="flex items-center justify-between gap-2">
+        <span>
+          Coins: any whole number from {REWARDS.CHEST_COINS_MIN} to{" "}
+          {REWARDS.CHEST_COINS_MAX}
+        </span>
+        <span className="shrink-0 font-mono tabular-nums">100%</span>
+      </div>
+      <p className="pl-0 text-muted-foreground/80">
+        Every amount in that range is equally likely — {CHEST_COIN_OUTCOMES}{" "}
+        possible amounts, about {CHEST_COIN_CHANCE_PERCENT.toFixed(1)}% each.
+      </p>
+      <div className="flex items-center justify-between gap-2 border-t border-border pt-1.5">
+        <span>Gem: {REWARDS.CHEST_WEEKEND_GEMS} on Saturdays and Sundays</span>
+        <span className="shrink-0 font-mono tabular-nums">
+          {REWARDS.CHEST_GEMS > 0 ? "100%" : "weekends only"}
+        </span>
+      </div>
+      <p className="border-t border-border pt-1.5 text-muted-foreground/80">
+        One chest every {REWARDS.CHEST_COOLDOWN_HOURS} hours. Coins and gems are
+        in-game items only — they have no cash value and cannot be exchanged for
+        money.
+      </p>
+    </div>
+  </details>
+);
 
 // Timer display component - clean countdown only
 const ChestTimer = ({ timeLeft, t }: { timeLeft: string; t: (key: string) => string }) => (
@@ -205,9 +254,14 @@ export function ChestRewardModal({ isOpen, onClose, onClaim }: ChestRewardModalP
           >
             {isClaiming ? t("chest.loading") : t("chest.open")}
           </SunsetButton>
+
+          <ChestOdds />
         </>
       ) : (
-        <ChestTimer timeLeft={chestTimeLeft} t={t} />
+        <>
+          <ChestTimer timeLeft={chestTimeLeft} t={t} />
+          <ChestOdds />
+        </>
       )}
 
       {/* Flying Currency Animations */}

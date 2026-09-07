@@ -16,6 +16,7 @@ import { GameModal } from "@/components/ui/game-modal";
 import { supabase } from "@/integrations/supabase/client";
 import { SECURITY_QUESTIONS } from "@/pages/ForgotPassword";
 import { trackSignupCompleted } from "@/lib/analytics";
+import { declareAgeGroup } from "@/native/trackingConsent";
 
 // Confetti celebration effect
 const celebrateConfetti = () => {
@@ -259,6 +260,11 @@ export function SignupOnboardingModal() {
         }
       }
       
+      // The app now knows how old this player is. ATT is gated on that (see
+      // `trackingConsent.ts`), and waiting for the profile to be refetched
+      // would leave a brand-new adult unasked until their next launch.
+      declareAgeGroup(selectedAgeGroup);
+
       trackSignupCompleted('username', false);
       await new Promise(resolve => setTimeout(resolve, 1500));
       celebrateConfetti();
@@ -286,7 +292,9 @@ export function SignupOnboardingModal() {
     }
   };
 
-  const handleAgeSelect = (age: AgeGroup) => {
+  // `null` is a real answer here: the age gate's under-13 option clears the
+  // selection rather than storing a bucket, which leaves Continue disabled.
+  const handleAgeSelect = (age: AgeGroup | null) => {
     setSelectedAgeGroup(age);
   };
 

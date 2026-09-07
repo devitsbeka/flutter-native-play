@@ -1,13 +1,10 @@
 import { describe, it, expect } from "vitest";
+import * as fakeAccounts from "@/config/fakeAccounts";
 import {
-  FAKE_ACCEPT_MAX_HOURS,
-  FAKE_ACCEPT_MIN_HOURS,
   FAKE_ACCOUNT_USER_IDS,
-  fakeAcceptDelayMs,
+  LEGACY_PHOTO_AVATAR_PATTERN,
   isFakeAccount,
 } from "@/config/fakeAccounts";
-
-const HOUR_MS = 60 * 60 * 1000;
 
 describe("fake account list", () => {
   it("has no duplicate ids", () => {
@@ -20,6 +17,18 @@ describe("fake account list", () => {
       expect(uuid.test(id), id).toBe(true);
     }
   });
+
+  it("no longer carries an auto-accept delay", () => {
+    // The seeded accounts used to accept a friend request 4-48 hours after it
+    // was sent, written from the requesting player's own client so they would
+    // "behave like real people". That is a fabricated relationship presented
+    // to a player as a real one, and it is gone. If this export comes back,
+    // so has the behaviour.
+    const exported = Object.keys(fakeAccounts);
+    expect(exported).not.toContain("fakeAcceptDelayMs");
+    expect(exported).not.toContain("FAKE_ACCEPT_MIN_HOURS");
+    expect(exported).not.toContain("FAKE_ACCEPT_MAX_HOURS");
+  });
 });
 
 describe("isFakeAccount", () => {
@@ -30,8 +39,6 @@ describe("isFakeAccount", () => {
   });
 
   it("treats anyone not listed as a real person", () => {
-    // This is the safety property: a real user must always decide their own
-    // friend requests, so an unknown id can never be auto-accepted.
     expect(isFakeAccount("00000000-0000-4000-8000-000000000000")).toBe(false);
     expect(isFakeAccount("some-real-user-id")).toBe(false);
   });
@@ -43,50 +50,32 @@ describe("isFakeAccount", () => {
   });
 });
 
-describe("fakeAcceptDelayMs", () => {
-  const sampleIds = [
-    "8f14e45f-ceea-467a-9575-1a9b1f5d5c74",
-    "c4ca4238-a0b9-4382-8dcc-509a6f75849b",
-    "eccbc87e-4b5c-42fd-9a3e-b13e4b3a6dcb",
-    "a87ff679-a2f3-4e71-8fc6-8e34ba4b18a7",
-    "e4da3b7f-bbce-4345-9777-2b0674a318d5",
-    "1679091c-5a88-4faf-9b25-13f1b74e6d8c",
-  ];
-
-  it("never accepts instantly", () => {
-    for (const id of sampleIds) {
-      expect(fakeAcceptDelayMs(id), id).toBeGreaterThanOrEqual(FAKE_ACCEPT_MIN_HOURS * HOUR_MS);
+describe("LEGACY_PHOTO_AVATAR_PATTERN", () => {
+  it("matches the eight deleted photo files", () => {
+    for (const name of [
+      "elene_e",
+      "grigoli_a",
+      "kosta",
+      "lash10",
+      "levan_88",
+      "natato",
+      "nona_12",
+      "sofia",
+    ]) {
+      expect(LEGACY_PHOTO_AVATAR_PATTERN.test(`/avatars/${name}.png`), name).toBe(true);
     }
   });
 
-  it("always accepts within the advertised window", () => {
-    for (const id of sampleIds) {
-      expect(fakeAcceptDelayMs(id), id).toBeLessThanOrEqual(FAKE_ACCEPT_MAX_HOURS * HOUR_MS);
-    }
-  });
-
-  it("is stable for the same row across reloads", () => {
-    // The delay must not re-roll on every mount, or a request would keep
-    // sliding into the future and never resolve.
-    for (const id of sampleIds) {
-      expect(fakeAcceptDelayMs(id)).toBe(fakeAcceptDelayMs(id));
-    }
-  });
-
-  it("spreads different requests across the window", () => {
-    const delays = sampleIds.map(fakeAcceptDelayMs);
-    expect(new Set(delays).size).toBeGreaterThan(1);
-  });
-
-  it("handles an empty id without producing NaN", () => {
-    const delay = fakeAcceptDelayMs("");
-    expect(Number.isFinite(delay)).toBe(true);
-    expect(delay).toBeGreaterThanOrEqual(FAKE_ACCEPT_MIN_HOURS * HOUR_MS);
-  });
-
-  it("keeps the window at a plausible human delay", () => {
-    expect(FAKE_ACCEPT_MIN_HOURS).toBeGreaterThanOrEqual(1);
-    expect(FAKE_ACCEPT_MAX_HOURS).toBeLessThanOrEqual(72);
-    expect(FAKE_ACCEPT_MIN_HOURS).toBeLessThan(FAKE_ACCEPT_MAX_HOURS);
+  it("leaves uploaded avatars alone", () => {
+    // Supabase storage serves ".../object/public/avatars/<uid>/scene_1.png",
+    // which contains the same path segment. Those are real players' own
+    // pictures and must not be swapped for a mascot.
+    expect(
+      LEGACY_PHOTO_AVATAR_PATTERN.test(
+        "https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/avatars/u1/scene_1.png",
+      ),
+    ).toBe(false);
+    expect(LEGACY_PHOTO_AVATAR_PATTERN.test("/src/assets/avatars/mascot-avatar-2.png")).toBe(false);
+    expect(LEGACY_PHOTO_AVATAR_PATTERN.test("mascot:panda")).toBe(false);
   });
 });

@@ -40,12 +40,19 @@ const DISCLOSURE_KEYS = [
 ] as const;
 
 describe("the privacy policy discloses what leaves the device", () => {
-  it("names photographs and the AI processor in the English page", () => {
-    const source = read("src/pages/PrivacyPolicyEN.tsx");
+  // There used to be a second, hardcoded English policy at
+  // src/pages/PrivacyPolicyEN.tsx, and this case asserted against it. The two
+  // documents had drifted apart — and because the App Store listing linked one
+  // while the app description linked the other, a correction made in the locale
+  // files reached only half of what Apple reads. The hardcoded page is gone;
+  // /privacy-policy-en now renders the localized page pinned to English, so the
+  // English text lives in the locale file and is asserted there.
+  it("names photographs and the AI processor in the English copy", () => {
+    const source = read("src/locales/en.ts");
 
     expect(
       source,
-      "the hardcoded English policy no longer lists photographs as collected data"
+      "the English policy no longer lists photographs as collected data"
     ).toMatch(/Photographs:/);
 
     expect(

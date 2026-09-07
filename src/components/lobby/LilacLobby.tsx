@@ -127,7 +127,7 @@ export function FitBox({
 }
 
 /**
- * Header row — back, TASolivare title, help (940:7493 / 938:6022). Same box
+ * Header row — back, Google Sans title, help (940:7493 / 938:6022). Same box
  * as the home header (px-4 py-3, 40px buttons) so the chrome height never
  * jumps between pages.
  */
@@ -166,7 +166,7 @@ export function LilacHeader({
         {icon && <img alt="" className="block size-[34px] shrink-0 object-contain drop-shadow-sm" src={icon} />}
         <p
           className="leading-[28px] not-italic text-[24px] tracking-[-0.16px] min-w-0 truncate"
-          style={{ fontFamily: "'TASolivare', sans-serif", color: HEADING_COLOR }}
+          style={{ fontFamily: "'Google Sans', sans-serif", color: HEADING_COLOR }}
         >
           {title}
         </p>
@@ -446,7 +446,7 @@ export function PlusChooser({
       >
         <p
           className="text-[20px] text-[#523b76] text-center pb-1"
-          style={{ fontFamily: "'TASolivare', sans-serif" }}
+          style={{ fontFamily: "'Google Sans', sans-serif" }}
         >
           {title}
         </p>
@@ -509,7 +509,7 @@ export function SeatMenu({
         <div className="relative rounded-full size-[64px] overflow-clip">
           <InviteAvatar url={target.avatarUrl} nickname={target.nickname} />
         </div>
-        <p className="text-[19px] text-[#523b76]" style={{ fontFamily: "'TASolivare', sans-serif" }}>
+        <p className="text-[19px] text-[#523b76]" style={{ fontFamily: "'Google Sans', sans-serif" }}>
           {target.nickname}
         </p>
         {actions.map((action) => (
@@ -619,7 +619,7 @@ export function CaptainInfoModal({
             {Math.max(0, secondsLeft)}
           </span>
         )}
-        <p className="text-[19px] text-[#523b76] text-center" style={{ fontFamily: "'TASolivare', sans-serif" }}>
+        <p className="text-[19px] text-[#523b76] text-center" style={{ fontFamily: "'Google Sans', sans-serif" }}>
           {title}
         </p>
         {members && members.length > 0 && (
@@ -1079,7 +1079,7 @@ export function FriendPeek({
         </div>
         <p
           className="text-[22px] text-[#523b76]"
-          style={{ fontFamily: "'TASolivare', sans-serif" }}
+          style={{ fontFamily: "'Google Sans', sans-serif" }}
         >
           {friend.nickname}
         </p>

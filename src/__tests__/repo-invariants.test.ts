@@ -150,7 +150,7 @@ describe("repo invariants", () => {
 
     // Retired products: known to the server, deliberately not sold.
     //
-    // `io.mytrivia.adfree` is the only one. Its sole entry point was a modal
+    // `io.mytrivia.adfree` is the first. Its sole entry point was a modal
     // Index rendered and never opened, so it could not be bought from any
     // shipped build — and a product App Review cannot reach is a 2.1
     // rejection the moment it is attached to a submission. It was dropped
@@ -160,7 +160,20 @@ describe("repo invariants", () => {
     // function's alone: it is written into the subscriptions table, the
     // pro-seats migration and supabase/tests/03-pro-seats.sql. Deleting the
     // mapping would orphan the tier without removing it.
-    const RETIRED = new Set(["io.mytrivia.adfree"]);
+    //
+    // `io.mytrivia.pro.weekly` is the second. It is the opposite history: it
+    // was never created in App Store Connect at all — the live catalogue is
+    // the four gem consumables, pro.monthly, pro.annual and
+    // proplus.monthly — but the client asked StoreKit for it on every launch
+    // and the server had a mapping ready for it. Asking for a product review
+    // cannot locate is guideline 2.1, so the client no longer names it.
+    //
+    // Nothing was ever sold under this id, so the server mapping grants
+    // nothing and resolves nothing; it is left in place only because
+    // supabase/ deploys through Lovable on its own schedule (see CLAUDE.md
+    // 4a) and a client that has stopped asking for the product is the whole
+    // of the fix. Whoever next touches _shared/iap.ts can drop it.
+    const RETIRED = new Set(["io.mytrivia.adfree", "io.mytrivia.pro.weekly"]);
 
     for (const id of RETIRED) {
       expect(
@@ -297,13 +310,19 @@ describe("repo invariants", () => {
     //
     // What this catches is a RENAME: either tier's id turning into an annual
     // or weekly one while the tier's own screens keep saying /month. The
-    // paywall's other billing periods (pro.annual, pro.weekly) are separate
-    // products with their own label — src/config/proPlans.ts pairs each id
-    // with the period it prints — so they are named here as expected, not
-    // matched by pattern. An id that appears in neither list fails.
+    // paywall's other billing period (pro.annual) is a separate product with
+    // its own label — src/config/proPlans.ts pairs each id with the period it
+    // prints — so it is named here as expected, not matched by pattern. An id
+    // that appears in neither list fails.
+    //
+    // io.mytrivia.pro.weekly used to be listed here as a second period. It was
+    // never created in App Store Connect, so every launch asked StoreKit for a
+    // product that does not exist — guideline 2.1, an in-app purchase review
+    // cannot locate. It is deliberately absent from both lists now, so putting
+    // the id back without creating the product fails here.
     const source = read("src/hooks/useInAppPurchases.ts");
     const TIER_PRODUCTS = ["io.mytrivia.pro.monthly", "io.mytrivia.proplus.monthly"];
-    const PERIOD_PRODUCTS = ["io.mytrivia.pro.annual", "io.mytrivia.pro.weekly"];
+    const PERIOD_PRODUCTS = ["io.mytrivia.pro.annual"];
 
     const subscriptions = [...source.matchAll(/"(io\.mytrivia\.(?:pro|proplus)\.[a-z0-9.]+)"/g)]
       .map((m) => m[1]);

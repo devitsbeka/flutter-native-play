@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { configureDeepLinks, hideSplashScreen } from "@/native/nativeShell";
 import { TrackingConsentGate } from "@/native/TrackingConsentGate";
+import { AdConsentGate } from "@/native/AdConsentGate";
 import { primeTrackingConsent } from "@/native/trackingConsent";
 
 /**
@@ -26,6 +27,23 @@ export function NativeBridge() {
       else dispose = cleanup;
     });
 
+    // Register the intent to ask about tracking. It does NOT prompt here.
+    //
+    // This used to sit inside the double-rAF below and put the ATT dialog on
+    // the first painted frame of a cold start — no session, no age, no
+    // interaction. The age gate only runs inside signup, so a 13-year-old was
+    // asked to allow tracking before ever declaring an age: guideline 5.1.4.
+    //
+    // `primeTrackingConsent()` prompts, on every cold start, for everyone,
+    // until iOS has an answer on file. It waits for nothing else.
+    //
+    // An earlier version gated it on the player having declared themselves
+    // 18+, which meant a guest was never asked. App Review played as a guest
+    // on an iPad, could not find the prompt, and rejected under 2.1. Younger
+    // players are protected by the ad restrictions keyed off age, not by
+    // withholding the question.
+    void primeTrackingConsent();
+
     // Two frames: the first is scheduled before paint, the second runs after
     // it. Hiding on the first uncovers a webview that has laid out but not
     // yet drawn, which flashes white on exactly the slower devices the splash
@@ -33,21 +51,6 @@ export function NativeBridge() {
     const raf = requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         hideSplashScreen();
-
-        // Ask about tracking here, and nowhere earlier.
-        //
-        // This is the call App Review has to be able to find. It used to
-        // happen only inside adService, behind an opt-in "watch ad" button
-        // that a reviewer never pressed, and build 34 was rejected for a
-        // prompt that could not be located. Nothing about it is conditional
-        // on sign-in, VIP status, or ads now — it runs on every cold start
-        // until iOS has an answer on file.
-        //
-        // After the splash rather than before: iOS only presents the ATT
-        // dialog while the app is active, and the native side waits for that
-        // anyway. Doing it here also means the explanation screen appears
-        // over a drawn app rather than a white webview.
-        void primeTrackingConsent();
       });
     });
 
@@ -61,5 +64,14 @@ export function NativeBridge() {
   // The ATT explanation screen. Invisible until consent is asked for, and
   // mounted here so it is already subscribed when the effect above primes it
   // — child effects run before the parent's, so the ordering holds.
-  return <TrackingConsentGate />;
+  // The launch consent sequence, in order. Each waits for the one before it:
+  // ensureAdConsent awaits ensureTrackingConsent, and PushRegistrar awaits
+  // both. Only one is ever on screen at a time, and outside the EEA the middle
+  // one never appears at all.
+  return (
+    <>
+      <TrackingConsentGate />
+      <AdConsentGate />
+    </>
+  );
 }

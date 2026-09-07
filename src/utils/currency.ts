@@ -1,69 +1,32 @@
 /**
- * Legacy currency helpers.
+ * The word after a subscription price — "/თვე" or "/mo".
  *
- * `formatPrice`, `formatMonthlyPrice` and `usdToGel` convert a USD figure at a
- * flat 2.75 — which is how a Georgian buyer came to be quoted 10.97 lari for a
- * subscription Stripe charges 9.99 lari for. Nothing renders an amount through
- * them any more: prices come from src/config/pricing.ts, which holds a real
- * figure per currency and is mirrored by the checkout, so the number shown is
- * the number taken.
+ * This file used to be a currency converter as well: `usdToGel`, `formatPrice`,
+ * `formatMonthlyPrice` and `getPriceDisplay` all multiplied a USD figure by a
+ * flat `USD_TO_GEL_RATE = 2.75`, which is how a Georgian buyer came to be
+ * quoted 10.97 lari for a subscription Stripe charges 9.99 lari for, and how a
+ * gem pack Apple sells for $0.99 came to be advertised at 2.72 ₾. Showing one
+ * price and taking another is guideline 2.3.1.
  *
- * What is still used here is `getPriceDisplay().monthLabel` — the "/თვე" or
- * "/mo" suffix — and `shouldShowGel`. The converters are kept because the
- * exchange rate is also what the gem packs' lari prices were derived from, and
- * deleting them would leave that history nowhere; do not reach for them to
- * price anything new.
+ * Every one of those exports was already dead — the two remaining call sites
+ * read `getPriceDisplay(x).monthLabel` and threw the converted number away —
+ * so they are gone rather than left lying next to a price surface for the next
+ * person to reach for. What is left takes no amount at all, because it does
+ * not have one to get wrong.
+ *
+ * Prices come from src/config/pricing.ts, which holds a real figure per
+ * currency and is mirrored by the checkout, or from StoreKit via
+ * src/hooks/useStorePrice.ts on a device. Nothing is converted anywhere.
  */
 
 import { readAppLanguage } from '@/utils/appLanguage';
 
-const USD_TO_GEL_RATE = 2.75;
-
 /**
- * Check if the user should see GEL pricing
+ * The per-month suffix in the app's current language.
+ *
+ * Georgian is the only language with its own form; everything else the app
+ * ships in uses the "/mo" abbreviation.
  */
-export function shouldShowGel(): boolean {
-  return readAppLanguage() === 'ka';
-}
-
-/**
- * Convert USD to GEL
- */
-export function usdToGel(usdPrice: number): number {
-  return Math.round(usdPrice * USD_TO_GEL_RATE * 100) / 100;
-}
-
-/**
- * Format a price in USD or GEL based on user locale
- */
-export function formatPrice(usdPrice: number): string {
-  if (shouldShowGel()) {
-    const gel = usdToGel(usdPrice);
-    return `${gel.toFixed(2).replace(/\.00$/, '')} ₾`;
-  }
-  return `$${usdPrice.toFixed(2).replace(/\.00$/, '')}`;
-}
-
-/**
- * Format price with per-month suffix
- */
-export function formatMonthlyPrice(usdPrice: number, monthLabel?: string): string {
-  const isGel = shouldShowGel();
-  const label = monthLabel ?? (isGel ? '/თვე' : '/mo');
-  if (isGel) {
-    const gel = usdToGel(usdPrice);
-    return `${gel.toFixed(2)} ₾${label}`;
-  }
-  return `$${usdPrice.toFixed(2)}${label}`;
-}
-
-/**
- * Get the price value and currency symbol separately (for inline rendering)
- */
-export function getPriceDisplay(usdPrice: number): { value: string; symbol: string; suffix: string; monthLabel: string } {
-  if (shouldShowGel()) {
-    const gel = usdToGel(usdPrice);
-    return { value: gel.toFixed(2), symbol: '', suffix: ' ₾', monthLabel: '/თვე' };
-  }
-  return { value: usdPrice.toFixed(2), symbol: '$', suffix: '', monthLabel: '/mo' };
+export function monthLabel(): string {
+  return readAppLanguage() === 'ka' ? '/თვე' : '/mo';
 }

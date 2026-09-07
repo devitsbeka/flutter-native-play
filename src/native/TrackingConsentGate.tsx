@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ShieldCheck, Sparkles, Gift, Lock } from "lucide-react";
+import { ShieldCheck, Sparkles, SlidersHorizontal, Lock } from "lucide-react";
 import { ConsentScreen, type ConsentPoint } from "@/native/ConsentScreen";
 import { subscribeToPrePrompt, acknowledgePrePrompt } from "@/native/trackingConsent";
 // The standalone translator rather than useLanguage: this screen is mounted at
@@ -22,6 +22,20 @@ import { t } from "@/utils/standaloneTranslation";
  * can revisit it in Settings. This screen's job is only to make the question
  * make sense before it is asked.
  *
+ * ## What it may not say
+ *
+ * The copy used to be titled "Help keep MyTrivia free" and one of the three
+ * points was "Keeps the game free — relevant ads earn more, and that is what
+ * pays for new questions every week". Guideline 5.1.1(ii) forbids offering an
+ * incentive for granting permission, and implying the app depends on consent
+ * to stay free is exactly that — the same wording was removed from
+ * `NSUserTrackingUsageDescription` in `Info.plist` for the same reason, and
+ * the two have to agree.
+ *
+ * What is left describes only what the advertising identifier is used for,
+ * and says in as many words that either answer is fine. Nothing on this
+ * screen may reintroduce a benefit contingent on saying yes.
+ *
  * Full-bleed rather than a modal card, because at launch it is the first thing
  * the player sees and a sheet floating over an empty app reads as an error.
  * The layout, and the reasoning behind it, is `ConsentScreen`.
@@ -41,11 +55,11 @@ export function TrackingConsentGate() {
       body: t("att.pointRelevantBody"),
     },
     {
-      icon: Gift,
+      icon: SlidersHorizontal,
       tile: "bg-emerald-500/10",
       mark: "text-emerald-500",
-      title: t("att.pointFreeTitle"),
-      body: t("att.pointFreeBody"),
+      title: t("att.pointChoiceTitle"),
+      body: t("att.pointChoiceBody"),
     },
     {
       icon: Lock,

@@ -7,6 +7,7 @@
 import { Capacitor } from '@capacitor/core';
 import { trackingService } from './trackingService';
 import { personalizedAdsAllowed, ensureTrackingConsent } from '@/native/trackingConsent';
+import { adRequestsAllowed, ensureAdConsent } from '@/native/adConsent';
 import { isUnderAgeOfConsent } from '@/hooks/useAgeGroup';
 
 /**
@@ -80,6 +81,34 @@ class AdService {
     const ids = ADMOB_CONFIG[kind];
     const configured = platform === 'ios' ? ids.ios : ids.android;
 
+    // Demo units for the whole build, for everyone on it.
+    //
+    // A new AdMob app sits at "Requires review" until the app is on the App
+    // Store, and until it clears there is no fill: the load fails, the reward
+    // gate fails open, the player gets their play, and nothing renders. That
+    // is correct and it is indistinguishable from a broken integration, which
+    // makes the flow impossible to sign off — by you or by a room full of
+    // TestFlight testers.
+    //
+    // The per-device override needs an identifier out of each tester's Xcode
+    // console, which does not scale past one person. This does: Google's demo
+    // units serve to anyone, so every tester sees a real ad render and the
+    // whole path can be verified.
+    //
+    // It earns nothing, and shipping it would be an AdMob policy breach, so
+    // verify-ios-bundle fails the build when it is set. This is for a
+    // TestFlight build you are validating, never the one you submit.
+    if (import.meta.env.VITE_ADMOB_FORCE_TEST_ADS === 'true') {
+      if (!this.warnedMissingUnits.has(`forced:${kind}`)) {
+        this.warnedMissingUnits.add(`forced:${kind}`);
+        console.warn(
+          `[ads] VITE_ADMOB_FORCE_TEST_ADS is on — serving Google's demo ` +
+          `${kind} unit. This build earns nothing and must not be submitted.`,
+        );
+      }
+      return GOOGLE_TEST_UNITS[kind];
+    }
+
     if (configured) return configured;
 
     // Falling back to a demo unit means this placement earns nothing. Say so
@@ -116,6 +145,8 @@ class AdService {
     this.ageGroup = next;
 
     // Already up and running under different assumptions: apply the new ones.
+    // UMP is asked again too — `tagForUnderAgeOfConsent` changes the question,
+    // and the answer to the old one does not carry over.
     if (this.isInitialized && this.isNative) {
       void this.applyAgeTreatment();
     }
@@ -133,6 +164,7 @@ class AdService {
   private async applyAgeTreatment(): Promise<void> {
     if (!this.AdMob) return;
     try {
+      await ensureAdConsent({ underAgeOfConsent: isUnderAgeOfConsent(this.ageGroup) });
       await this.AdMob.initialize(this.initOptions());
     } catch (error) {
       console.warn('[ads] Could not re-apply age treatment:', error);
@@ -142,9 +174,30 @@ class AdService {
   /** The options `AdMob.initialize()` takes, for the current age group. */
   private initOptions() {
     const safety = this.getChildSafetyOptions();
+    // Test ads, for a device you name.
+    //
+    // A brand-new AdMob app sits at "Requires review" until the app is on the
+    // App Store, and until it clears, fill is zero. The ad path then behaves
+    // exactly as designed — load fails, the reward gate fails open, the player
+    // gets their extra play — and shows nothing. That is correct and it is
+    // indistinguishable from a broken integration, which makes the whole flow
+    // untestable at the point you most want to test it.
+    //
+    // With a device id here, Google serves test ads to that device only,
+    // through the real ad units. It is Google's own sanctioned way to verify
+    // an integration and it does not touch anyone else's build. Get the id
+    // from the Xcode console on first run: the SDK logs
+    // "To get test ads on this device, set: testDeviceIdentifiers = @[ ... ]".
+    //
+    //   VITE_ADMOB_TEST_DEVICE=<that-id> npm run build:ios
+    //
+    // verify-ios-bundle fails the build if it is set, because a store build
+    // that serves test ads earns nothing and violates AdMob policy.
+    const testDevice = (import.meta.env.VITE_ADMOB_TEST_DEVICE ?? "").trim();
+
     return {
-      testingDevices: [],
-      initializeForTesting: false,
+      testingDevices: testDevice ? [testDevice] : [],
+      initializeForTesting: Boolean(testDevice),
       // The plugin defaults this to true and would present the ATT dialog
       // itself, bare, at whatever moment the ad SDK happens to start — racing
       // the explanation screen and, on a cold start, beating it. Consent is
@@ -161,15 +214,27 @@ class AdService {
   }
 
   /**
-   * '1' means non-personalised.
+   * `true` means non-personalised.
    *
    * On iOS the ATT answer decides it: anything short of an explicit yes, and
    * the request must go out without the advertising identifier. The
    * age-group rule below sets it independently for under-18s, and either
    * reason is sufficient.
+   *
+   * **A boolean, not the string `'1'`.** `'1'` is what the flag looks like on
+   * the wire — Google's own extras dictionary is `{"npa": "1"}` — but that
+   * translation is the plugin's job, not ours. `AdOptions.npa` is declared
+   * `boolean` (`@capacitor-community/admob/dist/esm/shared/ad-options.interface.d.ts`),
+   * and both native sides read it as one: iOS does
+   * `call.getBool("npa") ?? false` and Android `call.getBoolean("npa", false)`.
+   * A string reaches neither — the cast fails and the default `false` wins —
+   * so every request this app has ever made went out asking for *personalised*
+   * ads, including for a player who denied ATT and for every under-age or
+   * unknown-age player. Nothing failed and nothing logged; the flag was simply
+   * dropped at the bridge. Sending a real boolean is what makes it arrive.
    */
-  private nonPersonalizedFlag(): '1' | undefined {
-    if (!personalizedAdsAllowed()) return '1';
+  private nonPersonalizedFlag(): true | undefined {
+    if (!personalizedAdsAllowed()) return true;
     return this.getChildSafetyOptions().npa;
   }
 
@@ -177,17 +242,21 @@ class AdService {
    * Ad treatment for a player under the age of consent.
    *
    * `tagForChildDirectedTreatment` is deliberately not set. It is COPPA's
-   * under-13 flag, and MyTrivia is a 13+ service — the age gate has no bucket
-   * below 13 (see `AgeGateStep`). A legacy `child` row from before that
-   * option was removed lands here too, via `isUnderAgeOfConsent`, which is
-   * the stricter of the two answers available to it.
+   * under-13 flag, and MyTrivia is a 13+ service — the age gate refuses an
+   * under-13 rather than storing one (see `AgeGateStep`), so no profile
+   * should ever be below that line.
+   *
+   * Which age groups land here is `isUnderAgeOfConsent`, and since that
+   * predicate was inverted the answer includes an unknown or missing age —
+   * every anonymous guest, in other words, who previously got adult-rated
+   * personalised ads because nobody had ever asked them anything.
    */
   private getChildSafetyOptions() {
     if (isUnderAgeOfConsent(this.ageGroup)) {
       return {
         tagForUnderAgeOfConsent: true,
         maxAdContentRating: 'T' as const,
-        npa: '1' as const,
+        npa: true as const,
       };
     }
     return {};
@@ -198,6 +267,50 @@ class AdService {
    */
   shouldShowAd(): boolean {
     return !this.isVipUser;
+  }
+
+  /**
+   * Whether an ad request is permitted at all.
+   *
+   * This is the GDPR question, not the ATT one. Declining in the UMP form
+   * leaves `canRequestAds` false, and an EEA player who declined must see no
+   * ad — personalised or otherwise — rather than a non-personalised one. It
+   * is also false before the flow has resolved, so nothing is requested while
+   * the answer is still unknown.
+   *
+   * The web simulation is unaffected: `adRequestsAllowed()` reports true off
+   * a native platform, where there is no UMP and no real ad SDK.
+   */
+  private async mayRequestAds(): Promise<boolean> {
+    // Simulation mode. Either the web, or a native build where the AdMob
+    // import threw and `initialize()` fell back — there is no ad SDK to
+    // withhold and no UMP to ask, and blocking here would take the fallback
+    // rewards away too.
+    if (!this.isNative) return true;
+    if (adRequestsAllowed()) return true;
+
+    // Not resolved is not the same as refused, and this used to treat them
+    // alike. `ensureAdConsent()` swallows its own failures and leaves the
+    // state unresolved, so a single network blip during launch — the most
+    // likely moment for one, on a cold start over hotel wifi — meant
+    // `adRequestsAllowed()` stayed false for the entire session with nothing
+    // ever calling the flow again. Every later tap on "Ad" then failed open
+    // instantly: no ad, no error, a free play granted, and no way to tell it
+    // apart from no fill.
+    //
+    // Retrying here costs nothing when the answer is already on file
+    // (ensureAdConsent returns the cached state) and recovers the session
+    // when it is not. A genuine refusal stays refused: it resolves with
+    // canRequestAds false and we return false below.
+    const state = await ensureAdConsent();
+    if (state.resolved && state.canRequestAds) return true;
+
+    console.warn(
+      state.resolved
+        ? '[ads] Ad request blocked — consent refused (UMP).'
+        : '[ads] Ad request blocked — consent could not be resolved (UMP).',
+    );
+    return false;
   }
 
   async initialize(): Promise<boolean> {
@@ -225,6 +338,14 @@ class AdService {
           // asks at launch behind an explanation screen; all this needs is
           // the answer, to decide personalisation.
           await trackingService.initialize();
+
+          // The EEA consent flow, and it has to be here — before
+          // AdMob.initialize(), which is where Google's own documentation
+          // puts it and the only point at which refusing can still stop the
+          // ad SDK from starting up. See `native/adConsent.ts` for what was
+          // wrong: the UMP framework has been in the binary all along and was
+          // never once called.
+          await ensureAdConsent({ underAgeOfConsent: isUnderAgeOfConsent(this.ageGroup) });
 
           await this.AdMob.initialize(this.initOptions());
           
@@ -266,6 +387,11 @@ class AdService {
 
     if (this.isAdLoading) {
       console.log('Ad is already loading');
+      return false;
+    }
+
+    if (!(await this.mayRequestAds())) {
+      callbacks?.onAdFailedToLoad?.('Ad consent not granted');
       return false;
     }
 
@@ -433,6 +559,11 @@ class AdService {
       return true;
     }
 
+    // No consent, no ad request. Below the VIP bypass on purpose: a VIP is
+    // not shown an ad at all, so their reward must not depend on an answer
+    // that only governs advertising.
+    if (!(await this.mayRequestAds())) return false;
+
     // Load and show in one call
     if (!this.isAdLoaded) {
       const loaded = await this.loadRewardedAd(callbacks);
@@ -492,6 +623,7 @@ class AdService {
 
     // Web has no interstitials — nothing to load
     if (!this.isNative || !this.AdMob || !this.InterstitialAdPluginEvents) return false;
+    if (!(await this.mayRequestAds())) return false;
     if (this.isInterstitialLoaded) return true;
     if (this.isInterstitialLoading) return false;
 
@@ -524,6 +656,7 @@ class AdService {
     await ensureTrackingConsent();
 
     if (this.isVipUser) return false;
+    if (!(await this.mayRequestAds())) return false;
     if (!this.isNative || !this.AdMob || !this.InterstitialAdPluginEvents) return false;
 
     if (!this.isInterstitialLoaded) {

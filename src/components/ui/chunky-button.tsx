@@ -212,7 +212,7 @@ export const ChunkyButton = React.forwardRef<HTMLButtonElement, ChunkyButtonProp
     const styles = variantStyles[variant];
     const depth = depthSizes[size];
     // The green button's label is set in the hero face (Figma 1085:533):
-    // Slackey for Latin, TASolivare behind it for Georgian — 24px on a 75px
+    // Slackey for Latin, Google Sans behind it for Georgian — 24px on a 75px
     // button there, so a size up from the body ramp here, regular weight
     // (Slackey has no other) with the frame's 0.5px tracking. The other
     // variants keep Nunito.
