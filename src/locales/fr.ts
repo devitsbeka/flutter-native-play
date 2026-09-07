@@ -568,6 +568,38 @@ export const fr: KaTranslations = {
     continue: "Continuer",
     footnote: "iOS va maintenant te demander ton autorisation. Tu peux la modifier à tout moment dans Réglages > Confidentialité et sécurité > Suivi.",
   },
+  // ==========================================
+  // Push notification pre-prompt
+  // ==========================================
+  pushConsent: {
+    title: "Ne ratez pas votre tour",
+    body: "Nous n'envoyons que ce qui vous concerne directement. Rien d'autre.",
+    pointTurnTitle: "Quand c'est à vous",
+    pointTurnBody: "Quelqu'un vous défie, ou une partie attend votre réponse.",
+    pointFriendsTitle: "Demandes d'amis",
+    pointFriendsBody: "Quelqu'un que vous connaissez veut jouer — vous le saurez sans vérifier.",
+    pointRewardsTitle: "Résultats et récompenses",
+    pointRewardsBody: "Votre place au classement, et ce que vous avez gagné.",
+    continue: "Continuer",
+    footnote: "iOS va vous demander l'autorisation. Vous pouvez changer d'avis à tout moment dans les Réglages.",
+  },
+
+  // ==========================================
+  // Google's European ad-consent form (pre-prompt)
+  // ==========================================
+  adConsent: {
+    title: "La publicité en Europe demande votre avis",
+    body: "La loi européenne vous laisse le choix. L'écran suivant est celui de Google : il demande comment la publicité dans MyTrivia peut utiliser vos données.",
+    pointChoiceTitle: "Un vrai choix",
+    pointChoiceBody: "Accepter, ou gérer chaque finalité une par une. Les deux sont sur cet écran.",
+    pointRefuseTitle: "Refuser ne pose aucun problème",
+    pointRefuseBody: "Dites non et MyTrivia ne vous montrera simplement aucune publicité. Rien n'est verrouillé dans le jeu.",
+    pointChangeTitle: "Modifiable à tout moment",
+    pointChangeBody: "Réglages, Confidentialité, Confidentialité des annonces — le même écran, quand vous voulez.",
+    continue: "Continuer",
+    footnote: "Le formulaire de consentement de Google s'ouvre ensuite. Il liste les partenaires publicitaires que la loi nous oblige à nommer.",
+  },
+
   moderation: {
     ...en.moderation,
     thisPlayer: "Ce joueur",

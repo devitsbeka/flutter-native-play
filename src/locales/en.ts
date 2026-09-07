@@ -693,6 +693,22 @@ export const en: KaTranslations = {
   // ==========================================
   // Push notification pre-prompt
   // ==========================================
+  // ==========================================
+  // Google's European ad-consent form (pre-prompt)
+  // ==========================================
+  adConsent: {
+    title: "Ads in Europe need your say",
+    body: "European law gives you the choice. The next screen is Google's, and it asks how ads in MyTrivia may use your data.",
+    pointChoiceTitle: "It is a real choice",
+    pointChoiceBody: "Consent, or manage each purpose one by one. Both are on that screen.",
+    pointRefuseTitle: "Refusing is fine",
+    pointRefuseBody: "Say no and MyTrivia simply shows you no ads. Nothing in the game is locked or shortened.",
+    pointChangeTitle: "Change it whenever",
+    pointChangeBody: "Settings, then Privacy, then Ad privacy — the same screen, any time you like.",
+    continue: "Continue",
+    footnote: "Google's consent form opens next. It lists the advertising partners the law requires us to name.",
+  },
+
   pushConsent: {
     title: "Don't miss your turn",
     body: "We only send you things you are actually part of. Nothing else.",

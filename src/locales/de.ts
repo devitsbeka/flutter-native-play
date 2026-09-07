@@ -572,6 +572,38 @@ export const de: KaTranslations = {
     continue: "Weiter",
     footnote: "Als Nächstes fragt iOS nach deiner Erlaubnis. Du kannst das jederzeit unter Einstellungen > Datenschutz & Sicherheit > Tracking ändern.",
   },
+  // ==========================================
+  // Push notification pre-prompt
+  // ==========================================
+  pushConsent: {
+    title: "Verpass nicht, wenn du dran bist",
+    body: "Wir schicken dir nur, woran du selbst beteiligt bist. Sonst nichts.",
+    pointTurnTitle: "Wenn du am Zug bist",
+    pointTurnBody: "Jemand fordert dich heraus, oder eine Partie wartet auf deine Antwort.",
+    pointFriendsTitle: "Freundschaftsanfragen",
+    pointFriendsBody: "Jemand, den du kennst, will spielen — du erfährst es, ohne nachzusehen.",
+    pointRewardsTitle: "Ergebnisse und Belohnungen",
+    pointRewardsBody: "Wo du in der Bestenliste gelandet bist und was du dafür bekommen hast.",
+    continue: "Weiter",
+    footnote: "iOS fragt dich als Nächstes um Erlaubnis. Du kannst deine Antwort jederzeit in den Einstellungen ändern.",
+  },
+
+  // ==========================================
+  // Google's European ad-consent form (pre-prompt)
+  // ==========================================
+  adConsent: {
+    title: "Werbung in Europa braucht deine Zustimmung",
+    body: "Das europäische Recht gibt dir die Wahl. Der nächste Bildschirm ist von Google und fragt, wie Werbung in MyTrivia deine Daten nutzen darf.",
+    pointChoiceTitle: "Eine echte Wahl",
+    pointChoiceBody: "Zustimmen oder jeden Zweck einzeln verwalten. Beides steht auf diesem Bildschirm.",
+    pointRefuseTitle: "Ablehnen ist in Ordnung",
+    pointRefuseBody: "Sag Nein und MyTrivia zeigt dir einfach keine Werbung. Nichts im Spiel wird gesperrt.",
+    pointChangeTitle: "Jederzeit änderbar",
+    pointChangeBody: "Einstellungen, Datenschutz, Werbe-Datenschutz — derselbe Bildschirm, wann du willst.",
+    continue: "Weiter",
+    footnote: "Als Nächstes öffnet sich das Zustimmungsformular von Google. Es nennt die Werbepartner, die wir gesetzlich aufführen müssen.",
+  },
+
   moderation: {
     ...en.moderation,
     thisPlayer: "Dieser Spieler",

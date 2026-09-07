@@ -165,15 +165,27 @@ class AdService {
   }
 
   /**
-   * '1' means non-personalised.
+   * `true` means non-personalised.
    *
    * On iOS the ATT answer decides it: anything short of an explicit yes, and
    * the request must go out without the advertising identifier. The
    * age-group rule below sets it independently for under-18s, and either
    * reason is sufficient.
+   *
+   * **A boolean, not the string `'1'`.** `'1'` is what the flag looks like on
+   * the wire — Google's own extras dictionary is `{"npa": "1"}` — but that
+   * translation is the plugin's job, not ours. `AdOptions.npa` is declared
+   * `boolean` (`@capacitor-community/admob/dist/esm/shared/ad-options.interface.d.ts`),
+   * and both native sides read it as one: iOS does
+   * `call.getBool("npa") ?? false` and Android `call.getBoolean("npa", false)`.
+   * A string reaches neither — the cast fails and the default `false` wins —
+   * so every request this app has ever made went out asking for *personalised*
+   * ads, including for a player who denied ATT and for every under-age or
+   * unknown-age player. Nothing failed and nothing logged; the flag was simply
+   * dropped at the bridge. Sending a real boolean is what makes it arrive.
    */
-  private nonPersonalizedFlag(): '1' | undefined {
-    if (!personalizedAdsAllowed()) return '1';
+  private nonPersonalizedFlag(): true | undefined {
+    if (!personalizedAdsAllowed()) return true;
     return this.getChildSafetyOptions().npa;
   }
 
@@ -195,7 +207,7 @@ class AdService {
       return {
         tagForUnderAgeOfConsent: true,
         maxAdContentRating: 'T' as const,
-        npa: '1' as const,
+        npa: true as const,
       };
     }
     return {};

@@ -126,8 +126,25 @@ vi.mock("@capacitor-community/admob", () => ({
 /** A fresh module graph, because both modules under test hold state. */
 async function load() {
   vi.resetModules();
+  const consent = await import("@/native/adConsent");
+
+  // Stand in for AdConsentGate.
+  //
+  // Google's form is now preceded by a full-bleed explanation screen, the same
+  // one the tracking and notification prompts use. In the app that screen is
+  // rendered by AdConsentGate, which acknowledges it when the player taps
+  // Continue; in a test nothing renders, so without this the flow waits out its
+  // eight-second deadline and every case here times out.
+  //
+  // Acknowledging immediately is the honest stand-in: it makes these tests
+  // about what UMP does, which is what they were written for, and the deadline
+  // itself is covered separately in consentSequence.test.ts.
+  consent.subscribeToAdPrePrompt((open) => {
+    if (open) consent.acknowledgeAdPrePrompt();
+  });
+
   return {
-    consent: await import("@/native/adConsent"),
+    consent,
     ads: (await import("@/services/adService")).adService,
   };
 }

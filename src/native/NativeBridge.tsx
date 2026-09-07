@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { configureDeepLinks, hideSplashScreen } from "@/native/nativeShell";
 import { TrackingConsentGate } from "@/native/TrackingConsentGate";
+import { AdConsentGate } from "@/native/AdConsentGate";
 import { primeTrackingConsent } from "@/native/trackingConsent";
 
 /**
@@ -63,5 +64,14 @@ export function NativeBridge() {
   // The ATT explanation screen. Invisible until consent is asked for, and
   // mounted here so it is already subscribed when the effect above primes it
   // — child effects run before the parent's, so the ordering holds.
-  return <TrackingConsentGate />;
+  // The launch consent sequence, in order. Each waits for the one before it:
+  // ensureAdConsent awaits ensureTrackingConsent, and PushRegistrar awaits
+  // both. Only one is ever on screen at a time, and outside the EEA the middle
+  // one never appears at all.
+  return (
+    <>
+      <TrackingConsentGate />
+      <AdConsentGate />
+    </>
+  );
 }

@@ -1,4 +1,5 @@
 import { Capacitor } from "@capacitor/core";
+import { ensureTrackingConsent } from "@/native/trackingConsent";
 
 /**
  * Google's User Messaging Platform (UMP) — the GDPR/EEA consent flow.
@@ -125,6 +126,78 @@ function publish(next: AdConsentState) {
 }
 
 /** The last known state. Never blocks. */
+/**
+ * The explanation screen shown immediately before Google's own consent form.
+ *
+ * Google's form is a wall of legal text listing 198 ad partners, and it opens
+ * cold. On its own it reads as something gone wrong rather than a choice being
+ * offered, which is how you get a player tapping the first button to make it
+ * go away — a consent nobody can honestly call informed.
+ *
+ * So it gets the same treatment as the tracking and notification prompts: say
+ * what the next screen is and why it exists, then hand over. Only shown when a
+ * form is actually going to appear, which is the EEA, the UK and Switzerland
+ * — everywhere else this never runs and the player sees nothing.
+ */
+type PrePromptListener = (open: boolean) => void;
+let prePromptListeners: PrePromptListener[] = [];
+let prePromptOpen = false;
+let acknowledgePrePromptResolve: (() => void) | null = null;
+
+/** How long to wait for the screen before going straight to Google's form. */
+const AD_PRE_PROMPT_DEADLINE_MS = 8000;
+
+function setPrePromptOpen(open: boolean) {
+  prePromptOpen = open;
+  for (const listener of prePromptListeners) listener(open);
+}
+
+/** Subscribe the explanation screen. Returns an unsubscribe. */
+export function subscribeToAdPrePrompt(listener: PrePromptListener): () => void {
+  prePromptListeners.push(listener);
+  listener(prePromptOpen);
+  return () => {
+    prePromptListeners = prePromptListeners.filter((l) => l !== listener);
+  };
+}
+
+/** Called by the explanation screen when the player is ready to continue. */
+export function acknowledgeAdPrePrompt() {
+  const resolve = acknowledgePrePromptResolve;
+  acknowledgePrePromptResolve = null;
+  setPrePromptOpen(false);
+  resolve?.();
+}
+
+/**
+ * Show it and wait, but never longer than the deadline.
+ *
+ * A screen that fails to render must cost the explanation, not the form —
+ * the same rule the tracking flow follows, for the same reason: without a
+ * form, ads are refused outright in the EEA.
+ */
+function showAdPrePrompt(): Promise<void> {
+  return new Promise<void>((resolve) => {
+    let settled = false;
+    const settle = () => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      resolve();
+    };
+
+    acknowledgePrePromptResolve = settle;
+
+    const timer = setTimeout(() => {
+      if (acknowledgePrePromptResolve === settle) acknowledgePrePromptResolve = null;
+      setPrePromptOpen(false);
+      settle();
+    }, AD_PRE_PROMPT_DEADLINE_MS);
+
+    setPrePromptOpen(true);
+  });
+}
+
 export function getAdConsent(): AdConsentState {
   if (!isNative()) return NOT_APPLICABLE;
   return state;
@@ -250,6 +323,15 @@ export async function ensureAdConsent(options?: {
   if (inFlight) return inFlight;
 
   inFlight = (async (): Promise<AdConsentState> => {
+    // Apple's dialog first, then Google's form. Two consent surfaces racing
+    // each other at launch is how a player ends up tapping through one they
+    // never read, and on iOS the system dialog wins the window regardless —
+    // so the CMP form would be the one that got dismissed blind.
+    //
+    // Resolves instantly once ATT has an answer on file, and on every
+    // non-iOS target, so this costs nothing after the first launch.
+    await ensureTrackingConsent();
+
     const plugin = await loadPlugin();
     if (!plugin) return state;
 
@@ -265,6 +347,8 @@ export async function ensureAdConsent(options?: {
       // Outside the EEA (and the regulated US states) this never runs.
       if (info.status === "REQUIRED" && info.isConsentFormAvailable) {
         try {
+          // Explain, then hand over. Only reached where a form exists.
+          await showAdPrePrompt();
           const after = await plugin.showConsentForm();
           next = normalise(after);
         } catch (formError) {

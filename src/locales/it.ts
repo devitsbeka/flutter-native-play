@@ -572,6 +572,38 @@ export const it: KaTranslations = {
     continue: "Continua",
     footnote: "Ora iOS ti chiederà il permesso. Puoi cambiarlo quando vuoi in Impostazioni > Privacy e sicurezza > Tracciamento.",
   },
+  // ==========================================
+  // Push notification pre-prompt
+  // ==========================================
+  pushConsent: {
+    title: "Non perderti il tuo turno",
+    body: "Ti mandiamo solo ciò di cui fai parte. Nient'altro.",
+    pointTurnTitle: "Quando tocca a te",
+    pointTurnBody: "Qualcuno ti sfida, o una partita aspetta la tua risposta.",
+    pointFriendsTitle: "Richieste di amicizia",
+    pointFriendsBody: "Qualcuno che conosci vuole giocare — lo saprai senza controllare.",
+    pointRewardsTitle: "Risultati e premi",
+    pointRewardsBody: "Dove sei arrivato in classifica e cosa hai guadagnato.",
+    continue: "Continua",
+    footnote: "iOS ti chiederà il permesso adesso. Puoi cambiare la tua risposta quando vuoi nelle Impostazioni.",
+  },
+
+  // ==========================================
+  // Google's European ad-consent form (pre-prompt)
+  // ==========================================
+  adConsent: {
+    title: "La pubblicità in Europa richiede la tua scelta",
+    body: "La legge europea ti lascia scegliere. La schermata successiva è di Google e chiede come la pubblicità in MyTrivia può usare i tuoi dati.",
+    pointChoiceTitle: "È una scelta vera",
+    pointChoiceBody: "Accetta, oppure gestisci ogni finalità una per una. Entrambe sono su quella schermata.",
+    pointRefuseTitle: "Rifiutare va benissimo",
+    pointRefuseBody: "Di' di no e MyTrivia semplicemente non ti mostrerà pubblicità. Nel gioco non si blocca nulla.",
+    pointChangeTitle: "Cambia quando vuoi",
+    pointChangeBody: "Impostazioni, Privacy, Privacy degli annunci — la stessa schermata, quando preferisci.",
+    continue: "Continua",
+    footnote: "Si aprirà il modulo di consenso di Google. Elenca i partner pubblicitari che la legge ci obbliga a nominare.",
+  },
+
   moderation: {
     ...en.moderation,
     thisPlayer: "Questo giocatore",

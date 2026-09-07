@@ -3,7 +3,7 @@ import { Capacitor } from "@capacitor/core";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { PushConsentGate } from "@/native/PushConsentGate";
 import { ensureTrackingConsent } from "@/native/trackingConsent";
-import { useAuth } from "@/hooks/useAuth";
+import { ensureAdConsent } from "@/native/adConsent";
 
 /**
  * Mounts push registration for the lifetime of the app, and asks a new player
@@ -67,7 +67,6 @@ const ASK_DELAY_MS = 4000;
 
 export function PushRegistrar() {
   const { permission, requestPermission } = usePushNotifications();
-  const { user } = useAuth();
   const asked = useRef(false);
   const [explaining, setExplaining] = useState(false);
 
@@ -81,7 +80,6 @@ export function PushRegistrar() {
 
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
-    if (!user?.id) return;
     // "prompt" is the only state worth acting on. Granted needs nothing, and
     // denied cannot be undone from here — iOS will not show the dialog twice.
     if (permission !== "prompt") return;
@@ -98,10 +96,15 @@ export function PushRegistrar() {
     let cancelled = false;
     const timer = setTimeout(() => {
       void (async () => {
-        // Resolves immediately once tracking is decided, and on every non-iOS
-        // target. When the launch-time ATT flow is still on screen, this waits
-        // for it rather than opening a second screen behind it.
+        // Third in the queue, and it waits for the two ahead of it.
+        //
+        // ensureAdConsent itself waits for ensureTrackingConsent, so awaiting
+        // it alone would be enough — but naming both is what stops someone
+        // reordering those two later and silently putting a system dialog
+        // underneath Google's form. Each resolves instantly once its answer
+        // is on file, and on every non-iOS target.
         await ensureTrackingConsent();
+        await ensureAdConsent();
         if (!cancelled) setExplaining(true);
       })();
     }, ASK_DELAY_MS);
@@ -111,7 +114,7 @@ export function PushRegistrar() {
       clearTimeout(timer);
     };
     // `requestPermission` is deliberately absent — see the note above.
-  }, [user?.id, permission]);
+  }, [permission]);
 
   const handleContinue = useCallback(() => {
     setExplaining(false);

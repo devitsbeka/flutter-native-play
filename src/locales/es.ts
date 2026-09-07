@@ -576,6 +576,38 @@ export const es: KaTranslations = {
     continue: "Continuar",
     footnote: "A continuación, iOS te pedirá permiso. Puedes cambiarlo cuando quieras en Ajustes > Privacidad y seguridad > Rastreo.",
   },
+  // ==========================================
+  // Push notification pre-prompt
+  // ==========================================
+  pushConsent: {
+    title: "No te pierdas tu turno",
+    body: "Solo te enviamos aquello en lo que participas. Nada más.",
+    pointTurnTitle: "Cuando te toca",
+    pointTurnBody: "Alguien te reta, o una partida espera tu respuesta.",
+    pointFriendsTitle: "Solicitudes de amistad",
+    pointFriendsBody: "Alguien que conoces quiere jugar — lo sabrás sin tener que mirar.",
+    pointRewardsTitle: "Resultados y recompensas",
+    pointRewardsBody: "En qué puesto quedaste y qué ganaste por ello.",
+    continue: "Continuar",
+    footnote: "iOS te pedirá permiso a continuación. Puedes cambiar tu respuesta cuando quieras en Ajustes.",
+  },
+
+  // ==========================================
+  // Google's European ad-consent form (pre-prompt)
+  // ==========================================
+  adConsent: {
+    title: "La publicidad en Europa necesita tu decisión",
+    body: "La ley europea te da a elegir. La siguiente pantalla es de Google y pregunta cómo puede usar tus datos la publicidad de MyTrivia.",
+    pointChoiceTitle: "Es una elección real",
+    pointChoiceBody: "Acepta, o gestiona cada finalidad una a una. Ambas opciones están en esa pantalla.",
+    pointRefuseTitle: "Negarse está bien",
+    pointRefuseBody: "Di que no y MyTrivia sencillamente no te mostrará anuncios. No se bloquea nada del juego.",
+    pointChangeTitle: "Cámbialo cuando quieras",
+    pointChangeBody: "Ajustes, Privacidad, Privacidad de anuncios — la misma pantalla, cuando te apetezca.",
+    continue: "Continuar",
+    footnote: "A continuación se abre el formulario de consentimiento de Google. Enumera los socios publicitarios que la ley nos obliga a nombrar.",
+  },
+
   moderation: {
     ...en.moderation,
     thisPlayer: "Este jugador",
