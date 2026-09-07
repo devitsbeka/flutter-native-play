@@ -505,6 +505,63 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
   const quota = calculateAvatarQuota(generations, isVip);
   const activeQuota = quota.avatar;
 
+  /**
+   * The safety gate between a camera-roll photo and a public profile picture.
+   *
+   * Both paths out of this modal — "use the photo as it is" and "make a
+   * portrait from it" — put an image the player chose into the PUBLIC
+   * `avatars` bucket and hang it on the profile every other player sees. The
+   * only call either path used to make was `detect-face`, which asked
+   * whether there was a face in the picture and nothing else; the quiz-cover
+   * path has had a real content check (`validate-cover-image`) all along.
+   * `detect-face` now answers both questions and this is where its verdict is
+   * read.
+   *
+   * The rejected file is deleted from the bucket. It is publicly readable the
+   * moment it is uploaded, so leaving it there would keep the image online at
+   * a guessable URL after we refused to show it — and orphan it, since
+   * nothing else will ever reference it.
+   *
+   * FAILS CLOSED, unlike the quiz-cover path. `CoverImagePicker` treats an
+   * unreachable validator as a pass, so a provider outage does not stop
+   * people uploading covers. An avatar is not a cover: it appears beside its
+   * owner in every lobby, leaderboard and notification in the app, so
+   * "nobody could check this" has to mean "this does not go up". The two
+   * messages differ on purpose — a player whose photo was refused should not
+   * be told it was offensive when the truth is that the checker was down.
+   *
+   * Returns true when the photo may be published.
+   */
+  const screenPhotoForPublicUse = async (
+    publicUrl: string,
+    storagePath: string,
+  ): Promise<boolean> => {
+    let verdict: { isAppropriate?: boolean; checkFailed?: boolean } | null = null;
+    try {
+      const { data, error } = await supabase.functions.invoke("detect-face", {
+        body: { imageUrl: publicUrl, userId: user!.id },
+      });
+      if (error) throw error;
+      verdict = data;
+    } catch (err) {
+      console.warn("Avatar safety check failed:", err);
+      verdict = null;
+    }
+
+    if (verdict?.isAppropriate === true) return true;
+
+    // Refused, or never checked. Either way the file does not stay up.
+    await supabase.storage.from("avatars").remove([storagePath]);
+
+    const message =
+      verdict && verdict.checkFailed !== true
+        ? t("extra.textNotAllowed")
+        : t("errors.generic");
+    setFailure({ message });
+    toast.error(message);
+    return false;
+  };
+
   const generateAvatar = async () => {
     if (!uploadedImage || !user) return;
 
@@ -566,6 +623,16 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
         .getPublicUrl(fileName);
 
       const imageUrl = urlData.publicUrl;
+
+      // Screened BEFORE a generation is spent on it. The portrait keeps the
+      // face and the setting of whatever went in, so an image we would refuse
+      // to publish as-is is one we must not publish a stylised version of
+      // either — and refusing here also means the AI bill is not run up on a
+      // photo that was never going to be shown.
+      if (!(await screenPhotoForPublicUse(imageUrl, fileName))) {
+        setStep("upload");
+        return;
+      }
 
       // The upload makes a PORTRAIT: the circle avatar every profile
       // placement shows. Scenes are no longer generated — the home screen
@@ -648,6 +715,7 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
     if (!uploadedImage || !user) return;
 
     setIsLoading(true);
+    setFailure(null);
 
     try {
       const response = await fetch(uploadedImage);
@@ -668,14 +736,17 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
         .from("avatars")
         .getPublicUrl(fileName);
 
-      await updateProfile({ avatar_url: urlData.publicUrl });
-
-      // Detect face in background (non-blocking)
-      if (user) {
-        supabase.functions.invoke("detect-face", {
-          body: { imageUrl: urlData.publicUrl, userId: user.id },
-        }).catch(err => console.warn("Face detection failed:", err));
+      // BEFORE the profile write, not after and not in the background. This
+      // used to set `avatar_url` first and fire `detect-face` off into a
+      // `.catch(console.warn)` — so the photo was already every player's view
+      // of this person by the time anything looked at it, and nothing that
+      // came back could take it down again. `screenPhotoForPublicUse` deletes
+      // the uploaded file and explains itself; there is nothing left to undo.
+      if (!(await screenPhotoForPublicUse(urlData.publicUrl, fileName))) {
+        return;
       }
+
+      await updateProfile({ avatar_url: urlData.publicUrl });
 
       toast.success(t("avatar.avatarSaved"));
       finishAndClose();

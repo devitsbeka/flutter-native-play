@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { AI_CHAT_URL, AI_API_KEY, aiModel } from "../_shared/ai.ts";
+import { firstBlockedText } from "../_shared/contentFilter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -225,7 +226,7 @@ async function generateQuestions(
     if (!Array.isArray(questions) || questions.length === 0) {
       throw new Error("Invalid questions format");
     }
-    return questions.map((q: any) => ({
+    const mapped = questions.map((q: any) => ({
       question_text: q.question_text,
       correct_answer: q.correct_answer,
       incorrect_answers: Array.isArray(q.incorrect_answers)
@@ -233,6 +234,26 @@ async function generateQuestions(
         : [],
       difficulty: q.difficulty || "mixed",
     }));
+
+    // These rows are inserted `is_public: true` under accounts with faces
+    // and names, so they read as content a person wrote. The topics here are
+    // hardcoded and harmless, but the text is still model-written and lands
+    // in a public feed without anyone reading it first — screen it with the
+    // same blocklist everything else user-visible goes through. The question
+    // JSON is out of reach of the database trigger, which sees only the
+    // post's title, subject and description.
+    return mapped.filter((q) => {
+      const offending = firstBlockedText([
+        q.question_text,
+        q.correct_answer,
+        ...q.incorrect_answers,
+      ]);
+      if (offending !== null) {
+        console.warn(`Dropping seeded question for "${subject}" that failed the content screen`);
+        return false;
+      }
+      return true;
+    });
   } catch (e) {
     console.error(`Failed to parse AI response for "${subject}":`, content);
     throw e;
@@ -242,6 +263,27 @@ async function generateQuestions(
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // AN INTERNAL TOOL, NOT A PUBLIC ONE. This function is `verify_jwt = false`
+  // and had no check of its own, so anyone who learned the URL could POST to
+  // it and have the app AI-write quizzes and publish them `is_public: true`
+  // under eight hardcoded account ids that are not real people. That is a
+  // stranger injecting public content attributed to fabricated users, on
+  // demand, as many times as they like.
+  //
+  // Guarded exactly like translate-questions and generate-national-questions:
+  // verify_jwt stays off because the caller is a script or a cron job with no
+  // session, and the shared TRANSLATE_SECRET in x-cron-secret is what proves
+  // it is ours. Reusing that secret rather than minting another means there
+  // is one value to rotate, and no new platform secret to set through Lovable
+  // before this can be deployed.
+  const secret = Deno.env.get("SEED_SECRET") || Deno.env.get("TRANSLATE_SECRET");
+  if (!secret || req.headers.get("x-cron-secret") !== secret) {
+    return new Response(JSON.stringify({ error: "unauthorized" }), {
+      status: 401,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 
   try {
