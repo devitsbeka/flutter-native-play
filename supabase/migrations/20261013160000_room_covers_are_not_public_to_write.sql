@@ -1,0 +1,32 @@
+-- The room-covers bucket was writable, and deletable, by anybody.
+--
+-- The policy meant for edge functions was written without a role:
+--
+--   CREATE POLICY "Service role can manage room covers"
+--   ON storage.objects FOR ALL
+--   USING (bucket_id = 'room-covers') WITH CHECK (bucket_id = 'room-covers');
+--
+-- A policy with no TO clause applies to PUBLIC, and FOR ALL covers UPDATE and
+-- DELETE. So the only condition on replacing or destroying any object in a
+-- public bucket was that it lived in that bucket — no ownership test, and not
+-- even a requirement to be signed in. The practical version: replace another
+-- host's room cover with whatever you like, on a screen their players are
+-- looking at. The sibling quiz-covers bucket, created six hours earlier the
+-- same day, gets this right.
+--
+-- Nothing replaces these policies, and that is the point. The only writer to
+-- this bucket is supabase/functions/generate-room-covers, which authenticates
+-- with SUPABASE_SERVICE_ROLE_KEY — and the service role bypasses row-level
+-- security altogether, so it never needed a policy. No client code writes here
+-- at all (verified: `room-covers` appears in src/ only inside a documentation
+-- fixture). Public read stays, because these images are shown to everyone in
+-- the room.
+--
+-- If a client-side uploader is added later it will fail, loudly, with a policy
+-- error. That is the correct outcome: it should ship with a policy scoped to
+-- the uploader's own folder, the way quiz-covers does —
+--   auth.uid()::text = (storage.foldername(name))[1]
+-- and not inherit a blanket grant written for something else.
+
+DROP POLICY IF EXISTS "Service role can manage room covers" ON storage.objects;
+DROP POLICY IF EXISTS "Authenticated users can upload room covers" ON storage.objects;

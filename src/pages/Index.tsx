@@ -1120,6 +1120,7 @@ export default function Index() {
             box below is pointer-events-none. */}
         {!user && (
           <MobileGuestHero
+            onGuestPlay={handlePlayClick}
             onApple={async () => {
               const { error } = await signInWithApple();
               // Dismissing Apple's sheet is a choice, not a failure — no toast.

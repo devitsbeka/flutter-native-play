@@ -581,6 +581,8 @@ interface MobileGuestHeroProps {
   onApple: () => void;
   onGoogle: () => void;
   onEmail: () => void;
+  /** Start a game without an account. See the button below for why it exists. */
+  onGuestPlay: () => void;
   onMenu: () => void;
   onTerms: () => void;
   onPrivacy: () => void;
@@ -593,6 +595,7 @@ export function MobileGuestHero({
   onApple,
   onGoogle,
   onEmail,
+  onGuestPlay,
   onMenu,
   onTerms,
   onPrivacy,
@@ -703,6 +706,25 @@ export function MobileGuestHero({
               <span className="text-[15px] font-bold tracking-[-0.16px]">{t("extra.landingOrEmail")}</span>
             </span>
             <span aria-hidden className="absolute inset-0 rounded-[inherit] shadow-[inset_0px_1.86px_0px_0px_white]" />
+          </button>
+          {/* Play without an account.
+              Guest play already worked — handlePlayClick starts a quick game
+              for a signed-out player — but the only way to reach it was the
+              floating hex button in the bottom nav, which sits over the
+              artwork and reads as decoration. So this screen was, to anyone
+              who did not know that, a sign-in wall: three provider buttons
+              and no way past them.
+
+              That is an App Store guideline 2.1 rejection on its own, and the
+              review notes tell Apple the app "can be launched and played as a
+              guest without creating an account" — which was true and
+              undiscoverable at the same time. */}
+          <button
+            type="button"
+            onClick={onGuestPlay}
+            className="mx-auto mt-1 flex h-[44px] items-center justify-center px-4 text-[15px] font-semibold tracking-[-0.16px] text-[#402666] underline underline-offset-4 active:opacity-70"
+          >
+            {t("extra.playAsGuestShort")}
           </button>
         </div>
 
