@@ -1,5 +1,7 @@
 import { useEffect, useRef } from "react";
 
+import { markProgrammaticScroll } from "@/utils/scrollTapGuard";
+
 /**
  * Where a page's scroller was when the player last left it.
  *
@@ -36,9 +38,11 @@ import { useEffect, useRef } from "react";
  * While that is running the scroll events it causes are ignored, or the
  * clamped position would overwrite the very target being restored.
  *
- * The player wins immediately: a touch, a wheel or a key stops the
+ * The player wins immediately: a press, a touch, a wheel or a key stops the
  * restoring, so this can never drag the page out from under someone who has
- * already started reading.
+ * already started reading — and, just as importantly, the offsets cannot
+ * change between a press and its click, which is the other way a moving
+ * scroller makes a tap disappear.
  */
 
 /** Remembered offsets by key, for this run of the app only. */
@@ -77,6 +81,11 @@ export function useScrollMemory<T extends HTMLElement>(key: string) {
         if (!restoring || !ref.current) return;
         const node = ref.current;
         const max = node.scrollHeight - node.clientHeight;
+        // Say so before moving it. The page scroller's tap guard treats a
+        // moving scroller as one the finger is holding, and swallowed every
+        // tap for as long as this ran — a dead home feed for the second or
+        // so after coming back to it.
+        markProgrammaticScroll(node);
         node.scrollTop = Math.min(target, max);
         // Done as soon as the page can hold the whole offset; otherwise
         // keep re-applying while the rails land.
@@ -92,6 +101,7 @@ export function useScrollMemory<T extends HTMLElement>(key: string) {
     }
 
     // Anything the player does outranks the restore.
+    el.addEventListener("pointerdown", stop, { passive: true });
     el.addEventListener("touchstart", stop, { passive: true });
     el.addEventListener("wheel", stop, { passive: true });
     el.addEventListener("keydown", stop);
@@ -99,6 +109,7 @@ export function useScrollMemory<T extends HTMLElement>(key: string) {
 
     return () => {
       stop();
+      el.removeEventListener("pointerdown", stop);
       el.removeEventListener("touchstart", stop);
       el.removeEventListener("wheel", stop);
       el.removeEventListener("keydown", stop);

@@ -77,6 +77,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { Json } from "@/integrations/supabase/types";
 import { resolveAvatarUrl, fallbackAvatarFor } from "@/utils/avatarUtils";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
+import { markProgrammaticScroll } from "@/utils/scrollTapGuard";
 
 // Inspirational topics for trivia creation
 const INSPIRATIONAL_TOPIC_KEYS = [
@@ -783,9 +784,16 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   // a height of zero. Back from Guess landed on a heading, a hairline, and no
   // cards at all.
   const rowObserver = useRef<ResizeObserver | null>(null);
+  // The row node itself, as state: the card-placing effect below has to run
+  // again when this is replaced, and a ref would not tell it. Closing the
+  // category picker mounts a NEW row, at scrollLeft 0 — which is how the
+  // picked card ended up off-screen even though the effect had already
+  // placed it once (see the effect for the rest of that story).
+  const [rowEl, setRowEl] = useState<HTMLDivElement | null>(null);
   const rowRef = useCallback((el: HTMLDivElement | null) => {
     rowObserver.current?.disconnect();
     rowObserver.current = null;
+    setRowEl(el);
     if (!el) return;
     const publish = () => {
       const cs = getComputedStyle(el);
@@ -800,15 +808,72 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
 
   const cardRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
+  /**
+   * Bring the picked card to the front of the row.
+   *
+   * This was one `scrollIntoView({ behavior: "smooth" })`, and a smooth
+   * scroll is a request, not a result: it runs over the following frames and
+   * anything that scrolls the same box in the meantime wins. Arriving on
+   * Classic (`?mode=library`) opens the category picker in the same commit,
+   * and whatever that does on mount left the row sitting at 0 — the card
+   * was selected, and off the right-hand edge of the screen where nobody
+   * could see it (owner: "my selected game option is hidden"). Words, which
+   * opens a different overlay, happened to survive; the difference is luck,
+   * not design.
+   *
+   * So it is placed instantly instead, and held there for a moment against
+   * whatever an overlay does as it settles. The player's own touch ends it,
+   * and the row is marked so the page's tap guard does not mistake these
+   * for a scroll under the finger and swallow the next tap.
+   *
+   * And it runs again whenever the ROW is replaced, not only when the pick
+   * changes. Closing the picker mounts a new row element — the same reason
+   * `rowRef` is a callback ref rather than a mount effect — and a new row
+   * starts at 0 with the same card still selected. Placing it once on mount
+   * was therefore undone by the very overlay the mode had opened.
+   */
   useEffect(() => {
     if (!gameChoice) return;
-    cardRefs.current[gameChoice]?.scrollIntoView({
-      behavior: "smooth",
-      inline: "start",
-      // "nearest" vertically: centring would drag the whole form up too.
-      block: "nearest",
-    });
-  }, [gameChoice]);
+    const card = cardRefs.current[gameChoice];
+    if (!card) return;
+
+    const row: HTMLElement | null = rowEl;
+
+    let frame = 0;
+    let stopped = false;
+    const stop = () => {
+      stopped = true;
+      if (frame) cancelAnimationFrame(frame);
+      frame = 0;
+    };
+
+    const deadline = performance.now() + 600;
+    const place = () => {
+      const el = cardRefs.current[gameChoice];
+      if (stopped || !el) return;
+      if (row) {
+        // A delta, so re-applying corrects rather than compounds.
+        markProgrammaticScroll(row);
+        row.scrollLeft += el.getBoundingClientRect().left - row.getBoundingClientRect().left;
+      } else {
+        el.scrollIntoView({ behavior: "auto", inline: "start", block: "nearest" });
+      }
+      if (performance.now() > deadline) {
+        stop();
+        return;
+      }
+      frame = requestAnimationFrame(place);
+    };
+    frame = requestAnimationFrame(place);
+    row?.addEventListener("pointerdown", stop, { passive: true });
+    row?.addEventListener("touchstart", stop, { passive: true });
+
+    return () => {
+      stop();
+      row?.removeEventListener("pointerdown", stop);
+      row?.removeEventListener("touchstart", stop);
+    };
+  }, [gameChoice, rowEl]);
 
   // Set when the + picker adds rounds; the effect below then creates the
   // room as if Create had been pressed — the queue is shown and managed in

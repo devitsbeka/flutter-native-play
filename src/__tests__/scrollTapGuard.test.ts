@@ -17,6 +17,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import {
+  OFFSET_SLOP_PX,
   SETTLE_MS,
   TAP_SLOP_PX,
   isDeliberateTap,
@@ -41,6 +42,37 @@ describe("a tap is a tap", () => {
   it("a page that scrolled long enough ago has come to rest", () => {
     const rested = { ...still, sinceScrollMs: SETTLE_MS + 1 };
     expect(isDeliberateTap(rested, { x: 100, y: 200, offsets: [400, 0] })).toBe(true);
+  });
+
+  it("a scroller that settled by a hair is still a still scroller", () => {
+    // This comparison was exact, and a fractional settle — a rail
+    // re-snapping, a rubber band finishing, a late image shifting the
+    // layout — made the tap vanish with nothing to show for it. That is
+    // what "I can't click it, and it keeps coming back" looks like.
+    expect(isDeliberateTap(still, { x: 100, y: 200, offsets: [400.5, 0] })).toBe(true);
+    expect(isDeliberateTap(still, { x: 100, y: 200, offsets: [400 + OFFSET_SLOP_PX, 0] })).toBe(true);
+    // A pixel past the slop is a scroll again.
+    expect(
+      isDeliberateTap(still, { x: 100, y: 200, offsets: [400 + OFFSET_SLOP_PX + 1, 0] }),
+    ).toBe(false);
+  });
+});
+
+describe("a scroll the app performs itself is not the page moving", () => {
+  const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
+  const guard = read("src/utils/scrollTapGuard.ts");
+
+  it("the tracker ignores a marked scroller", () => {
+    // Restoring the home feed fired scroll events for as long as the rails
+    // took to load, and every one told the guard the page was moving — so
+    // every tap on the home was swallowed for that whole window.
+    expect(guard).toMatch(/export function markProgrammaticScroll/);
+    expect(guard).toMatch(/if \(\(programmaticUntil\.get\(e\.target\) \?\? 0\) >= now\) return;/);
+  });
+
+  it("and the two places that scroll on their own say so", () => {
+    expect(read("src/hooks/useScrollMemory.ts")).toMatch(/markProgrammaticScroll\(node\);/);
+    expect(read("src/components/team/CreateRoomPage.tsx")).toMatch(/markProgrammaticScroll\(row\);/);
   });
 });
 
