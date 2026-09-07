@@ -163,6 +163,12 @@ interface CreateRoomPageProps {
    * category picker, exactly as a tap on the card would.
    */
   initialMode?: GameChoice;
+  /**
+   * True when this screen IS the page at `/create-room`, false when the
+   * rooms hub renders it as an overlay over itself. It decides whether a
+   * handoff replaces the history entry — see `handoff`.
+   */
+  ownsRoute?: boolean;
   autoOpenPersonalTrivia?: boolean;
   preSelectedCategory?: {
     id: string;
@@ -186,7 +192,7 @@ interface CreateRoomPageProps {
   enterInstantly?: boolean;
 }
 
-export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType, initialMode, autoOpenPersonalTrivia, preSelectedCategory, enterInstantly = false }: CreateRoomPageProps) {
+export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType, initialMode, ownsRoute = false, autoOpenPersonalTrivia, preSelectedCategory, enterInstantly = false }: CreateRoomPageProps) {
   const { user, profile } = useAuth();
   const { t } = useLanguage();
   const bubbleVideo = useResponsiveVideo("/videos/floating-blob.mp4");
@@ -605,24 +611,26 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   /**
    * Leaving this screen for the game it just set up.
    *
-   * When the chooser was DEEP-LINKED — a card tapped on the home's Play
-   * rail arrives as `/create-room?mode=…` — it is a step the player passed
-   * through, not a place they asked to be, and it must not be left behind
-   * in the history stack. It was: tapping Quick Game on the home rail
-   * pushed the chooser and then pushed `/game` on top of it, so Back from
-   * the game landed on the chooser instead of the rail (owner: "back
-   * should strictly take us where we clicked"). Worse, arriving there ran
-   * the seeded mode again and threw the player straight back into the
-   * game — a Back button that could not be escaped, and a flash of the
-   * chooser showing its first card rather than the one that was tapped.
+   * Once a game has started, the screen that chose it is not somewhere to
+   * come back to. On its own route it pushed an entry all the same, so:
    *
-   * Replacing the entry makes the trip home → game, which is the trip the
-   * player took. A chooser opened deliberately (no `?mode=`) still pushes:
-   * that one IS a place they chose, and going back to it is right.
+   *   /  →  /create-room  →  /game
+   *
+   * and Back from the game landed here rather than on the page the player
+   * started from (owner: "back should strictly take us where we clicked").
+   * Arriving with a `?mode=` ran that mode again and threw them forward
+   * into the game a second time, which made Back impossible to escape.
+   *
+   * So on its own route — reached from the home rail's cards, the nav's
+   * Play button, or anywhere else that navigates to `/create-room` — the
+   * handoff REPLACES this entry, and Back is whatever came before it.
+   *
+   * Inside the rooms hub it must not: there the chooser is an overlay the
+   * hub draws over itself, with no history entry of its own, and replacing
+   * would swallow the hub's instead. That is what `ownsRoute` separates.
    */
-  const cameFromRail = Boolean(initialMode);
   const handoff = (to: string, options?: { state?: unknown }) =>
-    navigate(to, { ...options, replace: cameFromRail });
+    navigate(to, { ...options, replace: ownsRoute });
 
   // A card tapped on the home's Play rail lands here with a mode: run the
   // same startMode a tap on that card in this chooser would — once, on

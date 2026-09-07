@@ -18,8 +18,10 @@
  * showing its first card rather than the one that had been tapped.
  *
  * Replacing the entry on handoff makes the journey `/ → /game`, so Back is
- * the rail. A chooser opened deliberately, with no `?mode=`, still pushes:
- * that one is a place the player chose, and going back to it is right.
+ * the page the player started from — the home rail, or wherever else sent
+ * them to /create-room, the nav's Play button included. Only the copy the
+ * rooms hub draws over itself still pushes, because that one has no history
+ * entry of its own and would swallow the hub's.
  */
 
 import { describe, expect, it } from "vitest";
@@ -29,11 +31,18 @@ import { join } from "node:path";
 const page = readFileSync(join(process.cwd(), "src/components/team/CreateRoomPage.tsx"), "utf8");
 
 describe("the chooser hands off without staying behind", () => {
-  it("replaces its history entry only when a rail sent it here", () => {
-    expect(page).toMatch(/const cameFromRail = Boolean\(initialMode\);/);
+  it("replaces its history entry whenever it is the page", () => {
+    // First written as `Boolean(initialMode)` — true only for a card on the
+    // home rail, which deep-links `?mode=`. The nav's Play button navigates
+    // to /create-room with no mode, so Back from a game started there still
+    // landed on the chooser. The rule is the screen's shape, not how it was
+    // reached: on its own route the entry is its to replace.
     expect(page).toMatch(
-      /const handoff = \(to: string, options\?: \{ state\?: unknown \}\) =>\s*\n\s*navigate\(to, \{ \.\.\.options, replace: cameFromRail \}\);/,
+      /const handoff = \(to: string, options\?: \{ state\?: unknown \}\) =>\s*\n\s*navigate\(to, \{ \.\.\.options, replace: ownsRoute \}\);/,
     );
+    // And not inside the rooms hub, where the chooser is an overlay with no
+    // entry of its own — replacing would swallow the hub's.
+    expect(page).toMatch(/ownsRoute = false/);
   });
 
   it("and every way out of it goes through that", () => {

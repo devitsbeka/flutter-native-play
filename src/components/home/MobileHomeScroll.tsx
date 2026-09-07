@@ -7,6 +7,7 @@ import { MobileHeroWidgets, MobileProfileCard, NAV_CHROME } from "@/components/h
 import { MobileHomeFeed } from "@/components/home/MobileHomeFeed";
 import { useWaveStrip } from "@/components/home/wave";
 import { scrollTapGuard } from "@/utils/scrollTapGuard";
+import { useScrollMemory } from "@/hooks/useScrollMemory";
 
 /**
  * The phone home as a scroll-reveal (owner's ask).
@@ -91,6 +92,11 @@ export function MobileHomeScroll({
   // colour, its hills dealt fresh on every visit, centred on the edge so it
   // rises half a band above the panel and overlaps it by the other half.
   const lip = useWaveStrip(500, FEED_WAVE, "top", LIP_CLEAR + LIP_DEPTH);
+
+  // Where the feed was when the player last left it. Tapping anything here
+  // navigates away and unmounts the home, and it used to come back at the
+  // top — so Back from a game landed above the rail the game was tapped in.
+  const scroller = useScrollMemory<HTMLDivElement>("home-feed");
   return (
     // The scroller is `absolute inset-0` of this positioned, flex-filled root
     // rather than `h-full`, so it takes a real pixel height from the root and
@@ -102,7 +108,7 @@ export function MobileHomeScroll({
           on — the feed is a wall of cards and the hero is one big button.
           See scrollTapGuard: it judges the clicks in here, nothing below it
           has to. */}
-      <div className="absolute inset-0 overflow-y-auto overscroll-contain" {...scrollTapGuard()}>
+      <div ref={scroller} className="absolute inset-0 overflow-y-auto overscroll-contain" {...scrollTapGuard()}>
         {/* ── Hero: exactly one screenful, scrolls away as a whole ─────────
             The scene fills it (absolute inset-0 behind the reel and card),
             so at rest it is pixel-for-pixel the old home, and the feed waits
