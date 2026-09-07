@@ -1114,11 +1114,8 @@ export default function KingPage() {
         onPress: isKingHost ? () => setSeatMenu(p) : () => openProfile(p.user_id),
       })),
     ];
-    const inviteFaces = [...friends]
-      .filter((f) => f.status === "accepted")
-      .sort((a, b) => Number(!!b.isOnline) - Number(!!a.isOnline))
-      .slice(0, 3)
-      .map((f) => ({ url: f.avatarUrl, online: !!f.isOnline }));
+    // No faces on the invite line: see UniversalLobby's `inviteFaces`. Three
+    // friends drawn beside the + read as three friends already in the room.
     const coins = 200 * Math.max(1, kingParts.length);
     return (
       <UniversalLobby
@@ -1162,7 +1159,6 @@ export default function KingPage() {
           taken: humans + kingPending.length,
           fullLabel: t("extra.mpRoomFull"),
         }}
-        inviteFaces={inviteFaces}
         onInvite={inviteFriends}
         initialTab="players"
         start={

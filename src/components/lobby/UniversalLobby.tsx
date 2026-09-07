@@ -229,7 +229,22 @@ export interface UniversalLobbyProps {
    */
   playersFullSlot?: ReactNode;
   /** Faces for the invite row: the player's friends, online first. */
-  inviteFaces: { url: string | null; online?: boolean }[];
+  /**
+   * Faces to draw on the invite line.
+   *
+   * Left empty by every lobby in the app, deliberately. It used to be handed
+   * the player's first three friends as decoration, and in a room they were
+   * not in that is indistinguishable from three people who ARE: same 36px
+   * circle, same gradient ring the players wear, and a grey ring when
+   * offline — which is the exact treatment an INVITED player gets. A host
+   * who had just made an empty room saw their friends sitting in it (owner:
+   * "I created a room and I see there invited friends already, I should
+   * invite friends myself from scratch").
+   *
+   * Anyone actually in the room, invited included, is drawn in the players
+   * list where they belong. This line is a button.
+   */
+  inviteFaces?: { url: string | null; online?: boolean }[];
   onInvite?: () => void;
   /** Under the players list — results of a challenge, for instance. */
   playersExtra?: ReactNode;
@@ -327,7 +342,7 @@ export function UniversalLobby({
   players,
   playersHint,
   playersFullSlot,
-  inviteFaces,
+  inviteFaces = [],
   onInvite,
   playersExtra,
   capacity,
@@ -965,17 +980,21 @@ function LobbyFace({ url, seed }: { url: string | null; seed: string }) {
 }
 
 /**
- * The invite line (1018:5480): up to three friends' faces in gradient
- * rings, then the dashed green + and the word. Exported so a lobby with
- * more than one bench (the arena) can put one under each side.
+ * The invite line (1018:5480): the dashed green + and the word, and any
+ * faces the caller passes. Exported so a lobby with more than one bench
+ * (the arena) can put one under each side.
+ *
+ * The design draws three friends beside the +, and nothing in the app does
+ * any more: a face here is a face in the room to anyone reading it. See
+ * `inviteFaces` above.
  */
 export function LobbyInviteRow({
-  faces,
+  faces = [],
   label,
   onPress,
   className,
 }: {
-  faces: { url: string | null; online?: boolean }[];
+  faces?: { url: string | null; online?: boolean }[];
   label: string;
   onPress: () => void;
   className?: string;
