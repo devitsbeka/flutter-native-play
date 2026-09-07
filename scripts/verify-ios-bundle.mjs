@@ -129,6 +129,19 @@ if ((process.env.VITE_UMP_DEBUG_EEA ?? "").trim()) {
   );
 }
 
+// ── Test ads must never ship ──────────────────────────────────────────────
+//
+// VITE_ADMOB_TEST_DEVICE turns on Google's test ads for one device. In a store
+// build that means serving test creatives as production advertising: it earns
+// nothing and it is against AdMob policy.
+if ((process.env.VITE_ADMOB_TEST_DEVICE ?? "").trim()) {
+  failures.push(
+    "VITE_ADMOB_TEST_DEVICE is set. That serves Google's test ads instead of\n" +
+      "      real ones. It is a local verification switch — unset it before\n" +
+      "      building for the store.",
+  );
+}
+
 // ── No third-party tracking that runs before ATT ───────────────────────────
 const indexHtml = join(DIST, "index.html");
 try {

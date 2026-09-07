@@ -146,9 +146,30 @@ class AdService {
   /** The options `AdMob.initialize()` takes, for the current age group. */
   private initOptions() {
     const safety = this.getChildSafetyOptions();
+    // Test ads, for a device you name.
+    //
+    // A brand-new AdMob app sits at "Requires review" until the app is on the
+    // App Store, and until it clears, fill is zero. The ad path then behaves
+    // exactly as designed — load fails, the reward gate fails open, the player
+    // gets their extra play — and shows nothing. That is correct and it is
+    // indistinguishable from a broken integration, which makes the whole flow
+    // untestable at the point you most want to test it.
+    //
+    // With a device id here, Google serves test ads to that device only,
+    // through the real ad units. It is Google's own sanctioned way to verify
+    // an integration and it does not touch anyone else's build. Get the id
+    // from the Xcode console on first run: the SDK logs
+    // "To get test ads on this device, set: testDeviceIdentifiers = @[ ... ]".
+    //
+    //   VITE_ADMOB_TEST_DEVICE=<that-id> npm run build:ios
+    //
+    // verify-ios-bundle fails the build if it is set, because a store build
+    // that serves test ads earns nothing and violates AdMob policy.
+    const testDevice = (import.meta.env.VITE_ADMOB_TEST_DEVICE ?? "").trim();
+
     return {
-      testingDevices: [],
-      initializeForTesting: false,
+      testingDevices: testDevice ? [testDevice] : [],
+      initializeForTesting: Boolean(testDevice),
       // The plugin defaults this to true and would present the ATT dialog
       // itself, bare, at whatever moment the ad SDK happens to start — racing
       // the explanation screen and, on a cold start, beating it. Consent is
