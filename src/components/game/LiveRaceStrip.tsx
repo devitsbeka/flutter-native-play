@@ -2,11 +2,7 @@ import { Fragment } from "react";
 import { motion } from "framer-motion";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { useIsBreakpointUp } from "@/hooks/use-breakpoint";
-import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
-import trophyGold from "@/assets/trophy-gold.png";
-import trophySilver from "@/assets/trophy-silver.png";
-import trophyBronze from "@/assets/trophy-bronze.png";
 
 export interface RacePlayer {
   id: string;
@@ -42,27 +38,38 @@ const PACK_SHOWN_NARROW = 2;
 export const MAX_SHOWN = PODIUM_SHOWN + PACK_SHOWN;
 
 /**
- * At five or fewer there is room for a name under each avatar. At six and up
- * there is not: each entry gets thirty-odd pixels beside its score and a name
- * renders as "Sal…", which identifies nobody. The avatar does that job
- * better, and the ring says which one is you.
+ * At five or fewer each entry can be drawn at full size. At six and up the
+ * three that matter hold the left edge and the chasing pack is compact behind
+ * them, because ten of anything wider does not cross a phone.
  *
  * This is a count, not a breakpoint, so a four-player room looks the same on
  * a phone as on a desktop.
  */
 const ROOMY_UP_TO = 5;
 
-/** Ring and trophy per place. Fourth onward gets neither. */
+/**
+ * The ring per place. Fourth onward gets the plain one.
+ *
+ * The ring is now the ONLY thing that says who is winning. The strip used to
+ * hang a gold, silver or bronze trophy on the podium avatars as well, which
+ * said the same thing twice — and said it over the picture, since the badge
+ * sat on the rim of a 32px circle (owner's ask: avatars and points, nothing
+ * else).
+ */
 const PODIUM = [
-  { ring: "#F5B921", trophy: trophyGold },
-  { ring: "#C3CEDA", trophy: trophySilver },
-  { ring: "#D08A4F", trophy: trophyBronze },
+  { ring: "#F5B921" },
+  { ring: "#C3CEDA" },
+  { ring: "#D08A4F" },
 ] as const;
 
 /**
- * Everyone off the podium wears the same plain ring — except you, who wear a
- * bright one. Names do not survive a ten-player row (see below), so the ring
- * is what answers "which one am I".
+ * Everyone off the podium wears the same plain ring.
+ *
+ * SELF_RING is drawn OUTSIDE whichever ring the place gives, not instead of
+ * it. It used to be an either/or, which was fine while every entry carried a
+ * name — "You" answered it. With the names gone a player in the top three
+ * would have had no way at all to tell which avatar was theirs, because their
+ * ring would be the podium colour like anyone else's.
  */
 const PACK_RING = "rgba(255,255,255,0.32)";
 const SELF_RING = "rgba(255,255,255,0.95)";
@@ -93,13 +100,17 @@ export function rankPlayers<T extends RacePlayer>(players: T[]): T[] {
  * in. This puts it across the top: first place on the left, everyone else in
  * order after them, each with their score under their avatar.
  *
+ * A face and a number, and nothing else (owner's ask). The names and the
+ * podium trophies are gone: a name at 10px truncates to "Sal…" and identifies
+ * nobody, and a trophy on the rim of a 32px circle covers the one thing the
+ * entry is for while repeating what the ring already says.
+ *
  * The order is the point. Every entry animates its own position, so
  * overtaking someone is a thing you watch happen — the avatar slides left
  * into the gold ring as the score lands, rather than the table being
  * different the next time you open it.
  */
 export function LiveRaceStrip({ players, currentUserId, className }: LiveRaceStripProps) {
-  const { t } = useLanguage();
   const wide = useIsBreakpointUp("md");
 
   if (players.length < 2) return null;
@@ -111,10 +122,10 @@ export function LiveRaceStrip({ players, currentUserId, className }: LiveRaceStr
   const roomy = ranked.length <= ROOMY_UP_TO;
 
   /**
-   * Two or three players sit sideways -- avatar, then name over score beside
-   * it -- which is 46px tall against 63 for the stacked version, with a
-   * bigger name and a bigger score. Four or more would scroll sideways at
-   * that width, so they stack instead and stay visible at a glance.
+   * Two or three players sit sideways -- avatar, then score beside it --
+   * which is shorter than the stacked version and lets the score be bigger.
+   * Four or more would scroll sideways at that width, so they stack instead
+   * and stay visible at a glance.
    *
    * Height is the whole reason for the choice. This row is a header above the
    * question card and the four answers, and it began life at 93px with a
@@ -167,78 +178,54 @@ export function LiveRaceStrip({ players, currentUserId, className }: LiveRaceStr
                   ? "items-center gap-1.5"
                   : cn(
                       "flex-col items-center gap-0.5",
-                      // With five or fewer there is width to go round, and
-                      // every entry gets enough of it for a name. With six
-                      // and up the three that matter hold the left edge at
-                      // full size and the chasing pack is compact behind
-                      // them, because ten of anything wider does not cross a
-                      // phone.
-                      roomy ? "w-[72px]" : podium ? "w-[46px]" : "w-[30px]",
+                      // 72px here used to be a name's slot. Without one the
+                      // entry is an avatar over a number, and the extra
+                      // 26px was empty space that pushed a five-player row
+                      // wider than it needed to be.
+                      roomy || podium ? "w-[46px]" : "w-[30px]",
                     ),
               )}
             >
-              <div className="relative">
-                {/* A spread box-shadow, not a padded parent. The ring used to
-                    be a coloured div with 2.5px of padding, which rounds to
-                    whole pixels unevenly at this size and left the stroke
-                    visibly heavier along the bottom. A shadow of zero offset
-                    and zero blur is the same 2px the whole way round. */}
-                <SmartAvatar
-                  avatarUrl={player.avatar_url ?? undefined}
-                  fallback={player.nickname}
-                  size={sideways || roomy || podium ? "sm" : "xs"}
-                  // 28px for the chasing pack, not the 32 xs gives. Three
-                  // podium entries and seven more have to cross a tablet
-                  // without the tail of the field falling off the right
-                  // edge, and those four pixels are the difference.
-                  className={cn(
-                    "rounded-full",
-                    !sideways && !roomy && !podium && "h-7 w-7",
-                  )}
-                  style={{
-                    boxShadow: `0 0 0 2px ${podium?.ring ?? (isMe ? SELF_RING : PACK_RING)}`,
-                  }}
-                />
-
-                {podium && (
-                  <img
-                    src={podium.trophy}
-                    alt=""
-                    // Sitting on the rim, not hanging below the box. A round
-                    // avatar leaves its bounding box empty at the corner, so
-                    // -2px puts the trophy over the ring and keeps it clear
-                    // of the score on the line underneath.
-                    className="absolute -bottom-0.5 -right-0.5 h-[19px] w-[19px] object-contain drop-shadow"
-                  />
-                )}
-              </div>
-
-              {/* Name and score on ONE line. Stacked, under a 44px avatar,
-                  this row stood 93px tall and every one of those pixels came
-                  out of the question card and the four answers below it — the
-                  fourth was being clipped by the next-question button. The
-                  score still animates its own change, so an overtake is
-                  readable without the row being a scoreboard. */}
-              <div
+              {/* A spread box-shadow, not a padded parent. The ring used to
+                  be a coloured div with 2.5px of padding, which rounds to
+                  whole pixels unevenly at this size and left the stroke
+                  visibly heavier along the bottom. A shadow of zero offset
+                  and zero blur is the same 2px the whole way round.
+                  
+                  No wrapper around it any more: the only reason for one was
+                  anchoring the trophy that used to hang off the rim. */}
+              <SmartAvatar
+                avatarUrl={player.avatar_url ?? undefined}
+                fallback={player.nickname}
+                size={sideways || roomy || podium ? "sm" : "xs"}
+                // 28px for the chasing pack, not the 32 xs gives. Three
+                // podium entries and seven more have to cross a tablet
+                // without the tail of the field falling off the right
+                // edge, and those four pixels are the difference.
                 className={cn(
-                  "flex min-w-0",
-                  sideways ? "flex-col gap-0.5" : "max-w-full items-baseline gap-1",
+                  "rounded-full",
+                  !sideways && !roomy && !podium && "h-7 w-7",
                 )}
-              >
-                {/* Named while there is width for a name to survive — see
-                    ROOMY_UP_TO. Past that the ring above is what says which
-                    one is you. */}
-                {(sideways || roomy) && (
-                  <span
-                    className={cn(
-                      "min-w-0 truncate font-semibold leading-none text-white",
-                      sideways ? "text-[11px]" : "text-[10px]",
-                      isMe ? "font-extrabold" : "text-white/90",
-                    )}
-                  >
-                    {isMe ? t("game.you") : player.nickname}
-                  </span>
-                )}
+                style={{
+                  // Place first, then you around it. Two spread shadows
+                  // rather than one: a podium ring used to REPLACE the self
+                  // ring, which was survivable while a name said "You" and
+                  // is not now.
+                  boxShadow: [
+                    `0 0 0 2px ${podium?.ring ?? PACK_RING}`,
+                    isMe ? `0 0 0 4px ${SELF_RING}` : null,
+                  ]
+                    .filter(Boolean)
+                    .join(", "),
+                }}
+              />
+
+              {/* Just the score. The name that used to sit beside it is gone
+                  (owner's ask): at 10px it truncated to nothing readable, and
+                  the ring above answers "which one am I" for the only person
+                  who needs to ask. The score still animates its own change,
+                  so an overtake is readable. */}
+              <div className="flex min-w-0 max-w-full items-baseline justify-center">
                 <motion.span
                   key={score}
                   initial={{ scale: 1.35, opacity: 0.6 }}
@@ -246,7 +233,7 @@ export function LiveRaceStrip({ players, currentUserId, className }: LiveRaceStr
                   transition={{ duration: 0.25 }}
                   className={cn(
                     "shrink-0 font-display font-extrabold leading-none drop-shadow-sm",
-                    sideways ? "text-[13px]" : "text-[11px]",
+                    sideways ? "text-[13px]" : "text-[12px]",
                     isMe ? "text-white" : "text-white/90",
                   )}
                 >
