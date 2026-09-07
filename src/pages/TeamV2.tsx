@@ -78,6 +78,7 @@ import { instantTouchProps } from "@/utils/instantTouch";
 import { generateRoomIdentity } from "@/utils/roomNameGenerator";
 import { readAppLanguage } from "@/utils/appLanguage";
 import { toast } from "@/lib/toast";
+import { containsBlockedText } from "@/utils/contentFilter";
 import { useDeveloperMode } from "@/contexts/DeveloperModeContext";
 
 function TeamContentV2() {
@@ -813,6 +814,15 @@ function TeamContentV2() {
   const handleGuestJoinRoom = async (nickname: string) => {
     const code = pendingGuestJoinCode;
     if (!code) return;
+
+    // Screened here, before signInAnonymously, so a rejected name does not
+    // leave a stranded anonymous account behind. A database trigger refuses
+    // this write too, but only as a backstop — reaching it would surface as a
+    // generic "save failed" with nothing telling the player what was wrong.
+    if (containsBlockedText(nickname)) {
+      toast.error(t("extra.textNotAllowed"));
+      return;
+    }
 
     try {
       // Sign in anonymously to get a real user_id
@@ -1574,6 +1584,11 @@ function TeamContentV2() {
         onSave={async (questions, title) => {
           if (!user) return false;
 
+          if (containsBlockedText(title ?? "")) {
+            toast.error(t("extra.textNotAllowed"));
+            return false;
+          }
+
           const { error } = await supabase.from("user_quiz_posts").insert([{
             user_id: user.id,
             title: title || "MyTrivia Party",
@@ -1608,7 +1623,14 @@ function TeamContentV2() {
         }}
         onTriviaReady={async (questions, title, subject) => {
           if (!user) return;
-          
+
+          // Title and subject are both free text and both end up on a public
+          // post — subject also becomes the hashtags below.
+          if (containsBlockedText(title) || containsBlockedText(subject)) {
+            toast.error(t("extra.textNotAllowed"));
+            return;
+          }
+
           // Generate hashtags from subject
           const hashtags = subject
             .split(/[\s,]+/)

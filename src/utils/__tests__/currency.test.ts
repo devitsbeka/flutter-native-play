@@ -18,7 +18,7 @@ beforeEach(() => {
   installMemoryLocalStorage();
 });
 
-const useLanguage = (lang: string) => localStorage.setItem("preferredLanguage", lang);
+const setStoredLanguage = (lang: string) => localStorage.setItem("preferredLanguage", lang);
 
 describe("monthLabel", () => {
   it("defaults to the English suffix when no language has been chosen", () => {
@@ -26,13 +26,13 @@ describe("monthLabel", () => {
   });
 
   it("uses the Georgian form for Georgian", () => {
-    useLanguage("ka");
+    setStoredLanguage("ka");
     expect(monthLabel()).toBe("/თვე");
   });
 
   it("uses the English abbreviation for every other language the app ships", () => {
     for (const lang of ["en", "de", "es", "fr", "it", "pt"]) {
-      useLanguage(lang);
+      setStoredLanguage(lang);
       expect(monthLabel(), lang).toBe("/mo");
     }
   });
