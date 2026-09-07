@@ -1790,16 +1790,27 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       <div className="relative flex h-full w-full flex-col overflow-hidden">
 
       {/* Header — the home page's own (Figma 1013:1377): the wordmark centred
-          between a back arrow and the search + bell pair. The arrow goes home
-          rather than back to the rooms list this screen opened over: this is
-          the doorstep of a game, and leaving it means leaving. */}
+          between a back arrow and the search + bell pair.
+          
+          The arrow returns you to whatever you opened this over. It used to
+          go to "/" always, on the reading that this screen is the doorstep of
+          a game and leaving it means leaving — but this screen is mounted two
+          ways. As a page (`ownsRoute`, from the home rail's cards) there is
+          nothing underneath and home is right. As an OVERLAY, opened by the
+          Create button on the online-game page, home threw the player off the
+          rooms list they were standing on and back to the top of the app. */}
       <header className="relative z-20 shrink-0 border-b border-border/30 px-4 py-3">
         <div className="mx-auto flex w-full max-w-[700px] items-center justify-between gap-3 md:max-w-[520px]">
           <motion.button
             type="button"
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
-            onClick={() => (guessPicking ? setGameChoice(null) : navigate("/"))}
+            onClick={() => {
+              // The question the Guess card asks closes before the screen does.
+              if (guessPicking) return setGameChoice(null);
+              if (ownsRoute) return navigate("/");
+              onClose();
+            }}
             className="rounded-full p-2 transition-colors hover:bg-white/30"
           >
             <ArrowLeft className="h-6 w-6 text-gray-600" />

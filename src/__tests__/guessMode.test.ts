@@ -72,7 +72,10 @@ describe("Guess replaced Random on the create screen", () => {
     // Its own scroller — the document does not scroll on the device.
     expect(create).toMatch(/guessPicking \? \(\s*\n(?:.*\n)*?\s*<div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">/);
     // And the back arrow closes the question before it leaves the page.
-    expect(create).toMatch(/guessPicking \? setGameChoice\(null\) : navigate\("\/"\)/);
+    // The leaving half moved: it used to be navigate("/") in every case,
+    // which threw a player who opened this OVER the online-game page back to
+    // the top of the app. See everyGameIsReachable.test.ts.
+    expect(create).toMatch(/if \(guessPicking\) return setGameChoice\(null\);/);
   });
 
   it("the screen is the designed grid", () => {
