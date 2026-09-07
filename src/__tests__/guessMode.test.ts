@@ -100,9 +100,11 @@ describe("Guess replaced Random on the create screen", () => {
     // back to a fresh code on a collision.
     expect(create).toMatch(/walkInCode = room\?\.room_code \?\? null;/);
     // Navigate first, close second: closing first paints the chooser
-    // underneath for the whole join round trip.
-    expect(create).toMatch(/if \(walkInCode\) \{\s*\n\s*navigate\(/);
-    expect(create).toMatch(/navigate\(`\/team\?join=\$\{walkInCode\}/);
+    // underneath for the whole join round trip. Through `handoff`, which is
+    // that navigate plus the history rule — a chooser a rail deep-linked is
+    // replaced rather than left behind for the Back button.
+    expect(create).toMatch(/if \(walkInCode\) \{\s*\n\s*handoff\(/);
+    expect(create).toMatch(/handoff\(`\/team\?join=\$\{walkInCode\}/);
     // And it goes last, so the invitations are sent before the screen leaves.
     const walkIn = create.indexOf("if (walkInCode) {");
     const invites = create.indexOf("await sendInvitation(challengeUserId, room.id);");
@@ -154,7 +156,7 @@ describe("Guess replaced Random on the create screen", () => {
     // history, not the mechanism), and nothing in the lobby waiting for one.
     expect(create).not.toMatch(/&autostart=1/);
     expect(create).toMatch(
-      /navigate\(`\/team\?join=\$\{walkInCode\}`, \{ state: \{ entering: true \} \}\);/,
+      /handoff\(`\/team\?join=\$\{walkInCode\}`, \{ state: \{ entering: true \} \}\);/,
     );
     expect(read("src/components/team/RoomLobbyV2.tsx")).not.toMatch(/autostart|autoStarting/);
   });
