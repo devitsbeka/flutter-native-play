@@ -138,7 +138,12 @@ export function LiveRaceStrip({ players, currentUserId, className }: LiveRaceStr
   return (
     <div
       className={cn(
-        "flex overflow-x-auto scrollbar-hide px-4 py-0.5 -mx-4",
+        // py-1.5 rather than py-0.5: the rings are box-shadows, which are
+        // painted OUTSIDE the element's box and take no layout space. Your
+        // own avatar carries two of them, 4px out — more than the 2px this
+        // row used to reserve — so the bright ring spilled past the strip
+        // and sat against the top of the question card.
+        "flex overflow-x-auto scrollbar-hide px-4 py-1.5 -mx-4",
         sideways
           ? "items-center justify-center gap-5"
           : "items-start justify-center gap-[3px]",
@@ -181,8 +186,9 @@ export function LiveRaceStrip({ players, currentUserId, className }: LiveRaceStr
                       // 72px here used to be a name's slot. Without one the
                       // entry is an avatar over a number, and the extra
                       // 26px was empty space that pushed a five-player row
-                      // wider than it needed to be.
-                      roomy || podium ? "w-[46px]" : "w-[30px]",
+                      // wider than it needed to be. 40px holds a 32px face
+                      // and the 4px ring on either side of it exactly.
+                      roomy || podium ? "w-[40px]" : "w-[30px]",
                     ),
               )}
             >
@@ -197,14 +203,18 @@ export function LiveRaceStrip({ players, currentUserId, className }: LiveRaceStr
               <SmartAvatar
                 avatarUrl={player.avatar_url ?? undefined}
                 fallback={player.nickname}
-                size={sideways || roomy || podium ? "sm" : "xs"}
-                // 28px for the chasing pack, not the 32 xs gives. Three
+                // xs (32px), not sm (40). At 40 with a 4px ring the entry
+                // stood 48px tall in a header that sits directly above the
+                // question card, and the two touched (owner's ask: reduce
+                // them). The face is still the biggest thing in the row.
+                size="xs"
+                // 24px for the chasing pack, not the 32 xs gives. Three
                 // podium entries and seven more have to cross a tablet
                 // without the tail of the field falling off the right
-                // edge, and those four pixels are the difference.
+                // edge, and those pixels are the difference.
                 className={cn(
                   "rounded-full",
-                  !sideways && !roomy && !podium && "h-7 w-7",
+                  !sideways && !roomy && !podium && "h-6 w-6",
                 )}
                 style={{
                   // Place first, then you around it. Two spread shadows

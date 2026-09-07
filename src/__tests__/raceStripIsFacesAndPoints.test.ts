@@ -67,8 +67,26 @@ describe("what it draws instead", () => {
   it("and the space the name gave up goes to the number", () => {
     expect(strip).toMatch(/sideways \? "text-\[13px\]" : "text-\[12px\]"/);
     // The 72px slot was a name's; an avatar over a number does not need it.
-    expect(strip).toMatch(/roomy \|\| podium \? "w-\[46px\]" : "w-\[30px\]"/);
+    // 40 holds a 32px face and its 4px ring on either side exactly.
+    expect(strip).toMatch(/roomy \|\| podium \? "w-\[40px\]" : "w-\[30px\]"/);
     expect(strip).not.toMatch(/roomy \? "w-\[72px\]"/);
+  });
+});
+
+describe("the row clears the question card under it", () => {
+  it("the faces are 32px, not 40", () => {
+    // At 40 with a 4px ring an entry stood 48px tall in a header that sits
+    // directly above the question card, and the two touched.
+    expect(strip).toMatch(/size="xs"/);
+    expect(strip).not.toMatch(/size=\{sideways \|\| roomy \|\| podium \? "sm" : "xs"\}/);
+    expect(strip).toMatch(/!sideways && !roomy && !podium && "h-6 w-6"/);
+  });
+
+  it("and the row reserves room for a ring that takes no layout space", () => {
+    // Box-shadows paint outside the element's box: your own avatar carries
+    // one 4px out, which spilled past the strip's 2px of padding.
+    expect(strip).toMatch(/px-4 py-1\.5 -mx-4/);
+    expect(strip).not.toMatch(/px-4 py-0\.5 -mx-4/);
   });
 });
 
