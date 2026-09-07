@@ -235,7 +235,12 @@ describe("the room title in the lobby header", () => {
     // 14px floor so even the longest legal name — 22 Latin or 18 Georgian
     // characters — is read whole and small rather than cut), re-fitting once
     // the heavy display font loads. The old two-line clamp is gone.
-    expect(universal).toMatch(/useFitOneLine\(name, 43\.656, 14\)/);
+    // The fourth argument is the gutter: fitting to the parent's FULL width
+    // put a shrunk name hard against both screen edges (owner: "text almost
+    // touching edges left and right"), and it is also what makes a long name
+    // land smaller rather than merely narrower.
+    expect(universal).toMatch(/useFitOneLine\(name, 43\.656, 14, TITLE_GUTTER_PX\)/);
+    expect(universal).toMatch(/const TITLE_GUTTER_PX = 24;/);
     // Re-measures when the font settles — a ResizeObserver never sees a font
     // swap, so the name would otherwise overflow the fallback measurement.
     expect(universal).toMatch(/fonts\?\.ready\.then\(fit\)/);
@@ -260,7 +265,9 @@ describe("the room title in the lobby header", () => {
     // and WebKit reports the CLIPPED width there, so on an iPhone every
     // name "fit" and none ever shrank ("Cheerful Shar…" at full size).
     expect(universal).toMatch(/const parent = el\.parentElement;/);
-    expect(universal).toMatch(/const avail = parent\.getBoundingClientRect\(\)\.width;/);
+    expect(universal).toMatch(
+      /const avail = parent\.getBoundingClientRect\(\)\.width - 2 \* gutterPx;/,
+    );
     expect(universal).toMatch(/el\.style\.width = "max-content";\s*\n\s*el\.style\.maxWidth = "none";\s*\n\s*el\.style\.textOverflow = "clip";/);
     expect(universal).toMatch(/return el\.getBoundingClientRect\(\)\.width;/);
     expect(universal).not.toMatch(/el\.scrollWidth/);

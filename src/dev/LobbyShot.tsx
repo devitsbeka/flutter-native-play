@@ -33,6 +33,11 @@ export default function LobbyShot() {
   const { t } = useLanguage();
   const [params] = useSearchParams();
   const mode = params.get("mode") ?? "battle";
+  // `?name=` and `?blocked=1` exist so the two things that only go wrong on
+  // real content can be looked at here: a long room name against the screen
+  // edges, and a Start button that is disabled with a reason to show.
+  const name = params.get("name");
+  const blocked = params.get("blocked") === "1";
   const tab = (params.get("tab") ?? "players") as "rules" | "players";
   const noop = () => undefined;
   const labels = {
@@ -131,7 +136,16 @@ export default function LobbyShot() {
         players={[{ ...PEOPLE[0], score: undefined, rounds: undefined }]}
         inviteFaces={FACES}
         initialTab={tab}
-        start={{ label: t("lobby.startGame"), onPress: noop }}
+        start={
+        blocked
+          ? {
+              label: t("lobby.startGame"),
+              onPress: noop,
+              disabled: true,
+              caption: t("extra.rlNeedsSecondPlayer"),
+            }
+          : { label: t("lobby.startGame"), onPress: noop }
+      }
       />
     );
   }
@@ -140,7 +154,7 @@ export default function LobbyShot() {
   return (
     <UniversalLobby
       sceneArt={LOBBY_SCENES.guess}
-      roomName={t("extra.modeKingTitle")}
+      roomName={name ?? t("extra.modeKingTitle")}
       icon={iconKingMascot}
       onRename={noop}
       onBack={noop}
@@ -169,7 +183,16 @@ export default function LobbyShot() {
       inviteFaces={FACES}
       onInvite={noop}
       initialTab={tab}
-      start={{ label: t("lobby.startGame"), onPress: noop }}
+      start={
+        blocked
+          ? {
+              label: t("lobby.startGame"),
+              onPress: noop,
+              disabled: true,
+              caption: t("extra.rlNeedsSecondPlayer"),
+            }
+          : { label: t("lobby.startGame"), onPress: noop }
+      }
     />
   );
 }
