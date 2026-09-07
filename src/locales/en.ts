@@ -738,6 +738,7 @@ export const en: KaTranslations = {
     blockedPlayers: "Blocked players",
     unblock: "Unblock",
     reportReasonTitle: "What's wrong?",
+    reportDetailsPlaceholder: "Add details (optional)",
     blockConfirmTitle: "Block this player?",
     blockConfirmBody: "Their quizzes and comments will stop appearing. You can unblock from Settings.",
     reason: {

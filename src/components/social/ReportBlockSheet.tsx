@@ -188,7 +188,7 @@ export function ReportBlockSheet({
                   maxLength={NOTE_MAX}
                   rows={3}
                   disabled={busy}
-                  placeholder="Add details (optional)"
+                  placeholder={t("moderation.reportDetailsPlaceholder")}
                   className="mb-3 w-full resize-none rounded-2xl border border-border bg-muted/40 px-4 py-3 text-[15px] text-foreground outline-none placeholder:text-muted-foreground focus:border-primary disabled:opacity-50"
                 />
 

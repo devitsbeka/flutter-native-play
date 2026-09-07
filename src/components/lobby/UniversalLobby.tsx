@@ -73,7 +73,8 @@ export interface LobbyPlayer {
    * as somebody goes (a departed player's row stays a few seconds to say
    * so). Animated in, so the eye is drawn to the change.
    */
-  note?: "joined" | "left";
+  /** Only "left": the arrival note was dropped — see RoomLobbyV2. */
+  note?: "left";
   /**
    * Not a friend yet: the + on the row that asks to be. Absent for friends,
    * for yourself, and wherever the mode has nobody real to befriend. People
@@ -177,7 +178,6 @@ export interface UniversalLobbyProps {
     addFriend?: string;
     friendRequested?: string;
     /** The note beside a name for a moment: somebody arrived, somebody left. */
-    joined?: string;
     left?: string;
     /** Beside the name of somebody asked but not yet here. */
     invited?: string;
@@ -829,7 +829,6 @@ export function UniversalLobby({
                               callLabel={labels.call ?? "Call"}
                               addFriendLabel={labels.addFriend ?? "Add friend"}
                               friendRequestedLabel={labels.friendRequested ?? "Sent"}
-                              joinedLabel={labels.joined ?? "joined"}
                               leftLabel={labels.left ?? "left"}
                               invitedLabel={labels.invited ?? "invited"}
                               compact
@@ -862,7 +861,6 @@ export function UniversalLobby({
                             callLabel={labels.call ?? "Call"}
                             addFriendLabel={labels.addFriend ?? "Add friend"}
                             friendRequestedLabel={labels.friendRequested ?? "Sent"}
-                            joinedLabel={labels.joined ?? "joined"}
                             leftLabel={labels.left ?? "left"}
                             invitedLabel={labels.invited ?? "invited"}
                           />
@@ -1436,7 +1434,6 @@ function PlayerRow({
   callLabel,
   addFriendLabel,
   friendRequestedLabel,
-  joinedLabel,
   leftLabel,
   invitedLabel,
   compact = false,
@@ -1448,7 +1445,6 @@ function PlayerRow({
   callLabel: string;
   addFriendLabel: string;
   friendRequestedLabel: string;
-  joinedLabel: string;
   leftLabel: string;
   invitedLabel: string;
   /** Half the width to work in: two benches share the card. */
@@ -1559,10 +1555,10 @@ function PlayerRow({
             transition={{ type: "spring", stiffness: 480, damping: 26 }}
             className={cn(
               "ml-2 shrink-0 rounded-full px-2 py-0.5 font-[Nunito] text-[11px] font-bold leading-4",
-              player.note === "joined" ? "bg-[#10b981]/15 text-[#10b981]" : "bg-[#402666]/10 text-[#402666]/60",
+              "bg-[#402666]/10 text-[#402666]/60",
             )}
           >
-            {player.note === "joined" ? joinedLabel : leftLabel}
+            {leftLabel}
           </motion.span>
         )}
       </AnimatePresence>

@@ -78,30 +78,30 @@ describe("the round list drops under the chip", () => {
   });
 });
 
-describe("joined and left", () => {
-  it("a note beside the name for a moment, springing in", () => {
-    expect(universal).toMatch(/note\?: "joined" \| "left";/);
-    expect(universal).toMatch(/\{player\.note === "joined" \? joinedLabel : leftLabel\}/);
-    expect(universal).toMatch(/player\.note === "joined" \? "bg-\[#10b981\]\/15 text-\[#10b981\]" : "bg-\[#402666\]\/10 text-\[#402666\]\/60"/);
+describe("left, and no longer joined", () => {
+  it("the note is a departure only", () => {
+    // Superseded. The arrival note is gone (owner's ask): the avatar already
+    // says it — an invited seat is grey and turns full colour on arrival —
+    // and it was firing on the wrong event besides. See lobbyArrivalNote.
+    expect(universal).toMatch(/note\?: "left";/);
+    expect(universal).toMatch(/\{leftLabel\}/);
+    expect(universal).not.toMatch(/joinedLabel/);
   });
 
-  it("the room lobby marks arrivals and departures, and keeps a departed row a moment", () => {
+  it("the room lobby marks departures, and keeps a departed row a moment", () => {
     expect(room).toMatch(/const SEAT_NOTE_MS = 3500;/);
-    expect(room).toMatch(/newParticipants\.forEach\(\(id\) => next\.set\(id, "joined"\)\);\s*\n\s*gone\.forEach\(\(id\) => next\.set\(id, "left"\)\);/);
+    expect(room).toMatch(/gone\.forEach\(\(id\) => next\.set\(id, "left"\)\);/);
     expect(room).toMatch(/note: seatNotes\.get\(p\.user_id\),/);
     expect(room).toMatch(/players=\{\[\.\.\.lobbyPlayers, \.\.\.departedPlayers\]\}/);
-    expect(room).toMatch(/joined: t\("lobby\.uJoinedNote"\),\s*\n\s*left: t\("lobby\.uLeftNote"\),/);
+    expect(room).toMatch(/left: t\("lobby\.uLeftNote"\),/);
+    expect(room).not.toMatch(/joined: t\("lobby\.uJoinedNote"\)/);
   });
 
   it("in all seven languages, Georgian as asked", () => {
-    // Both keys, not their adjacency — uInvitedNote now sits between them.
     const ka = read("src/locales/ka.ts");
-    expect(ka).toMatch(/uJoinedNote: "შემოგვიერთდა",/);
     expect(ka).toMatch(/uLeftNote: "გავიდა",/);
     for (const lang of ["en", "de", "es", "fr", "it", "pt"]) {
-      const locale = read(`src/locales/${lang}.ts`);
-      expect(locale, lang).toMatch(/uJoinedNote: "/);
-      expect(locale, lang).toMatch(/uLeftNote: "/);
+      expect(read(`src/locales/${lang}.ts`), lang).toMatch(/uLeftNote: "/);
     }
   });
 });

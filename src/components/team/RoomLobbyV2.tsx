@@ -257,45 +257,56 @@ export function RoomLobbyV2() {
   const localizeQueueCategory = useLocalizedCategoryName();
   const iconForCategoryName = useCategoryIconByName();
 
-  // Who just arrived, who just left: a note beside the name for a moment,
-  // and a departed player's row kept a moment longer to carry "left"
-  // (owner's ask). The first snapshot is the room as found, not arrivals.
-  const [seatNotes, setSeatNotes] = useState<Map<string, "joined" | "left">>(() => new Map());
+  // Who just left: their row kept a moment longer to carry "left" (owner's
+  // ask). The first snapshot is the room as found, not arrivals.
+  //
+  // There is no "joined" note any more. Two reasons, and the second is the
+  // one that was actually visible: the avatar already says it — a seat that
+  // is only invited is drawn in grey and turns full colour on arrival, so a
+  // word saying the same thing is the third time of asking. And this fired
+  // on the wrong event. Inviting somebody INSERTS their participant row, so
+  // the diff below counted them as an arrival and flashed "joined" beside a
+  // name that had done nothing of the kind — then the row settled to
+  // "invited" half a second later and contradicted it.
+  const [seatNotes, setSeatNotes] = useState<Map<string, "left">>(() => new Map());
   const [departed, setDeparted] = useState<{ id: string; name: string; avatarUrl: string | null }[]>([]);
   const SEAT_NOTE_MS = 3500;
 
   // Play sound when new participant joins
   useEffect(() => {
     const currentIds = participants.map(p => p.user_id);
+    // An invited seat is a row too. Counting it as an arrival is what played
+    // the join sound and toasted "a new player joined" the moment the HOST
+    // sent an invitation — for somebody who had not answered it yet.
+    const seatedIds = participants
+      .filter((p) => (p.status as string) !== "invited")
+      .map((p) => p.user_id);
     const prevIds = prevParticipantsRef.current;
     const timers: number[] = [];
 
     if (prevIds.length > 0) {
-      const newParticipants = currentIds.filter(id => !prevIds.includes(id));
-      if (newParticipants.length > 0 && newParticipants[0] !== user?.id) {
+      const arrived = seatedIds.filter((id) => !prevIds.includes(id));
+      if (arrived.length > 0 && arrived[0] !== user?.id) {
         playSound("room-join");
         toast.success(t("team.newPlayerJoined"));
       }
       const gone = prevIds.filter((id) => !currentIds.includes(id) && id !== user?.id);
-      if (newParticipants.length > 0 || gone.length > 0) {
+      if (gone.length > 0) {
         setSeatNotes((prev) => {
           const next = new Map(prev);
-          newParticipants.forEach((id) => next.set(id, "joined"));
           gone.forEach((id) => next.set(id, "left"));
           return next;
         });
-        if (gone.length > 0) {
-          const faces = prevFacesRef.current;
-          setDeparted((prev) => [
-            ...prev.filter((d) => !gone.includes(d.id)),
-            ...gone.map((id) => ({ id, name: faces.get(id)?.name ?? "", avatarUrl: faces.get(id)?.avatarUrl ?? null })),
-          ]);
-        }
+        const faces = prevFacesRef.current;
+        setDeparted((prev) => [
+          ...prev.filter((d) => !gone.includes(d.id)),
+          ...gone.map((id) => ({ id, name: faces.get(id)?.name ?? "", avatarUrl: faces.get(id)?.avatarUrl ?? null })),
+        ]);
         timers.push(
           window.setTimeout(() => {
             setSeatNotes((prev) => {
               const next = new Map(prev);
-              [...newParticipants, ...gone].forEach((id) => next.delete(id));
+              gone.forEach((id) => next.delete(id));
               return next;
             });
             setDeparted((prev) => prev.filter((d) => !gone.includes(d.id)));
@@ -304,7 +315,10 @@ export function RoomLobbyV2() {
       }
     }
 
-    prevParticipantsRef.current = currentIds;
+    // Seated ids, matching what `arrived` is diffed against: an invitation
+    // that is later accepted has to read as an arrival at that moment, not
+    // at the moment it was sent.
+    prevParticipantsRef.current = seatedIds;
     prevFacesRef.current = new Map(participants.map((p) => [p.user_id, { name: p.nickname, avatarUrl: p.avatar_url }]));
     return () => timers.forEach((id) => window.clearTimeout(id));
   }, [participants, user?.id, playSound]);
@@ -1153,7 +1167,6 @@ export function RoomLobbyV2() {
         notifications: t("extra.notifications"),
         addFriend: t("extra.lobbyAddFriend"),
         friendRequested: t("extra.lobbyFriendRequested"),
-        joined: t("lobby.uJoinedNote"),
         left: t("lobby.uLeftNote"),
         invited: t("lobby.uInvitedNote"),
       }}

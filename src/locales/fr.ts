@@ -614,6 +614,7 @@ export const fr: KaTranslations = {
     blockedPlayers: "Joueurs bloqués",
     unblock: "Débloquer",
     reportReasonTitle: "Quel est le problème ?",
+    reportDetailsPlaceholder: "Ajoutez des détails (facultatif)",
     blockConfirmTitle: "Bloquer ce joueur ?",
     blockConfirmBody: "Ses quiz et commentaires n'apparaîtront plus. Tu peux le débloquer dans les Réglages.",
     reason: { inappropriate: "Contenu inapproprié", harassment: "Harcèlement ou abus", spam: "Spam", cheating: "Triche", other: "Autre chose" },

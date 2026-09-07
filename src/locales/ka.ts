@@ -736,6 +736,7 @@ export const ka = {
     blockedPlayers: "დაბლოკილი მოთამაშეები",
     unblock: "ბლოკის მოხსნა",
     reportReasonTitle: "რა არის პრობლემა?",
+    reportDetailsPlaceholder: "დაამატე დეტალები (არასავალდებულო)",
     blockConfirmTitle: "დაიბლოკოს ეს მოთამაშე?",
     blockConfirmBody: "მისი ქვიზები და კომენტარები აღარ გამოჩნდება. ბლოკის მოხსნა პარამეტრებიდან შეგიძლია.",
     reason: {
