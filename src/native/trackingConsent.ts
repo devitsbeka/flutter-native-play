@@ -72,16 +72,6 @@ let launchPrimed = false;
 let declaredAgeGroup: string | null = null;
 
 /**
- * The one age group that may be asked about tracking.
- *
- * Spelled out here rather than imported from `useAgeGroup`, which reaches the
- * Supabase client through `useAuth`: this module is loaded from the native
- * shell at launch and must not drag a database client in behind it. The value
- * is the same `"adult"` that `isKnownAdult()` tests.
- */
-const ADULT_AGE_GROUP = "adult";
-
-/**
  * How long to wait for the explanation screen before going straight to iOS.
  *
  * A safety valve, not a timeout anyone should hit. If `TrackingConsentGate`
@@ -188,8 +178,29 @@ export async function ensureTrackingConsent(): Promise<TrackingStatus> {
 function promptIfPermitted(): void {
   if (!launchPrimed) return;
   if (!isIosNative()) return;
-  if (declaredAgeGroup !== ADULT_AGE_GROUP) return;
 
+  // No age condition, and that is deliberate — it is the whole reason the app
+  // was rejected.
+  //
+  // This used to read `if (declaredAgeGroup !== ADULT_AGE_GROUP) return;`,
+  // added to avoid asking a minor about tracking. The effect was that nobody
+  // was asked at all unless they signed up AND ticked 18+, because a guest
+  // never declares an age and `declareAgeGroup(null)` means "unknown". App
+  // Review installed the app on an iPad, played as a guest, never found the
+  // prompt, and rejected under guideline 2.1:
+  //
+  //   "The app uses the AppTrackingTransparency framework, but we are unable
+  //    to locate the App Tracking Transparency permission request."
+  //
+  // Apple does not forbid showing this prompt to a minor. Only Kids Category
+  // apps must not use ATT at all, and this app is not one — `madeForKids` is
+  // false. What protects younger players is not withholding the question; it
+  // is `tagForUnderAgeOfConsent` and the non-personalised ad path, which run
+  // off `declareAgeGroup` and treat an unknown age as under-age. Those are
+  // untouched.
+  //
+  // So: everyone is asked, once, on first launch. That is the only version of
+  // this a reviewer can reliably find.
   void ensureTrackingConsent().catch(() => {
     /* retried on the next launch */
   });
@@ -198,14 +209,12 @@ function promptIfPermitted(): void {
 /**
  * The launch-time entry point, called by `NativeBridge`.
  *
- * It no longer prompts by itself. It records that the app is up and running,
- * which is one of the two conditions for asking; the other is an age, and it
- * arrives from `declareAgeGroup()`. If the age is already known by the time
- * this runs — a returning adult whose profile loaded first — the prompt goes
- * up immediately.
+ * This prompts. It is the only trigger that matters, and it runs on every
+ * cold start until iOS has an answer on file.
  *
- * It is still deliberately not tied to ads, sign-in or VIP status: no feature
- * a reviewer might not reach stands between an adult player and this prompt.
+ * Deliberately tied to nothing else — not ads, not sign-in, not age, not VIP.
+ * Every condition placed in front of this prompt is a condition under which a
+ * reviewer does not see it, and one already cost a rejection.
  */
 export async function primeTrackingConsent(): Promise<void> {
   if (!isIosNative()) return;
@@ -216,8 +225,12 @@ export async function primeTrackingConsent(): Promise<void> {
 /**
  * Tell the consent flow how old the player says they are.
  *
- * `null` — the unknown case, which is every anonymous guest — means "do not
- * ask", not "ask anyway". Safe to call repeatedly with the same value.
+ * This no longer gates the ATT prompt (see `promptIfPermitted`). It is kept
+ * because the age still decides how ads behave: `tagForUnderAgeOfConsent` for
+ * Google's consent flow, and the restricted content rating in `adService`.
+ * An unknown age counts as under-age for both.
+ *
+ * Safe to call repeatedly with the same value.
  */
 export function declareAgeGroup(ageGroup: string | null | undefined): void {
   const next = ageGroup ?? null;

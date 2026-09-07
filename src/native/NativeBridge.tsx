@@ -33,12 +33,14 @@ export function NativeBridge() {
     // interaction. The age gate only runs inside signup, so a 13-year-old was
     // asked to allow tracking before ever declaring an age: guideline 5.1.4.
     //
-    // `primeTrackingConsent()` now records that the app is up; the prompt
-    // itself waits for `declareAgeGroup()` and appears only for a player who
-    // has said they are 18+. `useConsentOrchestration` supplies the age as
-    // soon as the profile resolves, so for a returning adult this is still
-    // the first thing that happens after launch — which is what App Review
-    // has to be able to find.
+    // `primeTrackingConsent()` prompts, on every cold start, for everyone,
+    // until iOS has an answer on file. It waits for nothing else.
+    //
+    // An earlier version gated it on the player having declared themselves
+    // 18+, which meant a guest was never asked. App Review played as a guest
+    // on an iPad, could not find the prompt, and rejected under 2.1. Younger
+    // players are protected by the ad restrictions keyed off age, not by
+    // withholding the question.
     void primeTrackingConsent();
 
     // Two frames: the first is scheduled before paint, the second runs after
