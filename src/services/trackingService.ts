@@ -47,6 +47,42 @@ function normalize(status: unknown): TrackingStatus {
     : "unavailable";
 }
 
+/**
+ * How long a native tracking call may take before we stop waiting on it.
+ *
+ * Every ATT call this file makes crosses the Capacitor bridge, and a bridge
+ * call that is never resolved on the native side is a promise that never
+ * settles. `ensureTrackingConsent` holds exactly one of these as its in-flight
+ * promise and hands it to every later caller, so one unresolved call does not
+ * fail the tracking prompt — it freezes it, and everything queued behind it.
+ *
+ * On build 50 that is what happened, from a missing `didBecomeActive`
+ * notification in `AppTrackingPlugin.swift`. The notification prompt was never
+ * shown and every rewarded ad spun until its watchdog gave up, with no error
+ * logged anywhere. The Swift side now has its own deadline; this is the second
+ * one, because the failure is silent, total, and cheap to rule out.
+ *
+ * Timing out is not an answer and is not recorded as one: the status stays
+ * whatever it was, and an undetermined status is asked again next launch.
+ */
+const NATIVE_CALL_DEADLINE_MS = 12000;
+
+/** Resolve with `fallback` if `work` has not settled in time. */
+async function withDeadline<T>(work: Promise<T>, fallback: T, label: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout>;
+  const deadline = new Promise<T>((resolve) => {
+    timer = setTimeout(() => {
+      console.warn(`[tracking] ${label} did not return within ${NATIVE_CALL_DEADLINE_MS}ms.`);
+      resolve(fallback);
+    }, NATIVE_CALL_DEADLINE_MS);
+  });
+  try {
+    return await Promise.race([work, deadline]);
+  } finally {
+    clearTimeout(timer!);
+  }
+}
+
 class TrackingService {
   private status: TrackingStatus = "notDetermined";
   private initialized = false;
@@ -75,7 +111,7 @@ class TrackingService {
 
     let status: TrackingStatus;
     try {
-      const result = await AppTracking.getStatus();
+      const result = await withDeadline(AppTracking.getStatus(), null, "getStatus");
       status = normalize(result?.status);
     } catch {
       status = "unavailable";
@@ -111,7 +147,7 @@ class TrackingService {
 
     let status: TrackingStatus;
     try {
-      const result = await AppTracking.request();
+      const result = await withDeadline(AppTracking.request(), null, "request");
       status = normalize(result?.status);
     } catch {
       status = "unavailable";

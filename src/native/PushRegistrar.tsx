@@ -66,6 +66,30 @@ import { ensureAdConsent } from "@/native/adConsent";
 const ASKED_KEY = "push:prompted";
 const ASK_DELAY_MS = 4000;
 
+/**
+ * How long the ad-consent flow may hold up the notification prompt.
+ *
+ * Generous enough to cover a slow cold start and a player reading Google's
+ * form, short enough that a flow which is never coming back cannot cost the
+ * prompt entirely. See the note at the await.
+ */
+const AD_CONSENT_DEADLINE_MS = 15000;
+
+/** Wait for `work`, but not past `ms`. Rejections are swallowed, like the wait. */
+function withDeadline(work: Promise<unknown>, ms: number): Promise<void> {
+  return new Promise<void>((resolve) => {
+    const timer = setTimeout(resolve, ms);
+    void work
+      .catch(() => {
+        /* the flow logs its own failures; this one only gates a prompt */
+      })
+      .finally(() => {
+        clearTimeout(timer);
+        resolve();
+      });
+  });
+}
+
 export function PushRegistrar() {
   const { permission, requestPermission } = usePushNotifications();
   const asked = useRef(false);
@@ -122,8 +146,27 @@ export function PushRegistrar() {
         // reordering those two later and silently putting a system dialog
         // underneath Google's form. Each resolves instantly once its answer
         // is on file, and on every non-iOS target.
+        //
+        // ATT is awaited without a deadline on purpose: it is a system dialog,
+        // it is already on screen, and the player is going to answer it. Two
+        // system sheets stacking is the one ordering mistake here that is
+        // permanent, because the second gets dismissed on reflex and iOS never
+        // offers it again.
         await ensureTrackingConsent();
-        await ensureAdConsent();
+
+        // Google's is awaited *with* one, for the opposite reason. It is not a
+        // system dialog and it ends in a network call to Google that has no
+        // timeout of its own. On build 50 that call did not come back, and
+        // because this line awaited it bare, the notification prompt was never
+        // reached: the player got the tracking dialog at launch, signed in, and
+        // was never asked about notifications at all.
+        //
+        // Nothing about notifications depends on the ad answer. The await is
+        // only here to keep the two consent surfaces from arriving together, so
+        // when the ad flow is taking unreasonably long the right move is to
+        // stop waiting for it, not to give up on asking.
+        await withDeadline(ensureAdConsent(), AD_CONSENT_DEADLINE_MS);
+
         if (!cancelled) setExplaining(true);
       })();
     }, ASK_DELAY_MS);

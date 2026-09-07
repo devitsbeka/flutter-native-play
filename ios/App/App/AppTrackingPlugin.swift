@@ -90,18 +90,71 @@ public class AppTrackingPlugin: CAPPlugin, CAPBridgedPlugin {
                     // value, and hand back on main so the bridge is happy.
                     DispatchQueue.main.async { [weak self] in
                         self?.isRequesting = false
-                        call.resolve(["status": Self.statusString(), "shown": true])
+                        // `shown` used to be hardcoded true. It is the caller's
+                        // only way to tell "the player answered" from "iOS
+                        // declined to ask", and since the deadline above can now
+                        // reach this while the app is inactive — where iOS
+                        // presents nothing and reports the stored status — the
+                        // honest answer is whether the status left
+                        // `notDetermined`. A still-undetermined status is
+                        // retried on the next launch.
+                        let status = Self.statusString()
+                        call.resolve(["status": status, "shown": status != "notDetermined"])
                     }
                 }
             }
         }
     }
 
-    /// Run `work` once the app is genuinely active — immediately if it already is.
+    /// How long to wait for the app to become active before asking anyway.
+    ///
+    /// See `whenActive`. Long enough to cover a slow cold start, short enough
+    /// that nothing downstream is left waiting on a notification that is not
+    /// coming.
+    private static let activeDeadline: TimeInterval = 5
+
+    /// Run `work` once the app is genuinely active — immediately if it already
+    /// is, and at the latest after `activeDeadline`.
+    ///
+    /// ## Why there is a deadline
+    ///
+    /// This used to wait on `didBecomeActiveNotification` and nothing else, and
+    /// that notification is not guaranteed to arrive. `applicationState` is
+    /// `.inactive` for reasons that do not end in a fresh activation — behind
+    /// the splash, mid-transition, while a system alert is up — and if the app
+    /// was already foregrounded, the notification has been and gone before this
+    /// observer existed. `work()` was then never called, so `call` was never
+    /// resolved.
+    ///
+    /// An unresolved `CAPPluginCall` is a JavaScript promise that never
+    /// settles, and this one is awaited by everything: `ensureTrackingConsent`
+    /// keeps it as its in-flight promise forever, `ensureAdConsent` awaits that
+    /// before it does anything, `PushRegistrar` awaits both before showing the
+    /// notification explainer, and the rewarded-ad gate awaits it on every tap.
+    /// One missing notification took out the notification prompt and every ad
+    /// in the app, with no error anywhere. That was reported from a device on
+    /// build 50 and is what this deadline exists to make impossible.
+    ///
+    /// Asking while inactive is a recoverable failure and hanging is not: iOS
+    /// invokes the completion handler immediately with the current status and
+    /// presents nothing, so the status stays `notDetermined`, `shown` reports
+    /// false, and the prompt is simply retried on the next launch.
     private func whenActive(_ work: @escaping () -> Void) {
         if UIApplication.shared.applicationState == .active {
             work()
             return
+        }
+
+        // Both the observer and the deadline can fire; whichever is first wins.
+        var done = false
+        let runOnce = { [weak self] in
+            guard !done else { return }
+            done = true
+            if let self = self, let observer = self.activeObserver {
+                NotificationCenter.default.removeObserver(observer)
+                self.activeObserver = nil
+            }
+            work()
         }
 
         // One-shot: removed the moment it fires, so a later background/foreground
@@ -110,13 +163,13 @@ public class AppTrackingPlugin: CAPPlugin, CAPBridgedPlugin {
             forName: UIApplication.didBecomeActiveNotification,
             object: nil,
             queue: .main
-        ) { [weak self] _ in
-            guard let self = self else { return }
-            if let observer = self.activeObserver {
-                NotificationCenter.default.removeObserver(observer)
-                self.activeObserver = nil
+        ) { _ in runOnce() }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + Self.activeDeadline) {
+            if !done {
+                NSLog("[AppTracking] Still not active after \(Self.activeDeadline)s — requesting anyway rather than leaving the call unresolved.")
             }
-            work()
+            runOnce()
         }
     }
 

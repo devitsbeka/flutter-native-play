@@ -46,7 +46,10 @@ describe("the launch consent sequence", () => {
   it("puts notifications behind both", () => {
     const source = read("src/native/PushRegistrar.tsx");
     expect(source).toMatch(/await ensureTrackingConsent\(\)/);
-    expect(source).toMatch(/await ensureAdConsent\(\)/);
+    // Bounded, not bare. Awaiting the ad flow without a deadline is what cost
+    // the notification prompt on build 50 — see
+    // `consentCannotStallThePrompts.test.ts`, which pins that half.
+    expect(source).toMatch(/withDeadline\(\s*ensureAdConsent\(\)/);
   });
 
   it("asks about notifications whether or not anyone is signed in", () => {

@@ -255,7 +255,23 @@ class AdService {
     if (isUnderAgeOfConsent(this.ageGroup)) {
       return {
         tagForUnderAgeOfConsent: true,
-        maxAdContentRating: 'T' as const,
+        // `'Teen'`, not `'T'`.
+        //
+        // The plugin switches on this string and recognises exactly four
+        // values — `General`, `ParentalGuidance`, `Teen`, `MatureAudience`
+        // (`ios/Sources/AdMobPlugin/AdMobPlugin.swift`,
+        // `setRequestConfiguration`). Anything else falls through to a
+        // `default:` that prints "maxAdContentRating can't find value" and
+        // sets nothing.
+        //
+        // `'T'` is the AdMob console's own abbreviation, which is why it
+        // looked right. It is not what the bridge accepts, so the cap was
+        // dropped on every request the app has ever made: an under-age or
+        // unknown-age player was correctly kept off personalised ads and could
+        // still be shown a mature-rated one. Same shape as the `npa: '1'`
+        // string that sat next to it — a value the native side quietly refused
+        // to parse, with nothing logged on the JavaScript side to say so.
+        maxAdContentRating: 'Teen' as const,
         npa: true as const,
       };
     }

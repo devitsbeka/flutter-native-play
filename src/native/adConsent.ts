@@ -68,7 +68,7 @@ export interface AdConsentState {
 interface ConsentCapablePlugin {
   requestConsentInfo(options?: {
     tagForUnderAgeOfConsent?: boolean;
-    debugGeography?: string;
+    debugGeography?: number;
     testDeviceIdentifiers?: string[];
   }): Promise<{
     status: string;
@@ -303,21 +303,81 @@ function normalise(
  * build if it leaks, because a production binary that thinks every user is in
  * the EEA would show the form to everyone.
  */
+/**
+ * How long UMP gets to answer `requestConsentInfo` before we stop waiting.
+ *
+ * This is a network round-trip to Google, made during a cold start, and it has
+ * no timeout of its own. On build 50 that turned out to matter far more than
+ * the ad it governs: `PushRegistrar` awaits this flow before showing the
+ * notification explainer, so a `requestConsentInfo` that never came back took
+ * the notification prompt down with it — the player got the tracking dialog,
+ * then nothing, for the life of the install.
+ *
+ * A consent answer we could not obtain is already handled: the state stays
+ * unresolved, `adRequestsAllowed()` stays false, and no ad is requested. That
+ * is the correct outcome and it costs an ad. Blocking forever costs the
+ * notification prompt as well, which is not a trade worth making.
+ *
+ * Only the network step is bounded. The form itself is not — once Google's
+ * form is on screen a player is reading it, and cutting that off mid-read
+ * would be the one thing worse than not showing it.
+ */
+const CONSENT_INFO_DEADLINE_MS = 8000;
+
+/** Resolve with `fallback` if `work` has not settled within `ms`. */
+async function withDeadline<T>(work: Promise<T>, ms: number, onTimeout: () => T): Promise<T> {
+  let timer: ReturnType<typeof setTimeout>;
+  const deadline = new Promise<T>((resolve) => {
+    timer = setTimeout(() => resolve(onTimeout()), ms);
+  });
+  try {
+    return await Promise.race([work, deadline]);
+  } finally {
+    clearTimeout(timer!);
+  }
+}
+
 function debugOptions(): {
-  debugGeography?: string;
+  debugGeography?: number;
   testDeviceIdentifiers?: string[];
 } {
   const id = import.meta.env.VITE_UMP_DEBUG_EEA;
   if (!id) return {};
-  return { debugGeography: "EEA", testDeviceIdentifiers: [String(id)] };
+  // A number, not "EEA".
+  //
+  // The native side reads this with `call.getInt("debugGeography", 0)` and
+  // maps it through `DebugGeography(rawValue:)`
+  // (`AdMobPlugin.swift`, `requestConsentInfo`). A string does not parse as an
+  // Int, so it fell back to 0 — `disabled` — and the override did nothing at
+  // all. The one switch that makes the EEA form reachable from outside Europe
+  // was off the entire time it appeared to be on.
+  //
+  // 1 is `DebugGeography.EEA`. Google still only applies it to a device listed
+  // in `testDeviceIdentifiers`, which is why the id is required alongside it.
+  return { debugGeography: DEBUG_GEOGRAPHY_EEA, testDeviceIdentifiers: [String(id)] };
 }
+
+/** `UMPDebugGeography.EEA`. 0 is disabled, 2 is notEEA. */
+const DEBUG_GEOGRAPHY_EEA = 1;
 
 export async function ensureAdConsent(options?: {
   underAgeOfConsent?: boolean;
 }): Promise<AdConsentState> {
   if (!isNative()) return NOT_APPLICABLE;
 
-  const underAge = options?.underAgeOfConsent ?? true;
+  // A caller that does not know the age asks for the answer we already have,
+  // not for a new one under an assumption of its own.
+  //
+  // This defaulted to `true` unconditionally, and two callers disagreed as a
+  // result: `useConsentOrchestration` resolves the flow with the real age
+  // (`false` for an adult), and every no-argument caller — `PushRegistrar`,
+  // `mayRequestAds` — then asked again with `true`, missed the cache on
+  // `resolvedForUnderAge`, and drove a fresh native round-trip to Google. On a
+  // signed-in adult that happened on every single ad tap, each one serialised
+  // behind `inFlight`, and it also overwrote the correct adult treatment with
+  // the under-age one. Falling back to the answer on file makes a no-argument
+  // call what it reads as: "whatever we decided already".
+  const underAge = options?.underAgeOfConsent ?? resolvedForUnderAge ?? true;
 
   if (state.resolved && resolvedForUnderAge === underAge) return state;
   if (inFlight) return inFlight;
@@ -336,10 +396,25 @@ export async function ensureAdConsent(options?: {
     if (!plugin) return state;
 
     try {
-      const info = await plugin.requestConsentInfo({
-        tagForUnderAgeOfConsent: underAge,
-        ...debugOptions(),
-      });
+      const info = await withDeadline(
+        plugin.requestConsentInfo({
+          tagForUnderAgeOfConsent: underAge,
+          ...debugOptions(),
+        }),
+        CONSENT_INFO_DEADLINE_MS,
+        () => {
+          console.warn(
+            "[ads] UMP did not answer within " +
+              `${CONSENT_INFO_DEADLINE_MS}ms — carrying on without a consent ` +
+              "answer. No ad will be requested this session.",
+          );
+          return null;
+        },
+      );
+
+      // Timed out. Leave the state unresolved so nothing is served, and let
+      // every caller downstream of this get on with what it was doing.
+      if (!info) return state;
 
       let next = normalise(info);
 
