@@ -68,7 +68,7 @@ export interface AdConsentState {
 interface ConsentCapablePlugin {
   requestConsentInfo(options?: {
     tagForUnderAgeOfConsent?: boolean;
-    debugGeography?: string;
+    debugGeography?: number;
     testDeviceIdentifiers?: string[];
   }): Promise<{
     status: string;
@@ -338,13 +338,27 @@ async function withDeadline<T>(work: Promise<T>, ms: number, onTimeout: () => T)
 }
 
 function debugOptions(): {
-  debugGeography?: string;
+  debugGeography?: number;
   testDeviceIdentifiers?: string[];
 } {
   const id = import.meta.env.VITE_UMP_DEBUG_EEA;
   if (!id) return {};
-  return { debugGeography: "EEA", testDeviceIdentifiers: [String(id)] };
+  // A number, not "EEA".
+  //
+  // The native side reads this with `call.getInt("debugGeography", 0)` and
+  // maps it through `DebugGeography(rawValue:)`
+  // (`AdMobPlugin.swift`, `requestConsentInfo`). A string does not parse as an
+  // Int, so it fell back to 0 — `disabled` — and the override did nothing at
+  // all. The one switch that makes the EEA form reachable from outside Europe
+  // was off the entire time it appeared to be on.
+  //
+  // 1 is `DebugGeography.EEA`. Google still only applies it to a device listed
+  // in `testDeviceIdentifiers`, which is why the id is required alongside it.
+  return { debugGeography: DEBUG_GEOGRAPHY_EEA, testDeviceIdentifiers: [String(id)] };
 }
+
+/** `UMPDebugGeography.EEA`. 0 is disabled, 2 is notEEA. */
+const DEBUG_GEOGRAPHY_EEA = 1;
 
 export async function ensureAdConsent(options?: {
   underAgeOfConsent?: boolean;
