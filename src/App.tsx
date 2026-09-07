@@ -76,8 +76,20 @@ const CreateRoom = lazy(() => import("./pages/CreateRoom"));
 //
 // When these modes are ready, launching them is a build and a review, not a
 // database flip. That is the point, not an inconvenience.
-const INCLUDE_UNRELEASED_MODES =
-  import.meta.env.DEV || import.meta.env.VITE_INCLUDE_UNRELEASED_MODES === 'true';
+// Excluded from the NATIVE build only.
+//
+// The App Store finding is about what ships inside the binary — a route guard
+// is not enough there, because the chunk is the feature. The website is not
+// reviewed by Apple, and mytrivia.io/newui is how this team looks at work in
+// progress, so taking it off the web would solve a problem nobody had and
+// break a workflow somebody uses.
+//
+// VITE_NATIVE_BUILD is set by `npm run build:ios` and by nothing else, so this
+// stays true on the web and in dev, and false in exactly one place: the
+// archive that goes to Apple. verify-ios-bundle fails the build if any of
+// these chunks appears in it, so the two cannot drift apart silently.
+const INCLUDE_ON_THIS_TARGET = import.meta.env.VITE_NATIVE_BUILD !== 'true';
+const INCLUDE_UNRELEASED_MODES = INCLUDE_ON_THIS_TARGET;
 const TeamBattlePage = INCLUDE_UNRELEASED_MODES ? lazy(() => import("./pages/TeamBattlePage")) : null;
 const KingPage = INCLUDE_UNRELEASED_MODES ? lazy(() => import("./pages/KingPage")) : null;
 const QueuePage = lazy(() => import("./pages/QueuePage"));
@@ -108,8 +120,7 @@ const Words = lazy(() => import("./pages/Words"));
 // undocumented second UI with a second purchase surface is the shape guideline
 // 2.3.1 is written about, so it is excluded from a production build alongside
 // the other previews rather than merely unlinked.
-const INCLUDE_UI_PREVIEWS =
-  import.meta.env.DEV || import.meta.env.VITE_INCLUDE_UI_PREVIEWS === 'true';
+const INCLUDE_UI_PREVIEWS = INCLUDE_ON_THIS_TARGET;
 const HomeV3 = INCLUDE_UI_PREVIEWS ? lazy(() => import("./features/home-v3/pages/HomeV3")) : null;
 const PathDetailV3 = INCLUDE_UI_PREVIEWS ? lazy(() => import("./features/home-v3/pages/PathDetailV3")) : null;
 

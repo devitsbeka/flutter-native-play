@@ -42,8 +42,8 @@ import { DesktopActionCards } from "@/components/home/DesktopActionCards";
 // WorldMapCanvas (527 KB) plus three and @react-three/fiber landed in the
 // production bundle for a page no released route can reach. Lazy AND gated, so
 // the chunk is absent rather than merely unreachable.
-const INCLUDE_UI_PREVIEWS =
-  import.meta.env.DEV || import.meta.env.VITE_INCLUDE_UI_PREVIEWS === 'true';
+// Native build only — see the note in App.tsx.
+const INCLUDE_UI_PREVIEWS = import.meta.env.VITE_NATIVE_BUILD !== 'true';
 const LoggedInHomeV2 = INCLUDE_UI_PREVIEWS
   ? lazy(() => import("@/pages/LoggedInHomeV2").then((m) => ({ default: m.LoggedInHomeV2 })))
   : null;
