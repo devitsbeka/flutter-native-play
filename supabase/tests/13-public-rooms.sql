@@ -112,9 +112,9 @@ BEGIN
     (v_host, 'Host'), (v_guest, 'Guest'), (v_friend, 'Friend')
   ON CONFLICT (user_id) DO UPDATE SET nickname = EXCLUDED.nickname;
 
-  -- This block exercises the knock-and-approve flow, which is now the
-  -- opt-in path: a public room is OPEN by default (20260930100000), so the
-  -- room that tests approval has to ask for it with requires_approval.
+  -- This block exercises the knock-and-approve flow. The column default has
+  -- moved twice — open in 20260930100000, back to asking in 20261014100000 —
+  -- so the room states what it wants rather than leaning on either.
   INSERT INTO public.game_rooms (room_code, host_user_id, room_name, status, is_public, requires_approval)
   VALUES ('PUBLIC', v_host, 'The published one', 'waiting', true, true)
   RETURNING id INTO v_pub;
@@ -534,8 +534,11 @@ END $$;
 --
 -- The whole point of the new column, executed. Publishing a room shows it to
 -- everyone; whether that also OPENS it is the host's choice, and the default
--- is open. The claim worth testing is that the choice is the server's to
--- enforce — not the button's.
+-- is to ASK — the owner reversed it in
+-- `20261014100000_rooms_ask_to_join_by_default.sql`, so a room published
+-- without an opinion knocks before it seats. The claim worth testing is that
+-- the choice is the server's to enforce — not the button's, and that a host
+-- who does open the door is obeyed just as exactly.
 
 DO $$
 DECLARE
@@ -543,6 +546,7 @@ DECLARE
   v_open uuid := 'bc000000-0000-0000-0000-00000000004b';
   v_ask  uuid := 'bc000000-0000-0000-0000-00000000004c';
   v_room uuid;
+  v_dflt uuid;
   v_shut uuid;
   v_priv uuid;
   v_out  text;
@@ -554,14 +558,22 @@ BEGIN
     (v_host, 'Host4'), (v_open, 'Walker'), (v_ask, 'Knocker')
   ON CONFLICT (user_id) DO UPDATE SET nickname = EXCLUDED.nickname;
 
-  -- Default: a published room is open.
+  -- Default: a published room asks. Nothing here sets the column, so this is
+  -- the column default alone speaking.
   INSERT INTO public.game_rooms (room_code, host_user_id, status, is_public)
-  VALUES ('PUBOP1', v_host, 'waiting', true) RETURNING id INTO v_room;
+  VALUES ('PUBDF1', v_host, 'waiting', true) RETURNING id INTO v_dflt;
+  PERFORM pg_temp.must_equal(
+    (SELECT requires_approval FROM public.game_rooms WHERE id = v_dflt),
+    true, 'a published room asks unless its host opens it');
+
+  -- And the host who opens it: everything below is that room.
+  INSERT INTO public.game_rooms (room_code, host_user_id, status, is_public, requires_approval)
+  VALUES ('PUBOP1', v_host, 'waiting', true, false) RETURNING id INTO v_room;
   INSERT INTO public.room_participants (room_id, user_id, nickname, is_host, status)
   VALUES (v_room, v_host, 'Host4', true, 'joined');
   PERFORM pg_temp.must_equal(
     (SELECT requires_approval FROM public.game_rooms WHERE id = v_room),
-    false, 'a published room is open unless its host says otherwise');
+    false, 'a host who opens the door is taken at their word');
 
   SET LOCAL ROLE authenticated;
   PERFORM pg_temp.as_user(v_open);

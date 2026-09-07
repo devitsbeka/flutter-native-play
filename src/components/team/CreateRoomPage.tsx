@@ -78,6 +78,7 @@ import type { Json } from "@/integrations/supabase/types";
 import { resolveAvatarUrl, fallbackAvatarFor } from "@/utils/avatarUtils";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { markProgrammaticScroll } from "@/utils/scrollTapGuard";
+import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 
 // Inspirational topics for trivia creation
 const INSPIRATIONAL_TOPIC_KEYS = [
@@ -196,6 +197,8 @@ interface CreateRoomPageProps {
 export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType, initialMode, ownsRoute = false, autoOpenPersonalTrivia, preSelectedCategory, enterInstantly = false }: CreateRoomPageProps) {
   const { user, profile } = useAuth();
   const { t } = useLanguage();
+  // Which level of a picture game the player is up to.
+  const { getCategoryProgress } = useCategoryProgress();
   const bubbleVideo = useResponsiveVideo("/videos/floating-blob.mp4");
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -1411,7 +1414,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
    * way every other card's tap does.
    */
   const pickGuessCategory = (cat: Category) => {
-    // Straight into the game, with no room anywhere in it.
+    // Straight into the round: a countdown, then questions.
     //
     // A solo picture game used to CREATE A ROOM to play one round in: a
     // room row, a participant row, a lobby route, a start, a walk-in — and
@@ -1421,11 +1424,17 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     // All of that also has to happen before the first question, which is
     // why it took so long to load.
     //
-    // The versus flow already takes a category on its URL and needs no room
-    // at all; it simply ignored the parameter until now (see VSScreen).
-    // Playing it with friends is still the Library's room, which is where
-    // that belongs.
-    handoff(`/game?category=${cat.id}`);
+    // Not the versus screen either. Sending it there gave the round an
+    // opponent, a stake and a VS reveal to sit through — a whole second
+    // screen between the pick and the game (owner: "no need to show the
+    // versus game page here"). This is the category's own solo round, which
+    // is what a picture game is: the player's next level, with the 3-2-1
+    // this flow otherwise goes without.
+    //
+    // Playing a picture game WITH friends is still the Library's room,
+    // which is where that belongs.
+    const level = getCategoryProgress(cat.category_id ?? cat.id) || 1;
+    handoff(`/play/${cat.category_id ?? cat.id}/${level}`, { state: { countdown: true } });
     onClose();
   };
 
