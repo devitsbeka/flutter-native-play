@@ -33,7 +33,6 @@ import { ScenePortraitHealer } from "@/components/system/ScenePortraitHealer";
 import { ReducedMotionGuard } from "@/components/system/ReducedMotionGuard";
 import { RoundStartWatcher } from "@/components/system/RoundStartWatcher";
 import { HiddenWorkGuard } from "@/components/system/HiddenWorkGuard";
-import { FakeFriendRequestAutoAccept } from "@/components/system/FakeFriendRequestAutoAccept";
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { Navigate, useParams } from "react-router-dom";
 import { isLegalLanguage } from "@/utils/legalLanguage";
@@ -150,6 +149,7 @@ function NewUiPathRedirect() {
   return <Navigate to={`/newui/path/${pathId ?? ""}`} replace />;
 }
 const Support = lazy(() => import("./pages/Support"));
+const Credits = lazy(() => import("./pages/Credits"));
 const DeleteAccount = lazy(() => import("./pages/DeleteAccount"));
 
 // Admin pages - conditionally imported to enable tree-shaking when excluded
@@ -299,7 +299,6 @@ const App = () => (
             <ScenePortraitHealer />
             <ReducedMotionGuard />
             <HiddenWorkGuard />
-            <FakeFriendRequestAutoAccept />
             <FreshBuildGuard />
             {/* Outside <Routes> on purpose: MultiplayerProviderV2 is mounted
                 inside the /team route, so nothing followed a player who
@@ -401,6 +400,7 @@ const App = () => (
                 <Route path="/privacy-policy/:lang" element={<LegalByLanguage page="privacy" />} />
                 <Route path="/terms/:lang" element={<LegalByLanguage page="terms" />} />
                 <Route path="/support" element={<Support />} />
+                <Route path="/credits" element={<Credits />} />
                 <Route path="/delete-account" element={<DeleteAccount />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/settings/name" element={<SettingsName />} />

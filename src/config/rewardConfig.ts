@@ -119,9 +119,21 @@ export const REWARDS = {
 };
 
 // Helper to get random chest coins (50-250)
+//
+// Uniform: every whole number in the range is equally likely, which is what
+// `ChestRewardModal` discloses. App Store guideline 3.1.1 asks a randomised
+// reward to publish its odds, and the chest is randomised — so if the
+// distribution is ever weighted, the disclosure has to change with it.
 export function getRandomChestCoins(): number {
   return Math.floor(Math.random() * (REWARDS.CHEST_COINS_MAX - REWARDS.CHEST_COINS_MIN + 1)) + REWARDS.CHEST_COINS_MIN;
 }
+
+/** How many distinct coin amounts the chest can pay. */
+export const CHEST_COIN_OUTCOMES =
+  REWARDS.CHEST_COINS_MAX - REWARDS.CHEST_COINS_MIN + 1;
+
+/** The chance of any one of them, as a percentage. */
+export const CHEST_COIN_CHANCE_PERCENT = 100 / CHEST_COIN_OUTCOMES;
 
 // Check if today is a special day (weekend: Saturday or Sunday)
 export function isSpecialDay(): boolean {

@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { FAKE_ACCOUNT_USER_IDS } from '@/config/fakeAccounts';
 
 // Mascot/fake account user IDs (hardcoded)
 export const MASCOT_USER_IDS = new Set([
@@ -16,7 +17,9 @@ export const MASCOT_USER_IDS = new Set([
   '2574663a-d951-4475-9feb-60fef89caf9d', // Ana
   '7570d628-619b-434c-8d5c-fa6007eaa43f', // Luka
   '9b9330ae-740f-4b53-8e40-9202ce3660c9', // Elene
-  // Photo-based fake accounts
+  // Seeded content accounts. These eight wore a studio photograph of a real
+  // person until those files were deleted; they now wear one of MyTrivia's
+  // own characters, like every other seeded profile.
   'a1b2c3d4-1111-4000-8000-000000000001', // levan_88
   'a1b2c3d4-2222-4000-8000-000000000002', // Natato
   'a1b2c3d4-3333-4000-8000-000000000003', // Elene_E
@@ -48,4 +51,30 @@ export async function fetchAdminUserIds(): Promise<Set<string>> {
 /** Check if a user_id should be excluded from analytics */
 export function isExcludedUser(userId: string, adminIds: Set<string>): boolean {
   return MASCOT_USER_IDS.has(userId) || adminIds.has(userId);
+}
+
+/**
+ * Every profile that is not a person a player can meet: the mascot and
+ * seeded-content accounts above, plus anything listed in
+ * `FAKE_ACCOUNT_USER_IDS`. The two lists overlap but neither contains the
+ * other — `MASCOT_USER_IDS` carries the test accounts, `FAKE_ACCOUNT_USER_IDS`
+ * carries the three the product owner identified by hand — so the union is
+ * the one to filter on.
+ */
+export const NON_PLAYER_USER_IDS: ReadonlySet<string> = new Set([
+  ...MASCOT_USER_IDS,
+  ...FAKE_ACCOUNT_USER_IDS,
+]);
+
+/**
+ * True when this profile must not appear in user search or in any other
+ * "find people" surface.
+ *
+ * These accounts never sign in. Offering them as someone to befriend puts a
+ * fabricated profile in front of a player as though it were a person — which
+ * is what App Review reads guideline 2.3.1 against — and the friend request
+ * would sit pending forever anyway, because nobody is there to accept it.
+ */
+export function isHiddenFromSearch(userId: string | null | undefined): boolean {
+  return !!userId && NON_PLAYER_USER_IDS.has(userId);
 }

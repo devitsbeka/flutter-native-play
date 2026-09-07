@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { isHiddenFromSearch } from "@/lib/excludedUsers";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/lib/toast";
 import { t } from "@/contexts/LanguageContext";
@@ -364,7 +365,14 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
       // row — the actions it offers (friend request, invite) each re-check
       // the pair against the table before they write.
       const blocks = await ensureBlocksLoaded(user.id);
-      return (data || []).filter((row) => !blocks.hiddenIds.has(row.user_id));
+      // Seeded content accounts are not people: they never sign in, so a
+      // request to one sits pending forever, and offering them as somebody to
+      // meet is what guideline 2.3.1 reads as a fabricated user. Unlike the
+      // block filter this fails CLOSED — the list is a constant in the bundle,
+      // so there is no load to wait on.
+      return (data || []).filter(
+        (row) => !blocks.hiddenIds.has(row.user_id) && !isHiddenFromSearch(row.user_id),
+      );
     } catch (error) {
       console.error("Error searching users:", error);
       return [];

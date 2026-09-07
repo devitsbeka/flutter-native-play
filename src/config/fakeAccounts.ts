@@ -1,16 +1,28 @@
 // User ids of the seeded "content" profiles — accounts created to fill the
 // explore feed rather than to be played on.
 //
-// These accounts never sign in, so a friend request sent to one would sit
-// pending forever. FakeFriendRequestAutoAccept accepts those requests from
-// the requester's own client after a delay, so they behave like real people
-// who happened to be away for a while.
+// Two things used to be true of this list and are not any more, both because
+// App Review would have read them the way they were written:
 //
-// Anything not listed here is treated as a real person and is never
-// auto-accepted — a real user always decides for themselves.
+//  1. Eight of these profiles wore a studio photograph of a real person,
+//     shipped in `public/avatars/`. Those files are deleted. A seeded profile
+//     wears one of MyTrivia's own drawn characters, dealt by
+//     `ourFaceAvatarFor` — see `resolveAvatarUrl`, which maps the old
+//     `/avatars/<name>.png` values still stored on those rows.
+//
+//  2. `FakeFriendRequestAutoAccept` used to accept a friend request sent to
+//     one of these accounts, 4–48 hours later, writing `status: "accepted"`
+//     from the requesting player's own client so the account "behaved like a
+//     real person". That component is deleted. A request to a seeded account
+//     now stays pending, because nobody is there to accept it.
+//
+// What the list is still for: keeping these profiles out of analytics
+// (`isExcludedUser`) and out of the people a player can find and befriend
+// (`isHiddenFromSearch`). Anything not listed here is a real person.
 export const FAKE_ACCOUNT_USER_IDS: string[] = [
   // Hand-built ids (a1b2c3d4-NNNN-4000-8000-0000000000NN), zero games and
-  // zero recorded plays of any kind.
+  // zero recorded plays of any kind. These are the eight that wore the
+  // photographs.
   "a1b2c3d4-1111-4000-8000-000000000001", // levan_88
   "a1b2c3d4-2222-4000-8000-000000000002", // Natato
   "a1b2c3d4-3333-4000-8000-000000000003", // Elene_E
@@ -39,28 +51,15 @@ export const FAKE_ACCOUNT_USER_IDS: string[] = [
   "98a7bf77-23ce-4080-81c6-8184fd882d11", // George M.
 ];
 
-// A pending request to a fake account is accepted somewhere in this window,
-// never instantly — the exact moment is derived from the friendship row id,
-// so it stays stable across reloads instead of re-rolling each time.
-export const FAKE_ACCEPT_MIN_HOURS = 4;
-export const FAKE_ACCEPT_MAX_HOURS = 48;
-
-// Stable 0..1 value from a row id — same id always yields the same delay.
-function hashToUnitInterval(id: string): number {
-  let hash = 0;
-  for (let i = 0; i < id.length; i++) {
-    hash = (hash << 5) - hash + id.charCodeAt(i);
-    hash |= 0;
-  }
-  return (Math.abs(hash) % 10_000) / 10_000;
-}
-
-/** Milliseconds after the request was sent before this fake account replies. */
-export function fakeAcceptDelayMs(friendshipId: string): number {
-  const span = FAKE_ACCEPT_MAX_HOURS - FAKE_ACCEPT_MIN_HOURS;
-  const hours = FAKE_ACCEPT_MIN_HOURS + hashToUnitInterval(friendshipId) * span;
-  return hours * 60 * 60 * 1000;
-}
+/**
+ * The avatar values those eight profiles still carry in the database.
+ *
+ * The files behind them are gone. `resolveAvatarUrl` recognises the shape and
+ * substitutes one of MyTrivia's own characters, so no row has to be rewritten
+ * before the photographs can stop shipping — which is what made deleting them
+ * a client-side change rather than a migration.
+ */
+export const LEGACY_PHOTO_AVATAR_PATTERN = /^\/avatars\/[^/]+\.(png|jpg|jpeg|webp)$/i;
 
 /** True when this profile exists only to publish explore content. */
 export const isFakeAccount = (userId: string | null | undefined): boolean =>

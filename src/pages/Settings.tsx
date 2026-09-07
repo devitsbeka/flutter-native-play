@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { AmbientBlobBackdrop, AMBIENT_HEADER_CLASS } from "@/components/shared/AmbientBlobBackdrop";
-import { Mail, Globe, User, Lock, HelpCircle, Shield, Trash2, ChevronRight, Loader2, Check } from "lucide-react";
+import { Mail, Globe, User, Lock, HelpCircle, Shield, Trash2, ChevronRight, Loader2, Check, Copyright } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useState } from "react";
@@ -294,6 +294,29 @@ export default function Settings() {
             </div>
             <span className="flex-1 text-left font-medium text-foreground">
               {t("menu.privacy")}
+            </span>
+            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+          </motion.button>
+
+          {/* Credits. The picture rounds use 734 Creative Commons BY / BY-SA
+              images, whose licences require the work, its author and the
+              licence to be named wherever the work is used. Nothing did that
+              until /credits, and a credits screen nobody can reach is not
+              attribution — this row is how a player (and a reviewer) gets
+              there. Inline English: src/locales/ is owned elsewhere this
+              cycle, and "Credits" wants a key. */}
+          <motion.button
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.27 }}
+            onClick={() => navigate("/credits")}
+            className="w-full flex items-center gap-4 p-4 rounded-xl bg-card border border-border hover:bg-muted/50 transition-colors"
+          >
+            <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+              <Copyright className="w-6 h-6 text-emerald-500" />
+            </div>
+            <span className="flex-1 text-left font-medium text-foreground">
+              Credits &amp; attributions
             </span>
             <ChevronRight className="w-5 h-5 text-muted-foreground" />
           </motion.button>
