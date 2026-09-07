@@ -3180,6 +3180,7 @@ export const es: KaTranslations = {
     tvQuestionsOnTV: "Preguntas en el TV",
     tvOpenOnTV: "Abrir en el TV:",
     tvEnterCode: "Introduce el código de 4 dígitos:",
+    tvSheetPitch: "¿Juegas con amigos o familia? Pon el juego en la pantalla grande: cada uno responde desde su móvil.",
     tvConnectBtn: "Conectar",
     tvConnectingBtn: "Conectando...",
     tvConnected: "¡Conectado!",

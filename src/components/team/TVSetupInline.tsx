@@ -380,6 +380,26 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
+              {/* What this sheet is FOR, before how to use it.
+                  
+                  It opened straight onto "Open on TV: mytrivia.io/tv" and a
+                  code field. A player who reached it by tapping Play on their
+                  own trivia got a screen asking them to type a number, with
+                  nothing saying why they would want to — so the offer read as
+                  a step they had to get past (owner's ask).
+                  
+                  The title reuses the lobby's own `uPlayOnTv`: the same three
+                  words already translated in seven languages, rather than a
+                  second string that has to be kept in step with it. */}
+              <div className="mb-4 text-center">
+                <h3 className="font-display text-[19px] font-bold leading-[26px] text-[#402666]">
+                  {t("lobby.uPlayOnTv")}
+                </h3>
+                <p className="mt-1 text-[13px] leading-[18px] text-[#402666]/70">
+                  {t("extra.tvSheetPitch")}
+                </p>
+              </div>
+
               {/* Instructions */}
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-xl bg-[#402666]/10 flex items-center justify-center flex-shrink-0">
