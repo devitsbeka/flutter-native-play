@@ -45,13 +45,14 @@ describe("Guess replaced Random on the create screen", () => {
     const branchBody = guessBranch.slice(0, guessBranch.indexOf("autoStart.current = true;"));
     expect(branchBody).not.toMatch(/autoStart/);
     expect(create).toMatch(/extra\.guessPickTitle/);
-    // And the answer STARTS it. This opened a pre-lobby for a while, on the
-    // reading that a picture game was a 2-10 room like any other; the owner
-    // has since said it is a one-player game ("when I choose what to guess,
-    // start the game instantly, no lobby needed"), and a lobby for one
-    // person is a screen asking you to wait for nobody.
+    // And the answer PLAYS it, in the versus flow, with no room anywhere.
+    // This went through a pre-lobby, then through a room started on the
+    // pick; both were wrong for the same reason. A picture game is one
+    // player (owner), and a room meant a row, a lobby route, a start and a
+    // walk-in before the first question — plus a room left in the player's
+    // list when the round was over.
     expect(create).toMatch(
-      /const pickGuessCategory = \(cat: Category\) => \{[\s\S]*?autoStart\.current = true;\s*\n\s*setHandingOff\(true\);\s*\n\s*\};/,
+      /const pickGuessCategory = \(cat: Category\) => \{[\s\S]*?handoff\(`\/game\?category=\$\{cat\.id\}`\);\s*\n\s*onClose\(\);\s*\n\s*\};/,
     );
     expect(create).not.toMatch(/setPreLobby\("guess"\)/);
     // Both cards say so.
@@ -148,39 +149,23 @@ describe("Guess replaced Random on the create screen", () => {
     expect(create).not.toMatch(/const el = rowRef\.current;/);
   });
 
-  it("a solo Guess starts the round itself, before the screen changes", () => {
-    // Played alone, the round starts here: the room lobby will not let a
-    // lone host start (a room is two people), and a solo picture game is a
-    // real game. It is UNCONDITIONAL now — the friends picker lived in the
-    // pre-lobby, which Guess no longer opens, and a one-player game must
-    // never end up showing a lobby (owner: "start the game after they pick
-    // what to guess, no lobby").
-    //
-    // This was tried from the other end first — the create screen sent
-    // ?autostart=1 and the lobby pressed its own Start when it saw it — and
-    // that is a race with several ways to lose: the lobby has to mount, read
-    // the flag back out of a URL that three effects rewrite, and find the
-    // room, the seat, the host flag and the category all settled in the same
-    // render. It shipped, and it lost. Starting the round here needs none of
-    // it to line up, and /team then opens a room that is already playing.
+  it("and no room is created for it at all", () => {
+    // The room was the whole problem: a row, a participant, a lobby route,
+    // a start and a walk-in before the first question — and the room still
+    // in the player's list afterwards. Playing it WITH friends is the
+    // Library's room, which is where that belongs.
     expect(create).not.toMatch(/guessSolo/);
-    expect(create).toMatch(/if \(gameChoice === "guess" && room\) \{\s*\n\s*await startGame\(false, room\);/);
-    // And "called" is not "started": startGame returns void and gives up
-    // quietly, so the room is read back, retried once, and reported —
-    // rather than walking on into the lobby, which is what put a lobby on
-    // the owner's screen in the first place.
-    expect(create).toMatch(/const roomIsPlaying = async \(roomId: string\): Promise<boolean> =>/);
-    expect(create).toMatch(/if \(!\(await roomIsPlaying\(room\.id\)\)\) \{/);
-    expect(create).toMatch(/walkInCode = null;/);
-    expect(create).toMatch(/const \{ createRoom, startGame, loading \} = useMultiplayerV2\(\);/);
-    // No flag on the URL, and nothing in the lobby waiting for one.
-    // No flag on the URL (the comments above still name it — that is the
-    // history, not the mechanism), and nothing in the lobby waiting for one.
-    expect(create).not.toMatch(/&autostart=1/);
-    expect(create).toMatch(
-      /handoff\(`\/team\?join=\$\{walkInCode\}`, \{ state: \{ entering: true \} \}\);/,
-    );
-    expect(read("src/components/team/RoomLobbyV2.tsx")).not.toMatch(/autostart|autoStarting/);
+    expect(create).not.toMatch(/gameChoice === "guess" && room/);
+    expect(create).not.toMatch(/roomIsPlaying/);
+    // The versus screen has always taken a category on its URL and ignored
+    // it, spinning to a random winner. It honours it now, or the picked
+    // picture game would not be the one played.
+    const vs = read("src/components/game/VSScreen.tsx");
+    expect(vs).toMatch(/selectedCategoryId \} = useGame\(\)/);
+    expect(vs).toMatch(/const chosenCategory = useMemo\(/);
+    expect(vs).toMatch(/if \(chosenCategory\) \{\s*\n\s*setSelectedCategory\(\{ id: chosenCategory\.id, name: chosenCategory\.name \}\);/);
+    // And a re-spin would throw the choice away.
+    expect(vs).toMatch(/isCategoryLocked && !chosenCategory && categorySpinsLeft > 0/);
   });
 
   it("and startGame can be told which room, so it cannot read a stale one", () => {

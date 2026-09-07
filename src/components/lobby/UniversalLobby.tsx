@@ -178,6 +178,8 @@ export interface UniversalLobbyProps {
     /** The note beside a name for a moment: somebody arrived, somebody left. */
     joined?: string;
     left?: string;
+    /** Beside the name of somebody asked but not yet here. */
+    invited?: string;
   };
   /**
    * How the benches are laid out.
@@ -777,6 +779,7 @@ export function UniversalLobby({
                               friendRequestedLabel={labels.friendRequested ?? "Sent"}
                               joinedLabel={labels.joined ?? "joined"}
                               leftLabel={labels.left ?? "left"}
+                              invitedLabel={labels.invited ?? "invited"}
                               compact
                             />
                           ))}
@@ -809,6 +812,7 @@ export function UniversalLobby({
                             friendRequestedLabel={labels.friendRequested ?? "Sent"}
                             joinedLabel={labels.joined ?? "joined"}
                             leftLabel={labels.left ?? "left"}
+                            invitedLabel={labels.invited ?? "invited"}
                           />
                         ))}
                         {group.footer}
@@ -1382,6 +1386,7 @@ function PlayerRow({
   friendRequestedLabel,
   joinedLabel,
   leftLabel,
+  invitedLabel,
   compact = false,
 }: {
   player: LobbyPlayer;
@@ -1393,6 +1398,7 @@ function PlayerRow({
   friendRequestedLabel: string;
   joinedLabel: string;
   leftLabel: string;
+  invitedLabel: string;
   /** Half the width to work in: two benches share the card. */
   compact?: boolean;
 }) {
@@ -1443,6 +1449,10 @@ function PlayerRow({
             // Away, not gone. Greyed rather than hidden: the seat is still
             // theirs and the room is still waiting on it.
             player.offline && "opacity-45 grayscale",
+            // And the same for somebody who has been asked but has not
+            // arrived: their face comes up in colour the moment they do
+            // (owner's ask).
+            player.pending && "opacity-45 grayscale",
           )}
         >
           {/* LobbyFace, not a bare <img>. This row rendered
@@ -1480,6 +1490,13 @@ function PlayerRow({
       </span>
       {/* "joined" / "left", for a moment, springing in beside the name so
           the change is noticed (owner's ask). */}
+      {/* Asked, not here. Unlike the notes below this one stays for as long
+          as the invitation is outstanding, and goes when they arrive. */}
+      {player.pending && !player.note && (
+        <span className="ml-2 shrink-0 rounded-full bg-[#402666]/10 px-2 py-0.5 font-[Nunito] text-[11px] font-bold leading-4 text-[#402666]/60">
+          {invitedLabel}
+        </span>
+      )}
       <AnimatePresence initial={false}>
         {player.note && (
           <motion.span
