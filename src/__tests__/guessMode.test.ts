@@ -45,12 +45,17 @@ describe("Guess replaced Random on the create screen", () => {
     const branchBody = guessBranch.slice(0, guessBranch.indexOf("autoStart.current = true;"));
     expect(branchBody).not.toMatch(/autoStart/);
     expect(create).toMatch(/extra\.guessPickTitle/);
-    // The answer opens the pre-lobby — invite friends, or press Start and
-    // play alone — rather than arming a one-seat round (owner's ask: a
-    // picture game is 2-10 players).
+    // And the answer STARTS it. This opened a pre-lobby for a while, on the
+    // reading that a picture game was a 2-10 room like any other; the owner
+    // has since said it is a one-player game ("when I choose what to guess,
+    // start the game instantly, no lobby needed"), and a lobby for one
+    // person is a screen asking you to wait for nobody.
     expect(create).toMatch(
-      /const pickGuessCategory = \(cat: Category\) => \{[\s\S]*?setPreLobby\("guess"\);\s*\n\s*\};/,
+      /const pickGuessCategory = \(cat: Category\) => \{[\s\S]*?autoStart\.current = true;\s*\n\s*setHandingOff\(true\);\s*\n\s*\};/,
     );
+    expect(create).not.toMatch(/setPreLobby\("guess"\)/);
+    // Both cards say so.
+    expect(create).toMatch(/key: "guess"[^}]*players: "1"/);
   });
 
   it("the question gets a screen, not a strip under the card", () => {
@@ -117,7 +122,15 @@ describe("Guess replaced Random on the create screen", () => {
     // an effect keyed only on it never re-ran: after a create that failed and
     // toasted, every later tap set the ref and waited on a dependency that
     // was already true.
-    expect(create).toMatch(/\}, \[gameChoice, createEnabled, isCreating, selectedCategory\]\);/);
+    expect(create).toMatch(
+      /\}, \[gameChoice, createEnabled, isCreating, selectedCategory, user\]\);/,
+    );
+    // `user` is in there for a different failure: handleCreate returns at
+    // once without a session, so a tap that landed before auth finished
+    // restoring spent the arming on a call that did nothing, and the card
+    // was dead for the rest of the visit. It stays armed until the session
+    // is there.
+    expect(create).toMatch(/if \(!autoStart\.current\) return;\s*\n(?:\s*\/\/.*\n)*\s*if \(!user\) return;/);
   });
 
   it("and going back brings the carousel back with it", () => {
