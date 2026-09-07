@@ -118,8 +118,11 @@ describe("the picked card is brought into view", () => {
       .filter((line) => !/^\s*(\*|\/\/|\/\*)/.test(line))
       .join("\n");
     expect(code).not.toMatch(/behavior: "smooth"/);
-    expect(code).toMatch(/behavior: "auto", inline: "start", block: "nearest"/);
-    expect(page).toMatch(/row\.scrollLeft \+= el\.getBoundingClientRect\(\)\.left - row\.getBoundingClientRect\(\)\.left;/);
+    expect(code).toMatch(/behavior: "auto", inline: "center", block: "nearest"/);
+    // Centred in the row, not flush against its left edge.
+    expect(page).toMatch(
+      /row\.scrollLeft \+= card\.left \+ card\.width \/ 2 - \(box\.left \+ box\.width \/ 2\);/,
+    );
     expect(page).toMatch(/const deadline = performance\.now\(\) \+ 600;/);
   });
 
@@ -127,6 +130,13 @@ describe("the picked card is brought into view", () => {
     expect(page).toMatch(/const \[rowEl, setRowEl\] = useState<HTMLDivElement \| null>\(null\);/);
     expect(page).toMatch(/setRowEl\(el\);/);
     expect(page).toMatch(/\}, \[gameChoice, rowEl\]\);/);
+  });
+
+  it("and the row snaps to centre, so the placement sticks", () => {
+    // With snap-start the browser pulled every centring back to the left
+    // edge as soon as it settled, so the card could not be centred at all.
+    expect(page).toMatch(/shrink-0 snap-center overflow-clip/);
+    expect(page).not.toMatch(/shrink-0 snap-start overflow-clip/);
   });
 
   it("and yields to the player's own finger", () => {

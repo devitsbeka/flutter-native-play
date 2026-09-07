@@ -852,11 +852,17 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       const el = cardRefs.current[gameChoice];
       if (stopped || !el) return;
       if (row) {
-        // A delta, so re-applying corrects rather than compounds.
+        // Centred, not flush left: the row shows one card and a sliver of
+        // its neighbours, so the picked one belongs in the middle where a
+        // selected card reads as selected (owner: "not centered as the
+        // selected card should be shown"). A delta, so re-applying
+        // corrects rather than compounds.
+        const card = el.getBoundingClientRect();
+        const box = row.getBoundingClientRect();
         markProgrammaticScroll(row);
-        row.scrollLeft += el.getBoundingClientRect().left - row.getBoundingClientRect().left;
+        row.scrollLeft += card.left + card.width / 2 - (box.left + box.width / 2);
       } else {
-        el.scrollIntoView({ behavior: "auto", inline: "start", block: "nearest" });
+        el.scrollIntoView({ behavior: "auto", inline: "center", block: "nearest" });
       }
       if (performance.now() > deadline) {
         stop();
@@ -1897,7 +1903,14 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                     // A phone shows one card and the edge of the next; from
                     // tablet up the cards take a fixed width so the wide
                     // column shows two, three or more of them at once.
-                    "group relative isolate block shrink-0 snap-start overflow-clip rounded-[28px] bg-[#e9d8ff] text-left [container-type:inline-size]",
+                    // snap-center, not snap-start: the row rests with a card in the
+                    // middle of the screen and a sliver of its neighbours either
+                    // side, which is where a selected card has to be to read as
+                    // selected (owner: "not centered as the selected card should
+                    // be shown"). It also lets the placement below actually
+                    // stick — with snap-start the browser pulled every centring
+                    // back to the left edge the moment it settled.
+                    "group relative isolate block shrink-0 snap-center overflow-clip rounded-[28px] bg-[#e9d8ff] text-left [container-type:inline-size]",
                     // The designed 393:686 poster at 84% of the column —
                     // 146.6% of the row's width tall — or the row's height,
                     // whichever is shorter. A short screen keeps the card's
