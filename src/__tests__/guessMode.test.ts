@@ -151,8 +151,10 @@ describe("Guess replaced Random on the create screen", () => {
   it("a solo Guess starts the round itself, before the screen changes", () => {
     // Played alone, the round starts here: the room lobby will not let a
     // lone host start (a room is two people), and a solo picture game is a
-    // real game. With friends invited from the pre-lobby it waits instead,
-    // and the walk-in lands on the lobby (owner's ask: 2-10 players).
+    // real game. It is UNCONDITIONAL now — the friends picker lived in the
+    // pre-lobby, which Guess no longer opens, and a one-player game must
+    // never end up showing a lobby (owner: "start the game after they pick
+    // what to guess, no lobby").
     //
     // This was tried from the other end first — the create screen sent
     // ?autostart=1 and the lobby pressed its own Start when it saw it — and
@@ -161,8 +163,15 @@ describe("Guess replaced Random on the create screen", () => {
     // room, the seat, the host flag and the category all settled in the same
     // render. It shipped, and it lost. Starting the round here needs none of
     // it to line up, and /team then opens a room that is already playing.
-    expect(create).toMatch(/const guessSolo = invitees\.length === 0 && selectedFriends\.size === 0;/);
-    expect(create).toMatch(/if \(gameChoice === "guess" && room && guessSolo\) \{\s*\n\s*await startGame\(false, room\);/);
+    expect(create).not.toMatch(/guessSolo/);
+    expect(create).toMatch(/if \(gameChoice === "guess" && room\) \{\s*\n\s*await startGame\(false, room\);/);
+    // And "called" is not "started": startGame returns void and gives up
+    // quietly, so the room is read back, retried once, and reported —
+    // rather than walking on into the lobby, which is what put a lobby on
+    // the owner's screen in the first place.
+    expect(create).toMatch(/const roomIsPlaying = async \(roomId: string\): Promise<boolean> =>/);
+    expect(create).toMatch(/if \(!\(await roomIsPlaying\(room\.id\)\)\) \{/);
+    expect(create).toMatch(/walkInCode = null;/);
     expect(create).toMatch(/const \{ createRoom, startGame, loading \} = useMultiplayerV2\(\);/);
     // No flag on the URL, and nothing in the lobby waiting for one.
     // No flag on the URL (the comments above still name it — that is the

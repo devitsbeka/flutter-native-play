@@ -1304,8 +1304,13 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
          * the room is left "waiting" and the walk-in lands on the lobby with
          * a working Start — the right thing to fall back to.
          */
-        const guessSolo = invitees.length === 0 && selectedFriends.size === 0;
-        if (gameChoice === "guess" && room && guessSolo) {
+        // A picture game is played ALONE, full stop — not "alone unless
+        // somebody was picked earlier". The friends picker lives in the
+        // pre-lobby, which Guess no longer opens, so there is normally
+        // nobody to invite; making it unconditional closes the last route
+        // by which a one-player game could still end up showing a lobby
+        // (owner: "start the game after they pick what to guess, no lobby").
+        if (gameChoice === "guess" && room) {
           await startGame(false, room);
           // startGame returns void and bails silently on half a dozen
           // conditions, so "it was called" is not "it started". Read the
