@@ -1620,6 +1620,12 @@ export const ka = {
   // Play Limit Modal (registered) / თამაშის ლიმიტი (რეგისტრირებული)
   // ==========================================
   playLimit: {
+    countdownLabel: "კიდევ 5 უფასო თამაშამდე",
+    adRowTitle: "ნახე მოკლე რეკლამა",
+    adRowBody: "დაიბრუნე {count} თამაში ახლავე",
+    adRowAction: "ნახვა",
+    proHookTitle: "ითამაშე ლოდინის გარეშე",
+    proHookBody: "შეუზღუდავი თამაშები, რეკლამის გარეშე, ყველა კატეგორია",
     limitReached: "თამაშის ლიმიტი ამოწურულია",
     becomeProDescription: "გახდი PRO და ითამაშე შეუზღუდავად, შექმენი შენი ტრივიები და ბევრი სხვა",
     unlimitedGames: "ულიმიტო თამაშები",

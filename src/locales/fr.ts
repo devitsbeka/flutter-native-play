@@ -1353,6 +1353,12 @@ export const fr: KaTranslations = {
     gameStarting: "Le jeu commence...",
   },
   playLimit: {
+    countdownLabel: "avant 5 parties gratuites",
+    adRowTitle: "Regarder une courte pub",
+    adRowBody: "Récupérez {count} partie, tout de suite",
+    adRowAction: "Regarder",
+    proHookTitle: "Jouez sans attendre",
+    proHookBody: "Parties illimitées, sans pub, toutes les catégories",
     ...en.playLimit,
     limitReached: "Limite de jeux atteinte",
     becomeProDescription: "Devenez PRO et jouez sans limites, créez vos propres trivias et bien plus.",

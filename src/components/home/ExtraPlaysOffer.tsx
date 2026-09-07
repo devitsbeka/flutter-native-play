@@ -26,7 +26,24 @@ import gemChunky from "@/assets/figma-home/gem-chunky.png";
  * A price the player cannot meet is not hidden and not dead: it opens the
  * shop at the right shelf, which is where they were going to end up anyway.
  */
-export function ExtraPlaysOffer({ onPurchased }: { onPurchased?: () => void }) {
+export function ExtraPlaysOffer({
+  onPurchased,
+  section = "all",
+}: {
+  onPurchased?: () => void;
+  /**
+   * Which half to render.
+   *
+   * The limit modal used to stack every way of getting a play into one block
+   * of six identical buttons, and the one that costs nothing — the ad — was a
+   * small square labelled "Ad" between two numbers. It was reported as "no
+   * option to watch an ad": not hidden, just unreadable as an action.
+   *
+   * "ad" renders it as its own row with a real button; "packs" renders the
+   * coins and gems below the PRO offer, where a paid shortcut belongs.
+   */
+  section?: "all" | "ad" | "packs";
+}) {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const { profile } = useAuth();
@@ -129,6 +146,65 @@ export function ExtraPlaysOffer({ onPurchased }: { onPurchased?: () => void }) {
     );
   };
 
+  // ── The rewarded ad, as its own row ──────────────────────────────────────
+  //
+  // First offer on the card and the only free one, so it gets a full-width
+  // button with a verb on it instead of a square labelled "Ad". Google's own
+  // guidance for rewarded ads is the same: say what the reward is, and make
+  // opting in a deliberate tap rather than a guess.
+  const adPack = EXTRA_PLAY_PACKS.find((pack) => pack.ad);
+  if (section === "ad") {
+    if (!adPack || !adsAvailable) return null;
+    const isPending = pending === `${adPack.games}:ad`;
+    return (
+      <div className="mt-4 text-left">
+        <div
+          className="flex items-center gap-3 rounded-2xl px-4 py-3"
+          style={{ background: "#F5F8FF", border: "1.5px solid #C9D9F5" }}
+        >
+          <div
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+            style={{ background: "#E4ECFB" }}
+          >
+            <Play className="h-5 w-5 fill-current text-[#2C5BA8]" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="font-display text-[15px] font-bold leading-tight text-[#1E1B2E]">
+              {t("playLimit.adRowTitle")}
+            </p>
+            <p className="mt-0.5 text-[12.5px] leading-tight text-slate-500">
+              {t("playLimit.adRowBody", { count: adPack.games })}
+            </p>
+          </div>
+          <motion.button
+            type="button"
+            onClick={() => void buy(adPack, "ad")}
+            disabled={!!pending}
+            whileTap={pending ? undefined : { scale: 0.96, y: 1 }}
+            className="flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl px-4 font-display text-sm font-bold text-white disabled:opacity-60"
+            style={{
+              background: "linear-gradient(90deg, #3C6FD0 0%, #5B8BE8 100%)",
+              boxShadow: "0 3px 0 #2C5BA8",
+            }}
+          >
+            {isPending ? (
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+            ) : (
+              t("playLimit.adRowAction")
+            )}
+          </motion.button>
+        </div>
+        {refused && (
+          <p role="alert" className="mt-2 text-center text-xs font-semibold text-rose-500">
+            {refused === "ad_limit"
+              ? t("playLimit.adLimitReached")
+              : t("playLimit.purchaseFailed")}
+          </p>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="mt-5 space-y-3 text-left">
       {EXTRA_PLAY_PACKS.map((pack) => (
@@ -143,7 +219,7 @@ export function ExtraPlaysOffer({ onPurchased }: { onPurchased?: () => void }) {
           <div className="mt-2 flex gap-2">
             {priceButton(pack, "coins")}
             {priceButton(pack, "gems")}
-            {pack.ad && adsAvailable && priceButton(pack, "ad")}
+            {section === "all" && pack.ad && adsAvailable && priceButton(pack, "ad")}
           </div>
         </div>
       ))}

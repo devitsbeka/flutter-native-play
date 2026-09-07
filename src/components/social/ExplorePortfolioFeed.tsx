@@ -113,7 +113,7 @@ export function ExplorePortfolioFeed({
     isVip,
     loading: vipLoading,
     regenPlayAvailable,
-    timeUntilNextPlay,
+    timeUntilNextPlay, resetsAt,
     useRegenPlay,
   } = usePlayLimit();
 
@@ -231,6 +231,7 @@ export function ExplorePortfolioFeed({
                 vipLoading={vipLoading}
                 regenPlayAvailable={regenPlayAvailable}
                 timeUntilNextPlay={timeUntilNextPlay}
+                resetsAt={resetsAt}
                 useRegenPlay={useRegenPlay}
                 sendFriendRequest={sendFriendRequest}
                 acceptFriendRequest={acceptFriendRequest}

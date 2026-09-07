@@ -263,7 +263,7 @@ export function MatchResultScreen() {
   const { exhaustionInfo } = useTrivia();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { canPlay, isVip, loading: vipLoading, playsRemaining, windowMode, regenPlayAvailable, timeUntilNextPlay, useRegenPlay, consumePlay } = usePlayLimit();
+  const { canPlay, isVip, loading: vipLoading, playsRemaining, windowMode, regenPlayAvailable, timeUntilNextPlay, resetsAt, useRegenPlay, consumePlay } = usePlayLimit();
   
   // State for showing PRO upgrade modal when limit reached
   const [showPlayLimitModal, setShowPlayLimitModal] = useState(false);
@@ -578,6 +578,7 @@ export function MatchResultScreen() {
         isGuest={false}
         regenPlayAvailable={regenPlayAvailable}
         timeUntilNextPlay={timeUntilNextPlay}
+        resetsAt={resetsAt}
         onPlayWithRegen={async () => {
           const success = await useRegenPlay();
           if (success) {

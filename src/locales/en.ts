@@ -1621,6 +1621,12 @@ export const en: KaTranslations = {
   // Play Limit Modal (registered)
   // ==========================================
   playLimit: {
+    countdownLabel: "until 5 more free plays",
+    adRowTitle: "Watch a short ad",
+    adRowBody: "Get {count} play back, right now",
+    adRowAction: "Watch",
+    proHookTitle: "Play without the wait",
+    proHookBody: "Unlimited games, no ads, every category unlocked",
     limitReached: "Play limit reached",
     becomeProDescription: "Go PRO and play unlimited, create your own trivia and much more.",
     unlimitedGames: "Unlimited games",

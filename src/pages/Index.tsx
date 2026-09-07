@@ -284,7 +284,7 @@ export default function Index() {
   const { totalStars } = useTotalStars();
   const { canClaimDaily, canClaimChest, dailySecondsLeft } = useRewardTimers();
   const { missions, completedCount, totalCount } = useMissions();
-  const { playsRemaining, maxPlays, canPlay, isVip, loading: vipLoading, regenPlayAvailable, timeUntilNextPlay, useRegenPlay, freeGamesExhausted } = usePlayLimit();
+  const { playsRemaining, maxPlays, canPlay, isVip, loading: vipLoading, regenPlayAvailable, timeUntilNextPlay, resetsAt, useRegenPlay, freeGamesExhausted } = usePlayLimit();
   const { subscription } = useVipStatus();
   const { unreadCount } = useNotifications();
   const { hasEnoughCoins, stakeAmount } = useGameStake();
@@ -916,6 +916,7 @@ export default function Index() {
         isGuest={!user}
         regenPlayAvailable={regenPlayAvailable}
         timeUntilNextPlay={timeUntilNextPlay}
+        resetsAt={resetsAt}
         onPlayWithRegen={handlePlayWithRegen}
       />
       <NotEnoughStakeModal

@@ -1,6 +1,7 @@
 import triviaBuzzer from "@/assets/icons/trivia-buzzer.png";
 import crownIcon from "@/assets/crown-icon.png";
 import hourglassIcon from "@/assets/playlimit/hourglass.png";
+import { PlayLimitCountdown } from "@/components/home/PlayLimitCountdown";
 import gamepadIcon from "@/assets/playlimit/gamepad.png";
 import wheelIcon from "@/assets/playlimit/wheel.png";
 import React from "react";
@@ -26,6 +27,8 @@ interface PlayLimitModalProps {
   // Regen props for registered non-PRO users
   regenPlayAvailable?: boolean;
   timeUntilNextPlay?: string | null;
+  /** When the window rolls over, for the countdown. */
+  resetsAt?: number | null;
   onPlayWithRegen?: () => void;
   /**
    * A pack of extra games was bought and the player can start one now. Where
@@ -37,7 +40,7 @@ interface PlayLimitModalProps {
 }
 
 export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalProps>(
-  function PlayLimitModal({ isOpen, onClose, onRegister, isGuest = false, inline, regenPlayAvailable, timeUntilNextPlay, onPlayWithRegen, onPurchased }, ref) {
+  function PlayLimitModal({ isOpen, onClose, onRegister, isGuest = false, inline, regenPlayAvailable, timeUntilNextPlay, resetsAt, onPlayWithRegen, onPurchased }, ref) {
     const { t } = useLanguage();
     const navigate = useNavigate();
     const { initiateProCheckout, isProcessing, storeReady } = useProPurchase();
@@ -173,52 +176,58 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
           <X className="h-4 w-4 text-gray-600" />
         </button>
 
-        <img src={hourglassIcon} alt="" className="mx-auto h-16 w-16 object-contain" />
+        {/* The clock leads, because it is the only thing on this card that is
+            good news: the wait is finite and already running. The old layout
+            put a static "Next free play: 21m" in grey under the title, where
+            it read as a closed door and made the two offers below it look
+            like a toll rather than a choice. */}
+        <img src={hourglassIcon} alt="" className="mx-auto h-11 w-11 object-contain" />
 
-        <h2 className="mt-4 font-display text-xl font-bold text-[#1E1B2E]">
+        <PlayLimitCountdown
+          resetsAt={resetsAt}
+          fallback={timeUntilNextPlay}
+          label={t("playLimit.countdownLabel")}
+        />
+
+        <h2 className="mt-4 font-display text-lg font-bold text-[#1E1B2E]">
           {t("playLimit.limitReached")}
         </h2>
-        <p className="mx-auto mt-2 max-w-[300px] text-sm text-slate-500">
-          {timeUntilNextPlay
-            ? t("playLimit.nextFreePlay", { time: timeUntilNextPlay })
-            : t("playLimit.freePlayInterval")}
-        </p>
 
-        {/* Paying for the next game or three comes first: it is the only
-            answer here that ends with the player back in a game right now.
-            The offer takes itself off the card when there is nothing it can
-            sell, leaving the PRO route below it as it was. */}
-        <ExtraPlaysOffer onPurchased={handlePurchased} />
+        {/* Free first. Nothing else on this card can be had for nothing, and
+            burying it under two paid options is what got it reported as
+            missing. */}
+        <ExtraPlaysOffer section="ad" onPurchased={handlePurchased} />
 
-        <div className="mt-5 space-y-3 text-left">
-          <div
-            className="flex items-center gap-3 rounded-2xl px-4 py-3"
-            style={{ background: "#F5F8FF", border: "1.5px solid #C9D9F5" }}
-          >
-            <img src={gamepadIcon} alt="" className="h-9 w-9 shrink-0 object-contain" />
-            <p className="font-display text-base font-bold text-[#1E1B2E]">
-              {t("playLimit.unlimitedGames")}
-            </p>
+        {/* Then the subscription, in its own panel rather than as two feature
+            rows and a loose price. The hook is what it removes — the wait and
+            the ads — not a list of what it adds. */}
+        <div
+          className="mt-3 rounded-2xl px-4 py-4 text-left"
+          style={{
+            background: "linear-gradient(180deg, #FBF5FF 0%, #F4ECFF 100%)",
+            border: "1.5px solid #E9B5EE",
+          }}
+        >
+          <div className="flex items-center gap-3">
+            <img src={gamepadIcon} alt="" className="h-10 w-10 shrink-0 object-contain" />
+            <div className="min-w-0 flex-1">
+              <p className="font-display text-[15px] font-bold leading-tight text-[#1E1B2E]">
+                {t("playLimit.proHookTitle")}
+              </p>
+              <p className="mt-0.5 text-[12.5px] leading-tight text-slate-600">
+                {t("playLimit.proHookBody")}
+              </p>
+            </div>
+            <img src={wheelIcon} alt="" className="h-9 w-9 shrink-0 object-contain opacity-90" />
           </div>
 
-          <div
-            className="flex items-center gap-3 rounded-2xl px-4 py-3"
-            style={{ background: "#FBF5FF", border: "1.5px solid #E9B5EE" }}
-          >
-            <img src={wheelIcon} alt="" className="h-9 w-9 shrink-0 object-contain" />
-            <p className="font-display text-base font-bold text-[#1E1B2E]">
-              {t("playLimit.exclusiveFeatures")}
-            </p>
-          </div>
-        </div>
-
-        {/* The price of what the button below buys, and the period it renews
-            on. Above the button rather than under it, so it is read before
-            the tap and not after. */}
-        <p className="mt-5 text-center">
-          <span className="font-display text-2xl font-black text-[#1E1B2E]">{proPrice.display}</span>
-          <span className="ml-1 text-sm text-slate-500">{monthLabel()}</span>
-        </p>
+          {/* Price and period above the button, so both are read before the
+              tap rather than after it. Guideline 3.1.2, and paywallPrice.test
+              fails if either goes missing. */}
+          <p className="mt-3 text-center">
+            <span className="font-display text-2xl font-black text-[#1E1B2E]">{proPrice.display}</span>
+            <span className="ml-1 text-sm text-slate-500">{monthLabel()}</span>
+          </p>
 
         <motion.button
           onClick={handleUpgradeToPro}
@@ -237,11 +246,18 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
           {t("playLimit.becomePro")}
         </motion.button>
 
-        {/* The button above starts an auto-renewing subscription, so the
-            renewal terms belong beside it — guideline 3.1.2. This card is one
-            of the likeliest places a reviewer reaches the paywall from, and
-            it had no terms on it at all. */}
-        <SubscriptionTerms className="mt-3 text-center" onNavigate={onClose} />
+          {/* The button above starts an auto-renewing subscription, so the
+              renewal terms belong beside it — guideline 3.1.2. This card is
+              one of the likeliest places a reviewer reaches the paywall from,
+              and it had no terms on it at all. */}
+          <SubscriptionTerms className="mt-3 text-center" onNavigate={onClose} />
+        </div>
+
+        {/* Last, and quietest: the shortcuts for someone who would rather
+            spend than wait or watch. They were the loudest thing on the card
+            and they are the least interesting answer to "I want to play now".
+            Hidden entirely when there is nothing to sell. */}
+        <ExtraPlaysOffer section="packs" onPurchased={handlePurchased} />
       </div>
     );
 

@@ -38,7 +38,7 @@ export function PlayGuardProvider({ children }: { children: React.ReactNode }) {
     canPlay,
     loading: vipLoading,
     regenPlayAvailable,
-    timeUntilNextPlay,
+    timeUntilNextPlay, resetsAt,
     useRegenPlay,
   } = usePlayLimit();
   const { canPlayLevel } = useCategoryPlayLimit();
@@ -114,6 +114,7 @@ export function PlayGuardProvider({ children }: { children: React.ReactNode }) {
         isGuest={false}
         regenPlayAvailable={regenPlayAvailable}
         timeUntilNextPlay={timeUntilNextPlay}
+        resetsAt={resetsAt}
         onPlayWithRegen={handlePlayWithRegen}
         onPurchased={handlePurchased}
       />
