@@ -1138,6 +1138,7 @@ export function RoomLobbyV2() {
         friendRequested: t("extra.lobbyFriendRequested"),
         joined: t("lobby.uJoinedNote"),
         left: t("lobby.uLeftNote"),
+        invited: t("lobby.uInvitedNote"),
       }}
       rules={lobbyRules}
       rulesText={[

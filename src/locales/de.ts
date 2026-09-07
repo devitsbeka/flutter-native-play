@@ -1629,6 +1629,7 @@ export const de: KaTranslations = {
     uGameRules: "Spielregeln",
     uPlayersTab: "Spieler",
     uJoinedNote: "ist dabei",
+    uInvitedNote: "eingeladen",
     uLeftNote: "ist gegangen",
     uQuestionsPerRound: "Fragen pro Runde",
     uVisibility: "Sichtbarkeit",

@@ -67,7 +67,7 @@ const WavePattern = () => (
 type GameStage = "finding-opponent" | "opponent-found" | "finding-category" | "category-found" | "ready";
 
 export function VSScreen() {
-  const { opponent, beginPlaying, phase } = useGame();
+  const { opponent, beginPlaying, phase, selectedCategoryId } = useGame();
   const { profile } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
@@ -191,9 +191,31 @@ export function VSScreen() {
     return () => clearTimeout(timer);
   }, [stage]);
 
-  // Stage 3: Category slot machine animation
+  /**
+   * The category the player ALREADY chose, when they chose one.
+   *
+   * `startMatchmaking` has always taken a category — `/game?category=` — and
+   * nothing here read it, so the slot machine spun to a random winner and
+   * the choice was thrown away. That was invisible while the only caller
+   * passed nothing; it matters now that picking a picture game comes
+   * straight here (a solo Guess used to create a whole room to play one
+   * round in, and left the room behind afterwards).
+   */
+  const chosenCategory = useMemo(
+    () => (selectedCategoryId ? categories.find((c) => c.uuid === selectedCategoryId || c.id === selectedCategoryId) : undefined),
+    [selectedCategoryId, categories],
+  );
+
+  // Stage 3: the category is either the one the player picked — no spin,
+  // there is nothing to decide — or the slot machine picks one.
   useEffect(() => {
-    if (stage !== "finding-category" || categoryPool.length === 0) return;
+    if (stage !== "finding-category") return;
+    if (chosenCategory) {
+      setSelectedCategory({ id: chosenCategory.id, name: chosenCategory.name });
+      setStage("category-found");
+      return;
+    }
+    if (categoryPool.length === 0) return;
 
     let cycleCount = 0;
     const maxCycles = 14;
@@ -226,7 +248,7 @@ export function VSScreen() {
     return () => {
       if (categoryIntervalRef.current) clearTimeout(categoryIntervalRef.current);
     };
-  }, [stage, categoryPool]);
+  }, [stage, categoryPool, chosenCategory]);
 
   // Pre-fetch questions ref
   const prefetchedQuestionsRef = useRef<TriviaQuestion[] | null>(null);
@@ -556,7 +578,10 @@ export function VSScreen() {
             {/* Category spin button - BELOW blob. Three free re-rolls of the
                 category only (the opponent stays); gone once they're spent. */}
             <AnimatePresence>
-              {isCategoryLocked && categorySpinsLeft > 0 && (
+              {/* Not when the player chose the category themselves — a
+                  re-spin would throw away the thing they came here to
+                  play. */}
+              {isCategoryLocked && !chosenCategory && categorySpinsLeft > 0 && (
                 <motion.button
                   className="flex items-center justify-center gap-2 px-4 py-2 rounded-full backdrop-blur-md"
                   style={{

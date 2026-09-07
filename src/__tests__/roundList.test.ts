@@ -93,7 +93,7 @@ describe("what a drop means", () => {
 
 describe("the way to add more never scrolls away", () => {
   it("Add sits under the scroller, not inside it", () => {
-    const scroller = modal.indexOf("min-h-0 max-h-[400px] flex-1 overflow-y-auto");
+    const scroller = modal.indexOf("min-h-0 flex-1 overflow-y-auto");
     const add = modal.indexOf('t("lobby.uAddRounds")');
     const scrollerEnd = modal.indexOf("</Reorder.Group>");
     expect(scroller).toBeGreaterThan(-1);
@@ -104,20 +104,30 @@ describe("the way to add more never scrolls away", () => {
   });
 
   it("and the rounds are what scrolls", () => {
-    expect(modal).toMatch(/min-h-0 max-h-\[400px\] flex-1 overflow-y-auto/);
+    expect(modal).toMatch(/min-h-0 flex-1 overflow-y-auto/);
   });
 });
 
 describe("a list longer than the panel says so", () => {
-  it("the panel is as tall as the screen allows, not 60dvh", () => {
+  it("the panel measures its own ceiling rather than guessing at one", () => {
     const universal = read("src/components/lobby/UniversalLobby.tsx");
-    expect(universal).toMatch(/max-h-\[calc\(100dvh_-_var\(--safe-top,0px\)_-_var\(--safe-bottom,0px\)_-_145px\)\] flex-col overflow-hidden rounded-\[22px\]/);
+    // A flat reserve is a guess at where the chip row ends, and a guess has
+    // to be generous: this one stopped the list two rows short of the room
+    // it had. The row is measured instead, and the inset arithmetic stays
+    // in CSS where env() can do it.
+    expect(universal).toMatch(/setMenuMaxHeight\(`calc\(100dvh - \$\{top\}px - var\(--safe-bottom, 0px\) - 16px\)`\)/);
+    expect(universal).toMatch(/style=\{menuMaxHeight \? \{ maxHeight: menuMaxHeight \} : undefined\}/);
+    expect(universal).toMatch(/ref=\{categoryRowRef\}/);
+    // The class stays as the fallback for the frame before it lands.
+    expect(universal).toMatch(/max-h-\[calc\(100dvh_-_var\(--safe-top,0px\)_-_var\(--safe-bottom,0px\)_-_145px\)\] flex-col overflow-hidden/);
     expect(universal).not.toMatch(/max-h-\[60dvh\]/);
   });
 
-  it("six rows, then it scrolls", () => {
-    expect(modal).toMatch(/export const LIST_MAX_ROWS = 6;/);
-    expect(modal).toMatch(/className="min-h-0 max-h-\[400px\] flex-1 overflow-y-auto px-4 pb-3"/);
+  it("the list fills the panel, then scrolls", () => {
+    // No fixed row cap: it was pinned at six rows while the panel was
+    // allowed to be taller, so the list stopped short of its own space.
+    expect(modal).not.toMatch(/LIST_MAX_ROWS|max-h-\[400px\]/);
+    expect(modal).toMatch(/className="min-h-0 flex-1 overflow-y-auto px-4 pb-3"/);
     // The hint is in the fixed header, so the scroller holds rows only.
     const header = modal.slice(modal.indexOf('{t("lobby.uRoundsTitle")}'), modal.indexOf("<div ref={scrollerRef}"));
     expect(header).toMatch(/uRoundsHint/);
