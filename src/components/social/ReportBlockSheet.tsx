@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import {
@@ -7,6 +7,18 @@ import {
   type ReportReason,
 } from "@/hooks/useContentModeration";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/lib/toast";
+
+/** What a report can be about, beyond the person who posted it. */
+export type ReportedContentType = "quiz" | "room" | "message" | "profile";
+
+/** user_reports.content_id is a uuid column; a sample post's id is not one. */
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** As much free text as is useful to read in a list; the column is unbounded. */
+const NOTE_MAX = 500;
 
 interface ReportBlockSheetProps {
   open: boolean;
@@ -21,8 +33,21 @@ interface ReportBlockSheetProps {
   userId: string;
   /** Shown in the confirmation copy. */
   displayName?: string;
-  /** Optional content this is about, recorded on the report. */
-  context?: { messageId?: string; roomId?: string };
+  /**
+   * Optional content this is about, recorded on the report.
+   *
+   * `contentType`/`contentId` are the pair added in
+   * 20261013120000_moderation_actions.sql, and they are what the admin page's
+   * "Remove content" action reads: without them a report about a quiz is a
+   * report about its author with the quiz described in prose, and there is
+   * nothing for an admin to unpublish.
+   */
+  context?: {
+    messageId?: string;
+    roomId?: string;
+    contentType?: ReportedContentType;
+    contentId?: string;
+  };
   /** Called after a successful block, so the caller can dismiss the content. */
   onBlocked?: () => void;
 }
@@ -49,14 +74,62 @@ export function ReportBlockSheet({
   onBlocked,
 }: ReportBlockSheetProps) {
   const { t } = useLanguage();
+  const { user } = useAuth();
   const { reportUser, blockUser } = useContentModeration();
   const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState("");
+
+  // A new report starts on a blank note; the last one's text must not follow
+  // it into the next sheet.
+  useEffect(() => {
+    if (open) setNote("");
+  }, [open, userId, context?.contentId]);
 
   const close = () => onClose();
 
+  /**
+   * Report a piece of content.
+   *
+   * Not routed through `reportUser`: that helper refuses when the reported id
+   * is the caller's own, which is exactly the case for a quiz whose author we
+   * could not resolve, and it has nowhere to put content_type/content_id. The
+   * row it writes is otherwise the same one, and so are the two toasts.
+   */
+  const submitContentReport = async (reason: ReportReason, description: string | null) => {
+    if (!user) return;
+    const contentId = context?.contentId && UUID.test(context.contentId) ? context.contentId : null;
+    // An id we cannot store in a uuid column still belongs in the report:
+    // without it an admin cannot tell which quiz was flagged.
+    const trailer =
+      !contentId && context?.contentId ? `[${context.contentType}:${context.contentId}]` : null;
+
+    const { error } = await supabase.from("user_reports").insert({
+      reporter_id: user.id,
+      reported_user_id: userId || user.id,
+      report_type: reason,
+      description: [description, trailer].filter(Boolean).join(" ") || null,
+      message_id: context?.messageId ?? null,
+      room_id: context?.roomId ?? null,
+      content_type: context?.contentType ?? null,
+      content_id: contentId,
+    } as never);
+
+    if (error) {
+      console.error("[moderation] Content report failed:", error);
+      toast.error(t("moderation.reportFailed"));
+      return;
+    }
+    toast.success(t("moderation.reportReceived"));
+  };
+
   const submitReport = async (reason: ReportReason) => {
     setBusy(true);
-    await reportUser(userId, reason, undefined, context);
+    const description = note.trim().slice(0, NOTE_MAX) || null;
+    if (context?.contentType) {
+      await submitContentReport(reason, description);
+    } else {
+      await reportUser(userId, reason, description ?? undefined, context);
+    }
     setBusy(false);
     close();
   };
@@ -101,6 +174,22 @@ export function ReportBlockSheet({
                 <h2 className="mb-4 text-lg font-bold text-foreground">
                   {t("moderation.reportReasonTitle")}
                 </h2>
+
+                {/* Every report filed from here carried description: undefined,
+                    so `user_reports.description` was null for every single
+                    user-filed row and the reporter could never say what had
+                    actually happened — a reason alone does not tell an admin
+                    which message or which picture. Optional: a tap on a reason
+                    still files the report, exactly as before. */}
+                <textarea
+                  value={note}
+                  onChange={(e) => setNote(e.target.value.slice(0, NOTE_MAX))}
+                  maxLength={NOTE_MAX}
+                  rows={3}
+                  disabled={busy}
+                  placeholder="Add details (optional)"
+                  className="mb-3 w-full resize-none rounded-2xl border border-border bg-muted/40 px-4 py-3 text-[15px] text-foreground outline-none placeholder:text-muted-foreground focus:border-primary disabled:opacity-50"
+                />
 
                 {/* One group, even rhythm: these were padding-only blocks
                     with the same space inside a row as between rows. */}

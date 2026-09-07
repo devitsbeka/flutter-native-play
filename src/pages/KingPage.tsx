@@ -3,7 +3,7 @@ import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import type { Tables } from "@/integrations/supabase/types";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, ChevronLeft, Crown, Flag, X } from "lucide-react";
+import { AlertTriangle, Check, ChevronLeft, Crown, Flag, X } from "lucide-react";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { containsBlockedText } from "@/utils/contentFilter";
 import iconKingMascot from "@/assets/play-chooser/icon-king.webp";
@@ -235,44 +235,77 @@ function RevealRow({
  * — so the same report also goes to user_reports, which is the table the
  * admin Reports page actually reads. A report nobody can read is not a
  * report.
+ *
+ * THE RECEIPT USED TO BE A LIE. user_reports.report_type carried a CHECK
+ * listing five values, none of them 'king_question', so every one of these
+ * reports was rejected with 23514 — and this function awaited the insert
+ * without ever looking at `error`, then set `sent` in a `finally`. The
+ * player was thanked for a report the database had refused. The CHECK is
+ * widened in 20261013100000; the outcome is read here either way, because a
+ * failure that shows as a success is worse than a failure.
+ *
+ * Both writes are attempted and either one succeeding is a filed report:
+ * the structured table is the better record and the fallback is the one an
+ * admin reads, so losing one of the two is not worth telling a player about.
+ * Losing both is.
  */
 function ReportQuestionRow({ input }: { input: KingReportInput }) {
   const { t } = useLanguage();
-  const [sent, setSent] = useState(false);
-  const [busy, setBusy] = useState(false);
+  const [state, setState] = useState<"idle" | "busy" | "sent" | "failed">("idle");
 
   // A new question is a new report; the receipt must not carry over.
   useEffect(() => {
-    setSent(false);
+    setState("idle");
   }, [input.questionText]);
 
   const file = async () => {
-    if (busy || sent) return;
-    setBusy(true);
+    if (state === "busy" || state === "sent") return;
+    setState("busy");
     try {
-      await supabase.from("king_question_reports" as never).insert(
-        kingReportRow(input) as never,
-      );
+      const structured = await supabase
+        .from("king_question_reports" as never)
+        .insert(kingReportRow(input) as never);
+      if (structured.error) {
+        console.warn("[King] structured report failed", structured.error);
+      }
+
       const fallback = kingReportFallbackRow(input);
-      if (fallback) await supabase.from("user_reports").insert(fallback);
+      let fallbackOk = false;
+      if (fallback) {
+        const { error } = await supabase.from("user_reports").insert(fallback);
+        if (error) console.warn("[King] report failed", error);
+        fallbackOk = !error;
+      }
+
+      setState(!structured.error || fallbackOk ? "sent" : "failed");
     } catch (e) {
-      // Reporting is a courtesy, not a transaction — never block the reveal.
+      // Reporting never blocks the reveal — but it does say so now.
       console.warn("[King] report failed", e);
-    } finally {
-      setBusy(false);
-      setSent(true);
+      setState("failed");
     }
   };
+
+  const failed = state === "failed";
 
   return (
     <button
       type="button"
       onClick={() => void file()}
-      disabled={busy || sent}
+      disabled={state === "busy" || state === "sent"}
       className="mt-2 flex h-[33px] w-full items-center justify-center gap-2 font-[Nunito] text-[14px] leading-[26px] tracking-[-0.16px] text-[#ff615d] disabled:opacity-70"
     >
-      {sent ? <Check className="size-[13px]" strokeWidth={3} /> : <Flag className="size-[13px]" />}
-      {sent ? t("king.reportThanks") : t("king.reportQuestion")}
+      {state === "sent" ? (
+        <Check className="size-[13px]" strokeWidth={3} />
+      ) : failed ? (
+        <AlertTriangle className="size-[13px]" />
+      ) : (
+        <Flag className="size-[13px]" />
+      )}
+      {state === "sent"
+        ? t("king.reportThanks")
+        : failed
+          ? t("moderation.reportFailed")
+          : t("king.reportQuestion")}
     </button>
   );
 }

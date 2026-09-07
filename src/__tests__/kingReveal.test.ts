@@ -102,10 +102,23 @@ describe("the flag under the explanation", () => {
   });
 
   it("turns into its own receipt, and resets on the next question", () => {
-    expect(page).toMatch(/disabled=\{busy \|\| sent\}/);
-    expect(page).toMatch(/setSent\(false\);\s*\n\s*\}, \[input\.questionText\]\);/);
-    expect(page).toMatch(/t\("king\.reportThanks"\) : t\("king\.reportQuestion"\)/);
+    expect(page).toMatch(/disabled=\{state === "busy" \|\| state === "sent"\}/);
+    expect(page).toMatch(/setState\("idle"\);\s*\n\s*\}, \[input\.questionText\]\);/);
+    expect(page).toMatch(/t\("king\.reportThanks"\)/);
+    expect(page).toMatch(/t\("king\.reportQuestion"\)/);
     expect(page).toMatch(/text-\[#ff615d\]/);
+  });
+
+  it("and says so when the report did NOT land", () => {
+    // The receipt used to be set in a `finally`, so a rejected insert — every
+    // one of them, until user_reports' report_type CHECK learned about
+    // 'king_question' — was shown to the player as "reported, thank you".
+    // The outcome is read now: either write landing is a filed report, and
+    // neither landing says so.
+    expect(page).toMatch(/if \(structured\.error\)/);
+    expect(page).toMatch(/setState\(!structured\.error \|\| fallbackOk \? "sent" : "failed"\)/);
+    expect(page).toMatch(/t\("moderation\.reportFailed"\)/);
+    expect(page).not.toMatch(/setSent\(true\)/);
   });
 
   it("in all seven languages", () => {

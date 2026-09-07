@@ -35,6 +35,7 @@ import {
   type PublicRoom,
   type PublicRoomFilter,
 } from "@/hooks/usePublicRooms";
+import { useContentModeration } from "@/hooks/useContentModeration";
 import iconKingLounge from "@/assets/play-chooser/icon-king.webp";
 import iconBattleLounge from "@/assets/play-chooser/icon-crate.png";
 import { dealtCrests, dealtRoomIcon, fetchCrestPool } from "@/utils/roomCrests";
@@ -43,6 +44,7 @@ import iconWordsLounge from "@/assets/play-chooser/icon-words.webp";
 import crownIcon from "@/assets/crown-icon.png";
 import sceneArena from "@/assets/tb-lobby/scene-arena.webp";
 import { useDeveloperMode } from "@/contexts/DeveloperModeContext";
+import { ContentReportButton } from "@/components/social/ContentReportButton";
 
 /**
  * The Public tab: rooms anyone can find, and ask to be let into.
@@ -291,6 +293,19 @@ function PublicRoomCard({
                 {room.host_nickname || t("extra.friendFallback")}
               </span>
             </button>
+
+            {/* Guideline 1.2: a public room is user-generated content — its
+                name, its icon and its host's are all typed or chosen by a
+                stranger — and this list is where a reviewer meets it. There
+                was nothing to tap here; report and block hung off a profile
+                two screens away. Hidden on your own room. */}
+            <ContentReportButton
+              contentType="room"
+              contentId={room.id}
+              authorUserId={room.host_user_id}
+              roomId={room.id}
+              className={`h-8 w-8 shrink-0 ${ink.text} hover:bg-white/15`}
+            />
           </div>
 
           {/* Seats. The lounges are what this is for — their card is
@@ -746,8 +761,19 @@ export function PublicRoomsSection({
     onlineIds,
     friendIds,
   };
+  // A room hosted by a blocked player is not listed. Joining it would put
+  // the viewer in a lobby with them, under their name, at their invitation —
+  // the block is meant to end exactly that. Only the host is checked: the
+  // other seats are drawn as faces by UniversalLobby and RoomScoreboard,
+  // which do their own filtering, and hiding a whole room because one guest
+  // in it is blocked would take away far more than was asked for.
+  //
+  // Fails OPEN, like every read-only list here.
+  const { hiddenIds } = useContentModeration();
   const rooms = sortPublicRooms(
-    filterPublicRooms(data ?? [], filter, searchQuery, roomsCtx, developerMode),
+    filterPublicRooms(data ?? [], filter, searchQuery, roomsCtx, developerMode).filter(
+      (r) => !hiddenIds.has(r.host_user_id),
+    ),
     friendIds,
     roomsCtx,
   );

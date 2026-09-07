@@ -7,6 +7,7 @@ import { AvatarWithFrame } from "@/components/shared/AvatarWithFrame";
 import purpleHeartIcon from "@/assets/icons/purple-heart.webp";
 import bookmarkIcon from "@/assets/icons/bookmark-3d.png";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { ContentReportButton } from "@/components/social/ContentReportButton";
 
 const ICON_STORAGE_URL = "https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library";
 
@@ -149,10 +150,14 @@ export function TriviaPreviewModal({
                     size="sm"
                     showVipBadge={false}
                   />
-                  <div>
-                    <p className="font-semibold text-foreground">{post.displayName}</p>
-                    <p className="text-sm text-muted-foreground">@{post.username}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-foreground truncate">{post.displayName}</p>
+                    <p className="text-sm text-muted-foreground truncate">@{post.username}</p>
                   </div>
+                  {/* Guideline 1.2: the report has to be on the content. This
+                      is the screen a player reads before deciding to play a
+                      stranger's quiz, so it is where a bad one gets flagged. */}
+                  <ContentReportButton contentType="quiz" contentId={post.id} />
                 </div>
 
                 {/* Stats Grid */}
