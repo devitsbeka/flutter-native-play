@@ -41,6 +41,10 @@ export default function CreateRoom() {
     <MultiplayerProviderV2>
       <CreateRoomPage
         initialMode={initialMode}
+        // This screen is the page here, not an overlay, so its history
+        // entry is its own to replace when it hands off to a game — see
+        // `handoff` in CreateRoomPage.
+        ownsRoute
         // This screen IS the destination here, so it never fades in over
         // whatever happened to be behind it.
         enterInstantly
