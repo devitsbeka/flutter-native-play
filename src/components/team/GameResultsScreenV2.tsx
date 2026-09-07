@@ -165,15 +165,40 @@ export function GameResultsScreenV2() {
   const myParticipant = rankedParticipants.find(p => p.isMe);
   // Use Math.max to handle race condition where DB score hasn't propagated yet
   const myScore = Math.round(Math.max(myParticipant?.score || 0, localMyScore));
-  const myRank = myParticipant?.rank ?? rankedParticipants.length;
+  /**
+   * My place — or nothing, when this screen cannot see my row yet.
+   *
+   * It used to fall back to `rankedParticipants.length`: absent from the
+   * list was reported as LAST. A player who leaves and comes back arrives
+   * here before their participant row is read back, so the winner was told
+   * they came fourth while the list beside the words showed them first with
+   * the top score. Being missing and coming last are different facts, and
+   * only one of them is knowable here.
+   */
+  const myRank = myParticipant?.rank ?? null;
 
   const isWin = myRank === 1;
-  const isPodium = myRank <= 3;
-  const result = isWin 
-    ? t("game.victory") 
-    : isPodium 
-      ? t("game.placeFirst", { rank: myRank }) 
-      : t("game.place", { rank: myRank });
+  const isPodium = myRank !== null && myRank <= 3;
+  const result =
+    myRank === null
+      ? // Nothing to claim: the row is not here to read a place off. "Game
+        // over" is true whatever the place turns out to be, where "4th
+        // Place" over a list showing you first is not.
+        t("extra.gameOver")
+      : isWin
+        ? t("game.victory")
+        : isPodium
+          ? t("game.placeFirst", { rank: myRank })
+          : t("game.place", { rank: myRank });
+  /**
+   * The rank the PAYOUT uses, which cannot be null.
+   *
+   * Still last when the row is missing, deliberately: that is the smallest
+   * reward, and paying out on a guess should err downwards. The display
+   * above is what the owner reported and what changed; the money is left
+   * exactly as it was.
+   */
+  const myRankForPayout = myRank ?? rankedParticipants.length;
 
   const hasUpdatedStats = useRef(false);
 
@@ -261,7 +286,7 @@ export function GameResultsScreenV2() {
         // Unified reward policy — see multiplayerPayout.ts for the rules.
         const { earnedCoins, isPractice, countsAsWin } = calculateMultiplayerPayout({
           playerCount: participants.length,
-          myRank,
+          myRank: myRankForPayout,
           myScore,
           isWin,
         });
@@ -323,7 +348,7 @@ export function GameResultsScreenV2() {
         if (statsKey) processedResultsGames.delete(statsKey);
       });
     }
-  }, [user, profile, myScore, myRank, isWin, isHost, currentRoom, setProfileLocal, rankedParticipants, addCoins, participants, mltAllVotersDone, isMostLikelyRound]);
+  }, [user, profile, myScore, myRankForPayout, isWin, isHost, currentRoom, setProfileLocal, rankedParticipants, addCoins, participants, mltAllVotersDone, isMostLikelyRound]);
 
   // Prefetch the questions a challenge link carries, so sharing is one tap
   // and not a wait.
@@ -668,17 +693,33 @@ export function GameResultsScreenV2() {
                     className="w-12 h-12 border-2 border-white/30"
                     fallbackClassName="bg-gradient-to-br from-purple-400 to-purple-600 text-white text-base font-bold"
                   />
-                  {idx === 0 && (
-                    <Crown className="absolute -top-3 -right-1 w-5 h-5 text-amber-400 fill-amber-400 drop-shadow-md" />
-                  )}
+                  {/* No crown. It sat on idx === 0 — the WINNER — while the
+                      same crown means HOST everywhere else in the app: the
+                      lobby scoreboard draws it on `is_host`, so does every
+                      room card. So the player who won this round read as the
+                      person who owns the room, and the owner reported exactly
+                      that ("Beka is not a host and i see him as a host").
+                      The 🥇 beside the name already says who won, and says it
+                      without borrowing another badge's meaning. */}
                 </div>
                 
                 {/* Medal, or the place number from fourth down.
                     The colour is not optional: the top three are emoji and
                     paint themselves, but "#4" is text, and with nothing set
                     it inherited the default dark foreground and came out
-                    black on a dark row. */}
-                <span className="text-2xl font-display font-bold text-white min-w-[2ch] text-center">
+                    black on a dark row.
+                    
+                    The number is smaller than the medals it sits among
+                    (owner's ask). At the medals' 24px it was the loudest
+                    thing on a row it is the least important part of — an
+                    emoji carries padding inside its own glyph, so type set
+                    to match it optically overshoots. */}
+                <span
+                  className={cn(
+                    "font-display font-bold text-white min-w-[2ch] text-center",
+                    idx < 3 ? "text-2xl" : "text-base",
+                  )}
+                >
                   {idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `#${p.rank}`}
                 </span>
                 

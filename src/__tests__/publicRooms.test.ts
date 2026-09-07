@@ -191,12 +191,24 @@ describe("the private tab and the lobby it opens", () => {
   });
 });
 
-describe("the two tabs do not show the same room twice", () => {
-  it("the Private tab asks for private rooms only", () => {
+describe("the two tabs do not show the same room twice — except your own", () => {
+  it("the Private tab hides other people's published rooms", () => {
     const page = read("src/pages/TeamV2.tsx");
     expect(page).toMatch(/visibility="private"/);
     const rooms = read("src/hooks/useMyRooms.ts");
-    expect(rooms).toMatch(/if \(visibility === "private"\) \{\s*\n\s*result = result\.filter\(\(room\) => !room\.is_public\)/);
+    expect(rooms).toMatch(
+      /if \(visibility === "private"\) \{\s*\n\s*result = result\.filter\(\(room\) => !room\.is_public \|\| room\.is_host\)/,
+    );
+  });
+
+  it("but a room you HOST is on both, so it cannot be lost between them", () => {
+    // Superseded on purpose. The tabs sort other people's rooms — one list
+    // you can walk into, one you need a code for. Your own are the thing you
+    // came back for, and the owner reported hosting a public room, playing a
+    // round, and then not finding it under a filter called "My Rooms".
+    const rooms = read("src/hooks/useMyRooms.ts");
+    expect(rooms).toMatch(/\|\| room\.is_host\)/);
+    expect(rooms).not.toMatch(/result\.filter\(\(room\) => !room\.is_public\)\;/);
   });
 
   it("old links still land somewhere real", () => {

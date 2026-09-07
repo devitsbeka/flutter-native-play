@@ -508,8 +508,23 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
         )
       : activeRooms;
 
+    /**
+     * The Private tab hides published rooms — except your own.
+     *
+     * The tabs sort OTHER PEOPLE'S rooms: one list you can walk into, one
+     * you need a code for. Your own rooms are not a browsing problem, they
+     * are the thing you came back for, and splitting them across two tabs by
+     * a setting you made once means remembering which tab a room went into.
+     *
+     * The owner's report: hosted a public room, played a round, and could
+     * not find it afterwards — it was under Public while they were looking
+     * under Private, in a filter literally called "My Rooms".
+     *
+     * So a room you host stays on both tabs. Everything else the Private tab
+     * hides, it still hides.
+     */
     if (visibility === "private") {
-      result = result.filter((room) => !room.is_public);
+      result = result.filter((room) => !room.is_public || room.is_host);
     }
 
     // An unreleased mode's rooms are the admin's alone, the same rule the

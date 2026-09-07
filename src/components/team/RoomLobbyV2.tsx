@@ -925,7 +925,24 @@ export function RoomLobbyV2() {
       },
     };
   };
-  const lobbyPlayers: LobbyPlayer[] = participants.map((p) => ({
+  /**
+   * The Players tab, highest score first.
+   *
+   * It listed people in whatever order `participants` arrived in — join
+   * order — so the player with 680 points sat fourth under three players on
+   * zero, and read as being in fourth place. A tab that shows scores is a
+   * scoreboard whether or not it is called one.
+   *
+   * Seated players before invitations that nobody has answered: a
+   * placeholder has no score to rank and belongs at the end either way.
+   */
+  const rankedParticipants = [...participants].sort((a, b) => {
+    const pendingA = (a.status as string) === "invited" ? 1 : 0;
+    const pendingB = (b.status as string) === "invited" ? 1 : 0;
+    if (pendingA !== pendingB) return pendingA - pendingB;
+    return (b.total_score || 0) - (a.total_score || 0);
+  });
+  const lobbyPlayers: LobbyPlayer[] = rankedParticipants.map((p) => ({
     id: p.id,
     ...friendAsk(p.user_id),
     name: p.nickname,
