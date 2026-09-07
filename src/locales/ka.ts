@@ -4949,6 +4949,8 @@ export const ka = {
     mpRoomDataNotFound: "ოთახის მონაცემები ვერ მოიძებნა",
     mpTriviaQuestionsNotFound: "ტრივიის კითხვები ვერ მოიძებნა",
     mpGameStartFailed: "თამაშის დაწყება ვერ მოხერხდა. ცადე თავიდან.",
+    mpOnlyHostStarts: "რაუნდს მხოლოდ ჰოსტი იწყებს",
+    mpReopenRoom: "შედი ოთახში ხელახლა და სცადე",
     mpQuestionsNotFound: "კითხვები ვერ მოიძებნა",
     mpGameStartError: "თამაშის დაწყება ვერ მოხერხდა",
     // "Most Likely To" vote rounds
