@@ -232,14 +232,35 @@ class AdService {
    * The web simulation is unaffected: `adRequestsAllowed()` reports true off
    * a native platform, where there is no UMP and no real ad SDK.
    */
-  private mayRequestAds(): boolean {
+  private async mayRequestAds(): Promise<boolean> {
     // Simulation mode. Either the web, or a native build where the AdMob
     // import threw and `initialize()` fell back — there is no ad SDK to
     // withhold and no UMP to ask, and blocking here would take the fallback
     // rewards away too.
     if (!this.isNative) return true;
     if (adRequestsAllowed()) return true;
-    console.warn('[ads] Ad request blocked — no consent on file (UMP).');
+
+    // Not resolved is not the same as refused, and this used to treat them
+    // alike. `ensureAdConsent()` swallows its own failures and leaves the
+    // state unresolved, so a single network blip during launch — the most
+    // likely moment for one, on a cold start over hotel wifi — meant
+    // `adRequestsAllowed()` stayed false for the entire session with nothing
+    // ever calling the flow again. Every later tap on "Ad" then failed open
+    // instantly: no ad, no error, a free play granted, and no way to tell it
+    // apart from no fill.
+    //
+    // Retrying here costs nothing when the answer is already on file
+    // (ensureAdConsent returns the cached state) and recovers the session
+    // when it is not. A genuine refusal stays refused: it resolves with
+    // canRequestAds false and we return false below.
+    const state = await ensureAdConsent();
+    if (state.resolved && state.canRequestAds) return true;
+
+    console.warn(
+      state.resolved
+        ? '[ads] Ad request blocked — consent refused (UMP).'
+        : '[ads] Ad request blocked — consent could not be resolved (UMP).',
+    );
     return false;
   }
 
@@ -320,7 +341,7 @@ class AdService {
       return false;
     }
 
-    if (!this.mayRequestAds()) {
+    if (!(await this.mayRequestAds())) {
       callbacks?.onAdFailedToLoad?.('Ad consent not granted');
       return false;
     }
@@ -492,7 +513,7 @@ class AdService {
     // No consent, no ad request. Below the VIP bypass on purpose: a VIP is
     // not shown an ad at all, so their reward must not depend on an answer
     // that only governs advertising.
-    if (!this.mayRequestAds()) return false;
+    if (!(await this.mayRequestAds())) return false;
 
     // Load and show in one call
     if (!this.isAdLoaded) {
@@ -553,7 +574,7 @@ class AdService {
 
     // Web has no interstitials — nothing to load
     if (!this.isNative || !this.AdMob || !this.InterstitialAdPluginEvents) return false;
-    if (!this.mayRequestAds()) return false;
+    if (!(await this.mayRequestAds())) return false;
     if (this.isInterstitialLoaded) return true;
     if (this.isInterstitialLoading) return false;
 
@@ -586,7 +607,7 @@ class AdService {
     await ensureTrackingConsent();
 
     if (this.isVipUser) return false;
-    if (!this.mayRequestAds()) return false;
+    if (!(await this.mayRequestAds())) return false;
     if (!this.isNative || !this.AdMob || !this.InterstitialAdPluginEvents) return false;
 
     if (!this.isInterstitialLoaded) {
