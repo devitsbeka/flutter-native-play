@@ -170,6 +170,32 @@ export function roomSeats(room: Pick<PublicRoom, "game_type_key" | "max_players"
  */
 export const JUST_CREATED_MS = 10 * 60 * 1000;
 
+/**
+ * A room I made that nothing has happened in.
+ *
+ * You can reach the online page having created a room without meaning to:
+ * tap a game, back out before inviting anyone or picking a category, and the
+ * room exists. It should lead the list while it is warm — you may be about to
+ * go back to it, and it is the one card on the page you can do anything with.
+ *
+ * But only while it is warm. The owner's rule: if nothing happens in it in
+ * ten minutes, other rooms are the better cards and it stops leading. Not
+ * hidden — it drops to just above the rooms whose couch has closed the app,
+ * where a room nobody has touched belongs.
+ *
+ * "Touched" is somebody other than me being in it. Not the category: a host
+ * who picked one and then left is exactly the case this is for.
+ */
+export const isFreshOwnRoom = (room: PublicRoom, now = Date.now()): boolean => {
+  if (room.my_state !== "host") return false;
+  const stamp = room.last_activity_at ?? room.created_at;
+  const at = stamp ? Date.parse(stamp) : NaN;
+  if (!Number.isFinite(at)) return false;
+  // Absolute, so a device clock ahead of the server's cannot keep a
+  // week-old room pinned to the top of somebody's page forever.
+  return Math.abs(now - at) < JUST_CREATED_MS;
+};
+
 export function sortPublicRooms(
   rooms: PublicRoom[],
   friendIds: ReadonlySet<string>,
@@ -210,6 +236,11 @@ export function sortPublicRooms(
   // below both — an empty stale room is still empty even when a friend made
   // it — but above strangers', because who you play with matters more than
   // a stranger's fuller couch.
+  /** Mine, made minutes ago, and still nobody in it but me. */
+  const freshEmptyOwn = (r: PublicRoom) => r.player_count <= 1 && isFreshOwnRoom(r);
+  /** Mine, nobody ever came, and it has gone cold. */
+  const staleEmptyOwn = (r: PublicRoom) =>
+    r.my_state === "host" && r.player_count <= 1 && !isFreshOwnRoom(r);
   const tier = (r: PublicRoom) =>
     // Checked before `dead`: my own ask stays the first card even if the
     // room's couch stepped away while I was waiting on the answer.
@@ -217,17 +248,28 @@ export function sortPublicRooms(
       ? 0
       : dead(r)
         ? 9
-        : mine(r) && full(r)
+        : // A room I just made and nobody has walked into yet: the card I am
+          // most likely to be looking for, and the only one on the page I can
+          // do anything with. It wears the ring that says so.
+          freshEmptyOwn(r)
           ? 1
-          : mine(r)
-            ? 2
-            : justCreated(r)
-              ? 3
-              : r.player_count > 0
-                ? 4
-                : friendIds.has(r.host_user_id)
-                  ? 5
-                  : 6;
+          : // The same room once it has gone cold. Other rooms are better
+            // cards than an empty one nobody came to (owner's rule), so it
+            // sinks below all of them — but stays above the ones whose couch
+            // has closed the app.
+            staleEmptyOwn(r)
+            ? 8
+            : mine(r) && full(r)
+              ? 2
+              : mine(r)
+                ? 3
+                : justCreated(r)
+                  ? 4
+                  : r.player_count > 0
+                    ? 5
+                    : friendIds.has(r.host_user_id)
+                      ? 6
+                      : 7;
   const remaining = (r: PublicRoom) => {
     const seats = roomSeats(r);
     if (seats == null) return 98;
@@ -248,11 +290,13 @@ export function sortPublicRooms(
     // the new ones, fullest among the filling ones. Ordering the "just
     // created" band by open seats would have put a fresh empty room below a
     // fresh half-full one, which is the opposite of what that band is for.
-    if (tier(a) === 3) {
+    // Tiers renumbered when my own fresh room took the top: the "just
+    // created" band is 4 and the filling one 5.
+    if (tier(a) === 4) {
       const d = born(b) - born(a);
       if (d !== 0) return d;
     }
-    if (tier(a) === 4) {
+    if (tier(a) === 5) {
       // A full couch has no seat for you, so "most full" stops one short of
       // full: joinable rooms first, fullest of those at the front, and a
       // 10/10 room behind all of them. Sorting on fullness alone would have

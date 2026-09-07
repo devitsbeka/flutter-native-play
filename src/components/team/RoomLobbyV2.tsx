@@ -1157,6 +1157,10 @@ export function RoomLobbyV2() {
         // as "2/2" over three seated players.
         max: Math.max(currentRoom.max_players || 10, participants.length),
         taken: participants.length,
+        // The headline count is the people who are HERE. Counting an
+        // invitation nobody has accepted read "3/10 players" over a room
+        // that could not start, because starting counts answerers.
+        seated: seatedPlayers,
         fullLabel: t("extra.mpRoomFull"),
       }}
       inviteFaces={inviteFaces}

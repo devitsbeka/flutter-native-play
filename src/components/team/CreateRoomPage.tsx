@@ -77,6 +77,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { Json } from "@/integrations/supabase/types";
 import { resolveAvatarUrl, fallbackAvatarFor } from "@/utils/avatarUtils";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
+import { markProgrammaticScroll } from "@/utils/scrollTapGuard";
 
 // Inspirational topics for trivia creation
 const INSPIRATIONAL_TOPIC_KEYS = [
@@ -579,11 +580,23 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
    */
   useEffect(() => {
     if (!handingOff) return;
-    const t = setTimeout(() => {
+    // Named `timer`, not `t`: `t` is the translator, and the toast below
+    // needs it.
+    const timer = setTimeout(() => {
       autoStart.current = false;
       setHandingOff(false);
+      // And SAY so. Giving the screen back without a word is the shape of
+      // every "I tapped it and nothing happened" report: the player cannot
+      // tell a game that refused to start from one that was never asked
+      // for. Whatever swallowed the start, this is the last thing that
+      // knows it did not happen.
+      toast({
+        title: t("common.error"),
+        description: t("extra.mpRoomCreateFailed"),
+        variant: "destructive",
+      });
     }, HANDOFF_MAX_MS);
-    return () => clearTimeout(t);
+    return () => clearTimeout(timer);
   }, [handingOff]);
 
   const startMode = (key: GameChoice) => {
@@ -783,9 +796,16 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   // a height of zero. Back from Guess landed on a heading, a hairline, and no
   // cards at all.
   const rowObserver = useRef<ResizeObserver | null>(null);
+  // The row node itself, as state: the card-placing effect below has to run
+  // again when this is replaced, and a ref would not tell it. Closing the
+  // category picker mounts a NEW row, at scrollLeft 0 — which is how the
+  // picked card ended up off-screen even though the effect had already
+  // placed it once (see the effect for the rest of that story).
+  const [rowEl, setRowEl] = useState<HTMLDivElement | null>(null);
   const rowRef = useCallback((el: HTMLDivElement | null) => {
     rowObserver.current?.disconnect();
     rowObserver.current = null;
+    setRowEl(el);
     if (!el) return;
     const publish = () => {
       const cs = getComputedStyle(el);
@@ -800,15 +820,78 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
 
   const cardRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
+  /**
+   * Bring the picked card to the front of the row.
+   *
+   * This was one `scrollIntoView({ behavior: "smooth" })`, and a smooth
+   * scroll is a request, not a result: it runs over the following frames and
+   * anything that scrolls the same box in the meantime wins. Arriving on
+   * Classic (`?mode=library`) opens the category picker in the same commit,
+   * and whatever that does on mount left the row sitting at 0 — the card
+   * was selected, and off the right-hand edge of the screen where nobody
+   * could see it (owner: "my selected game option is hidden"). Words, which
+   * opens a different overlay, happened to survive; the difference is luck,
+   * not design.
+   *
+   * So it is placed instantly instead, and held there for a moment against
+   * whatever an overlay does as it settles. The player's own touch ends it,
+   * and the row is marked so the page's tap guard does not mistake these
+   * for a scroll under the finger and swallow the next tap.
+   *
+   * And it runs again whenever the ROW is replaced, not only when the pick
+   * changes. Closing the picker mounts a new row element — the same reason
+   * `rowRef` is a callback ref rather than a mount effect — and a new row
+   * starts at 0 with the same card still selected. Placing it once on mount
+   * was therefore undone by the very overlay the mode had opened.
+   */
   useEffect(() => {
     if (!gameChoice) return;
-    cardRefs.current[gameChoice]?.scrollIntoView({
-      behavior: "smooth",
-      inline: "start",
-      // "nearest" vertically: centring would drag the whole form up too.
-      block: "nearest",
-    });
-  }, [gameChoice]);
+    const card = cardRefs.current[gameChoice];
+    if (!card) return;
+
+    const row: HTMLElement | null = rowEl;
+
+    let frame = 0;
+    let stopped = false;
+    const stop = () => {
+      stopped = true;
+      if (frame) cancelAnimationFrame(frame);
+      frame = 0;
+    };
+
+    const deadline = performance.now() + 600;
+    const place = () => {
+      const el = cardRefs.current[gameChoice];
+      if (stopped || !el) return;
+      if (row) {
+        // Centred, not flush left: the row shows one card and a sliver of
+        // its neighbours, so the picked one belongs in the middle where a
+        // selected card reads as selected (owner: "not centered as the
+        // selected card should be shown"). A delta, so re-applying
+        // corrects rather than compounds.
+        const card = el.getBoundingClientRect();
+        const box = row.getBoundingClientRect();
+        markProgrammaticScroll(row);
+        row.scrollLeft += card.left + card.width / 2 - (box.left + box.width / 2);
+      } else {
+        el.scrollIntoView({ behavior: "auto", inline: "center", block: "nearest" });
+      }
+      if (performance.now() > deadline) {
+        stop();
+        return;
+      }
+      frame = requestAnimationFrame(place);
+    };
+    frame = requestAnimationFrame(place);
+    row?.addEventListener("pointerdown", stop, { passive: true });
+    row?.addEventListener("touchstart", stop, { passive: true });
+
+    return () => {
+      stop();
+      row?.removeEventListener("pointerdown", stop);
+      row?.removeEventListener("touchstart", stop);
+    };
+  }, [gameChoice, rowEl]);
 
   // Set when the + picker adds rounds; the effect below then creates the
   // room as if Create had been pressed — the queue is shown and managed in
@@ -967,6 +1050,22 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       title: t("extra.triviaReady"),
       description: t("extra.triviaReadyDesc", { count: questions.length, title }),
     });
+  };
+
+  /**
+   * Did the round actually begin?
+   *
+   * `startGame` returns void and gives up quietly on a stale room, a
+   * missing session, a host mismatch or an empty question pool, so the only
+   * honest answer comes from the row itself.
+   */
+  const roomIsPlaying = async (roomId: string): Promise<boolean> => {
+    const { data } = await supabase
+      .from("game_rooms")
+      .select("status")
+      .eq("id", roomId)
+      .maybeSingle();
+    return data?.status === "playing";
   };
 
   const handleCreate = async () => {
@@ -1208,6 +1307,22 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         const guessSolo = invitees.length === 0 && selectedFriends.size === 0;
         if (gameChoice === "guess" && room && guessSolo) {
           await startGame(false, room);
+          // startGame returns void and bails silently on half a dozen
+          // conditions, so "it was called" is not "it started". Read the
+          // room back: if it is not playing, try once more, and if it still
+          // is not, say so rather than walking into a lobby. Guess is a
+          // one-player game (owner) — a lobby is never the answer for it.
+          if (!(await roomIsPlaying(room.id))) {
+            await startGame(false, room);
+            if (!(await roomIsPlaying(room.id))) {
+              toast({
+                title: t("common.error"),
+                description: t("extra.mpRoomCreateFailed"),
+                variant: "destructive",
+              });
+              walkInCode = null;
+            }
+          }
         }
       }
       
@@ -1343,10 +1458,15 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   const pickGuessCategory = (cat: Category) => {
     setSelectedCategory(cat);
     setSelectionMode("library");
-    // Owner's ask: a picture game is 2-10 players, so the pick opens the
-    // pre-lobby — invite friends, or press Start and play it alone — rather
-    // than arming a one-seat round that started on its own.
-    setPreLobby("guess");
+    // The tap IS the start. A picture game had been opening a pre-lobby, on
+    // the reading that it was a 2-10 room like any other; it is a
+    // ONE-player game (owner: "it is a solo game... when I choose what to
+    // guess, start the game instantly, no lobby needed"), and a lobby for
+    // one person is a screen asking you to wait for nobody. So the pick
+    // arms Create exactly as every other card's tap does, and performCreate
+    // starts the round before the screen changes.
+    autoStart.current = true;
+    setHandingOff(true);
   };
 
   const pickedDetail = (
@@ -1634,11 +1754,18 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   // said why.
   useEffect(() => {
     if (!autoStart.current) return;
+    // Auth first, and STAY ARMED until it arrives. handleCreate's own first
+    // line is `if (!user) return`, so a tap that landed before the session
+    // finished restoring spent the arming on a call that did nothing and
+    // left the player on this screen for ever — the Quick Game card doing
+    // nothing at all, on a cold load and never on a warm one, which is why
+    // it kept coming back after each "fix".
+    if (!user) return;
     if (!createEnabled || isCreating) return;
     autoStart.current = false;
     void handleCreate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameChoice, createEnabled, isCreating, selectedCategory]);
+  }, [gameChoice, createEnabled, isCreating, selectedCategory, user]);
 
   return (
     <motion.div
@@ -1797,7 +1924,9 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                 // their order behind them.
                 { key: "quick", art: featuredQuick, artTop: -1.71, descW: 273, players: "1", title: t("extra.modeQuickTitle"), desc: t("extra.modeQuickDesc") },
                 { key: "library", art: featuredLibrary, artTop: -2.86, descW: 273, players: "2-10", title: t("extra.modeLibraryTitle"), desc: t("extra.libraryDesc") },
-                { key: "guess", art: featuredGuess, artTop: 0.05, descW: 273, players: "2-10", title: t("extra.modeGuessTitle"), desc: t("extra.modeGuessDesc") },
+                // One player: a picture game is played alone, and starts the moment
+                // one is picked rather than opening a lobby (owner).
+                { key: "guess", art: featuredGuess, artTop: 0.05, descW: 273, players: "1", title: t("extra.modeGuessTitle"), desc: t("extra.modeGuessDesc") },
                 // The King and Battle posters are developer-only until the
                 // modes are promoted — see DEVELOPER_ONLY_GAME_TYPES.
                 ...(developerMode
@@ -1832,7 +1961,14 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                     // A phone shows one card and the edge of the next; from
                     // tablet up the cards take a fixed width so the wide
                     // column shows two, three or more of them at once.
-                    "group relative isolate block shrink-0 snap-start overflow-clip rounded-[28px] bg-[#e9d8ff] text-left [container-type:inline-size]",
+                    // snap-center, not snap-start: the row rests with a card in the
+                    // middle of the screen and a sliver of its neighbours either
+                    // side, which is where a selected card has to be to read as
+                    // selected (owner: "not centered as the selected card should
+                    // be shown"). It also lets the placement below actually
+                    // stick — with snap-start the browser pulled every centring
+                    // back to the left edge the moment it settled.
+                    "group relative isolate block shrink-0 snap-center overflow-clip rounded-[28px] bg-[#e9d8ff] text-left [container-type:inline-size]",
                     // The designed 393:686 poster at 84% of the column —
                     // 146.6% of the row's width tall — or the row's height,
                     // whichever is shorter. A short screen keeps the card's

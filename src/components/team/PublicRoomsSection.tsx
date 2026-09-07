@@ -14,10 +14,11 @@ import {
 import { useFriends } from "@/contexts/FriendsContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { onlineUserIds } from "@/utils/presence";
-import { motion } from "framer-motion";
-import { Globe, Loader2, Users, Clock, Trash2, LogOut, X, UserPlus, Play } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Globe, Loader2, Users, Clock, Trash2, LogOut, X, UserPlus, Play, Plus } from "lucide-react";
 import { RoomCardPlayButton } from "@/components/team/RoomCardPlayButton";
 import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
+import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
 import { GradientBackground, ROOM_GRADIENT_PRESETS } from "@/components/ui/noisy-gradient-backgrounds";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -28,6 +29,7 @@ import { toast } from "@/lib/toast";
 import {
   filterPublicRooms,
   PUBLIC_ROOMS_KEY,
+  isFreshOwnRoom,
   publicRoomPath,
   roomSeats,
   sortPublicRooms,
@@ -112,6 +114,18 @@ interface CardPlayer {
   avatar_url: string | null;
 }
 
+/**
+ * How long the ring on a room you just made stays up.
+ *
+ * It is a greeting, not a status. Long enough to catch the eye of somebody
+ * who has just pressed back and is looking for their room; short enough that
+ * it never becomes part of how the card looks (owner's ask). The card keeps
+ * its place at the top of the list for the full ten minutes either way — the
+ * ring answers "which one", the position answers "what should I do next",
+ * and they are different questions with different lifespans.
+ */
+const FRESH_RING_MS = 3000;
+
 function PublicRoomCard({
   room,
   players,
@@ -120,6 +134,7 @@ function PublicRoomCard({
   blocked = false,
   knocks = 0,
   index,
+  onInvite,
   onAsk,
   onWithdraw,
   onRemove,
@@ -139,6 +154,8 @@ function PublicRoomCard({
   /** People knocking on this room — the host's, and only the host sees it. */
   knocks?: number;
   index: number;
+  /** Open the invite sheet for this room — the host's "+" on the seats row. */
+  onInvite: (room: PublicRoom) => void;
   onAsk: (room: PublicRoom) => void;
   /** Take back a pending ask — one game at a time, so waiting is undoable. */
   onWithdraw: (room: PublicRoom) => void;
@@ -226,6 +243,37 @@ function PublicRoomCard({
 
   const enter = () => navigate(publicRoomPath(room));
 
+  /**
+   * The room I just made, still waiting on its first arrival.
+   *
+   * Marked because it is findable: you can reach this page having created a
+   * room without meaning to — tap a game, back out before inviting anyone or
+   * picking a category — and then have no way to tell which of the cards is
+   * yours. The ring says which. It is the same condition that puts the card
+   * first (see isFreshOwnRoom), so the mark and the position agree, and both
+   * end together after ten minutes.
+   */
+  const freshlyMine = room.player_count <= 1 && isFreshOwnRoom(room);
+  /**
+   * The ring's own life, which is much shorter than the card's place.
+   *
+   * Shown on arrival and taken away three seconds later. It re-arms on a
+   * fresh mount, which is exactly the moment it is for: pressing back onto
+   * this page and looking for the room you just made.
+   */
+  const [ringUp, setRingUp] = useState(freshlyMine);
+  useEffect(() => {
+    if (!freshlyMine) {
+      setRingUp(false);
+      return;
+    }
+    setRingUp(true);
+    const t = setTimeout(() => setRingUp(false), FRESH_RING_MS);
+    return () => clearTimeout(t);
+  }, [freshlyMine, room.id]);
+  /** The host may invite from here rather than opening the room to do it. */
+  const canInvite = room.my_state === "host" && !full;
+
   return (
     <motion.div
       layout
@@ -238,6 +286,25 @@ function PublicRoomCard({
       onClick={() => (inside ? enter() : onAsk(room))}
       aria-disabled={blocked || undefined}
     >
+      {/* Drawn over the card, not around it: the wrapper clips to the same
+          radius, so the ring sits exactly on the card's edge whatever the
+          card is painted with. z-30 clears the seats and the bottom bar.
+          
+          It fades rather than blinking out, and unmounts when it has — a
+          conic gradient turning at opacity 0 behind every card on the page
+          for the rest of the ten minutes is work nobody can see. */}
+      <AnimatePresence>
+        {ringUp && (
+          <motion.span
+            aria-hidden
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.45 }}
+            className="fresh-room-ring pointer-events-none absolute inset-0 z-30 rounded-2xl"
+          />
+        )}
+      </AnimatePresence>
       {/* The private tab's card proportions (MyRoomsSection), exactly: the
           same shape on both tabs (owner: make them like the private rooms). */}
       <div className="relative p-3 aspect-[1.45/1] md:aspect-[1.15/1] flex flex-col rounded-2xl overflow-hidden">
@@ -420,7 +487,7 @@ function PublicRoomCard({
             faces (host first, crowned by the chip above), each with a green
             dot when that person is in the app right now; open seats are
             dashed outlines waiting to be filled. */}
-        {seatsToDraw > 0 && (
+        {(seatsToDraw > 0 || canInvite) && (
           <div className="relative z-10 flex items-center gap-1 pb-2 flex-wrap">
             {Array.from({ length: seatsToDraw }, (_, i) => {
               const person: CardPlayer | undefined =
@@ -452,6 +519,30 @@ function PublicRoomCard({
                 />
               );
             })}
+            {/* The host's way to fill the room from here.
+                
+                Inviting used to mean opening the room first, and a host who
+                had backed out of one without inviting anybody had to find
+                the card, enter, invite, and come back. It sits at the end of
+                the faces because that is the row it is about: this is the
+                next seat.
+                
+                It does not open the room — `stopPropagation`, or the card's
+                own tap would carry the host off the page they are inviting
+                from. */}
+            {canInvite && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onInvite(room);
+                }}
+                aria-label={t("extra.inviteFriendsTitle")}
+                className={`w-8 h-8 rounded-full border-2 border-dashed shrink-0 flex items-center justify-center transition-colors ${ink.ring} bg-white/70 hover:bg-white active:scale-95`}
+              >
+                <Plus className="w-4 h-4 text-[#2b1a4a]" />
+              </button>
+            )}
           </div>
         )}
 
@@ -551,6 +642,14 @@ export function PublicRoomsSection({
   const [busyId, setBusyId] = useState<string | null>(null);
   // The room whose delete/leave is being confirmed, if any.
   const [removing, setRemoving] = useState<PublicRoom | null>(null);
+  /**
+   * The room whose invite sheet is open, if any.
+   *
+   * Mounted here rather than in the page so the seats row's "+" is one
+   * tap: the host stays on the list they are filling instead of entering
+   * the room, inviting, and coming back.
+   */
+  const [inviting, setInviting] = useState<PublicRoom | null>(null);
 
   const { user } = useAuth();
   const { friends } = useFriends();
@@ -955,12 +1054,23 @@ export function PublicRoomsSection({
           knocks={knocksByRoom?.get(room.id) ?? 0}
           index={i}
           blocked={!!waitingRoomId && waitingRoomId !== room.id}
+          onInvite={setInviting}
           onAsk={(r) => void ask(r)}
           onWithdraw={(r) => void withdraw(r)}
           onRemove={setRemoving}
           busy={busyId === room.id}
         />
       ))}
+
+      {/* The host's invite sheet, opened by the "+" on the seats row. It is
+          the same sheet the lobby uses; roomId is what puts it in room-invite
+          mode, so the people picked here are invited into THIS room. */}
+      <InviteFriendsModal
+        isOpen={inviting !== null}
+        onClose={() => setInviting(null)}
+        roomId={inviting?.id}
+        roomCode={inviting?.room_code}
+      />
 
       <AlertDialog open={removing !== null} onOpenChange={(open) => !open && setRemoving(null)}>
         <AlertDialogContent className="bg-card border-border rounded-3xl max-w-sm">

@@ -119,11 +119,21 @@ describe("the rules that were already there still hold", () => {
     expect(order(rooms, ctxFor(rooms))[0]).toBe(pending.id);
   });
 
-  it("my own rooms sit above other people's", () => {
-    const mine = room({ my_state: "host", created_at: ago(8 * 3600_000) });
+  it("my own rooms sit above other people's — while anyone is in them", () => {
+    const mine = room({ my_state: "host", player_count: 2, created_at: ago(8 * 3600_000) });
     const fresh = room({ created_at: ago(30_000) });
     const rooms = [fresh, mine];
     expect(order(rooms, ctxFor(rooms))[0]).toBe(mine.id);
+  });
+
+  it("but an empty one of mine that has gone cold sinks below them", () => {
+    // Superseded by the owner's rule: a room I made that nobody came to
+    // stops leading after ten minutes, and other rooms are better cards
+    // than an empty one. It used to sit first however old it was.
+    const mine = room({ my_state: "host", player_count: 1, created_at: ago(8 * 3600_000) });
+    const fresh = room({ created_at: ago(30_000) });
+    const rooms = [fresh, mine];
+    expect(order(rooms, ctxFor(rooms))).toEqual([fresh.id, mine.id]);
   });
 
   it("a room nobody is in goes to the very back, however new or full", () => {

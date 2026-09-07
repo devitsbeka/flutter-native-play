@@ -401,8 +401,11 @@ describe("the public list", () => {
     expect(sortPublicRooms(rooms, new Set(["f1"])).map((r) => r.id)).toEqual([
       "waiting-on",
       "im-in-full",
-      "mine-empty",
+      // `mine-empty` was made months ago and nobody ever came, so it now
+      // sinks below a room that has people in it (owner's rule). It leads
+      // the page only while it is fresh — see isFreshOwnRoom.
       "friends-full",
+      "mine-empty",
     ]);
   });
 

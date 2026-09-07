@@ -147,7 +147,13 @@ export const ControllerCodeEntry: React.FC<ControllerCodeEntryProps> = ({ initia
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex flex-col items-center justify-center p-6">
+      {/* Owns its scrolling and makes room for the keyboard. The code field
+          focuses itself, and on iOS the webview is not resized for the
+          keyboard (KeyboardResize.None in nativeShell.ts) and its document
+          scroller is off — so a centred min-h-screen page put the field and
+          the Join button under the keypad with no way to reach them. */}
+      <div className="h-[100dvh] safe-bleed overflow-y-auto bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900">
+        <div className="flex min-h-full flex-col items-center justify-center px-6 pt-6 pb-[calc(1.5rem_+_var(--keyboard-height,0px))] transition-[padding] duration-200">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -207,6 +213,7 @@ export const ControllerCodeEntry: React.FC<ControllerCodeEntryProps> = ({ initia
             {loading ? t("extra.tvJoining") : t("extra.tvJoinBtn")}
           </ChunkyButton>
         </motion.div>
+        </div>
       </div>
 
       <GuestJoinModal

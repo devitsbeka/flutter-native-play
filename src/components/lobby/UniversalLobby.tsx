@@ -236,7 +236,23 @@ export interface UniversalLobbyProps {
    * are taken (pending invites hold a seat). Stated on the rules tab,
    * counted under the players, and the invite line stands down when full.
    */
-  capacity?: { min: number; max: number; taken: number; fullLabel: string };
+  capacity?: {
+    min: number;
+    max: number;
+    /** Seats spoken for — everyone here plus everyone invited. Caps the room. */
+    taken: number;
+    /**
+     * The people actually HERE, when that differs from `taken`.
+     *
+     * The headline count read `taken`, which counts an invitation nobody has
+     * accepted as a player. So a host alone with two invitations out read
+     * "3/10 players" while Start stayed disabled, because starting counts
+     * people who can answer (owner: "I CAN'T start the game, why is that?").
+     * The number on screen has to be the number the button is judging.
+     */
+    seated?: number;
+    fullLabel: string;
+  };
   start: {
     label: string;
     onPress: () => void;
@@ -353,6 +369,54 @@ export function UniversalLobby({
   const groups: LobbyPlayerGroup[] = isGrouped(players)
     ? players.map((g) => ({ ...g, players: visible(g.players) }))
     : [{ key: "all", players: visible(players as LobbyPlayer[]) }];
+
+  // A disabled Start has to say WHY, and say it where the reason cannot be
+  // pushed under the fold: above the button rather than below it. The owner
+  // pressed a dead "Start Game" and had to ask what was wrong. A caption on
+  // an ENABLED button is not a blocker — a guest's "waiting for the host" —
+  // and stays under it, where it was drawn.
+  const captionBlock = start.caption ? (
+            <motion.div
+              // A 2.4s round trip to 60% and back — slow enough to read as
+              // breathing rather than blinking. Reduced motion gets the
+              // words and the face, holding still.
+              animate={
+                start.captionPulse && !reduceMotion ? { opacity: [1, 0.6, 1] } : undefined
+              }
+              transition={
+                start.captionPulse && !reduceMotion
+                  ? { duration: 2.4, repeat: Infinity, ease: "easeInOut" }
+                  : undefined
+              }
+              className={cn(
+                "flex items-center justify-center gap-2",
+                // A caption-only footer (a guest's "waiting for the host") is
+                // the first thing in the footer, so it used to sit hard under
+                // the card. Give it room to breathe above (owner's ask); under
+                // a Start button the 8px gap is right — and above a disabled
+                // one, the same gap goes below it instead.
+                start.captionOnly
+                  ? "pt-4"
+                  : start.disabled
+                    ? "mb-2"
+                    : "[&:not(:first-child)]:mt-2",
+              )}
+            >
+              <p className="text-center font-[Nunito] text-[15px] font-semibold leading-[20px] text-[#402666]/70">
+                {start.caption}
+              </p>
+              {/* The host's face, right after the "…" — puts a person on the
+                  line that says you are waiting for one (owner's ask). */}
+              {start.captionAvatarUrl !== undefined && (
+                <span className="size-6 shrink-0 overflow-hidden rounded-full ring-2 ring-white/70">
+                  <LobbyFace
+                    url={start.captionAvatarUrl ?? null}
+                    seed={start.captionAvatarName ?? ""}
+                  />
+                </span>
+              )}
+            </motion.div>
+  ) : null;
 
   return (
     <div
@@ -560,7 +624,7 @@ export function UniversalLobby({
                 invisible on the rules tab entirely. */}
             {capacity && (
               <p className="mt-[18px] font-[Nunito] text-[16px] font-medium leading-[19.5px] tracking-[-0.16px] text-[#402666]">
-                {Math.min(capacity.taken, capacity.max)}/{capacity.max} {labels.players.toLowerCase()}
+                {Math.min(capacity.seated ?? capacity.taken, capacity.max)}/{capacity.max} {labels.players.toLowerCase()}
               </p>
             )}
           </motion.div>
@@ -804,6 +868,7 @@ export function UniversalLobby({
       <motion.div {...arrive(0.42)} className="relative z-20 shrink-0 px-4 pb-4">
         <div className="mx-auto w-full max-w-[700px] md:max-w-[520px]">
           {footerExtra}
+          {start.disabled && captionBlock}
           {!start.captionOnly && (
           <motion.button
             type="button"
@@ -829,43 +894,7 @@ export function UniversalLobby({
             </span>
           </motion.button>
           )}
-          {start.caption && (
-            <motion.div
-              // A 2.4s round trip to 60% and back — slow enough to read as
-              // breathing rather than blinking. Reduced motion gets the
-              // words and the face, holding still.
-              animate={
-                start.captionPulse && !reduceMotion ? { opacity: [1, 0.6, 1] } : undefined
-              }
-              transition={
-                start.captionPulse && !reduceMotion
-                  ? { duration: 2.4, repeat: Infinity, ease: "easeInOut" }
-                  : undefined
-              }
-              className={cn(
-                "flex items-center justify-center gap-2",
-                // A caption-only footer (a guest's "waiting for the host") is
-                // the first thing in the footer, so it used to sit hard under
-                // the card. Give it room to breathe above (owner's ask); under
-                // a Start button the 8px gap is right.
-                start.captionOnly ? "pt-4" : "[&:not(:first-child)]:mt-2",
-              )}
-            >
-              <p className="text-center font-[Nunito] text-[15px] font-semibold leading-[20px] text-[#402666]/70">
-                {start.caption}
-              </p>
-              {/* The host's face, right after the "…" — puts a person on the
-                  line that says you are waiting for one (owner's ask). */}
-              {start.captionAvatarUrl !== undefined && (
-                <span className="size-6 shrink-0 overflow-hidden rounded-full ring-2 ring-white/70">
-                  <LobbyFace
-                    url={start.captionAvatarUrl ?? null}
-                    seed={start.captionAvatarName ?? ""}
-                  />
-                </span>
-              )}
-            </motion.div>
-          )}
+          {!start.disabled && captionBlock}
         </div>
       </motion.div>
 
@@ -1017,7 +1046,7 @@ export function LobbyInfoRow({
  * in the mocks); changing font-size moves scrollWidth, not clientWidth, so
  * there is no loop.
  */
-function useFitOneLine(text: string, basePx: number, minPx: number) {
+function useFitOneLine(text: string, basePx: number, minPx: number, gutterPx = 0) {
   const ref = useRef<HTMLHeadingElement>(null);
   const [px, setPx] = useState(basePx);
   useLayoutEffect(() => {
@@ -1033,7 +1062,11 @@ function useFitOneLine(text: string, basePx: number, minPx: number) {
       // name never shrank and just ellipsised. The parent is the full-width
       // (w-full) box and does not depend on the text, so it is the honest
       // ceiling.
-      const avail = parent.getBoundingClientRect().width;
+      // Less a gutter each side. Fitting to the parent's full width is what
+      // a shrunk name did, and it came out spanning the screen edge to edge
+      // with nothing either side (owner: "text almost touching edges left
+      // and right"). The gutter is also what makes a long name land smaller.
+      const avail = parent.getBoundingClientRect().width - 2 * gutterPx;
       if (avail <= 0) return;
       // NATURAL width is the text's own one-line width, read off the BOX
       // while every constraint that could clip it is lifted: width
@@ -1089,6 +1122,9 @@ function useFitOneLine(text: string, basePx: number, minPx: number) {
   return { ref, px };
 }
 
+/** Breathing room either side of the room name, in px. */
+const TITLE_GUTTER_PX = 24;
+
 export function RoomTitle({
   name,
   icon,
@@ -1125,7 +1161,7 @@ export function RoomTitle({
   // is tapped, opening the sheet that sets both the name and the face. It is
   // never a child of the h1, so the chip's round edge and its shadow are never
   // clipped by the heading's overflow.
-  const { ref: headingRef, px: headingPx } = useFitOneLine(name, 43.656, 14);
+  const { ref: headingRef, px: headingPx } = useFitOneLine(name, 43.656, 14, TITLE_GUTTER_PX);
   const chip = (
     <span className="flex size-[22px] shrink-0 items-center justify-center rounded-full bg-white drop-shadow-[0px_2px_2px_rgba(0,0,0,0.18)]">
       <Pencil className="size-3 text-[#523b76]" />

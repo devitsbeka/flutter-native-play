@@ -95,13 +95,14 @@ export default function Auth() {
     // that opened this screen, while a stored one may be left over from an
     // OAuth trip that never came back. The stored value still carries the
     // OAuth flow, which returns to the origin with no query of its own.
-    if (returnTo) {
-      navigate(decodeURIComponent(returnTo));
-    } else if (saved) {
-      navigate(saved);
-    } else {
-      navigate("/");
-    }
+    // REPLACE, not push. This effect fires whenever there is a user, so a
+    // pushed destination leaves /auth sitting underneath it — and pressing
+    // Back re-mounts this screen, which still has a user, which pushes the
+    // destination again. The player is thrown forward every time and cannot
+    // get past the screen they signed in on. Replacing takes /auth out of
+    // the history it has no business being in once it is done.
+    const target = returnTo ? decodeURIComponent(returnTo) : (saved ?? "/");
+    navigate(target, { replace: true });
   }, [user, navigate, returnTo]);
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -145,8 +145,12 @@ describe("the lobby's heading carries the count", () => {
     // the foot of the players tab, below every bench and the hint — three
     // scrolls from the room's own name, and not on the rules tab at all.
     expect(universal).toMatch(/className="flex min-h-\[12px\] flex-1 flex-col items-center pt-\[39px\]"/);
+    // Seated, not taken: `taken` counts an invitation nobody has accepted,
+    // so a host alone with two out read "3/10 players" over a room that
+    // could not start (owner: "I CAN'T start the game, why is that?").
+    // Starting counts people who can answer, and so does this.
     expect(universal).toMatch(
-      /\{Math\.min\(capacity\.taken, capacity\.max\)\}\/\{capacity\.max\} \{labels\.players\.toLowerCase\(\)\}/,
+      /\{Math\.min\(capacity\.seated \?\? capacity\.taken, capacity\.max\)\}\/\{capacity\.max\} \{labels\.players\.toLowerCase\(\)\}/,
     );
     // And exactly once — it left the foot of the list rather than doubling.
     expect((universal.match(/capacity\.max\} \{labels\.players/g) ?? []).length).toBe(1);
