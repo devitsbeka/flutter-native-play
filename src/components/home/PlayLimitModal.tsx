@@ -253,11 +253,13 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
           <SubscriptionTerms className="mt-3 text-center" onNavigate={onClose} />
         </div>
 
-        {/* Last, and quietest: the shortcuts for someone who would rather
-            spend than wait or watch. They were the loudest thing on the card
-            and they are the least interesting answer to "I want to play now".
-            Hidden entirely when there is nothing to sell. */}
-        <ExtraPlaysOffer section="packs" onPurchased={handlePurchased} />
+        {/* No coins/gems packs here.
+            Three offers on one card is one too many: the clock says wait, the
+            ad row says watch, PRO says stop waiting. A fourth and fifth way to
+            spend, sitting under the subscription, competed with the thing the
+            card is actually for and pushed the terms halfway up a scroll.
+            Coins and gems still buy plays — from the shop, which is where
+            someone who wants to spend is already going. */}
       </div>
     );
 

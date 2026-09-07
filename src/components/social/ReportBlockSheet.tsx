@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import {
@@ -142,7 +143,7 @@ export function ReportBlockSheet({
     close();
   };
 
-  return (
+  const sheet = (
     <AnimatePresence>
       {open && (
         <motion.div
@@ -238,4 +239,18 @@ export function ReportBlockSheet({
       )}
     </AnimatePresence>
   );
+
+  // Portalled to the body, like GameModal.
+  //
+  // Rendered in place, this sheet is a descendant of a room card, and those
+  // cards carry backdrop-blur. A backdrop-filter creates a containing block,
+  // so `position: fixed` inside one resolves against the CARD rather than the
+  // viewport: the backdrop stops covering the screen, the panel is clipped to
+  // a strip, and the room list paints straight through the middle of it. That
+  // is exactly what it looked like on device.
+  //
+  // e2e/overlay-containment.spec.ts exists for this class of bug. It did not
+  // catch this one because the sheet only opens behind a tap on a card that
+  // renders for a signed-in player.
+  return typeof document === "undefined" ? sheet : createPortal(sheet, document.body);
 }
