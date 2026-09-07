@@ -660,7 +660,7 @@ export function MatchResultScreen() {
             transition={{ delay: 0.1 }}
             className="text-5xl font-black mb-8 text-white"
             style={{
-              fontFamily: "'TASolivare', sans-serif",
+              fontFamily: "'Google Sans', sans-serif",
             }}
           >
             {resultText}

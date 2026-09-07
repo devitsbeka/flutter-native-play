@@ -200,7 +200,7 @@ function RoomCard({
               </div>
               <div className="flex flex-1 flex-col items-start min-w-px relative">
                 <div className="flex flex-col h-[22.5px] items-start overflow-clip relative shrink-0 w-full">
-                  <p className="leading-[22.5px] not-italic text-[18px] text-white tracking-[-0.16px] whitespace-nowrap" style={{ fontFamily: "'TASolivare', sans-serif" }}>
+                  <p className="leading-[22.5px] not-italic text-[18px] text-white tracking-[-0.16px] whitespace-nowrap" style={{ fontFamily: "'Google Sans', sans-serif" }}>
                     {room.room_name || `Room #${room.room_code}`}
                   </p>
                 </div>
@@ -397,7 +397,7 @@ export default function OnlineGameHub() {
         <div className="sticky top-0 z-20 backdrop-blur-[12px] bg-[rgba(251,250,248,0.95)] border-[rgba(229,231,235,0.3)] border-b border-solid flex flex-col items-start relative shrink-0 w-full">
           <div className="bg-[#fbfaf8] border-[rgba(229,231,235,0.3)] border-b border-solid flex flex-col items-start relative shrink-0 w-full">
             <div className="flex h-[76px] items-center justify-between px-[16px] relative shrink-0 w-full">
-              <p className="leading-[28px] not-italic text-[#1e293b] text-[20px] tracking-[0.5px] uppercase whitespace-nowrap" style={{ fontFamily: "'TASolivare', sans-serif" }}>
+              <p className="leading-[28px] not-italic text-[#1e293b] text-[20px] tracking-[0.5px] uppercase whitespace-nowrap" style={{ fontFamily: "'Google Sans', sans-serif" }}>
                 {t("onlineGame.title")}
               </p>
               <div className="flex gap-[4px] items-center relative shrink-0">

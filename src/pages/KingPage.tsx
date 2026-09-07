@@ -152,7 +152,7 @@ function DuelTimerBadge({ seconds, urgent = false }: { seconds: number; urgent?:
     >
       <span
         className="text-[14px] leading-5 text-white"
-        style={{ fontFamily: "'TASolivare', sans-serif" }}
+        style={{ fontFamily: "'Google Sans', sans-serif" }}
       >
         {seconds}
       </span>
@@ -403,7 +403,7 @@ function DuelScoreRow({
   const score = (n: number) => (
     <p
       className="text-[32px] leading-[28px] text-[#402666] text-center"
-      style={{ fontFamily: "'TASolivare', sans-serif" }}
+      style={{ fontFamily: "'Google Sans', sans-serif" }}
     >
       {n}
     </p>

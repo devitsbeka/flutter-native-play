@@ -1,7 +1,7 @@
 @theme {
-    /* FONT FAMILY - Keep TASolivare for Georgian text display */
+    /* FONT FAMILY - Google Sans carries the Georgian display text (OFL 1.1) */
     --font-body: var(--font-nunito, "Nunito"), var(--font-inter, "Inter"), -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-    --font-display: var(--font-tasolivare, "TASolivare"), var(--font-nunito, "Nunito"), sans-serif;
+    --font-display: var(--font-googlesans, "Google Sans"), var(--font-nunito, "Nunito"), sans-serif;
     --font-mono: ui-monospace, "Roboto Mono", SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
     /* FONT SIZE */

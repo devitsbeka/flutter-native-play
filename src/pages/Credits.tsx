@@ -49,15 +49,11 @@ const TYPEFACES = [
   { name: "Noto Sans Georgian", note: "Google Fonts · SIL Open Font License 1.1" },
   { name: "Intel One Mono", note: "Google Fonts · SIL Open Font License 1.1" },
   { name: "Slackey", note: "Google Fonts · SIL Open Font License 1.1" },
-  // Deliberately states only what is verifiable from the font file itself.
-  //
-  // The name table reads "Copyright (c) 2025 by Tural Alisoy. All rights
-  // reserved." — a commercial face, and no licence for it is recorded anywhere
-  // in this repo. Until somebody produces the app-embedding licence, this line
-  // must not claim one exists: a credits page is exactly where an unverified
-  // rights claim does damage. Replace this note with the real licence once the
-  // paperwork is in hand, or replace the typeface.
-  { name: "TA Solivare", note: "Georgian display face · © 2025 Tural Alisoy" },
+  // Google Sans replaced TA Solivare, which was a commercially licensed face
+  // with "All rights reserved" in its own name table and no licence recorded
+  // anywhere in this repo. This one is verifiable: the served binary points at
+  // openfontlicense.org and the upstream repo carries OFL.txt.
+  { name: "Google Sans", note: "github.com/googlefonts/googlesans \u00b7 SIL Open Font License 1.1" },
 ];
 
 const SOFTWARE = [

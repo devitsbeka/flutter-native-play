@@ -243,7 +243,7 @@ export function SplashScreen({ children }: SplashScreenProps) {
                     <span 
                       className="text-3xl font-bold tracking-wider"
                       style={{
-                        fontFamily: "'TASolivare', sans-serif",
+                        fontFamily: "'Google Sans', sans-serif",
                         color: 'white',
                         textShadow: `0 2px 4px rgba(0,0,0,0.5), 0 0 20px rgba(255,255,255,0.3)`,
                       }}

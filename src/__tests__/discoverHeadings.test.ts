@@ -80,7 +80,7 @@ describe("one component, every title", () => {
 });
 
 describe("font-display is the right token for Georgian", () => {
-  it("is TASolivare, the face the frame sets its headings in", () => {
-    expect(tailwind).toMatch(/display: \[\s*\n\s*'TASolivare',/);
+  it("is Google Sans, the face the frame sets its headings in", () => {
+    expect(tailwind).toMatch(/display: \[\s*\n\s*'Google Sans',/);
   });
 });
