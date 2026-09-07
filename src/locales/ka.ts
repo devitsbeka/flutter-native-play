@@ -1879,6 +1879,7 @@ export const ka = {
     uGameRules: "თამაშის წესები",
     uPlayersTab: "მოთამაშეები",
     uJoinedNote: "შემოგვიერთდა",
+    uInvitedNote: "მოწვეული",
     uLeftNote: "გავიდა",
     uQuestionsPerRound: "კითხვები რაუნდში",
     uVisibility: "ხილვადობა",
