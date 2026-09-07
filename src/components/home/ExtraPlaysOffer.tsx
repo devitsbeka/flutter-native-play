@@ -100,7 +100,14 @@ export function ExtraPlaysOffer({ onPurchased }: { onPurchased?: () => void }) {
         disabled={!!pending}
         whileTap={pending ? undefined : { scale: 0.96, y: 1 }}
         aria-label={`${t("playLimit.extraGames", { count: pack.games })} — ${label}`}
-        className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl px-2 font-display text-sm font-bold text-[#1E1B2E] disabled:opacity-60"
+        // The ad button gets a little more of the row than the two price
+        // buttons. "Watch ad" is a phrase where "500" is a number, and it was
+        // previously labelled just "Ad" — which read as a category, not an
+        // action, and got missed by the person testing it. If a player cannot
+        // see the way past a paywall, neither can a reviewer.
+        className={`flex h-10 items-center justify-center gap-1.5 rounded-xl px-2 font-display text-sm font-bold text-[#1E1B2E] disabled:opacity-60 ${
+          source === "ad" ? "flex-[1.5]" : "flex-1"
+        }`}
         style={{
           background: affordable ? "#FFFFFF" : "#F3F4F6",
           border: "1.5px solid #E5E7EB",

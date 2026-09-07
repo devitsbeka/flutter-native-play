@@ -62,6 +62,7 @@ import { ensureAdConsent } from "@/native/adConsent";
  * the Settings row.
  */
 
+/** Only cleared now, never read. See the note in the effect below. */
 const ASKED_KEY = "push:prompted";
 const ASK_DELAY_MS = 4000;
 
@@ -85,11 +86,29 @@ export function PushRegistrar() {
     if (permission !== "prompt") return;
     if (asked.current) return;
 
+    // iOS is the only thing that knows whether it has been asked, and it has
+    // just said no — `permission === "prompt"` is notDetermined.
+    //
+    // This used to also return early on a persisted "already asked" flag, and
+    // that flag is wrong on real devices. Build 35 wrote it *before* arming
+    // the timer, and a separate bug then stopped the timer ever firing, so it
+    // shipped set on installs where the dialog had never appeared. localStorage
+    // survives an app update, so those devices carried a permanent suppression
+    // into every later build — including this one, which is why the prompt did
+    // not appear on a TestFlight update even after the original bug was fixed.
+    //
+    // A local flag can only ever be a cache of what iOS already knows, and a
+    // cache that disagrees with its source is just a bug with extra steps. It
+    // is gone. `asked.current` stops a second ask inside one session, and
+    // `permission !== "prompt"` stops it across launches, which is the same
+    // question answered by the system that owns it.
+    //
+    // Clearing the stale key as we pass is not required — nothing reads it any
+    // more — but it stops the next person finding it and wondering.
     try {
-      if (localStorage.getItem(ASKED_KEY)) return;
+      localStorage.removeItem(ASKED_KEY);
     } catch {
-      // Private mode or a full store. Falling through means this player may
-      // be asked again on a later launch, which is better than never asking.
+      /* private mode; nothing depends on this succeeding */
     }
     asked.current = true;
 
@@ -122,13 +141,9 @@ export function PushRegistrar() {
       try {
         await requestRef.current();
       } finally {
-        // Recorded here, not when the screen opened: the flag means "iOS has
-        // been asked", and until this line it has not been.
-        try {
-          localStorage.setItem(ASKED_KEY, "1");
-        } catch {
-          /* private mode; the in-memory guard still holds for this session */
-        }
+        // Nothing is persisted. iOS records the answer itself, and
+        // `permission` reports it on the next launch; writing our own copy is
+        // what produced a suppression that outlived the bug it was hiding.
       }
     })();
   }, []);

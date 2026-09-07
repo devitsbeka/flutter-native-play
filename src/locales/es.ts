@@ -1376,7 +1376,7 @@ export const es: KaTranslations = {
     nextFreePlay: "Siguiente juego gratis: {time}",
     freePlayInterval: "1 juego gratis cada 3 horas",
     extraGames: "+{count} partidas",
-    watchAd: "Anuncio",
+    watchAd: "Ver anuncio",
     notEnoughBalance: "No te alcanza para eso.",
     adLimitReached: "No quedan partidas por anuncios en este periodo.",
     purchaseFailed: "No se completó. Inténtalo de nuevo.",
