@@ -29,6 +29,20 @@ export const SETTLE_MS = 150;
 /** How far a finger may travel between press and release and still be a tap. */
 export const TAP_SLOP_PX = 12;
 
+/**
+ * How far a scroller may drift between press and release and still count as
+ * still.
+ *
+ * This comparison used to be exact, and exactness is the wrong test: a
+ * scroll offset is a fractional number, and a scroller can settle by a
+ * fraction of a pixel — a rail re-snapping under the finger, a rubber band
+ * finishing, a layout shift as a late image lands — after the press and
+ * before the click. Any of those made the tap vanish with nothing to show
+ * for it, which is what "I can't click it, and it keeps coming back" looks
+ * like from the outside. A real scroll moves tens of pixels; two is noise.
+ */
+export const OFFSET_SLOP_PX = 2;
+
 export interface Press {
   x: number;
   y: number;
@@ -64,7 +78,7 @@ export function isDeliberateTap(press: Press, release: Release): boolean {
   // momentum still bleeding off, or a scroll the finger itself started.
   return (
     press.offsets.length === release.offsets.length &&
-    press.offsets.every((offset, i) => offset === release.offsets[i])
+    press.offsets.every((offset, i) => Math.abs(offset - release.offsets[i]) <= OFFSET_SLOP_PX)
   );
 }
 
@@ -73,7 +87,33 @@ export function isDeliberateTap(press: Press, release: Release): boolean {
 const SCROLLS = /auto|scroll|overlay/;
 
 const lastScrollAt = new WeakMap<EventTarget, number>();
+/** Scrollers the app is moving itself, and until when. */
+const programmaticUntil = new WeakMap<EventTarget, number>();
 let tracking = false;
+
+/**
+ * How long after a mark the scroll events from it are still expected. One
+ * frame is the usual gap between an assignment and its event; a little more
+ * covers a busy frame.
+ */
+const PROGRAMMATIC_GRACE_MS = 100;
+
+/**
+ * "The scroll you are about to see on this element is mine."
+ *
+ * The guard exists to spot a page moving UNDER a finger — momentum to
+ * arrest, a drag in progress. A scroll the app performs itself is neither:
+ * restoring the home feed to where the player left it (see useScrollMemory)
+ * fired scroll events for as long as it took the rails to load, and every
+ * one of them told the guard the page was still moving. Taps on the home
+ * were swallowed for that whole window, which reads exactly like a dead
+ * button.
+ *
+ * Call this immediately before assigning `scrollTop`/`scrollLeft`.
+ */
+export function markProgrammaticScroll(el: EventTarget | null | undefined): void {
+  if (el) programmaticUntil.set(el, performance.now() + PROGRAMMATIC_GRACE_MS);
+}
 
 /**
  * One capturing listener stamps every scroller in the document as it moves.
@@ -87,7 +127,11 @@ function trackScrolls(): void {
   document.addEventListener(
     "scroll",
     (e) => {
-      if (e.target) lastScrollAt.set(e.target, performance.now());
+      if (!e.target) return;
+      const now = performance.now();
+      // Ours, not the finger's — see markProgrammaticScroll.
+      if ((programmaticUntil.get(e.target) ?? 0) >= now) return;
+      lastScrollAt.set(e.target, now);
     },
     { capture: true, passive: true },
   );

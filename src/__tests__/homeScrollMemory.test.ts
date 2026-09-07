@@ -76,9 +76,17 @@ describe("the home feed remembers where it was", () => {
   });
 
   it("stops the moment the player touches the page", () => {
-    for (const ev of ["touchstart", "wheel", "keydown"]) {
+    for (const ev of ["pointerdown", "touchstart", "wheel", "keydown"]) {
       expect(hook).toMatch(new RegExp(`addEventListener\\("${ev}", stop`));
     }
+  });
+
+  it("and tells the tap guard the scrolls are its own", () => {
+    // Otherwise the guard reads a restoring feed as a page moving under the
+    // finger and swallows every tap until it finishes — a dead home for the
+    // second after coming back to it.
+    expect(hook).toMatch(/import \{ markProgrammaticScroll \}/);
+    expect(hook).toMatch(/markProgrammaticScroll\(node\);[\s\S]*?node\.scrollTop = Math\.min\(target, max\);/);
   });
 
   it("and the feed's scroller is the thing it watches", () => {
@@ -86,5 +94,43 @@ describe("the home feed remembers where it was", () => {
     expect(scroll).toMatch(
       /<div ref=\{scroller\} className="absolute inset-0 overflow-y-auto overscroll-contain"/,
     );
+  });
+});
+
+/**
+ * The chooser shows the card that was picked.
+ *
+ * Arriving on `?mode=library` selects Classic and opens the category
+ * picker in the same commit — and the row stayed at 0, so the selected card
+ * sat off the right-hand edge of the screen (owner: "my selected game
+ * option is hidden"). Two causes, both of them about timing: a smooth
+ * scrollIntoView is a request that later work can win, and closing the
+ * picker mounts a NEW row element that starts at 0 with the same card still
+ * selected.
+ */
+describe("the picked card is brought into view", () => {
+  const page = read("src/components/team/CreateRoomPage.tsx");
+
+  it("instantly, and held for a moment against a settling overlay", () => {
+    // Prose still tells the story; no CALL may ask for a smooth scroll.
+    const code = page
+      .split("\n")
+      .filter((line) => !/^\s*(\*|\/\/|\/\*)/.test(line))
+      .join("\n");
+    expect(code).not.toMatch(/behavior: "smooth"/);
+    expect(code).toMatch(/behavior: "auto", inline: "start", block: "nearest"/);
+    expect(page).toMatch(/row\.scrollLeft \+= el\.getBoundingClientRect\(\)\.left - row\.getBoundingClientRect\(\)\.left;/);
+    expect(page).toMatch(/const deadline = performance\.now\(\) \+ 600;/);
+  });
+
+  it("again whenever the row itself is replaced", () => {
+    expect(page).toMatch(/const \[rowEl, setRowEl\] = useState<HTMLDivElement \| null>\(null\);/);
+    expect(page).toMatch(/setRowEl\(el\);/);
+    expect(page).toMatch(/\}, \[gameChoice, rowEl\]\);/);
+  });
+
+  it("and yields to the player's own finger", () => {
+    expect(page).toMatch(/row\?\.addEventListener\("pointerdown", stop/);
+    expect(page).toMatch(/row\?\.addEventListener\("touchstart", stop/);
   });
 });
