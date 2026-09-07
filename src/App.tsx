@@ -64,8 +64,23 @@ const Profile = lazy(() => import("./pages/Profile"));
 const PublicProfile = lazy(() => import("./pages/PublicProfile"));
 const TeamV2 = lazy(() => import("./pages/TeamV2"));
 const CreateRoom = lazy(() => import("./pages/CreateRoom"));
-const TeamBattlePage = lazy(() => import("./pages/TeamBattlePage"));
-const KingPage = lazy(() => import("./pages/KingPage"));
+// Unreleased game modes. Both are dark-launched: the flows are complete, the
+// registry marks them `status: "coming_soon"` with a "beta" badge, and whether
+// a player ever sees them is decided by DEVELOPER_ONLY_GAME_TYPES plus an
+// `is_live` column in the database.
+//
+// That arrangement is a rejection under App Store guideline 2.3.1 — hidden
+// features toggled on from a server after review — and 2.2, which is about
+// shipping beta software. A route guard does not fix it, because the guard
+// still ships the chunk and the chunk is the feature; the same reasoning that
+// put the admin console behind INCLUDE_ADMIN applies here.
+//
+// When these modes are ready, launching them is a build and a review, not a
+// database flip. That is the point, not an inconvenience.
+const INCLUDE_UNRELEASED_MODES =
+  import.meta.env.DEV || import.meta.env.VITE_INCLUDE_UNRELEASED_MODES === 'true';
+const TeamBattlePage = INCLUDE_UNRELEASED_MODES ? lazy(() => import("./pages/TeamBattlePage")) : null;
+const KingPage = INCLUDE_UNRELEASED_MODES ? lazy(() => import("./pages/KingPage")) : null;
 const QueuePage = lazy(() => import("./pages/QueuePage"));
 const OnlineGameHub = lazy(() => import("./pages/OnlineGameHub"));
 const Discover = lazy(() => import("./pages/Discover"));
@@ -89,8 +104,15 @@ const Words = lazy(() => import("./pages/Words"));
 // with MyTrivia's content in it. A preview at mytrivia.io/newui, like /dev/v2 —
 // the routes are cheap, the chunk loads only when visited, and it exposes
 // nothing the app does not already show.
-const HomeV3 = lazy(() => import("./features/home-v3/pages/HomeV3"));
-const PathDetailV3 = lazy(() => import("./features/home-v3/pages/PathDetailV3"));
+// The alternate home screen (/newui). 26 files under features/home-v3, its own
+// PRO paywall entry point, and its own docstring calling it a preview. An
+// undocumented second UI with a second purchase surface is the shape guideline
+// 2.3.1 is written about, so it is excluded from a production build alongside
+// the other previews rather than merely unlinked.
+const INCLUDE_UI_PREVIEWS =
+  import.meta.env.DEV || import.meta.env.VITE_INCLUDE_UI_PREVIEWS === 'true';
+const HomeV3 = INCLUDE_UI_PREVIEWS ? lazy(() => import("./features/home-v3/pages/HomeV3")) : null;
+const PathDetailV3 = INCLUDE_UI_PREVIEWS ? lazy(() => import("./features/home-v3/pages/PathDetailV3")) : null;
 
 
 // Settings pages
@@ -289,24 +311,23 @@ const App = () => (
             <Suspense fallback={<PageSkeleton />}>
               <Routes>
                 <Route path="/" element={<Index />} />
-                {/* Experimental world-map homepage. Not gated with the
-                    showcase routes above: those are excluded from a production
-                    build because each one pulls in a chunk that would otherwise
-                    ship (/docs in particular renders the internal schema map).
-                    This route renders Index, which every visitor already
-                    downloads, so shipping it costs nothing and exposes nothing.
-
-                    It is a preview, not a secret — Index.tsx only swaps in
-                    LoggedInHomeV2 for a signed-in user, and an unguessed URL is
-                    not a security boundary. Also reachable on device via
-                    mytrivia://dev/v2. */}
-                <Route path="/dev/v2" element={<Index />} />
-                {/* The new-UI preview (mytrivia.io/newui) — see the lazy import above. */}
-                <Route path="/newui" element={<HomeV3 />} />
-                <Route path="/newui/path/:pathId" element={<PathDetailV3 />} />
-                {/* The preview's first address; anything shared from it still lands. */}
-                <Route path="/v3" element={<Navigate to="/newui" replace />} />
-                <Route path="/v3/path/:pathId" element={<NewUiPathRedirect />} />
+                {/* Experimental world-map homepage.
+                    The old note here argued this route "costs nothing" because
+                    it renders Index, which everyone downloads anyway. That was
+                    true of the route object and false of the page: Index swaps
+                    in LoggedInHomeV2, which pulls the whole three.js world-map
+                    scene — a 527 KB chunk that ships only for this preview.
+                    Gated with the other previews now. */}
+                {INCLUDE_UI_PREVIEWS && HomeV3 && PathDetailV3 && (
+                  <>
+                    <Route path="/dev/v2" element={<Index />} />
+                    <Route path="/newui" element={<HomeV3 />} />
+                    <Route path="/newui/path/:pathId" element={<PathDetailV3 />} />
+                    {/* The preview's first address; anything shared from it still lands. */}
+                    <Route path="/v3" element={<Navigate to="/newui" replace />} />
+                    <Route path="/v3/path/:pathId" element={<NewUiPathRedirect />} />
+                  </>
+                )}
                 <Route path="/loading" element={<Loading />} />
                 <Route path="/trivialoader" element={<TriviaLoader />} />
                 
@@ -328,8 +349,12 @@ const App = () => (
                     /play/:categoryId/:levelId (exact match wins). */}
                 <Route path="/play" element={<Navigate to="/" replace />} />
                 <Route path="/play/queue" element={<QueuePage />} />
-                <Route path="/team-battle" element={<TeamBattlePage />} />
-                <Route path="/king" element={<KingPage />} />
+                {INCLUDE_UNRELEASED_MODES && TeamBattlePage && KingPage && (
+                  <>
+                    <Route path="/team-battle" element={<TeamBattlePage />} />
+                    <Route path="/king" element={<KingPage />} />
+                  </>
+                )}
                 <Route path="/lobby/:gameType" element={<OnlineGameHub />} />
                 <Route path="/create-room" element={<CreateRoom />} />
                 <Route path="/team" element={<TeamV2 />} />

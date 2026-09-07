@@ -31,6 +31,27 @@ const ADMIN_CHUNKS = [
   "UserAnalytics",
 ];
 
+/**
+ * Chunk name fragments belonging to surfaces that are built but not released.
+ *
+ * This list is the reason the previous one was not enough. It checked six
+ * hardcoded admin names, so it kept catching the leak it was written for while
+ * every unreleased surface added afterwards walked straight past it: two whole
+ * game modes (King, Team Battle), a second home screen with its own PRO
+ * paywall (HomeV3, PathDetailV3), and the 527 KB three.js world map. All of
+ * them shipped in the reviewed binary and all of them were reachable by deep
+ * link.
+ *
+ * Anything a reviewer must not find belongs here, not only the console.
+ */
+const UNRELEASED_CHUNKS = [
+  "KingPage",
+  "TeamBattlePage",
+  "HomeV3",
+  "PathDetailV3",
+  "WorldMapCanvas",
+];
+
 const failures = [];
 
 function listFiles(dir) {
@@ -76,6 +97,21 @@ if (adminChunks.length > 0) {
   failures.push(
     "The admin console is in the bundle. Build with VITE_INCLUDE_ADMIN=false.\n" +
       adminChunks.map((f) => `      ${f.replace(DIST + "/", "")}`).join("\n"),
+  );
+}
+
+// ── Unreleased surfaces must not be in the binary ──────────────────────────
+const unreleasedChunks = files.filter((f) =>
+  UNRELEASED_CHUNKS.some((name) => f.includes(name)),
+);
+
+if (unreleasedChunks.length > 0) {
+  failures.push(
+    "An unreleased surface is in the bundle. These are App Store guideline\n" +
+      "      2.3.1 (hidden features) and 2.2 (beta software) findings — a route\n" +
+      "      guard is not enough, the chunk itself must not ship. Leave\n" +
+      "      VITE_INCLUDE_UNRELEASED_MODES and VITE_INCLUDE_UI_PREVIEWS unset.\n" +
+      unreleasedChunks.map((f) => `      ${f.replace(DIST + "/", "")}`).join("\n"),
   );
 }
 

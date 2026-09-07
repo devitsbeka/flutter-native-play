@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, lazy } from "react";
 import { trackSignupCompleted } from "@/lib/analytics";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -37,7 +37,16 @@ import { MobileHomeScroll } from "@/components/home/MobileHomeScroll";
 import { useHomeMascot } from "@/hooks/useHomeMascot";
 import { useQuickDailyClaim } from "@/hooks/useQuickDailyClaim";
 import { DesktopActionCards } from "@/components/home/DesktopActionCards";
-import { LoggedInHomeV2 } from "@/pages/LoggedInHomeV2";
+// The /dev/v2 world-map preview. A static import here is what actually shipped
+// the three.js scene: the route was gated but this import was not, so
+// WorldMapCanvas (527 KB) plus three and @react-three/fiber landed in the
+// production bundle for a page no released route can reach. Lazy AND gated, so
+// the chunk is absent rather than merely unreachable.
+const INCLUDE_UI_PREVIEWS =
+  import.meta.env.DEV || import.meta.env.VITE_INCLUDE_UI_PREVIEWS === 'true';
+const LoggedInHomeV2 = INCLUDE_UI_PREVIEWS
+  ? lazy(() => import("@/pages/LoggedInHomeV2").then((m) => ({ default: m.LoggedInHomeV2 })))
+  : null;
 import { DesktopPlayButtonLarge } from "@/components/home/DesktopPlayButtonLarge";
 
 import { SoundSettingsModal } from "@/components/home/SoundSettingsModal";
@@ -766,7 +775,7 @@ export default function Index() {
 
   // /dev/v2 previews the 3D world-map homepage for logged-in users; the
   // regular responsive homepage below serves the main route.
-  if (user && isDevV2) {
+  if (user && isDevV2 && LoggedInHomeV2) {
     return (
       <>
         <LoggedInHomeV2
