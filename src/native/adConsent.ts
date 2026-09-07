@@ -67,6 +67,8 @@ export interface AdConsentState {
 interface ConsentCapablePlugin {
   requestConsentInfo(options?: {
     tagForUnderAgeOfConsent?: boolean;
+    debugGeography?: string;
+    testDeviceIdentifiers?: string[];
   }): Promise<{
     status: string;
     isConsentFormAvailable?: boolean;
@@ -208,6 +210,35 @@ function normalise(
  * Never throws: a failure here must not take the app or its ads down, and an
  * unresolved state already blocks ad requests on its own.
  */
+/**
+ * Force UMP to treat this device as being in the EEA, for testing.
+ *
+ * Without this the consent form is unreachable from outside Europe, which
+ * includes Georgia — so the one prerequisite that decides whether the app
+ * serves any ads at all in the EEA could not be verified from where it is
+ * built. UMP decides geography server-side from the IP; a VPN is the only
+ * alternative and it is not reliable.
+ *
+ * Off unless VITE_UMP_DEBUG_EEA is set, and the test-device id is required by
+ * Google for debug geography to apply at all. Get the id from the Xcode
+ * console on first run: the SDK logs it as
+ * "To enable debug mode for this device, set: testDeviceIdentifiers = @[ ... ]".
+ *
+ *   VITE_UMP_DEBUG_EEA=<that-id> npm run build:ios
+ *
+ * Never set in a shipped build: the guard in verify-ios-bundle fails the
+ * build if it leaks, because a production binary that thinks every user is in
+ * the EEA would show the form to everyone.
+ */
+function debugOptions(): {
+  debugGeography?: string;
+  testDeviceIdentifiers?: string[];
+} {
+  const id = import.meta.env.VITE_UMP_DEBUG_EEA;
+  if (!id) return {};
+  return { debugGeography: "EEA", testDeviceIdentifiers: [String(id)] };
+}
+
 export async function ensureAdConsent(options?: {
   underAgeOfConsent?: boolean;
 }): Promise<AdConsentState> {
@@ -225,6 +256,7 @@ export async function ensureAdConsent(options?: {
     try {
       const info = await plugin.requestConsentInfo({
         tagForUnderAgeOfConsent: underAge,
+        ...debugOptions(),
       });
 
       let next = normalise(info);

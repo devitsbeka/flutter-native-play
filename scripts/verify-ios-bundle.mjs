@@ -115,6 +115,20 @@ if (unreleasedChunks.length > 0) {
   );
 }
 
+// ── The EEA consent debug override must never ship ────────────────────────
+//
+// VITE_UMP_DEBUG_EEA forces Google's consent SDK to treat the device as being
+// in the EEA, so the consent form can be tested from outside Europe. In a
+// production binary that would show the European consent form to every user
+// in the world, and make the app's own EEA behaviour untestable because it
+// would always be on.
+if ((process.env.VITE_UMP_DEBUG_EEA ?? "").trim()) {
+  failures.push(
+    "VITE_UMP_DEBUG_EEA is set. That forces the EEA consent form for every\n" +
+      "      user. It is a local testing switch — unset it before building.",
+  );
+}
+
 // ── No third-party tracking that runs before ATT ───────────────────────────
 const indexHtml = join(DIST, "index.html");
 try {
