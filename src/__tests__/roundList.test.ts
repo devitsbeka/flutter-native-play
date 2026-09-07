@@ -128,25 +128,44 @@ describe("a list longer than the panel says so", () => {
     // list impossible to scroll (owner). Only the grip starts a drag now.
     const row = modal.slice(modal.indexOf("<Reorder.Item"), modal.indexOf("</Reorder.Item>"));
     expect(row).not.toMatch(/touchAction: canEdit/);
-    expect(row).toMatch(/onPointerDown=\{\(e\) => controls\.start\(e\)\}\s*\n\s*style=\{\{ touchAction: "none" \}\}/);
+    expect(row).toMatch(/aria-label=\{gripLabel\}\s*\n\s*onPointerDown=\{\(e\) => \{\s*\n\s*setLifted\(true\);\s*\n\s*controls\.start\(e\);\s*\n\s*\}\}\s*\n\s*style=\{\{ touchAction: "none" \}\}/);
     expect(row).toMatch(/h-10 w-10 shrink-0 cursor-grab/);
     for (const lang of ["en", "ka", "de", "es", "fr", "it", "pt"]) {
       expect(read(`src/locales/${lang}.ts`), lang).toMatch(/uRoundsDrag: "/);
     }
   });
 
-  it("and pages with arrows too", () => {
-    expect(modal).toMatch(/const \[more, setMore\] = useState\(\{ up: false, down: false \}\);/);
-    expect(modal).toMatch(/el\.addEventListener\("scroll", measure, \{ passive: true \}\);/);
-    expect(modal).toMatch(/new ResizeObserver\(measure\)/);
-    expect(modal).toMatch(/\{more\.down && \(\s*\n\s*<PageArrow dir=\{1\}/);
-    expect(modal).toMatch(/\{more\.up && \(\s*\n\s*<PageArrow dir=\{-1\}/);
-    expect(modal).toMatch(/scrollBy\(\{ top: dir \* ROW_STRIDE \* 3, behavior: "smooth" \}\)/);
+  it("no paging arrows any more — the rows scroll under a finger", () => {
+    // They date from when the whole row was the drag handle and the list
+    // could not scroll at all; with the grip-only handle they were clutter.
+    expect(modal).not.toMatch(/PageArrow|ROW_STRIDE|ResizeObserver|uRoundsMore/);
     for (const lang of ["en", "ka", "de", "es", "fr", "it", "pt"]) {
-      const src = read(`src/locales/${lang}.ts`);
-      expect(src, lang).toMatch(/uRoundsMoreBelow: "/);
-      expect(src, lang).toMatch(/uRoundsMoreAbove: "/);
+      expect(read(`src/locales/${lang}.ts`), lang).not.toMatch(/uRoundsMore(Below|Above)/);
     }
+  });
+
+  it("the X leads the row, before the number and far from the grip", () => {
+    // Beside the grip a thumb reaching for the drag handle removed the
+    // round instead. The held round keeps the slot so numbers line up.
+    const row = modal.slice(modal.indexOf("<Reorder.Item"), modal.indexOf("</Reorder.Item>"));
+    const x = row.indexOf("aria-label={removeLabel}");
+    const number = row.indexOf("{number}");
+    const grip = row.indexOf("aria-label={gripLabel}");
+    expect(x).toBeGreaterThan(-1);
+    expect(x).toBeLessThan(number);
+    expect(number).toBeLessThan(grip);
+    expect(row).toMatch(/<span className="h-9 w-9 shrink-0" \/>/);
+    for (const lang of ["en", "ka", "de", "es", "fr", "it", "pt"]) {
+      expect(read(`src/locales/${lang}.ts`), lang).toMatch(/uRoundsRemove: "/);
+    }
+  });
+
+  it("and a pressed grip lifts the row so it reads as movable", () => {
+    // From the press, not the first movement: scale, a purple halo and a
+    // deep shadow, and the grip itself lights up.
+    expect(modal).toMatch(/const \[lifted, setLifted\] = useState\(false\);/);
+    expect(modal).toMatch(/scale: 1\.03, boxShadow: "0 0 0 2px rgba\(113,38,213,0\.45\), 0 18px 40px rgba\(102,51,153,0\.32\)"/);
+    expect(modal).toMatch(/onDragEnd=\{\(\) => \{\s*\n\s*setLifted\(false\);/);
   });
 });
 
