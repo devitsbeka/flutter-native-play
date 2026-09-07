@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
 import { useNotificationModal } from "@/hooks/useNotificationModal";
 import { t as tStandalone } from "@/contexts/LanguageContext";
+import { checkBlockPair, ensureBlocksLoaded } from "@/hooks/useContentModeration";
 
 export interface GameInvitation {
   id: string;
@@ -73,7 +74,19 @@ export function useGameInvitations() {
         sender: profileMap.get(inv.sender_id) || undefined,
       })) || [];
 
-      setPendingInvitations(invitationsWithProfiles);
+      // Invitations fail CLOSED. Unlike a leaderboard, an invitation is
+      // something a blocked player *does* to you: it raises a modal over
+      // whatever you were doing, with their name and face on it. Showing one
+      // that could not be checked against the block list is the failure this
+      // whole change exists to stop, and the cost of the other mistake is
+      // that a legitimate invitation appears a moment late — or after the
+      // next refetch, of which there are several (mount, realtime, accept).
+      const blocks = await ensureBlocksLoaded(user.id);
+      const visible = blocks.loaded
+        ? invitationsWithProfiles.filter((inv) => !blocks.hiddenIds.has(inv.sender_id))
+        : [];
+
+      setPendingInvitations(visible);
     } catch (error) {
       console.error("Error fetching invitations:", error);
     } finally {
@@ -130,6 +143,25 @@ export function useGameInvitations() {
       if (!user) return false;
 
       try {
+        // The block has to stop the invitation, not just hide it afterwards:
+        // an invitation writes a row, adds a participant and fires a push
+        // carrying the sender's nickname to the recipient's lock screen.
+        // Asked of the table rather than the cached set, and an unreadable
+        // answer refuses — there is no harm in declining to send.
+        //
+        // Naming only the direction that is the caller's own doing: telling
+        // someone "that player blocked you" would make blocking announce
+        // itself.
+        const pairBlock = await checkBlockPair(user.id, receiverId);
+        if (pairBlock !== "clear") {
+          notify.error(
+            pairBlock === "blocked-by-you"
+              ? tStandalone("extra.userAlreadyBlocked")
+              : tStandalone("extra.inviteSendFailed"),
+          );
+          return false;
+        }
+
         // Check if there's already a pending invitation
         const { data: existing } = await supabase
           .from("game_invitations")
@@ -283,7 +315,16 @@ export function useGameInvitations() {
         },
         async (payload) => {
           const newInvitation = payload.new as GameInvitation;
-          
+
+          // Same fail-closed rule as the fetch above, and it has to be here
+          // rather than at render: this handler plays a sound and pushes the
+          // invitation onto the list GlobalGameInviteGate raises a modal
+          // from. An unverifiable sender is dropped.
+          const blocks = await ensureBlocksLoaded(user.id);
+          if (!blocks.loaded || blocks.hiddenIds.has(newInvitation.sender_id)) {
+            return;
+          }
+
           // Fetch sender profile
           const { data: profile } = await supabase
             .from("profiles")

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PersonAskModal } from "@/components/shared/PersonAskModal";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
@@ -10,6 +10,25 @@ import {
   useHostJoinRequests,
   useRoomJoinRequests,
 } from "@/hooks/useRoomJoinRequests";
+import { useContentModeration } from "@/hooks/useContentModeration";
+
+/**
+ * Drop the knocks that come from a blocked player.
+ *
+ * This one fails CLOSED. A join request is not a list the host is browsing —
+ * it is a modal that takes over the screen with a stranger's name and face
+ * on it and asks for a decision, which is precisely the thing a block is
+ * supposed to stop. Until the block set is known there is no doorstep, and
+ * the requests are still there a moment later: `useRoomJoinRequests` and
+ * `useHostJoinRequests` both keep polling.
+ */
+function useUnblockedRequests<T extends { user_id: string }>(pending: T[]): T[] {
+  const { hiddenIds, loaded } = useContentModeration();
+  return useMemo(
+    () => (loaded ? pending.filter((p) => !hiddenIds.has(p.user_id)) : []),
+    [pending, hiddenIds, loaded],
+  );
+}
 
 /**
  * The door of a published room.
@@ -43,7 +62,8 @@ export function JoinRequestGate({
    */
   hostTeam?: "a" | "b";
 }) {
-  const { pending, respond, block } = useRoomJoinRequests(roomId, isHost);
+  const { pending: allPending, respond, block } = useRoomJoinRequests(roomId, isHost);
+  const pending = useUnblockedRequests(allPending);
   const next = pending[0];
   return (
     <JoinRequestModal
@@ -68,7 +88,8 @@ export function JoinRequestGate({
  */
 export function GlobalJoinRequestGate() {
   const navigate = useNavigate();
-  const { pending, reload } = useHostJoinRequests();
+  const { pending: allPending, reload } = useHostJoinRequests();
+  const pending = useUnblockedRequests(allPending);
   const next = pending[0];
 
   const answer = async (approve: boolean, team?: "a" | "b") => {
