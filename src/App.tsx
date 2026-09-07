@@ -163,6 +163,7 @@ const OnboardingWelcomePreview = INCLUDE_ADMIN ? lazy(() => import("./pages/Onbo
 
 // Shop pages
 const ShopSuccess = lazy(() => import("./pages/shop/Success"));
+const CheckoutCancelled = lazy(() => import("./pages/checkout/Cancelled"));
 const ShopCancel = lazy(() => import("./pages/shop/Cancel"));
 // Internal design-system and documentation pages. These were reachable in
 // production by anyone who typed the URL, and /docs in particular renders the
@@ -403,6 +404,9 @@ const App = () => (
                 {/* The shop is the power-ups page; anything that still says
                     /shop (an old link, a typed URL) lands there, not on 404. */}
                 <Route path="/shop" element={<Navigate to="/power-ups" replace />} />
+                {/* Where Stripe's back arrow lands: it steps back over the
+                    checkout leg rather than stacking on top of it. */}
+                <Route path="/checkout/cancelled" element={<CheckoutCancelled />} />
                 <Route path="/shop/success" element={<ShopSuccess />} />
                 <Route path="/shop/cancel" element={<ShopCancel />} />
                 {INCLUDE_DEV_PAGES && Styleguide && <Route path="/styleguide" element={<Styleguide />} />}
