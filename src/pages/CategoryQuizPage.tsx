@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ChevronRight, TrendingUp } from "lucide-react";
@@ -143,6 +143,19 @@ const POWER_UP_SHORT_NAME: Record<PowerUpType, (t: (k: string) => string) => str
 export default function CategoryQuizPage() {
   const { categoryId, levelId } = useParams();
   const navigate = useNavigate();
+  /**
+   * The "3, 2, 1" some entries ask for.
+   *
+   * A level opened from the category's own page starts on the question, and
+   * should: the player has just been looking at the level they tapped. A
+   * picture game picked on the Guess screen arrives from somewhere else
+   * entirely and wants the beat the owner asked for ("it should show 3, 2,
+   * 1 and the game should start") — so the entry says, rather than every
+   * level everywhere growing a countdown.
+   */
+  const location = useLocation();
+  const wantsCountdown = Boolean((location.state as { countdown?: boolean } | null)?.countdown);
+  const [countdown, setCountdown] = useState<number | null>(wantsCountdown ? 3 : null);
   const { t } = useLanguage();
   const { user, profile } = useAuth();
   const { updateLevelProgress } = useCategoryProgress();
@@ -389,6 +402,10 @@ export default function CategoryQuizPage() {
   // Timer - pauses when frozen
   useEffect(() => {
     if (loading || isAnswered || showResults || questions.length === 0) return;
+    // And not while the 3-2-1 is on screen. These effects run whatever is
+    // rendered, so without this the first question's clock would be three
+    // seconds down before the player ever saw it.
+    if (countdown !== null && countdown > 0) return;
 
     const timer = setInterval(() => {
       // Check if timer is frozen
@@ -419,7 +436,7 @@ export default function CategoryQuizPage() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [loading, isAnswered, showResults, currentQuestionIndex, questions.length, timerFrozen, freezeEndTime]);
+  }, [loading, isAnswered, showResults, currentQuestionIndex, questions.length, timerFrozen, freezeEndTime, countdown]);
 
   // Save results when quiz ends
   useEffect(() => {
@@ -655,9 +672,10 @@ export default function CategoryQuizPage() {
   // on sets the clock back to full, and this stops being true.
   useEffect(() => {
     if (loading || showResults || isAnswered || questions.length === 0) return;
+    if (countdown !== null && countdown > 0) return;
     if (timeRemaining > 0) return;
     handleTimeUp();
-  }, [timeRemaining, loading, showResults, isAnswered, questions.length, handleTimeUp]);
+  }, [timeRemaining, loading, showResults, isAnswered, questions.length, handleTimeUp, countdown]);
 
   const handleAnswerSelect = (answer: string) => {
     if (isAnswered) return;
@@ -975,6 +993,36 @@ export default function CategoryQuizPage() {
     setFreezeTimeRemaining(0);
   }, []);
 
+
+  // Count down only once there is something to count down TO: ticking over
+  // the "generating questions" spinner would be a countdown to more waiting.
+  useEffect(() => {
+    if (countdown === null || loading || questions.length === 0) return;
+    if (countdown === 0) return;
+    const timer = setTimeout(() => setCountdown((n) => (n === null ? null : n - 1)), 700);
+    return () => clearTimeout(timer);
+  }, [countdown, loading, questions.length]);
+
+  if (!loading && questions.length > 0 && countdown !== null && countdown > 0) {
+    return (
+      <div className="h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] bg-background flex flex-col items-center justify-center gap-6">
+        <p className="font-display text-2xl text-foreground">{category?.name ?? ""}</p>
+        <AnimatePresence mode="popLayout">
+          <motion.span
+            key={countdown}
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 1.6, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 380, damping: 22 }}
+            className="font-display text-[96px] leading-none text-primary"
+          >
+            {countdown}
+          </motion.span>
+        </AnimatePresence>
+        <p className="text-sm font-medium text-muted-foreground">{t("extra.roundStartingSoon")}</p>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
