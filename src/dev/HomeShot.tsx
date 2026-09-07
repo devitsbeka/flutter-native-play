@@ -13,6 +13,9 @@ import { useSearchParams } from "react-router-dom";
 import { TVSetupInline } from "@/components/team/TVSetupInline";
 import { LibraryCard } from "@/components/team/CategoryPickerModal";
 import { RoundOrderModal } from "@/components/team/RoundOrderModal";
+import { RoomTitle } from "@/components/lobby/UniversalLobby";
+import { ChunkyButton } from "@/components/ui/chunky-button";
+import { GreenPlayButton } from "@/components/shared/GreenPlayButton";
 import type { QueueItem } from "@/hooks/useRoomCategoryQueue";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { MobileHeroWidgets, MobileProfileCard } from "@/components/home/MobileHome";
@@ -116,16 +119,45 @@ export default function HomeShot() {
       </div>
     );
   }
+  if (params.get("view") === "buttons") {
+    // The green buttons in both scripts, next to a purple one for contrast.
+    return (
+      <div className="flex min-h-[100dvh] w-full flex-col gap-4 bg-[#f3e8ff] p-6">
+        <ChunkyButton variant="success" size="lg" className="w-full">start</ChunkyButton>
+        <ChunkyButton variant="success" size="lg" className="w-full">დაწყება</ChunkyButton>
+        <ChunkyButton variant="success" size="md" className="w-full">Try it for 0 ₾</ChunkyButton>
+        <ChunkyButton variant="success" size="md" className="w-full">გამოსცადე 0 ₾-ად</ChunkyButton>
+        <GreenPlayButton className="h-14 w-full text-base">ითამაშე</GreenPlayButton>
+        <GreenPlayButton className="h-14 w-full text-base">Play</GreenPlayButton>
+        <ChunkyButton variant="primary" size="lg" className="w-full">Purple stays Nunito</ChunkyButton>
+      </div>
+    );
+  }
+  if (params.get("view") === "title") {
+    // The lobby's room title at phone width, with a name that does not fit.
+    const name = params.get("name") ?? "Cheerful Sharks Society";
+    return (
+      <div className="min-h-[100dvh] w-full bg-[#e9dcf7] px-4 pt-10">
+        <button type="button" className="flex w-full flex-col items-center">
+          <RoomTitle name={name} icon="/images/bgs.png" editable />
+        </button>
+      </div>
+    );
+  }
   if (params.get("view") === "rounds") {
     // The lobby's round list with more rounds than the panel can show.
-    const names = ["Guess the Logo", "Economics", "Guess the Celebrity", "Guess the City", "Guess the Athlete", "Mathematics", "Space", "Nature"];
+    const names = ["Guess the Logo", "Economics", "Guess the Celebrity", "Guess the City", "Guess the Athlete", "Mathematics", "Space", "Nature", "History", "Geography", "Music", "Cinema"];
     const items = names.map((name, i): QueueItem => ({
       id: `q${i}`, room_id: "r", position: i, source_type: "category", category_id: `c${i}`,
       category_name: name, user_trivia_id: null, icon_slug: "atom", created_at: "",
     }));
     return (
-      <div className="h-[100dvh] w-full bg-[#b9a3cf] p-4 pt-[140px]">
-        <div className="mx-auto flex max-h-[calc(100dvh_-_var(--safe-top,0px)_-_var(--safe-bottom,0px)_-_172px)] max-w-[700px] flex-col overflow-hidden rounded-[22px] border border-white/80 bg-[rgba(252,247,255,0.94)] shadow-[0_18px_48px_rgba(60,30,90,0.28)]">
+      // An iPhone's insets, so the panel's ceiling is the one the app gets.
+      <div
+        className="h-[100dvh] w-full bg-[#b9a3cf] p-4 pt-[188px]"
+        style={{ ["--safe-top" as string]: "59px", ["--safe-bottom" as string]: "34px" }}
+      >
+        <div className="mx-auto flex max-h-[calc(100dvh_-_var(--safe-top,0px)_-_var(--safe-bottom,0px)_-_145px)] max-w-[700px] flex-col overflow-hidden rounded-[22px] border border-white/80 bg-[rgba(252,247,255,0.94)] shadow-[0_18px_48px_rgba(60,30,90,0.28)]">
           <RoundOrderModal
             open
             onClose={noop}
