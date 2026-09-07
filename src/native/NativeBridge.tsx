@@ -26,6 +26,21 @@ export function NativeBridge() {
       else dispose = cleanup;
     });
 
+    // Register the intent to ask about tracking. It does NOT prompt here.
+    //
+    // This used to sit inside the double-rAF below and put the ATT dialog on
+    // the first painted frame of a cold start — no session, no age, no
+    // interaction. The age gate only runs inside signup, so a 13-year-old was
+    // asked to allow tracking before ever declaring an age: guideline 5.1.4.
+    //
+    // `primeTrackingConsent()` now records that the app is up; the prompt
+    // itself waits for `declareAgeGroup()` and appears only for a player who
+    // has said they are 18+. `useConsentOrchestration` supplies the age as
+    // soon as the profile resolves, so for a returning adult this is still
+    // the first thing that happens after launch — which is what App Review
+    // has to be able to find.
+    void primeTrackingConsent();
+
     // Two frames: the first is scheduled before paint, the second runs after
     // it. Hiding on the first uncovers a webview that has laid out but not
     // yet drawn, which flashes white on exactly the slower devices the splash
@@ -33,21 +48,6 @@ export function NativeBridge() {
     const raf = requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         hideSplashScreen();
-
-        // Ask about tracking here, and nowhere earlier.
-        //
-        // This is the call App Review has to be able to find. It used to
-        // happen only inside adService, behind an opt-in "watch ad" button
-        // that a reviewer never pressed, and build 34 was rejected for a
-        // prompt that could not be located. Nothing about it is conditional
-        // on sign-in, VIP status, or ads now — it runs on every cold start
-        // until iOS has an answer on file.
-        //
-        // After the splash rather than before: iOS only presents the ATT
-        // dialog while the app is active, and the native side waits for that
-        // anyway. Doing it here also means the explanation screen appears
-        // over a drawn app rather than a white webview.
-        void primeTrackingConsent();
       });
     });
 

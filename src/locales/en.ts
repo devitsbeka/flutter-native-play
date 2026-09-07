@@ -175,6 +175,10 @@ export const en: KaTranslations = {
     ageGateSubtitle: "This helps us show you the right experience",
     age13to17: "13–17",
     age18plus: "18+",
+    ageUnder13: "Under 13",
+    ageBlockedTitle: "MyTrivia is for players aged 13 and over",
+    ageBlockedBody: "We can't create an account for you yet — sorry. Come back on your 13th birthday and we'll be here.",
+    ageBlockedRetry: "I picked the wrong one",
   },
 
   // ==========================================
@@ -552,6 +556,8 @@ export const en: KaTranslations = {
     upToDate: "Up to date",
     privacyPolicy: "Privacy Policy",
     termsOfService: "Terms of Service",
+    adPrivacy: "Ad privacy options",
+    adPrivacyDescription: "Review or change your consent for personalised ads",
     dataManagement: "Data Management",
     exportData: "Export Data",
     exportDataDescription: "Download your data",
@@ -672,16 +678,16 @@ export const en: KaTranslations = {
   // App Tracking Transparency
   // ==========================================
   att: {
-    title: "Help keep MyTrivia free",
-    body: "You'll see ads either way. Allowing tracking just makes them relevant to you.",
-    pointRelevantTitle: "Ads worth seeing",
-    pointRelevantBody: "Games and quizzes you might actually like, instead of random noise.",
-    pointFreeTitle: "Keeps the game free",
-    pointFreeBody: "Relevant ads earn more, and that is what pays for new questions every week.",
+    title: "Before iOS asks about tracking",
+    body: "MyTrivia shows ads. iOS is about to ask whether it may use your device's advertising identifier for them.",
+    pointRelevantTitle: "What the identifier is for",
+    pointRelevantBody: "It lets Google AdMob pick ads based on your interests instead of showing untargeted ones.",
+    pointChoiceTitle: "Either answer is fine",
+    pointChoiceBody: "MyTrivia works exactly the same whichever you choose, and you can change it later in iOS Settings.",
     pointPrivateTitle: "Your answers stay yours",
     pointPrivateBody: "Scores, answers and friends are never shared with advertisers.",
     continue: "Continue",
-    footnote: "iOS will ask for your permission next. You can change your answer any time in Settings.",
+    footnote: "iOS will ask for your permission next. You can change your answer any time in Settings > Privacy & Security > Tracking.",
   },
 
   // ==========================================
@@ -1291,7 +1297,7 @@ export const en: KaTranslations = {
     ccpaRight2: "Right to delete your personal information",
     ccpaRight3: "Right to opt-out of the sale or sharing of personal information",
     ccpaRight4: "Right to non-discrimination for exercising your privacy rights",
-    ccpaNoSell: "We do not sell your personal information. We do not share your personal information for cross-context behavioral advertising purposes.",
+    ccpaNoSell: "We do not sell your personal information. If you allow tracking, your device’s advertising identifier is shared with Google AdMob so the ads in MyTrivia can be personalised — that is cross-context behavioral advertising, and you can withdraw it at any time in iOS Settings > Privacy & Security > Tracking.",
 
     // Account Deletion
     accountDeletion: "Account Deletion",

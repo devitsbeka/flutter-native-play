@@ -7,6 +7,7 @@
 import { Capacitor } from '@capacitor/core';
 import { trackingService } from './trackingService';
 import { personalizedAdsAllowed, ensureTrackingConsent } from '@/native/trackingConsent';
+import { adRequestsAllowed, ensureAdConsent } from '@/native/adConsent';
 import { isUnderAgeOfConsent } from '@/hooks/useAgeGroup';
 
 /**
@@ -116,6 +117,8 @@ class AdService {
     this.ageGroup = next;
 
     // Already up and running under different assumptions: apply the new ones.
+    // UMP is asked again too — `tagForUnderAgeOfConsent` changes the question,
+    // and the answer to the old one does not carry over.
     if (this.isInitialized && this.isNative) {
       void this.applyAgeTreatment();
     }
@@ -133,6 +136,7 @@ class AdService {
   private async applyAgeTreatment(): Promise<void> {
     if (!this.AdMob) return;
     try {
+      await ensureAdConsent({ underAgeOfConsent: isUnderAgeOfConsent(this.ageGroup) });
       await this.AdMob.initialize(this.initOptions());
     } catch (error) {
       console.warn('[ads] Could not re-apply age treatment:', error);
@@ -177,10 +181,14 @@ class AdService {
    * Ad treatment for a player under the age of consent.
    *
    * `tagForChildDirectedTreatment` is deliberately not set. It is COPPA's
-   * under-13 flag, and MyTrivia is a 13+ service — the age gate has no bucket
-   * below 13 (see `AgeGateStep`). A legacy `child` row from before that
-   * option was removed lands here too, via `isUnderAgeOfConsent`, which is
-   * the stricter of the two answers available to it.
+   * under-13 flag, and MyTrivia is a 13+ service — the age gate refuses an
+   * under-13 rather than storing one (see `AgeGateStep`), so no profile
+   * should ever be below that line.
+   *
+   * Which age groups land here is `isUnderAgeOfConsent`, and since that
+   * predicate was inverted the answer includes an unknown or missing age —
+   * every anonymous guest, in other words, who previously got adult-rated
+   * personalised ads because nobody had ever asked them anything.
    */
   private getChildSafetyOptions() {
     if (isUnderAgeOfConsent(this.ageGroup)) {
@@ -198,6 +206,29 @@ class AdService {
    */
   shouldShowAd(): boolean {
     return !this.isVipUser;
+  }
+
+  /**
+   * Whether an ad request is permitted at all.
+   *
+   * This is the GDPR question, not the ATT one. Declining in the UMP form
+   * leaves `canRequestAds` false, and an EEA player who declined must see no
+   * ad — personalised or otherwise — rather than a non-personalised one. It
+   * is also false before the flow has resolved, so nothing is requested while
+   * the answer is still unknown.
+   *
+   * The web simulation is unaffected: `adRequestsAllowed()` reports true off
+   * a native platform, where there is no UMP and no real ad SDK.
+   */
+  private mayRequestAds(): boolean {
+    // Simulation mode. Either the web, or a native build where the AdMob
+    // import threw and `initialize()` fell back — there is no ad SDK to
+    // withhold and no UMP to ask, and blocking here would take the fallback
+    // rewards away too.
+    if (!this.isNative) return true;
+    if (adRequestsAllowed()) return true;
+    console.warn('[ads] Ad request blocked — no consent on file (UMP).');
+    return false;
   }
 
   async initialize(): Promise<boolean> {
@@ -225,6 +256,14 @@ class AdService {
           // asks at launch behind an explanation screen; all this needs is
           // the answer, to decide personalisation.
           await trackingService.initialize();
+
+          // The EEA consent flow, and it has to be here — before
+          // AdMob.initialize(), which is where Google's own documentation
+          // puts it and the only point at which refusing can still stop the
+          // ad SDK from starting up. See `native/adConsent.ts` for what was
+          // wrong: the UMP framework has been in the binary all along and was
+          // never once called.
+          await ensureAdConsent({ underAgeOfConsent: isUnderAgeOfConsent(this.ageGroup) });
 
           await this.AdMob.initialize(this.initOptions());
           
@@ -266,6 +305,11 @@ class AdService {
 
     if (this.isAdLoading) {
       console.log('Ad is already loading');
+      return false;
+    }
+
+    if (!this.mayRequestAds()) {
+      callbacks?.onAdFailedToLoad?.('Ad consent not granted');
       return false;
     }
 
@@ -433,6 +477,11 @@ class AdService {
       return true;
     }
 
+    // No consent, no ad request. Below the VIP bypass on purpose: a VIP is
+    // not shown an ad at all, so their reward must not depend on an answer
+    // that only governs advertising.
+    if (!this.mayRequestAds()) return false;
+
     // Load and show in one call
     if (!this.isAdLoaded) {
       const loaded = await this.loadRewardedAd(callbacks);
@@ -492,6 +541,7 @@ class AdService {
 
     // Web has no interstitials — nothing to load
     if (!this.isNative || !this.AdMob || !this.InterstitialAdPluginEvents) return false;
+    if (!this.mayRequestAds()) return false;
     if (this.isInterstitialLoaded) return true;
     if (this.isInterstitialLoading) return false;
 
@@ -524,6 +574,7 @@ class AdService {
     await ensureTrackingConsent();
 
     if (this.isVipUser) return false;
+    if (!this.mayRequestAds()) return false;
     if (!this.isNative || !this.AdMob || !this.InterstitialAdPluginEvents) return false;
 
     if (!this.isInterstitialLoaded) {
