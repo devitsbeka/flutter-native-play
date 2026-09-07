@@ -12,6 +12,9 @@ import { ExtraPlaysOffer } from "@/components/home/ExtraPlaysOffer";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useNavigate } from "react-router-dom";
 import { useProPurchase } from "@/hooks/useProPurchase";
+import { useStorePrice } from "@/hooks/useStorePrice";
+import { monthLabel } from "@/utils/currency";
+import { PRICES } from "@/config/pricing";
 import { SubscriptionTerms } from "@/components/shared/SubscriptionTerms";
 
 interface PlayLimitModalProps {
@@ -38,6 +41,18 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
     const { t } = useLanguage();
     const navigate = useNavigate();
     const { initiateProCheckout, isProcessing, storeReady } = useProPurchase();
+    // "Become PRO" below goes straight to the App Store payment sheet on iOS,
+    // so what it costs and how often it renews have to be on the screen before
+    // the tap (guideline 3.1.2). This card printed neither — art, a limit
+    // message, two benefit rows, a green button, and the renewal terms with no
+    // figure anywhere in them.
+    //
+    // Same resolver and same shape as ProRequiredModal: StoreKit's own
+    // localized string on a phone, the table price on the web, and a "—"
+    // placeholder while the store is silent — which is also when `storeReady`
+    // holds the button closed, so a price is never missing from a live button.
+    const storePrice = useStorePrice();
+    const proPrice = storePrice("pro", PRICES.pro_monthly.USD, "pro_monthly");
     const guestProgress = getGuestProgress();
     
     // Calculate stats for guests
@@ -197,13 +212,21 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
           </div>
         </div>
 
+        {/* The price of what the button below buys, and the period it renews
+            on. Above the button rather than under it, so it is read before
+            the tap and not after. */}
+        <p className="mt-5 text-center">
+          <span className="font-display text-2xl font-black text-[#1E1B2E]">{proPrice.display}</span>
+          <span className="ml-1 text-sm text-slate-500">{monthLabel()}</span>
+        </p>
+
         <motion.button
           onClick={handleUpgradeToPro}
           // Not live while the store has told us nothing — see
           // useProPurchase.storeReady.
           disabled={isProcessing || !storeReady}
           whileTap={{ scale: 0.97, y: 2 }}
-          className="mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-2xl font-display text-base font-bold text-white disabled:opacity-60"
+          className="mt-3 flex h-14 w-full items-center justify-center gap-2 rounded-2xl font-display text-base font-bold text-white disabled:opacity-60"
           style={{
             background: "linear-gradient(90deg, #29B36B 0%, #7CC94A 60%, #B7E356 100%)",
             border: "2px solid #34D399",

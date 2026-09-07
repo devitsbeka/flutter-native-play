@@ -18,11 +18,17 @@
  * is the four extra seats. In dollars and euro it is still half the monthly
  * rate. See src/config/pricing.ts.
  *
- * The annual product does not exist in App Store Connect yet, so on a phone
- * that row is hidden — availablePlans() intersects with the catalogue the
- * device reported, because a row for a product the store never heard of
- * opens a payment sheet and fails. On the web it sells through Stripe at the
- * price in src/config/pricing.ts, in the buyer's own currency.
+ * All three products exist in App Store Connect. This used to say the annual
+ * one did not; it does — `io.mytrivia.pro.annual`, "PRO Annual", ONE_YEAR,
+ * verified against the App Store Connect API alongside pro.monthly,
+ * proplus.monthly and the four gem consumables, which is the whole catalogue.
+ *
+ * availablePlans() still intersects with the catalogue the device reported,
+ * and that is not a formality: StoreKit answers with nothing whenever the
+ * products are unapproved, unattached to the version, or unreachable, and a
+ * row for a product the device has no price for opens a payment sheet and
+ * fails. On the web every row sells through Stripe at the price in
+ * src/config/pricing.ts, in the buyer's own currency.
  *
  * **Free trials are split by platform, on purpose.** `trialDays` below is the
  * offer the *web* checkout grants, and it has to match `TRIAL_DAYS` in

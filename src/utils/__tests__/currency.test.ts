@@ -1,17 +1,18 @@
 import { describe, it, expect, beforeEach } from "vitest";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { installMemoryLocalStorage } from "@/test/memoryLocalStorage";
-import {
-  formatMonthlyPrice,
-  formatPrice,
-  getPriceDisplay,
-  shouldShowGel,
-  usdToGel,
-} from "@/utils/currency";
+import { monthLabel } from "@/utils/currency";
 
-// These strings are what a person reads before deciding to pay. A wrong
-// number here is not a rendering bug, it is a wrong price.
-
-const RATE = 2.75;
+// This module used to export a USD→GEL converter (`usdToGel`, `formatPrice`,
+// `formatMonthlyPrice`, `getPriceDisplay`) built on a flat 2.75 rate, and this
+// file tested every one of them — including that $9.99 renders as "27.47 ₾",
+// a number nothing has ever charged. The converter is gone: prices come from
+// src/config/pricing.ts on the web and from StoreKit on a device, and the only
+// thing this module ever really supplied was the "/mo" suffix.
+//
+// What is left is a string a person reads next to a price, so it is still
+// worth pinning — and so is the absence of the converter.
 
 beforeEach(() => {
   installMemoryLocalStorage();
@@ -19,150 +20,58 @@ beforeEach(() => {
 
 const useLanguage = (lang: string) => localStorage.setItem("preferredLanguage", lang);
 
-describe("shouldShowGel", () => {
-  it("defaults to USD when no language has been chosen", () => {
-    // The app's default language is English, and GEL is meaningless to
-    // anyone outside Georgia — an unset preference prices in dollars.
-    // Picking Georgian switches to GEL (covered below).
-    expect(shouldShowGel()).toBe(false);
+describe("monthLabel", () => {
+  it("defaults to the English suffix when no language has been chosen", () => {
+    expect(monthLabel()).toBe("/mo");
   });
 
-  it("shows GEL for Georgian", () => {
+  it("uses the Georgian form for Georgian", () => {
     useLanguage("ka");
-    expect(shouldShowGel()).toBe(true);
+    expect(monthLabel()).toBe("/თვე");
   });
 
-  it("shows USD for every other language", () => {
-    for (const lang of ["en", "ru", "de"]) {
+  it("uses the English abbreviation for every other language the app ships", () => {
+    for (const lang of ["en", "de", "es", "fr", "it", "pt"]) {
       useLanguage(lang);
-      expect(shouldShowGel(), lang).toBe(false);
+      expect(monthLabel(), lang).toBe("/mo");
     }
+  });
+
+  it("takes no amount, so it cannot render one", () => {
+    // The whole failure mode was a helper that accepted a USD figure and
+    // returned it converted. A suffix has nothing to convert.
+    expect(monthLabel.length).toBe(0);
   });
 });
 
-describe("usdToGel", () => {
-  it("converts at the configured rate", () => {
-    expect(usdToGel(1)).toBe(RATE);
-    expect(usdToGel(10)).toBe(27.5);
+describe("the currency module", () => {
+  const source = readFileSync(
+    join(process.cwd(), "src/utils/currency.ts"),
+    "utf8",
+  );
+
+  /** The file without its comments — the part that actually runs. */
+  const code = source
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/^\s*\/\/.*$/gm, "");
+
+  it("carries no exchange rate", () => {
+    // 2.75 lari to the dollar is the constant that quoted 10.97 ₾ for a 9.99 ₾
+    // subscription and 2.72 ₾ for a $0.99 gem pack. Reintroducing it here —
+    // or any other hardcoded rate — puts a number on a paywall that no
+    // checkout will honour (guideline 2.3.1).
+    //
+    // Matched against the stripped source, because the module's own docstring
+    // names the rate to explain why it is gone, and that history stays.
+    expect(
+      code,
+      "a conversion rate is back in currency.ts — prices belong in " +
+        "src/config/pricing.ts, one real figure per currency",
+    ).not.toMatch(/USD_TO_GEL|usdToGel|2\.75/);
   });
 
-  it("rounds to whole tetri, never fractions of a coin", () => {
-    expect(usdToGel(9.99)).toBe(27.47);
-    const converted = usdToGel(3.33);
-    expect(Number.isInteger(Math.round(converted * 100))).toBe(true);
-    expect(converted.toString()).toBe(converted.toFixed(2).replace(/0+$/, "").replace(/\.$/, ""));
-  });
-
-  it("converts zero to zero", () => {
-    expect(usdToGel(0)).toBe(0);
-  });
-
-  it("is monotonic — a dearer item is never cheaper in GEL", () => {
-    let previous = -1;
-    for (const usd of [0, 0.99, 1, 4.99, 9.99, 24.99, 99.99]) {
-      const gel = usdToGel(usd);
-      expect(gel, `$${usd}`).toBeGreaterThan(previous);
-      previous = gel;
-    }
-  });
-});
-
-describe("formatPrice", () => {
-  it("renders GEL with the lari sign", () => {
-    useLanguage("ka");
-    expect(formatPrice(9.99)).toBe("27.47 ₾");
-  });
-
-  it("renders USD with a dollar sign", () => {
-    useLanguage("en");
-    expect(formatPrice(9.99)).toBe("$9.99");
-  });
-
-  it("drops a trailing .00 in both currencies", () => {
-    useLanguage("en");
-    expect(formatPrice(10)).toBe("$10");
-    useLanguage("ka");
-    expect(formatPrice(4)).toBe("11 ₾"); // 4 × 2.75 = 11.00
-  });
-
-  it("keeps genuine decimals rather than truncating them", () => {
-    useLanguage("ka");
-    expect(formatPrice(10)).toBe("27.50 ₾"); // not "27.5"
-    useLanguage("en");
-    expect(formatPrice(4.5)).toBe("$4.50");
-  });
-
-  it("always shows a currency marker", () => {
-    for (const lang of ["ka", "en"]) {
-      useLanguage(lang);
-      for (const usd of [0, 1, 9.99, 100]) {
-        expect(formatPrice(usd), `${lang} $${usd}`).toMatch(/[$₾]/);
-      }
-    }
-  });
-
-  it("never renders NaN or undefined into a price", () => {
-    for (const lang of ["ka", "en"]) {
-      useLanguage(lang);
-      for (const usd of [0, 0.01, 999.99]) {
-        expect(formatPrice(usd)).not.toMatch(/NaN|undefined/);
-      }
-    }
-  });
-});
-
-describe("formatMonthlyPrice", () => {
-  it("appends a localised per-month suffix", () => {
-    useLanguage("ka");
-    expect(formatMonthlyPrice(9.99)).toBe("27.47 ₾/თვე");
-    useLanguage("en");
-    expect(formatMonthlyPrice(9.99)).toBe("$9.99/mo");
-  });
-
-  it("honours an explicit label in either currency", () => {
-    useLanguage("ka");
-    expect(formatMonthlyPrice(4, " / კვირა")).toBe("11.00 ₾ / კვირა");
-    useLanguage("en");
-    expect(formatMonthlyPrice(4, "/wk")).toBe("$4.00/wk");
-  });
-
-  it("keeps two decimals, unlike formatPrice", () => {
-    useLanguage("en");
-    expect(formatMonthlyPrice(10)).toBe("$10.00/mo");
-  });
-});
-
-describe("getPriceDisplay", () => {
-  it("splits the GEL price into value and trailing symbol", () => {
-    useLanguage("ka");
-    expect(getPriceDisplay(9.99)).toEqual({
-      value: "27.47",
-      symbol: "",
-      suffix: " ₾",
-      monthLabel: "/თვე",
-    });
-  });
-
-  it("splits the USD price into leading symbol and value", () => {
-    useLanguage("en");
-    expect(getPriceDisplay(9.99)).toEqual({
-      value: "9.99",
-      symbol: "$",
-      suffix: "",
-      monthLabel: "/mo",
-    });
-  });
-
-  it("reassembles into the same number formatPrice shows", () => {
-    for (const lang of ["ka", "en"]) {
-      useLanguage(lang);
-      for (const usd of [1, 4.99, 9.99]) {
-        const parts = getPriceDisplay(usd);
-        const assembled = `${parts.symbol}${parts.value}${parts.suffix}`;
-        // formatPrice trims a trailing .00; compare the numeric part only.
-        const numeric = (s: string) => parseFloat(s.replace(/[^\d.]/g, ""));
-        expect(numeric(assembled), `${lang} $${usd}`).toBeCloseTo(numeric(formatPrice(usd)), 2);
-      }
-    }
+  it("exports nothing that formats an amount", () => {
+    const exported = [...source.matchAll(/export function (\w+)/g)].map((m) => m[1]);
+    expect(exported).toEqual(["monthLabel"]);
   });
 });

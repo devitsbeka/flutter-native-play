@@ -33,6 +33,21 @@ export interface StorePrice {
    * price. Buy buttons must be disabled; see `useProPurchase.storeReady`.
    */
   fromStore: boolean;
+  /**
+   * Whether a buy button rendered beside this figure may be live.
+   *
+   * `fromStore` alone is the wrong test, and that is the trap the gem cards
+   * fell into: on the web it is *always* false — Stripe is charging and the
+   * app knows the figure — so gating on it would kill every web buy button,
+   * while on native it is the only thing that says a price exists at all.
+   *
+   * So the rule is the same one `useProPurchase.storeReady` applies to
+   * subscriptions: true off a device, `fromStore` on one. A card whose price
+   * reads "—" must not carry a live Buy button — tapping it only produces an
+   * "item unavailable" toast, which is guideline 2.1 ("we were unable to
+   * purchase") plus 3.1.1 on the same tap.
+   */
+  sellable: boolean;
 }
 
 // `solo`/`family` are the shop carousel's names for the same two tiers the
@@ -90,9 +105,9 @@ export function useStorePrice() {
       if (amount === null || amount === undefined) {
         // Nothing in the table for this id — a shop item priced somewhere
         // else. Show the figure the caller has, in its own currency.
-        return { display: formatMoney(fallbackUsd, "USD", language), fromStore: false };
+        return { display: formatMoney(fallbackUsd, "USD", language), fromStore: false, sellable: true };
       }
-      return { display: formatMoney(amount, currency, language), fromStore: false };
+      return { display: formatMoney(amount, currency, language), fromStore: false, sellable: true };
     };
 
     // Native: never convert. Apple charges the App Store Connect tier in the
@@ -118,6 +133,7 @@ export function useStorePrice() {
     const nativeUnknown = () => ({
       display: "—",
       fromStore: false,
+      sellable: false,
     });
 
     if (!Capacitor.isNativePlatform()) return webFallback();
@@ -126,7 +142,7 @@ export function useStorePrice() {
     const product = getProduct(productId);
 
     return product?.price
-      ? { display: product.price, fromStore: true }
+      ? { display: product.price, fromStore: true, sellable: true }
       : nativeUnknown();
   };
 }
