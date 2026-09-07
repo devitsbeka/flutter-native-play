@@ -13,6 +13,7 @@ import { useSearchParams } from "react-router-dom";
 import { TVSetupInline } from "@/components/team/TVSetupInline";
 import { LibraryCard } from "@/components/team/CategoryPickerModal";
 import { RoundOrderModal } from "@/components/team/RoundOrderModal";
+import { RoomTitle } from "@/components/lobby/UniversalLobby";
 import type { QueueItem } from "@/hooks/useRoomCategoryQueue";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { MobileHeroWidgets, MobileProfileCard } from "@/components/home/MobileHome";
@@ -113,6 +114,17 @@ export default function HomeShot() {
             />
           ))}
         </div>
+      </div>
+    );
+  }
+  if (params.get("view") === "title") {
+    // The lobby's room title at phone width, with a name that does not fit.
+    const name = params.get("name") ?? "Cheerful Sharks Society";
+    return (
+      <div className="min-h-[100dvh] w-full bg-[#e9dcf7] px-4 pt-10">
+        <button type="button" className="flex w-full flex-col items-center">
+          <RoomTitle name={name} icon="/images/bgs.png" editable />
+        </button>
       </div>
     );
   }
