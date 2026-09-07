@@ -2,8 +2,8 @@
  * The green buttons speak the hero type (Figma 1085:533).
  *
  * The frame shows the same green button twice: "start" in Slackey and
- * "დაწყება" in TA Solivare, 24px, 0.5px tracking. The app's `font-hero`
- * stack is exactly that pair — Slackey with TASolivare behind it, so
+ * "დაწყება" in the display face, 24px, 0.5px tracking. The app's `font-hero`
+ * stack is exactly that pair — Slackey with Google Sans behind it, so
  * Georgian, which Slackey lacks, falls through to the display face. Two
  * components draw green buttons; both wear it. Nothing else changes face.
  */
@@ -17,8 +17,8 @@ const chunky = read("src/components/ui/chunky-button.tsx");
 const green = read("src/components/shared/GreenPlayButton.tsx");
 
 describe("the hero face on the green buttons", () => {
-  it("font-hero is Slackey with TASolivare behind it", () => {
-    expect(read("tailwind.config.ts")).toMatch(/hero: \[\s*\n\s*'Slackey',\s*\n\s*'TASolivare'/);
+  it("font-hero is Slackey with Google Sans behind it", () => {
+    expect(read("tailwind.config.ts")).toMatch(/hero: \[\s*\n\s*'Slackey',\s*\n\s*'Google Sans'/);
   });
 
   it("ChunkyButton's success variant wears it, regular weight, 0.5px tracking — and only that variant", () => {

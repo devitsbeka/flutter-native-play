@@ -68,7 +68,7 @@ export function GreenPlayButton({ onClick, icon, children, className, disabled, 
       />
       {icon && <span className="relative flex items-center text-white">{icon}</span>}
       {/* The hero face, as on every green button (Figma 1085:533): Slackey
-          for Latin, TASolivare behind it for Georgian, regular weight. */}
+          for Latin, Google Sans behind it for Georgian, regular weight. */}
       <span className="relative font-hero font-normal tracking-[0.5px] text-white drop-shadow-[0px_4px_3px_rgba(0,0,0,0.07)] whitespace-nowrap">
         {children}
       </span>

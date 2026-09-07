@@ -1,9 +1,15 @@
 import { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { isHiddenFromSearch } from "@/lib/excludedUsers";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/lib/toast";
 import { t } from "@/contexts/LanguageContext";
+import {
+  checkBlockPair,
+  ensureBlocksLoaded,
+  useContentModeration,
+} from "@/hooks/useContentModeration";
 
 export interface Friend {
   id: string;
@@ -45,6 +51,13 @@ export const FriendsContext = createContext<FriendsContextValue | null>(null);
 export function FriendsProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const navigate = useNavigate();
+  /**
+   * Blocking has to reach the friends list, not just the feed it was written
+   * for. A blocked player stays in `friendships` — the row is a fact about
+   * two people and unblocking has to be able to put them back — so they are
+   * filtered out on the way to consumers instead.
+   */
+  const { hiddenIds, isHidden } = useContentModeration();
   const [friends, setFriends] = useState<Friend[]>([]);
   const [pendingRequests, setPendingRequests] = useState<Friend[]>([]);
   const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
@@ -68,6 +81,13 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
    */
   const onlineUsersRef = useRef<Set<string>>(new Set());
   onlineUsersRef.current = onlineUsers;
+  /**
+   * The same trick for the block set: `fetchFriends` must not be rebuilt
+   * every time a block lands, because the realtime subscription below is
+   * keyed on its identity and would tear itself down.
+   */
+  const hiddenIdsRef = useRef<Set<string>>(new Set());
+  hiddenIdsRef.current = hiddenIds;
 
   const fetchFriends = useCallback(async () => {
     if (!user) {
@@ -132,8 +152,13 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
           };
         });
 
-      const acceptedFriends = allFriends.filter(f => f.status === "accepted");
-      const newPendingRequests = allFriends.filter(f => f.status === "pending" && !f.isOutgoing);
+      // A blocked player is not a friend and their request is not news. This
+      // filter runs before the "new request" toast below, so blocking someone
+      // also stops them announcing themselves.
+      const visibleFriends = allFriends.filter(f => !hiddenIdsRef.current.has(f.friendId));
+
+      const acceptedFriends = visibleFriends.filter(f => f.status === "accepted");
+      const newPendingRequests = visibleFriends.filter(f => f.status === "pending" && !f.isOutgoing);
 
       if (!isInitialLoad.current && newPendingRequests.length > previousPendingCount.current) {
         const newRequest = newPendingRequests[newPendingRequests.length - 1];
@@ -196,6 +221,13 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
 
           if (payload.eventType === "INSERT" && row.friend_id === user.id && row.status === "pending") {
             const senderId = row.user_id;
+            // Fail closed: an unverifiable sender gets no toast. The row is
+            // still refetched below, where the list filter applies.
+            const blocks = await ensureBlocksLoaded(user.id);
+            if (!blocks.loaded || (senderId && blocks.hiddenIds.has(senderId))) {
+              fetchFriends();
+              return;
+            }
             const { data: profile } = await supabase
               .from("profiles")
               .select("nickname")
@@ -326,7 +358,21 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
         .neq("nickname", "[წაშლილი]")
         .limit(10);
       if (error) throw error;
-      return data || [];
+
+      // Search is a read-only list, so it fails OPEN: if the block set could
+      // not be read, results are shown unfiltered rather than the search
+      // appearing broken. Nothing can be *done* to the user from a search
+      // row — the actions it offers (friend request, invite) each re-check
+      // the pair against the table before they write.
+      const blocks = await ensureBlocksLoaded(user.id);
+      // Seeded content accounts are not people: they never sign in, so a
+      // request to one sits pending forever, and offering them as somebody to
+      // meet is what guideline 2.3.1 reads as a fabricated user. Unlike the
+      // block filter this fails CLOSED — the list is a constant in the bundle,
+      // so there is no load to wait on.
+      return (data || []).filter(
+        (row) => !blocks.hiddenIds.has(row.user_id) && !isHiddenFromSearch(row.user_id),
+      );
     } catch (error) {
       console.error("Error searching users:", error);
       return [];
@@ -347,6 +393,26 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
   const sendFriendRequest = useCallback(async (friendId: string) => {
     if (!user) return false;
     try {
+      // A block is not just a filter on what you see — it has to stop the
+      // other person reaching you. This is checked against the table rather
+      // than the cached set so a block made a moment ago still counts, and
+      // an unreadable answer ("unknown") refuses: a friend request is an
+      // outbound action, and there is no cost to declining to send one.
+      //
+      // What the refusal says matters. "You have blocked this player" is
+      // useful and tells them where to undo it. The other direction gets the
+      // ordinary send failure instead: a message that named the other
+      // person's block would turn blocking into a notification.
+      const pairBlock = await checkBlockPair(user.id, friendId);
+      if (pairBlock !== "clear") {
+        toast.error(
+          pairBlock === "blocked-by-you"
+            ? t("extra.userAlreadyBlocked")
+            : t("extra.requestSendFailed"),
+        );
+        return false;
+      }
+
       const { data: existing } = await supabase
         .from("friendships")
         .select("id, status, user_id")
@@ -465,10 +531,25 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
     void fetchFriends();
   }, [user, fetchFriends]);
 
+  /**
+   * Blocking somebody has to empty their row out of the list you are looking
+   * at, not at the next refetch. `fetchFriends` already filters what it
+   * stores; this filters again on the way out so a block landing while the
+   * list is on screen takes effect immediately, in both directions.
+   */
+  const visibleFriends = useMemo(
+    () => friends.filter((f) => !isHidden(f.friendId)),
+    [friends, isHidden],
+  );
+  const visiblePendingRequests = useMemo(
+    () => pendingRequests.filter((f) => !isHidden(f.friendId)),
+    [pendingRequests, isHidden],
+  );
+
   const value = useMemo(
     () => ({
-      friends,
-      pendingRequests,
+      friends: visibleFriends,
+      pendingRequests: visiblePendingRequests,
       onlineUsers,
       loading,
       searchUsers,
@@ -480,8 +561,8 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
       refreshFriendsIfStale,
     }),
     [
-      friends,
-      pendingRequests,
+      visibleFriends,
+      visiblePendingRequests,
       onlineUsers,
       loading,
       searchUsers,

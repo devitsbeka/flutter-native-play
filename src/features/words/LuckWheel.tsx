@@ -31,7 +31,39 @@ const WEDGES: Wedge[] = [
 ];
 
 // Cheap prizes come up more than rich ones.
+//
+// Because they do, the wheel cannot be read off the picture: six equal-looking
+// wedges, three of which are three times likelier than the others. The odds
+// are shown on the screen — see `PRIZE_ODDS` and the disclosure below the
+// wheel — which is what App Store guideline 3.1.1 asks of a randomised reward,
+// and what `LuckySpinModal` already does for its own wheel.
 const WEIGHTS = [22, 8, 20, 22, 8, 20];
+
+/**
+ * Every distinct prize and the chance of landing on it, as a percentage.
+ *
+ * Derived from WEDGES and WEIGHTS rather than typed out, so the disclosure
+ * cannot drift away from the wheel it describes. Two wedges pay the same
+ * prize (one hint), and their chances add: the player cares which prize they
+ * get, not which wedge delivered it.
+ */
+export const PRIZE_ODDS: { prize: Prize; percent: number }[] = (() => {
+  const total = WEIGHTS.reduce((a, b) => a + b, 0);
+  const byPrize = new Map<string, { prize: Prize; weight: number }>();
+  WEDGES.forEach((w, i) => {
+    const key = `${w.prize.kind}:${w.prize.amount}`;
+    const existing = byPrize.get(key);
+    if (existing) existing.weight += WEIGHTS[i];
+    else byPrize.set(key, { prize: w.prize, weight: WEIGHTS[i] });
+  });
+  return [...byPrize.values()]
+    .sort((a, b) => b.weight - a.weight)
+    .map(({ prize, weight }) => ({ prize, percent: (weight / total) * 100 }));
+})();
+
+/** "8%" / "8.5%" — one decimal only when it changes the number. */
+const formatPercent = (percent: number): string =>
+  `${Number.isInteger(percent) ? percent : percent.toFixed(1)}%`;
 
 function pickWedge(random: () => number): number {
   const total = WEIGHTS.reduce((a, b) => a + b, 0);
@@ -171,6 +203,31 @@ export function LuckWheel({ size, onDone, random = Math.random }: Props) {
           </ChunkyButton>
         )}
       </div>
+
+      {/* Odds disclosure — App Store guideline 3.1.1. The wedges are not
+          equally weighted, so this is the only place a player can find out
+          what the wheel actually pays. Same shape as LuckySpinModal's.
+          NOTE: these strings are inline English on purpose — src/locales/ is
+          owned elsewhere this cycle. They are listed for translation. */}
+      <details className="mt-4 w-full max-w-xs">
+        <summary className="cursor-pointer text-center text-xs text-gray-500 hover:text-gray-700">
+          📊 Win chances
+        </summary>
+        <div className="mt-2 space-y-1 rounded-xl bg-gray-50 p-3 text-xs text-gray-600">
+          <p className="mb-2 font-medium text-gray-700">Chance of each prize on one spin</p>
+          {PRIZE_ODDS.map(({ prize, percent }) => (
+            <div key={`${prize.kind}-${prize.amount}`} className="flex items-center justify-between">
+              <span>{describePrize(t, prize)}</span>
+              <span className="font-mono tabular-nums text-gray-500">{formatPercent(percent)}</span>
+            </div>
+          ))}
+          <p className="mt-2 border-t border-gray-200 pt-2 text-gray-400">
+            Every spin is independent, and the prize is drawn before the wheel
+            moves. Prizes are in-game items only — they have no cash value and
+            cannot be exchanged for money.
+          </p>
+        </div>
+      </details>
     </div>
   );
 }

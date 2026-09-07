@@ -180,7 +180,7 @@ function TBGate({ joining }: { joining: boolean }) {
       />
       <p
         className="text-[26px] text-[#523b76]"
-        style={{ fontFamily: "'TASolivare', sans-serif" }}
+        style={{ fontFamily: "'Google Sans', sans-serif" }}
       >
         {t("teamBattle.title")}
       </p>

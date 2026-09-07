@@ -167,8 +167,8 @@ export const PAGES_MAIN: PageDoc[] = [
     components: []
   },
   {
-    name: "PrivacyPolicyEN",
-    path: "src/pages/PrivacyPolicyEN.tsx",
+    name: "PrivacyPolicy (English)",
+    path: "src/pages/PrivacyPolicy.tsx",
     route: "/privacy-policy-en",
     description: "Privacy policy page in English.",
     features: ["Legal text display"],
@@ -185,8 +185,8 @@ export const PAGES_MAIN: PageDoc[] = [
     components: []
   },
   {
-    name: "TermsOfServiceEN",
-    path: "src/pages/TermsOfServiceEN.tsx",
+    name: "TermsOfService (English)",
+    path: "src/pages/TermsOfService.tsx",
     route: "/terms-en",
     description: "Terms of service page in English.",
     features: ["Legal text display"],

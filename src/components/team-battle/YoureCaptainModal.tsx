@@ -52,7 +52,7 @@ export function YoureCaptainModal({ open, onClose }: { open: boolean; onClose: (
         />
         <p
           className="text-center text-[21px] text-[#523b76]"
-          style={{ fontFamily: "'TASolivare', sans-serif" }}
+          style={{ fontFamily: "'Google Sans', sans-serif" }}
         >
           {t("lobby.youAreCaptain")}
         </p>

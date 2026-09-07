@@ -3,6 +3,8 @@ import { useLocation } from "react-router-dom";
 import posthog from "posthog-js";
 import { useAuth } from "@/contexts/AuthContext";
 import { fbTrackPageView } from "@/lib/fbpixel";
+import { analyticsConsentAllowed, subscribeToAdConsent } from "@/native/adConsent";
+import { useConsentOrchestration } from "@/native/useConsentOrchestration";
 
 const POSTHOG_KEY = "phc_mJKmSyJCq92bAxkvo7NZmdP7UZP79zqmJ7AX9E5vFYA";
 const POSTHOG_HOST = "https://us.i.posthog.com";
@@ -35,7 +37,32 @@ function getBootstrapIdentity(): { userId: string; displayName: string | undefin
 
 const bootstrapIdentity = getBootstrapIdentity();
 
-// Initialize synchronously at module level so it's ready before any hooks fire
+/**
+ * Initialised at module level, but **capturing nothing until consent exists.**
+ *
+ * This used to be a bare `posthog.init()` at module scope with
+ * `autocapture: true`, `person_profiles: "always"` and `capture_pageleave:
+ * true`, bootstrapping an identified distinct_id out of the Supabase session
+ * in localStorage — so the first events, carrying `$email`, nickname, country,
+ * coins, gems and games played, went out before the app had asked anybody
+ * anything. Identical for a player who had denied ATT and for an EEA player
+ * with no consent record of any kind.
+ *
+ * `opt_out_capturing_by_default` is the supported way to keep the SDK's setup
+ * where it belongs — before any hook fires, so no event is lost to a race —
+ * while sending nothing. `useAnalyticsConsent()` below opts in once the
+ * consent flow in `native/adConsent.ts` has an answer that permits it.
+ *
+ * Two further deliberate settings:
+ *
+ *   - `disable_session_recording: true` was **absent**, which left recording
+ *     under a server-side project switch. Flipping that switch would have
+ *     started capturing typed input from an app whose privacy manifest
+ *     declares no such thing. It is now off in the client, where it is
+ *     visible in review.
+ *   - `sanitize_properties` drops `$ip`. PostHog derives geography from it,
+ *     and a coarse country code is already sent as a person property.
+ */
 posthog.init(POSTHOG_KEY, {
   api_host: POSTHOG_HOST,
   capture_pageview: false,
@@ -43,6 +70,9 @@ posthog.init(POSTHOG_KEY, {
   autocapture: true,
   persistence: "localStorage+cookie",
   person_profiles: "always",
+  opt_out_capturing_by_default: true,
+  disable_session_recording: true,
+  sanitize_properties: (properties) => ({ ...properties, $ip: null }),
   bootstrap: bootstrapIdentity
     ? { distinctID: bootstrapIdentity.userId, isIdentifiedID: true }
     : undefined,
@@ -72,6 +102,32 @@ if (bootstrapIdentity) {
     user_type: "registered",
   });
   posthog.register({ user_type: "registered" });
+}
+
+/**
+ * Opts in and out of capturing as the consent answer changes.
+ *
+ * The answer comes from the same UMP flow that governs ads: consent not
+ * required in this jurisdiction, or required and given. "Not asked yet" is not
+ * consent, and neither is a refusal — both leave the SDK opted out, which is
+ * how it starts.
+ */
+function useAnalyticsConsent() {
+  useEffect(() => {
+    const apply = () => {
+      const allowed = analyticsConsentAllowed();
+      if (allowed && !posthog.has_opted_in_capturing()) {
+        // No `$opt_in` event: it would be the first thing a player who has
+        // just consented sees in their own data, and it says nothing.
+        posthog.opt_in_capturing({ captureEventName: false });
+      } else if (!allowed && !posthog.has_opted_out_capturing()) {
+        posthog.opt_out_capturing();
+      }
+    };
+
+    apply();
+    return subscribeToAdConsent(apply);
+  }, []);
 }
 
 /** Tracks SPA route changes as $pageview events */
@@ -169,6 +225,12 @@ function useIdentifyUser() {
 }
 
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
+  // Sits here because this provider is mounted directly inside AuthProvider
+  // and wraps the whole app — see the note in useConsentOrchestration. It
+  // resolves the age that gates the ATT prompt and the UMP flow whose answer
+  // useAnalyticsConsent below is waiting for.
+  useConsentOrchestration();
+  useAnalyticsConsent();
   usePageviewTracker();
   useIdentifyUser();
 

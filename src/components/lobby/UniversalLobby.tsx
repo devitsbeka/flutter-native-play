@@ -10,6 +10,7 @@ import chipQuestion from "@/assets/lobby/chip-question.webp";
 import chipTv from "@/assets/lobby/chip-tv.webp";
 import crownIcon from "@/assets/lobby/crown.png";
 import { resolveAvatarUrl, fallbackAvatarFor } from "@/utils/avatarUtils";
+import { useContentModeration } from "@/hooks/useContentModeration";
 
 /**
  * The one lobby every game mode opens into — Figma 1018:5815 (Game Rules)
@@ -379,9 +380,27 @@ export function UniversalLobby({
           transition: { ...ARRIVE, delay },
         };
 
+  /**
+   * A blocked player is not drawn in the roster.
+   *
+   * Only the picture changes. The seat is still theirs — the room's capacity,
+   * who may start and every score still counts them, because they really are
+   * in the game and a lobby that lied about how many people were in it would
+   * break the thing it was trying to protect. What blocking buys is that the
+   * viewer does not have to look at their name and face for the length of a
+   * match.
+   *
+   * Fails OPEN: this is a rendered list, and emptying every lobby for the
+   * first moments of a session would be a far worse bug than a blocked name
+   * showing for one render.
+   */
+  const { hiddenIds } = useContentModeration();
+  const visible = (list: LobbyPlayer[]) =>
+    hiddenIds.size === 0 ? list : list.filter((p) => !hiddenIds.has(p.id));
+
   const groups: LobbyPlayerGroup[] = isGrouped(players)
-    ? players
-    : [{ key: "all", players: players as LobbyPlayer[] }];
+    ? players.map((g) => ({ ...g, players: visible(g.players) }))
+    : [{ key: "all", players: visible(players as LobbyPlayer[]) }];
 
   // A disabled Start has to say WHY, and say it where the reason cannot be
   // pushed under the fold: above the button rather than below it. The owner

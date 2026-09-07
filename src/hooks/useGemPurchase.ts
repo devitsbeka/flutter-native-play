@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useInAppPurchases } from "@/hooks/useInAppPurchases";
 import { GEM_PACK_PRODUCTS } from "@/config/gemPacks";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { NATIVE_BUILD } from "@/config/buildTarget";
 
 interface GemProduct {
   id: string;
@@ -67,6 +68,13 @@ export function useGemPurchase() {
     }
 
     // Web platform — Stripe.
+    //
+    // Dropped from the iOS bundle at build time, not just guarded at runtime.
+    // See src/config/buildTarget.ts.
+    if (NATIVE_BUILD) {
+      return;
+    }
+
     setIsProcessing(true);
 
     try {

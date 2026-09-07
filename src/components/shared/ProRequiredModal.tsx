@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useProPurchase } from "@/hooks/useProPurchase";
 import { useStorePrice } from "@/hooks/useStorePrice";
-import { getPriceDisplay } from "@/utils/currency";
+import { monthLabel } from "@/utils/currency";
 import { PRICES } from "@/config/pricing";
 import { SubscriptionTerms } from "@/components/shared/SubscriptionTerms";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -37,7 +37,7 @@ export function ProRequiredModal({ isOpen, onClose, feature = "general" }: ProRe
   // bundled USD price only as the not-yet-loaded fallback.
   const storePrice = useStorePrice();
   const proPrice = storePrice("pro", PRICES.pro_monthly.USD, "pro_monthly");
-  const monthLabel = getPriceDisplay(3.99).monthLabel;
+  const period = monthLabel();
 
   const handleUpgrade = async () => {
     if (Capacitor.isNativePlatform()) {
@@ -111,7 +111,7 @@ export function ProRequiredModal({ isOpen, onClose, feature = "general" }: ProRe
             className="mb-4 text-center"
           >
             <span className="text-xl font-black text-foreground">{proPrice.display}</span>
-            <span className="ml-1 text-sm text-muted-foreground">{monthLabel}</span>
+            <span className="ml-1 text-sm text-muted-foreground">{period}</span>
           </motion.p>
 
           {/* CTA Button */}

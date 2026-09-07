@@ -25,7 +25,7 @@ interface PlayOptionsModalProps {
 /**
  * The "What do you feel like playing?" takeover, extracted from Figma
  * 950:9956 (board 952:10090): a lilac blur wash over the home page, the
- * TASolivare heading, and the four staggered cards — Quick Game, Play With
+ * Google Sans heading, and the four staggered cards — Quick Game, Play With
  * Friends, New! Versus King, Play Team Battle — at design coordinates
  * inside ScaledCanvas. King and Battle keep their dark-launch state from
  * the game type registry.
@@ -120,7 +120,7 @@ export function PlayOptionsModal({
               animate={{ opacity: 1, y: 0 }}
               transition={{ type: "spring", stiffness: 420, damping: 26 }}
               className="absolute left-[52px] top-[134px] w-[400px] not-italic leading-[52px] text-[46px] tracking-[-0.16px] text-[#523b76]"
-              style={{ fontFamily: "'TASolivare', sans-serif" }}
+              style={{ fontFamily: "'Google Sans', sans-serif" }}
             >
               {t("extra.howToPlayPrompt")}
             </motion.p>
@@ -145,7 +145,7 @@ export function PlayOptionsModal({
                   -5.89,
                 )}
                 <img alt="" className="absolute left-[26px] top-[19px] size-[51px] object-contain" src={iconButton} />
-                <p className="absolute left-[25px] top-[107px] max-w-[170px] overflow-hidden text-ellipsis capitalize leading-[34.5px] text-[#402666] text-[20px] tracking-[-0.14px] whitespace-nowrap" style={{ fontFamily: "'Slackey', 'TASolivare', cursive" }}>
+                <p className="absolute left-[25px] top-[107px] max-w-[170px] overflow-hidden text-ellipsis capitalize leading-[34.5px] text-[#402666] text-[20px] tracking-[-0.14px] whitespace-nowrap" style={{ fontFamily: "'Slackey', 'Google Sans', cursive" }}>
                   {t("extra.playQuickGame")}
                 </p>
               </motion.button>
@@ -179,7 +179,7 @@ export function PlayOptionsModal({
                 <p className="absolute left-[27px] top-[254px] font-[Nunito] font-bold leading-[25.5px] text-[#402666] text-[17px] tracking-[-0.16px] whitespace-nowrap">
                   {t("lobby.playPrefix")}
                 </p>
-                <p className="absolute left-[25px] top-[280px] max-w-[170px] overflow-hidden text-ellipsis capitalize leading-[34.5px] text-[#402666] text-[20px] tracking-[-0.14px] whitespace-nowrap" style={{ fontFamily: "'Slackey', 'TASolivare', cursive" }}>
+                <p className="absolute left-[25px] top-[280px] max-w-[170px] overflow-hidden text-ellipsis capitalize leading-[34.5px] text-[#402666] text-[20px] tracking-[-0.14px] whitespace-nowrap" style={{ fontFamily: "'Slackey', 'Google Sans', cursive" }}>
                   {t("lobby.withFriends")}
                 </p>
               </motion.button>
@@ -204,7 +204,7 @@ export function PlayOptionsModal({
                 <p className="absolute left-[27px] top-[262px] font-[Nunito] font-bold leading-[25.5px] opacity-50 text-[#402666] text-[17px] tracking-[-0.16px] whitespace-nowrap">
                   {dark("king") ? t("gameTypes.comingSoon") : t("lobby.newBang")}
                 </p>
-                <p className="absolute left-[25px] top-[288px] max-w-[170px] overflow-hidden text-ellipsis capitalize leading-[34.5px] text-[#402666] text-[20px] tracking-[-0.14px] whitespace-nowrap" style={{ fontFamily: "'Slackey', 'TASolivare', cursive" }}>
+                <p className="absolute left-[25px] top-[288px] max-w-[170px] overflow-hidden text-ellipsis capitalize leading-[34.5px] text-[#402666] text-[20px] tracking-[-0.14px] whitespace-nowrap" style={{ fontFamily: "'Slackey', 'Google Sans', cursive" }}>
                   {t("lobby.vkTitle")}
                 </p>
               </motion.button>}
@@ -232,7 +232,7 @@ export function PlayOptionsModal({
                 <p className="absolute left-[24px] top-[92px] font-[Nunito] font-bold leading-[25.5px] text-[#402666] text-[17px] tracking-[-0.16px] whitespace-nowrap">
                   {dark("team_battle") ? t("gameTypes.comingSoon") : t("lobby.playPrefix")}
                 </p>
-                <p className="absolute left-[24px] top-[118px] max-w-[170px] overflow-hidden text-ellipsis capitalize leading-[34.5px] text-[#402666] text-[20px] tracking-[-0.14px] whitespace-nowrap" style={{ fontFamily: "'Slackey', 'TASolivare', cursive" }}>
+                <p className="absolute left-[24px] top-[118px] max-w-[170px] overflow-hidden text-ellipsis capitalize leading-[34.5px] text-[#402666] text-[20px] tracking-[-0.14px] whitespace-nowrap" style={{ fontFamily: "'Slackey', 'Google Sans', cursive" }}>
                   {t("teamBattle.title")}
                 </p>
               </motion.button>}

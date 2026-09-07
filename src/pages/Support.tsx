@@ -3,9 +3,11 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { AmbientBlobBackdrop, AMBIENT_HEADER_CLASS } from "@/components/shared/AmbientBlobBackdrop";
 import { HelpCircle, Mail, MessageCircle, Bug, Lightbulb, ChevronRight, ExternalLink } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAppVersion } from "@/hooks/useAppVersion";
 
 export default function Support() {
   const { t } = useLanguage();
+  const appVersion = useAppVersion();
 
   const faqs = [
     { question: t("extra.faq1Q"), answer: t("extra.faq1A") },
@@ -136,10 +138,10 @@ export default function Support() {
           className="text-center pt-4"
         >
           <p className="text-xs text-muted-foreground">
-            MyTrivia v1.0.0
+            MyTrivia {appVersion}
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            © 2025 MyTrivia. {t("extra.allRightsReserved")}
+            © {new Date().getFullYear()} MyTrivia. {t("extra.allRightsReserved")}
           </p>
         </motion.div>
       </div>

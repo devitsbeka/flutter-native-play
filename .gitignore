@@ -50,3 +50,10 @@ screenshots/
 # project that no longer exists. Fetched from the console instead:
 # Project settings -> General -> Your apps -> GoogleService-Info.plist
 ios/App/App/GoogleService-Info.plist
+
+# Xcode archive/export output written by the release scripts into the repo
+# root: ~10 GB of .xcarchive, .dSYM bundles and 60+ downloaded
+# .mobileprovision files. This repository is public — provisioning profiles
+# and full symbol bundles have no business in it. `ios/.gitignore` only
+# covers `ios/App/build`, which does not match this one.
+build/

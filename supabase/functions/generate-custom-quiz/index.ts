@@ -4,6 +4,11 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getCorsHeaders } from "../_shared/cors.ts";
 import { factCheckQuestions } from "../_shared/factCheck.ts";
 import { AI_CHAT_URL, AI_API_KEY, aiModel } from "../_shared/ai.ts";
+import {
+  CONTENT_SAFETY_PROMPT,
+  containsBlockedText,
+  firstBlockedText,
+} from "../_shared/contentFilter.ts";
 
 // App-wide character limits
 const QUESTION_MAX_LENGTH = 65;
@@ -130,6 +135,18 @@ serve(async (req) => {
       );
     }
 
+    // The topic is free text typed by any signed-in player and it is handed
+    // straight to a model. Screen it here rather than only in the client:
+    // the client's copy of this check can simply not be run — the anon key
+    // ships in the binary and this endpoint answers a plain POST.
+    if (containsBlockedText(String(subject))) {
+      console.warn("Refusing generation for blocked subject");
+      return new Response(
+        JSON.stringify({ error: "ეს თემა არ არის დაშვებული. სცადეთ სხვა თემა.", refused: true }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     if (!AI_API_KEY) {
       throw new Error("AI_API_KEY is not configured");
     }
@@ -139,6 +156,8 @@ serve(async (req) => {
     const requestCount = questionCount + 5;
     
 const systemPrompt = `You are an expert trivia question generator for a Georgian quiz app. You create fun, accurate, and engaging trivia questions.
+
+${CONTENT_SAFETY_PROMPT}
 
 🚨 FACTUAL ACCURACY - ABSOLUTELY CRITICAL - READ CAREFULLY:
 
@@ -346,13 +365,51 @@ Return ONLY valid JSON.`;
       throw new Error("Failed to parse generated quiz");
     }
 
+    // The model was told to answer an unsafe topic with a refusal rather
+    // than a sanitised quiz. Honour it: the alternative is that a refusal
+    // falls through "Invalid quiz format" and reaches the player as a
+    // generic failure they will retry with the same topic.
+    if (quizData.refused === true) {
+      console.warn("Model refused the topic:", quizData.reason);
+      return new Response(
+        JSON.stringify({ error: "ეს თემა არ არის დაშვებული. სცადეთ სხვა თემა.", refused: true }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     if (!quizData.questions || !Array.isArray(quizData.questions)) {
       throw new Error("Invalid quiz format");
     }
 
+    // MODERATION, SERVER SIDE, BEFORE ANYTHING ELSE IS SPENT ON THESE.
+    // The safety block in the system prompt is an instruction, and an
+    // instruction is the thing a determined topic is written to get around.
+    // This is the same blocklist the client screens nicknames and room names
+    // with (`_shared/contentFilter.ts`, the one copy), run over what the
+    // model actually wrote — question, correct answer and every distractor.
+    // A single question is dropped rather than failing the batch: one
+    // unlucky phrase should not cost a player their whole quiz.
+    const safeQuestions = quizData.questions.filter((q: GeneratedQuestion) => {
+      const offending = firstBlockedText([
+        q?.question_text,
+        q?.correct_answer,
+        ...(Array.isArray(q?.incorrect_answers) ? q.incorrect_answers : []),
+      ]);
+      if (offending !== null) {
+        console.warn("Dropping generated question that failed the content screen");
+        return false;
+      }
+      return true;
+    });
+    if (safeQuestions.length < quizData.questions.length) {
+      console.warn(
+        `Content screen dropped ${quizData.questions.length - safeQuestions.length} of ${quizData.questions.length} generated questions`,
+      );
+    }
+
     // STRICT validation: Filter out questions that exceed character limits
-    const validQuestions = quizData.questions.filter((q: GeneratedQuestion) => isValidQuestion(q, isTrueFalse));
-    console.log(`Validation: ${quizData.questions.length} generated, ${validQuestions.length} passed strict limits`);
+    const validQuestions = safeQuestions.filter((q: GeneratedQuestion) => isValidQuestion(q, isTrueFalse));
+    console.log(`Validation: ${safeQuestions.length} screened, ${validQuestions.length} passed strict limits`);
 
     // Remove duplicates from the valid questions
     const uniqueQuestions = removeDuplicateQuestions(validQuestions);
@@ -549,9 +606,17 @@ Return ONLY valid JSON.`;
 
     console.log(`Successfully generated ${questionsWithIcons.length} unique questions with icons`);
 
+    // The suggested title is model-written too and lands in the title field
+    // of a quiz that can be made public. Screen it, and fall back to the
+    // topic rather than refusing the whole generation over a title.
+    const suggestedTitle =
+      typeof quizData.suggestedTitle === "string" && !containsBlockedText(quizData.suggestedTitle)
+        ? quizData.suggestedTitle
+        : `${subject} ტრივია`;
+
     return new Response(
       JSON.stringify({
-        suggestedTitle: quizData.suggestedTitle || `${subject} ტრივია`,
+        suggestedTitle,
         questions: questionsWithIcons,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

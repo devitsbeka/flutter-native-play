@@ -200,9 +200,11 @@ verify_jwt = false
 [functions.register-username]
 verify_jwt = false
 
-# --- PUBLIC/READ-ONLY (can remain public if needed) ---
-[functions.search-question-image]
-verify_jwt = true
+# search-question-image was deleted in the App Review 1.2 pass. Neither
+# UNSPLASH_ACCESS_KEY nor PEXELS_API_KEY was ever configured, so both of its
+# real branches were dead and every call fell through to picsum.photos — a
+# developer placeholder service serving scraped photography under no licence
+# this project holds — and no client ever called it.
 
 # --- NEW: Media Question Functions ---
 [functions.parse-wikipedia-media]
@@ -236,6 +238,11 @@ verify_jwt = false
 verify_jwt = false
 
 # --- SEEDING (one-time use, admin only) ---
+# Internal seeding tool. verify_jwt stays off because the caller is a script
+# with no session, and the function itself now requires the shared cron secret
+# in x-cron-secret (SEED_SECRET, falling back to TRANSLATE_SECRET) — without
+# it this was an open endpoint that published AI-written quizzes under eight
+# fabricated accounts to anyone who knew the URL.
 [functions.seed-sample-content]
 verify_jwt = false
 

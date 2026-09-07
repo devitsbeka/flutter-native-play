@@ -129,19 +129,6 @@ export const ALL_EDGE_FUNCTIONS_FULL: EdgeFunctionDocFull[] = [
     usedBy: ["QuestionEditor"]
   },
   {
-    name: "search-question-image",
-    path: "supabase/functions/search-question-image",
-    description: "Searches stock images for question.",
-    category: "Image",
-    method: "POST",
-    auth: "admin",
-    params: [
-      { name: "query", type: "string", required: true, description: "Search query" },
-    ],
-    returns: "{ images: ImageResult[] }",
-    usedBy: ["QuestionEditor"]
-  },
-  {
     name: "validate-cover-image",
     path: "supabase/functions/validate-cover-image",
     description: "AI validation of cover image quality.",

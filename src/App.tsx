@@ -33,7 +33,6 @@ import { ScenePortraitHealer } from "@/components/system/ScenePortraitHealer";
 import { ReducedMotionGuard } from "@/components/system/ReducedMotionGuard";
 import { RoundStartWatcher } from "@/components/system/RoundStartWatcher";
 import { HiddenWorkGuard } from "@/components/system/HiddenWorkGuard";
-import { FakeFriendRequestAutoAccept } from "@/components/system/FakeFriendRequestAutoAccept";
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { Navigate, useParams } from "react-router-dom";
 import { isLegalLanguage } from "@/utils/legalLanguage";
@@ -64,8 +63,35 @@ const Profile = lazy(() => import("./pages/Profile"));
 const PublicProfile = lazy(() => import("./pages/PublicProfile"));
 const TeamV2 = lazy(() => import("./pages/TeamV2"));
 const CreateRoom = lazy(() => import("./pages/CreateRoom"));
-const TeamBattlePage = lazy(() => import("./pages/TeamBattlePage"));
-const KingPage = lazy(() => import("./pages/KingPage"));
+// Unreleased game modes. Both are dark-launched: the flows are complete, the
+// registry marks them `status: "coming_soon"` with a "beta" badge, and whether
+// a player ever sees them is decided by DEVELOPER_ONLY_GAME_TYPES plus an
+// `is_live` column in the database.
+//
+// That arrangement is a rejection under App Store guideline 2.3.1 — hidden
+// features toggled on from a server after review — and 2.2, which is about
+// shipping beta software. A route guard does not fix it, because the guard
+// still ships the chunk and the chunk is the feature; the same reasoning that
+// put the admin console behind INCLUDE_ADMIN applies here.
+//
+// When these modes are ready, launching them is a build and a review, not a
+// database flip. That is the point, not an inconvenience.
+// Excluded from the NATIVE build only.
+//
+// The App Store finding is about what ships inside the binary — a route guard
+// is not enough there, because the chunk is the feature. The website is not
+// reviewed by Apple, and mytrivia.io/newui is how this team looks at work in
+// progress, so taking it off the web would solve a problem nobody had and
+// break a workflow somebody uses.
+//
+// VITE_NATIVE_BUILD is set by `npm run build:ios` and by nothing else, so this
+// stays true on the web and in dev, and false in exactly one place: the
+// archive that goes to Apple. verify-ios-bundle fails the build if any of
+// these chunks appears in it, so the two cannot drift apart silently.
+const INCLUDE_ON_THIS_TARGET = import.meta.env.VITE_NATIVE_BUILD !== 'true';
+const INCLUDE_UNRELEASED_MODES = INCLUDE_ON_THIS_TARGET;
+const TeamBattlePage = INCLUDE_UNRELEASED_MODES ? lazy(() => import("./pages/TeamBattlePage")) : null;
+const KingPage = INCLUDE_UNRELEASED_MODES ? lazy(() => import("./pages/KingPage")) : null;
 const QueuePage = lazy(() => import("./pages/QueuePage"));
 const OnlineGameHub = lazy(() => import("./pages/OnlineGameHub"));
 const Discover = lazy(() => import("./pages/Discover"));
@@ -89,8 +115,14 @@ const Words = lazy(() => import("./pages/Words"));
 // with MyTrivia's content in it. A preview at mytrivia.io/newui, like /dev/v2 —
 // the routes are cheap, the chunk loads only when visited, and it exposes
 // nothing the app does not already show.
-const HomeV3 = lazy(() => import("./features/home-v3/pages/HomeV3"));
-const PathDetailV3 = lazy(() => import("./features/home-v3/pages/PathDetailV3"));
+// The alternate home screen (/newui). 26 files under features/home-v3, its own
+// PRO paywall entry point, and its own docstring calling it a preview. An
+// undocumented second UI with a second purchase surface is the shape guideline
+// 2.3.1 is written about, so it is excluded from a production build alongside
+// the other previews rather than merely unlinked.
+const INCLUDE_UI_PREVIEWS = INCLUDE_ON_THIS_TARGET;
+const HomeV3 = INCLUDE_UI_PREVIEWS ? lazy(() => import("./features/home-v3/pages/HomeV3")) : null;
+const PathDetailV3 = INCLUDE_UI_PREVIEWS ? lazy(() => import("./features/home-v3/pages/PathDetailV3")) : null;
 
 
 // Settings pages
@@ -101,9 +133,7 @@ const SettingsPrivacy = lazy(() => import("./pages/SettingsPrivacy"));
 
 // Legal pages
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
-const PrivacyPolicyEN = lazy(() => import("./pages/PrivacyPolicyEN"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
-const TermsOfServiceEN = lazy(() => import("./pages/TermsOfServiceEN"));
 
 /**
  * The legal pages at a URL that names its language.
@@ -130,6 +160,7 @@ function NewUiPathRedirect() {
   return <Navigate to={`/newui/path/${pathId ?? ""}`} replace />;
 }
 const Support = lazy(() => import("./pages/Support"));
+const Credits = lazy(() => import("./pages/Credits"));
 const DeleteAccount = lazy(() => import("./pages/DeleteAccount"));
 
 // Admin pages - conditionally imported to enable tree-shaking when excluded
@@ -279,7 +310,6 @@ const App = () => (
             <ScenePortraitHealer />
             <ReducedMotionGuard />
             <HiddenWorkGuard />
-            <FakeFriendRequestAutoAccept />
             <FreshBuildGuard />
             {/* Outside <Routes> on purpose: MultiplayerProviderV2 is mounted
                 inside the /team route, so nothing followed a player who
@@ -289,24 +319,23 @@ const App = () => (
             <Suspense fallback={<PageSkeleton />}>
               <Routes>
                 <Route path="/" element={<Index />} />
-                {/* Experimental world-map homepage. Not gated with the
-                    showcase routes above: those are excluded from a production
-                    build because each one pulls in a chunk that would otherwise
-                    ship (/docs in particular renders the internal schema map).
-                    This route renders Index, which every visitor already
-                    downloads, so shipping it costs nothing and exposes nothing.
-
-                    It is a preview, not a secret — Index.tsx only swaps in
-                    LoggedInHomeV2 for a signed-in user, and an unguessed URL is
-                    not a security boundary. Also reachable on device via
-                    mytrivia://dev/v2. */}
-                <Route path="/dev/v2" element={<Index />} />
-                {/* The new-UI preview (mytrivia.io/newui) — see the lazy import above. */}
-                <Route path="/newui" element={<HomeV3 />} />
-                <Route path="/newui/path/:pathId" element={<PathDetailV3 />} />
-                {/* The preview's first address; anything shared from it still lands. */}
-                <Route path="/v3" element={<Navigate to="/newui" replace />} />
-                <Route path="/v3/path/:pathId" element={<NewUiPathRedirect />} />
+                {/* Experimental world-map homepage.
+                    The old note here argued this route "costs nothing" because
+                    it renders Index, which everyone downloads anyway. That was
+                    true of the route object and false of the page: Index swaps
+                    in LoggedInHomeV2, which pulls the whole three.js world-map
+                    scene — a 527 KB chunk that ships only for this preview.
+                    Gated with the other previews now. */}
+                {INCLUDE_UI_PREVIEWS && HomeV3 && PathDetailV3 && (
+                  <>
+                    <Route path="/dev/v2" element={<Index />} />
+                    <Route path="/newui" element={<HomeV3 />} />
+                    <Route path="/newui/path/:pathId" element={<PathDetailV3 />} />
+                    {/* The preview's first address; anything shared from it still lands. */}
+                    <Route path="/v3" element={<Navigate to="/newui" replace />} />
+                    <Route path="/v3/path/:pathId" element={<NewUiPathRedirect />} />
+                  </>
+                )}
                 <Route path="/loading" element={<Loading />} />
                 <Route path="/trivialoader" element={<TriviaLoader />} />
                 
@@ -328,8 +357,12 @@ const App = () => (
                     /play/:categoryId/:levelId (exact match wins). */}
                 <Route path="/play" element={<Navigate to="/" replace />} />
                 <Route path="/play/queue" element={<QueuePage />} />
-                <Route path="/team-battle" element={<TeamBattlePage />} />
-                <Route path="/king" element={<KingPage />} />
+                {INCLUDE_UNRELEASED_MODES && TeamBattlePage && KingPage && (
+                  <>
+                    <Route path="/team-battle" element={<TeamBattlePage />} />
+                    <Route path="/king" element={<KingPage />} />
+                  </>
+                )}
                 <Route path="/lobby/:gameType" element={<OnlineGameHub />} />
                 <Route path="/create-room" element={<CreateRoom />} />
                 <Route path="/team" element={<TeamV2 />} />
@@ -358,13 +391,27 @@ const App = () => (
                 <Route path="/words/:code" element={<Words />} />
                 <Route path="/notifications" element={<Notifications />} />
                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                <Route path="/privacy-policy-en" element={<PrivacyPolicyEN />} />
                 <Route path="/terms" element={<TermsOfService />} />
-                <Route path="/terms-en" element={<TermsOfServiceEN />} />
+                {/* /privacy-policy-en and /terms-en used to render a SECOND,
+                    hardcoded English copy of each document. They had drifted:
+                    one carried a Data Sharing clause the other lacked, the
+                    other a Data Security clause the first lacked. That matters
+                    because the App Store listing links /privacy-policy/en/
+                    while the app description and the review notes link
+                    /privacy-policy-en — so Apple was reading one document and
+                    the app was showing another, and a correction made in the
+                    locale files reached only one of them.
+
+                    Both addresses now render the same locale-driven page,
+                    pinned to English. One document, still at both URLs, so no
+                    link anybody has already published breaks. */}
+                <Route path="/privacy-policy-en" element={<PrivacyPolicy lang="en" />} />
+                <Route path="/terms-en" element={<TermsOfService lang="en" />} />
                 {/* Per-language legal URLs, for the App Store listing. */}
                 <Route path="/privacy-policy/:lang" element={<LegalByLanguage page="privacy" />} />
                 <Route path="/terms/:lang" element={<LegalByLanguage page="terms" />} />
                 <Route path="/support" element={<Support />} />
+                <Route path="/credits" element={<Credits />} />
                 <Route path="/delete-account" element={<DeleteAccount />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/settings/name" element={<SettingsName />} />

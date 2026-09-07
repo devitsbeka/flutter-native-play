@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Flag, Search, Check, X, User, MessageSquare, Clock, Filter, ChevronDown, AlertTriangle, Eye } from 'lucide-react';
+import { Flag, Search, Check, X, User, MessageSquare, Clock, Filter, ChevronDown, AlertTriangle, Eye, Trash2, Ban, UserCheck, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -35,6 +35,11 @@ interface Report {
   description: string | null;
   message_id: string | null;
   room_id: string | null;
+  // Added by 20261013120000_moderation_actions.sql, and optional here because
+  // src/integrations/supabase/types.ts is not regenerated in this repo (see
+  // CLAUDE.md rule 1) — the columns arrive on the row at runtime.
+  content_type?: string | null;
+  content_id?: string | null;
   status: string;
   created_at: string;
   reviewed_at: string | null;
@@ -62,6 +67,80 @@ const REPORT_TYPE_LABELS: Record<string, { label: string; color: string }> = {
   other: { label: "სხვა", color: "bg-gray-100 text-gray-800" },
 };
 
+/**
+ * The two moderation functions, called by name.
+ *
+ * `supabase.rpc` is typed off `Database["public"]["Functions"]`, and this repo
+ * deliberately does not regenerate `src/integrations/supabase/types.ts`
+ * (CLAUDE.md rule 1), so two functions that exist in the database are absent
+ * from the generated union. This is the narrow, explicit escape hatch rather
+ * than an `any` at each call site.
+ *
+ * Both are SECURITY DEFINER and both check `has_role(auth.uid(), 'admin')` in
+ * their own body: this page runs as the ordinary `authenticated` role, so the
+ * gate that matters is in Postgres, not here.
+ */
+type AdminRpc = (
+  fn: string,
+  args: Record<string, unknown>,
+) => Promise<{ data: unknown; error: { message: string } | null }>;
+
+const callAdminRpc = (fn: string, args: Record<string, unknown>) =>
+  (supabase.rpc as unknown as AdminRpc)(fn, args);
+
+/**
+ * The moderation actions this page can take.
+ *
+ * Removal is soft where the schema has a soft flag: a reported quiz is
+ * unpublished (`is_public = false`), a reported room is closed and archived,
+ * and a reported profile keeps its account and its history while losing the
+ * nickname and avatar that were the offence. Only a chat message is actually
+ * deleted, because that table has no flag any reader honours.
+ */
+type ModerationAction =
+  | { kind: 'remove'; target: 'auto' | 'profile' }
+  | { kind: 'suspend'; suspended: boolean };
+
+const actionKey = (a: ModerationAction) =>
+  a.kind === 'remove'
+    ? a.target === 'profile'
+      ? 'clearProfile'
+      : 'removeContent'
+    : a.suspended
+      ? 'suspend'
+      : 'unsuspend';
+
+const ACTION_LABELS: Record<string, { label: string; confirm: string; done: string }> = {
+  removeContent: {
+    label: 'კონტენტის წაშლა',
+    confirm: 'რეპორტირებული კონტენტი დაიმალება. გავაგრძელოთ?',
+    done: 'კონტენტი წაიშალა',
+  },
+  clearProfile: {
+    label: 'პროფილის გასუფთავება',
+    confirm: 'მეტსახელი და ავატარი წაიშლება. გავაგრძელოთ?',
+    done: 'პროფილი გასუფთავდა',
+  },
+  suspend: {
+    label: 'მომხმარებლის შეჩერება',
+    confirm: 'ანგარიში შეჩერდება და მისი საჯარო ქვიზები დაიმალება. გავაგრძელოთ?',
+    done: 'მომხმარებელი შეჩერდა',
+  },
+  unsuspend: {
+    label: 'შეჩერების მოხსნა',
+    confirm: 'ანგარიშის შეჩერება მოიხსნება. გავაგრძელოთ?',
+    done: 'შეჩერება მოიხსნა',
+  },
+};
+
+/** What a report says it is about, for the detail dialog. */
+const CONTENT_TYPE_LABELS: Record<string, string> = {
+  quiz: "ქვიზი",
+  room: "ოთახი",
+  message: "შეტყობინება",
+  profile: "პროფილი",
+};
+
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   pending: { label: "მოლოდინში", color: "bg-amber-100 text-amber-800" },
   reviewed: { label: "განხილულია", color: "bg-blue-100 text-blue-800" },
@@ -77,6 +156,10 @@ export default function AdminReports() {
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  // Which moderation action is one tap from happening. Removing content and
+  // ejecting an account are not undoable from this page, so neither is a
+  // single click on a row you opened to read.
+  const [pendingAction, setPendingAction] = useState<ModerationAction | null>(null);
 
   // Fetch reports
   useEffect(() => {
@@ -153,6 +236,49 @@ export default function AdminReports() {
     } catch (error) {
       console.error('Error updating report:', error);
       toast.error('სტატუსის განახლება ვერ მოხერხდა');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  /**
+   * Act on the report, not just on its status row.
+   *
+   * Until this existed the only thing this page could do with a report was
+   * change a word in its `status` column. The Terms of Service promise that
+   * content reported as offensive is "reviewed and removed within 24 hours,
+   * and users who post it are ejected" — there was no code path anywhere in
+   * the product that removed anything or ejected anyone, which is what
+   * Guideline 1.2 asks a reviewer to check.
+   *
+   * Every action here is a `SECURITY DEFINER` function that checks the admin
+   * role in its own body and is granted to `authenticated` only.
+   */
+  const runAction = async (action: ModerationAction) => {
+    if (!selectedReport) return;
+    setActionLoading(true);
+    try {
+      const { error } =
+        action.kind === 'suspend'
+          ? await callAdminRpc('admin_set_user_suspended', {
+              p_user_id: selectedReport.reported_user_id,
+              p_suspended: action.suspended,
+              p_reason: selectedReport.report_type,
+            })
+          : await callAdminRpc('admin_remove_reported_content', {
+              p_report_id: selectedReport.id,
+              p_target: action.target,
+            });
+
+      if (error) throw new Error(error.message);
+
+      toast.success(ACTION_LABELS[actionKey(action)].done);
+      setPendingAction(null);
+      setSelectedReport(null);
+      fetchReports();
+    } catch (error) {
+      console.error('Moderation action failed:', error);
+      toast.error('მოქმედება ვერ შესრულდა');
     } finally {
       setActionLoading(false);
     }
@@ -317,7 +443,13 @@ export default function AdminReports() {
       </ScrollArea>
 
       {/* Report Detail Dialog */}
-      <Dialog open={!!selectedReport} onOpenChange={() => setSelectedReport(null)}>
+      <Dialog
+        open={!!selectedReport}
+        onOpenChange={() => {
+          setSelectedReport(null);
+          setPendingAction(null);
+        }}
+      >
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>რეპორტის დეტალები</DialogTitle>
@@ -380,12 +512,110 @@ export default function AdminReports() {
                 </div>
               )}
 
+              {/* What it is about. A report with a content id is one an admin
+                  can act on directly; one without is about the person. */}
+              {(selectedReport.content_type || selectedReport.content_id) && (
+                <div className="p-3 bg-muted/50 rounded-lg">
+                  <p className="text-xs text-muted-foreground mb-1">კონტენტი</p>
+                  <p className="text-sm">
+                    {CONTENT_TYPE_LABELS[selectedReport.content_type || ''] || selectedReport.content_type}
+                    {selectedReport.content_id && (
+                      <span className="ml-2 font-mono text-xs text-muted-foreground">
+                        {selectedReport.content_id}
+                      </span>
+                    )}
+                  </p>
+                </div>
+              )}
+
               {/* Date */}
               <div className="p-3 bg-muted/50 rounded-lg">
                 <p className="text-xs text-muted-foreground mb-1">თარიღი</p>
                 <p className="text-sm">
                   {format(new Date(selectedReport.created_at), 'dd MMMM yyyy, HH:mm', { locale: ka })}
                 </p>
+              </div>
+
+              {/* Moderation. Removing content and ejecting its author are the
+                  two things the Terms promise and the page could not do. */}
+              <div className="p-3 border border-destructive/30 rounded-lg space-y-2">
+                <p className="text-xs text-muted-foreground">მოდერაცია</p>
+
+                {pendingAction ? (
+                  <div className="space-y-2">
+                    <p className="text-sm">{ACTION_LABELS[actionKey(pendingAction)].confirm}</p>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        disabled={actionLoading}
+                        onClick={() => runAction(pendingAction)}
+                      >
+                        {actionLoading ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <Check className="w-4 h-4 mr-2" />
+                        )}
+                        დადასტურება
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={actionLoading}
+                        onClick={() => setPendingAction(null)}
+                      >
+                        გაუქმება
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setPendingAction({ kind: 'remove', target: 'auto' })}
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      {ACTION_LABELS.removeContent.label}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setPendingAction({ kind: 'remove', target: 'profile' })}
+                      disabled={selectedReport.reported_user_id === selectedReport.reporter_id}
+                    >
+                      <User className="w-4 h-4 mr-2" />
+                      {ACTION_LABELS.clearProfile.label}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => setPendingAction({ kind: 'suspend', suspended: true })}
+                      disabled={selectedReport.reported_user_id === selectedReport.reporter_id}
+                    >
+                      <Ban className="w-4 h-4 mr-2" />
+                      {ACTION_LABELS.suspend.label}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setPendingAction({ kind: 'suspend', suspended: false })}
+                      disabled={selectedReport.reported_user_id === selectedReport.reporter_id}
+                    >
+                      <UserCheck className="w-4 h-4 mr-2" />
+                      {ACTION_LABELS.unsuspend.label}
+                    </Button>
+                  </div>
+                )}
+
+                {/* king_question and words_word are filed by a player against
+                    themselves — the reported column is NOT NULL and a bad
+                    puzzle is not a person. Nothing here should touch them. */}
+                {selectedReport.reported_user_id === selectedReport.reporter_id && (
+                  <p className="text-xs text-muted-foreground">
+                    კონტენტის რეპორტი — მომხმარებელზე მოქმედება არ ვრცელდება
+                  </p>
+                )}
               </div>
             </div>
           )}

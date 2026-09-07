@@ -415,6 +415,11 @@ export default function ModalsShowcase() {
           <PlayLimitModal
             isOpen={isModalOpen}
             onClose={handleClose}
+            // A realistic preview: the clock only exists when there is an
+            // instant to count to, and without one this card previews as a
+            // title over an empty space.
+            resetsAt={Date.now() + 21 * 60 * 1000 + 4000}
+            timeUntilNextPlay="21m"
           />
         );
 

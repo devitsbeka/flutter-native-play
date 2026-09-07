@@ -4,6 +4,11 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getCorsHeaders } from "../_shared/cors.ts";
 import { factCheckQuestions } from "../_shared/factCheck.ts";
 import { AI_CHAT_URL, AI_API_KEY, aiModel } from "../_shared/ai.ts";
+import {
+  CONTENT_SAFETY_PROMPT,
+  containsBlockedText,
+  firstBlockedText,
+} from "../_shared/contentFilter.ts";
 
 // App-wide character limits - strict for gameplay display
 const QUESTION_MAX_LENGTH = 70;
@@ -59,6 +64,8 @@ function isValidQuestion(q: GeneratedQuestion, isTrueFalse: boolean = false): bo
 // Build system prompt for TRIVIA mode (factual questions about topics)
 function buildTriviaPrompt(subject: string, difficulty: string, isTrueFalse: boolean): string {
   return `You are an expert trivia question generator for a Georgian quiz app.
+
+${CONTENT_SAFETY_PROMPT}
 
 🎯 TOPIC: "${subject}"
 
@@ -166,6 +173,15 @@ const PERSONAL_THEME_ICONS: Record<string, string[]> = {
 function buildPersonalPrompt(subject: string, difficulty: string, isTrueFalse: boolean, focusCategory: { theme: string; examples: string[] }): string {
   return `You are a CREATIVE party game question generator for friends & family. Your goal is to create FUN, PERSONAL questions that spark laughter and memories.
 
+${CONTENT_SAFETY_PROMPT}
+
+⚠️ THIS MODE IN PARTICULAR: the questions below are ABOUT REAL PEOPLE sitting
+in the room — somebody's mother, somebody's little brother. "Embarrassing" here
+means a burnt cake or a late arrival, never anything about a person's body,
+sex life, weight, appearance, intelligence or mental health, and never
+anything a person would be humiliated to have read out loud about them. If a
+funny question would only be funny at someone's expense, write a different one.
+
 🎲 FOCUS THEME FOR THIS QUESTION: "${focusCategory.theme}"
 Examples for this theme:
 ${focusCategory.examples.map(e => `- ${e}`).join('\n')}
@@ -264,6 +280,16 @@ serve(async (req) => {
     if (!subject) {
       return new Response(
         JSON.stringify({ error: "Subject is required" }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Free text from any signed-in player, handed straight to a model. The
+    // client screens it too; the client is not the thing an attacker runs.
+    if (containsBlockedText(String(subject))) {
+      console.warn("Refusing generation for blocked subject");
+      return new Response(
+        JSON.stringify({ error: "ეს თემა არ არის დაშვებული. სცადეთ სხვა თემა.", refused: true }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -381,6 +407,33 @@ Return ONLY valid JSON.`;
     } catch (parseError) {
       console.error("Failed to parse question data:", content);
       throw new Error("Failed to parse generated question");
+    }
+
+    // The model was told to refuse an unsafe topic in this exact shape.
+    if ((questionData as { refused?: boolean }).refused === true) {
+      console.warn("Model refused the topic");
+      return new Response(
+        JSON.stringify({ error: "ეს თემა არ არის დაშვებული. სცადეთ სხვა თემა.", refused: true }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // MODERATION, SERVER SIDE. Same blocklist the client screens nicknames
+    // and room names with (`_shared/contentFilter.ts`), run over what the
+    // model actually wrote. There is only one question here, so a hit is a
+    // refusal rather than a filter — and the caller retries, which asks for
+    // a different question rather than the same one again.
+    const offending = firstBlockedText([
+      questionData.question_text,
+      questionData.correct_answer,
+      ...(questionData.incorrect_answers || []),
+    ]);
+    if (offending !== null) {
+      console.warn("Generated question failed the content screen; refusing");
+      return new Response(
+        JSON.stringify({ error: "კითხვა ვერ დაგენერირდა. სცადეთ თავიდან.", refused: true }),
+        { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Validate the question

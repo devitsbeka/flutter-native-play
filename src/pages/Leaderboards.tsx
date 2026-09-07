@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, forwardRef } from "react";
+import { useEffect, useMemo, useRef, useState, forwardRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -21,6 +21,7 @@ import { getCountryFlag } from "@/data/opponents";
 import { countryName } from "@/utils/countryName";
 import { formatCompactNumber } from "@/lib/utils";
 import { useMyLeaderboardRank } from "@/hooks/useMyLeaderboardRank";
+import { useContentModeration } from "@/hooks/useContentModeration";
 
 type Scope = "local" | "global";
 
@@ -232,7 +233,25 @@ export default function Leaderboards() {
     if (!scopeTouched && countryCode) setScope("local");
   }, [countryCode, scopeTouched]);
 
-  const { data: entries = [], isLoading } = useFunLeaderboard(scope, countryCode);
+  const { data: allEntries = [], isLoading } = useFunLeaderboard(scope, countryCode);
+
+  /**
+   * A blocked player does not appear on the board.
+   *
+   * The rank numbers are left alone: they were assigned when the board was
+   * built and they are the player's real position, so hiding row 7 leaves a
+   * gap between 6 and 8 rather than promoting everyone below. Renumbering
+   * would show the viewer a standing that is not true of anything.
+   *
+   * Fails OPEN — a leaderboard is read-only, and blanking it for the first
+   * moments of every session while the block set loads would be a worse bug
+   * than a blocked nickname appearing briefly in a list of fifty.
+   */
+  const { hiddenIds } = useContentModeration();
+  const entries = useMemo(
+    () => (hiddenIds.size === 0 ? allEntries : allEntries.filter((e) => !hiddenIds.has(e.user_id))),
+    [allEntries, hiddenIds],
+  );
 
   const myEntry = user ? entries.find((e) => e.user_id === user.id) : undefined;
   const needsOwnRank = !!user && !!profile && entries.length > 0 && !myEntry;
