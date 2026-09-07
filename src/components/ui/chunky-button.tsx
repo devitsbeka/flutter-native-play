@@ -158,6 +158,16 @@ const sizeStyles = {
   xl: "px-10 py-5 text-lg font-bold rounded-2xl",
 };
 
+/** The hero face is smaller on the eye than Nunito at the same px, so each
+    size steps up one notch for it. */
+const heroSizeStyles = {
+  sm: "text-base",
+  md: "text-lg",
+  compact: "text-lg",
+  lg: "text-xl",
+  xl: "text-2xl",
+};
+
 const depthSizes = {
   sm: 4,
   md: 5,
@@ -201,6 +211,12 @@ export const ChunkyButton = React.forwardRef<HTMLButtonElement, ChunkyButtonProp
     const [isHovered, setIsHovered] = React.useState(false);
     const styles = variantStyles[variant];
     const depth = depthSizes[size];
+    // The green button's label is set in the hero face (Figma 1085:533):
+    // Slackey for Latin, TASolivare behind it for Georgian — 24px on a 75px
+    // button there, so a size up from the body ramp here, regular weight
+    // (Slackey has no other) with the frame's 0.5px tracking. The other
+    // variants keep Nunito.
+    const heroLabel = variant === "success" ? "font-hero font-normal tracking-[0.5px]" : null;
     
     // Detect if device supports hover (desktop) vs touch-only (mobile)
     const canHover = typeof window !== 'undefined' && window.matchMedia('(hover: hover)').matches;
@@ -217,6 +233,8 @@ export const ChunkyButton = React.forwardRef<HTMLButtonElement, ChunkyButtonProp
           styles.face,
           styles.textColor,
           sizeStyles[size],
+          heroLabel,
+          heroLabel && heroSizeStyles[size],
           className
         )}
         style={{

@@ -14,6 +14,8 @@ import { TVSetupInline } from "@/components/team/TVSetupInline";
 import { LibraryCard } from "@/components/team/CategoryPickerModal";
 import { RoundOrderModal } from "@/components/team/RoundOrderModal";
 import { RoomTitle } from "@/components/lobby/UniversalLobby";
+import { ChunkyButton } from "@/components/ui/chunky-button";
+import { GreenPlayButton } from "@/components/shared/GreenPlayButton";
 import type { QueueItem } from "@/hooks/useRoomCategoryQueue";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { MobileHeroWidgets, MobileProfileCard } from "@/components/home/MobileHome";
@@ -114,6 +116,20 @@ export default function HomeShot() {
             />
           ))}
         </div>
+      </div>
+    );
+  }
+  if (params.get("view") === "buttons") {
+    // The green buttons in both scripts, next to a purple one for contrast.
+    return (
+      <div className="flex min-h-[100dvh] w-full flex-col gap-4 bg-[#f3e8ff] p-6">
+        <ChunkyButton variant="success" size="lg" className="w-full">start</ChunkyButton>
+        <ChunkyButton variant="success" size="lg" className="w-full">დაწყება</ChunkyButton>
+        <ChunkyButton variant="success" size="md" className="w-full">Try it for 0 ₾</ChunkyButton>
+        <ChunkyButton variant="success" size="md" className="w-full">გამოსცადე 0 ₾-ად</ChunkyButton>
+        <GreenPlayButton className="h-14 w-full text-base">ითამაშე</GreenPlayButton>
+        <GreenPlayButton className="h-14 w-full text-base">Play</GreenPlayButton>
+        <ChunkyButton variant="primary" size="lg" className="w-full">Purple stays Nunito</ChunkyButton>
       </div>
     );
   }

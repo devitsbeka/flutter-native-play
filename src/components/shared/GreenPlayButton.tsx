@@ -67,7 +67,9 @@ export function GreenPlayButton({ onClick, icon, children, className, disabled, 
         style={{ backgroundImage: palette.face }}
       />
       {icon && <span className="relative flex items-center text-white">{icon}</span>}
-      <span className="relative font-bold text-white drop-shadow-[0px_4px_3px_rgba(0,0,0,0.07)] whitespace-nowrap">
+      {/* The hero face, as on every green button (Figma 1085:533): Slackey
+          for Latin, TASolivare behind it for Georgian, regular weight. */}
+      <span className="relative font-hero font-normal tracking-[0.5px] text-white drop-shadow-[0px_4px_3px_rgba(0,0,0,0.07)] whitespace-nowrap">
         {children}
       </span>
     </motion.button>
