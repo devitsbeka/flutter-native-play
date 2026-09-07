@@ -4891,6 +4891,8 @@ export const en: KaTranslations = {
     mpRoomDataNotFound: "Room data not found",
     mpTriviaQuestionsNotFound: "Trivia questions not found",
     mpGameStartFailed: "Game start failed. Try again.",
+    mpOnlyHostStarts: "Only the host can start the round",
+    mpReopenRoom: "Reopen the room and try again",
     mpQuestionsNotFound: "Questions not found",
     mpGameStartError: "Could not start game",
     // "Most Likely To" vote rounds

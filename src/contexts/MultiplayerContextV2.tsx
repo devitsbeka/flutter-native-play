@@ -1650,7 +1650,22 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     const startingRoom = room ?? state.currentRoom;
     // isHost is derived from state.currentRoom, so it is stale for the same
     // reason — check the room in hand instead.
-    if (!startingRoom || !user || startingRoom.host_user_id !== user.id) return;
+    //
+    // Said out loud, not returned quietly. The Start button is drawn from the
+    // same `isHost`, so when this disagrees with it the host taps a live
+    // button and NOTHING happens — no spinner, no error, no line in the log.
+    // That is the whole of "I still can't start the game": not a refusal the
+    // player could act on, a button that ignored them.
+    if (!startingRoom || !user) {
+      console.error("[startGame] blocked: no room or no user", { hasRoom: !!startingRoom, hasUser: !!user });
+      toast.error(tStandalone("extra.mpRoomDataNotFound"));
+      return;
+    }
+    if (startingRoom.host_user_id !== user.id) {
+      console.error("[startGame] blocked: not the host", { host: startingRoom.host_user_id, me: user.id });
+      toast.error(tStandalone("extra.mpOnlyHostStarts"));
+      return;
+    }
     
     const roomId = startingRoom.id;
     
@@ -2453,11 +2468,19 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
 
   // Start new round (any player can call this)
   const startNewRound = useCallback(async () => {
-    if (!state.currentRoom || !user) return;
+    // Every exit from here is one the host can SEE. This function is reached
+    // by pressing Start; a silent return leaves a live button that did
+    // nothing, which is indistinguishable from the app having hung.
+    if (!state.currentRoom || !user) {
+      console.error("[startNewRound] blocked: no room or no user");
+      toast.error(tStandalone("extra.mpRoomDataNotFound"));
+      return;
+    }
     // Product rule: ONLY the host starts rounds. Non-host clients are pulled
     // into host-started games via the room realtime subscription.
     if (state.currentRoom.host_user_id !== user.id) {
       console.warn("[MP] startNewRound blocked - only the host can start rounds");
+      toast.error(tStandalone("extra.mpOnlyHostStarts"));
       return;
     }
     
@@ -2471,7 +2494,14 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       .single();
     
     if (roomError || !freshRoom) {
+      // The likeliest real cause of a Start that does nothing: the row read
+      // fails (a dropped connection, an RLS refusal) and the round never
+      // begins. It used to end here with a console line the player will
+      // never see.
       console.error("[startNewRound] Failed to fetch fresh room:", roomError);
+      toast.error(tStandalone("extra.mpRoomDataNotFound"), {
+        description: tStandalone("extra.mpReopenRoom"),
+      });
       return;
     }
     
@@ -2816,10 +2846,17 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
   // Start next round from queue - pop queue item and start with that category
   // This function DIRECTLY fetches questions with the new category to avoid race conditions
   const startNextFromQueue = useCallback(async () => {
-    if (!state.currentRoom || !user) return;
+    // Same rule as startNewRound: reached by pressing Start, so it never
+    // ends without saying something.
+    if (!state.currentRoom || !user) {
+      console.error("[startNextFromQueue] blocked: no room or no user");
+      toast.error(tStandalone("extra.mpRoomDataNotFound"));
+      return;
+    }
     // Product rule: ONLY the host starts rounds (see startNewRound)
     if (state.currentRoom.host_user_id !== user.id) {
       console.warn("[MP] startNextFromQueue blocked - only the host can start rounds");
+      toast.error(tStandalone("extra.mpOnlyHostStarts"));
       return;
     }
     

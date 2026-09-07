@@ -4234,6 +4234,8 @@ export const fr: KaTranslations = {
     mpRoomDataNotFound: "Données du salon introuvables",
     mpTriviaQuestionsNotFound: "Questions du trivia introuvables",
     mpGameStartFailed: "Échec du lancement. Réessaie.",
+    mpOnlyHostStarts: "Seul l’hôte peut lancer la manche",
+    mpReopenRoom: "Rouvrez le salon et réessayez",
     mpQuestionsNotFound: "Questions introuvables",
     mpGameStartError: "Impossible de lancer la partie",
     // "Most Likely To" vote rounds
