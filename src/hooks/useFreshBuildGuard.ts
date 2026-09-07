@@ -20,6 +20,51 @@ const isSafeMoment = (): boolean =>
 // Survives route changes: once a newer build is detected, reload at the
 // first safe opportunity
 let staleDetected = false;
+// Which build the reload below is trying to reach, for the pathname effect.
+let staleTarget: string | null = null;
+
+/**
+ * Reload once per newer build, and only once.
+ *
+ * A reload only helps if it changes what runs. When a service worker or a
+ * CDN edge keeps handing this device the old bundle, the served id stays
+ * ahead of the running one no matter how many times the page reloads — and
+ * this guard checks every 45 seconds AND every time the app is brought back
+ * to the front, so the tab would reload itself forever and never be usable.
+ *
+ * The attempt is recorded in sessionStorage because the module-level flags
+ * above die with the page: it has to outlive the very reload it is guarding.
+ * A second attempt for the same build is refused; the manual "check for
+ * updates" in Settings clears the record, so a person can always insist.
+ */
+const ATTEMPT_KEY = "mytrivia:freshbuild-attempt";
+
+function reloadForBuild(id: string): void {
+  try {
+    if (sessionStorage.getItem(ATTEMPT_KEY) === id) {
+      console.warn("[FreshBuild] Already reloaded for", id, "and still running the old bundle — not reloading again");
+      return;
+    }
+    sessionStorage.setItem(ATTEMPT_KEY, id);
+  } catch {
+    // Private mode with storage off: one reload per page life is still
+    // better than none, and the module flag below stops it repeating.
+    if (reloadedThisLoad) return;
+  }
+  reloadedThisLoad = true;
+  console.warn("[FreshBuild] Reloading to pick up the new build");
+  window.location.reload();
+}
+
+let reloadedThisLoad = false;
+
+function clearReloadAttempt(): void {
+  try {
+    sessionStorage.removeItem(ATTEMPT_KEY);
+  } catch {
+    // Nothing recorded, nothing to clear.
+  }
+}
 
 // Short human-readable fingerprint of the code THIS device is running -
 // rendered in lobby corners and in Settings so "I'm not seeing the update"
@@ -36,6 +81,8 @@ export function currentBuildLabel(): string {
 export async function checkForUpdateNow(): Promise<"updating" | "current"> {
   const served = await servedBuildId();
   if (served && served !== __BUILD_ID__) {
+    // Asked for by hand, so the one-attempt record does not apply.
+    clearReloadAttempt();
     window.location.reload();
     return "updating";
   }
@@ -89,16 +136,16 @@ async function checkAndMaybeReload() {
   if (servedId) {
     if (servedId === __BUILD_ID__) {
       staleDetected = false;
+      staleTarget = null;
+      clearReloadAttempt();
       return;
     }
     if (!staleDetected) {
       console.warn("[FreshBuild] New build deployed:", servedId, "(running:", __BUILD_ID__, ")");
     }
     staleDetected = true;
-    if (isSafeMoment()) {
-      console.warn("[FreshBuild] Reloading to pick up the new build");
-      window.location.reload();
-    }
+    staleTarget = servedId;
+    if (isSafeMoment()) reloadForBuild(servedId);
     return;
   }
 
@@ -108,16 +155,16 @@ async function checkAndMaybeReload() {
   if (!served) return;
   if (served === current) {
     staleDetected = false;
+    staleTarget = null;
+    clearReloadAttempt();
     return;
   }
   if (!staleDetected) {
     console.warn("[FreshBuild] New build deployed:", served, "(running:", current, ")");
   }
   staleDetected = true;
-  if (isSafeMoment()) {
-    console.warn("[FreshBuild] Reloading to pick up the new build");
-    window.location.reload();
-  }
+  staleTarget = served;
+  if (isSafeMoment()) reloadForBuild(served);
 }
 
 export function useFreshBuildGuard() {
@@ -126,9 +173,8 @@ export function useFreshBuildGuard() {
   // Any navigation while a newer build is known to exist → reload if no
   // game is actively running
   useEffect(() => {
-    if (staleDetected && isSafeMoment()) {
-      console.warn("[FreshBuild] Stale build and no live game - reloading");
-      window.location.reload();
+    if (staleDetected && staleTarget && isSafeMoment()) {
+      reloadForBuild(staleTarget);
     }
   }, [location.pathname]);
 

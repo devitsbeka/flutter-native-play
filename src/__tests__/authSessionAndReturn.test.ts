@@ -101,7 +101,13 @@ describe("where /auth sends you afterwards", () => {
   it("an explicit ?returnTo beats a stored one", () => {
     // The param came from the tap that opened the screen; the stored value
     // may be from an OAuth trip that never came back.
-    expect(authPage).toMatch(/if \(returnTo\) \{\s*\n\s*navigate\(decodeURIComponent\(returnTo\)\);\s*\n\s*\} else if \(saved\) \{/);
+    expect(authPage).toMatch(
+      /const target = returnTo \? decodeURIComponent\(returnTo\) : \(saved \?\? "\/"\);/,
+    );
+    // And it REPLACES: this effect fires whenever there is a user, so a
+    // pushed destination leaves /auth underneath it and Back re-mounts a
+    // screen that immediately pushes again — see navigationTraps.test.ts.
+    expect(authPage).toMatch(/navigate\(target, \{ replace: true \}\);/);
     expect(authPage).toMatch(/const saved = takeAuthReturnTo\(\);/);
   });
 
