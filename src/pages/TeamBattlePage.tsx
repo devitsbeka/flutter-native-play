@@ -750,11 +750,8 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
     toast.success(t("teamBattle.pokeSent"));
   };
 
-  const inviteFaces = [...friends]
-    .filter((f) => f.status === "accepted")
-    .sort((a, b) => Number(!!b.isOnline) - Number(!!a.isOnline))
-    .slice(0, 3)
-    .map((f) => ({ url: f.avatarUrl, online: !!f.isOnline }));
+  // No faces on the invite line: see UniversalLobby's `inviteFaces`. Three
+  // friends drawn beside the + read as three friends already in the room.
 
   // The host can still publish or withdraw the arena from the lobby; the
   // row's own update policy is host-only, and the write goes through the
@@ -1048,7 +1045,6 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
         taken: participants.length + pendingInvites.length,
         fullLabel: t("extra.mpRoomFull"),
       }}
-      inviteFaces={inviteFaces}
       initialTab="players"
       start={
         isHost

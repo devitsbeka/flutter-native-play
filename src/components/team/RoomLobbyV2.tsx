@@ -991,11 +991,8 @@ export function RoomLobbyV2() {
     pending: true,
     note: "left" as const,
   }));
-  const inviteFaces = [...friends]
-    .filter((f) => f.status === "accepted")
-    .sort((a, b) => Number(!!b.isOnline) - Number(!!a.isOnline))
-    .slice(0, 3)
-    .map((f) => ({ url: f.avatarUrl, online: !!f.isOnline }));
+  // No faces on the invite line: see UniversalLobby's `inviteFaces`. Three
+  // friends drawn beside the + read as three friends already in the room.
   // The rules the host sets: how many questions a round deals, and whether
   // the room is on the public list. Both are the room row's own columns —
   // the context reads total_questions when it deals, the public tab reads
@@ -1194,7 +1191,6 @@ export function RoomLobbyV2() {
         seated: seatedPlayers,
         fullLabel: t("extra.mpRoomFull"),
       }}
-      inviteFaces={inviteFaces}
       onInvite={() => setShowInviteModal(true)}
       playersExtra={<ChallengeResultsSection roomId={currentRoom.id} />}
       initialTab={needsCategorySelection ? "players" : "rules"}

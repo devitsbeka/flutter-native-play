@@ -2195,11 +2195,6 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                     onPress: () => setFriendPickOpen(true),
                   })),
               ]}
-              inviteFaces={acceptedFriends
-                .slice()
-                .sort((a, b) => Number(!!b.isOnline) - Number(!!a.isOnline))
-                .slice(0, 3)
-                .map((f) => ({ url: f.avatarUrl, online: !!f.isOnline }))}
               onInvite={() => setFriendPickOpen(true)}
               initialTab="players"
               start={{
