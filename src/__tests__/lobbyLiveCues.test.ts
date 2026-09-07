@@ -94,7 +94,10 @@ describe("joined and left", () => {
   });
 
   it("in all seven languages, Georgian as asked", () => {
-    expect(read("src/locales/ka.ts")).toMatch(/uJoinedNote: "შემოგვიერთდა",\s*\n\s*uLeftNote: "გავიდა",/);
+    // Both keys, not their adjacency — uInvitedNote now sits between them.
+    const ka = read("src/locales/ka.ts");
+    expect(ka).toMatch(/uJoinedNote: "შემოგვიერთდა",/);
+    expect(ka).toMatch(/uLeftNote: "გავიდა",/);
     for (const lang of ["en", "de", "es", "fr", "it", "pt"]) {
       const locale = read(`src/locales/${lang}.ts`);
       expect(locale, lang).toMatch(/uJoinedNote: "/);

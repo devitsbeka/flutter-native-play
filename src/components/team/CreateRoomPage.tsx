@@ -1052,21 +1052,6 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     });
   };
 
-  /**
-   * Did the round actually begin?
-   *
-   * `startGame` returns void and gives up quietly on a stale room, a
-   * missing session, a host mismatch or an empty question pool, so the only
-   * honest answer comes from the row itself.
-   */
-  const roomIsPlaying = async (roomId: string): Promise<boolean> => {
-    const { data } = await supabase
-      .from("game_rooms")
-      .select("status")
-      .eq("id", roomId)
-      .maybeSingle();
-    return data?.status === "playing";
-  };
 
   const handleCreate = async () => {
     if (!user) return;
@@ -1289,46 +1274,11 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         // createRoom falls back to a fresh code on a collision.
         walkInCode = room?.room_code ?? null;
 
-        /**
-         * A Guess round played ALONE starts HERE, before the screen changes,
-         * so /team opens a room that is already playing and never renders a
-         * lobby: the room lobby will not let a lone host start (a room is two
-         * people), and a solo picture game is a real game. With friends
-         * invited from the pre-lobby the round waits — the walk-in below
-         * lands on the lobby, which starts once the second player is in.
-         *
-         * Started here rather than by a flag the lobby read back off the
-         * URL: that was a race with several ways to lose (the lobby has to
-         * mount, read the flag out of a URL three effects rewrite, and find
-         * room, seat, host and category settled in one render). If it fails,
-         * the room is left "waiting" and the walk-in lands on the lobby with
-         * a working Start — the right thing to fall back to.
-         */
-        // A picture game is played ALONE, full stop — not "alone unless
-        // somebody was picked earlier". The friends picker lives in the
-        // pre-lobby, which Guess no longer opens, so there is normally
-        // nobody to invite; making it unconditional closes the last route
-        // by which a one-player game could still end up showing a lobby
-        // (owner: "start the game after they pick what to guess, no lobby").
-        if (gameChoice === "guess" && room) {
-          await startGame(false, room);
-          // startGame returns void and bails silently on half a dozen
-          // conditions, so "it was called" is not "it started". Read the
-          // room back: if it is not playing, try once more, and if it still
-          // is not, say so rather than walking into a lobby. Guess is a
-          // one-player game (owner) — a lobby is never the answer for it.
-          if (!(await roomIsPlaying(room.id))) {
-            await startGame(false, room);
-            if (!(await roomIsPlaying(room.id))) {
-              toast({
-                title: t("common.error"),
-                description: t("extra.mpRoomCreateFailed"),
-                variant: "destructive",
-              });
-              walkInCode = null;
-            }
-          }
-        }
+        // Nothing to start here. A Guess round used to be started on this
+        // spot, because it was a room like any other and a room will not let
+        // a lone host begin; a picture game now goes straight to the versus
+        // flow and never reaches this function at all (see
+        // pickGuessCategory).
       }
       
       // Send invitations immediately after room is created — picked friends
@@ -1461,18 +1411,24 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
    * way every other card's tap does.
    */
   const pickGuessCategory = (cat: Category) => {
-    setSelectedCategory(cat);
-    setSelectionMode("library");
-    // The tap IS the start. A picture game had been opening a pre-lobby, on
-    // the reading that it was a 2-10 room like any other; it is a
-    // ONE-player game (owner: "it is a solo game... when I choose what to
-    // guess, start the game instantly, no lobby needed"), and a lobby for
-    // one person is a screen asking you to wait for nobody. So the pick
-    // arms Create exactly as every other card's tap does, and performCreate
-    // starts the round before the screen changes.
-    autoStart.current = true;
-    setHandingOff(true);
+    // Straight into the game, with no room anywhere in it.
+    //
+    // A solo picture game used to CREATE A ROOM to play one round in: a
+    // room row, a participant row, a lobby route, a start, a walk-in — and
+    // the room still sitting in the player's list when the round was over
+    // (owner: "it still created a room for that guess game after the game
+    // ended, we don't need it... it should be just like the versus game").
+    // All of that also has to happen before the first question, which is
+    // why it took so long to load.
+    //
+    // The versus flow already takes a category on its URL and needs no room
+    // at all; it simply ignored the parameter until now (see VSScreen).
+    // Playing it with friends is still the Library's room, which is where
+    // that belongs.
+    handoff(`/game?category=${cat.id}`);
+    onClose();
   };
+
 
   const pickedDetail = (
     <div className="mt-3 shrink-0 space-y-3 empty:hidden">

@@ -1874,6 +1874,7 @@ export const en: KaTranslations = {
     uGameRules: "Game Rules",
     uPlayersTab: "Players",
     uJoinedNote: "joined",
+    uInvitedNote: "invited",
     uLeftNote: "left",
     uQuestionsPerRound: "Questions per round",
     uVisibility: "Visibility",
