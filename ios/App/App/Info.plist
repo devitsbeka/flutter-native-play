@@ -75,11 +75,16 @@
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>MyTrivia needs access to your photos so you can choose a profile picture.</string>
 
-	<!-- App Tracking Transparency. Written from the player's side rather than
-	     the ad network's: "this identifier will be used to deliver personalized
-	     ads to you" describes what we get, not what they get. -->
+	<!-- App Tracking Transparency. States only what the advertising identifier
+	     is used for. The previous wording ("Allow tracking to keep MyTrivia
+	     free …") is rejectable twice over: App Review guideline 5.1.1(iv)
+	     forbids offering an incentive for granting permission, and implying
+	     the app depends on consent to stay free is exactly that. No mention of
+	     price, and no request framed as a favour — just the purpose.
+	     Localized copies live in ios/App/App/*.lproj/InfoPlist.strings; change
+	     them together or non-English users keep reading the old text. -->
 	<key>NSUserTrackingUsageDescription</key>
-	<string>Allow tracking to keep MyTrivia free — you will see ads that are relevant to you instead of random ones. Your quiz answers are never shared.</string>
+	<string>Your advertising identifier is used to show you more relevant ads in MyTrivia.</string>
 
 	<!-- ═══ AdMob ═══
 	     The Google Mobile Ads SDK raises on launch when this key is absent, so

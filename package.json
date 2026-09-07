@@ -9,6 +9,8 @@
     "build:dev": "vite build --mode development",
     "build:ios": "node scripts/verify-ios-native.mjs && VITE_INCLUDE_ADMIN=false VITE_NATIVE_BUILD=true vite build && node scripts/prune-ios-videos.mjs && node scripts/verify-ios-bundle.mjs && cap sync ios",
     "capacitor:sync:before": "node scripts/verify-ios-bundle.mjs",
+    "//ios:bump": "Run before every archive. App Store Connect rejects a CFBundleVersion it has already seen (ITMS-4238) and nothing increments it automatically, so the number silently went stale at 43 while the store held 46. agvtool is deliberately called WITHOUT -all: -all also rewrites $(CURRENT_PROJECT_VERSION) in both Info.plists to a literal, permanently breaking the link to the build setting. Bare next-version touches only the four CURRENT_PROJECT_VERSION lines in project.pbxproj.",
+    "ios:bump": "cd ios/App && agvtool next-version",
     "capacitor:copy:before": "node scripts/verify-ios-bundle.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
