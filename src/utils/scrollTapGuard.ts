@@ -43,6 +43,33 @@ export const TAP_SLOP_PX = 12;
  */
 export const OFFSET_SLOP_PX = 2;
 
+/**
+ * How far the pointer may wander during a press and still count as held
+ * still.
+ *
+ * This is what separates a page moving UNDER a finger from a page moved BY
+ * the press, and the two are indistinguishable from the offsets alone.
+ *
+ * Pressing a card in the play rail focuses it, and the browser scrolls a
+ * freshly focused element into view — inside a `snap-mandatory` rail that
+ * correction is animated, so it swings out and settles back:
+ *
+ *     pointerdown   scrollLeft 0
+ *     focusin       (the press focused the card)
+ *     +76ms         scrollLeft 2
+ *     +125ms        scrollLeft 3
+ *     +161ms        click, scrollLeft 3   ← 3px of drift, and the tap died
+ *     +243ms        scrollLeft 0          ← back where it began
+ *
+ * The rail never went anywhere; it wobbled because the card was pressed. A
+ * click held for a human length of time (~150ms) lands mid-wobble, and the
+ * guard cancelled it — the Quick Game card taking several tries to open,
+ * reported as "quick game becomes not clickable". A pointer that has not
+ * moved cannot have scrolled anything, so drift under a still pointer is
+ * never the finger's doing and never cancels the tap.
+ */
+export const STILL_FINGER_PX = 6;
+
 export interface Press {
   x: number;
   y: number;
@@ -59,6 +86,12 @@ export interface Release {
   x: number;
   y: number;
   offsets: readonly number[];
+  /**
+   * The furthest the pointer got from where it went down, at any point
+   * during the press — not just where it ended up. A drag that returns to
+   * its starting point is still a drag.
+   */
+  maxTravelPx: number;
 }
 
 /**
@@ -71,11 +104,20 @@ export function isDeliberateTap(press: Press, release: Release): boolean {
   // The finger came down while the page was still moving. That tap belongs
   // to the scroller, which it stops; it was never meant for the card.
   if (press.sinceScrollMs < SETTLE_MS) return false;
-  // It travelled — a drag, however short.
+  // It travelled — a drag, however short. Both where it ended up and the
+  // furthest it got: a finger that dragged the page and came back to where
+  // it started reads as motionless from the endpoints alone.
   if (Math.abs(release.x - press.x) > TAP_SLOP_PX) return false;
   if (Math.abs(release.y - press.y) > TAP_SLOP_PX) return false;
-  // Or the page moved under it, which is the same thing seen from the page:
-  // momentum still bleeding off, or a scroll the finger itself started.
+  if (release.maxTravelPx > TAP_SLOP_PX) return false;
+  // The pointer held its place. Then nothing it did moved a scroller, and
+  // whatever they did during the press is the press's own doing — the
+  // browser scrolling the pressed card into view, a snap correction
+  // settling. See STILL_FINGER_PX: cancelling the tap for that made the
+  // card cancel itself.
+  if (release.maxTravelPx <= STILL_FINGER_PX) return true;
+  // It moved a little, so the page moving with it is the same thing seen
+  // from the page: momentum still bleeding off, or a scroll it started.
   return (
     press.offsets.length === release.offsets.length &&
     press.offsets.every((offset, i) => Math.abs(offset - release.offsets[i]) <= OFFSET_SLOP_PX)
@@ -153,13 +195,56 @@ const offsetsOf = (els: readonly Element[]): number[] =>
 // One finger at a time: the press being judged is always the last one down.
 let press: (Press & { scrollers: Element[] }) | null = null;
 
+/**
+ * How far the pointer has strayed from where it went down.
+ *
+ * Sampled from `pointermove` rather than from the endpoints, because the
+ * endpoints cannot see an excursion: a finger that drags the page and comes
+ * back to where it started ends exactly where it began. Tracked only while a
+ * button is down — the listeners go on at `pointerdown` and come off at
+ * `pointerup`, so an idle page carries none.
+ */
+let travel = 0;
+let travelFrom: { x: number; y: number } | null = null;
+
+const onTravel = (e: PointerEvent): void => {
+  if (!travelFrom) return;
+  travel = Math.max(travel, Math.abs(e.clientX - travelFrom.x), Math.abs(e.clientY - travelFrom.y));
+};
+
+// `pointerup` runs before the click, so `travel` is final by the time the
+// click is judged. Stopping only detaches; the value is read after.
+const stopTravel = (): void => {
+  travelFrom = null;
+  document.removeEventListener("pointermove", onTravel, true);
+  document.removeEventListener("pointerup", stopTravel, true);
+  document.removeEventListener("pointercancel", stopTravel, true);
+};
+
+function watchTravel(x: number, y: number): void {
+  if (typeof document === "undefined") return;
+  stopTravel();
+  travel = 0;
+  travelFrom = { x, y };
+  document.addEventListener("pointermove", onTravel, { capture: true, passive: true });
+  document.addEventListener("pointerup", stopTravel, { capture: true, passive: true });
+  document.addEventListener("pointercancel", stopTravel, { capture: true, passive: true });
+}
+
 export function scrollTapGuard(): {
   onPointerDownCapture: (e: React.PointerEvent) => void;
   onClickCapture: (e: React.MouseEvent) => void;
 } {
+  // Before the first press, not on it. Installed from the first pointerdown,
+  // the tracker had recorded nothing by the time that press was judged, so
+  // `sinceScrollMs` was Infinity and the settling rule could not fire for it
+  // — the one press per page load where a thumb is most likely to be
+  // arresting a fling. A scroller mounts this during render, which is early
+  // enough to have watched everything that moved since.
+  trackScrolls();
   return {
     onPointerDownCapture: (e) => {
-      trackScrolls();
+      watchTravel(e.clientX, e.clientY);
       const scrollers = scrollersAbove(e.target as Element | null);
       const now = performance.now();
       press = {
@@ -182,7 +267,13 @@ export function scrollTapGuard(): {
       // Enter or Space on a focused card arrives as a click with no press
       // behind it (detail 0), and is never a stray finger.
       if (!p || e.detail === 0) return;
-      if (isDeliberateTap(p, { x: e.clientX, y: e.clientY, offsets: offsetsOf(p.scrollers) })) return;
+      const release = {
+        x: e.clientX,
+        y: e.clientY,
+        offsets: offsetsOf(p.scrollers),
+        maxTravelPx: travel,
+      };
+      if (isDeliberateTap(p, release)) return;
       e.preventDefault();
       e.stopPropagation();
     },
