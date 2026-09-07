@@ -15,6 +15,8 @@ import triviaBuzzer from '@/assets/trivia-buzzer.png';
 import { TVBrandingOverlay } from './TVBrandingOverlay';
 import { MyTriviaLiveLogo } from '@/components/shared/MyTriviaLiveLogo';
 import { currentBuildLabel } from '@/hooks/useFreshBuildGuard';
+import { containsBlockedText } from '@/utils/contentFilter';
+import { toast } from '@/lib/toast';
 
 const MAX_PLAYERS = 8;
 const MIN_PLAYERS_TO_START = 2;
@@ -234,11 +236,24 @@ export const TVLobbyScreenV2: React.FC = () => {
 
   const handleSaveRoomName = async () => {
     if (!sessionId || !editedName.trim()) return;
+
+    // Screened exactly as the phone-side rename is
+    // (RoomLobbyV2.handleUpdateRoomIconAndName). This one was the rename
+    // that was not: a name typed here goes straight onto `tv_sessions`, and
+    // it is then painted at 3xl across a television in somebody's living
+    // room, next to the join code strangers scan. The editing state stays
+    // open on a rejection so the name is still there to fix.
+    const name = editedName.trim();
+    if (containsBlockedText(name)) {
+      toast.error(t('extra.textNotAllowed'));
+      return;
+    }
+
     await supabase
       .from('tv_sessions')
-      .update({ room_name: editedName.trim() })
+      .update({ room_name: name })
       .eq('id', sessionId);
-    setRoomName(editedName.trim());
+    setRoomName(name);
     setIsEditingName(false);
   };
 

@@ -136,6 +136,60 @@ export async function configureKeyboard(): Promise<void> {
  * `navigate` is the router's navigate function, passed in rather than
  * imported so this file stays outside React.
  */
+/**
+ * The one URL the OAuth leg is allowed to come back on.
+ *
+ * A custom scheme is not exclusive on iOS: any app on the device can call
+ * `openURL("mytrivia://x#access_token=…&refresh_token=…")`, and another app
+ * may register `mytrivia` for itself. This handler used to read those tokens
+ * out of whatever URL arrived and install them, which signs the player into an
+ * account somebody else controls — with their purchases, profile and content
+ * following them into it. The session branches now run only for this exact
+ * origin.
+ */
+const AUTH_CALLBACK_SCHEME = "mytrivia:";
+const AUTH_CALLBACK_HOST = "auth-callback";
+
+/** The site's own hosts, for a universal link arriving as https. */
+const WEB_HOSTS = new Set(["mytrivia.io", "www.mytrivia.io"]);
+
+/**
+ * Paths a deep link may navigate to, mirroring the `paths` array in
+ * `public/.well-known/apple-app-site-association`.
+ *
+ * Universal links were already restricted to this list — the association file
+ * is an allowlist and Apple enforces it. The custom scheme had no equivalent:
+ * it forwarded any incoming path straight into the router, so every route
+ * compiled into the bundle was reachable from outside the app, including the
+ * unreleased game modes and the alternate home screen. Keeping the two in step
+ * is the point; a route that is not fit to be a universal link is not fit to
+ * be a `mytrivia://` link either.
+ */
+const DEEP_LINK_ALLOWLIST: RegExp[] = [
+  /^\/challenge\/[^/]+\/?$/,
+  /^\/i\/[^/]+\/?$/,
+  /^\/join\/?$/,
+  /^\/join\/[^/]+\/?$/,
+  /^\/room\/[^/]+\/?$/,
+  /^\/team\/?$/,
+  /^\/words\/?$/,
+  /^\/words\/[^/]+\/?$/,
+  /^\/tv\/[^/]+\/?$/,
+  /^\/controller\/[^/]+\/?$/,
+  /^\/collection\/[^/]+\/?$/,
+  /^\/trivia\/[^/]+\/?$/,
+  /^\/profile\/[^/]+\/?$/,
+  /^\/category\/[^/]+\/?$/,
+  /^\/play\/[^/]+\/?$/,
+  /^\/leaderboards\/?$/,
+  /^\/leaderboards\/[^/]+\/?$/,
+];
+
+/** True when a deep link may route to this path. */
+export function isAllowedDeepLinkPath(pathname: string): boolean {
+  return DEEP_LINK_ALLOWLIST.some((re) => re.test(pathname));
+}
+
 export async function configureDeepLinks(
   navigate: (path: string) => void,
 ): Promise<() => void> {
@@ -149,13 +203,19 @@ export async function configureDeepLinks(
       try {
         const parsed = new URL(url);
 
+        // Is this our own OAuth return leg, or merely something that arrived
+        // on our scheme? Only the former may carry a session.
+        const isAuthCallback =
+          parsed.protocol === AUTH_CALLBACK_SCHEME &&
+          parsed.hostname === AUTH_CALLBACK_HOST;
+
         // Supabase returns OAuth results either in the fragment (implicit) or
         // as a ?code= (PKCE). detectSessionInUrl is off on native, because the
         // tokens never touch the page URL here — they arrive on this event.
         const fragment = new URLSearchParams(parsed.hash.replace(/^#/, ""));
-        const accessToken = fragment.get("access_token");
-        const refreshToken = fragment.get("refresh_token");
-        const code = parsed.searchParams.get("code");
+        const accessToken = isAuthCallback ? fragment.get("access_token") : null;
+        const refreshToken = isAuthCallback ? fragment.get("refresh_token") : null;
+        const code = isAuthCallback ? parsed.searchParams.get("code") : null;
 
         // The OAuth pages open in an SFSafariViewController sheet
         // (@capacitor/browser). It does not dismiss itself when the redirect
@@ -187,9 +247,24 @@ export async function configureDeepLinks(
           return;
         }
 
-        // Anything else is a content link: keep the path and query, drop the
-        // origin, and let the router decide whether it knows the route.
-        navigate(`${parsed.pathname}${parsed.search}`);
+        // Anything else is a content link. Keep the path and query, drop the
+        // origin — but only for an origin we recognise and a path the
+        // association file already publishes. An unknown link lands on the
+        // home screen rather than deep inside the app.
+        // https only. The custom scheme exists for the OAuth return leg and
+        // nothing else (see Info.plist), and it cannot carry a content path
+        // anyway: `mytrivia://room/ABC` parses `room` as the host, leaving the
+        // pathname `/ABC`. Content arrives as a universal link, where the
+        // association file has already vouched for the path.
+        const originOk =
+          parsed.protocol === "https:" && WEB_HOSTS.has(parsed.hostname);
+
+        if (originOk && isAllowedDeepLinkPath(parsed.pathname)) {
+          navigate(`${parsed.pathname}${parsed.search}`);
+          return;
+        }
+
+        navigate("/");
       } catch (error) {
         console.warn("[native] Could not handle deep link:", url, error);
       }

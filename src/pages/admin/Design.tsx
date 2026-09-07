@@ -29,9 +29,19 @@ const Notifications = lazy(() => import("@/pages/Notifications"));
 const PowerUps = lazy(() => import("@/pages/PowerUps"));
 const Support = lazy(() => import("@/pages/Support"));
 const PrivacyPolicy = lazy(() => import("@/pages/PrivacyPolicy"));
-const PrivacyPolicyEN = lazy(() => import("@/pages/PrivacyPolicyEN"));
+// The English previews render the same canonical pages, pinned. The separate
+// hardcoded *EN pages they used to point at are gone — they had drifted from
+// the localized ones, which is how the App Store listing and the app
+// description ended up linking two different privacy policies.
+const PrivacyPolicyEN = lazy(async () => {
+  const m = await import("@/pages/PrivacyPolicy");
+  return { default: () => <m.default lang="en" /> };
+});
+const TermsOfServiceEN = lazy(async () => {
+  const m = await import("@/pages/TermsOfService");
+  return { default: () => <m.default lang="en" /> };
+});
 const TermsOfService = lazy(() => import("@/pages/TermsOfService"));
-const TermsOfServiceEN = lazy(() => import("@/pages/TermsOfServiceEN"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const CategoryPage = lazy(() => import("@/pages/CategoryPage"));
 const CategoryQuizPage = lazy(() => import("@/pages/CategoryQuizPage"));

@@ -21,14 +21,20 @@ import { introFreeDays } from "@/utils/introOffer";
 // created, because an App Store product id can never be reused once it exists.
 export const IAP_PRODUCTS = {
   PRO_MONTHLY: "io.mytrivia.pro.monthly",
-  // The paywall's other two billing periods for the same PRO tier. They are
-  // listed here so the StoreKit query asks for them and the paywall can offer
-  // them the day they exist; until they are created in App Store Connect the
-  // store simply does not return them, and src/config/proPlans.ts drops the
-  // rows rather than showing a plan that cannot be bought.
+  // The other billing period for the same PRO tier. Verified against the App
+  // Store Connect API: "PRO Annual", ONE_YEAR, and it is live — an older
+  // comment here and in src/config/proPlans.ts said it did not exist yet.
   PRO_ANNUAL: "io.mytrivia.pro.annual",
-  PRO_WEEKLY: "io.mytrivia.pro.weekly",
   PRO_PLUS_MONTHLY: "io.mytrivia.proplus.monthly",
+  // `io.mytrivia.pro.weekly` was listed here as a third period "so the paywall
+  // can offer it the day it exists". It does not exist, and it was never
+  // created — the whole catalogue in App Store Connect is the four gem
+  // consumables plus pro.monthly, pro.annual and proplus.monthly. Every launch
+  // therefore asked StoreKit for a product id with nothing behind it, which is
+  // the 2.1 finding: a request for an in-app purchase App Review cannot locate.
+  //
+  // A future weekly plan means creating the product first, then adding the id
+  // back here and a row in src/config/proPlans.ts. Not the other way round.
   // `io.mytrivia.adfree` is deliberately absent. It was a non-consumable
   // whose only entry point was AdFreeModal, which Index rendered and never
   // opened — `setIsAdFreeModalOpen(true)` appeared nowhere in the app. A
@@ -682,13 +688,29 @@ export function useInAppPurchases() {
     }
   }, [user, refreshBalance]);
 
-  // Restore previous purchases
+  /**
+   * Restore previous purchases.
+   *
+   * **Runs signed out.** It used to refuse — an error toast saying "please
+   * sign in" and nothing else happened — and that is a 3.1.1 rejection on its
+   * own: the Restore row is rendered unconditionally in Settings, /settings
+   * has no auth guard, the app is playable as a guest, and App Review tests
+   * Restore before it tests anything that needs an account. A Restore button
+   * that does not restore is what the reviewer writes down.
+   *
+   * Only the second half of the job needs a session. StoreKit's own restore is
+   * a device-and-Apple-ID operation and works with nobody signed in; what
+   * cannot happen without a user is `syncEntitlements`, which is the server
+   * attaching what Apple reports to a row in the database. So the plugin call
+   * always runs, and the sync is skipped with an honest message when there is
+   * no account to attach to — the transactions are on the device, and the next
+   * sign-in picks them up (`syncEntitlements` runs again on purchase and on
+   * the next restore).
+   *
+   * Not a silent no-op either way: signed out it says the purchases were
+   * restored and to sign in.
+   */
   const restorePurchases = useCallback(async (): Promise<boolean> => {
-    if (!user) {
-      toast.error(tStandalone("iap.pleaseSignIn"));
-      return false;
-    }
-
     if (!Capacitor.isNativePlatform()) {
       toast.info(tStandalone("extra.iapRestoreOnlyMobile"));
       return false;
@@ -715,6 +737,17 @@ export function useInAppPurchases() {
           setTimeout(() => reject(new Error("restorePurchases did not answer within 60s")), 60_000),
         ),
       ]);
+
+      // No account to attach the result to. Apple has replayed the
+      // transactions onto the device, which is the whole of what Restore can
+      // do here, so say that and point at the step the player still owes —
+      // rather than reporting a failure for something that succeeded.
+      if (!user) {
+        toast.success(
+          `${tStandalone("iap.purchasesRestored")} ${tStandalone("iap.pleaseSignIn")}`,
+        );
+        return true;
+      }
 
       const synced = await syncEntitlements();
       if (!synced.success) {

@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { samplePosts, SamplePost } from "@/data/samplePosts";
+import { SamplePost } from "@/data/samplePosts";
 import { Json } from "@/integrations/supabase/types";
 import { createNotification } from "@/hooks/useNotifications";
 
@@ -361,8 +361,16 @@ export function useSocialFeed() {
   feedItems.length = 0;
   feedItemsWithTimestamp.forEach(x => feedItems.push(x.item));
 
-  // Flatten for backward compatibility - but also export feedItems
-  const allPosts: SamplePost[] = [...standalonePosts, ...samplePosts];
+  // Flatten for backward compatibility - but also export feedItems.
+  //
+  // This used to append `samplePosts` — ~31 invented profiles, sixteen of
+  // them flagged `verified: true`, with hot-linked stock covers. Nothing
+  // renders `posts` today (the feed comes from `usePlayerFeedItems`), so the
+  // fabricated rows were latent rather than live; a single destructure would
+  // have put them on screen. The fixture now lives in `src/dev/` and is not
+  // imported from anywhere in the app. What comes back is what the database
+  // holds and nothing else.
+  const allPosts: SamplePost[] = standalonePosts;
 
   return {
     posts: allPosts,

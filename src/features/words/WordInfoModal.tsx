@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Flag, Loader2, Check } from "lucide-react";
+import { AlertTriangle, Flag, Loader2, Check } from "lucide-react";
 import { GameModal } from "@/components/ui/game-modal";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -83,14 +83,13 @@ export function WordInfoModal({ word, lang, levelNumber, onClose }: Props) {
   const { playSound } = useSound();
   const [lines, setLines] = useState<string[] | null>(null);
   const [loading, setLoading] = useState(false);
-  const [reported, setReported] = useState(false);
-  const [reporting, setReporting] = useState(false);
+  const [reportState, setReportState] = useState<"idle" | "busy" | "sent" | "failed">("idle");
 
   useEffect(() => {
     if (!word) return;
     let alive = true;
     setLines(null);
-    setReported(false);
+    setReportState("idle");
     setLoading(true);
     void (async () => {
       try {
@@ -108,9 +107,21 @@ export function WordInfoModal({ word, lang, levelNumber, onClose }: Props) {
     };
   }, [word, lang]);
 
+  /**
+   * File the report — and say so honestly.
+   *
+   * This used to set `reported` in a `finally`, so the button turned into
+   * "thanks, we'll take a look" whether or not anything had been written.
+   * Both writes could fail at once: `words_word_reports` may not exist yet
+   * (its migration reaches the database by hand), and the fallback into
+   * `user_reports` was rejected outright — report_type's CHECK listed five
+   * values and 'words_word' was not one of them, so every fallback came back
+   * 23514. Widened in 20261013120000_moderation_actions.sql; read either way,
+   * because a report the player thinks they filed is worse than none.
+   */
   const report = async () => {
-    if (!word || reporting || reported) return;
-    setReporting(true);
+    if (!word || reportState === "busy" || reportState === "sent") return;
+    setReportState("busy");
     playSound("button-click");
     try {
       const note = `${lang}:${word}:level ${levelNumber}`;
@@ -120,19 +131,25 @@ export function WordInfoModal({ word, lang, levelNumber, onClose }: Props) {
         word,
         level: levelNumber,
       } as never);
-      if (first.error && user) {
-        await supabase.from("user_reports").insert({
-          reporter_id: user.id,
-          reported_user_id: user.id,
-          report_type: "words_word",
-          description: note,
-        });
+
+      let ok = !first.error;
+      if (first.error) {
+        console.warn("[Words] structured report failed", first.error);
+        if (user) {
+          const { error } = await supabase.from("user_reports").insert({
+            reporter_id: user.id,
+            reported_user_id: user.id,
+            report_type: "words_word",
+            description: note,
+          });
+          if (error) console.warn("[Words] report failed", error);
+          ok = !error;
+        }
       }
+      setReportState(ok ? "sent" : "failed");
     } catch (e) {
       console.warn("[Words] report failed", e);
-    } finally {
-      setReporting(false);
-      setReported(true);
+      setReportState("failed");
     }
   };
 
@@ -168,13 +185,27 @@ export function WordInfoModal({ word, lang, levelNumber, onClose }: Props) {
 
       <button
         onClick={() => void report()}
-        disabled={reporting || reported}
+        disabled={reportState === "busy" || reportState === "sent"}
         className={`mt-4 flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold transition-colors ${
-          reported ? "bg-success/10 text-success" : "bg-muted text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+          reportState === "sent"
+            ? "bg-success/10 text-success"
+            : reportState === "failed"
+              ? "bg-destructive/10 text-destructive"
+              : "bg-muted text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
         }`}
       >
-        {reported ? <Check className="h-4 w-4" /> : <Flag className="h-4 w-4" />}
-        {reported ? t("words.reportThanks") : t("words.reportWord")}
+        {reportState === "sent" ? (
+          <Check className="h-4 w-4" />
+        ) : reportState === "failed" ? (
+          <AlertTriangle className="h-4 w-4" />
+        ) : (
+          <Flag className="h-4 w-4" />
+        )}
+        {reportState === "sent"
+          ? t("words.reportThanks")
+          : reportState === "failed"
+            ? t("moderation.reportFailed")
+            : t("words.reportWord")}
       </button>
     </GameModal>
   );

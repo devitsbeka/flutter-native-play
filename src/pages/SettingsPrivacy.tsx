@@ -1,10 +1,10 @@
 import { toastIcon, ICON_URLS } from "@/lib/toast-icons";
 import triviaBuzzer from "@/assets/icons/trivia-buzzer.png";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { BlockedPlayersSection } from "@/components/social/BlockedPlayersSection";
 import { useNavigate } from "react-router-dom";
-import { Shield, FileText, Download, Trash2, ChevronRight, Loader2, AlertTriangle } from "lucide-react";
+import { Shield, FileText, Download, Trash2, ChevronRight, Loader2, AlertTriangle, Megaphone } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { AmbientBlobBackdrop, AMBIENT_HEADER_CLASS } from "@/components/shared/AmbientBlobBackdrop";
 import { useAuth } from "@/hooks/useAuth";
@@ -14,6 +14,7 @@ import { useNotificationModal } from "@/hooks/useNotificationModal";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { translateErrorMessage } from "@/utils/errorTranslations";
+import { getAdConsent, openAdPrivacyOptions, subscribeToAdConsent } from "@/native/adConsent";
 
 export default function SettingsPrivacy() {
   const navigate = useNavigate();
@@ -24,6 +25,34 @@ export default function SettingsPrivacy() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+
+  /**
+   * The way back into Google's consent form.
+   *
+   * The GDPR requires consent to be as easy to withdraw as it was to give,
+   * and UMP's own answer to that is the privacy options form. The row only
+   * appears when the SDK says the entry point is required — outside the EEA
+   * and the regulated US states there is no form to open, and a row that
+   * opened nothing would be worse than no row.
+   */
+  const [adPrivacyRequired, setAdPrivacyRequired] = useState(
+    () => getAdConsent().privacyOptionsRequired,
+  );
+  const [openingAdPrivacy, setOpeningAdPrivacy] = useState(false);
+
+  useEffect(
+    () => subscribeToAdConsent((consent) => setAdPrivacyRequired(consent.privacyOptionsRequired)),
+    [],
+  );
+
+  const handleAdPrivacy = async () => {
+    setOpeningAdPrivacy(true);
+    try {
+      await openAdPrivacyOptions();
+    } finally {
+      setOpeningAdPrivacy(false);
+    }
+  };
 
   const handleExportData = async () => {
     if (!user) return;
@@ -141,6 +170,38 @@ export default function SettingsPrivacy() {
             );
           })}
         </motion.div>
+
+        {/* Ad consent, for a player the SDK says is entitled to revisit it. */}
+        {adPrivacyRequired && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+          >
+            <button
+              onClick={handleAdPrivacy}
+              disabled={openingAdPrivacy}
+              className="w-full flex items-center gap-4 p-4 rounded-xl bg-card border border-border hover:bg-muted/50 transition-colors disabled:opacity-50"
+            >
+              <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center">
+                {openingAdPrivacy ? (
+                  <Loader2 className="w-6 h-6 text-purple-500 animate-spin" />
+                ) : (
+                  <Megaphone className="w-6 h-6 text-purple-500" />
+                )}
+              </div>
+              <div className="flex-1 text-left">
+                <span className="font-medium text-foreground block">
+                  {t("settings.adPrivacy")}
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  {t("settings.adPrivacyDescription")}
+                </span>
+              </div>
+              <ChevronRight className="w-5 h-5 text-muted-foreground" />
+            </button>
+          </motion.div>
+        )}
 
         {/* People you've blocked, and the way back. */}
         {user && <BlockedPlayersSection />}

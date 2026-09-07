@@ -161,12 +161,12 @@ export default {
         ],
         hero: [
           'Slackey',
-          'TASolivare',
+          'Google Sans',
           'Nunito',
           'sans-serif'
         ],
         display: [
-          'TASolivare',
+          'Google Sans',
           'Nunito',
           'sans-serif'
         ],

@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { containsBlockedText } from "../_shared/contentFilter.ts";
 
 /**
  * Username-only registration that survives email confirmations being ON.
@@ -48,6 +49,14 @@ serve(async (req) => {
     }
     const trimmed = username.trim();
     if (trimmed.length < 3 || trimmed.length > 20) {
+      return json({ error: "invalid username" }, 400);
+    }
+    // The nickname is written into user_metadata here and becomes the public
+    // display name every other player sees. This endpoint is `verify_jwt =
+    // false` and validated only the length and the absence of an @ — so a
+    // slur registered cleanly, from a signed-out POST, past the client screen
+    // in AuthContext entirely. Same list, same function, server side.
+    if (containsBlockedText(trimmed)) {
       return json({ error: "invalid username" }, 400);
     }
     // Mirror the client's signup password policy (8+, letter, digit).

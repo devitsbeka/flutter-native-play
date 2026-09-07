@@ -28,6 +28,7 @@ import { createNotification } from "@/hooks/useNotifications";
 import trophyWinIcon from "@/assets/icons/trophy-win.png";
 import { useLocation, useNavigate } from "react-router-dom";
 import { calculateXP } from "@/utils/vipMultipliers";
+import { ContentReportButton } from "@/components/social/ContentReportButton";
 
 interface Question {
   question: string;
@@ -391,12 +392,22 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts, retur
               </div>
             </div>
             
-            <button
-              onClick={handleClose}
-              className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center"
-            >
-              <X className="w-5 h-5 text-white" />
-            </button>
+            <div className="flex items-center gap-2">
+              {/* Guideline 1.2: reportable while it is on screen. A player who
+                  hits an offensive question mid-quiz should not have to work
+                  out who wrote it and go and find their profile. */}
+              <ContentReportButton
+                contentType="quiz"
+                contentId={currentRoundPost?.id || post.id}
+                className="h-10 w-10 bg-white/20 text-white hover:bg-white/30"
+              />
+              <button
+                onClick={handleClose}
+                className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center"
+              >
+                <X className="w-5 h-5 text-white" />
+              </button>
+            </div>
           </div>
 
           {/* Content */}

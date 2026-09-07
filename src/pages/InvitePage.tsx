@@ -464,7 +464,7 @@ export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }
         <div>
           <h1
             className="font-display text-[21px] uppercase leading-tight tracking-[-0.16px] text-[#161e46]"
-            // TASolivare ships a single 700 face, so CSS font matching picks it for
+            // Google Sans ships a single 700 face, so CSS font matching picks it for
             // any weight asked for and never synthesises a heavier one — font-black
             // would change nothing here. Thickening the strokes is what actually
             // makes the name read as heavier than the sentence under it, which is
@@ -800,7 +800,7 @@ function FriendInviteScreen({
         <div className="w-full">
           <h1
             className="font-display text-[21px] uppercase leading-tight tracking-[-0.16px] text-[#161e46]"
-            // TASolivare ships a single 700 face, so CSS font matching picks it for
+            // Google Sans ships a single 700 face, so CSS font matching picks it for
             // any weight asked for and never synthesises a heavier one — font-black
             // would change nothing here. Thickening the strokes is what actually
             // makes the name read as heavier than the sentence under it, which is

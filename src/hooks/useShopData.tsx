@@ -134,29 +134,41 @@ export function useShopData() {
 
     // VIP Section - aligned with rewardConfig.ts VIP_PRICES
     // (no 1-day option — week and month keep the section an even pair)
+    //
+    // Neither row carries a `savings` percentage any more, and that is the
+    // point. They used to: -52% on the week and -72% on the month, both
+    // measured against REWARDS.VIP_PRICES.day (30 gems) x the number of days —
+    // 210 gems for a week, 900 for a month. Those are not prices anybody can
+    // pay. The shop has never listed a 1-day VIP (see the line above), so the
+    // discount was against a figure with no purchasable original, which is
+    // exactly the reference-price claim guideline 2.3.1 calls out.
+    //
+    // The two honest fixes were to list a 1-day VIP at 30 gems and let the
+    // comparison stand, or to drop the badge. Dropping it, because a 1-day VIP
+    // is not an offer anyone here wants to make — it would exist only to be
+    // the expensive thing the real items are cheaper than, and the section is
+    // deliberately an even pair. The prices themselves are unchanged.
     const VIP_PROMO_ITEMS: ShopItem[] = [
       {
         id: "vip_week_deal",
         name: t("shop.vipWeek"),
         description: t("shop.vipBenefitsWeek"),
-        price: 100,  // 100 gems = 10 GEL (vs 210 for 7 days = 52% savings)
+        price: 100,  // 100 gems = 10 GEL
         currency: "gems",
         icon: <img src={iconVipCrown} alt="" width={50} height={50} loading="lazy" decoding="async" className="w-[50px] h-[50px] object-contain" />,
         gradient: "transparent",
         badge: "popular",
-        savings: 52,
         vipDuration: "week",
       },
       {
         id: "vip_month",
         name: t("shop.vipMonth"),
         description: t("shop.vipBenefitsMonth"),
-        price: 250,  // 250 gems = 25 GEL (vs 900 for 30 days = 72% savings)
+        price: 250,  // 250 gems = 25 GEL
         currency: "gems",
         icon: <img src={iconVipCrown} alt="" width={50} height={50} loading="lazy" decoding="async" className="w-[50px] h-[50px] object-contain" />,
         gradient: "transparent",
         badge: "best-value",
-        savings: 72,
         vipDuration: "month",
       },
     ];

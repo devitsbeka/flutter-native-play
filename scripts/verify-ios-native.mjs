@@ -87,6 +87,37 @@ if (!existsSync(infoPlist)) {
   }
 }
 
+// ── Real ad units, not Google's demo placements ───────────────────────────
+//
+// src/services/adService.ts falls back to ca-app-pub-3940256099942544/… when
+// VITE_ADMOB_IOS_REWARDED or _INTERSTITIAL is unset. Those are Google's public
+// TEST units, and the SDK is initialised with isTesting: false — so a build
+// made without these variables serves Google's demo creatives to real users as
+// production advertising. It violates AdMob's policy, it earns nothing, and to
+// a reviewer it looks like test content shipped by mistake.
+//
+// The only signal today is a console.warn nobody reads on a device. The
+// tracked .env sets both, so this passes locally; it exists for the build that
+// happens somewhere else — a CI runner, a fresh clone, a worktree — where .env
+// was never loaded. Same reasoning as the Supabase guard in vite.config.ts:
+// the failure is invisible at build time and expensive afterwards, so it has
+// to be loud here.
+for (const key of ["VITE_ADMOB_IOS_REWARDED", "VITE_ADMOB_IOS_INTERSTITIAL"]) {
+  const value = (process.env[key] ?? "").trim();
+  if (!value) {
+    failures.push(
+      `${key} is not set. The build would fall back to Google's demo ad\n` +
+        "      unit and serve test creatives as production advertising.\n" +
+        "      Supply the value; do not remove this check.",
+    );
+  } else if (value.includes("3940256099942544")) {
+    failures.push(
+      `${key} is set to Google's demo ad unit. That is the test\n` +
+        "      placement — it serves ads and earns nothing. Use the real unit.",
+    );
+  }
+}
+
 if (failures.length > 0) {
   console.error("\nverify-ios-native failed:\n");
   for (const f of failures) console.error(`  ✗ ${f}\n`);

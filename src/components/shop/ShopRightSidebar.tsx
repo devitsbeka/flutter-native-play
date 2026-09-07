@@ -8,7 +8,7 @@ import shopBgVideo from "@/assets/shopbg.mp4";
 import shopBgVideoWebm from "@/assets/shopbg.webm";
 import crown3dIcon from "@/assets/crown-3d.png";
 import { useProPurchase, type ProTierId } from "@/hooks/useProPurchase";
-import { getPriceDisplay } from "@/utils/currency";
+import { monthLabel } from "@/utils/currency";
 import { useStorePrice } from "@/hooks/useStorePrice";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { SubscriptionTerms } from "@/components/shared/SubscriptionTerms";
@@ -177,7 +177,7 @@ export function ShopRightSidebar() {
                         <h3 className="text-base font-bold text-white">{tier.name}</h3>
                         <div className="flex items-baseline gap-1">
                           <span className="text-xl font-black text-white">{storePrice(tier.id, tier.price).display}</span>
-                          <span className="text-xs text-white/70">{getPriceDisplay(tier.price).monthLabel}</span>
+                          <span className="text-xs text-white/70">{monthLabel()}</span>
                         </div>
                       </div>
                       {!isHovered && !isCurrentTier && (

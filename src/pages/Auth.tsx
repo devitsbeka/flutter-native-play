@@ -503,11 +503,11 @@ export default function Auth() {
               5.1.1) — this screen had no legal reference at all. */}
           <p className="mt-4 text-center text-[11px] leading-snug text-muted-foreground">
             {t("extra.authAgreePrefix")}{" "}
-            <Link to={language === "ka" ? "/terms" : "/terms-en"} className="underline underline-offset-2">
+            <Link to="/terms" className="underline underline-offset-2">
               {t("extra.authAgreeTerms")}
             </Link>{" "}
             {t("extra.authAgreeAnd")}{" "}
-            <Link to={language === "ka" ? "/privacy-policy" : "/privacy-policy-en"} className="underline underline-offset-2">
+            <Link to="/privacy-policy" className="underline underline-offset-2">
               {t("extra.authAgreePrivacy")}
             </Link>
           </p>

@@ -51,7 +51,15 @@ export function ShopProductGrid({
       <div className="shop-grid-row">
       <div className="grid grid-cols-2 gap-2">
         {items.map((item, index) => {
-          // Real-money (lari) packs are always purchasable — gems balance is irrelevant
+          // Can the player pay for it out of their gem balance? Real-money
+          // (lari) packs are not paid for in gems, so the balance says nothing
+          // about them and this is true.
+          //
+          // It is NOT the whole "may this be bought" test, and reading it as
+          // one is what left dead Buy buttons on the gem packs: whether the
+          // store has a price for a real-money item is only known inside
+          // ShopItemCard, which calls useStorePrice per item (a hook cannot be
+          // called in this map) and dims itself when the answer is no.
           const canAfford = item.currency === "lari" || gems >= item.price;
           const isPurchased = purchasedItems.has(item.id);
           const isFrameOwned = item.frameId

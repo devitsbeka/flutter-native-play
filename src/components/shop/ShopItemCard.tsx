@@ -58,17 +58,36 @@ export function ShopItemCard({
   // Georgian player was being quoted "2.72 ₾" for a $0.99 pack: a number Apple
   // never charges, on the card they tap to buy, which is guideline 2.3.1.
   //
-  // Falls back to the converted figure while offerings load, so the card does
-  // not render blank — and a price that still looks converted after a second
-  // is the visible sign that the store returned nothing.
+  // Nothing is converted any more, and on a phone there is no fallback figure
+  // either: until StoreKit answers there is no price, and the card says so.
   const storePrice = useStorePrice();
+  // Resolved once, and its `sellable` flag decides whether this card may carry
+  // a live Buy button at all.
+  //
+  // It could not before: the price line rendered whatever `display` said —
+  // including the "—" placeholder StoreKit leaves behind when it has not
+  // answered — while the button's only disabled conditions were `isPurchased`
+  // and `isLoading`, and `canAfford` is hardcoded true for real-money items in
+  // ShopProductGrid. So on an App Review device, where StoreKit routinely
+  // returns nothing, every gem pack showed an em dash beside a live, undimmed
+  // Buy button, and tapping it produced an "item unavailable" toast. That is a
+  // 2.1 rejection (a purchase that cannot complete) and a 3.1.1 one (a price
+  // that is not a price) on the same tap.
+  //
+  // The subscription paywalls already refuse to sell in this state, through
+  // their own `storeReady` guard; this is the same rule for consumables.
+  const lariPrice = isLari ? storePrice(GEM_PACK_PRODUCTS[id] ?? id, price) : null;
+  const storeUnavailable = !!lariPrice && !lariPrice.sellable;
+  // Nothing that cannot be bought should look buyable, so an unreachable store
+  // dims the card exactly the way an unaffordable price does.
+  const purchasable = canAfford && !storeUnavailable;
   // Hero bundles opt in to their own gradient fill so they stand apart from
   // the regular lavender-white content cards; white text rides on top of it.
   const hasGradient = vibrant && !!gradient && gradient !== "transparent";
   // The gradient only actually paints on an affordable, unpurchased card —
   // otherwise the background falls back to muted/green, so light-on-dark
   // text and vibrant borders must not be used (white-on-gray bug).
-  const gradientActive = hasGradient && !isPurchased && canAfford;
+  const gradientActive = hasGradient && !isPurchased && purchasable;
 
   // Shared by both the vertical and the featured horizontal layout
   const actionBlock = isPurchased ? (
@@ -78,10 +97,17 @@ export function ShopItemCard({
     </div>
   ) : isLoading ? (
     <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+  ) : storeUnavailable ? (
+    // Say so, rather than showing an em dash above a button that fails. The
+    // copy already exists in every locale — it is the toast the failed tap
+    // used to produce, moved to where it stops the tap from happening.
+    <p className="px-1 text-center text-[11px] leading-snug text-muted-foreground">
+      {t("extra.iapItemUnavailable")}
+    </p>
   ) : (
     <>
       {isLari ? (
-        <span className="font-bold text-base sm:text-lg text-pink-600 dark:text-pink-400">{storePrice(GEM_PACK_PRODUCTS[id] ?? id, price).display}</span>
+        <span className="font-bold text-base sm:text-lg text-pink-600 dark:text-pink-400">{lariPrice!.display}</span>
       ) : (
         <div className="flex items-center justify-center gap-1">
           <img src={currencyIcon!} alt="" width={24} height={24} loading="lazy" decoding="async" className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -90,7 +116,10 @@ export function ShopItemCard({
       )}
       <motion.button
         onClick={onClick}
-        disabled={isPurchased || isLoading}
+        // storeUnavailable is already handled above, where the whole block is
+        // replaced — repeated here so the one condition that must never let a
+        // purchase start is stated on the control that starts it.
+        disabled={isPurchased || isLoading || storeUnavailable}
         className="px-4 py-1.5 rounded-full font-bold text-xs text-[#402666]"
         // White chunky pill, same recipe as the main page stat pills
         style={{
@@ -127,19 +156,19 @@ export function ShopItemCard({
             "px-4 sm:px-6 py-5",
             // Full-row widgets (deals, bundles, VIP month...) share one height
             "min-h-[250px]",
-            !isPurchased && canAfford && !hasGradient && "liquid-glass"
+            !isPurchased && purchasable && !hasGradient && "liquid-glass"
           )}
           style={{
             background: isPurchased
               ? "linear-gradient(180deg, hsl(150 70% 92%) 0%, hsl(145 65% 85%) 100%)"
-              : !canAfford
+              : !purchasable
               ? "hsl(var(--muted))"
               : hasGradient
               ? gradient
               : undefined,
             boxShadow: isPurchased
               ? "0 4px 0 hsl(145 60% 70%)"
-              : !canAfford
+              : !purchasable
               ? "0 3px 0 hsl(var(--border))"
               : hasGradient
               ? "0 3.6px 0 0 rgba(0,0,0,0.22), inset 0 1.8px 0 0 rgba(255,255,255,0.35)"
@@ -192,19 +221,19 @@ export function ShopItemCard({
           "w-full rounded-[24px] transition-all relative overflow-hidden flex flex-col items-center text-center",
           "px-2.5 sm:px-3 p-3",
           "h-[210px] sm:h-[222px]",
-          !isPurchased && canAfford && !hasGradient && "liquid-glass"
+          !isPurchased && purchasable && !hasGradient && "liquid-glass"
         )}
         style={{
           background: isPurchased
             ? "linear-gradient(180deg, hsl(150 70% 92%) 0%, hsl(145 65% 85%) 100%)"
-            : !canAfford
+            : !purchasable
             ? "hsl(var(--muted))"
             : hasGradient
             ? gradient
             : undefined,
           boxShadow: isPurchased
             ? "0 4px 0 hsl(145 60% 70%)"
-            : !canAfford
+            : !purchasable
             ? "0 3px 0 hsl(var(--border))"
             : hasGradient
             ? "0 3.6px 0 0 rgba(0,0,0,0.22), inset 0 1.8px 0 0 rgba(255,255,255,0.35)"

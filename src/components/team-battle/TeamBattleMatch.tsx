@@ -929,7 +929,7 @@ function PhaseSuperVote() {
           <div className="text-center">
             <h1
               className="text-3xl font-black text-white"
-              style={{ fontFamily: "'TASolivare', sans-serif", textShadow: "0 2px 10px rgba(0,0,0,0.3)" }}
+              style={{ fontFamily: "'Google Sans', sans-serif", textShadow: "0 2px 10px rgba(0,0,0,0.3)" }}
             >
               {t("teamBattle.superVoteTitle")}
             </h1>
@@ -1026,7 +1026,7 @@ function PhaseSuperRound() {
           <div className="flex flex-col items-center gap-1">
             <h1
               className="text-xl font-black text-white"
-              style={{ fontFamily: "'TASolivare', sans-serif" }}
+              style={{ fontFamily: "'Google Sans', sans-serif" }}
             >
               {t("teamBattle.superRoundTitle")}
             </h1>
@@ -1222,7 +1222,7 @@ function PhaseDone({ onDismiss }: { onDismiss?: () => void }) {
           initial={{ scale: 0.7, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           className="text-5xl font-black text-white text-center"
-          style={{ fontFamily: "'TASolivare', sans-serif", textShadow: "0 2px 10px rgba(0,0,0,0.4)" }}
+          style={{ fontFamily: "'Google Sans', sans-serif", textShadow: "0 2px 10px rgba(0,0,0,0.4)" }}
         >
           {won ? t("teamBattle.youWon") : t("teamBattle.youLost")}
         </motion.h1>

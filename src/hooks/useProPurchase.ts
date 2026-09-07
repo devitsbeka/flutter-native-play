@@ -7,6 +7,7 @@ import { Capacitor } from "@capacitor/core";
 import { useInAppPurchases, IAP_PRODUCTS } from "@/hooks/useInAppPurchases";
 import { rememberCheckoutLaunch } from "@/utils/checkoutReturn";
 import { readAppLanguage } from "@/utils/appLanguage";
+import { NATIVE_BUILD } from "@/config/buildTarget";
 
 export type ProTierId = "pro" | "pro_plus";
 
@@ -75,7 +76,15 @@ export function useProPurchase() {
       return result;
     }
 
-    // Web platform - use Stripe
+    // Web platform - use Stripe.
+    //
+    // NATIVE_BUILD is a compile-time constant, so this whole branch is dropped
+    // from the iOS bundle rather than merely skipped at runtime — see
+    // src/config/buildTarget.ts for why absent beats unreachable here.
+    if (NATIVE_BUILD) {
+      return { success: false, error: "WEB_CHECKOUT_NOT_IN_NATIVE_BUILD" };
+    }
+
     setIsProcessing(true);
 
     try {

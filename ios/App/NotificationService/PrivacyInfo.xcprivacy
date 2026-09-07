@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Privacy manifest for the notification service extension.
+
+  An app extension is a separate bundle with its own executable, and Apple
+  reads a manifest per bundle. The app's own PrivacyInfo.xcprivacy at
+  ios/App/App/ does not cover this target, so without this file the extension
+  is simply undeclared in the aggregated privacy report.
+
+  Everything below is empty on purpose, and each entry is a claim about code
+  that can be checked against NotificationService.swift:
+
+  - NSPrivacyTracking = false. The extension talks to mytrivia.io (the push
+    icon) and to whatever https URL the payload names as the sender avatar.
+    Neither is an ad network and nothing is joined with data from other
+    companies. The app target keeps NSPrivacyTracking = true because AdMob
+    runs there; this bundle contains no ad SDK at all.
+
+  - NSPrivacyTrackingDomains empty. Adding a domain here makes iOS block it
+    until ATT is authorised — which would break icon downloads for every
+    player who declined tracking, for no reason.
+
+  - NSPrivacyCollectedDataTypes empty. Nothing is collected: the extension
+    reads the push it was handed, downloads two images, and hands the
+    notification back. The INInteraction donation stays on device.
+
+  - NSPrivacyAccessedAPITypes empty. It links no third-party frameworks
+    (its Frameworks build phase is empty) and touches no required-reason
+    API. FileManager.temporaryDirectory / moveItem / removeItem are not on
+    the list; the file-timestamp APIs are, and none is called here.
+
+  If this extension ever gains an SDK or starts reading file timestamps,
+  this file has to grow with it or the upload is rejected.
+-->
+<plist version="1.0">
+<dict>
+	<key>NSPrivacyTracking</key>
+	<false/>
+
+	<key>NSPrivacyTrackingDomains</key>
+	<array/>
+
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array/>
+
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array/>
+</dict>
+</plist>

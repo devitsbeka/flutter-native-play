@@ -1,6 +1,8 @@
 import { motion } from "framer-motion";
 import { GameModal } from "@/components/ui/game-modal";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useStorePrice } from "@/hooks/useStorePrice";
+import { GEM_PACK_PRODUCTS } from "@/config/gemPacks";
 import iconGem from "@/assets/icons/icon-gem.png";
 import iconCoin from "@/assets/icons/icon-coin.png";
 import fiftyFiftyIcon from "@/assets/powers/5050.png";
@@ -198,6 +200,22 @@ function ItemContentsDisplay({ item, t }: { item: { id: string; description: str
   );
 }
 
+/**
+ * The expanded view of a shop item.
+ *
+ * **Reachable only from the admin design gallery** (`src/pages/admin/Design.tsx`,
+ * the sole importer), which `VITE_INCLUDE_ADMIN=false` tree-shakes out of the
+ * iOS build — see the `build:ios` script. The shop itself buys straight from
+ * ShopItemCard.
+ *
+ * It is still priced through the real resolver rather than left as a preview
+ * that lies. It used to render `${t('shop.buy')} ${item.price}` — the raw USD
+ * float out of the catalog, with no currency on it and StoreKit never asked —
+ * beside a COIN icon on a real-money item. Nobody could reach it, but it is
+ * the shape of the 2.3.1 finding that has already been fixed twice elsewhere
+ * in this shop, and a dev screen quoting a price the store does not charge is
+ * how it comes back.
+ */
 export function ShopItemDetailModal({
   isOpen,
   onClose,
@@ -208,9 +226,19 @@ export function ShopItemDetailModal({
   onBuy,
 }: ShopItemDetailModalProps) {
   const { t } = useLanguage();
+  // Hooks run before the early return — `item` is read inside the resolver
+  // call below, not here, so the call is unconditional either way.
+  const storePrice = useStorePrice();
   if (!item) return null;
 
-  const currencyIcon = item.currency === "gems" ? iconGem : iconCoin;
+  const isLari = item.currency === "lari";
+  // Real money is not paid in gems or coins, so it gets no soft-currency icon.
+  const currencyIcon = isLari ? null : item.currency === "gems" ? iconGem : iconCoin;
+  // StoreKit's own localized string on a device, the pricing table on the web,
+  // and "—" with `sellable` false while the store is silent.
+  const lariPrice = isLari ? storePrice(GEM_PACK_PRODUCTS[item.id] ?? item.id, item.price) : null;
+  const storeUnavailable = !!lariPrice && !lariPrice.sellable;
+  const priceLabel = lariPrice ? lariPrice.display : String(item.price);
 
   return (
     <GameModal
@@ -255,15 +283,24 @@ export function ShopItemDetailModal({
           ) : (
             <button
               onClick={onBuy}
-              disabled={!canAfford || isLoading}
+              // Nothing may be bought at a price the store has not given —
+              // the same rule ShopItemCard and the paywalls' `storeReady`
+              // guard apply.
+              disabled={!canAfford || isLoading || storeUnavailable}
               className="flex items-center gap-2 px-8 py-3 rounded-2xl font-bold text-white disabled:opacity-50 disabled:cursor-not-allowed transition-transform active:scale-95"
               style={{
                 background: "#00DDA3",
                 boxShadow: "0 4px 0 #00A87C, 0 6px 12px rgba(0,0,0,0.15)",
               }}
             >
-              <img src={currencyIcon} alt="" className="w-5 h-5" />
-              <span>{isLoading ? "..." : `${t('shop.buy')} ${item.price}`}</span>
+              {currencyIcon && <img src={currencyIcon} alt="" className="w-5 h-5" />}
+              <span>
+                {isLoading
+                  ? "..."
+                  : storeUnavailable
+                  ? t("extra.iapItemUnavailable")
+                  : `${t("shop.buy")} ${priceLabel}`}
+              </span>
             </button>
           )}
         </motion.div>

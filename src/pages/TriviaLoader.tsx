@@ -138,7 +138,7 @@ export default function TriviaLoader() {
               </motion.div>
               {/* Text inside bar */}
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <span className="text-sm font-bold tracking-wide" style={{ color: 'white', textShadow: '0 1px 3px rgba(0,0,0,0.5)', fontFamily: "'TASolivare', sans-serif" }}>
+                <span className="text-sm font-bold tracking-wide" style={{ color: 'white', textShadow: '0 1px 3px rgba(0,0,0,0.5)', fontFamily: "'Google Sans', sans-serif" }}>
                   {t("common.loading")} {progress}%
                 </span>
               </div>
