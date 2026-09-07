@@ -78,7 +78,12 @@ describe("every way the handoff can end without leaving gives the screen back", 
     // lands would leave no way off the screen at all.
     expect(page).toMatch(/const HANDOFF_MAX_MS = 10000;/);
     expect(page).toMatch(/\}, HANDOFF_MAX_MS\);/);
-    expect(page).toMatch(/return \(\) => clearTimeout\(t\);/);
+    expect(page).toMatch(/return \(\) => clearTimeout\(timer\);/);
+    // And it says why rather than just handing the screen back — a silent
+    // give-up is the shape of every "I tapped it and nothing happened".
+    expect(page).toMatch(
+      /setHandingOff\(false\);[\s\S]*?toast\(\{\s*\n\s*title: t\("common\.error"\)/,
+    );
   });
 });
 

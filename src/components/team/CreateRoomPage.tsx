@@ -580,11 +580,23 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
    */
   useEffect(() => {
     if (!handingOff) return;
-    const t = setTimeout(() => {
+    // Named `timer`, not `t`: `t` is the translator, and the toast below
+    // needs it.
+    const timer = setTimeout(() => {
       autoStart.current = false;
       setHandingOff(false);
+      // And SAY so. Giving the screen back without a word is the shape of
+      // every "I tapped it and nothing happened" report: the player cannot
+      // tell a game that refused to start from one that was never asked
+      // for. Whatever swallowed the start, this is the last thing that
+      // knows it did not happen.
+      toast({
+        title: t("common.error"),
+        description: t("extra.mpRoomCreateFailed"),
+        variant: "destructive",
+      });
     }, HANDOFF_MAX_MS);
-    return () => clearTimeout(t);
+    return () => clearTimeout(timer);
   }, [handingOff]);
 
   const startMode = (key: GameChoice) => {
@@ -1040,6 +1052,22 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     });
   };
 
+  /**
+   * Did the round actually begin?
+   *
+   * `startGame` returns void and gives up quietly on a stale room, a
+   * missing session, a host mismatch or an empty question pool, so the only
+   * honest answer comes from the row itself.
+   */
+  const roomIsPlaying = async (roomId: string): Promise<boolean> => {
+    const { data } = await supabase
+      .from("game_rooms")
+      .select("status")
+      .eq("id", roomId)
+      .maybeSingle();
+    return data?.status === "playing";
+  };
+
   const handleCreate = async () => {
     if (!user) return;
     if (isCreating) return;
@@ -1279,6 +1307,22 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         const guessSolo = invitees.length === 0 && selectedFriends.size === 0;
         if (gameChoice === "guess" && room && guessSolo) {
           await startGame(false, room);
+          // startGame returns void and bails silently on half a dozen
+          // conditions, so "it was called" is not "it started". Read the
+          // room back: if it is not playing, try once more, and if it still
+          // is not, say so rather than walking into a lobby. Guess is a
+          // one-player game (owner) — a lobby is never the answer for it.
+          if (!(await roomIsPlaying(room.id))) {
+            await startGame(false, room);
+            if (!(await roomIsPlaying(room.id))) {
+              toast({
+                title: t("common.error"),
+                description: t("extra.mpRoomCreateFailed"),
+                variant: "destructive",
+              });
+              walkInCode = null;
+            }
+          }
         }
       }
       
@@ -1414,10 +1458,15 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   const pickGuessCategory = (cat: Category) => {
     setSelectedCategory(cat);
     setSelectionMode("library");
-    // Owner's ask: a picture game is 2-10 players, so the pick opens the
-    // pre-lobby — invite friends, or press Start and play it alone — rather
-    // than arming a one-seat round that started on its own.
-    setPreLobby("guess");
+    // The tap IS the start. A picture game had been opening a pre-lobby, on
+    // the reading that it was a 2-10 room like any other; it is a
+    // ONE-player game (owner: "it is a solo game... when I choose what to
+    // guess, start the game instantly, no lobby needed"), and a lobby for
+    // one person is a screen asking you to wait for nobody. So the pick
+    // arms Create exactly as every other card's tap does, and performCreate
+    // starts the round before the screen changes.
+    autoStart.current = true;
+    setHandingOff(true);
   };
 
   const pickedDetail = (
@@ -1705,11 +1754,18 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   // said why.
   useEffect(() => {
     if (!autoStart.current) return;
+    // Auth first, and STAY ARMED until it arrives. handleCreate's own first
+    // line is `if (!user) return`, so a tap that landed before the session
+    // finished restoring spent the arming on a call that did nothing and
+    // left the player on this screen for ever — the Quick Game card doing
+    // nothing at all, on a cold load and never on a warm one, which is why
+    // it kept coming back after each "fix".
+    if (!user) return;
     if (!createEnabled || isCreating) return;
     autoStart.current = false;
     void handleCreate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameChoice, createEnabled, isCreating, selectedCategory]);
+  }, [gameChoice, createEnabled, isCreating, selectedCategory, user]);
 
   return (
     <motion.div
@@ -1868,7 +1924,9 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                 // their order behind them.
                 { key: "quick", art: featuredQuick, artTop: -1.71, descW: 273, players: "1", title: t("extra.modeQuickTitle"), desc: t("extra.modeQuickDesc") },
                 { key: "library", art: featuredLibrary, artTop: -2.86, descW: 273, players: "2-10", title: t("extra.modeLibraryTitle"), desc: t("extra.libraryDesc") },
-                { key: "guess", art: featuredGuess, artTop: 0.05, descW: 273, players: "2-10", title: t("extra.modeGuessTitle"), desc: t("extra.modeGuessDesc") },
+                // One player: a picture game is played alone, and starts the moment
+                // one is picked rather than opening a lobby (owner).
+                { key: "guess", art: featuredGuess, artTop: 0.05, descW: 273, players: "1", title: t("extra.modeGuessTitle"), desc: t("extra.modeGuessDesc") },
                 // The King and Battle posters are developer-only until the
                 // modes are promoted — see DEVELOPER_ONLY_GAME_TYPES.
                 ...(developerMode
