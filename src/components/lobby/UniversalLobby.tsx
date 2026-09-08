@@ -112,8 +112,6 @@ export interface UniversalLobbyProps {
   /** The tapped card's render — becomes the blurred scene behind the title. */
   sceneArt: string;
   roomName: string;
-  /** What kind of room this is, said small beside the emblem. See RoomTitle. */
-  roomKicker?: string;
   /**
    * The face of the room, beside its name.
    *
@@ -327,7 +325,6 @@ function isGrouped(players: LobbyPlayer[] | LobbyPlayerGroup[]): players is Lobb
 export function UniversalLobby({
   sceneArt,
   roomName,
-  roomKicker,
   icon,
   onRename,
   onBack,
@@ -688,10 +685,10 @@ export function UniversalLobby({
                 onClick={onRename}
                 className="flex w-full flex-col items-center"
               >
-                <RoomTitle name={roomName} icon={icon} kicker={roomKicker} editable />
+                <RoomTitle name={roomName} icon={icon} editable />
               </motion.button>
             ) : (
-              <RoomTitle name={roomName} icon={icon} kicker={roomKicker} />
+              <RoomTitle name={roomName} icon={icon} />
             )}
             {/* How full the room is, right under its name.
                 It used to sit at the foot of the players tab, below every
@@ -1268,22 +1265,10 @@ export function RoomTitle({
   name,
   icon,
   editable = false,
-  kicker,
 }: {
   name: string;
   icon?: string | null;
   editable?: boolean;
-  /**
-   * What KIND of room this is, said small beside the emblem — so the heading
-   * below is free to carry what this room is CALLED.
-   *
-   * A MyTrivia Party room is stored under the brand as its name, so the
-   * heading read "My Trivia Party" and nothing on the screen named the host's
-   * own room (owner: "my trivia party goes up next to the icon in category
-   * container and below goes either untitled or name host will provide for
-   * room"). Ordinary rooms pass nothing and are unchanged.
-   */
-  kicker?: string;
 }) {
   // Stacked and centred (Figma 1059:532): the emblem at 91px, the name
   // under it at 43.656 on 51.36.
@@ -1351,14 +1336,11 @@ export function RoomTitle({
   );
   return (
     <>
-      <span className="mb-[15px] flex items-center justify-center gap-3">
-        {emblem}
-        {kicker && (
-          <span className="font-[Nunito] text-[15px] font-bold leading-[20px] tracking-[-0.15px] text-[#402666]/70">
-            {kicker}
-          </span>
-        )}
-      </span>
+      {/* Emblem, then the name under it — nothing beside it. The kind of
+          room this is belongs on the category chip at the top, which is
+          where the player looks to see what the room plays; a caption here
+          only pushed the emblem off centre (owner's ask). */}
+      <span className="mb-[15px] block">{emblem}</span>
       {heading}
     </>
   );
