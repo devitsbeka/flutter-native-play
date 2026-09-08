@@ -57,3 +57,12 @@ ios/App/App/GoogleService-Info.plist
 # and full symbol bundles have no business in it. `ios/.gitignore` only
 # covers `ios/App/build`, which does not match this one.
 build/
+
+# Throwaway Node harnesses written by QA/stress-testing agent runs (direct
+# Supabase protocol scripts, not app code). Findings land in docs/, these
+# scripts do not need to survive as repo history.
+.qa-scratch/
+
+# Local state directory written by the Supabase CLI (`npx supabase --version`
+# and friends) — machine-local, not project source.
+supabase/.temp/
