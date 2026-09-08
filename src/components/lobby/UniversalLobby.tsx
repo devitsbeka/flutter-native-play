@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { ArrowLeft, Bell, BellRing, Check, Loader2, Pencil, Play, Plus, UserPlus, X } from "lucide-react";
+import { ArrowLeft, Bell, BellRing, Check, Loader2, Pencil, Plus, UserPlus, X } from "lucide-react";
 import SpotlightSearch from "@/components/search/SpotlightSearch";
 import { MyTriviaLiveLogo } from "@/components/shared/MyTriviaLiveLogo";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
@@ -610,37 +610,35 @@ export function UniversalLobby({
           className="relative z-40 mx-auto mt-[13px] w-full max-w-[700px] shrink-0 px-[28px] md:max-w-[520px]"
         >
           <div>
-            <div className="flex h-[63px] items-stretch gap-2">
-              <Ring on={!!category.glow} className="min-w-0 flex-1">
-                <Chip
-                  iconSlug={category.iconSlug}
-                  label={category.label}
-                  trailing={category.trailing}
-                  onPress={category.onPress}
-                />
-              </Ring>
-              {category.onAdd && (
-                <Ring on={!!category.glow && !categoryMenu?.open} className="shrink-0">
-                  {/* While the round list is open under the chip this button
-                      is the way to close it, and says so: an X, not a +
-                      (owner's ask). The list is closed first, then the
-                      picker can be opened from the list's own Add row. */}
-                  <motion.button
-                    type="button"
-                    whileTap={{ scale: 0.94 }}
-                    onClick={categoryMenu?.open ? categoryMenu.onClose : category.onAdd}
-                    aria-label={categoryMenu?.open ? "close" : "add category"}
-                    className="flex h-[63px] w-[63px] shrink-0 items-center justify-center rounded-bl-[24px] rounded-br-[54px] rounded-tl-[24px] rounded-tr-[24px] border-2 border-solid border-white bg-[#faebef] shadow-[0px_2px_8px_0px_rgba(51,51,51,0.06),0px_8px_0px_0px_#bf909b] transition-[transform,box-shadow] duration-100 active:translate-y-[4px] active:shadow-[0px_4px_0px_0px_#bf909b]"
-                  >
-                    {categoryMenu?.open ? (
-                      <X className="h-6 w-6 text-[#44246b]" strokeWidth={2.4} />
-                    ) : (
-                      <Plus className="h-6 w-6 text-[#44246b]" strokeWidth={2.4} />
-                    )}
-                  </motion.button>
-                </Ring>
-              )}
-            </div>
+            <Ring on={!!category.glow} className="min-w-0">
+              <Chip
+                iconSlug={category.iconSlug}
+                label={category.label}
+                trailing={category.trailing}
+                onPress={category.onPress}
+                action={
+                  category.onAdd && (
+                    // While the round list is open under the chip this button
+                    // is the way to close it, and says so: an X, not a +
+                    // (owner's ask). The list is closed first, then the
+                    // picker can be opened from the list's own Add row.
+                    <motion.button
+                      type="button"
+                      whileTap={{ scale: 0.9 }}
+                      onClick={categoryMenu?.open ? categoryMenu.onClose : category.onAdd}
+                      aria-label={categoryMenu?.open ? "close" : "add category"}
+                      className="mr-[20px] flex size-[40px] shrink-0 items-center justify-center rounded-[14px]"
+                    >
+                      {categoryMenu?.open ? (
+                        <X className="h-6 w-6 text-[#402666]" strokeWidth={2.6} />
+                      ) : (
+                        <Plus className="h-6 w-6 text-[#402666]" strokeWidth={2.6} />
+                      )}
+                    </motion.button>
+                  )
+                }
+              />
+            </Ring>
           </div>
 
           {/* The round list, dropped under the chip. */}
@@ -737,52 +735,27 @@ export function UniversalLobby({
             <div className="relative flex items-center gap-[6px] rounded-[28px] border border-[#ceb8e4] bg-[rgba(255,255,255,0.77)] p-[10px] shadow-[0px_8px_0px_0px_#d0bbe3]">
               {(["rules", "players"] as const).map((key) => {
                 const active = tab === key;
-                // The + rides the Players tab while it is open: the control
-                // that adds a person, on the tab that shows the people. It
-                // goes when the room is full, on the same condition that
-                // takes the Invite row below away.
-                const withInvite =
-                  key === "players"
-                  && active
-                  && !!onInvite
-                  && !(capacity && capacity.taken >= capacity.max);
                 return (
-                  <div key={key} className="relative flex-1">
-                    <button
-                      type="button"
-                      onClick={() => setTab(key)}
-                      className={cn(
-                        "relative flex h-[52px] w-full items-center justify-center rounded-[14px] px-[10px] text-center font-[Nunito] text-[16px] leading-[19.5px] tracking-[-0.16px] text-[#402666]",
-                        // The + is drawn over the pane's right end, so the
-                        // label centres in what is left of it — otherwise a
-                        // language with a longer word for "Players" slides
-                        // its last letters under the glyph.
-                        withInvite && "pr-[52px]",
-                        active ? "font-bold" : "font-medium",
-                      )}
-                    >
-                      {active && (
-                        <motion.span
-                          layoutId="lobby-tab-pill"
-                          transition={{ type: "spring", stiffness: 420, damping: 34 }}
-                          className="absolute inset-0 rounded-[14px] border border-[#d1a7dc] bg-[rgba(240,218,245,0.22)]"
-                        />
-                      )}
-                      <span className="relative truncate">
-                        {key === "rules" ? labels.rules : labels.players}
-                      </span>
-                    </button>
-                    {withInvite && (
-                      <button
-                        type="button"
-                        onClick={onInvite}
-                        aria-label={labels.invite}
-                        className="absolute right-[10px] top-1/2 flex size-[40px] -translate-y-1/2 items-center justify-center rounded-[10px] bg-white shadow-[0px_2px_4px_0px_rgba(102,51,153,0.12)] transition-transform duration-100 active:scale-95"
-                      >
-                        <Plus className="size-[22px] text-[#402666]" strokeWidth={3} />
-                      </button>
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setTab(key)}
+                    className={cn(
+                      "relative flex h-[52px] flex-1 items-center justify-center rounded-[14px] px-[10px] text-center font-display text-[18px] leading-[26px] text-[#402666]",
+                      active ? "font-bold" : "font-normal",
                     )}
-                  </div>
+                  >
+                    {active && (
+                      <motion.span
+                        layoutId="lobby-tab-pill"
+                        transition={{ type: "spring", stiffness: 420, damping: 34 }}
+                        className="absolute inset-0 rounded-[14px] border border-[#d1a7dc] bg-[rgba(240,218,245,0.22)]"
+                      />
+                    )}
+                    <span className="relative truncate">
+                      {key === "rules" ? labels.rules : labels.players}
+                    </span>
+                  </button>
                 );
               })}
             </div>
@@ -1047,12 +1020,8 @@ export function UniversalLobby({
         <div className="mx-auto w-full max-w-[700px] md:max-w-[520px]">
           {footerExtra}
           {start.disabled && captionBlock}
-          {/* 1123:9975: the slab is sunset now, not violet — a plum top
-              falling through pink and coral into orange, on a hard #663951
-              foot with the same white hairline inside its top edge. The
-              violet read as one more of the lilac panes it sits on; this is
-              the only warm thing on the screen, which is what an only button
-              should be. */}
+          {/* 1123:9998: the violet slab, 63 tall with a hard #6906cd foot
+              under it and a white hairline inside its top edge. */}
           {!start.captionOnly && (
           <motion.button
             type="button"
@@ -1060,23 +1029,15 @@ export function UniversalLobby({
             onClick={start.onPress}
             disabled={start.disabled}
             className={cn(
-              "relative flex h-[63px] w-full items-center justify-center overflow-hidden rounded-[18.39px] border-[1.5px] border-solid border-[#b54682] bg-[linear-gradient(175.73deg,#6c3271_11.562%,#ff5993_34.068%,rgba(255,118,98,0.65)_61.925%,#ff9120_126.14%)] shadow-[0px_4px_0px_0px_#663951,0px_8px_16px_0px_#b44582] transition-[transform,box-shadow,opacity] duration-100",
+              "relative flex h-[63px] w-full items-center justify-center overflow-hidden rounded-[28px] border-[1.5px] border-solid border-[#402666] bg-[linear-gradient(180deg,#a374e9_0%,#cf5eff_58%,#9f5dff_100%)] shadow-[0px_4px_0px_0px_#6906cd,0px_8px_16px_0px_rgba(102,51,153,0.3)] transition-[transform,box-shadow,opacity] duration-100",
               start.disabled
                 ? "opacity-50"
-                : "active:translate-y-[2px] active:shadow-[0px_2px_0px_0px_#663951,0px_8px_16px_0px_#b44582]",
+                : "active:translate-y-[2px] active:shadow-[0px_2px_0px_0px_#6906cd,0px_8px_16px_0px_rgba(102,51,153,0.3)]",
             )}
           >
             <span aria-hidden className="pointer-events-none absolute inset-0 rounded-[inherit] shadow-[inset_0px_2px_0px_0px_rgba(255,255,255,0.45)]" />
             <span className="relative flex h-full items-center justify-center gap-2 font-display text-[20px] font-medium leading-[26px] text-white [text-shadow:1px_2px_0px_rgba(0,0,0,0.25)]">
-              {/* The play triangle the design puts before the words. A caller
-                  with its own glyph — the host's Plus to pick a category, a
-                  guest's bell — keeps it: the arrow is what Start looks like,
-                  not what every button here looks like. */}
-              {start.loading ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
-              ) : (
-                start.icon ?? <Play className="h-5 w-5 fill-current" strokeWidth={0} />
-              )}
+              {start.loading ? <Loader2 className="h-5 w-5 animate-spin" /> : start.icon}
               {start.label}
             </span>
           </motion.button>
@@ -1419,6 +1380,7 @@ function Chip({
   label,
   trailing,
   onPress,
+  action,
 }: {
   /** The category's own icon, once one is picked. With nothing picked the
       mock shows the words alone rather than a placeholder for it. */
@@ -1427,53 +1389,68 @@ function Chip({
   /** A note pinned to the far right of the chip — "+5" extra rounds. */
   trailing?: string;
   onPress?: () => void;
+  /** The + that queues another round, drawn INSIDE the pill's right end. */
+  action?: ReactNode;
 }) {
-  const Tag = onPress ? motion.button : motion.div;
   return (
-    <Tag
-      type={onPress ? "button" : undefined}
-      whileTap={onPress ? { scale: 0.99 } : undefined}
-      onClick={onPress}
-      // 1113:8161: the cream slab with a hard rose foot, the asymmetric
-      // 24/24/54/24 corner the whole play flow is cut to, and the label set
-      // back 33px from its edge. It was a translucent rule-row box with a
-      // question-mark placeholder in it, which read as one more field on a
-      // card rather than as the thing to press first.
+    // 1123:8967: one pill, not two boxes. The + used to be a second 63px
+    // slab floating beside this one with its own border and its own foot,
+    // so the row read as two controls that happened to be adjacent rather
+    // than as one thing with an action on its end. The design draws a
+    // single 465-wide pill with the icon at its left, the name across it
+    // and the + inside its right edge — and in the lilac the rest of the
+    // screen is in, where the old rose was the only warm note up here.
+    //
+    // :active on an ancestor matches while a descendant is pressed, so the
+    // whole pill still takes its foot whichever half you touch.
+    <div
       className={cn(
-        "relative flex h-[63px] w-full min-w-0 flex-1 items-center gap-2 rounded-bl-[24px] rounded-br-[54px] rounded-tl-[24px] rounded-tr-[24px] border-2 border-solid border-white bg-[#faebef] pr-[16px] text-left shadow-[0px_2px_8px_0px_rgba(51,51,51,0.06),0px_8px_0px_0px_#bf909b]",
-        onPress && "transition-[transform,box-shadow] duration-100 active:translate-y-[4px] active:shadow-[0px_4px_0px_0px_#bf909b]",
-        // The picked category wears its own face; with nothing picked yet the
-        // mock shows the words alone, so the label takes the icon's place
-        // rather than standing beside a placeholder for it.
-        iconSlug ? "pl-[16px]" : "pl-[33px]",
+        "relative flex h-[63px] w-full min-w-0 flex-1 items-center rounded-bl-[24px] rounded-br-[54px] rounded-tl-[24px] rounded-tr-[24px] border-2 border-solid border-white bg-[#fcf7fd] shadow-[0px_2px_8px_0px_rgba(51,51,51,0.06),0px_8px_0px_0px_#bea5d4]",
+        onPress
+          && "transition-[transform,box-shadow] duration-100 active:translate-y-[4px] active:shadow-[0px_4px_0px_0px_#bea5d4]",
       )}
     >
-      {iconSlug && (
-        <span className="pointer-events-none shrink-0">
-          <DynamicIcon slug={iconSlug} size={32} />
-        </span>
-      )}
-      <span className="min-w-0 flex-1 truncate font-display text-[18px] font-bold leading-[26px] text-[#44246b]">
-        {label}
-      </span>
-      {/* The "+N" pops as it changes: keyed by its value, so a new count
-          mounts a new span that springs in — the eye is drawn to a round
-          being added. */}
-      <AnimatePresence mode="popLayout" initial={false}>
-        {trailing && (
-          <motion.span
-            key={trailing}
-            initial={{ opacity: 0, scale: 0.5, y: -8 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.6, y: 8 }}
-            transition={{ type: "spring", stiffness: 520, damping: 22 }}
-            className="ml-2 shrink-0 font-display text-[18px] font-bold leading-[26px] text-[#44246b]/60"
-          >
-            {trailing}
-          </motion.span>
+      <motion.button
+        type="button"
+        whileTap={onPress ? { scale: 0.99 } : undefined}
+        onClick={onPress}
+        disabled={!onPress}
+        className={cn(
+          "flex h-full min-w-0 flex-1 items-center gap-2 rounded-bl-[22px] rounded-tl-[22px] pr-[8px] text-left",
+          // The picked category wears its own face; with nothing picked yet
+          // the mock shows the words alone, so the label takes the icon's
+          // place rather than standing beside a placeholder for it.
+          iconSlug ? "pl-[13px]" : "pl-[31px]",
         )}
-      </AnimatePresence>
-    </Tag>
+      >
+        {iconSlug && (
+          <span className="pointer-events-none shrink-0">
+            <DynamicIcon slug={iconSlug} size={32} />
+          </span>
+        )}
+        <span className="min-w-0 flex-1 truncate font-display text-[16px] font-bold leading-[26px] text-[#402666]">
+          {label}
+        </span>
+        {/* The "+N" pops as it changes: keyed by its value, so a new count
+            mounts a new span that springs in — the eye is drawn to a round
+            being added. */}
+        <AnimatePresence mode="popLayout" initial={false}>
+          {trailing && (
+            <motion.span
+              key={trailing}
+              initial={{ opacity: 0, scale: 0.5, y: -8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.6, y: 8 }}
+              transition={{ type: "spring", stiffness: 520, damping: 22 }}
+              className="ml-2 shrink-0 font-display text-[16px] font-bold leading-[26px] text-[#402666]/60"
+            >
+              {trailing}
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </motion.button>
+      {action}
+    </div>
   );
 }
 

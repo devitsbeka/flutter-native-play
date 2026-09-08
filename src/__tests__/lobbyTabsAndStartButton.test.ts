@@ -1,25 +1,26 @@
 /**
- * The lobby's two tabs and its one button, redrawn to Figma 1123:9994.
+ * The lobby's chrome, redrawn to Figma 1123:8843.
  *
- * Every lobby in the app — a room, the arena, the King's couch, the room
- * being created — is the same UniversalLobby, so both of these are one
- * change in one file rather than four that can drift apart.
+ * Every lobby in the app is the same UniversalLobby — a room, the arena,
+ * the King's couch, the room being created — so this is one change in one
+ * file rather than four that can drift apart.
  *
  * What the design moved:
  *
+ *  - The category row was TWO boxes: a wide pill and, floating beside it,
+ *    a second 63px slab holding the +, with its own border and its own
+ *    foot. The row read as two controls that happened to be adjacent. The
+ *    design draws ONE pill with the icon at its left, the name across it
+ *    and the + inside its right end — in the lilac the rest of the screen
+ *    is in, where the old rose was the only warm note up there.
+ *
  *  - The tab bar was a hairline box with the open tab filled solid #402666
- *    and its label knocked out white. The closed tab therefore read as text
- *    switched OFF rather than as somewhere to go. It is a white bar on a
+ *    and its label knocked out white, so the CLOSED tab read as text
+ *    switched off rather than as somewhere to go. It is a white bar on a
  *    chunky lilac foot now, the open tab a bordered pane inside it, and
  *    both labels the same colour — weight is what says which one is open.
  *
- *  - The Players tab carries a + while it is the open one: the control that
- *    adds a person, on the tab that shows the people.
- *
- *  - Start was violet, which is the colour of the panes it sits on. It is a
- *    sunset now — plum through pink and coral into orange — and the only
- *    warm thing on the screen, with the play triangle the design puts before
- *    the words.
+ * The Start button is deliberately unchanged: the design keeps it violet.
  */
 
 import { describe, expect, it } from "vitest";
@@ -27,6 +28,44 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const lobby = readFileSync(join(process.cwd(), "src/components/lobby/UniversalLobby.tsx"), "utf8");
+
+describe("the category chip", () => {
+  it("is one pill, in the design's lilac on a lilac foot", () => {
+    expect(lobby).toMatch(
+      /border-2 border-solid border-white bg-\[#fcf7fd\] shadow-\[0px_2px_8px_0px_rgba\(51,51,51,0\.06\),0px_8px_0px_0px_#bea5d4\]/,
+    );
+    // The rose slab and its rose foot are what this replaced.
+    expect(lobby).not.toMatch(/bg-\[#faebef\]/);
+    expect(lobby).not.toMatch(/#bf909b/);
+  });
+
+  it("keeps the asymmetric corner the whole play flow is cut to", () => {
+    expect(lobby).toMatch(
+      /rounded-bl-\[24px\] rounded-br-\[54px\] rounded-tl-\[24px\] rounded-tr-\[24px\]/,
+    );
+  });
+
+  it("carries the + inside itself rather than beside itself", () => {
+    // One pill: the + is handed to the Chip, not drawn as a sibling box.
+    expect(lobby).toMatch(/action=\{\s*\n\s*category\.onAdd && \(/);
+    expect(lobby).toMatch(/action\?: ReactNode;/);
+    expect(lobby).toMatch(/\{action\}/);
+    // The + no longer has a slab of its own to stand on.
+    expect(lobby).not.toMatch(/flex h-\[63px\] w-\[63px\] shrink-0 items-center justify-center rounded-bl/);
+  });
+
+  it("presses as one, whichever half is touched", () => {
+    // :active matches on an ancestor while a descendant is pressed, so the
+    // foot is taken by the pill and not by the half that was tapped.
+    expect(lobby).toMatch(
+      /active:translate-y-\[4px\] active:shadow-\[0px_4px_0px_0px_#bea5d4\]/,
+    );
+  });
+
+  it("and the + still closes the round list it opened", () => {
+    expect(lobby).toMatch(/onClick=\{categoryMenu\?\.open \? categoryMenu\.onClose : category\.onAdd\}/);
+  });
+});
 
 describe("the tab bar", () => {
   it("is a white bar standing on a chunky lilac foot", () => {
@@ -39,13 +78,21 @@ describe("the tab bar", () => {
     expect(lobby).toMatch(
       /rounded-\[14px\] border border-\[#d1a7dc\] bg-\[rgba\(240,218,245,0\.22\)\]/,
     );
-    // The knocked-out white label on solid violet is what this replaced.
     expect(lobby).not.toMatch(/bg-\[#402666\] shadow-\[inset_0px_2px_4px/);
     expect(lobby).not.toMatch(/active \? "text-white" : "text-\[#402666\]"/);
   });
 
   it("says which tab is open with weight, both labels the same colour", () => {
-    expect(lobby).toMatch(/active \? "font-bold" : "font-medium"/);
+    expect(lobby).toMatch(/active \? "font-bold" : "font-normal"/);
+  });
+
+  it("sets the labels in the design's 18px display face", () => {
+    expect(lobby).toMatch(/font-display text-\[18px\] leading-\[26px\] text-\[#402666\]/);
+  });
+
+  it("carries no + of its own — the design puts that on the category pill", () => {
+    expect(lobby).not.toMatch(/const withInvite =/);
+    expect(lobby).not.toMatch(/aria-label=\{labels\.invite\}/);
   });
 
   it("keeps the pill's own animation across the move", () => {
@@ -53,57 +100,22 @@ describe("the tab bar", () => {
   });
 });
 
-describe("the + on the Players tab", () => {
-  it("rides the Players tab only while it is the open one", () => {
+describe("the Start button stays violet", () => {
+  it("wears the gradient and the foot the design keeps for it", () => {
     expect(lobby).toMatch(
-      /const withInvite =\s*\n\s*key === "players"\s*\n\s*&& active\s*\n\s*&& !!onInvite/,
+      /bg-\[linear-gradient\(180deg,#a374e9_0%,#cf5eff_58%,#9f5dff_100%\)\]/,
     );
+    expect(lobby).toMatch(/shadow-\[0px_4px_0px_0px_#6906cd,0px_8px_16px_0px_rgba\(102,51,153,0\.3\)\]/);
+    expect(lobby).toMatch(/rounded-\[28px\] border-\[1\.5px\] border-solid border-\[#402666\]/);
+    // The sunset was drawn from a variant the design has since replaced.
+    expect(lobby).not.toMatch(/#b54682|#663951|175\.73deg/);
   });
 
-  it("goes when the room is full, on the same test the Invite row uses", () => {
-    // Twice in the negative: once for this +, once for the Invite row
-    // inside the tab. (The positive form is a third thing — the "room is
-    // full" line that stands where the row would have been.)
-    expect(
-      (lobby.match(/!\(capacity && capacity\.taken >= capacity\.max\)/g) ?? []).length,
-    ).toBe(2);
-  });
-
-  it("leaves the label room, so a longer word cannot slide under the glyph", () => {
-    expect(lobby).toMatch(/withInvite && "pr-\[52px\]"/);
-    expect(lobby).toMatch(/absolute right-\[10px\] top-1\/2 flex size-\[40px\]/);
-  });
-
-  it("opens the same invite sheet the row below it does", () => {
-    expect(lobby).toMatch(/onClick=\{onInvite\}\s*\n\s*aria-label=\{labels\.invite\}/);
-  });
-});
-
-describe("the Start button", () => {
-  it("is the sunset, not the violet it shared with every pane behind it", () => {
+  it("shows only the glyph its caller brought, and no arrow of its own", () => {
     expect(lobby).toMatch(
-      /bg-\[linear-gradient\(175\.73deg,#6c3271_11\.562%,#ff5993_34\.068%,rgba\(255,118,98,0\.65\)_61\.925%,#ff9120_126\.14%\)\]/,
+      /\{start\.loading \? <Loader2 className="h-5 w-5 animate-spin" \/> : start\.icon\}/,
     );
-    expect(lobby).toMatch(/border-\[#b54682\]/);
-    expect(lobby).toMatch(/rounded-\[18\.39px\]/);
-    expect(lobby).not.toMatch(/#cf5eff|#a374e9|#6906cd/);
-  });
-
-  it("stands on its own foot and presses onto it", () => {
-    expect(lobby).toMatch(/shadow-\[0px_4px_0px_0px_#663951,0px_8px_16px_0px_#b44582\]/);
-    expect(lobby).toMatch(
-      /active:translate-y-\[2px\] active:shadow-\[0px_2px_0px_0px_#663951,0px_8px_16px_0px_#b44582\]/,
-    );
-    // The white hairline inside the top edge survives the recolour.
-    expect(lobby).toMatch(/shadow-\[inset_0px_2px_0px_0px_rgba\(255,255,255,0\.45\)\]/);
-  });
-
-  it("takes the play triangle only when the caller brought no glyph of its own", () => {
-    // A host picking a category brings a Plus, a guest pinging brings a
-    // bell; neither should be overwritten by an arrow that means Start.
-    expect(lobby).toMatch(
-      /start\.icon \?\? <Play className="h-5 w-5 fill-current" strokeWidth=\{0\} \/>/,
-    );
+    expect(lobby).not.toMatch(/<Play /);
   });
 });
 

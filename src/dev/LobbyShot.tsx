@@ -159,7 +159,10 @@ export default function LobbyShot() {
       onRename={noop}
       onBack={noop}
       unreadCount={2}
-      category={{ label: t("lobby.uSelectCategory"), onPress: noop }}
+      // onAdd so the chip renders the + the design draws inside it: a host's
+      // lobby always has one, and without it this page drew a pill the real
+      // screen never shows.
+      category={{ label: t("lobby.uSelectCategory"), onPress: noop, onAdd: noop }}
       tv={{ label: t("lobby.uPlayOnTv"), onPress: noop }}
       labels={labels}
       rules={[
