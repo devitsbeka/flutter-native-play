@@ -112,6 +112,8 @@ export interface UniversalLobbyProps {
   /** The tapped card's render — becomes the blurred scene behind the title. */
   sceneArt: string;
   roomName: string;
+  /** What kind of room this is, said small beside the emblem. See RoomTitle. */
+  roomKicker?: string;
   /**
    * The face of the room, beside its name.
    *
@@ -325,6 +327,7 @@ function isGrouped(players: LobbyPlayer[] | LobbyPlayerGroup[]): players is Lobb
 export function UniversalLobby({
   sceneArt,
   roomName,
+  roomKicker,
   icon,
   onRename,
   onBack,
@@ -685,10 +688,10 @@ export function UniversalLobby({
                 onClick={onRename}
                 className="flex w-full flex-col items-center"
               >
-                <RoomTitle name={roomName} icon={icon} editable />
+                <RoomTitle name={roomName} icon={icon} kicker={roomKicker} editable />
               </motion.button>
             ) : (
-              <RoomTitle name={roomName} icon={icon} />
+              <RoomTitle name={roomName} icon={icon} kicker={roomKicker} />
             )}
             {/* How full the room is, right under its name.
                 It used to sit at the foot of the players tab, below every
@@ -1265,10 +1268,22 @@ export function RoomTitle({
   name,
   icon,
   editable = false,
+  kicker,
 }: {
   name: string;
   icon?: string | null;
   editable?: boolean;
+  /**
+   * What KIND of room this is, said small beside the emblem — so the heading
+   * below is free to carry what this room is CALLED.
+   *
+   * A MyTrivia Party room is stored under the brand as its name, so the
+   * heading read "My Trivia Party" and nothing on the screen named the host's
+   * own room (owner: "my trivia party goes up next to the icon in category
+   * container and below goes either untitled or name host will provide for
+   * room"). Ordinary rooms pass nothing and are unchanged.
+   */
+  kicker?: string;
 }) {
   // Stacked and centred (Figma 1059:532): the emblem at 91px, the name
   // under it at 43.656 on 51.36.
@@ -1324,15 +1339,25 @@ export function RoomTitle({
       heading
     );
   }
+  const emblem = (
+    <span className="relative block size-[91px] shrink-0">
+      <img
+        alt=""
+        src={icon}
+        className="size-full object-contain drop-shadow-[0_4px_10px_rgba(88,50,160,0.22)]"
+      />
+      {editable && <span className="absolute left-[65px] top-[4px]">{chip}</span>}
+    </span>
+  );
   return (
     <>
-      <span className="relative mb-[15px] block size-[91px] shrink-0">
-        <img
-          alt=""
-          src={icon}
-          className="size-full object-contain drop-shadow-[0_4px_10px_rgba(88,50,160,0.22)]"
-        />
-        {editable && <span className="absolute left-[65px] top-[4px]">{chip}</span>}
+      <span className="mb-[15px] flex items-center justify-center gap-3">
+        {emblem}
+        {kicker && (
+          <span className="font-[Nunito] text-[15px] font-bold leading-[20px] tracking-[-0.15px] text-[#402666]/70">
+            {kicker}
+          </span>
+        )}
       </span>
       {heading}
     </>
