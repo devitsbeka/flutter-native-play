@@ -1,6 +1,6 @@
 # QA / stress-testing pass ahead of App Store resubmission — 2026-09-08
 
-Commissioned as an independent pre-launch QA pass: run the app's real functionality and multiplayer modes under actual concurrent load, re-verify App Store readiness against current code, and hand back actionable findings — not fix them yet. **Nothing in this pass has been fixed.** Every file below is written so the fix can be picked up and done in one sitting once you say to start.
+Commissioned as an independent pre-launch QA pass: run the app's real functionality and multiplayer modes under actual concurrent load, re-verify App Store readiness against current code, and hand back actionable findings. **Update 2026-09-08, later the same day: items 1-11 below are now fixed on this branch** (code + migrations + regression tests, all verified locally) — see `07-fixes-applied-2026-09-08.md` for exactly what changed and, importantly, **what still has to be deployed before any of it is actually live.** Items 12-14 remain open findings, not yet acted on.
 
 ## Methodology note (read this before the findings — it explains why there's no video/screenshot evidence)
 
@@ -12,31 +12,33 @@ All test traffic went against the **real, only** backend (there's no separate st
 
 ## Priority action list
 
-### Do now, independent of everything else below (live, actively exploitable, zero cost to fix)
+### Do now, independent of everything else below (live, actively exploitable, zero cost to fix) — ✅ FIXED, not yet deployed
 
-1. **[P0] Any room's data is world-readable, and a room can be griefed by a stranger with no account.** `game_rooms`/`room_participants` have had `SELECT USING (true)` policies since the very first migration, never narrowed even after later work built a "the room id is the secret" security model on top of them. Confirmed live: reading other people's real room/roster data with zero authentication, self-seating into a private room, rewriting its status, and forging a live Words game's state to another player. **Pure server-side RLS fix, no app rebuild needed** — ready-to-paste SQL is in `01-CRITICAL-room-data-exposure.md`.
-2. **[P0] `submit_tv_answer` will pay out any amount, to any player, on request.** No caller-identity check and no server-side recomputation of points. Confirmed live: crediting one player 999,000,000 points, and crediting a *different, real* player 5,000,000 points from an attacker's own session. Full detail and fix direction (bind the payout to a per-session token, recompute points server-side) in `06-tv-mode-findings.md`, Finding 2.
+1. **[P0] ✅ FIXED — Any room's data is world-readable, and a room can be griefed by a stranger with no account.** `game_rooms`/`room_participants` have had `SELECT USING (true)` policies since the very first migration, never narrowed even after later work built a "the room id is the secret" security model on top of them. Confirmed live: reading other people's real room/roster data with zero authentication, self-seating into a private room, rewriting its status, and forging a live Words game's state to another player. Fixed in `supabase/migrations/20261016100000_narrow_room_visibility.sql` — **still needs to be applied to the live database; this branch merging does not deploy it.** See `07-fixes-applied-2026-09-08.md`.
+2. **[P0] ✅ FIXED — `submit_tv_answer` will pay out any amount, to any player, on request.** No caller-identity check and no server-side recomputation of points. Confirmed live: crediting one player 999,000,000 points, and crediting a *different, real* player 5,000,000 points from an attacker's own session. Fixed in `supabase/migrations/20261016130000_tv_answer_bound_and_verified.sql`. Original detail in `06-tv-mode-findings.md`, Finding 2.
 
-### Fix before resubmission (functional, not just security)
+### Fix before resubmission (functional, not just security) — ✅ FIXED, not yet deployed
 
-3. **[P0] A guest cannot actually host a TV game — it fails silently and the session gets stuck forever.** This directly undermines `docs/OPERATIONS.md`'s own submission checklist item about a reviewer being able to test multiplayer without an account. `06-tv-mode-findings.md`, Finding 1.
-4. **[P1] Joining TV mode with a stale/expired code produces a real infinite-loading hang**, not a clean error — live-reproduced, not hypothetical. `06-tv-mode-findings.md`, Finding 3.
-5. **[P1] Classic-room capacity is a client-side check only** — concurrent joins (exactly what a shared invite link produces) oversold a 5-seat room to 7. `02-classic-rooms-findings.md`, Finding 3.
+3. **[P0] ✅ FIXED — A guest cannot actually host a TV game — it fails silently and the session gets stuck forever.** This directly undermined `docs/OPERATIONS.md`'s own submission checklist item about a reviewer being able to test multiplayer without an account. Fixed alongside #2, same migration + `src/contexts/TVGameContext.tsx`. `06-tv-mode-findings.md`, Finding 1.
+4. **[P1] ✅ FIXED — Joining TV mode with a stale/expired code produces a real infinite-loading hang**, not a clean error — live-reproduced, not hypothetical. `06-tv-mode-findings.md`, Finding 3.
+5. **[P1] ✅ FIXED — Classic-room capacity is a client-side check only** — concurrent joins (exactly what a shared invite link produces) oversold a 5-seat room to 7. Fixed in `supabase/migrations/20261016120000_classic_room_integrity.sql`, re-verified with genuine concurrent connections. `02-classic-rooms-findings.md`, Finding 3.
 
-### Worth fixing, lower urgency (game-integrity, not security or crashes)
+### Worth fixing, lower urgency (game-integrity, not security or crashes) — ✅ FIXED, not yet deployed
 
-6. **[P1] `increment_participant_score` (classic rooms) has no per-question cap** — a legitimate participant can call it directly and credit themselves points for questions they never answered. `02-classic-rooms-findings.md`, Finding 2.
-7. **[P2] A duplicate/retried answer submission in classic rooms double-pays** — the unique constraint that used to prevent this was narrowed for TV mode's benefit and never restored for classic rooms. `02-classic-rooms-findings.md`, Finding 1.
-8. **[P2] TV mode: a player who joins mid-question can stay excluded from scoring for the rest of the game** — the recovery path that's supposed to fix this is dead code under the current server-side round-advance design. `06-tv-mode-findings.md`, Finding 4.
-9. **[P2] Words: two friends finding the same word at the same instant permanently disagree on who gets credit** — no tiebreaker in the client-side merge. `03-words-mode-findings.md`.
-10. **[P2] TV mode's self-heal-a-missing-player-row feature cannot actually work for a real guest** — it hits a foreign-key constraint that only an authenticated user's id would satisfy. `06-tv-mode-findings.md`, Finding 2 (third bullet).
+6. **[P1] ✅ FIXED — `increment_participant_score` (classic rooms) has no per-question cap** — a legitimate participant can call it directly and credit themselves points for questions they never answered. `02-classic-rooms-findings.md`, Finding 2.
+7. **[P2] ✅ FIXED — A duplicate/retried answer submission in classic rooms double-pays** — the unique constraint that used to prevent this was narrowed for TV mode's benefit and never restored for classic rooms. `02-classic-rooms-findings.md`, Finding 1.
+8. **[P2] ✅ FIXED — TV mode: a player who joins mid-question can stay excluded from scoring for the rest of the game** — the recovery path that's supposed to fix this is dead code under the current server-side round-advance design. `06-tv-mode-findings.md`, Finding 4.
+9. **[P2] ✅ FIXED — Words: two friends finding the same word at the same instant permanently disagree on who gets credit** — no tiebreaker in the client-side merge. `03-words-mode-findings.md`.
+10. **[P2] ✅ FIXED — TV mode's self-heal-a-missing-player-row feature cannot actually work for a real guest** — it hit a foreign-key constraint that only an authenticated user's id would satisfy. Fixed alongside #2. `06-tv-mode-findings.md`, Finding 2 (third bullet).
 
 ### Housekeeping (no user-facing risk, but worth doing)
 
-11. **[P3] A real money-adjacent SQL test (`supabase/tests/15-room-pot.sql`) exists, passes, but was never wired into `pr-checks.yml`.** `05-baseline-test-suite.md`.
-12. **[P3] `npm run lint` has never been a CI gate** and currently has 515 pre-existing errors — decide whether to start enforcing it. `05-baseline-test-suite.md`.
-13. **[P3] TV mode has silently drifted from having a first-answer bonus**, unlike the other two scored modes — a product decision, not a bug. `06-tv-mode-findings.md`.
-14. **[P4] One live, revenue-relevant question this environment cannot settle:** whether the deployed checkout backend's trial/tier logic actually matches what's on `main` right now. Needs a human with Lovable/Stripe access, or the SQL checks already written in `docs/IOS_APP_REVIEW_AUDIT.md`'s F-3 section. `04-app-store-readiness-reaudit.md`.
+11. **[P3] ✅ FIXED — A real money-adjacent SQL test (`supabase/tests/15-room-pot.sql`) exists, passes, but was never wired into `pr-checks.yml`.** Now wired in, alongside the three new test files this pass added. `05-baseline-test-suite.md`.
+12. **[P3] Still open — `npm run lint` has never been a CI gate** and currently has 515 pre-existing errors — decide whether to start enforcing it. `05-baseline-test-suite.md`.
+13. **[P3] Still open — TV mode has silently drifted from having a first-answer bonus**, unlike the other two scored modes — a product decision, not a bug, deliberately not acted on in this pass. `06-tv-mode-findings.md`.
+14. **[P4] Still open — one live, revenue-relevant question this environment cannot settle:** whether the deployed checkout backend's trial/tier logic actually matches what's on `main` right now. Needs a human with Lovable/Stripe access, or the SQL checks already written in `docs/IOS_APP_REVIEW_AUDIT.md`'s F-3 section. `04-app-store-readiness-reaudit.md`.
+
+**Deployment status — read this before assuming anything above is actually live:** all eleven fixes are committed to this branch, verified locally (full SQL suite, typecheck, unit tests, build, e2e — see `07-fixes-applied-2026-09-08.md`), and **not yet deployed**. The three new migrations need Lovable to apply them to the real database; merging the client code to `main` alone does not do that. Full detail and recommended deploy order in `07-fixes-applied-2026-09-08.md`.
 
 ## What's already in good shape (confirmed by actually re-running everything, not by re-reading old docs)
 
@@ -57,6 +59,7 @@ All test traffic went against the **real, only** backend (there's no separate st
 | `04-app-store-readiness-reaudit.md` | Fresh re-verification of every item in the existing iOS review audit docs |
 | `05-baseline-test-suite.md` | Full run of typecheck/unit/SQL/build/e2e, mirroring CI exactly |
 | `06-tv-mode-findings.md` | TV/Kahoot-style mode: guest hosting, payout trust, join/expiry handling |
+| `07-fixes-applied-2026-09-08.md` | What was actually fixed for items 1-11, how it was verified, and the deploy steps still needed |
 
 ## What this pass did not cover
 

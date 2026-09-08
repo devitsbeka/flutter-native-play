@@ -236,18 +236,42 @@ const verifyQuestionsCommitted = async (
   return false;
 };
 
-// Atomic score increment via SECURITY DEFINER RPC. Absolute-value score writes
-// race across devices (e.g. observer bonus vs answer points landing together)
-// and can clobber each other; the RPC applies the delta server-side. Falls back
-// to false if the migration (20260724130000_mp_sync_rpcs.sql) isn't applied yet.
-const incrementParticipantScore = async (roomId: string, delta: number): Promise<boolean> => {
+// Atomic score increment for the OBSERVER BONUS path via SECURITY DEFINER
+// RPC. Absolute-value score writes race across devices (e.g. observer bonus
+// vs answer points landing together) and can clobber each other; the RPC
+// applies the delta server-side, and (20261016120000_classic_room_integrity)
+// only pays it to the room's own observing host. Falls back to false if the
+// migration isn't applied yet.
+const awardObserverBonusScore = async (roomId: string, delta: number): Promise<boolean> => {
   // Cast needed until Supabase types are regenerated after the migration is applied
+  const { error } = await (supabase.rpc as unknown as (
+    fn: string,
+    args: Record<string, unknown>
+  ) => Promise<{ error: { message: string } | null }>)("award_room_observer_bonus", {
+    p_room_id: roomId,
+    p_delta: delta,
+  });
+  if (error) {
+    console.error("[MP] award_room_observer_bonus RPC failed, falling back to absolute write:", error);
+    return false;
+  }
+  return true;
+};
+
+// Atomic, server-computed score award for an ANSWERED QUESTION via SECURITY
+// DEFINER RPC (20261016120000_classic_room_integrity.sql). The RPC looks up
+// the caller's own player_answers row for (room, question_index), computes
+// the award itself from the same formula as calculatePoints() in
+// src/utils/scoring.ts, and no-ops (not an error) if there's no matching
+// correct answer or it was already scored — so a retried call is silent.
+// Falls back to false if the migration isn't applied yet.
+const awardAnswerScore = async (roomId: string, questionIndex: number): Promise<boolean> => {
   const { error } = await (supabase.rpc as unknown as (
     fn: string,
     args: Record<string, unknown>
   ) => Promise<{ error: { message: string } | null }>)("increment_participant_score", {
     p_room_id: roomId,
-    p_delta: delta,
+    p_question_index: questionIndex,
   });
   if (error) {
     console.error("[MP] increment_participant_score RPC failed, falling back to absolute write:", error);
@@ -1545,25 +1569,29 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           return false;
         }
 
-        // New participant
-        const { count } = await supabase
-          .from("room_participants")
-          .select('id', { count: 'exact', head: true })
-          .eq("room_id", room.id);
-        
-        if (typeof count === 'number' && count >= room.max_players) {
-          toast.error(tStandalone("extra.mpRoomFull"));
+        // New participant. The count-then-insert used to happen here as two
+        // separate, unlocked round trips - concurrent joiners on a popular
+        // invite link could all read a seat count under max_players and all
+        // insert, overselling the room. join_classic_room
+        // (20261016120000_classic_room_integrity.sql) takes a row lock on
+        // the room before counting, so concurrent callers serialize through
+        // it one at a time and "room is full" is raised server-side.
+        const { error: joinError } = await (supabase.rpc as unknown as (
+          fn: string,
+          args: Record<string, unknown>
+        ) => Promise<{ error: { message: string } | null }>)("join_classic_room", {
+          p_room_id: room.id,
+          p_nickname: joiningProfile.nickname || "Player",
+          p_avatar_url: joiningProfile.avatar_url,
+          p_country_code: joiningProfile.country_code,
+        });
+
+        if (joinError) {
+          console.error("[MP] join_classic_room failed:", joinError);
+          const full = /full/i.test(joinError.message || "");
+          toast.error(tStandalone(full ? "extra.mpRoomFull" : "extra.mpJoinFailed"));
           return false;
         }
-        
-        await supabase.from("room_participants").insert({
-          room_id: room.id,
-          user_id: user.id,
-          nickname: joiningProfile.nickname || "Player",
-          avatar_url: joiningProfile.avatar_url,
-          country_code: joiningProfile.country_code,
-          is_host: false,
-        });
 
         expectedGameIdRef.current = null; // Joining fresh - not synced into any game
         setState(prev => ({ ...prev, phase: "lobby", currentRoom: room as GameRoom }));
@@ -2198,11 +2226,11 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     
     // Update participant score (round to prevent floating point accumulation)
     const newScore = Math.round(state.myScore + points);
-    // Atomic delta via RPC so concurrent writes (e.g. observer bonus) can't be
-    // clobbered by an absolute score; fall back to the absolute write if the
-    // migration isn't applied yet
+    // Server-computed award via RPC, keyed off the answer row just inserted
+    // above (not the client's own point total) — see awardAnswerScore. Falls
+    // back to the absolute write if the migration isn't applied yet.
     const scoreApplied = points > 0
-      ? await incrementParticipantScore(state.currentRoom.id, points)
+      ? await awardAnswerScore(state.currentRoom.id, state.currentQuestionIndex)
       : true;
     await supabase
       .from("room_participants")
@@ -3362,7 +3390,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     const newBonusTotal = state.observerBonusThisRound + bonusAmount;
 
     // Atomic delta via RPC (falls back to absolute write pre-migration)
-    const applied = await incrementParticipantScore(state.currentRoom.id, bonusAmount);
+    const applied = await awardObserverBonusScore(state.currentRoom.id, bonusAmount);
     if (!applied) {
       await supabase
         .from("room_participants")

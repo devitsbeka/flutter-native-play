@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useCallback, useEffect, use
 import { toast } from "@/lib/toast";
 import { t } from '@/utils/standaloneTranslation';
 import { supabase } from '@/integrations/supabase/client';
+import { callRpc } from '@/integrations/supabase/rpc';
 import { Json } from '@/integrations/supabase/types';
 import { tvLog, tvLogPhase, tvLogPlayer, tvLogError, tvLogPresence, tvLogTimer } from '@/utils/tvDebug';
 import { shouldApplyPhase } from '@/utils/tvPhaseOrder';
@@ -138,17 +139,36 @@ export const mapDbStatusToPhase = (status: string): TVPhase => {
 // For guests: generate UUID once and store in localStorage
 const getOrCreatePlayerId = (userId?: string): string => {
   if (userId) return userId;
-  
+
   const STORAGE_KEY = 'tv_guest_player_id';
   let guestId = localStorage.getItem(STORAGE_KEY);
-  
+
   if (!guestId) {
     guestId = crypto.randomUUID();
     localStorage.setItem(STORAGE_KEY, guestId);
     tvLog('Created new guest player ID', { id: guestId.slice(0, 8) });
   }
-  
+
   return guestId;
+};
+
+// A guest player_id (above) has nothing behind it but "the client says so" —
+// there is no auth.uid() to prove who is submitting an answer as that id.
+// This token is the proof instead: generated once per device, sent on every
+// submit_tv_answer call, and checked server-side against the value stored on
+// that player's tv_players row (trust-on-first-use — see
+// 20261016130000_tv_answer_bound_and_verified.sql). A signed-in caller does
+// not need this (auth.uid() already proves it), but sending it is harmless.
+const getOrCreateAnswerToken = (): string => {
+  const STORAGE_KEY = 'tv_guest_answer_token';
+  let token = localStorage.getItem(STORAGE_KEY);
+
+  if (!token) {
+    token = crypto.randomUUID();
+    localStorage.setItem(STORAGE_KEY, token);
+  }
+
+  return token;
 };
 
 // Helper to generate 4-digit TV code
@@ -2102,12 +2122,26 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         'round-intro', 'poll-suggest', 'poll-voting', 'poll-results', 'category-select'
       ];
 
+      // A session's code (and, via a bookmarked/shared link, its id) outlives
+      // the game itself — expires_at is set once at creation
+      // (createSession, +24h) and never advanced, so it is a genuine "this
+      // is stale" cutoff, not an active-session TTL a real game could ever
+      // hit. Without this filter a code that happens to collide with a
+      // long-dead, empty session (confirmed live: one over a month past
+      // expires_at, status 'playing', questions: []) joins that zombie
+      // instead of failing — and TVJoin.tsx's own handling of "status wants
+      // questions but there are none" is to treat it as a loading state and
+      // poll forever, so this was a real, reproducible infinite spinner, not
+      // a hypothetical.
+      const notExpired = new Date().toISOString();
+
       if (isSessionIdJoin) {
         const { data, error: byIdError } = await supabase
           .from('tv_sessions')
           .select('*')
           .eq('id', raw)
           .in('status', activeStatuses)
+          .gt('expires_at', notExpired)
           .maybeSingle();
         session = data;
         error = byIdError;
@@ -2118,6 +2152,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           .select('*')
           .eq('tv_pairing_code', upperCode)
           .in('status', activeStatuses)
+          .gt('expires_at', notExpired)
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle();
@@ -2160,37 +2195,79 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         tvLog('Created new player ID and session binding', { playerId: playerId.slice(0, 8) });
       }
       
+      const isTVDisplay = nickname === 'TV_DISPLAY';
+
+      // If nobody has claimed this session yet and this isn't the TV display
+      // itself, attempt to claim it — through tv_claim_session, not a bare
+      // UPDATE. The DB has revoked anon's UPDATE on tv_sessions since
+      // 20260728120000_block_anon_session_writes.sql (hosting requires an
+      // account), and the RPC is also what makes the claim atomic (a CAS on
+      // host_user_id IS NULL) rather than "last writer wins" if two devices
+      // read an unclaimed session at once.
+      //
+      // Previously this ran a raw update with no error check, so a guest
+      // (no auth.uid()) got silently refused by the DB while the client had
+      // already decided locally that they were host — isHostPlayer below
+      // used to be computed from the session snapshot from BEFORE this
+      // attempt, so it read `!session.host_user_id` (true) regardless of
+      // whether the write actually landed. The guest's screen then showed
+      // host controls for a session that, in the database, still had no
+      // host at all — permanently, since nothing ever retried the claim.
+      // Computing isHostPlayer from the actual outcome below, not from the
+      // pre-claim snapshot, is the fix: a failed claim leaves host_user_id
+      // genuinely null, so the very next signed-in joiner (which may be the
+      // same guest, after signing in) can still successfully become host.
+      let hostClaimReason: 'not_authenticated' | 'not_found' | 'already_claimed' | null = null;
+      if (!session.host_user_id && !isTVDisplay) {
+        const { data: claim, error: claimError } = await callRpc<{
+          claimed: boolean; session_id?: string; reason?: string;
+        }>('tv_claim_session', { p_pairing_code: session.tv_pairing_code });
+
+        if (!claimError && claim?.claimed) {
+          session.host_user_id = authUserId;
+          session.is_paired = true;
+          if (session.status === 'waiting') session.status = 'paired';
+          tvLog('Claimed host via tv_claim_session', { authUserId: authUserId?.slice(0, 8) });
+        } else {
+          hostClaimReason = (claim?.reason as typeof hostClaimReason) ?? 'not_found';
+          tvLog('Host claim failed', { reason: hostClaimReason, error: claimError?.message });
+          if (hostClaimReason === 'already_claimed') {
+            // Lost the race to another device — pick up the real host so
+            // isHostPlayer below reflects it instead of stale null.
+            const { data: fresh } = await supabase
+              .from('tv_sessions')
+              .select('host_user_id, is_paired, status')
+              .eq('id', session.id)
+              .maybeSingle();
+            if (fresh) {
+              session.host_user_id = fresh.host_user_id;
+              session.is_paired = fresh.is_paired;
+              session.status = fresh.status;
+            }
+          }
+          // not_authenticated / not_found: session.host_user_id stays null.
+          // Exposed on state below so the UI can tell "nobody has hosted
+          // this yet" apart from "you are host" instead of guessing from a
+          // plain boolean.
+        }
+      }
+
       // Check if this player is the host:
-      // 1. They're the first player (no host set yet), OR
+      // 1. They just claimed it above, OR
       // 2. Their player ID matches the stored host_user_id, OR
       // 3. Their auth user ID matches the stored host_user_id (for authenticated hosts)
-      const isHostPlayer = !session.host_user_id || 
-                           session.host_user_id === playerId || 
+      const isHostPlayer = (!hostClaimReason && !session.host_user_id && !isTVDisplay) ||
+                           session.host_user_id === playerId ||
                            (authUserId && session.host_user_id === authUserId);
-      const isTVDisplay = nickname === 'TV_DISPLAY';
-      
-      tvLog('Host check', { 
-        authUserId: authUserId?.slice(0, 8), 
-        playerId: playerId.slice(0, 8), 
+
+      tvLog('Host check', {
+        authUserId: authUserId?.slice(0, 8),
+        playerId: playerId.slice(0, 8),
         storedHostId: session.host_user_id?.slice(0, 8),
         isHostPlayer,
-        isTVDisplay
+        isTVDisplay,
+        hostClaimReason,
       });
-
-      // If first player (no host yet) and NOT a TV display, become host
-      // Use auth user ID if available, otherwise use player ID
-      if (!session.host_user_id && !isTVDisplay) {
-        const hostIdToStore = authUserId || playerId;
-        tvLog('Setting host_user_id', { hostIdToStore: hostIdToStore.slice(0, 8) });
-        await supabase
-          .from('tv_sessions')
-          .update({ 
-            host_user_id: hostIdToStore,
-            is_paired: true,
-            status: 'paired'  // Use 'paired' for DB (constraint-compatible)
-          })
-          .eq('id', session.id);
-      }
 
       // ENFORCE UNIQUE NICKNAMES: TV-mode identity is the normalized nickname
       // (podium spots, answer matching, and lobby dedupe all group by it), so
@@ -2283,6 +2360,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               avatar_url: avatarUrl || null,
               is_host: isHostPlayer,
               is_active: shouldBeActive, // Inactive if joining mid-game!
+              answer_token: getOrCreateAnswerToken(),
             });
 
           if (insertError) {
@@ -3704,6 +3782,11 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       p_is_correct: isCorrect,
       p_points: points,
       p_time_remaining: state.timeRemaining,
+      // Proves this device is who it claims to be for a guest player_id —
+      // the server recomputes is_correct/points itself and no longer trusts
+      // the two fields above for scoring; see
+      // 20261016130000_tv_answer_bound_and_verified.sql.
+      p_answer_token: getOrCreateAnswerToken(),
       // Identity, so the server can recreate this player's tv_players row if
       // it is missing. A failed INSERT at join time used to leave a player
       // able to answer but unable to score for the rest of the game.

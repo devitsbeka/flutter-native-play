@@ -447,38 +447,27 @@ END $$;
 
 -- ── a score increment is bounded ───────────────────────────────────────────
 --
--- increment_participant_score takes the amount from the caller. Before it was
--- clamped, one call with 999999 set a room score to 999999.
+-- increment_participant_score used to take a raw amount from the caller —
+-- clamped to one question's maximum (275), but with nothing tying a call to
+-- an actual submitted answer, so a participant could call it repeatedly with
+-- no player_answers row behind it at all (confirmed live, see
+-- docs/qa-app-store-2026-09/02-classic-rooms-findings.md, Finding 2).
+-- 20261016120000_classic_room_integrity.sql changed its signature to
+-- (room_id, question_index): it now looks up the caller's own player_answers
+-- row and computes the award itself, no-ops on anything that isn't a real,
+-- unscored, correct answer. That full contract — including the old clamp's
+-- job, since a fabricated points_earned is now ignored entirely rather than
+-- merely capped — is asserted end-to-end in
+-- supabase/tests/17-classic-room-integrity.sql, which is where this
+-- coverage now lives.
+--
+-- The fixture below (user 44444444…, test.uid set to it) stays: the next
+-- section's PRO power-up assertions run as this same user.
 
 INSERT INTO auth.users (id, email) VALUES
   ('44444444-4444-4444-4444-444444444444','d@test')
 ON CONFLICT (id) DO NOTHING;
-INSERT INTO public.game_rooms (id, room_code, host_user_id, status)
-VALUES ('55555555-5555-5555-5555-555555555555','ASRT01',
-        '44444444-4444-4444-4444-444444444444','playing')
-ON CONFLICT (id) DO NOTHING;
-INSERT INTO public.room_participants (room_id, user_id, status, nickname, score)
-VALUES ('55555555-5555-5555-5555-555555555555',
-        '44444444-4444-4444-4444-444444444444','joined','D',0)
-ON CONFLICT DO NOTHING;
-UPDATE public.room_participants SET score = 0
- WHERE room_id = '55555555-5555-5555-5555-555555555555';
-
 SELECT set_config('test.uid','44444444-4444-4444-4444-444444444444', false);
-SELECT public.increment_participant_score('55555555-5555-5555-5555-555555555555', 999999);
-SELECT pg_temp.must_equal(
-  (SELECT score FROM public.room_participants
-    WHERE room_id = '55555555-5555-5555-5555-555555555555'), 275,
-  'a delta of 999999 is clamped to one question''s maximum');
-
-UPDATE public.room_participants SET score = 0
- WHERE room_id = '55555555-5555-5555-5555-555555555555';
-SELECT public.increment_participant_score('55555555-5555-5555-5555-555555555555', 250);
-SELECT public.increment_participant_score('55555555-5555-5555-5555-555555555555', 275);
-SELECT pg_temp.must_equal(
-  (SELECT score FROM public.room_participants
-    WHERE room_id = '55555555-5555-5555-5555-555555555555'), 525,
-  'two honest answers are not clamped');
 
 -- ── the daily PRO power-ups land together or not at all ────────────────────
 

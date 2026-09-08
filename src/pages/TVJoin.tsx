@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { TVGameProvider, useTVGame } from '@/contexts/TVGameContext';
 import { ControllerCodeEntry } from '@/components/controller/ControllerCodeEntry';
@@ -62,21 +62,70 @@ const TVJoinContent: React.FC = () => {
   // CRITICAL FIX: Auto-refetch questions when in invalid state
   // This recovers from missed realtime updates during poll->game transitions
   // IMPORTANT: This hook must be called unconditionally (before any early returns)
+  //
+  // Bounded, not forever: this used to retry with no limit at all, which is
+  // indistinguishable from a hang once the underlying session is genuinely
+  // dead rather than momentarily lagging — confirmed live joining a session
+  // over a month past its own expiry, status 'playing' with an empty
+  // questions array, which this loop polled every 500ms without end. The
+  // join lookup itself now excludes expired sessions (TVGameContext's
+  // joinSession), so that exact case can no longer be joined at all, but a
+  // give-up path still matters for whatever else could leave this state
+  // permanently empty — realtime lag resolves in a second or two either way.
+  const invalidStateAttemptsRef = useRef(0);
+  const [invalidStateGaveUp, setInvalidStateGaveUp] = useState(false);
+  const MAX_INVALID_STATE_RETRIES = 10;
+
   useEffect(() => {
-    if (hasInvalidState && sessionId) {
-      console.log('[TVJoin] ⚠️ Invalid state detected - triggering context refetch...');
-      
-      // Use context's refetchSessionData which properly updates state
-      const timer = setTimeout(() => {
-        refetchSessionData();
-      }, 500);
-      return () => clearTimeout(timer);
+    if (!hasInvalidState || !sessionId) {
+      invalidStateAttemptsRef.current = 0;
+      if (invalidStateGaveUp) setInvalidStateGaveUp(false);
+      return;
     }
-  }, [hasInvalidState, sessionId, refetchSessionData]);
+
+    if (invalidStateAttemptsRef.current >= MAX_INVALID_STATE_RETRIES) {
+      console.warn('[TVJoin] ⚠️ Invalid state never resolved after', MAX_INVALID_STATE_RETRIES, 'retries — giving up');
+      setInvalidStateGaveUp(true);
+      return;
+    }
+
+    console.log('[TVJoin] ⚠️ Invalid state detected - triggering context refetch...',
+      { attempt: invalidStateAttemptsRef.current + 1 });
+    invalidStateAttemptsRef.current += 1;
+
+    // Use context's refetchSessionData which properly updates state
+    const timer = setTimeout(() => {
+      refetchSessionData();
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [hasInvalidState, sessionId, refetchSessionData, invalidStateGaveUp]);
 
   // Show code entry if not joined yet
   if (!isJoined) {
     return <ControllerCodeEntry initialCode={initialCode} onJoined={() => setIsJoined(true)} />;
+  }
+
+  // Genuinely stuck, not just lagging: retried MAX_INVALID_STATE_RETRIES
+  // times and the session never produced any questions. Say so and offer a
+  // way out, instead of the spinner below forever.
+  if (hasInvalidState && invalidStateGaveUp) {
+    return (
+      <div className="h-[100dvh] safe-bleed bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-6 flex flex-col items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-white text-xl font-bold mb-2">{t("extra.tvGameNotFound")}</h2>
+          <button
+            type="button"
+            onClick={() => {
+              leaveSession();
+              navigate('/', { replace: true });
+            }}
+            className="mt-4 px-6 py-3 rounded-full bg-white/10 text-white font-medium hover:bg-white/20 transition-colors"
+          >
+            {t("common.back")}
+          </button>
+        </div>
+      </div>
+    );
   }
 
   // Show loading instead of error when waiting for questions

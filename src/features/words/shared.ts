@@ -50,6 +50,28 @@ export function hasNews(local: SharedState, incoming: SharedState): boolean {
   return false;
 }
 
+/**
+ * The union of two credit maps (`found` or `bonus`), with a same-word
+ * conflict resolved the same way on both sides.
+ *
+ * Two devices can each commit a find before hearing the other's broadcast,
+ * so the same word can arrive with two different finders. There is no
+ * shared clock to say who was first, so the tie is broken on something both
+ * copies already agree on regardless of which one is "local" for this
+ * merge: the lower player id. That makes the merge commutative — whichever
+ * side runs it lands on the same winner — which a plain object spread
+ * (last writer, i.e. whichever side is merging, wins) does not.
+ */
+function mergeCredit(local: Record<string, string>, incoming: Record<string, string>): Record<string, string> {
+  const merged: Record<string, string> = { ...incoming, ...local };
+  for (const word of Object.keys(merged)) {
+    const a = local[word];
+    const b = incoming[word];
+    if (a !== undefined && b !== undefined && a !== b) merged[word] = a < b ? a : b;
+  }
+  return merged;
+}
+
 /** The union of two copies of the same level, or the newer level outright. */
 export function mergeShared(local: SharedState, incoming: SharedState): SharedState {
   // Two banks cannot be added up. The incoming copy is the room's (the
@@ -60,9 +82,11 @@ export function mergeShared(local: SharedState, incoming: SharedState): SharedSt
   return {
     lang: local.lang,
     level: local.level,
-    // First finder wins a word that both found at once.
-    found: { ...incoming.found, ...local.found },
-    bonus: { ...incoming.bonus, ...local.bonus },
+    // A word (or bonus word) found by both before either heard the other's
+    // broadcast: the lower player id wins on every device, so the two
+    // friends' scores converge instead of each keeping its own credit.
+    found: mergeCredit(local.found, incoming.found),
+    bonus: mergeCredit(local.bonus, incoming.bonus),
     hinted: Array.from(new Set([...local.hinted, ...incoming.hinted])),
     rev: Math.max(local.rev, incoming.rev) + 1,
   };

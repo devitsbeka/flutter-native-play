@@ -19,6 +19,7 @@ import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { QuizCategoryIcon } from "@/components/ui/quiz-category-icon";
 import { supabase } from "@/integrations/supabase/client";
+import { callRpc } from "@/integrations/supabase/rpc";
 import { TVMirrorModal } from "@/components/tv/TVMirrorModal";
 import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
 import { Capacitor } from "@capacitor/core";
@@ -256,10 +257,7 @@ export function MyRoomsSection({
     // Cosmetic, and nothing below depends on it — don't make the player wait
     // on a write that only clears a dot.
     if (room.has_unread_activity) {
-      void supabase
-        .from("game_rooms")
-        .update({ has_unread_activity: false })
-        .eq("id", room.id);
+      void callRpc("mark_room_activity_read", { p_room_id: room.id });
     }
     
     // Check if TV session exists but is expired (3+ hours old)

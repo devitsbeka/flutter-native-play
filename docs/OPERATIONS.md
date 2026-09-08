@@ -82,34 +82,39 @@ is proposed, not executed.
 
 Seeded from the repo. Ordered by what unblocks the most.
 
-### Urgent — security, live today
+### Urgent — security, fixed on a branch, NOT YET DEPLOYED
 
-Full detail, evidence, and ready-to-paste fix SQL for both:
-`docs/qa-app-store-2026-09/00-EXECUTIVE-SUMMARY.md` (priority list) and its
-linked files. Confirmed live against production on 2026-09-08 by direct
-network testing (not hypothetical, not a browser test — see that file's
-methodology note).
+Code + migrations + regression tests for all three of these landed on
+`claude/app-store-submission-testing-lj8ret` the same day they were found —
+see `docs/qa-app-store-2026-09/07-fixes-applied-2026-09-08.md` for exactly
+what changed. **They are not live.** Per §4a, merging that branch's client
+code to `main` does not deploy the new migrations — that needs Lovable
+separately. Until that happens the items below are still true of the live
+database. Recommended order and a way to confirm each has actually landed
+are both in the fixes-applied doc.
 
-- [ ] **Any room's data is world-readable and griefable with no account at
-      all.** `game_rooms`/`room_participants` have carried
-      `FOR SELECT USING (true)` since the first migration
-      (`20251226102356_...sql`), never narrowed even after
-      `20260922100000_public_rooms.sql` built a "the room id is the secret"
-      model on top. Confirmed: reading real rooms/rosters with zero auth,
-      self-seating into a private room, rewriting its status, forging a live
-      Words game's state. Pure RLS fix, no rebuild needed —
+- [ ] **DEPLOY: `20261016100000_narrow_room_visibility.sql`.** Fixes any
+      room's data being world-readable and griefable with no account at all
+      — `game_rooms`/`room_participants` carried `FOR SELECT USING (true)`
+      since the first migration, never narrowed even after a later "the room
+      id is the secret" model was built on top of it. Confirmed live before
+      the fix: reading real rooms/rosters with zero auth, self-seating into a
+      private room, rewriting its status, forging a live Words game's state.
       `docs/qa-app-store-2026-09/01-CRITICAL-room-data-exposure.md`.
-- [ ] **`submit_tv_answer` pays any amount to any player, on request.** No
-      caller-identity check, no server-side recompute of points. Confirmed:
-      credited one player 999,000,000 points; credited a *different real
-      player* 5,000,000 points from an attacker's own session.
-      `docs/qa-app-store-2026-09/06-tv-mode-findings.md`, Finding 2.
-- [ ] **A guest cannot actually host a TV game — it fails silently and the
-      session sticks forever.** Undercuts the "reviewer can test multiplayer
-      without an account" submission note two sections down. Route the host
-      claim through the already-existing `tv_claim_session` RPC instead of an
-      unchecked direct table update.
-      `docs/qa-app-store-2026-09/06-tv-mode-findings.md`, Finding 1.
+- [ ] **DEPLOY: `20261016130000_tv_answer_bound_and_verified.sql`, together
+      with the client build that calls it (signature changed, must ship
+      together).** Fixes `submit_tv_answer` paying any amount to any player
+      on request (confirmed live: 999,000,000 points to one account, 5M to a
+      different real player from an attacker's own session) and a guest
+      being unable to actually host a TV game (silent failure, session stuck
+      forever — undercut the "reviewer can test multiplayer without an
+      account" submission note two sections down).
+      `docs/qa-app-store-2026-09/06-tv-mode-findings.md`, Findings 1 and 2.
+- [ ] **DEPLOY: `20261016120000_classic_room_integrity.sql`, together with
+      the client build (signature changed, must ship together).** Fixes
+      classic-room capacity being client-side only (oversold 5 seats to 7
+      under concurrent joins) and `increment_participant_score` having no
+      per-question cap. `docs/qa-app-store-2026-09/02-classic-rooms-findings.md`.
 
 ### Urgent — money, live today
 
@@ -190,12 +195,15 @@ methodology note).
 - [ ] The gem ladder is non-monotonic — the 1,500 pack is worse value per dollar
       than the 500 ($11.97 or below fixes it). Prices stay editable; ids do not.
 - [ ] **Server-side score verification** — the one acknowledged economy gap.
-      **Update 2026-09-08: worse than "not verified" for TV mode specifically
-      — `submit_tv_answer` is not bounded at all** (see the security section
-      above; classic rooms' `increment_participant_score` is at least
-      per-call-clamped, TV mode's points are accepted verbatim from the
-      client). A project, not a patch; worth closing before the economy
-      carries real money at scale, and TV mode should move first.
+      **Update 2026-09-08 (fixed on a branch, not yet deployed):** it was
+      worse than "not verified" for TV mode specifically —
+      `submit_tv_answer` accepted client-claimed points verbatim, no bound at
+      all. Both TV mode and classic rooms now recompute points server-side
+      from the actual answer rather than trusting the caller — see the
+      security section above and
+      `docs/qa-app-store-2026-09/07-fixes-applied-2026-09-08.md`. This closes
+      the acknowledged gap for the two modes it covered; re-open this line if
+      a future mode adds scoring without the same server-side recompute.
 
 ### Missing knowledge — needed before Phase 3
 
@@ -218,6 +226,10 @@ does not reopen it.
   actually unbounded for TV mode, and found room privacy has been broken
   since the very first migration. Both added to §5 as urgent-security items,
   ahead of the pre-existing urgent-money item.
+- **2026-09-08 (later)** — Fixed all three §5 urgent-security items plus five
+  more findings from the same pass (see run log below). Deliberately did not
+  touch the urgent-money item (F-2, deployed-backend drift) — that needs a
+  human with Lovable/Stripe access, not more code.
 
 ## 7. Run log
 
@@ -245,3 +257,20 @@ the next one. Keep it scannable — this is the file a week of work is read from
   run: apply the fixes, starting with the two urgent-security items — nothing
   in this pass touched app code, only this file, `.gitignore`, and the new
   `docs/qa-app-store-2026-09/` reports.
+- **2026-09-08 (later)** — Applied the fixes from the run above: all three §5
+  urgent-security items, plus classic-room capacity/scoring integrity, plus
+  the Words merge-conflict scoring bug. Three new migrations
+  (`20261016100000_narrow_room_visibility`, `20261016120000_classic_room_integrity`,
+  `20261016130000_tv_answer_bound_and_verified`), matching client changes in
+  `TVGameContext.tsx`/`MultiplayerContextV2.tsx`/`TVJoin.tsx`/`shared.ts`, and
+  three new SQL regression files (`16`, `17`, `18`) wired into `pr-checks.yml`
+  alongside `15-room-pot.sql`, which existed but was never wired in either.
+  Full detail in `docs/qa-app-store-2026-09/07-fixes-applied-2026-09-08.md`.
+  Verified locally: the entire SQL suite (18 files) against a from-scratch
+  database, typecheck, 2348 unit tests, build, and the Playwright e2e suite —
+  all green. **Not deployed.** The three migrations need Lovable; merging to
+  `main` only ships the client. Left for the next run: get these three
+  migrations applied (room-visibility first if there's any delay on the
+  others), then confirm via the read-only probes described in the
+  fixes-applied doc. F-2 (deployed-backend drift, §5 urgent-money) is still
+  untouched — still needs a human with Lovable/Stripe access.

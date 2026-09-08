@@ -20,10 +20,32 @@ describe("words shared state", () => {
     expect(m.hinted.sort()).toEqual(["0,0", "1,1"]);
   });
 
-  it("keeps the first finder when both found a word at once", () => {
+  it("breaks a simultaneous same-word find the same way on both devices", () => {
+    // Neither side has heard the other's broadcast yet, so both "found" SIT
+    // locally before merging in the other's copy. Whichever id sorts lower
+    // wins the credit — and, crucially, it must be the same word for both
+    // players, not whichever side happens to be doing the merge.
     const a = { ...emptyShared(1), found: { SIT: "a" } };
     const b = { ...emptyShared(1), found: { SIT: "b" } };
-    expect(mergeShared(a, b).found.SIT).toBe("a");
+    const fromA = mergeShared(a, b); // a's device merging in b's broadcast
+    const fromB = mergeShared(b, a); // b's device merging in a's broadcast
+    expect(fromA.found.SIT).toBe("a");
+    expect(fromB.found.SIT).toBe("a");
+    expect(fromA.found).toEqual(fromB.found);
+  });
+
+  it("breaks a simultaneous bonus-word find the same way on both devices", () => {
+    const a = { ...emptyShared(1), bonus: { SIN: "zeb" } };
+    const b = { ...emptyShared(1), bonus: { SIN: "abe" } };
+    expect(mergeShared(a, b).bonus.SIN).toBe("abe");
+    expect(mergeShared(b, a).bonus.SIN).toBe("abe");
+  });
+
+  it("keeps each side's own uncontested find alongside the resolved conflict", () => {
+    const a = { ...emptyShared(1), found: { SIT: "b", CROWN: "b" } };
+    const b = { ...emptyShared(1), found: { SIT: "a", SAINT: "a" } };
+    const merged = mergeShared(a, b);
+    expect(merged.found).toEqual({ SIT: "a", CROWN: "b", SAINT: "a" });
   });
 
   it("follows a friend who moved on to the next level", () => {

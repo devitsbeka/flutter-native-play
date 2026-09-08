@@ -279,3 +279,59 @@ jobs:
           psql -h localhost -p 5432 -U postgres \
             -v ON_ERROR_STOP=1 -f supabase/tests/14-streak-milestones.sql
 
+      # Room-round pot: staking and payout on a room's rounds. Written
+      # alongside the pot feature but never wired into this job — a gap
+      # found during a QA pass, not a deliberate exclusion. Asserts nothing
+      # is minted, payouts are zero-sum, double-settlement is idempotent,
+      # and PRO players are treated the same as everyone else.
+      - name: Assert room round pot rules
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -p 5432 -U postgres \
+            -v ON_ERROR_STOP=1 -f supabase/tests/15-room-pot.sql
+
+      # Room and roster visibility. game_rooms/room_participants carried a
+      # FOR SELECT USING (true) policy from their very first migration,
+      # never narrowed even after a later "the room id is the secret" model
+      # was built on top of it for private rooms — confirmed live as a real
+      # data exposure (any room, any roster, readable and griefable with no
+      # account at all) before 20261016100000_narrow_room_visibility.sql.
+      # These assert a room and its roster are visible only to the host, a
+      # seated participant, or (the room row only) once its host publishes
+      # it — and that the "clear unread activity" full-row UPDATE grant is
+      # gone in favour of a function that can only touch that one column.
+      - name: Assert room and roster visibility rules
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -p 5432 -U postgres \
+            -v ON_ERROR_STOP=1 -f supabase/tests/16-room-visibility.sql
+
+      # Classic-room integrity: capacity under concurrent joins, scoring
+      # bound to real submitted answers, and duplicate-answer rejection.
+      # Found and fixed in the same QA pass as the visibility rules above —
+      # see supabase/migrations/20261016120000_classic_room_integrity.sql.
+      - name: Assert classic room integrity rules
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -p 5432 -U postgres \
+            -v ON_ERROR_STOP=1 -f supabase/tests/17-classic-room-integrity.sql
+
+      # TV mode's submit_tv_answer trusted whatever player_id and points it
+      # was told — confirmed live as two real exploits (a 999,000,000-point
+      # answer, and crediting a real other player from an attacker's own
+      # session). These assert points are always recomputed from the
+      # question's own correct answer, a guest player_id can only be acted
+      # on by whoever holds its answer_token, a signed-in caller cannot
+      # answer as anyone but themselves, and a late joiner parked inactive
+      # for the question they arrived during is reactivated once a new one
+      # starts.
+      - name: Assert TV answer binding and scoring rules
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -p 5432 -U postgres \
+            -v ON_ERROR_STOP=1 -f supabase/tests/18-tv-answer-integrity.sql
+
