@@ -1,20 +1,24 @@
 /**
  * The way into a room, on a room card (Figma 1058:325).
  *
- * One button in three colours: mint on the public list, white on the
- * private one, purple on a MyTrivia Party card. It used to be four
- * different pills saying three different words — a flat white "Join" with
- * a green dot on My Rooms, the same white "Join" or "Enter" on the public
- * list, and the chunky mint "Play" only when a room happened to be full —
- * so the one act a card exists for looked like a different act on every
- * card. It says "Play" now, with the play triangle, and the only thing
- * that changes between cards is the colour.
+ * One button, sharing one of two colours with the rest of the rooms list:
+ * mint when a room is ready to start and says "Play", white for every other
+ * state on it — "Join", "Enter", waiting on the host. It used to be four
+ * different pills saying three different words for the one act every card
+ * exists for; it says "Play" now, with the play triangle, and the only thing
+ * that changes between cards is which of those two colours applies.
  *
- * The party card's own Play used to be a purple OUTLINE — transparent face,
- * purple border and text, borrowed from ChunkyButton's generic "outline"
- * variant rather than drawn to this button's own spec. It reads as a lesser
- * action beside every filled, white Play on the rooms around it (owner: put
- * this one in the same button, filled purple with white icon and text).
+ * The party card's own Play went through two looks that both gave it a
+ * colour the rooms list did not otherwise speak: first a purple OUTLINE —
+ * ChunkyButton's generic variant, transparent face, purple border and
+ * text — which read as a lesser action beside a filled Play; then a purple
+ * FILL of its own, which fixed that but made the party card the one card on
+ * the screen with a third colour in play. It wears the rooms list's own
+ * white now — the same fill Join and Enter wear — rather than a shade that
+ * belongs to it alone (owner: "play buttons other color... just like we
+ * have on join button on public rooms"). The `purple` tone stays defined —
+ * the dev showcase still swatches it — for whichever card reaches for it
+ * next.
  *
  * The states a card still distinguishes (a live round pulsing, a join
  * request waiting on its host) do it through motion and their own label,

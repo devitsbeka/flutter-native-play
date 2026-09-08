@@ -167,44 +167,84 @@ describe("what the card does with it", () => {
     expect(tab).toMatch(/coverIcon=\{partyIcons\.get\(item\.data\.id\)\}/);
   });
 
-  it("and paints it on white, alone — the banner carries no words now", () => {
-    expect(tab).toMatch(/bg-white px-4/);
+  it("and paints it on the gradient every trivia is dealt, not white", () => {
+    // A flat white banner was tried first and left the icon with nothing to
+    // sit on (owner: "we need background for My Trivia Party cards behind
+    // the icon, make sure we use beautiful gradient and icons will be
+    // visible on them"). Every post, parties included, is already dealt a
+    // gradient at creation (TriviaCreationContext) — the fallback just has
+    // to use it, the way the ordinary trivia card beside it always has.
     expect(tab).toMatch(/<DynamicIcon\s*\n\s*slug=\{coverIcon \?\? PARTY_COVER_ICON_SLUGS\[0\]\}/);
+    expect(tab).not.toMatch(/bg-white px-4/);
     // The title moved down beside the icon in the meta row (owner's ask),
     // so nothing is drawn over the party banner at all — not over the icon
-    // and not over a cover photo. Scoped to the party card: the ordinary
-    // trivia card beside it still writes its title across its own banner.
+    // and not over a cover photo.
     expect(tab).not.toMatch(/text-base font-bold text-slate-900 text-center/);
     const party = tab.slice(
-      tab.indexOf("Cover image, or one of the four party icons"),
-      tab.indexOf("src={iconHouseParty}"),
+      tab.indexOf("function PersonalTriviaCard"),
+      tab.indexOf("function StandaloneQuizCard"),
     );
-    expect(party.length).toBeGreaterThan(0);
-    expect(party).not.toMatch(/<h4/);
-    // The photo stands alone too — no scrim, because nothing sits on it.
+    expect(party).toMatch(/const gradientProps = getGradientProps\(post\.cover_gradient\);/);
     expect(party).toMatch(
-      /\{post\.cover_image \? \(\s*\n\s*<img src=\{post\.cover_image\}[^\n]*\/>\s*\n\s*\) : \(/,
+      /<div className=\{`absolute inset-0 \$\{gradientProps\.className\}`\} style=\{gradientProps\.style\} \/>/,
+    );
+    expect(party).not.toMatch(/<h4/);
+  });
+
+  it("and the icon keeps its own shadow, now that it sits on colour instead of white", () => {
+    // shadow=false suited a white banner, where DynamicIcon's default
+    // drop-shadow read as a grey box sitting on it; on a gradient the shadow
+    // is what separates the icon from a background that is no longer plain.
+    const party = tab.slice(
+      tab.indexOf("function PersonalTriviaCard"),
+      tab.indexOf("function StandaloneQuizCard"),
+    );
+    expect(party).not.toMatch(/shadow=\{false\}/);
+  });
+
+  it("and the two chips over it are one dark treatment again, not a per-case pair", () => {
+    // The grey-on-white problem this pair once solved doesn't exist once the
+    // banner is always a photo or a gradient — both dark enough for the same
+    // bg-black/40 every other card's chips already use.
+    const party = tab.slice(
+      tab.indexOf("function PersonalTriviaCard"),
+      tab.indexOf("function StandaloneQuizCard"),
+    );
+    expect(party).not.toMatch(/slate-900/);
+    expect(party).toMatch(
+      /bg-black\/40 backdrop-blur-sm rounded-full h-8 px-3 text-xs text-white flex items-center gap-1\.5/,
     );
   });
 
-  it("and the two chips over it darken too, rather than going grey-on-white", () => {
-    // bg-black/40 is a dark chip over a photo and a mid grey over white,
-    // where its white text all but disappears.
-    expect(tab).toMatch(
-      /post\.cover_image \? "bg-black\/40 hover:bg-black\/60" : "bg-slate-900\/70 hover:bg-slate-900\/85"/,
-    );
-    expect(tab).toMatch(/post\.cover_image \? "bg-black\/40" : "bg-slate-900\/70"/);
-  });
-
-  it("and the gradient it replaced is gone from the party card", () => {
-    // The party card was the only caller reading cover_gradient for a
-    // fallback; leaving it would be a dead branch that quietly comes back.
+  it("and a cover that IS there is untouched", () => {
     const card = tab.slice(
       tab.indexOf("function PersonalTriviaCard"),
       tab.indexOf("function StandaloneQuizCard"),
     );
-    expect(card).not.toContain("gradientProps");
-    // A cover that IS there is untouched.
     expect(card).toMatch(/<img src=\{post\.cover_image\}/);
+  });
+});
+
+describe("the party's Play button matches the rooms list, not a colour of its own", () => {
+  it("wears white, the same fill Join and Enter wear on a room card", () => {
+    // Purple was tried first, to read as a stronger action than
+    // ChunkyButton's generic outline had; the owner's next word on it was to
+    // match the rooms list instead of adding a third colour beside it
+    // ("play buttons other color... just like we have on join button on
+    // public rooms").
+    const card = tab.slice(
+      tab.indexOf("function PersonalTriviaCard"),
+      tab.indexOf("function StandaloneQuizCard"),
+    );
+    expect(card).toMatch(/<RoomCardPlayButton\s*\n\s*tone="white"/);
+    expect(card).not.toMatch(/tone="purple"/);
+  });
+
+  it("and that IS the Join/Enter colour on the public rooms list", () => {
+    const publicRooms = read("src/components/team/PublicRoomsSection.tsx");
+    // A ready-to-start room goes mint and says Play; everything else — Join,
+    // Enter, waiting on the host — is the white this party button now
+    // shares.
+    expect(publicRooms).toMatch(/tone=\{ready \? "mint" : "white"\}/);
   });
 });
