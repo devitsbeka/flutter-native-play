@@ -447,7 +447,32 @@ function TeamContentV2() {
   const [roomsFilter, setRoomsFilter] = useState<RoomFilter>("all");
   const [roomsSearchQuery, setRoomsSearchQuery] = useState("");
   // Private spans rooms and trivias under one filter; Public is rooms only.
-  const [privateFilter, setPrivateFilter] = useState<PrivateFilter>("all");
+  /**
+   * The Private tab's filter, carried in the URL beside the tab.
+   *
+   * The tab has always been a URL param so that leaving and coming back
+   * lands on the same half of the page. The filter was not, so opening a
+   * trivia from the Trivias list and pressing Back put the player on Private
+   * showing everything — their trivias somewhere down a list of rooms
+   * (owner: "back button should land user on online game page, trivias are
+   * selected page, to see all"). Same trip, same reason, same fix.
+   */
+  const [privateFilter, setPrivateFilterState] = useState<PrivateFilter>(
+    () => (searchParams.get("filter") as PrivateFilter | null) ?? "all",
+  );
+  const setPrivateFilter = (filter: PrivateFilter) => {
+    setPrivateFilterState(filter);
+    const next = new URLSearchParams(searchParams);
+    if (filter === "all") next.delete("filter");
+    else next.set("filter", filter);
+    setSearchParams(next, { replace: true });
+  };
+  // Browser navigation (Back/Forward) moves the param; follow it.
+  useEffect(() => {
+    const fromUrl = (searchParams.get("filter") as PrivateFilter | null) ?? "all";
+    if (fromUrl !== privateFilter) setPrivateFilterState(fromUrl);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
   const [privateSearchQuery, setPrivateSearchQuery] = useState("");
   const [publicFilter, setPublicFilter] = useState<PublicRoomsFilter>("all");
   const [publicSearchQuery, setPublicSearchQuery] = useState("");

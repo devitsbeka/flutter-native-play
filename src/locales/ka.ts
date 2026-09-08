@@ -4885,6 +4885,7 @@ export const ka = {
     createGameRoomLabel: "შექმენი სათამაშო ოთახი",
     // multipleRoundsLabel - defined above
     myTriviaPartyLabel: "My Trivia Party",
+    triviaUntitled: "უსათაურო",
     yourQuestionsLabel: "შენი კითხვები",
     chooseGameTypeLabel: "აირჩიე რას ითამაშებთ",
     // TVConnectModal

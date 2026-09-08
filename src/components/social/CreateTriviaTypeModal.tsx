@@ -7,7 +7,7 @@ import SpotlightSearch from "@/components/search/SpotlightSearch";
 import { MyTriviaLiveLogo } from "@/components/shared/MyTriviaLiveLogo";
 import triviaBuzzer from "@/assets/trivia-buzzer.png";
 import iconCollections from "@/assets/icon-collections.png";
-import iconGroupOfPeople from "@/assets/group-of-people.png";
+import { MyTriviaPartyLogo } from "@/components/brand/MyTriviaPartyLogo";
 import danceFloor from "@/assets/dance-floor.png";
 import { DraftsList } from "./DraftsList";
 
@@ -67,11 +67,19 @@ export function CreateTriviaTypeModal({
   // The three things to make. Trivia and Collection share a row; the Party
   // takes the full width beneath them (its icon is the widest, and the
   // frame gives it the room).
-  const cards: { key: string; icon: string; title: string; wide?: boolean; onPick: () => void }[] = [
+  const cards: {
+    key: string;
+    icon?: string;
+    title?: string;
+    /** The brand names itself; a caption under it would say it twice. */
+    logo?: boolean;
+    wide?: boolean;
+    onPick: () => void;
+  }[] = [
     { key: "trivia", icon: triviaBuzzer, title: t("extra.triviaLabel"), onPick: () => onSelectSingle() },
     { key: "collection", icon: iconCollections, title: t("extra.collectionLabel"), onPick: () => onSelectCollection() },
     ...(onSelectPersonal
-      ? [{ key: "personal", icon: iconGroupOfPeople, title: "My Trivia Party", wide: true, onPick: () => onSelectPersonal() }]
+      ? [{ key: "personal", logo: true, wide: true, onPick: () => onSelectPersonal() }]
       : []),
   ];
 
@@ -189,8 +197,17 @@ export function CreateTriviaTypeModal({
                       card.wide ? "col-span-2" : ""
                     }`}
                   >
-                    <img src={card.icon} alt="" draggable={false} className="h-[92px] w-[92px] object-contain drop-shadow-[0_6px_10px_rgba(88,50,160,0.18)]" />
-                    <span className="font-hero text-[18px] leading-[28px] tracking-[-0.16px] text-[#402666]">{card.title}</span>
+                    {card.logo ? (
+                      <MyTriviaPartyLogo
+                        height={58}
+                        className="drop-shadow-[0_6px_10px_rgba(88,50,160,0.18)]"
+                      />
+                    ) : (
+                      <>
+                        <img src={card.icon} alt="" draggable={false} className="h-[92px] w-[92px] object-contain drop-shadow-[0_6px_10px_rgba(88,50,160,0.18)]" />
+                        <span className="font-hero text-[18px] leading-[28px] tracking-[-0.16px] text-[#402666]">{card.title}</span>
+                      </>
+                    )}
                   </motion.button>
                 ))}
               </div>
