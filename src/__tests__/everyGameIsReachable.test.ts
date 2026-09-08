@@ -10,6 +10,12 @@
  * This walks the surface: card → startMode → destination → route. It is a
  * structural check, not a behavioural one; it cannot prove a game plays, only
  * that nothing on the way to it is missing.
+ *
+ * The chooser draws its cards on two halves now — solo, and the Pro "Play
+ * With Friends" door — so a card being IN the file is no longer the same as
+ * it being on screen at any given moment. Which half each mode sits on is
+ * pinned in soloShelfAndFriendsDoor.test.ts; what matters here is that the
+ * card exists at all and that what it starts is mounted.
  */
 
 import { describe, expect, it } from "vitest";

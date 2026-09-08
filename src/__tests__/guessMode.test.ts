@@ -27,7 +27,8 @@ const LOCALES = ["en", "ka", "de", "es", "fr", "it", "pt"] as const;
 
 describe("Guess replaced Random on the create screen", () => {
   it("the card is the guess game, and nothing rolls a category any more", () => {
-    expect(create).toMatch(/\{ key: "guess", art: featuredGuess,/);
+    // The cards carry a `crew` now — which half of the chooser they sit on.
+    expect(create).toMatch(/\{ key: "guess", crew: "solo", art: featuredGuess,/);
     expect(create).not.toMatch(/\{ key: "random",/);
     expect(create).not.toMatch(/extra\.modeRandom/);
     // GameChoice is the union the cards are keyed by; "random" leaving it is

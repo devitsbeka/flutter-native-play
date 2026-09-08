@@ -76,6 +76,12 @@ function generateRoomCode() {
 import { useQueryClient } from "@tanstack/react-query";
 import type { Json } from "@/integrations/supabase/types";
 import { resolveAvatarUrl, fallbackAvatarFor } from "@/utils/avatarUtils";
+import { useProGating } from "@/hooks/useProGating";
+import { ProPaywallModal } from "@/components/pro/ProPaywallModal";
+// The padlock the locked bar wears. Figma exported an empty layer for it
+// (320x320 of nothing), and the project already ships this render at the
+// same size — greyscaled below to match the mock's silver lock.
+import lockRender from "@/assets/streak/lock.png";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { markProgrammaticScroll } from "@/utils/scrollTapGuard";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
@@ -249,6 +255,51 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     if (defaultChallengeType === "my-trivias" || defaultChallengeType === "create") return "mytrivias";
     return null;
   });
+
+  /**
+   * Which half of the chooser is on screen.
+   *
+   * The Play button and "+ Room" opened all seven modes at once — four you
+   * can play by yourself and three that are only a game if somebody else
+   * turns up. A player tapping Play wants to PLAY, and half the shelf was
+   * asking them to find a friend first (owner's ask).
+   *
+   * So the shelf opens on the solo games — Quick, Guess, Words and your own
+   * trivias — with one bar under it, "Play With Friends", that swaps in the
+   * ones that need a room: Classic Trivia, your trivias again (they play
+   * both ways), and the two arenas while they are developer-only.
+   *
+   * A deep link that names a friends-only mode (`/create-room?mode=library`,
+   * the home rail's Classic Trivia card, a challenge that arrives with a
+   * category already chosen) opens on the friends half, because otherwise
+   * the mode it seeds would not have a card to run.
+   */
+  const friendsOnlyMode = (key: GameChoice | null | undefined) =>
+    key === "library" || key === "king" || key === "battle";
+  const [friendsMode, setFriendsMode] = useState<boolean>(
+    () =>
+      friendsOnlyMode(initialMode) ||
+      !!preSelectedCategory ||
+      defaultChallengeType === "library",
+  );
+
+  /**
+   * The friends half is a Pro room.
+   *
+   * `requirePro` is the app's one gate: it runs the callback for a
+   * subscriber and opens the paywall for everyone else, and it holds the
+   * request rather than guessing while the subscription is still loading.
+   */
+  const { isVip, requirePro, showProModal, setShowProModal } = useProGating();
+
+  /** The three faces on the bar: friends, the ones who are online first. */
+  const friendFaces = useMemo(
+    () =>
+      [...friends]
+        .sort((a, b) => Number(!!b.isOnline) - Number(!!a.isOnline))
+        .slice(0, 3),
+    [friends],
+  );
   
   // Room name & icon state - AI-generated via edge function
   /**
@@ -1817,6 +1868,14 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
             onClick={() => {
               // The question the Guess card asks closes before the screen does.
               if (guessPicking) return setGameChoice(null);
+              // And the friends half closes back onto the solo one. Leaving
+              // the screen from there would drop the player two steps for
+              // one tap, past a shelf they never chose to leave.
+              if (friendsMode) {
+                setFriendsMode(false);
+                setGameChoice(null);
+                return;
+              }
               if (ownsRoute) return navigate("/");
               onClose();
             }}
@@ -1912,23 +1971,27 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                 // Quick Game leads and Classic Trivia (the library) follows —
                 // the two most-played, first in reach. Guess and the rest keep
                 // their order behind them.
-                { key: "quick", art: featuredQuick, artTop: -1.71, descW: 273, players: "1", title: t("extra.modeQuickTitle"), desc: t("extra.modeQuickDesc") },
-                { key: "library", art: featuredLibrary, artTop: -2.86, descW: 273, players: "2-10", title: t("extra.modeLibraryTitle"), desc: t("extra.libraryDesc") },
+                // `crew` says which half of the shelf a card belongs to.
+                // "both" is for a mode that is a real game either way — your
+                // own trivias play solo and around a table alike.
+                { key: "quick", crew: "solo", art: featuredQuick, artTop: -1.71, descW: 273, players: "1", title: t("extra.modeQuickTitle"), desc: t("extra.modeQuickDesc") },
+                { key: "library", crew: "friends", art: featuredLibrary, artTop: -2.86, descW: 273, players: "2-10", title: t("extra.modeLibraryTitle"), desc: t("extra.libraryDesc") },
                 // One player: a picture game is played alone, and starts the moment
                 // one is picked rather than opening a lobby (owner).
-                { key: "guess", art: featuredGuess, artTop: 0.05, descW: 273, players: "1", title: t("extra.modeGuessTitle"), desc: t("extra.modeGuessDesc") },
+                { key: "guess", crew: "solo", art: featuredGuess, artTop: 0.05, descW: 273, players: "1", title: t("extra.modeGuessTitle"), desc: t("extra.modeGuessDesc") },
                 // The King and Battle posters are developer-only until the
                 // modes are promoted — see DEVELOPER_ONLY_GAME_TYPES.
                 ...(developerMode
                   ? [
-                      { key: "king", art: featuredKing, artTop: 0, descW: 273, players: "1-10", title: t("extra.modeKingTitle"), desc: t("lobby.kingCardDesc") },
-                      { key: "battle", art: featuredBattle, artTop: -4.56, descW: 273, players: "4-10", title: t("extra.modeBattleTitle"), desc: t("gameTypes.teamBattleDesc") },
+                      { key: "king", crew: "friends", art: featuredKing, artTop: 0, descW: 273, players: "1-10", title: t("extra.modeKingTitle"), desc: t("lobby.kingCardDesc") },
+                      { key: "battle", crew: "friends", art: featuredBattle, artTop: -4.56, descW: 273, players: "4-10", title: t("extra.modeBattleTitle"), desc: t("gameTypes.teamBattleDesc") },
                     ]
                   : []),
-                { key: "words", art: featuredWords, artTop: 0.04, descW: 329, players: "1-2", title: t("gameTypes.wordsTitle"), desc: t("extra.modeWordsDesc") },
-                { key: "mytrivias", art: featuredMyTrivias, artTop: -0.02, descW: 273, players: null, title: t("extra.myTriviaOption"), desc: t("extra.myTriviaDesc") },
-              ] as { key: GameChoice; art: string; artTop: number; descW: number; players: string | null; title: string; desc: string }[]
-            ).map((card, i) => {
+                { key: "words", crew: "solo", art: featuredWords, artTop: 0.04, descW: 329, players: "1-2", title: t("gameTypes.wordsTitle"), desc: t("extra.modeWordsDesc") },
+                { key: "mytrivias", crew: "both", art: featuredMyTrivias, artTop: -0.02, descW: 273, players: null, title: t("extra.myTriviaOption"), desc: t("extra.myTriviaDesc") },
+              ] as { key: GameChoice; crew: "solo" | "friends" | "both"; art: string; artTop: number; descW: number; players: string | null; title: string; desc: string }[]
+            ).filter((card) => card.crew === "both" || card.crew === (friendsMode ? "friends" : "solo"))
+             .map((card, i) => {
               const isPicked = gameChoice === card.key;
               const busy = isPicked && isCreating;
               return (
@@ -2044,6 +2107,83 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
             })}
             <div aria-hidden className="w-px shrink-0" />
           </div>
+
+          {/* Play With Friends — Figma 1102:4545 (open) and 1102:6045
+              (locked), a 448x90 bar under the shelf with a hard 8px foot.
+
+              It is the door to the other half of the chooser, and it is a
+              Pro door: coloured and pressable for a subscriber, white and
+              padlocked for everyone else, who get the paywall instead of
+              the room modes. Only on the solo half — once you are looking
+              at the friends games there is nothing left for it to offer. */}
+          {!friendsMode && (
+            <button
+              type="button"
+              onClick={() => requirePro("rooms", () => { setFriendsMode(true); setGameChoice(null); })}
+              aria-label={t("extra.playWithFriendsFeature")}
+              className={cn(
+                "mb-[8px] mt-[14px] flex h-[90px] w-full shrink-0 items-center rounded-[28px] border border-solid transition-[transform,box-shadow] duration-100 md:mx-auto md:max-w-[520px]",
+                // The foot is the whole shape of the press: 8px of solid
+                // colour under the bar that collapses to 4 as it goes down.
+                "active:translate-y-[4px]",
+                isVip
+                  ? "border-[#b3dfdb] bg-gradient-to-r from-[#def5f5] to-[#f0e6ff] shadow-[0px_8px_0px_0px_#c8d2ee] active:shadow-[0px_4px_0px_0px_#c8d2ee]"
+                  : "border-[#919191] bg-white shadow-[0px_8px_0px_0px_#919191] active:shadow-[0px_4px_0px_0px_#919191]",
+              )}
+            >
+              {/* The padlock: 62px at 12px in, which is what puts the
+                  locked label at 74 where the open one starts at 31. */}
+              {!isVip && (
+                <img
+                  alt=""
+                  src={lockRender}
+                  className="ml-[12px] h-[62px] w-[62px] shrink-0 object-contain grayscale"
+                />
+              )}
+              <span
+                className={cn(
+                  "font-hero truncate text-[22px] capitalize leading-[48px] tracking-[-0.16px] [text-shadow:0px_2px_0px_white]",
+                  isVip ? "pl-[31px] text-[#402666]" : "text-[#919191]",
+                )}
+              >
+                {t("extra.playWithFriendsFeature")}
+              </span>
+              {/* Your friends, three of them, overlapping — the people the
+                  other half of the shelf is for. Nothing is drawn when you
+                  have none: three strangers' faces would be inventing them. */}
+              {friendFaces.length > 0 && (
+                <span className="ml-auto flex shrink-0 items-center pl-3 pr-[21px]">
+                  {friendFaces.map((friend, i) => (
+                    <span
+                      key={friend.friendId}
+                      style={{
+                        marginLeft: i === 0 ? 0 : -15,
+                        background: !isVip
+                          ? "#919191"
+                          : friend.isOnline
+                            ? "linear-gradient(135deg, rgb(147, 51, 234) 0%, rgb(236, 72, 153) 50%, rgb(249, 115, 22) 100%)"
+                            : "linear-gradient(135deg, rgb(148, 163, 184) 0%, rgb(203, 213, 225) 100%)",
+                      }}
+                      className="flex size-[42.857px] items-center justify-center rounded-full p-[2.009px]"
+                    >
+                      {/* The inner rim: gold on the open bar, grey on the
+                          locked one — both halves of it go grey (1106:5178),
+                          not just the ring around it. */}
+                      <span className={cn("flex size-full items-center justify-center rounded-full p-[1.339px]", isVip ? "bg-[#f6d878]" : "bg-[#919191]")}>
+                        <span className={cn("size-full overflow-hidden rounded-full", !isVip && "grayscale")}>
+                          <img
+                            alt=""
+                            src={resolveAvatarUrl(friend.avatarUrl) ?? fallbackAvatarFor(friend.nickname)}
+                            className="h-full w-full object-cover"
+                          />
+                        </span>
+                      </span>
+                    </span>
+                  ))}
+                </span>
+              )}
+            </button>
+          )}
 
           <div className="w-full md:mx-auto md:max-w-[520px]">{pickedDetail}</div>
         </div>
@@ -2433,6 +2573,10 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
           }))
         } : null}
       />
+
+      {/* The paywall the locked bar opens. Mounted here rather than beside
+          the bar so it survives the shelf swapping halves under it. */}
+      <ProPaywallModal isOpen={showProModal} onClose={() => setShowProModal(false)} />
     </motion.div>
   );
 }
