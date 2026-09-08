@@ -39,17 +39,21 @@ describe("the ring", () => {
     expect(universal).not.toMatch(/flashKey/);
   });
 
-  it("is lit on the host's chip and + only until a category is picked", () => {
-    expect(universal).toMatch(/<Ring on=\{!!category\.glow\} className="min-w-0 flex-1">\s*\n\s*<Chip/);
-    expect(universal).toMatch(/<Ring on=\{!!category\.glow && !categoryMenu\?\.open\} className="shrink-0">/);
+  it("is lit on the host's chip only until a category is picked", () => {
+    // ONE ring now, around one pill (Figma 1123:8843). The + used to be a
+    // slab of its own beside the chip and wore a second ring; both the
+    // slab and its ring are gone — the + is inside the pill this ring
+    // already goes around.
+    expect(universal).toMatch(/<Ring on=\{!!category\.glow\} className="min-w-0">\s*\n\s*<Chip/);
+    expect((universal.match(/<Ring on=/g) ?? []).length).toBe(1);
     // The chip fills the ring: the ring is a flex box (flex-1 on the chip
     // means nothing under a block) and the chip is w-full.
     expect(universal).toMatch(/<div className=\{cn\("relative flex", className\)\}>/);
-    expect(universal).toMatch(/"relative flex h-\[63px\] w-full min-w-0 flex-1 items-center gap-2 rounded-bl-\[24px\]/);
+    expect(universal).toMatch(/"relative flex h-\[63px\] w-full min-w-0 flex-1 items-center rounded-bl-\[24px\]/);
     // While the round list is open the + is an X that closes it.
     expect(universal).toMatch(/onClick=\{categoryMenu\?\.open \? categoryMenu\.onClose : category\.onAdd\}/);
     expect(universal).toMatch(/aria-label=\{categoryMenu\?\.open \? "close" : "add category"\}/);
-    expect(universal).toMatch(/\{categoryMenu\?\.open \? \(\s*\n\s*<X className="h-6 w-6 text-\[#44246b\]" strokeWidth=\{2\.4\} \/>/);
+    expect(universal).toMatch(/\{categoryMenu\?\.open \? \(\s*\n\s*<X className="h-6 w-6 text-\[#402666\]" strokeWidth=\{2\.6\} \/>/);
     // Host only, and only while there is still a category to pick.
     expect(room).toMatch(/glow: isHost && needsCategorySelection,/);
     expect(room).not.toMatch(/rounds,\s*\n\s*glow:/);
