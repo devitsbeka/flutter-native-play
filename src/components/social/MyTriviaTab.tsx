@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { Plus, Play, Loader2, Globe, Lock, ChevronDown, ChevronUp, Layers, Pencil, FileEdit, Trash2, Check } from "lucide-react";
 import triviaBuzzerIcon from "@/assets/trivia-buzzer.png";
 import iconGroupOfPeople from "@/assets/group-of-people.png";
+import { triviaDisplayTitle } from "@/utils/triviaTitle";
 import { ownerHasSeenTrivia } from "@/utils/triviaFairPlay";
 import purpleHeart3d from "@/assets/icons/purple-heart-3d.png";
 import bookmark3d from "@/assets/icons/bookmark-3d-orange.png";
@@ -655,7 +656,11 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
       initial={isNew ? { opacity: 0, y: 20, rotate: tiltDirection } : { opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0, rotate: 0 }}
       transition={isNew ? { type: "spring", stiffness: 300, damping: 20, delay: index * 0.05 } : { delay: index * 0.05 }}
-      onClick={() => onEdit(post)}
+      // Tapping the card opens the party, the way tapping a trivia card
+      // opens the trivia (owner: "clicking on it we go on that trivia").
+      // Editing is what the pencil in the corner is for; the whole card
+      // meaning "edit" is why there was no way to simply go and look at one.
+      onClick={() => navigate(`/trivia/${post.id}`)}
       className="relative bg-card rounded-2xl overflow-hidden shadow-lg cursor-pointer hover:shadow-xl transition-shadow"
       style={{ border: "2px solid rgba(236, 72, 153, 0.5)" }}
     >
@@ -681,9 +686,12 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
             <div className="absolute inset-0 bg-black/20" />
           </>
         )}
+        {/* What the player called this party, or Untitled. The brand is
+            named once, beside the icon below; saying it up here as well
+            left the card with nothing on it naming THIS party. */}
         <div className="absolute inset-0 flex items-center justify-center translate-y-5">
           <h4 className="text-xl font-bold text-white text-center px-4 drop-shadow-lg">
-            {post.title}
+            {triviaDisplayTitle(post.title, t)}
           </h4>
         </div>
         <div className="absolute top-3 right-3 bg-black/40 backdrop-blur-sm rounded-full h-8 px-3 text-xs text-white flex items-center gap-1.5">

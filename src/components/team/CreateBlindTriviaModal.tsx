@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useTriviaCreation } from "@/contexts/TriviaCreationContext";
 import { anyBlockedText } from "@/utils/contentFilter";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, Sparkles, ChevronRight, Check, Loader2, RefreshCw, Globe, Lock, CheckCircle, Plus } from "lucide-react";
@@ -29,6 +30,11 @@ interface GeneratedQuestion {
 interface CreateBlindTriviaModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /**
+   * The generation has been handed to the background and this screen is
+   * closing. The page that opened it says so on its Create button.
+   */
+  onTriviaHandedOff?: () => void;
   onTriviaReady: (questions: GeneratedQuestion[], title: string, subject: string) => void;
   resumeDraftId?: string | null;
   onDraftResumed?: () => void;
@@ -78,7 +84,7 @@ interface TopicSuggestion {
   icon_slug: string;
 }
 
-export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resumeDraftId, onDraftResumed, onSwitchToCollection }: CreateBlindTriviaModalProps) {
+export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, onTriviaHandedOff, resumeDraftId, onDraftResumed, onSwitchToCollection }: CreateBlindTriviaModalProps) {
   const { toast: toastHook } = useToast();
   const { t } = useLanguage();
   const { user } = useAuth();
@@ -89,6 +95,7 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
   // created blind ('play'), and the old mode-chooser step 1 is skipped.
   const [step, setStep] = useState(2);
   const [creatorMode, setCreatorMode] = useState<CreatorMode>("play");
+  const { startTriviaGeneration, busy: triviaBusy } = useTriviaCreation();
   const [subject, setSubject] = useState("");
   const [questionCount, setQuestionCount] = useState(10);
   const [answerFormat, setAnswerFormat] = useState<"4_answers" | "true_false">("4_answers");
@@ -249,6 +256,27 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
     
     resetForm();
     onOpenChange(false);
+  };
+
+  /**
+   * Hand the generation over and get out of the way.
+   *
+   * This was the wait: an AI call of unknown length behind a progress bar
+   * counted on a timer, with the modal held open throughout and everything
+   * discarded if it was closed (owner: "i wait too long and if i cancel it
+   * shows nothing, disappears"). It lives in TriviaCreationContext now and
+   * finishes whether or not this screen does.
+   */
+  const handOffGeneration = () => {
+    if (!startTriviaGeneration({
+      subject,
+      questionCount,
+      answerFormat,
+      difficulty,
+      isPublic,
+    })) return;
+    onTriviaHandedOff?.();
+    void handleClose();
   };
 
   const generateQuestions = async () => {
@@ -554,21 +582,12 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
           </button>
           <ChunkyButton 
             variant="whitePurple"
-            onClick={generateQuestions} 
-            disabled={isGenerating} 
+            onClick={handOffGeneration} 
+            disabled={triviaBusy} 
             className="flex-[2]"
           >
-            {isGenerating ? (
-              <>
-                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                {Math.round(generationProgress)}%
-              </>
-            ) : (
-              <>
-                <Sparkles className="w-5 h-5 mr-2" />
-                {t("extra.cbtCreateBtn")}
-              </>
-            )}
+            <Sparkles className="w-5 h-5 mr-2" />
+            {t("extra.cbtCreateBtn")}
           </ChunkyButton>
         </div>
       );

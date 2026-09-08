@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, Plus, Layers } from "lucide-react";
+import { Users, Plus, Layers, Loader2 } from "lucide-react";
 import { MultiplayerProviderV2, useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
@@ -33,6 +33,8 @@ import { ExplorePortfolioFeed } from "@/components/social/ExplorePortfolioFeed";
 import { PUBLIC_SHARING_ENABLED } from "@/config/features";
 import { MyTriviaTab } from "@/components/social/MyTriviaTab";
 import { CreateQuizModal } from "@/components/social/CreateQuizModal";
+import { TriviaOnItsWayModal } from "@/components/social/TriviaOnItsWayModal";
+import { useTriviaCreation } from "@/contexts/TriviaCreationContext";
 import { CreateCollectionModal } from "@/components/social/CreateCollectionModal";
 import { CreateTriviaTypeModal } from "@/components/social/CreateTriviaTypeModal";
 import { QuizPlayModal } from "@/components/social/QuizPlayModal";
@@ -422,6 +424,11 @@ function TeamContentV2() {
     handleTabChange(tab);
   };
   const [showCreateQuizModal, setShowCreateQuizModal] = useState(false);
+  // A trivia already generating in the background: the Create button says
+  // so, and refuses to start a second one (owner: "while i'm creating one
+  // can't create something else in parallel").
+  const { busy: triviaBusy } = useTriviaCreation();
+  const [showTriviaOnItsWay, setShowTriviaOnItsWay] = useState(false);
   const [showCreateCollectionModal, setShowCreateCollectionModal] = useState(false);
   const [showCreateTypeModal, setShowCreateTypeModal] = useState(false);
   // True while the chooser is open because the play chooser's My Trivias
@@ -440,7 +447,32 @@ function TeamContentV2() {
   const [roomsFilter, setRoomsFilter] = useState<RoomFilter>("all");
   const [roomsSearchQuery, setRoomsSearchQuery] = useState("");
   // Private spans rooms and trivias under one filter; Public is rooms only.
-  const [privateFilter, setPrivateFilter] = useState<PrivateFilter>("all");
+  /**
+   * The Private tab's filter, carried in the URL beside the tab.
+   *
+   * The tab has always been a URL param so that leaving and coming back
+   * lands on the same half of the page. The filter was not, so opening a
+   * trivia from the Trivias list and pressing Back put the player on Private
+   * showing everything — their trivias somewhere down a list of rooms
+   * (owner: "back button should land user on online game page, trivias are
+   * selected page, to see all"). Same trip, same reason, same fix.
+   */
+  const [privateFilter, setPrivateFilterState] = useState<PrivateFilter>(
+    () => (searchParams.get("filter") as PrivateFilter | null) ?? "all",
+  );
+  const setPrivateFilter = (filter: PrivateFilter) => {
+    setPrivateFilterState(filter);
+    const next = new URLSearchParams(searchParams);
+    if (filter === "all") next.delete("filter");
+    else next.set("filter", filter);
+    setSearchParams(next, { replace: true });
+  };
+  // Browser navigation (Back/Forward) moves the param; follow it.
+  useEffect(() => {
+    const fromUrl = (searchParams.get("filter") as PrivateFilter | null) ?? "all";
+    if (fromUrl !== privateFilter) setPrivateFilterState(fromUrl);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
   const [privateSearchQuery, setPrivateSearchQuery] = useState("");
   const [publicFilter, setPublicFilter] = useState<PublicRoomsFilter>("all");
   const [publicSearchQuery, setPublicSearchQuery] = useState("");
@@ -1311,20 +1343,30 @@ function TeamContentV2() {
 
                   {/* Create button - right edge, aligned with the tabs (md+) */}
                   <motion.button
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.97 }}
-                    {...instantTouchProps(() =>
-                      activeTab === "public"
-                        ? setShowCreateModal(true)
-                        : setShowCreateTypeModal(true),
-                    )}
-                    className="hidden md:flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-primary text-primary-foreground shadow-sm shrink-0 text-sm font-bold"
+                    whileHover={triviaBusy ? undefined : { scale: 1.03 }}
+                    whileTap={triviaBusy ? undefined : { scale: 0.97 }}
+                    {...(triviaBusy
+                      ? { disabled: true }
+                      : instantTouchProps(() =>
+                          activeTab === "public"
+                            ? setShowCreateModal(true)
+                            : setShowCreateTypeModal(true),
+                        ))}
+                    aria-busy={triviaBusy || undefined}
+                    className={`hidden md:flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-primary text-primary-foreground shadow-sm shrink-0 text-sm font-bold${
+                      triviaBusy ? " opacity-70" : ""
+                    }`}
                   >
                     {/* Public makes a room, because that is the only thing
                         that can go on a public list. Private opens the
                         chooser, which leads with a room and offers the three
                         trivia types under it. */}
-                    {activeTab === "public" ? t("extra.addRoom") : t("extra.createBtn")}
+                    {triviaBusy && <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2.5} />}
+                    {triviaBusy
+                      ? t("extra.triviaCreatingBtn")
+                      : activeTab === "public"
+                        ? t("extra.addRoom")
+                        : t("extra.createBtn")}
                   </motion.button>
                 </div>
               </div>
@@ -1352,6 +1394,8 @@ function TeamContentV2() {
                     onSearchQueryChange={setPrivateSearchQuery}
                     onAddClick={() => setShowCreateTypeModal(true)}
                     addButtonText={t("extra.createBtn")}
+                    addBusy={triviaBusy}
+                    addBusyText={t("extra.triviaCreatingBtn")}
                   />
                 )}
               </div>
@@ -1621,6 +1665,7 @@ function TeamContentV2() {
           setShowBlindTriviaModal(open);
           if (!open) setEditingDraftId(null);
         }}
+        onTriviaHandedOff={() => setShowTriviaOnItsWay(true)}
         onTriviaReady={async (questions, title, subject) => {
           if (!user) return;
 
@@ -1702,9 +1747,15 @@ function TeamContentV2() {
           setShowCreateCollectionModal(true);
         }}
       />
+      <TriviaOnItsWayModal
+        open={showTriviaOnItsWay}
+        kind="trivia"
+        onClose={() => setShowTriviaOnItsWay(false)}
+      />
       <CreateQuizModal
         open={showCreateQuizModal}
         onOpenChange={setShowCreateQuizModal}
+        onTriviaHandedOff={() => setShowTriviaOnItsWay(true)}
         onQuizCreated={() => setActiveTab("private")}
         onSwitchToCollection={() => setShowCreateCollectionModal(true)}
       />

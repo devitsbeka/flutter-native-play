@@ -5,6 +5,7 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { localizeCategoryNames } from "@/utils/localizeCategories";
+import { OWN_TRIVIA_ICON_SLUG } from "@/utils/ownTriviaRound";
 import { popularCategoryIcon } from "@/config/popularImageCategories";
 import { filterCategoriesForLanguage } from "@/utils/languageCategoryFilter";
 import { excludePartyCategories, pinPartyCategoriesFirst } from "@/config/partyCategories";
@@ -297,6 +298,10 @@ export function CategoryPickerModal({
             source_type: "user_trivia",
             user_trivia_id: item.id,
             category_name: item.name,
+            // A trivia is not a category and has no icon of its own, so this
+            // row used to be queued without one and every screen fell back
+            // to a placeholder. It has a face — see ownTriviaRound.
+            icon_slug: OWN_TRIVIA_ICON_SLUG,
           });
         }
       }

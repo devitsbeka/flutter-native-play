@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, Filter, Search, X, Check } from "lucide-react";
+import { ChevronDown, Filter, Loader2, Search, X, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   DropdownMenu,
@@ -12,6 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { instantTouchProps } from "@/utils/instantTouch";
+import { cn } from "@/lib/utils";
 import { PUBLIC_SHARING_ENABLED } from "@/config/features";
 
 export interface FilterOption<T extends string> {
@@ -68,6 +69,13 @@ interface UnifiedFiltersBarProps<F extends string, S extends string> {
   onSearchQueryChange: (query: string) => void;
   onAddClick?: () => void;
   addButtonText?: string;
+  /**
+   * Something the button starts is already running — a trivia being
+   * generated in the background. It says so and refuses a second one, which
+   * is the only place that state is visible once the wizard has closed.
+   */
+  addBusy?: boolean;
+  addBusyText?: string;
   /** Inline variant for embedding in the tab row (no outer padding/width,
       fixed-width search input, no add button). */
   compact?: boolean;
@@ -84,6 +92,8 @@ export function UnifiedFiltersBar<F extends string, S extends string>({
   onSearchQueryChange,
   onAddClick,
   addButtonText,
+  addBusy = false,
+  addBusyText,
   compact = false,
 }: UnifiedFiltersBarProps<F, S>) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -209,10 +219,17 @@ export function UnifiedFiltersBar<F extends string, S extends string>({
               <motion.button
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                {...instantTouchProps(onAddClick)}
-                className="flex md:hidden items-center gap-1.5 px-3 py-2 rounded-full bg-primary text-primary-foreground shadow-sm flex-shrink-0"
+                {...(addBusy ? { disabled: true } : instantTouchProps(onAddClick))}
+                aria-busy={addBusy || undefined}
+                className={cn(
+                  "flex md:hidden items-center gap-1.5 px-3 py-2 rounded-full bg-primary text-primary-foreground shadow-sm flex-shrink-0",
+                  addBusy && "opacity-70",
+                )}
               >
-                <span className="text-[13px] font-bold">{defaultAddText}</span>
+                {addBusy && <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2.5} />}
+                <span className="text-[13px] font-bold">
+                  {addBusy ? addBusyText || defaultAddText : defaultAddText}
+                </span>
               </motion.button>
             )}
           </>

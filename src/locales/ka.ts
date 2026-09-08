@@ -4486,6 +4486,10 @@ export const ka = {
     cbtAuthRequired: "გაიარე ავტორიზაცია",
     cbtDraftAutoSaved: "დრაფტი ავტომატურად შეინახა",
     cbtGenerationFailed: "კითხვები ვერ დაგენერირდა",
+    triviaOnItsWayTitle: "შენი ტრივია მზადდება",
+    partyOnItsWayTitle: "შენი MyTrivia Party მზადდება",
+    triviaOnItsWayBody: "მალე მზად იქნება. შეგიძლია დახურო — ჩვენ დავასრულებთ.",
+    triviaCreatingBtn: "მზადდება…",
     cbtErrorToastTitle: "შეცდომა 😕",
     cbtErrorToastDesc: "კითხვების გენერაცია ვერ მოხერხდა",
     cbtTriviaSuffix: "ტრივია",
@@ -4881,6 +4885,7 @@ export const ka = {
     createGameRoomLabel: "შექმენი სათამაშო ოთახი",
     // multipleRoundsLabel - defined above
     myTriviaPartyLabel: "My Trivia Party",
+    triviaUntitled: "უსათაურო",
     yourQuestionsLabel: "შენი კითხვები",
     chooseGameTypeLabel: "აირჩიე რას ითამაშებთ",
     // TVConnectModal

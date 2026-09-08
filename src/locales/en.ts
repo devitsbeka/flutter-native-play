@@ -4451,6 +4451,10 @@ export const en: KaTranslations = {
     cbtAuthRequired: "Please sign in",
     cbtDraftAutoSaved: "Draft auto-saved",
     cbtGenerationFailed: "Questions could not be generated",
+    triviaOnItsWayTitle: "Your trivia is on its way",
+    partyOnItsWayTitle: "Your MyTrivia Party is on its way",
+    triviaOnItsWayBody: "It will be ready in a moment. You can close this — we will finish it for you.",
+    triviaCreatingBtn: "Creating…",
     cbtErrorToastTitle: "Error 😕",
     cbtErrorToastDesc: "Question generation failed",
     cbtTriviaSuffix: "Trivia",
@@ -4846,6 +4850,7 @@ export const en: KaTranslations = {
     createGameRoomLabel: "Create a game room",
     // multipleRoundsLabel - defined above
     myTriviaPartyLabel: "My Trivia Party",
+    triviaUntitled: "Untitled",
     yourQuestionsLabel: "Your questions",
     chooseGameTypeLabel: "Choose what to play",
     // TVConnectModal
