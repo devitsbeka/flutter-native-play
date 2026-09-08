@@ -8,6 +8,7 @@ import { Plus, Play, Loader2, Globe, Lock, ChevronDown, ChevronUp, Layers, Penci
 import triviaBuzzerIcon from "@/assets/trivia-buzzer.png";
 import iconHouseParty from "@/assets/house-party.png";
 import { triviaDisplayTitle } from "@/utils/triviaTitle";
+import { partyCoverIcons, PARTY_COVER_ICON_SLUGS, type PartyCoverIconSlug } from "@/utils/partyCoverIcon";
 import { ownerHasSeenTrivia } from "@/utils/triviaFairPlay";
 import purpleHeart3d from "@/assets/icons/purple-heart-3d.png";
 import bookmark3d from "@/assets/icons/bookmark-3d-orange.png";
@@ -593,12 +594,11 @@ function CollectionCard({
 }
 
 // Personal trivia card with distinct styling
-function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNew, isPosting }: { post: any; profile: any; index: number; onEdit: (post: any) => void; onPlay?: (post: any) => void; onPost?: (post: any) => void; isNew?: boolean; isPosting?: boolean }) {
+function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNew, isPosting, coverIcon }: { post: any; profile: any; index: number; onEdit: (post: any) => void; onPlay?: (post: any) => void; onPost?: (post: any) => void; isNew?: boolean; isPosting?: boolean; coverIcon?: PartyCoverIconSlug }) {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { createRoom } = useMultiplayerV2();
   const [isStartingTV, setIsStartingTV] = useState(false);
-  const gradientProps = getGradientProps(post.cover_gradient);
   const tiltDirection = post.id.charCodeAt(0) % 2 === 0 ? 15 : -15;
 
   const handlePlayOnTV = async () => {
@@ -669,34 +669,53 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
       {/* Edit Button */}
       <button 
         onClick={(e) => { e.stopPropagation(); onEdit(post); }}
-        className="absolute top-3 left-3 z-10 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-colors"
+        className={cn(
+          "absolute top-3 left-3 z-10 w-8 h-8 rounded-full backdrop-blur-sm flex items-center justify-center transition-colors",
+          // 40% black is a dark chip over a photo and a pale grey over the
+          // white fallback, where white-on-grey is barely a contrast at all.
+          post.cover_image ? "bg-black/40 hover:bg-black/60" : "bg-slate-900/70 hover:bg-slate-900/85",
+        )}
       >
         <Pencil className="w-4 h-4 text-white" />
       </button>
 
 
-      {/* Cover Image or Gradient Thumbnail */}
+      {/* Cover Image, or one of the four party icons on white.
+          What the player called this party, or Untitled — the brand is named
+          once, beside the icon below; saying it up here as well left the
+          card with nothing on it naming THIS party. */}
       <div className="h-32 relative overflow-hidden">
         {post.cover_image ? (
           <>
             <img src={post.cover_image} alt="" className="absolute inset-0 w-full h-full object-cover" />
             <div className="absolute inset-0 bg-black/30" />
+            <div className="absolute inset-0 flex items-center justify-center translate-y-5">
+              <h4 className="text-xl font-bold text-white text-center px-4 drop-shadow-lg">
+                {triviaDisplayTitle(post.title, t)}
+              </h4>
+            </div>
           </>
         ) : (
-          <>
-            <div className={`absolute inset-0 ${gradientProps.className}`} style={gradientProps.style} />
-            <div className="absolute inset-0 bg-black/20" />
-          </>
+          /* No picture uploaded and none generated. A gradient stood here,
+             which said nothing about what the card was; the party icons say
+             it, dealt so a player's parties do not all wear the same one
+             (see partyCoverIcon.ts). White ground, so the title goes dark. */
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-white px-4">
+            <DynamicIcon
+              slug={coverIcon ?? PARTY_COVER_ICON_SLUGS[0]}
+              size={60}
+              shadow={false}
+              className="h-[60px] w-[60px] shrink-0"
+            />
+            <h4 className="text-base font-bold text-slate-900 text-center leading-tight line-clamp-1">
+              {triviaDisplayTitle(post.title, t)}
+            </h4>
+          </div>
         )}
-        {/* What the player called this party, or Untitled. The brand is
-            named once, beside the icon below; saying it up here as well
-            left the card with nothing on it naming THIS party. */}
-        <div className="absolute inset-0 flex items-center justify-center translate-y-5">
-          <h4 className="text-xl font-bold text-white text-center px-4 drop-shadow-lg">
-            {triviaDisplayTitle(post.title, t)}
-          </h4>
-        </div>
-        <div className="absolute top-3 right-3 bg-black/40 backdrop-blur-sm rounded-full h-8 px-3 text-xs text-white flex items-center gap-1.5">
+        <div className={cn(
+          "absolute top-3 right-3 backdrop-blur-sm rounded-full h-8 px-3 text-xs text-white flex items-center gap-1.5",
+          post.cover_image ? "bg-black/40" : "bg-slate-900/70",
+        )}>
           {PUBLIC_SHARING_ENABLED && post.is_public !== false && (
             <Globe className="w-3.5 h-3.5" aria-hidden />
           )}
@@ -1191,6 +1210,13 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
 
   // Filter standalone posts (not in any collection)
   const allStandalonePosts = myPosts?.filter(post => !post.collection_id) || [];
+
+  // The face each pictureless party wears, dealt over EVERY party the player
+  // has rather than over the list on screen — searching or filtering must not
+  // redraw the cards that survive it.
+  const partyIcons = partyCoverIcons(
+    (myPosts ?? []).filter(post => post.subject === "personal"),
+  );
   
   // Apply search filter
   //
@@ -1480,9 +1506,10 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
               onPost={handleToggleQuizVisibility}
               isNew={newItemIds.has(item.data.id)}
               isPosting={postingItemId === item.data.id}
+              coverIcon={partyIcons.get(item.data.id)}
             />
           ) : (
-            <StandaloneQuizCard 
+            <StandaloneQuizCard
               key={item.data.id} 
               post={item.data} 
               profile={profile} 
