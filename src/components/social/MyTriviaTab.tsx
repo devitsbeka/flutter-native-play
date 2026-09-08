@@ -33,6 +33,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast";
 import { PUBLIC_SHARING_ENABLED } from "@/config/features";
+import { generateRoomIdentity } from "@/utils/roomNameGenerator";
+import { readAppLanguage } from "@/utils/appLanguage";
 
 // Localized time format helper
 function formatLocalTimeAgo(date: Date, t: (key: string, params?: Record<string, string | number>) => string): string {
@@ -631,12 +633,19 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
           return;
         }
 
-        // Create room with "My Trivia Party" as default room name, trivia title as category
+        // The room gets a dealt name — a mood and a creature, same as every
+        // other room — not the brand string this literally used to pass.
+        // "My Trivia Party" is not a name `isGeneratedRoomName` recognises,
+        // so the lobby read it as a host rename and showed it verbatim
+        // instead of the party's own title (owner: "this my trivia party
+        // has title 'tt' but when i opened it - it shows 'my trivia party'
+        // as title too"). A real dealt name is what lets the lobby tell
+        // "still wears the name it was dealt" from "the host renamed it".
         const room = await createRoom(
           "custom",
           data.title || post.title || "My Trivia Party", // category_name (what's being played)
           customQuestions,
-          "My Trivia Party", // room_name (always "My Trivia Party")
+          generateRoomIdentity(readAppLanguage()).name, // room_name (dealt, not the brand)
           (data.cover_image as string | null) || null
         );
 
