@@ -3,7 +3,6 @@ import crownIcon from "@/assets/crown-icon.png";
 import hourglassIcon from "@/assets/playlimit/hourglass.png";
 import { PlayLimitCountdown } from "@/components/home/PlayLimitCountdown";
 import gamepadIcon from "@/assets/playlimit/gamepad.png";
-import wheelIcon from "@/assets/playlimit/wheel.png";
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Trophy, Lock, X } from "lucide-react";
@@ -218,7 +217,6 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
                 {t("playLimit.proHookBody")}
               </p>
             </div>
-            <img src={wheelIcon} alt="" className="h-9 w-9 shrink-0 object-contain opacity-90" />
           </div>
 
           {/* Price and period above the button, so both are read before the
