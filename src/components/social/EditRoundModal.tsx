@@ -272,12 +272,18 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
     
     setIsDeleting(true);
     try {
-      const { error } = await supabase
+      // `.select()` so the rows actually removed come back. A DELETE that
+      // matches nothing answers 204 with no error — RLS on somebody else's
+      // row, a stale id — and without this the screen said "deleted",
+      // closed, and left the thing sitting exactly where it was.
+      const { data: removed, error } = await supabase
         .from("user_quiz_posts")
         .delete()
-        .eq("id", round.id);
+        .eq("id", round.id)
+        .select("id");
 
       if (error) throw error;
+      if (!removed?.length) throw new Error("delete matched no rows");
 
       toast({
         title: t("extra.ermDeleted"),
