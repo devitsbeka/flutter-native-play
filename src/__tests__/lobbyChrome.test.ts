@@ -421,7 +421,12 @@ describe("every lobby says which game it is", () => {
     // Not a second random icon drawn for this screen: the per-room deal the
     // public card and the search strip already use, seeded off the room id,
     // so a room looks like itself wherever it turns up.
-    expect(room).toMatch(/const roomFace = currentRoom\.room_icon \?\? dealtRoomIcon\(currentRoom\.id, iconPool\)/);
+    // A party room now takes one of its own four in between; everything
+    // else still falls through to the dealt crest, and a host's own icon
+    // still wins over both.
+    expect(room).toMatch(
+      /const roomFace =\s*\n\s*currentRoom\.room_icon\s*\n\s*\?\? \(isPartyRoom \? partyRoomIconUrl\(currentRoom\.id\) : null\)\s*\n\s*\?\? dealtRoomIcon\(currentRoom\.id, iconPool\);/,
+    );
     expect(room).toMatch(/icon=\{roomFace\}/);
     // And the sheet opens on it, so a rename cannot silently clear the icon.
     expect(room).toMatch(/currentIconUrl=\{roomFace\}/);

@@ -951,38 +951,50 @@ export function UniversalLobby({
           you can see something is there, and that it scrolls. The list's
           own padding-bottom (measured, above) keeps all of it reachable. */}
       <div ref={footerRef} className="absolute inset-x-0 bottom-0 z-20">
-        {/* The haze, as a ramp rather than a pane.
+        {/* The haze: a progressive blur, not a stack of panes.
  
-            One blur layer over the whole footer put a hard horizontal line
-            across the screen where it began — the blur was uniform, so its
-            own top edge WAS the edge (owner: "smooth ending, not strict
-            line"). Fading a backdrop-filter with a CSS mask is the obvious
-            answer and is the one thing iOS's webview renders as a band, so
-            instead the blur is stacked: five bottom-anchored panes, each
-            shorter and stronger than the one behind it, so the backdrop is
-            filtered again at every step down. 1px at the top, 26 at the
-            button, and no single edge strong enough to read as a line.
+            One uniform pane put a hard line across the screen where it
+            began. Six panes of rising strength, each starting a little
+            higher, only turned that one line into six — each pane's own top
+            edge is still an edge, and at these radii they read as bands
+            (owner: "i see 2-3 strict lines it is not smooth").
  
-            The tint rides the same ramp and stays under half opacity, so
-            what is behind still reads as content rather than as a bar. */}
+            What removes the edge is masking each layer rather than clipping
+            it: every layer spans the whole ramp and fades ITSELF in over a
+            different stretch of it, so the blur radius climbs continuously
+            from nothing at the top to 26px at the button and there is no
+            boundary anywhere to see. Four layers is enough because their
+            masks overlap — 0-25%, 20-50%, 45-75%, 70-100%.
+ 
+            Masking a backdrop-filter is what an earlier note here refused to
+            do, on a worry about iOS banding that was never tested and cost
+            the thing it was protecting. If a webview ignored the mask the
+            layers would simply all apply, which is the uniform pane this
+            started as — the failure mode is the old behaviour, not a worse
+            one. */}
         {[
-          { top: -72, blur: 1 },
-          { top: -58, blur: 3 },
-          { top: -45, blur: 6 },
-          { top: -33, blur: 10 },
-          { top: -22, blur: 16 },
-          { top: -12, blur: 26 },
+          { blur: 2, from: 0, to: 25 },
+          { blur: 6, from: 20, to: 50 },
+          { blur: 14, from: 45, to: 75 },
+          { blur: 26, from: 70, to: 100 },
         ].map((step) => (
           <div
-            key={step.top}
+            key={step.blur}
             aria-hidden
-            style={{ top: step.top, backdropFilter: `blur(${step.blur}px)`, WebkitBackdropFilter: `blur(${step.blur}px)` }}
-            className="pointer-events-none absolute inset-x-0 bottom-0"
+            style={{
+              backdropFilter: `blur(${step.blur}px)`,
+              WebkitBackdropFilter: `blur(${step.blur}px)`,
+              WebkitMaskImage: `linear-gradient(180deg, transparent ${step.from}%, #000 ${step.to}%)`,
+              maskImage: `linear-gradient(180deg, transparent ${step.from}%, #000 ${step.to}%)`,
+            }}
+            className="pointer-events-none absolute inset-x-0 bottom-0 top-[-120px]"
           />
         ))}
+        {/* The tint rides the same ramp and tops out under half opacity, so
+            what is behind still reads as content rather than as a bar. */}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 bottom-0 top-[-72px] bg-[linear-gradient(180deg,rgba(249,219,255,0)_0%,rgba(249,219,255,0.06)_35%,rgba(249,219,255,0.22)_65%,rgba(249,219,255,0.44)_100%)]"
+          className="pointer-events-none absolute inset-x-0 bottom-0 top-[-120px] bg-[linear-gradient(180deg,rgba(249,219,255,0)_0%,rgba(249,219,255,0.05)_40%,rgba(249,219,255,0.2)_72%,rgba(249,219,255,0.46)_100%)]"
         />
         {/* Shorter than it was: the caption and the button are the whole
             reason this bar exists, and it was carrying 12px of air above

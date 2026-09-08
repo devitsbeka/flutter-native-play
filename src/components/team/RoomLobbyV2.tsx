@@ -49,6 +49,9 @@ import type { QueueItem } from "@/hooks/useRoomCategoryQueue";
 import { classicLobbyScene } from "@/utils/lobbyScene";
 import { gameRoomsHasApproval, roomVisibilityFields } from "@/utils/roomVisibility";
 import { dealtRoomIcon, fetchCrestPool } from "@/utils/roomCrests";
+import { partyRoomIconUrl } from "@/utils/partyCoverIcon";
+import { isGeneratedRoomName } from "@/utils/roomNameGenerator";
+import { triviaDisplayTitle } from "@/utils/triviaTitle";
 import { useFriends } from "@/hooks/useFriends";
 import {
   AlertDialog,
@@ -104,6 +107,45 @@ export function RoomLobbyV2() {
   useEffect(() => {
     void fetchCrestPool().then(setIconPool);
   }, []);
+  /**
+   * The party this room is playing, when it is playing one.
+   *
+   * A room built on a MyTrivia Party was dealt a creature and a made-up name
+   * like every other room: a parrot over "Cheerful Rabbits", which named
+   * neither the party nor the kind of thing it was (owner: "we should show
+   * one of the my trivia party icons here instead random icons and random
+   * name for room, we should show name user provided for their trivia party
+   * or untitled").
+   *
+   * The room row carries `category_name` — the trivia's title as it stood
+   * when the room was made — but not whether that trivia is a PARTY, and
+   * the four party icons belong to parties. So one row is read, once per
+   * room, and it also keeps the name current when the party is renamed.
+   */
+  const [partyTitle, setPartyTitle] = useState<string | null | undefined>(undefined);
+  const ownTriviaId = currentRoom?.user_trivia_id ?? null;
+  useEffect(() => {
+    if (!ownTriviaId) {
+      setPartyTitle(undefined);
+      return;
+    }
+    let alive = true;
+    void supabase
+      .from("user_quiz_posts")
+      .select("title, subject")
+      .eq("id", ownTriviaId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!alive) return;
+        // Only a party. A trivia the player wrote is not one of these, and
+        // dressing its room in balloons would say it was.
+        setPartyTitle(data?.subject === "personal" ? (data.title ?? "") : undefined);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [ownTriviaId]);
+  const isPartyRoom = partyTitle !== undefined;
   /**
    * Whether the room can start, for the handler rather than the button.
    *
@@ -882,7 +924,22 @@ export function RoomLobbyV2() {
   enoughPlayersRef.current = enoughPlayers;
   const canStartGame = participants.length >= 1;
   const roomGradient = getGradientById(currentRoom?.background_gradient);
-  const roomName = currentRoom.room_name || t("extra.gameRoomDefault");
+  /**
+   * A party room is called what the party is called.
+   *
+   * Only while the room still wears the name it was dealt: a host who has
+   * renamed it keeps their name, which `isGeneratedRoomName` is what tells
+   * apart — every room is created with a generated name, so "is it named?"
+   * cannot be answered by asking whether a name exists.
+   *
+   * `triviaDisplayTitle` handles the party that was never named: the save
+   * stores the brand rather than a blank, so an unnamed party arrives here
+   * already looking titled, and titled the same as every other one.
+   */
+  const roomName =
+    isPartyRoom && isGeneratedRoomName(currentRoom.room_name)
+      ? triviaDisplayTitle(partyTitle, t)
+      : currentRoom.room_name || t("extra.gameRoomDefault");
 
   // What the universal lobby shows for this room.
   const hasContent = queue.length > 0 || currentRoom.category_id || currentRoom.user_trivia_id;
@@ -1048,7 +1105,12 @@ export function RoomLobbyV2() {
    * icon and the name. (The pool itself is fetched up with the other hooks;
    * everything from here down runs after an early return.)
    */
-  const roomFace = currentRoom.room_icon ?? dealtRoomIcon(currentRoom.id, iconPool);
+  // A party wears one of its own four; anything else keeps the dealt crest.
+  // A host who picked an icon still wins over both.
+  const roomFace =
+    currentRoom.room_icon
+    ?? (isPartyRoom ? partyRoomIconUrl(currentRoom.id) : null)
+    ?? dealtRoomIcon(currentRoom.id, iconPool);
   // A My Trivia room plays the quiz as written — its own question count —
   // so the questions-per-round choice is a library/random room's alone.
   const playsUserTrivia = !!currentRoom.user_trivia_id && !currentRoom.category_id;

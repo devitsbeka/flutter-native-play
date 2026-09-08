@@ -680,36 +680,29 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
       </button>
 
 
-      {/* Cover Image, or one of the four party icons on white.
-          What the player called this party, or Untitled — the brand is named
-          once, beside the icon below; saying it up here as well left the
-          card with nothing on it naming THIS party. */}
+      {/* Cover image, or one of the four party icons on white — and nothing
+          written on either.
+          The title moved down beside the icon (owner: "we show my trivia
+          party icon and title user entered or untitled next to it, and
+          random my trivia party icon on banner above, no text on banner
+          just icon"). A name over a photo needs a scrim and a shadow to be
+          legible at all, and the same name in the same card twice — once on
+          the banner, once in the meta row — was what put it up here. */}
       <div className="h-32 relative overflow-hidden">
         {post.cover_image ? (
-          <>
-            <img src={post.cover_image} alt="" className="absolute inset-0 w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-black/30" />
-            <div className="absolute inset-0 flex items-center justify-center translate-y-5">
-              <h4 className="text-xl font-bold text-white text-center px-4 drop-shadow-lg">
-                {triviaDisplayTitle(post.title, t)}
-              </h4>
-            </div>
-          </>
+          <img src={post.cover_image} alt="" className="absolute inset-0 w-full h-full object-cover" />
         ) : (
           /* No picture uploaded and none generated. A gradient stood here,
              which said nothing about what the card was; the party icons say
              it, dealt so a player's parties do not all wear the same one
-             (see partyCoverIcon.ts). White ground, so the title goes dark. */
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-white px-4">
+             (see partyCoverIcon.ts). */
+          <div className="absolute inset-0 flex items-center justify-center bg-white px-4">
             <DynamicIcon
               slug={coverIcon ?? PARTY_COVER_ICON_SLUGS[0]}
-              size={60}
+              size={72}
               shadow={false}
-              className="h-[60px] w-[60px] shrink-0"
+              className="h-[72px] w-[72px] shrink-0"
             />
-            <h4 className="text-base font-bold text-slate-900 text-center leading-tight line-clamp-1">
-              {triviaDisplayTitle(post.title, t)}
-            </h4>
           </div>
         )}
         <div className={cn(
@@ -731,8 +724,11 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
             <img src={iconHouseParty} alt="" className="w-7 h-7 object-contain" />
           </div>
           <div className="flex-1 min-w-0">
+            {/* What the player called this party, or Untitled. The brand is
+                the icon beside it now — repeating "My Trivia Party" here
+                left the card with nothing on it naming THIS party. */}
             <p className="font-semibold text-foreground truncate">
-              {t("extra.myTriviaPartyLabel")}
+              {triviaDisplayTitle(post.title, t)}
             </p>
             <p className="text-xs text-muted-foreground">
               {formatLocalTimeAgo(new Date(post.created_at), t)}

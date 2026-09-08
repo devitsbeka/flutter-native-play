@@ -125,6 +125,31 @@ export function generateRoomName(language?: string): string {
   return generateRoomIdentity(language).name;
 }
 
+/**
+ * Is this name still the one the app dealt, rather than one a host typed?
+ *
+ * Every room is created with a generated name, so "did the host name this
+ * room?" cannot be answered by asking whether a name exists. It can be
+ * answered by asking whether the name is one this generator could have
+ * produced — a mood and a creature out of these tables, in any of the seven
+ * languages, since a room made in Georgian may be looked at in English.
+ *
+ * What it is for: a room built on one of the player's own trivias should be
+ * called what the trivia is called, and a host who has since renamed it
+ * should keep their name. This is what separates those two cases.
+ *
+ * A host who types a name that happens to be in the tables ("Brave Lions")
+ * loses it to the trivia's title. That is a name they could have been dealt
+ * anyway, and the cost of being wrong is the room reading as its own party.
+ */
+export function isGeneratedRoomName(name: string | null | undefined): boolean {
+  const trimmed = (name ?? "").trim();
+  if (!trimmed) return false;
+  return LANGS.some((lang) =>
+    roomNameCandidates(lang).some((candidate) => candidate.name === trimmed),
+  );
+}
+
 /** Language-appropriate default, for when even the tables are unreachable. */
 export function getDefaultRoomName(language?: string): string {
   return normalizeLang(language) === "ka" ? "სახალისო გუნდი" : "Fun Squad";
