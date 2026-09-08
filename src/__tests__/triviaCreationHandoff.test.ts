@@ -114,9 +114,9 @@ describe("what the player sees instead of the wait", () => {
 
   it("wearing the face of the thing being made", () => {
     expect(modal).toMatch(/import triviaBuzzer from "@\/assets\/trivia-buzzer\.png";/);
-    expect(modal).toMatch(/import iconGroupOfPeople from "@\/assets\/group-of-people\.png";/);
+    expect(modal).toMatch(/import iconHouseParty from "@\/assets\/house-party\.png";/);
     expect(modal).toMatch(/trivia: triviaBuzzer,/);
-    expect(modal).toMatch(/party: iconGroupOfPeople,/);
+    expect(modal).toMatch(/party: iconHouseParty,/);
   });
 
   it("and the page opens it when the wizard hands off", () => {

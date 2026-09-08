@@ -19,11 +19,11 @@ const feed = read("src/components/home/MobileHomeFeed.tsx");
 describe("the three kinds and their faces", () => {
   it("wear the icons the create chooser offers them under", () => {
     const chooser = read("src/components/social/CreateTriviaTypeModal.tsx");
-    for (const asset of ["trivia-buzzer.png", "icon-collections.png", "group-of-people.png"]) {
+    for (const asset of ["trivia-buzzer.png", "icon-collections.png", "house-party.png"]) {
       expect(feed).toContain(`@/assets/${asset}`);
       expect(chooser).toContain(`@/assets/${asset}`);
     }
-    expect(feed).toMatch(/trivia: triviaBuzzer,\s*\n\s*party: iconGroupOfPeople,\s*\n\s*collection: iconCollections,/);
+    expect(feed).toMatch(/trivia: triviaBuzzer,\s*\n\s*party: iconHouseParty,\s*\n\s*collection: iconCollections,/);
   });
 
   it("a party is a post whose subject is personal; a collection is its own table", () => {

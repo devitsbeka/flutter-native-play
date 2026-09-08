@@ -8,7 +8,7 @@ import secretBookcase from "@/assets/secret-bookcase.png";
 import iconCollections from "@/assets/icon-collections.png";
 import triviaBuzzer from "@/assets/trivia-buzzer-3.png";
 import danceFloor from "@/assets/dance-floor.png";
-import iconGroupOfPeople from "@/assets/group-of-people.png";
+import iconHouseParty from "@/assets/house-party.png";
 
 interface ChallengeTypeModalProps {
   isOpen: boolean;
@@ -73,7 +73,7 @@ export function ChallengeTypeModal({
     },
     {
       id: "my-trivias",
-      imageIcon: iconGroupOfPeople,
+      imageIcon: iconHouseParty,
       title: t("extra.myTriviaPartyLabel"),
       subtitle: t("extra.yourQuestionsLabel"),
       glowColor: "rgba(236, 72, 153, 0.4)",

@@ -23,7 +23,7 @@ import featuredWords from "@/assets/play-chooser/featured-words.webp";
 import featuredMyTrivias from "@/assets/play-chooser/featured-mytrivias.webp";
 import triviaBuzzer from "@/assets/trivia-buzzer.png";
 import iconCollections from "@/assets/icon-collections.png";
-import iconGroupOfPeople from "@/assets/group-of-people.png";
+import iconHouseParty from "@/assets/house-party.png";
 import { useCategories } from "@/hooks/useCategories";
 import { useVipStatus } from "@/hooks/useVipStatus";
 import { AirbnbCategoryCard } from "@/components/discover/AirbnbCategoryCard";
@@ -95,7 +95,7 @@ interface Trivia {
 // whose subject is "personal"; a collection is its own table.
 const KIND_ICON: Record<TriviaKind, string> = {
   trivia: triviaBuzzer,
-  party: iconGroupOfPeople,
+  party: iconHouseParty,
   collection: iconCollections,
 };
 

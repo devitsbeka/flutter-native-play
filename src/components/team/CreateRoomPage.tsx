@@ -38,7 +38,7 @@ import { useIconLibrary } from "@/hooks/useIconLibrary";
 import iconCollections from "@/assets/icon-collections.png";
 import secretBookcase from "@/assets/secret-bookcase.png";
 import triviaBuzzer from "@/assets/trivia-buzzer-3.png";
-import iconGroupOfPeople from "@/assets/group-of-people.png";
+import iconHouseParty from "@/assets/house-party.png";
 import stickerAlbum from "@/assets/sticker-album.png";
 import featuredQuick from "@/assets/play-chooser/featured-quick.webp";
 // The Guess card's scene. The file is still called "random" — it is the
@@ -2215,7 +2215,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                       : "bg-gradient-to-br from-emerald-500 to-teal-600"
                   )}>
                     {isPersonalTrivia ? (
-                      <img src={iconGroupOfPeople} alt="" className="w-8 h-8 object-contain" />
+                      <img src={iconHouseParty} alt="" className="w-8 h-8 object-contain" />
                     ) : (
                       <img src={triviaBuzzer} alt="" className="w-8 h-8 object-contain" />
                     )}

@@ -5,7 +5,7 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import triviaBuzzer from "@/assets/trivia-buzzer.png";
 import iconCollections from "@/assets/icon-collections.png";
-import iconGroupOfPeople from "@/assets/group-of-people.png";
+import iconHouseParty from "@/assets/house-party.png";
 import secretBookcase from "@/assets/secret-bookcase.png";
 import spinTheBottle from "@/assets/spin-the-bottle.png";
 
@@ -48,7 +48,7 @@ export function CreateRoomScreen({
   const bottomOptions: GameOption[] = [
     { id: "trivia", imageIcon: triviaBuzzer, title: t("extra.trivia"), subtitle: t("extra.oneRound"), glowColor: "rgba(139, 92, 246, 0.4)" },
     { id: "collection", imageIcon: iconCollections, title: t("extra.collection"), subtitle: t("extra.multipleRounds"), glowColor: "rgba(34, 211, 238, 0.4)" },
-    { id: "party", imageIcon: iconGroupOfPeople, title: "MyTrivia Party", subtitle: t("extra.yourQuestions"), glowColor: "rgba(236, 72, 153, 0.4)" },
+    { id: "party", imageIcon: iconHouseParty, title: "MyTrivia Party", subtitle: t("extra.yourQuestions"), glowColor: "rgba(236, 72, 153, 0.4)" },
   ];
 
   const handleCreate = () => {

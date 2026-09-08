@@ -6,7 +6,7 @@ import { FeatureOnboardingCarousel, hasSeenFeatureOnboarding } from "@/component
 import { useNavigate } from "react-router-dom";
 import { Plus, Play, Loader2, Globe, Lock, ChevronDown, ChevronUp, Layers, Pencil, FileEdit, Trash2, Check } from "lucide-react";
 import triviaBuzzerIcon from "@/assets/trivia-buzzer.png";
-import iconGroupOfPeople from "@/assets/group-of-people.png";
+import iconHouseParty from "@/assets/house-party.png";
 import { triviaDisplayTitle } from "@/utils/triviaTitle";
 import { ownerHasSeenTrivia } from "@/utils/triviaFairPlay";
 import purpleHeart3d from "@/assets/icons/purple-heart-3d.png";
@@ -707,7 +707,7 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
         <div className="flex items-center gap-3">
           {/* the party's own face, not the host's avatar */}
           <div className="w-10 h-10 rounded-lg bg-pink-500/15 flex items-center justify-center flex-shrink-0">
-            <img src={iconGroupOfPeople} alt="" className="w-7 h-7 object-contain" />
+            <img src={iconHouseParty} alt="" className="w-7 h-7 object-contain" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-foreground truncate">
