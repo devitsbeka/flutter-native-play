@@ -17,6 +17,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { toast } from "@/lib/toast";
 import { supabase } from "@/integrations/supabase/client";
+import { OWN_TRIVIA_ICON_SLUG, roomPlaysOwnTrivia, roundIconSlug } from "@/utils/ownTriviaRound";
 import { siteUrl } from "@/config/site";
 import { inviteLinkPath } from "@/utils/inviteLink";
 import { useRoomMatchHistory } from "@/hooks/useRoomMatchHistory";
@@ -913,7 +914,8 @@ export function RoomLobbyV2() {
         iconSlug:
           iconForCategoryName(currentRoom.category_name)
           || getCategoryIconSlug(currentRoom.category_id ?? "")
-          || null,
+          // A trivia the player wrote has no category to take an icon from.
+          || (currentRoom.user_trivia_id ? OWN_TRIVIA_ICON_SLUG : null),
       }
     : null;
   const totalRounds = (heldRound ? 1 : 0) + queue.length;
@@ -1049,6 +1051,24 @@ export function RoomLobbyV2() {
   // A My Trivia room plays the quiz as written — its own question count —
   // so the questions-per-round choice is a library/random room's alone.
   const playsUserTrivia = !!currentRoom.user_trivia_id && !currentRoom.category_id;
+  /**
+   * The room is playing the player's own writing.
+   *
+   * Then it is not a room for strangers: it is for the friends the host
+   * invites, or for nobody (owner: "trivias created by me or my trivia
+   * parties are private ... host invites friends to join or plays solo").
+   * Both the Visibility and the Joining rows stand down — a public list and
+   * a door policy are questions a private room does not have.
+   *
+   * A room CREATED from a trivia is private by construction — `canPublish`
+   * has never included My Trivia, so `publishRoom` is false on that path —
+   * which is why its own round hides the rows outright.
+   *
+   * A trivia merely QUEUED into a room only hides them while the room is
+   * private. Hiding them on a public room would stand the host on the
+   * public list with the switch taken away, which is worse than the row.
+   */
+  const playsOwnTrivia = roomPlaysOwnTrivia(currentRoom, isPublicRoom, queue);
   const lobbyRules: LobbyRuleRow[] = [
     // No player-count picker on a classic room (owner's ask): the cap is 10
     // and the host starts whenever — with one friend or ten. The card no
@@ -1060,7 +1080,7 @@ export function RoomLobbyV2() {
       value: String(questionsPerRound(currentRoom.total_questions)),
       onChange: isHost ? (v: string) => void setQuestions(v) : undefined,
     } satisfies LobbyRuleRow]),
-    {
+    ...(playsOwnTrivia ? [] : [{
       key: "visibility",
       label: t("lobby.uVisibility"),
       options: [
@@ -1068,12 +1088,12 @@ export function RoomLobbyV2() {
         { value: "private", label: t("extra.roomPrivate") },
       ],
       value: isPublicRoom ? "public" : "private",
-      onChange: isHost ? (v) => void setVisibility(v) : undefined,
-    },
+      onChange: isHost ? (v: string) => void setVisibility(v) : undefined,
+    } satisfies LobbyRuleRow]),
     // Only a PUBLIC room has a door worth guarding. A private one is joined
     // with its code, and whoever handed that over has already said yes — so
     // the row would be a switch with nothing on the other side of it.
-    ...(isPublicRoom && hasApprovalColumn
+    ...(isPublicRoom && hasApprovalColumn && !playsOwnTrivia
       ? [{
           key: "joining",
           label: t("lobby.uJoining"),
@@ -1113,7 +1133,9 @@ export function RoomLobbyV2() {
             : null;
         const firstIconSlug = heldRound
           ? (heldRound.iconSlug ?? undefined)
-          : (firstQueue?.icon_slug ?? undefined);
+          // Rounds queued before the icon was written carry none, so it is
+          // resolved here too rather than only at the picker.
+          : roundIconSlug(firstQueue);
         return {
           label: freshStart || !firstName ? t("lobby.uSelectCategory") : firstName,
           // The extra rounds ride the FAR RIGHT of the chip (owner's ask),
