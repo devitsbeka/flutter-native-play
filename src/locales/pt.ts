@@ -2015,6 +2015,7 @@ export const pt: KaTranslations = {
     sidebarLevelSuffix: "Nível {level}",
     sidebarQuickPlay: "Jogo rápido",
     changeScene: "Mudar mascote",
+    pokeMascot: "Tocar no mascote",
     playNGames: "Jogue {count} jogos",
     nOfMDone: "{done}/{total} concluídos",
     task: "Tarefa",

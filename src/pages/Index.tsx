@@ -34,6 +34,8 @@ import { SceneSidebar } from "@/components/home/SceneSidebar";
 import { DesktopGuestLanding, DesktopGuestSceneBackground } from "@/components/home/DesktopGuestLanding";
 import { MobileSceneBackground, MobileMascotScene, MobileGuestHero } from "@/components/home/MobileHome";
 import { MobileHomeScroll } from "@/components/home/MobileHomeScroll";
+import { AnimatedMascotScene } from "@/components/home/AnimatedMascotScene";
+import { useDeveloperMode } from "@/contexts/DeveloperModeContext";
 import { useHomeMascot } from "@/hooks/useHomeMascot";
 import { useQuickDailyClaim } from "@/hooks/useQuickDailyClaim";
 import { DesktopActionCards } from "@/components/home/DesktopActionCards";
@@ -733,6 +735,10 @@ export default function Index() {
   const { mascot, isLoading: mascotLoading } = useHomeMascot(user?.id);
   const isSceneViewport = useIsSceneViewport();
   const isMobileViewport = useIsMobileViewport();
+  // Admin-only preview: the developer-mode switch swaps the photo scene for
+  // the animated recreation (see AnimatedMascotScene) so an admin can see
+  // where an animated home might go without it reaching real players.
+  const { developerMode } = useDeveloperMode();
   // The scrollable phone home: a logged-in player on a phone gets the feed of
   // feature rails, which brings its own blob background, mascot strip, friends
   // reel and profile identity — so the old absolute mobile layers stand down.
@@ -957,8 +963,11 @@ export default function Index() {
             away with it — never as a fixed page-level backdrop. iOS composites
             the scene's <video> above anything that scrolls over it regardless
             of z-index, which is how a fixed scene punched through the feed. */}
-        {user && isMobileViewport && !showHomeFeed && sceneUrl && <MobileMascotScene sceneUrl={sceneUrl} />}
-        {user && isMobileViewport && !showHomeFeed && showDefaultScene && (
+        {user && isMobileViewport && !showHomeFeed && developerMode && <AnimatedMascotScene />}
+        {user && isMobileViewport && !showHomeFeed && !developerMode && sceneUrl && (
+          <MobileMascotScene sceneUrl={sceneUrl} />
+        )}
+        {user && isMobileViewport && !showHomeFeed && !developerMode && showDefaultScene && (
           <MobileSceneBackground defaultVideoSrc={DEFAULT_SCENE_VIDEO} />
         )}
         {/* The mascot's scene (or the default Trivia King loop) as the
@@ -967,7 +976,15 @@ export default function Index() {
             layer, not here — background layers never receive them.
             Mounted only when the viewport is actually xl, so smaller
             screens never download the media. */}
-        {!isSceneViewport ? null : sceneUrl ? (
+        {!isSceneViewport ? null : developerMode ? (
+          // Non-interactive here: SceneHero's own click-catcher already owns
+          // the full-area "tap the wallpaper" gesture on desktop, and the
+          // poke reaction is a touch-first delight anyway.
+          <AnimatedMascotScene
+            className="hidden md:block absolute inset-0 z-0 select-none overflow-hidden pointer-events-none"
+            interactive={false}
+          />
+        ) : sceneUrl ? (
           /* Mascot scene: the whole artwork fits in the band BELOW the
              friends reel (top 230px), bottom-anchored and centered, so the
              subject can never sit under the reel and nothing is cropped at
@@ -1202,7 +1219,9 @@ export default function Index() {
         {showHomeFeed && (
           <MobileHomeScroll
             scene={
-              sceneUrl ? (
+              developerMode ? (
+                <AnimatedMascotScene />
+              ) : sceneUrl ? (
                 <MobileMascotScene sceneUrl={sceneUrl} />
               ) : showDefaultScene ? (
                 <MobileSceneBackground defaultVideoSrc={DEFAULT_SCENE_VIDEO} />

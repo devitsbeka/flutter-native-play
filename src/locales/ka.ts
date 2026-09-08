@@ -2303,6 +2303,7 @@ export const ka = {
     sidebarLevelSuffix: "{level} დონე",
     sidebarQuickPlay: "სწრაფი თამაში",
     changeScene: "შეცვალე მასკოტი",
+    pokeMascot: "შეეხე მასკოტს",
     playNGames: "ითამაშე {count} თამაში",
     nOfMDone: "{done}/{total} შესრულებულია",
     task: "დავალება",

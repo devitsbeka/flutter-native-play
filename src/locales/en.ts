@@ -2298,6 +2298,7 @@ export const en: KaTranslations = {
     sidebarLevelSuffix: "Level {level}",
     sidebarQuickPlay: "Quick game",
     changeScene: "Change mascot",
+    pokeMascot: "Poke mascot",
     playNGames: "Play {count} games",
     nOfMDone: "{done}/{total} completed",
     task: "Task",

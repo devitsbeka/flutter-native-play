@@ -1998,6 +1998,7 @@ export const fr: KaTranslations = {
     sidebarLevelSuffix: "Niveau {level}",
     sidebarQuickPlay: "Partie rapide",
     changeScene: "Changer de mascotte",
+    pokeMascot: "Toucher la mascotte",
     playNGames: "Joue {count} parties",
     nOfMDone: "{done}/{total} terminés",
     task: "Tâche",
