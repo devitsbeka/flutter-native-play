@@ -14,6 +14,7 @@ import { TVSetupInline } from "@/components/team/TVSetupInline";
 import { LibraryCard } from "@/components/team/CategoryPickerModal";
 import { RoundOrderModal } from "@/components/team/RoundOrderModal";
 import { RoomTitle } from "@/components/lobby/UniversalLobby";
+import { TriviaBeingMadeCard } from "@/components/team/TriviaBeingMadeCard";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { GreenPlayButton } from "@/components/shared/GreenPlayButton";
 import type { QueueItem } from "@/hooks/useRoomCategoryQueue";
@@ -116,6 +117,15 @@ export default function HomeShot() {
             />
           ))}
         </div>
+      </div>
+    );
+  }
+  if (params.get("view") === "making") {
+    // What waits on the private tab while a trivia is being generated.
+    return (
+      <div className="min-h-[100dvh] w-full space-y-2 bg-[#f7f4fb] p-4">
+        <TriviaBeingMadeCard job={{ id: "1", kind: "trivia", subject: "Georgian wine regions", startedAt: Date.now() }} />
+        <TriviaBeingMadeCard job={{ id: "2", kind: "party", subject: "80s movie night", startedAt: Date.now() }} />
       </div>
     );
   }
