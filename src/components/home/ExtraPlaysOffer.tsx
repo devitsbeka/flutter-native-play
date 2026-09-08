@@ -15,6 +15,8 @@ import {
 } from "@/config/extraPlays";
 import coinChunky from "@/assets/figma-home/coin-chunky.png";
 import gemChunky from "@/assets/figma-home/gem-chunky.png";
+import watchAdIcon from "@/assets/playlimit/watch-ad.png";
+import heartIcon from "@/assets/playlimit/heart.png";
 
 /**
  * "Play now" for a player who has run out: one game or three, paid for with
@@ -158,42 +160,45 @@ export function ExtraPlaysOffer({
     const isPending = pending === `${adPack.games}:ad`;
     return (
       <div className="mt-4 text-left">
-        <div
-          className="flex items-center gap-3 rounded-2xl px-4 py-3"
-          style={{ background: "#F5F8FF", border: "1.5px solid #C9D9F5" }}
+        {/* The whole card is the button (Figma 1110:5285's sibling screen,
+            node 1102:4335) — a dark "chunky" card in the shape every button
+            on this screen shares (rounded-bl/tl 24px, rounded-br 54px, a
+            solid colour ledge underneath for depth), the clapperboard
+            spilling over its top edge, and a "+1" heart pill standing in for
+            a second line of copy explaining the reward. */}
+        <motion.button
+          type="button"
+          onClick={() => void buy(adPack, "ad")}
+          disabled={!!pending}
+          whileTap={pending ? undefined : { scale: 0.98, y: 2 }}
+          className="relative flex w-full items-center gap-3 overflow-visible rounded-tl-[24px] rounded-tr-[24px] rounded-bl-[24px] rounded-br-[40px] border-2 border-[#949494] bg-[#5e5e5e] py-4 pl-[92px] pr-4 text-left disabled:opacity-70"
+          style={{ boxShadow: "0 6px 0 0 #262626, 0 8px 16px rgba(0,0,0,0.18)" }}
         >
-          <div
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
-            style={{ background: "#E4ECFB" }}
-          >
-            <Play className="h-5 w-5 fill-current text-[#2C5BA8]" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="font-display text-[15px] font-bold leading-tight text-[#1E1B2E]">
-              {t("playLimit.adRowTitle")}
-            </p>
-            <p className="mt-0.5 text-[12.5px] leading-tight text-slate-500">
-              {t("playLimit.adRowBody", { count: adPack.games })}
-            </p>
-          </div>
-          <motion.button
-            type="button"
-            onClick={() => void buy(adPack, "ad")}
-            disabled={!!pending}
-            whileTap={pending ? undefined : { scale: 0.96, y: 1 }}
-            className="flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl px-4 font-display text-sm font-bold text-white disabled:opacity-60"
-            style={{
-              background: "linear-gradient(90deg, #3C6FD0 0%, #5B8BE8 100%)",
-              boxShadow: "0 3px 0 #2C5BA8",
-            }}
+          <img
+            src={watchAdIcon}
+            alt=""
+            className="pointer-events-none absolute -top-3 left-2 h-[84px] w-[84px] object-contain"
+          />
+          {/* min-w-0 so a longer translation wraps instead of shoving the
+              pill past the card's own edge — a flex child's default min
+              width is its unwrapped content, not 0. */}
+          <p className="min-w-0 flex-1 font-display text-[15px] font-extrabold uppercase leading-tight text-white">
+            {t("playLimit.adRowTitle")}
+          </p>
+          <span
+            className="ml-auto flex h-9 shrink-0 items-center gap-1 rounded-full bg-white px-3 font-display text-sm font-black text-[#161e46]"
+            style={{ boxShadow: "0 2px 0 #9ca29c" }}
           >
             {isPending ? (
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-600" />
             ) : (
-              t("playLimit.adRowAction")
+              <>
+                <img src={heartIcon} alt="" className="h-5 w-5 object-contain" />
+                +1
+              </>
             )}
-          </motion.button>
-        </div>
+          </span>
+        </motion.button>
         {refused && (
           <p role="alert" className="mt-2 text-center text-xs font-semibold text-rose-500">
             {refused === "ad_limit"
