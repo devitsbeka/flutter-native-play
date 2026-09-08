@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { ArrowLeft, Bell, BellRing, Check, Loader2, Pencil, Plus, UserPlus, X } from "lucide-react";
+import { ArrowLeft, Bell, BellRing, Check, Loader2, Pencil, Play, Plus, UserPlus, X } from "lucide-react";
 import SpotlightSearch from "@/components/search/SpotlightSearch";
 import { MyTriviaLiveLogo } from "@/components/shared/MyTriviaLiveLogo";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
@@ -465,7 +465,7 @@ export function UniversalLobby({
                     : "[&:not(:first-child)]:mt-3 px-2",
               )}
             >
-              <p className="text-center font-[Nunito] text-[15px] font-semibold leading-[20px] text-[#402666]/70">
+              <p className="text-center font-[Nunito] text-[16px] font-medium leading-[19.5px] tracking-[-0.16px] text-[#402666]">
                 {start.caption}
               </p>
               {/* The host's face, right after the "…" — puts a person on the
@@ -728,27 +728,61 @@ export function UniversalLobby({
               tab === "rules" ? "pb-[50px]" : "pb-[31px]",
             )}
           >
-            <div className={cn("relative flex items-center rounded-[20px] p-[6px]", RULE_BORDER)}>
+            {/* The two tabs (1123:8947): a white bar standing on a chunky
+                lilac foot, with the open tab drawn as a bordered pane inside
+                it rather than the filled violet slab it was. Both labels stay
+                the same colour — weight is what says which one is open, so
+                the closed tab reads as a place to go rather than as text
+                switched off. */}
+            <div className="relative flex items-center gap-[6px] rounded-[28px] border border-[#ceb8e4] bg-[rgba(255,255,255,0.77)] p-[10px] shadow-[0px_8px_0px_0px_#d0bbe3]">
               {(["rules", "players"] as const).map((key) => {
                 const active = tab === key;
+                // The + rides the Players tab while it is open: the control
+                // that adds a person, on the tab that shows the people. It
+                // goes when the room is full, on the same condition that
+                // takes the Invite row below away.
+                const withInvite =
+                  key === "players"
+                  && active
+                  && !!onInvite
+                  && !(capacity && capacity.taken >= capacity.max);
                 return (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => setTab(key)}
-                    className="relative flex-1 rounded-[16px] py-2 text-center font-[Nunito] text-[16px] font-medium leading-[19.5px] tracking-[-0.16px]"
-                  >
-                    {active && (
-                      <motion.span
-                        layoutId="lobby-tab-pill"
-                        transition={{ type: "spring", stiffness: 420, damping: 34 }}
-                        className="absolute inset-0 rounded-[16px] bg-[#402666] shadow-[inset_0px_2px_4px_0px_rgba(0,0,0,0.05)] drop-shadow-[0px_2px_4px_rgba(0,0,0,0.1)]"
-                      />
+                  <div key={key} className="relative flex-1">
+                    <button
+                      type="button"
+                      onClick={() => setTab(key)}
+                      className={cn(
+                        "relative flex h-[52px] w-full items-center justify-center rounded-[14px] px-[10px] text-center font-[Nunito] text-[16px] leading-[19.5px] tracking-[-0.16px] text-[#402666]",
+                        // The + is drawn over the pane's right end, so the
+                        // label centres in what is left of it — otherwise a
+                        // language with a longer word for "Players" slides
+                        // its last letters under the glyph.
+                        withInvite && "pr-[52px]",
+                        active ? "font-bold" : "font-medium",
+                      )}
+                    >
+                      {active && (
+                        <motion.span
+                          layoutId="lobby-tab-pill"
+                          transition={{ type: "spring", stiffness: 420, damping: 34 }}
+                          className="absolute inset-0 rounded-[14px] border border-[#d1a7dc] bg-[rgba(240,218,245,0.22)]"
+                        />
+                      )}
+                      <span className="relative truncate">
+                        {key === "rules" ? labels.rules : labels.players}
+                      </span>
+                    </button>
+                    {withInvite && (
+                      <button
+                        type="button"
+                        onClick={onInvite}
+                        aria-label={labels.invite}
+                        className="absolute right-[10px] top-1/2 flex size-[40px] -translate-y-1/2 items-center justify-center rounded-[10px] bg-white shadow-[0px_2px_4px_0px_rgba(102,51,153,0.12)] transition-transform duration-100 active:scale-95"
+                      >
+                        <Plus className="size-[22px] text-[#402666]" strokeWidth={3} />
+                      </button>
                     )}
-                    <span className={cn("relative", active ? "text-white" : "text-[#402666]")}>
-                      {key === "rules" ? labels.rules : labels.players}
-                    </span>
-                  </button>
+                  </div>
                 );
               })}
             </div>
@@ -1013,11 +1047,12 @@ export function UniversalLobby({
         <div className="mx-auto w-full max-w-[700px] md:max-w-[520px]">
           {footerExtra}
           {start.disabled && captionBlock}
-          {/* 1102:4561: the violet slab, 63 tall with a hard #6906cd foot
-              under it and a white hairline inside its top edge. It was a flat
-              #8858d5 rectangle with three overlay gradients and a play
-              triangle beside the words; the mock presses like every other
-              button in the flow and says only what it does. */}
+          {/* 1123:9975: the slab is sunset now, not violet — a plum top
+              falling through pink and coral into orange, on a hard #663951
+              foot with the same white hairline inside its top edge. The
+              violet read as one more of the lilac panes it sits on; this is
+              the only warm thing on the screen, which is what an only button
+              should be. */}
           {!start.captionOnly && (
           <motion.button
             type="button"
@@ -1025,15 +1060,23 @@ export function UniversalLobby({
             onClick={start.onPress}
             disabled={start.disabled}
             className={cn(
-              "relative flex h-[63px] w-full items-center justify-center overflow-hidden rounded-[28px] border-[1.5px] border-solid border-[#402666] bg-[linear-gradient(180deg,#a374e9_0%,#cf5eff_58%,#9f5dff_100%)] shadow-[0px_4px_0px_0px_#6906cd,0px_8px_16px_0px_rgba(102,51,153,0.3)] transition-[transform,box-shadow,opacity] duration-100",
+              "relative flex h-[63px] w-full items-center justify-center overflow-hidden rounded-[18.39px] border-[1.5px] border-solid border-[#b54682] bg-[linear-gradient(175.73deg,#6c3271_11.562%,#ff5993_34.068%,rgba(255,118,98,0.65)_61.925%,#ff9120_126.14%)] shadow-[0px_4px_0px_0px_#663951,0px_8px_16px_0px_#b44582] transition-[transform,box-shadow,opacity] duration-100",
               start.disabled
                 ? "opacity-50"
-                : "active:translate-y-[2px] active:shadow-[0px_2px_0px_0px_#6906cd,0px_8px_16px_0px_rgba(102,51,153,0.3)]",
+                : "active:translate-y-[2px] active:shadow-[0px_2px_0px_0px_#663951,0px_8px_16px_0px_#b44582]",
             )}
           >
             <span aria-hidden className="pointer-events-none absolute inset-0 rounded-[inherit] shadow-[inset_0px_2px_0px_0px_rgba(255,255,255,0.45)]" />
             <span className="relative flex h-full items-center justify-center gap-2 font-display text-[20px] font-medium leading-[26px] text-white [text-shadow:1px_2px_0px_rgba(0,0,0,0.25)]">
-              {start.loading ? <Loader2 className="h-5 w-5 animate-spin" /> : start.icon}
+              {/* The play triangle the design puts before the words. A caller
+                  with its own glyph — the host's Plus to pick a category, a
+                  guest's bell — keeps it: the arrow is what Start looks like,
+                  not what every button here looks like. */}
+              {start.loading ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                start.icon ?? <Play className="h-5 w-5 fill-current" strokeWidth={0} />
+              )}
               {start.label}
             </span>
           </motion.button>
