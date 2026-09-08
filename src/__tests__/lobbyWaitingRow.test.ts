@@ -31,8 +31,12 @@ const king = read("src/pages/KingPage.tsx");
 describe("the invite line is said once", () => {
   it("the classic lobby no longer passes the hint it already shows below the CTA", () => {
     expect(classic).not.toMatch(/playersHint=\{enoughPlayers \? null : t\("extra\.rlNeedsSecondPlayer"\)\}/);
-    // The footer caption — the surviving copy — is untouched.
-    expect(classic).toMatch(/caption: !needsCategorySelection && !enoughPlayers && !isStarting \? t\("extra\.rlNeedsSecondPlayer"\) : null,/);
+    // The footer caption is still the one place that asks for an invite —
+    // it just picks between two sentences now, because a host who HAS
+    // invited somebody is waiting, not failing to invite.
+    expect(classic).toMatch(
+      /caption:\s*\n\s*!needsCategorySelection && !enoughPlayers && !isStarting\s*\n\s*\? invitedPlayers > 0\s*\n\s*\? t\("extra\.rlWaitingOnInvites"\)\s*\n\s*: t\("extra\.rlNeedsSecondPlayer"\)\s*\n\s*: null,/,
+    );
     // Exactly one place renders that string as lobby chrome now.
     expect(classic.match(/t\("extra\.rlNeedsSecondPlayer"\)/g) ?? []).toHaveLength(2); // caption + the start toast
   });

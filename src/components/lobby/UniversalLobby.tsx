@@ -417,6 +417,22 @@ export function UniversalLobby({
     ? players.map((g) => ({ ...g, players: visible(g.players) }))
     : [{ key: "all", players: visible(players as LobbyPlayer[]) }];
 
+  // How tall the footer actually is, so the list above can stop clear of
+  // it. It changes with the caption (one line, two, or none) and with the
+  // keyboard's safe area, so it is observed rather than measured once.
+  const footerRef = useRef<HTMLDivElement>(null);
+  const [footerHeight, setFooterHeight] = useState(0);
+  useLayoutEffect(() => {
+    const node = footerRef.current;
+    if (!node) return;
+    const read = () => setFooterHeight(node.getBoundingClientRect().height);
+    read();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(read);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
   // A disabled Start has to say WHY, and say it where the reason cannot be
   // pushed under the fold: above the button rather than below it. The owner
   // pressed a dead "Start Game" and had to ask what was wrong. A caption on
@@ -445,8 +461,8 @@ export function UniversalLobby({
                 start.captionOnly
                   ? "pt-4"
                   : start.disabled
-                    ? "mb-2"
-                    : "[&:not(:first-child)]:mt-2",
+                    ? "mb-3 px-2"
+                    : "[&:not(:first-child)]:mt-3 px-2",
               )}
             >
               <p className="text-center font-[Nunito] text-[15px] font-semibold leading-[20px] text-[#402666]/70">
@@ -641,7 +657,14 @@ export function UniversalLobby({
 
       {/* Body (1018:6818): the name, the card. Scrolls itself — the
           document never does on the device. */}
-      <div className="relative z-10 min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
+      <div
+        className="relative z-10 min-h-0 flex-1 overflow-y-auto overflow-x-hidden"
+        // The footer floats over this list now, so the list has to end above
+        // it — measured rather than guessed, because the footer is one line
+        // tall for a guest and three for a host with a caption under a
+        // disabled Start.
+        style={{ paddingBottom: footerHeight }}
+      >
         <div className="mx-auto flex min-h-full w-full max-w-[700px] flex-col px-4 md:max-w-[520px]">
 
           {/* The room, said once and centred: its face, its name, how full
@@ -914,8 +937,31 @@ export function UniversalLobby({
       {/* Footer (1059:532): Start Game, and nothing else — no rule above it
           and no padding of its own. The card's 20px is the whole gap, which
           is what the divider and a second 16px of padding were quietly
-          turning into 36. */}
-      <motion.div {...arrive(0.42)} className="relative z-20 shrink-0 px-4 pb-4">
+          turning into 36.
+
+          It floats over the list rather than sitting under it. As a flex
+          sibling it cut the card off at a hard horizontal line — the Invite
+          row was sliced through the middle of its glyphs and the screen
+          simply ended there, which reads as "that is the bottom" and not as
+          "there is more below" (owner's ask). Over the list, with the two
+          hazes below, the content keeps going under the button, blurred:
+          you can see something is there, and that it scrolls. The list's
+          own padding-bottom (measured, above) keeps all of it reachable. */}
+      <div ref={footerRef} className="absolute inset-x-0 bottom-0 z-20">
+        {/* The haze. Two layers, no mask: a plain blur behind the whole
+            footer, and a gradient over it that fades the tint out towards
+            the top edge. A backdrop-filter under a CSS mask is the obvious
+            way to fade the blur itself and is the one thing iOS's webview
+            renders as a hard band, so it is deliberately not used here. */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 bottom-0 top-[-34px] backdrop-blur-[12px]"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 bottom-0 top-[-34px] bg-[linear-gradient(180deg,rgba(249,219,255,0)_0%,rgba(249,219,255,0.45)_34px,rgba(249,219,255,0.72)_100%)]"
+        />
+        <motion.div {...arrive(0.42)} className="relative px-4 pb-4 pt-3">
         <div className="mx-auto w-full max-w-[700px] md:max-w-[520px]">
           {footerExtra}
           {start.disabled && captionBlock}
@@ -946,7 +992,8 @@ export function UniversalLobby({
           )}
           {!start.disabled && captionBlock}
         </div>
-      </motion.div>
+        </motion.div>
+      </div>
 
       {children}
     </div>
