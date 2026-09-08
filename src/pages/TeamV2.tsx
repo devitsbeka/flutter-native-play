@@ -10,6 +10,7 @@ import { useSound } from "@/contexts/SoundContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { CreateRoomPage } from "@/components/team/CreateRoomPage";
 import { CreateBlindTriviaModal } from "@/components/team/CreateBlindTriviaModal";
+import { TriviaBeingMadeCard } from "@/components/team/TriviaBeingMadeCard";
 import { GameStylePersonalTrivia } from "@/components/team/GameStylePersonalTrivia";
 import { JoinRoomModal } from "@/components/team/JoinRoomModal";
 import { RoomLobbyV2 } from "@/components/team/RoomLobbyV2";
@@ -427,7 +428,7 @@ function TeamContentV2() {
   // A trivia already generating in the background: the Create button says
   // so, and refuses to start a second one (owner: "while i'm creating one
   // can't create something else in parallel").
-  const { busy: triviaBusy } = useTriviaCreation();
+  const { busy: triviaBusy, job: triviaJob } = useTriviaCreation();
   const [showTriviaOnItsWay, setShowTriviaOnItsWay] = useState(false);
   const [showCreateCollectionModal, setShowCreateCollectionModal] = useState(false);
   const [showCreateTypeModal, setShowCreateTypeModal] = useState(false);
@@ -1416,6 +1417,10 @@ function TeamContentV2() {
                   nobody found. */}
               {activeTab === "private" && (
                 <div className="px-4 pt-4 space-y-2">
+                  {/* Above both lists: under "all" the trivia list only
+                      appears once there IS a trivia, so a first one would
+                      otherwise be made with nothing on screen at all. */}
+                  {triviaJob && <TriviaBeingMadeCard job={triviaJob} />}
                   {showsPrivateRooms && (privateFilterApplied !== "all" || hasRooms || !hasTrivias) && (
                     <MyRoomsSection
                       hideTV
@@ -1665,7 +1670,14 @@ function TeamContentV2() {
           setShowBlindTriviaModal(open);
           if (!open) setEditingDraftId(null);
         }}
-        onTriviaHandedOff={() => setShowTriviaOnItsWay(true)}
+        onTriviaHandedOff={() => {
+          // Land on the list the trivia will appear in, not on whatever tab
+          // the player happened to be on — Public, by default, where there
+          // is nothing to see and no sign the work started.
+          setSortFilter("all");
+          setActiveTab("private");
+          setShowTriviaOnItsWay(true);
+        }}
         onTriviaReady={async (questions, title, subject) => {
           if (!user) return;
 
@@ -1755,7 +1767,14 @@ function TeamContentV2() {
       <CreateQuizModal
         open={showCreateQuizModal}
         onOpenChange={setShowCreateQuizModal}
-        onTriviaHandedOff={() => setShowTriviaOnItsWay(true)}
+        onTriviaHandedOff={() => {
+          // Land on the list the trivia will appear in, not on whatever tab
+          // the player happened to be on — Public, by default, where there
+          // is nothing to see and no sign the work started.
+          setSortFilter("all");
+          setActiveTab("private");
+          setShowTriviaOnItsWay(true);
+        }}
         onQuizCreated={() => setActiveTab("private")}
         onSwitchToCollection={() => setShowCreateCollectionModal(true)}
       />

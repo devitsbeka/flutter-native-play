@@ -47,8 +47,9 @@ describe("the work outlives the screen that started it", () => {
     expect(blind).toMatch(/onTriviaHandedOff\?\.\(\);\s*\n\s*void handleClose\(\);/);
     expect(blind).toMatch(/onClick=\{handOffGeneration\}/);
     expect(blind).not.toMatch(/onClick=\{generateQuestions\}/);
-    // And the page opens the card off the same signal.
-    expect(page).toMatch(/onTriviaHandedOff=\{\(\) => setShowTriviaOnItsWay\(true\)\}/);
+    // And the page opens the card off the same signal (and lands on the
+    // tab the trivia will appear on — see triviaOnItsWayLanding.test.ts).
+    expect(page).toMatch(/onTriviaHandedOff=\{\(\) => \{[\s\S]*?setShowTriviaOnItsWay\(true\);/);
   });
 
   it("and the other door into the generator does the same", () => {
@@ -79,7 +80,7 @@ describe("one trivia at a time", () => {
 
   it("and both Create buttons say so and stand down", () => {
     // The page's own button (md+) and the filter bar's (mobile).
-    expect(page).toMatch(/const \{ busy: triviaBusy \} = useTriviaCreation\(\);/);
+    expect(page).toMatch(/const \{ busy: triviaBusy, job: triviaJob \} = useTriviaCreation\(\);/);
     expect(page).toMatch(/triviaBusy\s*\n?\s*\? \{ disabled: true \}/);
     expect(page).toMatch(/t\("extra\.triviaCreatingBtn"\)/);
     expect(page).toMatch(/addBusy=\{triviaBusy\}/);
@@ -121,7 +122,7 @@ describe("what the player sees instead of the wait", () => {
 
   it("and the page opens it when the wizard hands off", () => {
     expect(page).toMatch(/<TriviaOnItsWayModal/);
-    expect(page).toMatch(/onTriviaHandedOff=\{\(\) => setShowTriviaOnItsWay\(true\)\}/);
+    expect(page).toMatch(/onTriviaHandedOff=\{\(\) => \{[\s\S]*?setShowTriviaOnItsWay\(true\);/);
   });
 
   it("in the reader's language", () => {
