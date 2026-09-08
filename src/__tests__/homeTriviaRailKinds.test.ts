@@ -19,18 +19,10 @@ const feed = read("src/components/home/MobileHomeFeed.tsx");
 describe("the three kinds and their faces", () => {
   it("wear the icons the create chooser offers them under", () => {
     const chooser = read("src/components/social/CreateTriviaTypeModal.tsx");
-    // Trivia and collection are icons in both places.
-    for (const asset of ["trivia-buzzer.png", "icon-collections.png"]) {
+    for (const asset of ["trivia-buzzer.png", "icon-collections.png", "group-of-people.png"]) {
       expect(feed).toContain(`@/assets/${asset}`);
       expect(chooser).toContain(`@/assets/${asset}`);
     }
-    // A party is the exception now: the chooser gives it its own wordmark,
-    // which carries the name, so the tile has no caption under it. The
-    // rail's card is a small square face and keeps the square icon — a
-    // 3.3:1 wordmark is not legible at that size and is not a face.
-    expect(chooser).toContain("MyTriviaPartyLogo");
-    expect(chooser).not.toContain("@/assets/group-of-people.png");
-    expect(feed).toContain("@/assets/group-of-people.png");
     expect(feed).toMatch(/trivia: triviaBuzzer,\s*\n\s*party: iconGroupOfPeople,\s*\n\s*collection: iconCollections,/);
   });
 
