@@ -29,6 +29,19 @@ describe("the sheet introduces itself", () => {
     expect(sheet).toMatch(/\{t\("extra\.tvSheetPitch"\)\}/);
   });
 
+  it("against the TV, with the words beside it rather than under it", () => {
+    // The same retro TV the pairing modal wears, so the sheet is
+    // recognisable as the TV one before a word of it is read (owner's ask).
+    expect(sheet).toMatch(/import retroTvIcon from '@\/assets\/retro-tv-colored\.png';/);
+    const header = sheet.slice(sheet.indexOf('className="mb-4 flex items-start gap-3"'), sheet.indexOf("{/* Instructions */}"));
+    expect(header).toMatch(/src=\{retroTvIcon\}/);
+    // Icon first, then the title, then the line under it.
+    expect(header.indexOf("retroTvIcon")).toBeLessThan(header.indexOf('t("lobby.uPlayOnTv")'));
+    expect(header.indexOf('t("lobby.uPlayOnTv")')).toBeLessThan(header.indexOf('t("extra.tvSheetPitch")'));
+    // Not the centred stack it replaced.
+    expect(sheet).not.toMatch(/className="mb-4 text-center"/);
+  });
+
   it("above the instruction and the code, not below them", () => {
     // The order is the point: the reason, then the how.
     const pitch = sheet.indexOf('t("extra.tvSheetPitch")');
