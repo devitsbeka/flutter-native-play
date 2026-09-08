@@ -50,15 +50,23 @@ describe("the footer floats over the list", () => {
   });
 
   it("with a blur that ramps, so it has no edge of its own", () => {
-    // One uniform pane put a hard line across the screen where it began.
-    // Six bottom-anchored panes of rising strength instead — 1px of blur at
-    // the top of the ramp, 26 at the button.
-    expect(lobby).toMatch(/\{ top: -72, blur: 1 \}/);
-    expect(lobby).toMatch(/\{ top: -12, blur: 26 \}/);
+    // Every layer spans the whole ramp and fades ITSELF in over a different
+    // stretch of it, so the radius climbs continuously from 2px to 26 and
+    // no layer contributes an edge. Panes that merely START at different
+    // heights turn one hard line into several, which is what this replaced.
+    expect(lobby).toMatch(/\{ blur: 2, from: 0, to: 25 \}/);
+    expect(lobby).toMatch(/\{ blur: 26, from: 70, to: 100 \}/);
     expect(lobby).toMatch(/backdropFilter: `blur\(\$\{step\.blur\}px\)`/);
-    // Never as a mask over a single blur: that is the shape iOS's webview
-    // renders as a band.
-    expect(lobby).not.toMatch(/mask-image[^\n]*backdrop/);
+    expect(lobby).toMatch(
+      /WebkitMaskImage: `linear-gradient\(180deg, transparent \$\{step\.from\}%, #000 \$\{step\.to\}%\)`/,
+    );
+    // Masks are the mechanism, so every layer must carry one: an unmasked
+    // layer is a uniform pane and brings its own edge back.
+    const ramp = lobby.slice(lobby.indexOf("{ blur: 2, from: 0, to: 25 }"), lobby.indexOf("The tint rides the same ramp"));
+    expect((ramp.match(/blur: \d+/g) ?? []).length).toBe(4);
+    // All four start at the same height — the mask does the ramping, not
+    // the geometry.
+    expect((ramp.match(/top-\[-120px\]/g) ?? []).length).toBe(1);
   });
 
   it("and the list stops clear of it, by measurement", () => {
