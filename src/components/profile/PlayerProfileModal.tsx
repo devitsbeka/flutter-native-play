@@ -1,14 +1,11 @@
 import { BackgroundVideo } from "@/components/shared/BackgroundVideo";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, UserPlus, Swords, Gamepad2, Check, Clock, Heart, Play, Send, ArrowRight, Users, Loader2, Camera, Plus, Pencil } from "lucide-react";
+import { ChevronLeft, UserPlus, Swords, Check, Clock, Send, ArrowRight, Users, Loader2, Camera, Plus, Pencil } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import iconTrophy from "@/assets/icon-trophy.png";
-import iconTrivia from "@/assets/trivia-buzzer.png";
 import iconInfo from "@/assets/icon-info.png";
-import iconCollections from "@/assets/icon-collections.png";
 
 import { ChunkyButton } from "@/components/ui/chunky-button";
-import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { usePlayerProfile as usePlayerProfileData, InteractionLogItem } from "@/hooks/usePlayerProfile";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -60,16 +57,6 @@ interface PlayerProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
   userId: string | null;
-  /**
-   * Drop the trivias tab.
-   *
-   * Opened from a join request, this sheet answers one question — who is
-   * asking to come in — and the answer is their name, their record and what
-   * they have won. Their quizzes are a shop window in the middle of a yes/no
-   * decision, and tapping one would navigate the host out of the lobby they
-   * were deciding in.
-   */
-  hideTrivias?: boolean;
 }
 
 const ACHIEVEMENT_ICONS: Record<string, string> = {
@@ -104,7 +91,7 @@ const TAB_TRIGGER_CLASS = [
 const TAB_ICON_CLASS =
   "w-9 h-9 transition-all group-data-[state=inactive]:opacity-60";
 
-export function PlayerProfileModal({ isOpen, onClose, userId, hideTrivias }: PlayerProfileModalProps) {
+export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileModalProps) {
   const { user, profile } = useAuth();
   const bubbleVideo = useResponsiveVideo("/videos/floating-blob.mp4");
   const { isAdmin } = useAdminRole();
@@ -138,7 +125,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId, hideTrivias }: Pla
    *
    * The tabs cannot be left uncontrolled. `defaultValue` is read once, at
    * mount, and at that moment the record and the facts are still in flight —
-   * so it always resolved to "trivias", and Info then appeared beside it
+   * so it always resolved to "trophies", and Info then appeared beside it
    * already unselected. Null means "nobody has chosen", which is what lets
    * the default below land late without overriding a real choice.
    */
@@ -155,25 +142,11 @@ export function PlayerProfileModal({ isOpen, onClose, userId, hideTrivias }: Pla
   // the reader — a refetch that comes back with nothing to put in it — and a
   // Tabs whose value names no trigger renders an empty panel with nothing
   // selected, which is what "switching tabs is broken" looks like.
-  const showTriviasTab = !hideTrivias;
-  const fallbackTab = showInfoTab ? "info" : showTriviasTab ? "trivias" : "trophies";
+  const fallbackTab = showInfoTab ? "info" : "trophies";
   const activeTab =
-    chosenTab
-    && (chosenTab !== "info" || showInfoTab)
-    && (chosenTab !== "trivias" || showTriviasTab)
+    chosenTab && (chosenTab !== "info" || showInfoTab)
       ? chosenTab
       : fallbackTab;
-
-  // Navigate to trivia/collection lobby pages
-  const handlePlayTrivia = (triviaId: string) => {
-    onClose();
-    navigate(`/trivia/${triviaId}`);
-  };
-
-  const handlePlayCollection = (collectionId: string) => {
-    onClose();
-    navigate(`/collection/${collectionId}`);
-  };
 
   const getFlagEmoji = (countryCode: string) => {
     const codePoints = countryCode
@@ -576,7 +549,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId, hideTrivias }: Pla
                   )}
                 </div>
 
-                {/* Tabs - Trivias and Trophies (both visible to everyone) */}
+                {/* Tabs - Trophies (visible to everyone), Info when it has content */}
                 {/* Info leads when there is something in it — the record
                     between you and what they are best at is what a visitor
                     came for. It is dropped entirely rather than opened onto
@@ -594,25 +567,17 @@ export function PlayerProfileModal({ isOpen, onClose, userId, hideTrivias }: Pla
                 <Tabs value={activeTab} onValueChange={setChosenTab} className="px-4 pb-4">
                   <TabsList
                     className={`grid w-full mb-4 h-auto gap-1 rounded-2xl bg-primary/[0.07] p-1.5 ${
-                      ["grid-cols-1", "grid-cols-2", "grid-cols-3"][
-                        (showInfoTab ? 1 : 0) + (showTriviasTab ? 1 : 0)
-                      ]
+                      showInfoTab ? "grid-cols-2" : "grid-cols-1"
                     }`}
                   >
                     {showInfoTab && (
                       <TabsTrigger value="info" className={TAB_TRIGGER_CLASS}>
-                        {/* The same 3D art the other two tabs use, rather than
-                            a lucide glyph — crossed swords beside a tab
-                            labelled "info" read as a second Challenge button.
-                            128px like its siblings, which covers w-9 at 3x. */}
+                        {/* The same 3D art the other tab uses, rather than a
+                            lucide glyph — crossed swords beside a tab labelled
+                            "info" read as a second Challenge button. 128px
+                            like its sibling, which covers w-9 at 3x. */}
                         <img src={iconInfo} alt="" className={TAB_ICON_CLASS} />
                         <span className="text-xs">{t("extra.infoTab")}</span>
-                      </TabsTrigger>
-                    )}
-                    {showTriviasTab && (
-                      <TabsTrigger value="trivias" className={TAB_TRIGGER_CLASS}>
-                        <img src={iconTrivia} alt="" className={TAB_ICON_CLASS} />
-                        <span className="text-xs">{t("extra.triviasTab")}</span>
                       </TabsTrigger>
                     )}
                     <TabsTrigger value="trophies" className={TAB_TRIGGER_CLASS}>
@@ -653,84 +618,6 @@ export function PlayerProfileModal({ isOpen, onClose, userId, hideTrivias }: Pla
                             {ACHIEVEMENT_ICONS[achievement.achievement_id] || "🏅"}
                           </motion.div>
                         ))}
-                      </div>
-                    )}
-                  </TabsContent>
-
-                  <TabsContent value="trivias">
-                    {data.trivias.length === 0 && data.collections.length === 0 ? (
-                      <div className="text-center py-8 text-muted-foreground">
-                        <p>{t("extra.noTriviasProfileYet")}</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {/* Trivias */}
-                        {data.trivias.length > 0 && (
-                          <div className="space-y-3">
-                            {data.trivias.map((trivia) => (
-                              <motion.div
-                                key={trivia.id}
-                                initial={{ y: 10, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                onClick={() => handlePlayTrivia(trivia.id)}
-                                className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border cursor-pointer hover:bg-accent/50 active:scale-[0.98] transition-all"
-                              >
-                                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center overflow-hidden">
-                                  {trivia.cover_image ? (
-                                    <img src={trivia.cover_image} alt="" className="w-full h-full object-cover rounded-lg" />
-                                  ) : trivia.icon_slug ? (
-                                    <DynamicIcon slug={trivia.icon_slug} size={32} hideIfEmpty />
-                                  ) : (
-                                    <Gamepad2 className="w-6 h-6 text-primary" />
-                                  )}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="font-medium text-foreground truncate">{trivia.title}</p>
-                                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                                    <span className="flex items-center gap-1">
-                                      <Play className="w-3 h-3" /> {trivia.plays_count || 0}
-                                    </span>
-                                    <span className="flex items-center gap-1">
-                                      <Heart className="w-3 h-3" /> {trivia.likes_count || 0}
-                                    </span>
-                                  </div>
-                                </div>
-                              </motion.div>
-                            ))}
-                          </div>
-                        )}
-                        
-                        {/* Collections */}
-                        {data.collections.length > 0 && (
-                          <div className="grid grid-cols-2 gap-3">
-                            {data.collections.map((collection) => (
-                              <motion.div
-                                key={collection.id}
-                                initial={{ scale: 0.9, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                onClick={() => handlePlayCollection(collection.id)}
-                                className="rounded-xl overflow-hidden border border-border cursor-pointer hover:bg-accent/50 active:scale-[0.98] transition-all"
-                              >
-                                <div 
-                                  className="aspect-video"
-                                  style={{ background: collection.cover_gradient }}
-                                >
-                                  {collection.cover_image && (
-                                    <img src={collection.cover_image} alt="" className="w-full h-full object-cover" />
-                                  )}
-                                </div>
-                                <div className="p-2 bg-card">
-                                  <p className="font-medium text-sm text-foreground truncate">{collection.title}</p>
-                                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                    <span className="flex items-center gap-1">
-                                      <Play className="w-3 h-3" /> {collection.plays_count || 0}
-                                    </span>
-                                  </div>
-                                </div>
-                              </motion.div>
-                            ))}
-                          </div>
-                        )}
                       </div>
                     )}
                   </TabsContent>

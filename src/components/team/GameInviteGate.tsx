@@ -50,7 +50,7 @@ export function GlobalGameInviteGate() {
     <PersonAskModal
       motionKey="invite-gate"
       person={next?.sender}
-      onOpenProfile={() => next && openProfile(next.sender_id, { hideTrivias: true })}
+      onOpenProfile={() => next && openProfile(next.sender_id)}
       profileLabel={t("extra.joinRequestSeeProfile")}
       body={t("extra.inviteModalBody")}
       declineLabel={t("extra.notifDecline")}

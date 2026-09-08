@@ -12,13 +12,19 @@
  * clock rather than watching an ad or going PRO (owner: "check if you merge
  * to main, i can't see design i provided via Figma link").
  *
- * One thing the reference does NOT get copied verbatim: its fine print reads
- * "first 3 days free, then 59.88 GEL/year" — a trial and an annual plan this
- * app's checkout does not offer (`useStorePrice`/`PRICES.pro_monthly` is a
- * plain monthly price with no trial wired in here). Printing that line would
- * be a 3.1.2 rejection waiting to happen — a paywall promising money terms
- * the purchase does not honour. The real price and the real
- * SubscriptionTerms disclosure stay exactly where they were.
+ * The reference's fine print reads "first 3 days free, then 59.88 GEL/year",
+ * and its button offers the trial. That copy was left off at first, because
+ * the card sold the MONTHLY plan and monthly carries no introductory offer on
+ * either platform — printing it would have been a paywall promising money
+ * terms the purchase does not honour (3.1.2).
+ *
+ * It says it now, because the card sells the plan the promise belongs to: the
+ * annual one, which really does carry a trial (`trialDays` on the web, App
+ * Store Connect's own `introFreeDays` on a phone). Neither the days nor the
+ * figures are typed into the component — the sentence is `paywall.footnoteTrial`
+ * filled in from the store, and it falls back to the trial-free sentence
+ * wherever there is no offer to claim. Same rule for the button (owner: "button
+ * should say what on design is shown and below texts also").
  */
 
 import { describe, expect, it } from "vitest";
@@ -31,8 +37,16 @@ const adOffer = read("src/components/home/ExtraPlaysOffer.tsx");
 
 describe("the card behind the Play button", () => {
   it("leads with what happened, then that there is a choice", () => {
-    expect(modal).toMatch(/\{t\("playLimit\.limitReached"\)\}/);
-    expect(modal).toMatch(/\{t\("playLimit\.chooseHow"\)\}/);
+    expect(modal).toMatch(/"playLimit\.limitReached"/);
+    expect(modal).toMatch(/"playLimit\.chooseHow"/);
+  });
+
+  it("and says the other thing it can be refusing", () => {
+    // The same screen is the Pro door on the online page's Create button,
+    // where neither an ad nor the clock is an answer.
+    expect(modal).toMatch(/"playLimit\.roomsLockedTitle"/);
+    expect(modal).toMatch(/"playLimit\.roomsLockedBody"/);
+    expect(modal).toMatch(/\{reason === "lives" && \(/);
   });
 
   it("and the old chrome is gone: no hourglass, no top-of-card countdown, no corner X", () => {
@@ -52,18 +66,27 @@ describe("the PRO card", () => {
   });
 
   it("keeps the real price and the real renewal disclosure", () => {
-    // Both survive verbatim from before the reskin — this is the guard
-    // against someone matching the Figma reference's trial copy instead.
-    expect(modal).toMatch(/\{proPrice\.display\}/);
-    expect(modal).toMatch(/\{monthLabel\(\)\}/);
+    // The price and the period reach the sentence from the store and the
+    // plan, never from a figure typed into the component.
+    expect(modal).toMatch(/\.replace\("\{price\}", proPrice\.display\)/);
+    expect(modal).toMatch(/\.replace\("\{period\}", t\(periodKeyFor\(proPlan\)\)\)/);
     expect(modal).toMatch(/<SubscriptionTerms className="mt-3 text-center" onNavigate=\{onClose\} \/>/);
-    // And no borrowed promise of a trial or a yearly price this checkout
-    // does not sell.
-    expect(modal).not.toMatch(/free trial|3 days free|59\.88/i);
+    // No borrowed figures: the reference's own numbers must not be typed in.
+    expect(modal).not.toMatch(/3 days free|59\.88/i);
   });
 
-  it("and the button says PRO, not a claim about being free", () => {
-    expect(modal).toMatch(/\{t\("playLimit\.becomePro"\)\}/);
+  it("and sells the plan whose promise it is printing", () => {
+    // The trial sentence belongs to the annual plan. Pointing the button at
+    // monthly while printing it is the 3.1.2 mismatch this guards.
+    expect(modal).toMatch(/PRO_PLANS\.find\(\(plan\) => plan\.id === "annual"\)/);
+    expect(modal).toMatch(/proPlan\.months >= 12 \? "year" : "month"/);
+    // And the trial is only claimed where the store grants one.
+    expect(modal).toMatch(/introFreeDays/);
+    expect(modal).toMatch(/t\(trialDays \? "paywall\.footnoteTrial" : "paywall\.footnote"\)/);
+  });
+
+  it("and the button offers the trial only where there is one", () => {
+    expect(modal).toMatch(/t\(trialDays \? "paywall\.ctaTrial" : "playLimit\.becomePro"\)/);
   });
 });
 
@@ -127,7 +150,7 @@ describe("in the reader's language", () => {
   for (const lang of ["en", "ka", "de", "es", "fr", "it", "pt"]) {
     it(`${lang} has the new copy`, () => {
       const src = read(`src/locales/${lang}.ts`);
-      for (const key of ["chooseHow", "giveUp", "giveUpBody"]) {
+      for (const key of ["chooseHow", "giveUp", "giveUpBody", "roomsLockedTitle", "roomsLockedBody"]) {
         expect(src, `${lang}.${key}`).toMatch(new RegExp(`${key}: "[^"]+",`));
       }
     });

@@ -126,8 +126,11 @@ describe("the party and the friends icon are not the same picture", () => {
   it("and the friends artwork stays where it was", () => {
     // The collision, from the other side: these mean people, not a party,
     // and moving them would just swap which screen is wrong.
+    // The shop reel dropped it entirely when the PRO banner was redrawn to
+    // Figma 1119:5470 — the card leads with a photographic hero now and has
+    // no icon slot beside the title for either picture to be wrong in.
     expect(read("src/components/shop/MobileProCarousel.tsx"))
-      .toContain("@/assets/group-of-people.png");
+      .not.toContain("group-of-people");
     expect(read("src/features/home-v3/proBenefits.ts"))
       .toContain("@/assets/icons/group-of-people.png");
     expect(read("src/components/pro/ProPaywallModal.tsx"))

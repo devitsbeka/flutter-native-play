@@ -107,7 +107,7 @@ export function GlobalFriendRequestGate() {
     <PersonAskModal
       motionKey="friend-ask-gate"
       person={person}
-      onOpenProfile={() => data.sender_id && openProfile(data.sender_id, { hideTrivias: true })}
+      onOpenProfile={() => data.sender_id && openProfile(data.sender_id)}
       profileLabel={t("extra.joinRequestSeeProfile")}
       body={t("extra.friendAskBody")}
       declineLabel={t("notifications.decline")}

@@ -834,11 +834,14 @@ describe("the host's doorstep", () => {
 
   it("shows the asker's record and trophies but not their quizzes", () => {
     const gate = read("src/components/team/JoinRequestGate.tsx");
-    expect(gate).toMatch(/openProfile\(next\.user_id, \{ hideTrivias: true \}\)/);
+    expect(gate).toMatch(/openProfile\(next\.user_id\)/);
+    // The profile modal never has a quizzes tab at all now - trivias are
+    // private, shown only in a creator's own private tab on the online-game
+    // page, never on anyone's profile.
     const modal = read("src/components/profile/PlayerProfileModal.tsx");
-    expect(modal).toMatch(/const showTriviasTab = !hideTrivias/);
-    // Trophies must survive the hiding — they are half of what the host is
-    // looking at.
+    expect(modal).not.toMatch(/TabsTrigger value="trivias"/);
+    expect(modal).not.toMatch(/TabsContent value="trivias"/);
+    // Trophies still show — they are half of what the host is looking at.
     expect(modal).toMatch(/<TabsTrigger value="trophies"/);
   });
 });

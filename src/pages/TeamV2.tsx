@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, Plus, Layers, Loader2 } from "lucide-react";
+import { Users, Plus, Layers, Loader2, Lock } from "lucide-react";
 import { MultiplayerProviderV2, useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
@@ -59,6 +59,7 @@ import { HeaderActions } from "@/components/shared/HeaderActions";
 import { TVMirrorModal } from "@/components/tv/TVMirrorModal";
 import { useProGating } from "@/hooks/useProGating";
 import { ProRequiredModal } from "@/components/shared/ProRequiredModal";
+import { PlayLimitModal } from "@/components/home/PlayLimitModal";
 import {
   UnifiedFiltersBar,
   roomFilterOptions,
@@ -117,7 +118,21 @@ function TeamContentV2() {
   } = useGameInvitations();
   const { createRoom } = useMultiplayerV2();
   const queryClient = useQueryClient();
-  const { showProModal, setShowProModal, gatedFeature } = useProGating();
+  const { showProModal, setShowProModal, gatedFeature, isVip } = useProGating();
+  /**
+   * Making a room is a subscriber's to do, and the button says so.
+   *
+   * It used to open the create screen for everybody and the Pro door was
+   * somewhere further in, so a player picked a category, named a room and
+   * only then met the wall. A padlock on the button and the wall on the tap
+   * costs them one press instead of four (owner's ask).
+   */
+  const roomsLocked = !isVip;
+  const [showRoomsWall, setShowRoomsWall] = useState(false);
+  const openCreateRoom = () => {
+    if (roomsLocked) return setShowRoomsWall(true);
+    setShowCreateModal(true);
+  };
   // Ads are strictly opt-in: a player sees one only by pressing a button
   // that says so (extra plays, spins, power-ups). Room creation, challenges
   // and TV flows run without any ad gate.
@@ -1350,7 +1365,7 @@ function TeamContentV2() {
                       ? { disabled: true }
                       : instantTouchProps(() =>
                           activeTab === "public"
-                            ? setShowCreateModal(true)
+                            ? openCreateRoom()
                             : setShowCreateTypeModal(true),
                         ))}
                     aria-busy={triviaBusy || undefined}
@@ -1363,6 +1378,9 @@ function TeamContentV2() {
                         chooser, which leads with a room and offers the three
                         trivia types under it. */}
                     {triviaBusy && <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2.5} />}
+                    {!triviaBusy && activeTab === "public" && roomsLocked && (
+                      <Lock className="h-4 w-4" strokeWidth={2.5} />
+                    )}
                     {triviaBusy
                       ? t("extra.triviaCreatingBtn")
                       : activeTab === "public"
@@ -1381,8 +1399,9 @@ function TeamContentV2() {
                     filterOptions={publicFilterOptionsShown}
                     searchQuery={publicSearchQuery}
                     onSearchQueryChange={setPublicSearchQuery}
-                    onAddClick={() => setShowCreateModal(true)}
+                    onAddClick={openCreateRoom}
                     addButtonText={t("extra.addRoom")}
+                    addLocked={roomsLocked}
                   />
                 )}
 
@@ -1866,6 +1885,15 @@ function TeamContentV2() {
         isOpen={showProModal}
         onClose={() => setShowProModal(false)}
         feature={gatedFeature}
+      />
+
+      {/* The padlock on Create's own screen (Figma 1102:4315, the rooms
+          wording): what is locked, and the one way to open it. No ad row and
+          no "give up" here — neither watching nor waiting makes a room. */}
+      <PlayLimitModal
+        reason="rooms"
+        isOpen={showRoomsWall}
+        onClose={() => setShowRoomsWall(false)}
       />
     </MainLayout>
   );
