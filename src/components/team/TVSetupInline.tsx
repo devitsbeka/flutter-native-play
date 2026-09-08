@@ -8,6 +8,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from "@/lib/toast";
 import { useNavigate } from 'react-router-dom';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
+import retroTvIcon from '@/assets/retro-tv-colored.png';
 
 interface TVSetupInlineProps {
   onComplete: () => void;
@@ -390,14 +391,26 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
                   
                   The title reuses the lobby's own `uPlayOnTv`: the same three
                   words already translated in seven languages, rather than a
-                  second string that has to be kept in step with it. */}
-              <div className="mb-4 text-center">
-                <h3 className="font-display text-[19px] font-bold leading-[26px] text-[#402666]">
-                  {t("lobby.uPlayOnTv")}
-                </h3>
-                <p className="mt-1 text-[13px] leading-[18px] text-[#402666]/70">
-                  {t("extra.tvSheetPitch")}
-                </p>
+                  second string that has to be kept in step with it.
+
+                  The set beside it rather than above it (owner's ask): the
+                  same retro TV the pairing modal wears, so the sheet is
+                  recognisable as the TV one before a word of it is read, and
+                  the two lines read as one block against it. */}
+              <div className="mb-4 flex items-start gap-3">
+                <img
+                  src={retroTvIcon}
+                  alt=""
+                  className="h-12 w-12 shrink-0 object-contain"
+                />
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-display text-[19px] font-bold leading-[26px] text-[#402666]">
+                    {t("lobby.uPlayOnTv")}
+                  </h3>
+                  <p className="mt-0.5 text-[13px] leading-[18px] text-[#402666]/70">
+                    {t("extra.tvSheetPitch")}
+                  </p>
+                </div>
               </div>
 
               {/* Instructions */}
