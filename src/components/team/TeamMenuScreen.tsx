@@ -4,7 +4,7 @@ import { ArrowLeft, Sparkles } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import triviaBuzzer from "@/assets/trivia-buzzer.png";
 import iconCollections from "@/assets/icon-collections.png";
-import iconGroupOfPeople from "@/assets/group-of-people.png";
+import iconHouseParty from "@/assets/house-party.png";
 import secretBookcase from "@/assets/secret-bookcase.png";
 import spinTheBottle from "@/assets/spin-the-bottle.png";
 import danceFloor from "@/assets/dance-floor.png";
@@ -104,7 +104,7 @@ export const TeamMenuScreen = forwardRef<HTMLDivElement, TeamMenuScreenProps>(
       },
       {
         id: "party",
-        imageIcon: iconGroupOfPeople,
+        imageIcon: iconHouseParty,
         icon: null,
         title: "MyTrivia Party",
         subtitle: t("extra.yourQuestions"),

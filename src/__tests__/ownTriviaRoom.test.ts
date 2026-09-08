@@ -53,7 +53,9 @@ describe("a round that is the player's own trivia", () => {
   it("wears the MyTrivia face when it has none of its own", () => {
     expect(roundIconSlug({ source_type: "user_trivia" })).toBe(OWN_TRIVIA_ICON_SLUG);
     // The catalogue's own name for it — the same art the create menu shows.
-    expect(OWN_TRIVIA_ICON_SLUG).toBe("group-of-people");
+    // Its own face, not the one the Family PRO plan and the invite-a-friend
+    // benefits wear: those keep group-of-people, this is "House Party".
+    expect(OWN_TRIVIA_ICON_SLUG).toBe("house-party");
   });
 
   it("but never overrides an icon it was given", () => {

@@ -5,7 +5,7 @@ import { useTriviaDrafts } from "@/hooks/useTriviaDrafts";
 import { useLanguage } from "@/contexts/LanguageContext";
 import triviaBuzzer from "@/assets/trivia-buzzer.png";
 import iconCollections from "@/assets/icon-collections.png";
-import iconGroupOfPeople from "@/assets/group-of-people.png";
+import iconHouseParty from "@/assets/house-party.png";
 
 function formatTimeAgo(date: Date, t: (key: string, params?: Record<string, string | number>) => string) {
   const diffMs = Date.now() - date.getTime();
@@ -79,7 +79,7 @@ export function DraftsList({ onResumeDraft, onClose }: DraftsListProps) {
                   : "bg-gradient-to-br from-purple-500/30 to-violet-600/30"
               }`}>
                 <img 
-                  src={isPersonal ? iconGroupOfPeople : triviaBuzzer} 
+                  src={isPersonal ? iconHouseParty : triviaBuzzer} 
                   alt="" 
                   className="w-7 h-7 object-contain"
                 />

@@ -7,7 +7,7 @@ import { useMyRooms, MyRoom, RoomFilter, isActiveTVSession } from "@/hooks/useMy
 import iconKingLounge from "@/assets/play-chooser/icon-king.webp";
 import iconBattleLounge from "@/assets/play-chooser/icon-crate.png";
 import iconWordsLounge from "@/assets/play-chooser/icon-words.webp";
-import iconPartyLounge from "@/assets/group-of-people.png";
+import iconPartyLounge from "@/assets/house-party.png";
 import { roomKind, routeForRoom } from "@/utils/roomRoutes";
 import { roomCardAction } from "@/utils/roomCardAction";
 import { RoomCardPlayButton } from "@/components/team/RoomCardPlayButton";
