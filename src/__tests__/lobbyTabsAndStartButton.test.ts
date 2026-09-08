@@ -76,10 +76,19 @@ describe("the tab bar", () => {
 
   it("draws the open tab as a bordered pane, not a filled slab", () => {
     expect(lobby).toMatch(
-      /rounded-\[14px\] border border-\[#d1a7dc\] bg-\[rgba\(240,218,245,0\.22\)\]/,
+      /"absolute inset-0 border border-\[#d1a7dc\] bg-\[rgba\(240,218,245,0\.22\)\]",\s*\n\s*tabRadius,/,
     );
     expect(lobby).not.toMatch(/bg-\[#402666\] shadow-\[inset_0px_2px_4px/);
     expect(lobby).not.toMatch(/active \? "text-white" : "text-\[#402666\]"/);
+  });
+
+  it("scoops the tab bar's own outer corner on each side, same 24/24/24/54 the category chip wears", () => {
+    // Left (rules) tab scoops bottom-left; right (players) tab scoops
+    // bottom-right — mirrored, so the pair reads as one continuous shape
+    // whichever side is open.
+    expect(lobby).toMatch(
+      /"rounded-tl-\[24px\] rounded-tr-\[24px\] rounded-br-\[24px\] rounded-bl-\[54px\]"\s*\n\s*: "rounded-tl-\[24px\] rounded-tr-\[24px\] rounded-bl-\[24px\] rounded-br-\[54px\]";/,
+    );
   });
 
   it("says which tab is open with weight, both labels the same colour", () => {

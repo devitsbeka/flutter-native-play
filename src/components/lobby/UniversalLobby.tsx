@@ -752,13 +752,22 @@ export function UniversalLobby({
             <div className="relative flex items-center gap-[6px] rounded-[28px] border border-[#ceb8e4] bg-[rgba(255,255,255,0.77)] p-[10px] shadow-[0px_8px_0px_0px_#d0bbe3]">
               {(["rules", "players"] as const).map((key) => {
                 const active = tab === key;
+                // The same asymmetric corner the category chip wears (see
+                // CHIP_RADIUS above), mirrored per side: the left (rules)
+                // tab scoops its own outer corner — bottom-left — and the
+                // right (players) tab scoops its outer corner, bottom-right.
+                const tabRadius =
+                  key === "rules"
+                    ? "rounded-tl-[24px] rounded-tr-[24px] rounded-br-[24px] rounded-bl-[54px]"
+                    : "rounded-tl-[24px] rounded-tr-[24px] rounded-bl-[24px] rounded-br-[54px]";
                 return (
                   <button
                     key={key}
                     type="button"
                     onClick={() => setTab(key)}
                     className={cn(
-                      "relative flex h-[52px] flex-1 items-center justify-center rounded-[14px] px-[10px] text-center font-display text-[18px] leading-[26px] text-[#402666]",
+                      "relative flex h-[52px] flex-1 items-center justify-center px-[10px] text-center font-display text-[18px] leading-[26px] text-[#402666]",
+                      tabRadius,
                       active ? "font-bold" : "font-normal",
                     )}
                   >
@@ -766,7 +775,10 @@ export function UniversalLobby({
                       <motion.span
                         layoutId="lobby-tab-pill"
                         transition={{ type: "spring", stiffness: 420, damping: 34 }}
-                        className="absolute inset-0 rounded-[14px] border border-[#d1a7dc] bg-[rgba(240,218,245,0.22)]"
+                        className={cn(
+                          "absolute inset-0 border border-[#d1a7dc] bg-[rgba(240,218,245,0.22)]",
+                          tabRadius,
+                        )}
                       />
                     )}
                     <span className="relative truncate">
@@ -1429,7 +1441,8 @@ function Chip({
     // whole pill still takes its foot whichever half you touch.
     <div
       className={cn(
-        "relative flex h-[63px] w-full min-w-0 flex-1 items-center rounded-bl-[24px] rounded-br-[54px] rounded-tl-[24px] rounded-tr-[24px] border-2 border-solid border-white bg-[#fcf7fd] shadow-[0px_2px_8px_0px_rgba(51,51,51,0.06),0px_8px_0px_0px_#bea5d4]",
+        CHIP_RADIUS,
+        "relative flex h-[63px] w-full min-w-0 flex-1 items-center border-2 border-solid border-white bg-[#fcf7fd] shadow-[0px_2px_8px_0px_rgba(51,51,51,0.06),0px_8px_0px_0px_#bea5d4]",
         onPress
           && "transition-[transform,box-shadow] duration-100 active:translate-y-[4px] active:shadow-[0px_4px_0px_0px_#bea5d4]",
       )}
@@ -1491,7 +1504,15 @@ function Chip({
  * on — the same weight as every rule box below — rather than a second,
  * heavier band around it. The first cut was a 2px band outside the border,
  * which read as bolder than anything else on the screen.
+ *
+ * The overlay's radius has to match the chip's own asymmetric 24/24/24/54
+ * corner exactly (see Chip above) — a uniform rounded-[20px] here traced a
+ * different curve than the chip's actual edge, most visibly at the 54px
+ * corner, and left a sliver of the chip's own border showing past the
+ * ring: a stray line peeking out from behind the chip/+.
  */
+const CHIP_RADIUS = "rounded-bl-[24px] rounded-br-[54px] rounded-tl-[24px] rounded-tr-[24px]";
+
 function Ring({
   on,
   className,
@@ -1508,7 +1529,7 @@ function Ring({
   return (
     <div className={cn("relative flex", className)}>
       {children}
-      {on && <span aria-hidden className="lobby-ring pointer-events-none absolute inset-0 z-10 rounded-[20px]" />}
+      {on && <span aria-hidden className={cn("lobby-ring pointer-events-none absolute inset-0 z-10", CHIP_RADIUS)} />}
     </div>
   );
 }
