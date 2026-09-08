@@ -214,34 +214,34 @@ describe("a party has no lobby, and delete deletes", () => {
  * The heading half is settled next door in partyRoomIsItsParty: `roomName`
  * resolves to the party's own title while the room still wears a dealt name,
  * and to Untitled when the party was never named. What is here is the other
- * half — the kind, said small beside the emblem, so a room called "Untitled"
+ * half — the kind, said on the category chip, so a room called "Untitled"
  * still says what it is.
  */
-describe("the lobby says what kind of room it is, beside the emblem", () => {
+describe("the lobby says what kind of room it is, on the chip", () => {
   const roomLobby = read("src/components/team/RoomLobbyV2.tsx");
   const universal = read("src/components/lobby/UniversalLobby.tsx");
 
-  it("the brand rides beside the emblem, not in the heading", () => {
-    expect(roomLobby).toMatch(
-      /const heroKicker = isPartyRoom \? t\("extra\.myTriviaPartyLabel"\) : undefined;/,
-    );
-    expect(roomLobby).toMatch(/roomName=\{roomName\}\s*\n\s*roomKicker=\{heroKicker\}/);
-    // Beside it, in a row — not a second stacked line above the heading.
-    expect(universal).toMatch(/<span className="mb-\[15px\] flex items-center justify-center gap-3">/);
-    expect(universal).toMatch(/\{kicker && \(/);
+  it("the brand is the chip's label, not a caption beside the emblem", () => {
+    // The heading under the emblem already carries the title the host
+    // picked, so a caption beside the emblem said nothing twice — and the
+    // chip, which is where a player looks to see what the room plays, was
+    // repeating the party's title instead of naming the product (owner).
+    expect(roomLobby).toMatch(/label: isPartyRoom\s*\n\s*\? t\("extra\.myTriviaPartyLabel"\)/);
+    expect(roomLobby).not.toMatch(/heroKicker|roomKicker/);
+    expect(universal).not.toMatch(/kicker/);
   });
 
-  it("and only a real party is captioned as one", () => {
+  it("and the emblem stands alone above the name", () => {
+    expect(universal).toMatch(/<span className="mb-\[15px\] block">\{emblem\}<\/span>/);
+    expect(universal).toMatch(/<RoomTitle name=\{roomName\} icon=\{icon\} editable \/>/);
+  });
+
+  it("and only a real party is named as one", () => {
     // isPartyRoom checks the trivia's subject; playsOwnTrivia is also true
     // for a room built on a trivia the player merely WROTE, which is not a
     // party — the same distinction the room's icon makes.
     expect(roomLobby).toMatch(/const isPartyRoom = partyTitle !== undefined;/);
-    expect(roomLobby).not.toMatch(/heroKicker = playsOwnTrivia/);
-  });
-
-  it("and an ordinary room gets no kicker at all", () => {
-    expect(universal).toMatch(/kicker\?: string;/);
-    expect(universal).toMatch(/kicker && \(/);
+    expect(roomLobby).not.toMatch(/label: playsOwnTrivia/);
   });
 
   it("and the rename sheet still edits the room's name", () => {

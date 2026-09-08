@@ -1132,22 +1132,6 @@ export function RoomLobbyV2() {
    */
   const playsOwnTrivia = roomPlaysOwnTrivia(currentRoom, isPublicRoom, queue);
 
-  /**
-   * The kind of room, said small beside the emblem.
-   *
-   * `roomName` above already resolves what this party is CALLED — the
-   * party's own title while the room still wears a dealt name, Untitled when
-   * the party was never named. What was missing is what it IS: the heading
-   * alone left a room called "Untitled" with nothing saying it was a party
-   * at all (owner: "my trivia party goes up next to the icon in category
-   * container and below goes either untitled or name host will provide for
-   * room").
-   *
-   * `isPartyRoom` rather than `playsOwnTrivia`: a room built on a trivia the
-   * player merely WROTE is not a party, and captioning it as one would say
-   * it was — the same distinction the room's icon already makes.
-   */
-  const heroKicker = isPartyRoom ? t("extra.myTriviaPartyLabel") : undefined;
   const lobbyRules: LobbyRuleRow[] = [
     // No player-count picker on a classic room (owner's ask): the cap is 10
     // and the host starts whenever — with one friend or ten. The card no
@@ -1190,7 +1174,6 @@ export function RoomLobbyV2() {
     <UniversalLobby
       sceneArt={classicLobbyScene(currentRoom)}
       roomName={roomName}
-      roomKicker={heroKicker}
       icon={roomFace}
       onRename={isHost ? () => setShowIconPicker(true) : undefined}
       onBack={handleExitRoom}
@@ -1217,7 +1200,17 @@ export function RoomLobbyV2() {
           // resolved here too rather than only at the picker.
           : roundIconSlug(firstQueue);
         return {
-          label: freshStart || !firstName ? t("lobby.uSelectCategory") : firstName,
+          // A party's chip names the PRODUCT, not the party's own title.
+          // The heading under the emblem already carries the title the host
+          // picked, so the chip repeating it said nothing twice and left
+          // nothing on the screen saying this room was a party at all
+          // (owner). Only a real party: a room built on a trivia the player
+          // merely WROTE keeps its round's own name, which is its topic.
+          label: isPartyRoom
+            ? t("extra.myTriviaPartyLabel")
+            : freshStart || !firstName
+              ? t("lobby.uSelectCategory")
+              : firstName,
           // The extra rounds ride the FAR RIGHT of the chip (owner's ask),
           // not crowded against the category's name.
           trailing: !freshStart && firstName && extra > 0 ? `+${extra}` : undefined,

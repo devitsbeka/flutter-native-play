@@ -408,8 +408,8 @@ describe("every lobby says which game it is", () => {
     // Slackey heading — and which game you had walked into was something
     // you worked out from the rows underneath.
     expect(universal).toMatch(/icon\?: string \| null;/);
-    expect(universal).toMatch(/<RoomTitle name=\{roomName\} icon=\{icon\} kicker=\{roomKicker\} editable \/>/);
-    expect(universal).toMatch(/<RoomTitle name=\{roomName\} icon=\{icon\} kicker=\{roomKicker\} \/>/);
+    expect(universal).toMatch(/<RoomTitle name=\{roomName\} icon=\{icon\} editable \/>/);
+    expect(universal).toMatch(/<RoomTitle name=\{roomName\} icon=\{icon\} \/>/);
   });
 
   it("the King wears the crowned mascot and the arena its crate", () => {

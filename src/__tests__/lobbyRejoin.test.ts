@@ -124,11 +124,11 @@ describe("the arena's heading and its VS", () => {
     // to keep a big heading and an emblem on a short screen — and the
     // design buys that height back from the lilac under the card instead.
     //
-    // The 15px moved to the row that holds the emblem, which is what lets a
-    // party room hang its kind beside it (see myTriviaPartyBrand). The
-    // emblem is still 91px and still above the heading, not beside it.
+    // The emblem stands alone in its own block above the heading: a party
+    // room says what KIND it is on the category chip, not beside the emblem
+    // (see myTriviaPartyBrand), so nothing shares this row.
     expect(universal).toMatch(/relative block size-\[91px\] shrink-0/);
-    expect(universal).toMatch(/<span className="mb-\[15px\] flex items-center justify-center gap-3">/);
+    expect(universal).toMatch(/<span className="mb-\[15px\] block">\{emblem\}<\/span>/);
     expect(universal).not.toMatch(/size-\[44px\] object-contain/);
     expect(universal).not.toMatch(/flex flex-col items-start gap-2/);
   });
