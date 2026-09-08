@@ -64,6 +64,12 @@ export const SKIN_WHITE: BannerSkin = {
 /** Lifts the top edge of a tile so it reads as a pane, not a hole. */
 export const GLASS_SHEEN = "inset 0px 1px 0px 0px rgba(255,255,255,0.7)";
 
+// The PRO card's own tiles (1119:5515). Same violet wash as SKIN_WHITE's,
+// drawn at the mock's hairline rather than the old card's 1px border.
+const PERK_TILE_FILL = "linear-gradient(180deg, rgba(124,58,237,0.09) 0%, rgba(124,58,237,0.03) 100%)";
+const PERK_TILE_EDGE = "rgba(124,58,237,0.16)";
+const PERK_SHEEN = "inset 0px 0.762px 0px 0px rgba(255,255,255,0.7)";
+
 // Tile captions reserve two lines of 16px/1.15 whether or not they need
 // both, and centre inside that box. Without it a wrapping caption hangs
 // below its neighbours and the row of tiles reads as misaligned.
@@ -139,7 +145,7 @@ function WaveStack({ fill }: { fill: string }) {
  * the resolution behind it; when the cap bites, the stage centres in the
  * space rather than hugging the left edge.
  */
-function useBannerScale(maxScale: number) {
+function useBannerScale(maxScale: number, designW: number = BANNER_DESIGN_W) {
   const ref = useRef<HTMLDivElement | null>(null);
   const [width, setWidth] = useState(0);
 
@@ -158,10 +164,10 @@ function useBannerScale(maxScale: number) {
   }, []);
 
   // Before the first measurement, render at nothing rather than at full
-  // size — a 575px stage inside an unmeasured box overflows every parent
-  // it has for one frame.
-  const scale = width > 0 ? Math.min(width / BANNER_DESIGN_W, maxScale) : 0;
-  const offsetX = Math.max(0, (width - BANNER_DESIGN_W * scale) / 2);
+  // size — a design-width stage inside an unmeasured box overflows every
+  // parent it has for one frame.
+  const scale = width > 0 ? Math.min(width / designW, maxScale) : 0;
+  const offsetX = Math.max(0, (width - designW * scale) / 2);
 
   return { ref, scale, offsetX };
 }
@@ -465,80 +471,9 @@ export function BannerTile({
 }
 
 /* ------------------------------------------------------------------ *
- * Stacked benefits (narrow stages)
+ * Pieces the deal card still uses
  * ------------------------------------------------------------------ */
 
-// Three tiles side by side across 575 design pixels leaves each one 150 wide
-// with a 16px caption — which, on a phone, is a 575px canvas drawn at about
-// two thirds size, so the caption lands near 11px and the benefits become
-// fine print. Stacked, a row is the full width of the card and its label can
-// be half as big again, reading at a normal size once scaled.
-const ROW_LEFT = 52;
-const ROW_W = 471;
-const ROW_H = 92;
-const ROW_GAP = 12;
-const ROWS_TOP = 150;
-
-// What the frame leaves between the last thing in the card and the card's
-// own bottom edge: 396 tall with tiles ending at 294. Keeping it means the
-// button clears the list by the same margin it clears the tiles by — at 34
-// the button landed on top of the third row.
-const CARD_FOOT = CARD_H - 294;
-
-/** Design height a stacked tier card needs for `count` benefits. */
-function stackedCardHeight(count: number): number {
-  return ROWS_TOP + count * ROW_H + (count - 1) * ROW_GAP + CARD_FOOT;
-}
-
-function BannerRow({
-  skin,
-  index,
-  icon,
-  iconSize,
-  label,
-}: {
-  skin: BannerSkin;
-  index: number;
-  icon: string;
-  iconSize: number;
-  label: ReactNode;
-}) {
-  const top = ROWS_TOP + index * (ROW_H + ROW_GAP);
-  // The artwork keeps the size the frame gave it, centred in the row's own
-  // gutter rather than scaled to fit — these icons are drawn at different
-  // sizes on purpose and matching them flattens the set.
-  const art = Math.min(iconSize, ROW_H - 14);
-
-  return (
-    <div
-      className="absolute flex items-center gap-[18px] rounded-[24px] border border-solid px-[22px]"
-      style={{
-        left: ROW_LEFT,
-        top,
-        width: ROW_W,
-        height: ROW_H,
-        backgroundImage: skin.tileFill,
-        borderColor: skin.tileEdge,
-        boxShadow: GLASS_SHEEN,
-      }}
-    >
-      <img
-        src={icon}
-        alt=""
-        draggable={false}
-        className="shrink-0 object-contain"
-        style={{ width: art, height: art }}
-      />
-      <p className="text-[26px] font-semibold leading-[1.2]" style={{ color: skin.ink }}>
-        {label}
-      </p>
-    </div>
-  );
-}
-
-/** One rounded pill in the deal card's top strip. */
-// 15% above the frame's sizes: at the width a phone actually gives the card,
-// the deal label and its countdown read as fine print beside the title.
 function BannerStripPill({ icon, fill, ink, children }: { icon: string; fill: string; ink: string; children: ReactNode }) {
   return (
     <div className="flex shrink-0 items-center justify-center gap-[3px] rounded-[24px] px-[9px] py-[5px]" style={{ background: fill }}>
@@ -552,13 +487,6 @@ function BannerStripPill({ icon, fill, ink, children }: { icon: string; fill: st
   );
 }
 
-/* ------------------------------------------------------------------ *
- * The three banners
- *
- * Presentational only — every value arrives as a prop, so the carousel
- * owns the data and these own the frame's geometry.
- * ------------------------------------------------------------------ */
-
 export interface BannerTileContent {
   icon: string;
   iconSize: number;
@@ -570,60 +498,274 @@ export interface BannerTileContent {
   labelCenter: number;
 }
 
+/* ------------------------------------------------------------------ *
+ * The PRO offer card — Figma 1119:5471 (Friends) and 1119:5502 (solo)
+ * ------------------------------------------------------------------ */
+
 /**
- * The header geometry differs between the two PRO frames, so it travels with
- * the variant rather than being averaged into one layout: solo (636:169)
- * leads with a big tilted crown and a narrow 143px title column, family
- * (636:180) with a smaller upright pair of people and a 215px column its
- * longer name needs to stay on one line.
+ * The banner a PRO tier is sold on.
+ *
+ * A different card from the one above it in this file, not a re-skin of it.
+ * The old banner was a 575-wide landscape strip: a crown, a title and a price
+ * across the top, three tiles under them, and a button straddling the bottom
+ * edge. On a phone that canvas was drawn at about two thirds size, so the
+ * captions landed near 11px and the benefits became fine print — which is why
+ * it grew a whole second layout that stacked them into a list.
+ *
+ * The mock is a portrait card 426 wide, which is roughly a phone, so it is
+ * drawn near 1:1 where it is actually read and the stacked fallback has
+ * nothing left to fix. It leads with the artwork instead of a crown, and the
+ * three promises sit on tiles with their art hung over the top edge.
  */
-export interface ProTierHeader {
-  /** Artwork boxes, drawn in order — family layers two overlapping groups. */
-  art: { src: string; left: number; top: number; size: number; rotate?: number }[];
-  titleLeft: number;
-  titleTop: number;
-  titleWidth: number;
+export const PRO_CARD_W = 426;
+export const PRO_CARD_H = 527;
+/** The solid ledge under the card — reserved by the stage, not clipped. */
+const PRO_CARD_FOOT = 8;
+
+/** Card fill, and the colour the hero's foot is blurred out into. */
+const PRO_CARD_FILL = "#f5ecfd";
+
+// The three tiles, and the column each one is centred on. The frame parks
+// them at these x's on the 426 canvas; every measure inside a tile follows
+// from its own box rather than from the frame's per-tile drift.
+const PERK_LEFTS = [20, 155.226, 289.657];
+const PERK_W = 119.317;
+const PERK_H = 87.6;
+const PERK_TOP = 338.121;
+// The frame draws each icon at its own size — 51.7, 46.1, 53.3 — because the
+// three renders are different shapes. Ours are one square set, so they take
+// one size and one baseline: the frame's own, which is where its three icons
+// all end (~370.8).
+const PERK_ICON = 50;
+const PERK_ICON_TOP = 321;
+const PERK_LABEL_W = 98.635;
+const PERK_LABEL_TOP = 381.08;
+// Two lines of 14, which is exactly what the frame's label box holds. Reserved
+// whether or not both are needed: without it a caption that wraps hangs below
+// its neighbours and the row reads as misaligned.
+const PERK_LABEL_H = 28.184;
+
+export interface ProPerk {
+  icon: string;
+  label: ReactNode;
 }
 
-export const HEADER_SOLO = (crown: string): ProTierHeader => ({
-  art: [{ src: crown, left: 143.4, top: 33.4, size: 88.77, rotate: -21.65 }],
-  titleLeft: 246.63,
-  titleTop: 41.82,
-  titleWidth: 143,
-});
+/** The gold face's three specks of light, at the 398-wide button's own x's. */
+const PRO_SPECULARS = [
+  { left: 50.84, top: 7.75, size: 3.809, fill: "#ffffff", opacity: 0.49 },
+  { left: 187.05, top: 14.62, size: 3.809, fill: "#ffffff", opacity: 0.35 },
+  { left: 63.04, top: 32.13, size: 3.809, fill: "rgba(255,255,255,0.8)", opacity: 0.58 },
+];
 
-export const HEADER_FAMILY = (people: string): ProTierHeader => ({
-  // The frame layers two copies of the group offset from each other. One
-  // reads as a crowd already; two just look like a rendering mistake, so a
-  // single icon sits centred on the pair's combined bounds at their size.
-  art: [{ src: people, left: 132, top: 35.5, size: 80 }],
-  titleLeft: 214.76,
-  titleTop: 46.42,
-  titleWidth: 215.37,
-});
-
-/** Frames 636:169 (solo) and 636:180 (family). */
-export function ProTierBanner({
-  skin,
-  header,
-  name,
-  price,
-  month,
-  tiles,
+export function ProOfferCard({
+  hero,
+  title,
+  savings,
+  perks,
   actionLabel,
   onAction,
   actionDisabled,
   actionActive,
   onClick,
   dimmed,
-  stacked,
+  maxScale = 1.25,
 }: {
-  skin: BannerSkin;
-  header: ProTierHeader;
+  /** The scene across the top, bleeding past both edges of the card. */
+  hero: string;
+  title: ReactNode;
+  /** Per cent off, when there is a real one. No badge without it. */
+  savings?: number;
+  perks: ProPerk[];
+  actionLabel: ReactNode;
+  onAction?: () => void;
+  actionDisabled?: boolean;
+  /** The tier the player is already on — draws the quiet button. */
+  actionActive?: boolean;
+  onClick?: () => void;
+  dimmed?: boolean;
+  maxScale?: number;
+}) {
+  const { ref, scale, offsetX } = useBannerScale(maxScale, PRO_CARD_W);
+  const stageHeight = PRO_CARD_H + PRO_CARD_FOOT;
+
+  return (
+    <div
+      ref={ref}
+      className="relative w-full"
+      // The stage is scaled, so the wrapper reserves the scaled height
+      // itself — a transform does not affect layout.
+      style={{ height: stageHeight * scale, opacity: dimmed ? 0.7 : 1 }}
+    >
+      <div
+        className="absolute top-0"
+        style={{
+          left: offsetX,
+          width: PRO_CARD_W,
+          height: stageHeight,
+          transform: `scale(${scale})`,
+          transformOrigin: "top left",
+        }}
+      >
+        <div
+          onClick={onClick}
+          className={`absolute left-0 top-0 h-[527px] w-[426px] overflow-clip rounded-[28px] border border-solid border-[#e8daf8] shadow-[0px_0px_0px_1px_#ffffff,0px_8px_0px_0px_#cfc0e9] ${
+            onClick ? "cursor-pointer" : ""
+          }`}
+          style={{ background: PRO_CARD_FILL }}
+        >
+          {/* The scene, wider than the card on both sides so it has no edges
+              of its own to see (1119:5503). */}
+          <img
+            src={hero}
+            alt=""
+            draggable={false}
+            className="pointer-events-none absolute left-[-36px] top-[-1px] h-[279px] w-[495px] max-w-none object-cover"
+          />
+          {/* 1119:5530 and 1119:5531: two bands of the card's own fill,
+              blurred, laid across the picture's foot so it dissolves into the
+              card rather than ending on a line. Two, as drawn — one is not
+              opaque enough at the middle to cover the join, which is the
+              whole reason the frame has a pair. */}
+          {[30, -10].map((left) => (
+            <div
+              key={left}
+              aria-hidden
+              className="pointer-events-none absolute top-[241px] h-[80px] w-[398px] blur-[22px]"
+              style={{ left, background: PRO_CARD_FILL }}
+            />
+          ))}
+
+          {/* 1119:5511 — what is off, when something is. Never drawn without
+              a real figure behind it: a badge is a claim about money. */}
+          {savings != null && (
+            <div className="absolute left-[17px] top-[14px] flex h-[32px] items-center rounded-[15.8px] border-2 border-solid border-[#ffe8b5] bg-[rgba(249,198,37,0.62)] px-[10.2px] shadow-[0px_2.26px_6.78px_0px_rgba(151,64,64,0.06),0px_2.26px_0px_0px_#d6c7c4]">
+              <span className="whitespace-nowrap font-[Nunito] text-[13.664px] font-extrabold leading-[13.664px] tracking-[-0.1562px] text-[#78350f]">
+                -{savings}%
+              </span>
+            </div>
+          )}
+
+          {/* 1119:5532 — the name, in the face the app's own headings wear. */}
+          <p className="absolute left-[22px] right-[16px] top-[267px] truncate font-hero text-[26px] capitalize leading-[44.814px] tracking-[-0.1494px] text-[#402666]">
+            {title}
+          </p>
+
+          {perks.slice(0, PERK_LEFTS.length).map((perk, i) => {
+            const left = PERK_LEFTS[i];
+            return (
+              <div key={i}>
+                <div
+                  aria-hidden
+                  className="absolute rounded-[18.282px] border-[0.762px] border-solid"
+                  style={{
+                    left,
+                    top: PERK_TOP,
+                    width: PERK_W,
+                    height: PERK_H,
+                    backgroundImage: PERK_TILE_FILL,
+                    borderColor: PERK_TILE_EDGE,
+                    boxShadow: PERK_SHEEN,
+                  }}
+                />
+                <img
+                  src={perk.icon}
+                  alt=""
+                  draggable={false}
+                  className="absolute max-w-none object-contain"
+                  style={{
+                    left: left + (PERK_W - PERK_ICON) / 2,
+                    top: PERK_ICON_TOP,
+                    width: PERK_ICON,
+                    height: PERK_ICON,
+                  }}
+                />
+                <div
+                  className="absolute flex items-center justify-center"
+                  style={{
+                    left: left + (PERK_W - PERK_LABEL_W) / 2,
+                    top: PERK_LABEL_TOP,
+                    width: PERK_LABEL_W,
+                    height: PERK_LABEL_H,
+                  }}
+                >
+                  <p className="line-clamp-2 text-center font-[Nunito] text-[12.188px] font-semibold leading-[14.016px] tracking-[-0.1219px] text-[#402666]">
+                    {perk.label}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+
+          {/* 1119:5504 — the buy button, inside the card now rather than
+              straddling its bottom edge. */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onAction?.();
+            }}
+            disabled={actionDisabled}
+            className="absolute left-[14px] top-[447px] flex h-[59px] w-[398px] items-center justify-center rounded-[18.282px] border border-solid disabled:cursor-not-allowed"
+            style={{
+              borderColor: actionActive ? ACTIVE_BORDER : "#e9e5fa",
+              boxShadow: actionActive
+                ? ACTIVE_SHADOW
+                : "0px 4.57px 0px 0px #841a66, 0px 7.617px 18.282px 0px rgba(132,26,102,0.17)",
+            }}
+          >
+            <span
+              aria-hidden
+              className="absolute left-[2px] top-px h-[54px] w-[393px] rounded-[16px]"
+              style={{ backgroundImage: actionActive ? ACTIVE_BUTTON : GOLD_BUTTON }}
+            />
+            {!actionActive &&
+              PRO_SPECULARS.map((spec) => (
+                <span
+                  key={spec.left}
+                  aria-hidden
+                  className="absolute rounded-full"
+                  style={{
+                    left: spec.left,
+                    top: spec.top,
+                    width: spec.size,
+                    height: spec.size,
+                    background: spec.fill,
+                    opacity: spec.opacity,
+                  }}
+                />
+              ))}
+            <span
+              className={`relative flex items-center gap-[8px] whitespace-nowrap font-[Nunito] text-[18px] font-bold leading-[23.576px] tracking-[-0.1371px] ${
+                actionActive ? "text-[#402666]" : "text-white drop-shadow-[0px_3.047px_2.285px_rgba(0,0,0,0.07)]"
+              }`}
+            >
+              {actionActive && <Check className="size-[18px]" strokeWidth={3} />}
+              {actionLabel}
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Frames 1119:5471 and 1119:5502 — one PRO tier, sold. */
+export function ProTierBanner({
+  hero,
+  name,
+  savings,
+  perks,
+  actionLabel,
+  onAction,
+  actionDisabled,
+  actionActive,
+  onClick,
+  dimmed,
+}: {
+  hero: string;
   name: ReactNode;
-  price: ReactNode;
-  month: ReactNode;
-  tiles: BannerTileContent[];
+  savings?: number;
+  perks: ProPerk[];
   actionLabel: ReactNode;
   onAction: () => void;
   actionDisabled?: boolean;
@@ -631,68 +773,20 @@ export function ProTierBanner({
   actionActive?: boolean;
   onClick?: () => void;
   dimmed?: boolean;
-  /** Benefits as a list rather than a row — see the note on BannerRow. */
-  stacked?: boolean;
 }) {
   return (
-    <ProBannerCard
-      skin={skin}
-      onClick={onClick}
-      dimmed={dimmed}
+    <ProOfferCard
+      hero={hero}
+      title={name}
+      savings={savings}
+      perks={perks}
       actionLabel={actionLabel}
+      onAction={onAction}
       actionDisabled={actionDisabled}
       actionActive={actionActive}
-      onAction={onAction}
-      cardHeight={stacked ? stackedCardHeight(tiles.length) : undefined}
-    >
-      {header.art.map((art, i) => (
-        <img
-          key={i}
-          src={art.src}
-          alt=""
-          draggable={false}
-          className="absolute max-w-none object-contain"
-          style={{
-            left: art.left,
-            top: art.top,
-            width: art.size,
-            height: art.size,
-            transform: art.rotate ? `rotate(${art.rotate}deg)` : undefined,
-          }}
-        />
-      ))}
-      <div
-        className="absolute flex flex-col gap-[10px]"
-        style={{
-          left: header.titleLeft,
-          top: header.titleTop,
-          width: header.titleWidth,
-          color: skin.ink,
-        }}
-      >
-        <p className="text-center font-display text-[24px] font-extrabold leading-none">{name}</p>
-        {/* The month label carries its own separator ("/თვე", "/mo"), so
-            adding one here printed "10.97 ₾ / /თვე". */}
-        <p className="text-center font-semibold leading-none">
-          <span className="text-[24px]">{price} </span>
-          <span className="text-[16px]">{month}</span>
-        </p>
-      </div>
-      {stacked
-        ? tiles.map((tile, i) => (
-            <BannerRow
-              key={tile.labelCenter}
-              skin={skin}
-              index={i}
-              icon={tile.icon}
-              iconSize={tile.iconSize}
-              label={tile.label}
-            />
-          ))
-        : tiles.map((tile) => (
-            <BannerTile key={tile.labelCenter} skin={skin} left={tileLeft(tile)} top={164} height={130} {...tile} />
-          ))}
-    </ProBannerCard>
+      onClick={onClick}
+      dimmed={dimmed}
+    />
   );
 }
 

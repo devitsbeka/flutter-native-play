@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, Filter, Loader2, Search, X, Check } from "lucide-react";
+import { ChevronDown, Filter, Loader2, Lock, Search, X, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   DropdownMenu,
@@ -76,6 +76,12 @@ interface UnifiedFiltersBarProps<F extends string, S extends string> {
    */
   addBusy?: boolean;
   addBusyText?: string;
+  /**
+   * The thing this button makes is behind the Pro door, so the button says
+   * so before it is pressed rather than after. Still pressable — it opens
+   * the door; a dead button teaches nothing.
+   */
+  addLocked?: boolean;
   /** Inline variant for embedding in the tab row (no outer padding/width,
       fixed-width search input, no add button). */
   compact?: boolean;
@@ -94,6 +100,7 @@ export function UnifiedFiltersBar<F extends string, S extends string>({
   addButtonText,
   addBusy = false,
   addBusyText,
+  addLocked = false,
   compact = false,
 }: UnifiedFiltersBarProps<F, S>) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -227,6 +234,7 @@ export function UnifiedFiltersBar<F extends string, S extends string>({
                 )}
               >
                 {addBusy && <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2.5} />}
+                {!addBusy && addLocked && <Lock className="h-3.5 w-3.5" strokeWidth={2.5} />}
                 <span className="text-[13px] font-bold">
                   {addBusy ? addBusyText || defaultAddText : defaultAddText}
                 </span>

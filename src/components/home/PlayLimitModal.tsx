@@ -12,8 +12,10 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useNavigate } from "react-router-dom";
 import { useProPurchase } from "@/hooks/useProPurchase";
 import { useStorePrice } from "@/hooks/useStorePrice";
-import { monthLabel } from "@/utils/currency";
 import { PRICES } from "@/config/pricing";
+import { PRO_PLANS, periodKeyFor } from "@/config/proPlans";
+import { useInAppPurchases } from "@/hooks/useInAppPurchases";
+import { Capacitor } from "@capacitor/core";
 import { SubscriptionTerms } from "@/components/shared/SubscriptionTerms";
 import { PlayBackdrop } from "@/components/shared/PlayBackdrop";
 import { MyTriviaLiveLogo } from "@/components/shared/MyTriviaLiveLogo";
@@ -37,10 +39,20 @@ interface PlayLimitModalProps {
    * unset and the modal just closes.
    */
   onPurchased?: () => void;
+  /**
+   * What is being refused.
+   *
+   * "lives" is the original wall: the free games have run out, so an ad buys
+   * one back and the clock says when the next is free. "rooms" is the Pro
+   * door on the online page — creating a room and inviting friends are
+   * subscriber features, and neither an ad nor waiting will open them, so
+   * both of those rows stand down and PRO is the only offer left.
+   */
+  reason?: "lives" | "rooms";
 }
 
 export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalProps>(
-  function PlayLimitModal({ isOpen, onClose, onRegister, isGuest = false, inline, regenPlayAvailable, timeUntilNextPlay, resetsAt, onPlayWithRegen, onPurchased }, ref) {
+  function PlayLimitModal({ isOpen, onClose, onRegister, isGuest = false, inline, regenPlayAvailable, timeUntilNextPlay, resetsAt, onPlayWithRegen, onPurchased, reason = "lives" }, ref) {
     const { t } = useLanguage();
     const navigate = useNavigate();
     const { initiateProCheckout, isProcessing, storeReady } = useProPurchase();
@@ -55,7 +67,23 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
     // placeholder while the store is silent — which is also when `storeReady`
     // holds the button closed, so a price is never missing from a live button.
     const storePrice = useStorePrice();
-    const proPrice = storePrice("pro", PRICES.pro_monthly.USD, "pro_monthly");
+    // The mock's fine print opens with a free run of days and then a yearly
+    // price, and its button offers the trial — so the card sells the plan
+    // that actually carries one. Monthly has no introductory offer on either
+    // platform, and pointing the button at it while printing the annual
+    // plan's promise is the 3.1.2 mismatch this screen exists to avoid.
+    const isNative = Capacitor.isNativePlatform();
+    const { products } = useInAppPurchases();
+    const proPlan =
+      PRO_PLANS.find((plan) => plan.id === "annual") ?? PRO_PLANS[0];
+    const proPrice = storePrice(proPlan.productId, PRICES[proPlan.priceKey].USD, proPlan.priceKey);
+    // The free trial the store will really honour. On a phone only App Store
+    // Connect can grant one, so only App Store Connect gets to claim one; on
+    // the web the app owns the offer and create-pro-checkout grants it. Same
+    // rule, and the same reasoning, as ProPaywallModal.trialDaysFor.
+    const trialDays = isNative
+      ? products.find((product) => product.productId === proPlan.productId)?.introFreeDays
+      : proPlan.trialDays;
     // For the give-up card below — called unconditionally, ahead of the
     // isGuest branch's early return, though only the non-guest card reads it.
     const giveUpClock = usePlayLimitClock(resetsAt, timeUntilNextPlay);
@@ -75,7 +103,11 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
     // profile page stays the fallback only when the checkout cannot start.
     const handleUpgradeToPro = async () => {
       if (isProcessing) return;
-      const { success } = await initiateProCheckout("pro");
+      const { success } = await initiateProCheckout(
+        proPlan.tier,
+        isNative ? proPlan.productId : undefined,
+        proPlan.months >= 12 ? "year" : "month",
+      );
       if (success) {
         onClose();
       } else {
@@ -178,11 +210,11 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
       <div className="mx-auto flex w-full max-w-[500px] flex-col px-[19px] pb-8">
         {/* 1102:4322 — the whole reason the screen exists, said once. */}
         <h2 className="mx-auto mt-[43px] max-w-[340px] text-center font-display text-[38px] font-bold uppercase leading-[43px] tracking-[-1.16px] text-[#402666]">
-          {t("playLimit.limitReached")}
+          {t(reason === "rooms" ? "playLimit.roomsLockedTitle" : "playLimit.limitReached")}
         </h2>
         {/* 1102:4320 — and that there is something to do about it. */}
         <p className="mt-[16px] text-center font-[Nunito] text-[22px] font-normal leading-[26px] tracking-[-0.16px] text-[#1c2c59]">
-          {t("playLimit.chooseHow")}
+          {t(reason === "rooms" ? "playLimit.roomsLockedBody" : "playLimit.chooseHow")}
         </p>
 
         {/* Free first. Nothing else on this screen can be had for nothing, and
@@ -192,9 +224,11 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
             `empty:hidden`: the offer renders nothing where rewarded ads do not
             exist — on the web, and wherever the legacy quota is still the rule
             — and without this the row's air stayed behind as a gap. */}
-        <div className="mt-[34px] empty:hidden">
-          <ExtraPlaysOffer section="ad" onPurchased={handlePurchased} />
-        </div>
+        {reason === "lives" && (
+          <div className="mt-[34px] empty:hidden">
+            <ExtraPlaysOffer section="ad" onPurchased={handlePurchased} />
+          </div>
+        )}
 
         {/* Then the subscription — a card of its own, the crown floating
             above it the way the clapperboard spills over the ad card, and
@@ -212,7 +246,7 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
             className="pointer-events-none absolute -top-[42px] left-1/2 h-[107px] w-[107px] -translate-x-1/2 object-contain"
           />
           <p className="text-center font-display text-[20px] font-extrabold uppercase leading-[26px] text-[#161e46]">
-            {t("playLimit.proHookTitle")}
+            {t("paywall.title")}
           </p>
           <p className="mt-[7px] text-center font-display text-[16px] leading-[20.7px] tracking-[-0.16px] text-[#1c2c59]">
             {t("playLimit.proHookBody")}
@@ -231,7 +265,7 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
               boxShadow: "0 4px 0 0 #1e8e74, inset 0 2px 0 0 rgba(255,255,255,0.45)",
             }}
           >
-            {t("playLimit.becomePro")}
+            {t(trialDays ? "paywall.ctaTrial" : "playLimit.becomePro")}
           </motion.button>
 
           {/* What it costs and how often, in the small line under the button
@@ -242,8 +276,16 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
               introductory-offer copy, which this screen has no trial wired up
               to honour. */}
           <p className="mx-auto mt-[22px] max-w-[344px] font-display text-[13px] leading-[20px] tracking-[-0.16px] text-[#1c2c59] opacity-80">
-            <span className="font-black">{proPrice.display}</span>
-            <span className="ml-1">{monthLabel()}</span>
+            {/* The mock's own sentence — "first N days free, then <price> per
+                <period>, cancel any time" — assembled from what the store
+                will really charge rather than from the figures typed into the
+                reference. Without a trial it is the same sentence minus its
+                first clause. Guideline 3.1.2 wants the price and the period
+                read before the tap. */}
+            {t(trialDays ? "paywall.footnoteTrial" : "paywall.footnote")
+              .replace("{days}", String(trialDays ?? 0))
+              .replace("{price}", proPrice.display)
+              .replace("{period}", t(periodKeyFor(proPlan)))}
           </p>
 
           {/* The button above starts an auto-renewing subscription, so the
@@ -264,6 +306,7 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
             that says what closing costs — waiting out the clock rather than
             watching an ad or going PRO — the way the rest of this screen
             says what it offers. */}
+        {reason === "lives" && (
         <button
           type="button"
           onClick={onClose}
@@ -282,6 +325,7 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
             )}
           </span>
         </button>
+        )}
       </div>
     );
 

@@ -6,19 +6,14 @@ import { useVipStatus } from "@/hooks/useVipStatus";
 import { useProPurchase, type ProTierId } from "@/hooks/useProPurchase";
 import { useStorePrice } from "@/hooks/useStorePrice";
 import { useLanguage } from "@/contexts/LanguageContext";
-import crownIcon from "@/assets/crown-icon.png";
-import friendsIcon from "@/assets/group-of-people.png";
 import gamepadIcon from "@/assets/pro-banner/banner-gamepad.webp";
 import wheelIcon from "@/assets/pro-banner/banner-wheel.webp";
 import noAdsIcon from "@/assets/pro-banner/banner-no-ads.webp";
+import heroSolo from "@/assets/pro-banner/pro-hero-solo.webp";
+import heroFriends from "@/assets/pro-banner/pro-hero-friends.webp";
 import { dealToShopItem, useLiveDeals, DealBannerCard } from "./DailyDealsRow";
 import { SubscriptionTerms } from "@/components/shared/SubscriptionTerms";
-import {
-  ProTierBanner,
-  HEADER_SOLO,
-  HEADER_FAMILY,
-  SKIN_WHITE,
-} from "./ProBannerCard";
+import { ProTierBanner } from "./ProBannerCard";
 import type { ShopItem } from "@/hooks/useShopData";
 
 type SimplifiedTier = "solo" | "family";
@@ -50,16 +45,15 @@ function ownsTier(tierId: SimplifiedTier, currentTier: string | undefined): bool
 // `slides: "pro"` keeps and everything else drops.
 type SlideType = "pro" | "family" | "deal";
 
-// Frame 636:169 — the artwork for each promise a PRO tier makes, at the
-// size the frame draws it. Not a uniform set, so each carries its own.
-interface ProBenefitArt {
-  icon: string;
-  size: number;
-  top: number;
-}
-const BENEFIT_PLAY: ProBenefitArt = { icon: gamepadIcon, size: 66, top: 138 };
-const BENEFIT_FEATURES: ProBenefitArt = { icon: wheelIcon, size: 67, top: 139 };
-const BENEFIT_NO_ADS: ProBenefitArt = { icon: noAdsIcon, size: 69, top: 137 };
+// The artwork for each promise a PRO tier makes. Figma 1119:5514 draws its
+// own three — a crown, a bottle of powers, a coin — but those belong to the
+// mock's own captions ("5x PRO", "10x All Powers", "25,000 Coins"), and a
+// subscription that grants none of those three must not wear their pictures.
+// Ours keep the glyphs that match what the tiers actually give, at the one
+// size the mock's tiles are drawn to.
+const BENEFIT_PLAY = gamepadIcon;
+const BENEFIT_FEATURES = wheelIcon;
+const BENEFIT_NO_ADS = noAdsIcon;
 
 interface ProBannerReelProps {
   purchasedItems: Set<string>;
@@ -131,12 +125,11 @@ export function ProBannerReel({ purchasedItems, isPurchasing, onItemClick, slide
       id: "solo" as const,
       name: t("extra.soloPro"),
       price: PRICES.pro_monthly.USD,
-      header: HEADER_SOLO(crownIcon),
-      skin: SKIN_WHITE,
+      hero: heroSolo,
       benefits: [
-        { art: BENEFIT_PLAY, label: t("extra.mobileSoloBenefit1") },
-        { art: BENEFIT_FEATURES, label: t("extra.mobileSoloBenefit2") },
-        { art: BENEFIT_NO_ADS, label: t("extra.mobileSoloBenefit3") },
+        { icon: BENEFIT_PLAY, label: t("extra.mobileSoloBenefit1") },
+        { icon: BENEFIT_FEATURES, label: t("extra.mobileSoloBenefit2") },
+        { icon: BENEFIT_NO_ADS, label: t("extra.mobileSoloBenefit3") },
       ],
     },
     {
@@ -144,16 +137,14 @@ export function ProBannerReel({ purchasedItems, isPurchasing, onItemClick, slide
       id: "family" as const,
       name: t("extra.familyPro"),
       price: PRICES.pro_plus_monthly.USD,
-      header: HEADER_FAMILY(friendsIcon),
-      skin: SKIN_WHITE,
+      hero: heroFriends,
       benefits: [
-        // Family leads with the PRO bundle, then play — the opposite of solo.
         // Same order as solo above — play, features, no ads — so the two
         // tiers read as the same offer at two sizes rather than two
         // different lists. Art follows meaning, not position.
-        { art: BENEFIT_PLAY, label: t("extra.mobileFamilyBenefit1") },
-        { art: BENEFIT_FEATURES, label: t("extra.mobileFamilyBenefit2") },
-        { art: BENEFIT_NO_ADS, label: t("extra.mobileFamilyBenefit3") },
+        { icon: BENEFIT_PLAY, label: t("extra.mobileFamilyBenefit1") },
+        { icon: BENEFIT_FEATURES, label: t("extra.mobileFamilyBenefit2") },
+        { icon: BENEFIT_NO_ADS, label: t("extra.mobileFamilyBenefit3") },
       ],
     },
   ], [t]);
@@ -172,33 +163,6 @@ export function ProBannerReel({ purchasedItems, isPurchasing, onItemClick, slide
     );
   }, [ALL_SLIDES, slides, currentTier]);
 
-  // Captions sit on their tile's true centre, not the frame's own values,
-  // which drift a few px off and read as misaligned once the captions all
-  // occupy the same box. 124 wide keeps them inside the tile and lets the
-  // longer ones wrap rather than run to the edges.
-  const PRO_COLUMNS = [
-    { left: 43, labelCenter: 118 },
-    { left: 213, labelCenter: 288 },
-    { left: 382, labelCenter: 457 },
-  ];
-
-  // Build the three tiles for a tier. The icon is chosen by what the benefit
-  // promises, never by which column it lands in: the two tiers list their
-  // benefits in different orders, and keying off position put the prize
-  // wheel on "free play" and a joystick on "PRO features". Each icon keeps
-  // its own size from the frame and is centred on its column.
-  const proTiles = (benefits: { art: ProBenefitArt; label: string }[]) =>
-    benefits.map(({ art, label }, i) => ({
-      icon: art.icon,
-      iconSize: art.size,
-      iconLeft: PRO_COLUMNS[i].labelCenter - art.size / 2,
-      iconTop: art.top,
-      label,
-      labelTop: 218,
-      labelWidth: 124,
-      labelCenter: PRO_COLUMNS[i].labelCenter,
-    }));
-
   const getButtonText = (tierId: SimplifiedTier, currentTierVal: string | undefined) =>
     ownsTier(tierId, currentTierVal)
       ? { text: t("extra.activeStatus"), isActive: true }
@@ -214,18 +178,12 @@ export function ProBannerReel({ purchasedItems, isPurchasing, onItemClick, slide
   // knowing the sidebar exists. 360 is the width below which a banner's
   // captions stop being readable.
   const [perView, setPerView] = useState(1);
-  // One banner's width, which is what decides whether the three benefits fit
-  // side by side or have to become a list. Measured rather than guessed from
-  // the viewport: the same reel is narrower on the shop page than on the
-  // profile at the same screen width.
-  const [bannerWidth, setBannerWidth] = useState(0);
   useEffect(() => {
     const el = reelRef.current;
     if (!el) return;
     const measure = () => {
       const pv = Math.max(1, Math.min(3, Math.floor(el.clientWidth / 360)));
       setPerView(pv);
-      setBannerWidth((el.clientWidth - REEL_GAP * (pv - 1)) / pv);
     };
     measure();
     if (typeof ResizeObserver === "undefined") {
@@ -351,23 +309,35 @@ export function ProBannerReel({ purchasedItems, isPurchasing, onItemClick, slide
                 const price = resolvePrice(slide.id as string, slide.price!);
                 return (
                   <ProTierBanner
-                    skin={slide.skin!}
-                    header={slide.header!}
+                    hero={slide.hero!}
                     name={slide.name}
-                    price={price.display}
-                    month={monthLabel}
-                    tiles={proTiles(slide.benefits!)}
-                    // Three tiles need roughly 420px of banner to stay
-                    // readable; below that they become a list.
-                    //
-                    // Only where this reel is showing the tiers alone. In
-                    // the shop it sits beside deal and invite banners built
-                    // to the frame's height, and a taller card there would
-                    // leave every other slide with a gap under it.
-                    stacked={slides === "pro" && bannerWidth > 0 && bannerWidth < 420}
+                    perks={slide.benefits!}
                     onClick={handleCardClick}
                     dimmed={busy}
-                    actionLabel={isProcessing ? <Loader2 className="size-5 animate-spin" /> : state.text}
+                    // The mock puts the price on the button — "Buy for
+                    // $9.99" — and has no price line anywhere else on the
+                    // card, so the period has to travel with it. Guideline
+                    // 3.1.2 wants both read before the tap, and this is the
+                    // only place left on the card that says either.
+                    //
+                    // Its sibling in the mock reads "Try for free". Not used:
+                    // whether there is a free trial is a question only the
+                    // store can answer (see utils/introOffer), and this reel
+                    // does not ask it.
+                    actionLabel={
+                      isProcessing ? (
+                        <Loader2 className="size-5 animate-spin" />
+                      ) : state.isActive ? (
+                        state.text
+                      ) : (
+                        // `shop.buyFor` already carries the whole phrase with
+                        // its own placeholder, which is how the currency modal
+                        // says the same thing — a bare "Buy for" fragment with
+                        // a number stuck after it puts the words in the wrong
+                        // order in half the languages here.
+                        t("shop.buyFor").replace("{price}", `${price.display}${monthLabel}`)
+                      )
+                    }
                     actionDisabled={state.isActive || busy}
                     actionActive={state.isActive && !busy}
                     onAction={() => handleUpgrade(slide.id as SimplifiedTier)}
