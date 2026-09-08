@@ -3167,7 +3167,7 @@ export const de: KaTranslations = {
     tvQuestionsOnTV: "Fragen auf dem TV",
     tvOpenOnTV: "Auf dem TV öffnen:",
     tvEnterCode: "Gib den 4-stelligen Code ein:",
-    tvSheetPitch: "Spielst du mit Freunden oder Familie? Bring das Spiel auf den großen Bildschirm — alle antworten vom eigenen Handy.",
+    tvSheetPitch: "Spielt zusammen — jeder antwortet vom eigenen Handy.",
     tvConnectBtn: "Verbinden",
     tvConnectingBtn: "Verbinden...",
     tvConnected: "Verbunden!",

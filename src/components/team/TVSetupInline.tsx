@@ -409,7 +409,7 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
                 <h3 className="mt-3 font-display text-[24px] font-bold leading-[30px] text-[#402666]">
                   {t("lobby.uPlayOnTv")}
                 </h3>
-                <p className="mt-2 max-w-[280px] text-[16px] leading-[22px] text-[#402666]/70">
+                <p className="mt-2 max-w-[260px] text-[16px] leading-[22px] text-[#402666]/70">
                   {t("extra.tvSheetPitch")}
                 </p>
               </div>
