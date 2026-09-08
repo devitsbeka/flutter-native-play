@@ -461,7 +461,7 @@ export function UniversalLobby({
                 start.captionOnly
                   ? "pt-4"
                   : start.disabled
-                    ? "mb-3 px-2"
+                    ? "mb-2 px-2"
                     : "[&:not(:first-child)]:mt-3 px-2",
               )}
             >
@@ -948,20 +948,43 @@ export function UniversalLobby({
           you can see something is there, and that it scrolls. The list's
           own padding-bottom (measured, above) keeps all of it reachable. */}
       <div ref={footerRef} className="absolute inset-x-0 bottom-0 z-20">
-        {/* The haze. Two layers, no mask: a plain blur behind the whole
-            footer, and a gradient over it that fades the tint out towards
-            the top edge. A backdrop-filter under a CSS mask is the obvious
-            way to fade the blur itself and is the one thing iOS's webview
-            renders as a hard band, so it is deliberately not used here. */}
+        {/* The haze, as a ramp rather than a pane.
+ 
+            One blur layer over the whole footer put a hard horizontal line
+            across the screen where it began — the blur was uniform, so its
+            own top edge WAS the edge (owner: "smooth ending, not strict
+            line"). Fading a backdrop-filter with a CSS mask is the obvious
+            answer and is the one thing iOS's webview renders as a band, so
+            instead the blur is stacked: five bottom-anchored panes, each
+            shorter and stronger than the one behind it, so the backdrop is
+            filtered again at every step down. 1px at the top, 26 at the
+            button, and no single edge strong enough to read as a line.
+ 
+            The tint rides the same ramp and stays under half opacity, so
+            what is behind still reads as content rather than as a bar. */}
+        {[
+          { top: -72, blur: 1 },
+          { top: -58, blur: 3 },
+          { top: -45, blur: 6 },
+          { top: -33, blur: 10 },
+          { top: -22, blur: 16 },
+          { top: -12, blur: 26 },
+        ].map((step) => (
+          <div
+            key={step.top}
+            aria-hidden
+            style={{ top: step.top, backdropFilter: `blur(${step.blur}px)`, WebkitBackdropFilter: `blur(${step.blur}px)` }}
+            className="pointer-events-none absolute inset-x-0 bottom-0"
+          />
+        ))}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 bottom-0 top-[-34px] backdrop-blur-[12px]"
+          className="pointer-events-none absolute inset-x-0 bottom-0 top-[-72px] bg-[linear-gradient(180deg,rgba(249,219,255,0)_0%,rgba(249,219,255,0.06)_35%,rgba(249,219,255,0.22)_65%,rgba(249,219,255,0.44)_100%)]"
         />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 bottom-0 top-[-34px] bg-[linear-gradient(180deg,rgba(249,219,255,0)_0%,rgba(249,219,255,0.45)_34px,rgba(249,219,255,0.72)_100%)]"
-        />
-        <motion.div {...arrive(0.42)} className="relative px-4 pb-4 pt-3">
+        {/* Shorter than it was: the caption and the button are the whole
+            reason this bar exists, and it was carrying 12px of air above
+            the caption and 16 below the button for no one (owner's ask). */}
+        <motion.div {...arrive(0.42)} className="relative px-4 pb-3 pt-1.5">
         <div className="mx-auto w-full max-w-[700px] md:max-w-[520px]">
           {footerExtra}
           {start.disabled && captionBlock}

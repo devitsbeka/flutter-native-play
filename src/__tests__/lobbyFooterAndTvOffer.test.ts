@@ -49,8 +49,16 @@ describe("the footer floats over the list", () => {
     expect(lobby).not.toMatch(/className="relative z-20 shrink-0 px-4 pb-4"/);
   });
 
-  it("with a blur, so what is behind it reads as content and not as an edge", () => {
-    expect(lobby).toMatch(/backdrop-blur-\[12px\]/);
+  it("with a blur that ramps, so it has no edge of its own", () => {
+    // One uniform pane put a hard line across the screen where it began.
+    // Six bottom-anchored panes of rising strength instead — 1px of blur at
+    // the top of the ramp, 26 at the button.
+    expect(lobby).toMatch(/\{ top: -72, blur: 1 \}/);
+    expect(lobby).toMatch(/\{ top: -12, blur: 26 \}/);
+    expect(lobby).toMatch(/backdropFilter: `blur\(\$\{step\.blur\}px\)`/);
+    // Never as a mask over a single blur: that is the shape iOS's webview
+    // renders as a band.
+    expect(lobby).not.toMatch(/mask-image[^\n]*backdrop/);
   });
 
   it("and the list stops clear of it, by measurement", () => {
@@ -60,8 +68,9 @@ describe("the footer floats over the list", () => {
     expect(lobby).not.toMatch(/paddingBottom: \d/);
   });
 
-  it("the caption line gets room around it", () => {
-    expect(lobby).toMatch(/"mb-3 px-2"/);
+  it("the caption line gets room around it, without the bar going tall", () => {
+    expect(lobby).toMatch(/"mb-2 px-2"/);
+    expect(lobby).toMatch(/className="relative px-4 pb-3 pt-1\.5"/);
   });
 });
 
