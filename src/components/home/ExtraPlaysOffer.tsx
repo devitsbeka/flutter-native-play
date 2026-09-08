@@ -159,48 +159,53 @@ export function ExtraPlaysOffer({
     if (!adPack || !adsAvailable) return null;
     const isPending = pending === `${adPack.games}:ad`;
     return (
-      <div className="mt-4 text-left">
-        {/* The whole card is the button (Figma 1110:5285's sibling screen,
-            node 1102:4335) — a dark "chunky" card in the shape every button
-            on this screen shares (rounded-bl/tl 24px, rounded-br 54px, a
-            solid colour ledge underneath for depth), the clapperboard
-            spilling over its top edge, and a "+1" heart pill standing in for
-            a second line of copy explaining the reward. */}
+      <div className="text-left">
+        {/* The whole card is the button (Figma 1102:4334/1102:4335) — a dark
+            "chunky" card in the shape every button on this screen shares
+            (rounded-bl/tl 24px, rounded-br 54px, a solid colour ledge
+            underneath for depth), the clapperboard spilling over its top
+            edge, and a "+1" heart pill standing in for a second line of copy
+            explaining the reward.
+
+            Drawn at the mock's own measures now that this sits on a screen
+            rather than inside a 384px card: 99 tall, a 116px clapperboard
+            hung 23 above its top edge, and the reward on the same white chip
+            the counters over the chooser's shelf are drawn on. */}
         <motion.button
           type="button"
           onClick={() => void buy(adPack, "ad")}
           disabled={!!pending}
-          whileTap={pending ? undefined : { scale: 0.98, y: 2 }}
-          className="relative flex w-full items-center gap-3 overflow-visible rounded-tl-[24px] rounded-tr-[24px] rounded-bl-[24px] rounded-br-[40px] border-2 border-[#949494] bg-[#5e5e5e] py-4 pl-[92px] pr-4 text-left disabled:opacity-70"
-          style={{ boxShadow: "0 6px 0 0 #262626, 0 8px 16px rgba(0,0,0,0.18)" }}
+          whileTap={pending ? undefined : { scale: 0.99, y: 2 }}
+          className="relative flex h-[99px] w-full items-center gap-3 overflow-visible rounded-tl-[24px] rounded-tr-[24px] rounded-bl-[24px] rounded-br-[54px] border-2 border-[#949494] bg-[#5e5e5e] pl-[142px] pr-[24px] text-left disabled:opacity-70"
+          style={{ boxShadow: "0 8px 0 0 #262626, 0 8px 16px rgba(0,0,0,0.18)" }}
         >
           <img
             src={watchAdIcon}
             alt=""
-            className="pointer-events-none absolute -top-3 left-2 h-[84px] w-[84px] object-contain"
+            className="pointer-events-none absolute -top-[23px] left-[14px] h-[116px] w-[116px] object-contain"
           />
           {/* min-w-0 so a longer translation wraps instead of shoving the
               pill past the card's own edge — a flex child's default min
               width is its unwrapped content, not 0. */}
-          <p className="min-w-0 flex-1 font-display text-[15px] font-extrabold uppercase leading-tight text-white">
+          <p className="min-w-0 flex-1 font-display text-[20px] font-extrabold uppercase leading-[26px] text-white">
             {t("playLimit.adRowTitle")}
           </p>
           <span
-            className="ml-auto flex h-9 shrink-0 items-center gap-1 rounded-full bg-white px-3 font-display text-sm font-black text-[#161e46]"
-            style={{ boxShadow: "0 2px 0 #9ca29c" }}
+            className="ml-auto flex h-[43px] w-[81px] shrink-0 items-center justify-center gap-[1px] rounded-[18px] border border-solid border-[#e8e0f5] bg-white/90 font-[Nunito] text-[16.16px] font-black tracking-[-0.146px] text-[#161e46]"
+            style={{ boxShadow: "0 2.94px 0 #9ca29c, 0 4.409px 11.758px rgba(0,0,0,0.1)" }}
           >
             {isPending ? (
               <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-600" />
             ) : (
               <>
-                <img src={heartIcon} alt="" className="h-5 w-5 object-contain" />
+                <img src={heartIcon} alt="" className="h-[33px] w-[33px] object-contain" />
                 +1
               </>
             )}
           </span>
         </motion.button>
         {refused && (
-          <p role="alert" className="mt-2 text-center text-xs font-semibold text-rose-500">
+          <p role="alert" className="mt-3 text-center text-xs font-semibold text-rose-500">
             {refused === "ad_limit"
               ? t("playLimit.adLimitReached")
               : t("playLimit.purchaseFailed")}

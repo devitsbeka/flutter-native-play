@@ -105,7 +105,7 @@ describe("the watch-ad card", () => {
     // A flex child's default min-width is its own unwrapped content, not 0 —
     // without this a longer translation shoves the "+1" pill past the
     // card's own edge instead of wrapping to a second line.
-    expect(adOffer).toMatch(/className="min-w-0 flex-1 font-display text-\[15px\] font-extrabold uppercase/);
+    expect(adOffer).toMatch(/className="min-w-0 flex-1 font-display text-\[\d+px\] font-extrabold uppercase/);
   });
 });
 
