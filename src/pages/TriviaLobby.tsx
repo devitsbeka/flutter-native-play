@@ -1,6 +1,7 @@
 import { useEffect, useState, lazy, Suspense } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useParams, useNavigate } from "react-router-dom";
+import { MY_TRIVIAS_PATH } from "@/utils/triviaListRoute";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Play, Users, BarChart3, HelpCircle, Info, Pencil } from "lucide-react";
 import { useTriviaLobby } from "@/hooks/useTriviaLobby";
@@ -125,7 +126,7 @@ export default function TriviaLobby() {
   const isParty = (trivia?.subject ?? "") === "personal";
   useEffect(() => {
     if (!isLoading && trivia && isParty) {
-      navigate("/team?tab=private&filter=trivias", { replace: true });
+      navigate(MY_TRIVIAS_PATH, { replace: true });
     }
   }, [isLoading, trivia, isParty, navigate]);
 
@@ -431,7 +432,7 @@ export default function TriviaLobby() {
             isOpen={isEditModalOpen}
             onClose={() => setIsEditModalOpen(false)}
             // Deleting from here deletes the page you are standing on.
-            onDeleted={() => navigate("/team?tab=private&filter=trivias", { replace: true })}
+            onDeleted={() => navigate(MY_TRIVIAS_PATH, { replace: true })}
             quiz={{
               id: trivia.id,
               title: trivia.title,

@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { MY_TRIVIAS_PATH } from "@/utils/triviaListRoute";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronRight, Plus } from "lucide-react";
 
@@ -364,7 +365,7 @@ export function MobileHomeFeed() {
                     onPress: () => navigate("/team", { state: { openTrivia: true } }),
                     kind: "add",
                   }
-                : { label: t("extra.allTriviasBtn"), onPress: () => navigate("/team") }
+                : { label: t("extra.allTriviasBtn"), onPress: () => navigate(MY_TRIVIAS_PATH) }
             }
           />
           {/* Outside the scroller: the panel is the full width of the page,
