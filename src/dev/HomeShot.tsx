@@ -20,7 +20,7 @@ import { GreenPlayButton } from "@/components/shared/GreenPlayButton";
 import type { QueueItem } from "@/hooks/useRoomCategoryQueue";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { MobileHeroWidgets, MobileProfileCard } from "@/components/home/MobileHome";
-import { RoomCard } from "@/components/team/MyRoomsSection";
+import { RoomCard, RoomCardGrid } from "@/components/team/MyRoomsSection";
 import { AirbnbCategoryCard } from "@/components/discover/AirbnbCategoryCard";
 import type { MyRoom } from "@/hooks/useMyRooms";
 import homeScene from "@/assets/figma-home/home-scene.webp";
@@ -187,6 +187,30 @@ export default function HomeShot() {
     // `?kb=336` sets --keyboard-height the way nativeShell does on
     // keyboardWillShow, so the sheet's lift can be seen without a device.
     return <TVSheetShot keyboard={Number(params.get("kb") ?? 0)} />;
+  }
+  if (params.get("view") === "rooms-grid") {
+    // The private grid card, host-alone (no Play button, wide empty bar)
+    // and host-with-a-guest-online (Play button + the "+" before the faces).
+    const base = sampleRoom({ is_host: true, max_players: 10 });
+    const alone = { ...base, participants: base.participants.slice(0, 1), has_players_in_room: true };
+    const withGuest = {
+      ...base,
+      participants: [
+        base.participants[0],
+        { user_id: "guest-1", nickname: "Gloria", avatar_url: null, is_host: false },
+      ],
+      online_participants: [{ user_id: "guest-1", nickname: "Gloria", avatar_url: null }],
+      has_others_online: true,
+      has_players_in_room: true,
+    };
+    return (
+      <div className="min-h-[100dvh] w-full space-y-4 bg-[#faf6ff] p-4">
+        <div className="grid grid-cols-1 gap-3">
+          <RoomCardGrid room={alone} index={0} onJoin={noop} onDelete={noop} onLeave={noop} onInvite={noop} />
+          <RoomCardGrid room={withGuest} index={1} onJoin={noop} onDelete={noop} onLeave={noop} onInvite={noop} />
+        </div>
+      </div>
+    );
   }
   if (params.get("view") === "rooms") {
     const rooms = [

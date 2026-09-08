@@ -86,9 +86,12 @@ describe("the card that draws it", () => {
     expect(source).toMatch(/const action = roomCardAction\(room\)/);
   });
 
-  it("draws no button at all when there is no action", () => {
-    // Not a disabled button, not an empty pill: nothing.
-    expect(source).toMatch(/\{action && \(\s*\/\*[\s\S]*?<RoomCardPlayButton/);
+  it("draws no button at all when there is no action — the invite \"+\" takes that side instead", () => {
+    // Not a disabled button, not an empty pill: the Play button specifically,
+    // replaced there by the host's own invite "+" when a seat is open (see
+    // roomCardInvite.test.ts) and by nothing at all otherwise.
+    expect(source).toMatch(/\{action \? \(\s*\/\*[\s\S]*?<RoomCardPlayButton/);
+    expect(source).toMatch(/\) : \(\s*\/\/ No Play button to share the row with/);
   });
 
   it("says Play, in the short form, whichever state the card is in", () => {

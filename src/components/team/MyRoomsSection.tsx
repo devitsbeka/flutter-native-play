@@ -19,6 +19,7 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { QuizCategoryIcon } from "@/components/ui/quiz-category-icon";
 import { supabase } from "@/integrations/supabase/client";
 import { TVMirrorModal } from "@/components/tv/TVMirrorModal";
+import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
 import { Capacitor } from "@capacitor/core";
 import { formatDistanceToNow } from "date-fns";
 import { dateLocaleFor } from "@/utils/dateLocale";
@@ -134,6 +135,9 @@ export function MyRoomsSection({
   const navigate = useNavigate();
   const { t } = useLanguage();
   const [showTVModal, setShowTVModal] = useState(false);
+  /** The host's own room, from the "+" on its card. Same sheet the lobby
+      uses; roomId is what puts it in room-invite mode. */
+  const [inviting, setInviting] = useState<MyRoom | null>(null);
   
   const platform = Capacitor.getPlatform();
   const TVIcon = platform === 'ios' ? Airplay : platform === 'android' ? Cast : Tv;
@@ -361,6 +365,15 @@ export function MyRoomsSection({
       {/* TV Mirror Modal */}
       <TVMirrorModal open={showTVModal} onOpenChange={setShowTVModal} />
 
+      {/* The host's invite sheet, opened by the "+" on a room card — the
+          same one the Public tab's cards already open. */}
+      <InviteFriendsModal
+        isOpen={inviting !== null}
+        onClose={() => setInviting(null)}
+        roomId={inviting?.id}
+        roomCode={inviting?.room_code}
+      />
+
       {/* Rooms List */}
       {rooms.length === 0 && homeRail && !searching ? (
         // On the home rail an empty state has to stay a CARD. The panel
@@ -457,6 +470,7 @@ export function MyRoomsSection({
                     onJoin={() => handleJoin(room)}
                     onDelete={handleDeleteRoom}
                     onLeave={handleLeaveRoom}
+                    onInvite={setInviting}
                     isJoining={joiningRoomId === room.id}
                   />
                 </motion.div>
@@ -1005,11 +1019,13 @@ interface RoomCardGridProps {
   onJoin: () => void;
   onDelete: (roomId: string) => void;
   onLeave: (roomId: string) => void;
+  /** The host's way to fill this room from the list, without opening it. */
+  onInvite?: (room: MyRoom) => void;
   /** Opening this room: the card says so and stops taking taps. */
   isJoining?: boolean;
 }
 
-function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, isJoining = false }: RoomCardGridProps) {
+export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite, isJoining = false }: RoomCardGridProps) {
   const { openProfile } = usePlayerProfile();
   const { t } = useLanguage();
   const localizeCategory = useLocalizedCategoryName();
@@ -1084,6 +1100,16 @@ function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, isJoining = fals
   // What this room is offering right now, or null when it offers nothing.
   // See roomCardAction for why an empty room gets no button at all.
   const action = roomCardAction(room);
+  /**
+   * The host's way to fill an open seat, from the list rather than from
+   * inside the room.
+   *
+   * Only the host invites — a guest has no seats to give away. And only
+   * while a seat is actually open: an unlimited room (no max_players) always
+   * has one, a capped room does once its count is below the cap. Same rule
+   * the Public tab's cards already use (PublicRoomsSection.canInvite).
+   */
+  const canInvite = room.is_host && (!room.max_players || displayPlayerCount < room.max_players);
 
   // The faces used to be trimmed to two whenever the card carried a button,
   // with the "+N" bubble suppressed on the reasoning that the count pill above
@@ -1279,10 +1305,31 @@ function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, isJoining = fals
                 {/* Left: TV marker (played or live on TV, no container) +
                     player count (TV active players if available) + the faces
                     of who is in there, which belong beside the number they
-                    are the count of. */}
+                    are the count of.
+
+                    The "+" for an open seat lives HERE, before the faces,
+                    only when the Play button already has the right side
+                    (below) — otherwise it takes that side itself, since
+                    nothing else is using it. Same afforance the Public tab's
+                    cards already give the host; a room with only the host in
+                    it (screenshot: a wide bar and nobody to invite from it)
+                    was the one card in the app that never offered it. */}
                 <div className="flex items-center gap-2 min-w-0">
                   {playedOnTV && (
                     <img src={retroTv3d} alt="TV" className="w-7 h-7 object-contain drop-shadow select-none flex-shrink-0" draggable={false} />
+                  )}
+                  {canInvite && action && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onInvite?.(room);
+                      }}
+                      aria-label={t("extra.inviteFriendsTitle")}
+                      className="w-8 h-8 rounded-full border-2 border-dashed border-[#2b1a4a]/30 bg-white/70 flex items-center justify-center flex-shrink-0 transition-colors hover:bg-white active:scale-95"
+                    >
+                      <Plus className="w-4 h-4 text-[#2b1a4a]" />
+                    </button>
                   )}
 
                   {/* Avatars (use TV players if session is active). These are
@@ -1371,7 +1418,7 @@ function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, isJoining = fals
                     deliberately treats /team as "already there" and never
                     navigates, so a player parked on this very list is the one
                     person a starting round cannot reach. */}
-                {action && (
+                {action ? (
                   /* The public list's button in white — same shape, same
                      word, same play triangle. Which list you are on is the
                      only difference between them.
@@ -1400,6 +1447,23 @@ function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, isJoining = fals
                     <Play className="w-3.5 h-3.5 fill-current" />
                     {t("extra.roomPlay")}
                   </RoomCardPlayButton>
+                ) : (
+                  // No Play button to share the row with (nobody else is
+                  // online) — the "+" takes the right side itself instead of
+                  // the left, since it is the only thing there.
+                  canInvite && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onInvite?.(room);
+                      }}
+                      aria-label={t("extra.inviteFriendsTitle")}
+                      className="w-8 h-8 rounded-full border-2 border-dashed border-[#2b1a4a]/30 bg-white/70 flex items-center justify-center flex-shrink-0 transition-colors hover:bg-white active:scale-95"
+                    >
+                      <Plus className="w-4 h-4 text-[#2b1a4a]" />
+                    </button>
+                  )
                 )}
               </div>
             </div>
