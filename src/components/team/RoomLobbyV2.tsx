@@ -1148,6 +1148,7 @@ export function RoomLobbyV2() {
    * public list with the switch taken away, which is worse than the row.
    */
   const playsOwnTrivia = roomPlaysOwnTrivia(currentRoom, isPublicRoom, queue);
+
   const lobbyRules: LobbyRuleRow[] = [
     // No player-count picker on a classic room (owner's ask): the cap is 10
     // and the host starts whenever — with one friend or ten. The card no
@@ -1216,7 +1217,17 @@ export function RoomLobbyV2() {
           // resolved here too rather than only at the picker.
           : roundIconSlug(firstQueue);
         return {
-          label: freshStart || !firstName ? t("lobby.uSelectCategory") : firstName,
+          // A party's chip names the PRODUCT, not the party's own title.
+          // The heading under the emblem already carries the title the host
+          // picked, so the chip repeating it said nothing twice and left
+          // nothing on the screen saying this room was a party at all
+          // (owner). Only a real party: a room built on a trivia the player
+          // merely WROTE keeps its round's own name, which is its topic.
+          label: isPartyRoom
+            ? t("extra.myTriviaPartyLabel")
+            : freshStart || !firstName
+              ? t("lobby.uSelectCategory")
+              : firstName,
           // The extra rounds ride the FAR RIGHT of the chip (owner's ask),
           // not crowded against the category's name.
           trailing: !freshStart && firstName && extra > 0 ? `+${extra}` : undefined,

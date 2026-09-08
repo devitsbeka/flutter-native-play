@@ -202,3 +202,49 @@ describe("a party has no lobby, and delete deletes", () => {
     expect(lobby).toMatch(/onDeleted=\{\(\) => navigate\(MY_TRIVIAS_PATH, \{ replace: true \}\)\}/);
   });
 });
+
+/**
+ * The lobby heading said what kind of room it was, not which room it was.
+ *
+ * A MyTrivia Party room is SAVED under the brand, so the one big heading over
+ * the lobby read "My Trivia Party" for every party anyone ever made (owner:
+ * "my trivia party goes up next to the icon in category container and below
+ * goes either untitled or name host will provide for room").
+ *
+ * The heading half is settled next door in partyRoomIsItsParty: `roomName`
+ * resolves to the party's own title while the room still wears a dealt name,
+ * and to Untitled when the party was never named. What is here is the other
+ * half — the kind, said on the category chip, so a room called "Untitled"
+ * still says what it is.
+ */
+describe("the lobby says what kind of room it is, on the chip", () => {
+  const roomLobby = read("src/components/team/RoomLobbyV2.tsx");
+  const universal = read("src/components/lobby/UniversalLobby.tsx");
+
+  it("the brand is the chip's label, not a caption beside the emblem", () => {
+    // The heading under the emblem already carries the title the host
+    // picked, so a caption beside the emblem said nothing twice — and the
+    // chip, which is where a player looks to see what the room plays, was
+    // repeating the party's title instead of naming the product (owner).
+    expect(roomLobby).toMatch(/label: isPartyRoom\s*\n\s*\? t\("extra\.myTriviaPartyLabel"\)/);
+    expect(roomLobby).not.toMatch(/heroKicker|roomKicker/);
+    expect(universal).not.toMatch(/kicker/);
+  });
+
+  it("and the emblem stands alone above the name", () => {
+    expect(universal).toMatch(/<span className="mb-\[15px\] block">\{emblem\}<\/span>/);
+    expect(universal).toMatch(/<RoomTitle name=\{roomName\} icon=\{icon\} editable \/>/);
+  });
+
+  it("and only a real party is named as one", () => {
+    // isPartyRoom checks the trivia's subject; playsOwnTrivia is also true
+    // for a room built on a trivia the player merely WROTE, which is not a
+    // party — the same distinction the room's icon makes.
+    expect(roomLobby).toMatch(/const isPartyRoom = partyTitle !== undefined;/);
+    expect(roomLobby).not.toMatch(/label: playsOwnTrivia/);
+  });
+
+  it("and the rename sheet still edits the room's name", () => {
+    expect(roomLobby).toMatch(/roomName=\{roomName\}\s*\n\s*onConfirm=\{handleUpdateRoomIconAndName\}/);
+  });
+});

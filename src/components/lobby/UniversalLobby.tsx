@@ -1324,16 +1324,23 @@ export function RoomTitle({
       heading
     );
   }
+  const emblem = (
+    <span className="relative block size-[91px] shrink-0">
+      <img
+        alt=""
+        src={icon}
+        className="size-full object-contain drop-shadow-[0_4px_10px_rgba(88,50,160,0.22)]"
+      />
+      {editable && <span className="absolute left-[65px] top-[4px]">{chip}</span>}
+    </span>
+  );
   return (
     <>
-      <span className="relative mb-[15px] block size-[91px] shrink-0">
-        <img
-          alt=""
-          src={icon}
-          className="size-full object-contain drop-shadow-[0_4px_10px_rgba(88,50,160,0.22)]"
-        />
-        {editable && <span className="absolute left-[65px] top-[4px]">{chip}</span>}
-      </span>
+      {/* Emblem, then the name under it — nothing beside it. The kind of
+          room this is belongs on the category chip at the top, which is
+          where the player looks to see what the room plays; a caption here
+          only pushed the emblem off centre (owner's ask). */}
+      <span className="mb-[15px] block">{emblem}</span>
       {heading}
     </>
   );
