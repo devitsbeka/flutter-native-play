@@ -529,11 +529,19 @@ export default function Index() {
   // since rooms need an account anyway.
   const handlePlayClick = useCallback(() => {
     if (user) {
+      // Out of lives: the answer is the screen that says so and offers the
+      // three ways out — an ad, PRO, or waiting for the next one — not the
+      // play chooser, which let a player pick a game and only then find out
+      // they could not start it (owner's ask).
+      if (!canPlay && !isVip) {
+        setShowGuestMaxPlaysModal(true);
+        return;
+      }
       navigate("/create-room");
     } else {
       void startQuickGame();
     }
-  }, [user, navigate, startQuickGame]);
+  }, [user, navigate, startQuickGame, canPlay, isVip]);
 
   // Guest welcome panel handlers
   const handleGuestCreateAccount = useCallback(async (username: string, password: string) => {

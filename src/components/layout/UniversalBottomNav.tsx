@@ -1,7 +1,7 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { useCallback, useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { Home, Play, Compass, Store, Trophy, Headphones, Plus, Hourglass, Lock } from "lucide-react";
+import { Home, Play, Compass, Store, Trophy, Headphones, Plus, Lock } from "lucide-react";
 import { t } from "@/lib/i18n";
 import { usePendingChallenges } from "@/hooks/usePendingChallenges";
 import { useNewContentIndicators } from "@/hooks/useNewContentIndicators";
@@ -211,8 +211,6 @@ export function UniversalBottomNav({
                 isPlayButton={showPlayButton}
                 isPlusIcon={false}
                 variant={isVip ? "gold" : canPlay ? (new Date() < new Date("2026-02-22T23:59:59") ? "gold" : "mint") : "exhausted"}
-                playsRemaining={playsRemaining}
-                maxPlays={maxPlays}
                 isVip={isVip}
                 canPlay={canPlay}
                 isLoading={vipLoading}
@@ -462,8 +460,6 @@ interface Hex3DPlayButtonProps {
   isPlayButton: boolean;
   isPlusIcon?: boolean;
   variant?: "mint" | "purple" | "gold" | "exhausted";
-  playsRemaining?: number;
-  maxPlays?: number;
   isVip?: boolean;
   canPlay?: boolean;
   isLoading?: boolean;
@@ -475,8 +471,6 @@ function Hex3DPlayButton({
   isPlayButton, 
   isPlusIcon = false, 
   variant = "mint",
-  playsRemaining = 5,
-  maxPlays = 5,
   isVip = false,
   canPlay = true,
   isLoading = false,
@@ -514,7 +508,6 @@ function Hex3DPlayButton({
   };
 
   const colors = colorSchemes[variant];
-  const showExhausted = variant === "exhausted" && isPlayButton;
   const isPromo = !isVip && variant === "gold" && new Date() < new Date("2026-02-22T23:59:59");
   const [showGlow, setShowGlow] = useState(isPromo);
 
@@ -556,42 +549,27 @@ function Hex3DPlayButton({
           }} />
         </motion.div>
       )}
-      {/* Badge above button */}
-      {isPlayButton && !isPlusIcon && (
+      {/* Above the button: only the PRO mark.
+ 
+          The play counter used to live here — "3/5" in mint, or a pulsing
+          hourglass and a "0" when they ran out — and the button itself wore
+          a turning hourglass and a sweeping ring to match. Four pieces of
+          chrome to say a number the player is not deciding anything with:
+          the button's job is to start a game, and what happens when there
+          are none left is a screen that offers the ways out, not a badge
+          that says no (owner: "don't show sand timer here, show just play
+          button without 0/5").
+ 
+          The PRO mark stays. It is not a count — it is ∞, or the hours left
+          on a subscription about to lapse, which is the one thing up here
+          worth interrupting for. */}
+      {isPlayButton && !isPlusIcon && isVip && (
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           className="absolute -top-2 left-1/2 -translate-x-1/2 z-[70]"
         >
-          {isVip ? (
-            // VIP badge - countdown if expiring within 24h, otherwise infinity
-            <VipBadge vipExpiresAt={vipExpiresAt} />
-          ) : canPlay ? (
-            // Plays remaining badge
-            <div 
-              className="flex items-center gap-0.5 px-2 py-0.5 rounded-full"
-              style={{
-                background: "linear-gradient(180deg, #5EE8B5 0%, #3FC99A 100%)",
-                boxShadow: "0 2px 6px rgba(94, 232, 181, 0.4)",
-              }}
-            >
-              <span className="text-[10px] font-bold text-white">{playsRemaining}/{maxPlays}</span>
-            </div>
-          ) : (
-            // Exhausted badge
-            <motion.div 
-              className="flex items-center gap-1 px-2 py-0.5 rounded-full"
-              style={{
-                background: "linear-gradient(180deg, #6B7280 0%, #4B5563 100%)",
-                boxShadow: "0 2px 6px rgba(75, 85, 99, 0.4)",
-              }}
-              animate={{ opacity: [0.7, 1, 0.7] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-            >
-              <Hourglass className="w-3 h-3 text-white" />
-              <span className="text-[10px] font-bold text-white">0</span>
-            </motion.div>
-          )}
+          <VipBadge vipExpiresAt={vipExpiresAt} />
         </motion.div>
       )}
 
@@ -675,17 +653,6 @@ function Hex3DPlayButton({
                 color="#ffffff"
                 strokeWidth={3}
               />
-            ) : showExhausted ? (
-              <motion.div
-                animate={{ rotate: [0, 180] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-              >
-                <Hourglass 
-                  className="w-7 h-7" 
-                  color="#ffffff"
-                  strokeWidth={2.5}
-                />
-              </motion.div>
             ) : isPlayButton ? (
               /* PRO players get the play triangle too. The button's job is to
                  start a game, and the crown answered a question nobody was
@@ -707,37 +674,6 @@ function Hex3DPlayButton({
           </div>
         </div>
 
-        {/* Progress ring for exhausted state */}
-        {showExhausted && (
-          <svg 
-            className="absolute inset-0 w-full h-full" 
-            style={{ transform: "rotate(-90deg)" }}
-          >
-            <circle
-              cx="45"
-              cy="45"
-              r="40"
-              fill="none"
-              stroke="rgba(94, 232, 181, 0.3)"
-              strokeWidth="4"
-            />
-            <motion.circle
-              cx="45"
-              cy="45"
-              r="40"
-              fill="none"
-              stroke="#5EE8B5"
-              strokeWidth="4"
-              strokeLinecap="round"
-              initial={{ pathLength: 0 }}
-              animate={{ pathLength: 1 }}
-              transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
-              style={{ 
-                strokeDasharray: "251.2",
-              }}
-            />
-          </svg>
-        )}
       </motion.button>
 
     </div>
