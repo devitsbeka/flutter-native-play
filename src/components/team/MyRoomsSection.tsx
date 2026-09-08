@@ -9,6 +9,7 @@ import iconBattleLounge from "@/assets/play-chooser/icon-crate.png";
 import iconWordsLounge from "@/assets/play-chooser/icon-words.webp";
 import iconPartyLounge from "@/assets/house-party.png";
 import { roomKind, routeForRoom } from "@/utils/roomRoutes";
+import { isGeneratedRoomName } from "@/utils/roomNameGenerator";
 import { roomCardAction } from "@/utils/roomCardAction";
 import { RoomCardPlayButton } from "@/components/team/RoomCardPlayButton";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
@@ -587,7 +588,6 @@ export function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = f
           // The classic party room is a game too: it wears My Trivia Party's
           // face when the host never picked an icon of their own.
           : { icon: iconPartyLounge, label: t("extra.myTriviaPartyLabel") };
-  const displayName = room.room_name || lounge?.label || t("extra.gameRoomLabel");
   // A room built on one of the player's own trivias — a MyTrivia Party among
   // them. The line under the room's own name used to show the trivia's raw
   // title here ("tt"), which is what the room's OWN name is for; this line
@@ -595,6 +595,17 @@ export function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = f
   // (owner: "instead tt we show My Trivia Party... replace 'tt' to always
   // show My Trivia party").
   const isPartyRoom = !!room.user_trivia_id;
+  // A party room never shows a dealt or icon-generated name here — only one
+  // the host actually typed. isGeneratedRoomName catches the client's own
+  // vocabulary; an empty name catches the moment before any name has
+  // landed at all, generated or otherwise (owner: "my trivia party should
+  // have name: Untitled... remove that random names from my trivia party
+  // rooms").
+  const displayName = isPartyRoom
+    ? (!room.room_name || isGeneratedRoomName(room.room_name)
+        ? t("extra.triviaUntitled")
+        : room.room_name)
+    : room.room_name || lounge?.label || t("extra.gameRoomLabel");
   // How long ago the room was made — the thing that tells two similar rooms
   // apart in a list of them.
   const createdAgo = useRoomAge(room.created_at);
@@ -1064,7 +1075,6 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
           // The classic party room is a game too: it wears My Trivia Party's
           // face when the host never picked an icon of their own.
           : { icon: iconPartyLounge, label: t("extra.myTriviaPartyLabel") };
-  const displayName = room.room_name || lounge?.label || t("extra.gameRoomLabel");
   // A room built on one of the player's own trivias — a MyTrivia Party among
   // them. The line under the room's own name used to show the trivia's raw
   // title here ("tt"), which is what the room's OWN name is for; this line
@@ -1072,6 +1082,17 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
   // (owner: "instead tt we show My Trivia Party... replace 'tt' to always
   // show My Trivia party").
   const isPartyRoom = !!room.user_trivia_id;
+  // A party room never shows a dealt or icon-generated name here — only one
+  // the host actually typed. isGeneratedRoomName catches the client's own
+  // vocabulary; an empty name catches the moment before any name has
+  // landed at all, generated or otherwise (owner: "my trivia party should
+  // have name: Untitled... remove that random names from my trivia party
+  // rooms").
+  const displayName = isPartyRoom
+    ? (!room.room_name || isGeneratedRoomName(room.room_name)
+        ? t("extra.triviaUntitled")
+        : room.room_name)
+    : room.room_name || lounge?.label || t("extra.gameRoomLabel");
   // How long ago the room was made — the thing that tells two similar rooms
   // apart in a list of them.
   const createdAgo = useRoomAge(room.created_at);

@@ -960,7 +960,7 @@ export function RoomLobbyV2() {
    * already looking titled, and titled the same as every other one.
    */
   const roomName =
-    isPartyRoom && isGeneratedRoomName(currentRoom.room_name)
+    isPartyRoom && (!currentRoom.room_name || isGeneratedRoomName(currentRoom.room_name))
       ? triviaDisplayTitle(partyTitle, t)
       : currentRoom.room_name || t("extra.gameRoomDefault");
 
@@ -1578,6 +1578,15 @@ export function RoomLobbyV2() {
         currentIconUrl={roomFace}
         roomName={roomName}
         onConfirm={handleUpdateRoomIconAndName}
+        // The sheet's own AI namer rewrites the name field on every icon tap
+        // — right for an ordinary room choosing a face for the first time,
+        // wrong for a party, whose identity is the trivia it plays. Left on,
+        // browsing icons kept overwriting "Untitled" (or the trivia's own
+        // title) with a fresh random name the host never asked for and had
+        // to notice and delete (owner: "if clicks another icon it shouldn't
+        // give room random name, remove that random names from my trivia
+        // party rooms").
+        autoName={!isPartyRoom}
       />
 
       {/* The rounds, in the order they play, drop under the chip: see the

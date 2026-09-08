@@ -16,6 +16,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { isGeneratedRoomName } from "@/utils/roomNameGenerator";
 
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 const grid = read("src/components/team/MyRoomsSection.tsx");
@@ -48,11 +49,41 @@ describe("the line under the room's name", () => {
     ).toBe(2);
   });
 
-  it("but the room's own name is untouched — displayName still reads room_name first", () => {
+  it("and an ordinary room's own name is untouched — room_name still comes first", () => {
     expect(
       (grid.match(
-        /const displayName = room\.room_name \|\| lounge\?\.label \|\| t\("extra\.gameRoomLabel"\);/g,
+        /: room\.room_name \|\| lounge\?\.label \|\| t\("extra\.gameRoomLabel"\);/g,
       ) ?? []).length,
     ).toBe(2);
+  });
+});
+
+/**
+ * A party room's OWN name defaults to Untitled too, not a dealt one.
+ *
+ * Play-on-TV deals the room a real generated name now (a separate fix), so
+ * every fresh party room wears a mood-and-creature pairing until the host
+ * changes it — "Angry Elephants" as the big heading a card leads with. That
+ * is exactly the random name this screen is supposed to be free of (owner:
+ * "my trivia party should have name: Untitled... remove that random names
+ * from my trivia party rooms").
+ */
+describe("a party room's own name defaults to Untitled, not a dealt one", () => {
+  it("in both card components", () => {
+    expect(
+      (grid.match(
+        /const displayName = isPartyRoom\s*\n\s*\? \(!room\.room_name \|\| isGeneratedRoomName\(room\.room_name\)\s*\n\s*\? t\("extra\.triviaUntitled"\)\s*\n\s*: room\.room_name\)\s*\n\s*: room\.room_name \|\| lounge\?\.label \|\| t\("extra\.gameRoomLabel"\);/g,
+      ) ?? []).length,
+    ).toBe(2);
+  });
+
+  it("recognising the client's own dealt vocabulary, not just an empty name", () => {
+    expect(grid).toMatch(/import \{ isGeneratedRoomName \} from "@\/utils\/roomNameGenerator";/);
+  });
+
+  it("but a name the host actually typed still shows, once it exists", () => {
+    // A typed name is not one of the pairings this generator deals, so it
+    // falls through to room.room_name unchanged.
+    expect(isGeneratedRoomName("Beka's birthday")).toBe(false);
   });
 });
