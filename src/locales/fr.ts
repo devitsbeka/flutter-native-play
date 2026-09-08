@@ -3135,7 +3135,6 @@ export const fr: KaTranslations = {
     challengeBtn: "Défier",
     trophiesTab: "Récompenses",
     noTrophiesYet: "Pas encore de récompenses",
-    noTriviasProfileYet: "Pas encore de trivias",
     deleteFriendTitle: "Retirer l'ami",
     deleteFriendDesc: "Tu es sûr de vouloir retirer {name} de tes amis ?",
     deletingLabel: "Suppression...",

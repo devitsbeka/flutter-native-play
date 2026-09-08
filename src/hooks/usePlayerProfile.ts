@@ -65,25 +65,6 @@ export interface PlayerProfileData {
     achievement_id: string;
     unlocked_at: string;
   }>;
-  trivias: Array<{
-    id: string;
-    title: string;
-    description: string | null;
-    cover_image: string | null;
-    icon_slug: string | null;
-    plays_count: number | null;
-    likes_count: number | null;
-    created_at: string | null;
-  }>;
-  collections: Array<{
-    id: string;
-    title: string;
-    description: string | null;
-    cover_image: string | null;
-    cover_gradient: string;
-    plays_count: number | null;
-    likes_count: number | null;
-  }>;
   interactions: InteractionLogItem[];
   /**
    * The record between the viewer and this player.
@@ -112,13 +93,11 @@ export interface PlayerProfileData {
 type CoreProfile = Pick<PlayerProfileData, "profile" | "stats">;
 type ProfileExtras = Pick<
   PlayerProfileData,
-  "achievements" | "trivias" | "collections" | "interactions" | "isFriend" | "friendshipStatus" | "friendshipId"
+  "achievements" | "interactions" | "isFriend" | "friendshipStatus" | "friendshipId"
 >;
 
 const EMPTY_EXTRAS: ProfileExtras = {
   achievements: [],
-  trivias: [],
-  collections: [],
   interactions: [],
   isFriend: false,
   friendshipStatus: 'none',
@@ -287,22 +266,6 @@ async function fetchExtras(userId: string, viewerId: string | undefined): Promis
     .eq("user_id", userId)
     .order("unlocked_at", { ascending: false });
 
-  const triviasQ = supabase
-    .from("user_quiz_posts")
-    .select("id, title, description, cover_image, icon_slug, plays_count, likes_count, created_at")
-    .eq("user_id", userId)
-    .eq("is_public", true)
-    .order("created_at", { ascending: false })
-    .limit(10);
-
-  const collectionsQ = supabase
-    .from("quiz_collections")
-    .select("id, title, description, cover_image, cover_gradient, plays_count, likes_count")
-    .eq("user_id", userId)
-    .eq("is_public", true)
-    .order("created_at", { ascending: false })
-    .limit(10);
-
   const friendshipP = (async () => {
     if (!viewerId || viewerId === userId) return null;
     const { data: friendship } = await supabase
@@ -379,8 +342,8 @@ async function fetchExtras(userId: string, viewerId: string | undefined): Promis
     return interactions;
   })();
 
-  const [{ data: achievements }, { data: trivias }, { data: collections }, friendship, interactions] =
-    await Promise.all([achievementsQ, triviasQ, collectionsQ, friendshipP, interactionsP]);
+  const [{ data: achievements }, friendship, interactions] =
+    await Promise.all([achievementsQ, friendshipP, interactionsP]);
 
   let friendshipStatus: PlayerProfileData["friendshipStatus"] = 'none';
   let friendshipId: string | null = null;
@@ -397,8 +360,6 @@ async function fetchExtras(userId: string, viewerId: string | undefined): Promis
 
   return {
     achievements: achievements || [],
-    trivias: trivias || [],
-    collections: collections || [],
     interactions: interactions.slice(0, 10),
     isFriend,
     friendshipStatus,
