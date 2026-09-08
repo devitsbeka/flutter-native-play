@@ -69,13 +69,17 @@ describe("a party that was never named", () => {
 });
 
 describe("the name is said once, and it names this party", () => {
-  it("the banner carries the player's own name for it", () => {
+  it("the meta row carries the player's own name for it", () => {
     expect(tab).toMatch(/\{triviaDisplayTitle\(post\.title, t\)\}/);
   });
 
-  it("the brand stays where it was, beside the icon", () => {
-    expect(tab).toMatch(/\{t\("extra\.myTriviaPartyLabel"\)\}/);
+  it("the brand is the icon beside it, not a second line of words", () => {
+    // The words moved off the banner and into the row, where the label
+    // used to be (owner: "we show my trivia party icon and title user
+    // entered or untitled next to it"). Saying the brand there as well
+    // would put the card back to naming everything except this party.
     expect(tab).toMatch(/src=\{iconHouseParty\}/);
+    expect(tab).not.toMatch(/\{t\("extra\.myTriviaPartyLabel"\)\}/);
   });
 
   it("and no wordmark was left behind anywhere", () => {

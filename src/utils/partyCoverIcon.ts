@@ -95,3 +95,29 @@ export function partyCoverIcons(
   }
   return dealt;
 }
+
+/**
+ * Where the icon catalogue lives. Every slug is stored as `<slug>.png`, which
+ * is how a card can draw its icon without waiting for the 1.3 MB index (see
+ * DynamicIcon). The lobby's emblem is an `<img src>` rather than a slug, so
+ * a party room needs the URL rather than the name.
+ */
+const ICON_STORAGE_URL =
+  "https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library";
+
+/**
+ * The face a MyTrivia Party's ROOM wears.
+ *
+ * The lobby dealt every room a creature off the crest pool — a parrot over a
+ * party called "Cheerful Rabbits" — which named neither the party nor the
+ * kind of thing it was (owner's ask). A party room wears one of the same four
+ * icons its card does.
+ *
+ * One room is not a list, so there is no bag to deal from here: the icon is a
+ * hash of the room id, which keeps a room's face the same on every screen,
+ * across reloads, and for everyone in it.
+ */
+export function partyRoomIconUrl(roomId: string): string {
+  const slug = PARTY_COVER_ICON_SLUGS[hashString(roomId) % PARTY_COVER_ICON_SLUGS.length];
+  return `${ICON_STORAGE_URL}/${slug}.png`;
+}

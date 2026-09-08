@@ -167,11 +167,24 @@ describe("what the card does with it", () => {
     expect(tab).toMatch(/coverIcon=\{partyIcons\.get\(item\.data\.id\)\}/);
   });
 
-  it("and paints it on white, with the title gone dark to survive it", () => {
-    // White-on-white would be an invisible title, which is how this breaks.
+  it("and paints it on white, alone — the banner carries no words now", () => {
     expect(tab).toMatch(/bg-white px-4/);
     expect(tab).toMatch(/<DynamicIcon\s*\n\s*slug=\{coverIcon \?\? PARTY_COVER_ICON_SLUGS\[0\]\}/);
-    expect(tab).toMatch(/text-base font-bold text-slate-900 text-center/);
+    // The title moved down beside the icon in the meta row (owner's ask),
+    // so nothing is drawn over the party banner at all — not over the icon
+    // and not over a cover photo. Scoped to the party card: the ordinary
+    // trivia card beside it still writes its title across its own banner.
+    expect(tab).not.toMatch(/text-base font-bold text-slate-900 text-center/);
+    const party = tab.slice(
+      tab.indexOf("Cover image, or one of the four party icons"),
+      tab.indexOf("src={iconHouseParty}"),
+    );
+    expect(party.length).toBeGreaterThan(0);
+    expect(party).not.toMatch(/<h4/);
+    // The photo stands alone too — no scrim, because nothing sits on it.
+    expect(party).toMatch(
+      /\{post\.cover_image \? \(\s*\n\s*<img src=\{post\.cover_image\}[^\n]*\/>\s*\n\s*\) : \(/,
+    );
   });
 
   it("and the two chips over it darken too, rather than going grey-on-white", () => {
