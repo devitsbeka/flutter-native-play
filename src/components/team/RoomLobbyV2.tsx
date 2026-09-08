@@ -18,6 +18,7 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { toast } from "@/lib/toast";
 import { supabase } from "@/integrations/supabase/client";
 import { OWN_TRIVIA_ICON_SLUG, roomPlaysOwnTrivia, roundIconSlug } from "@/utils/ownTriviaRound";
+import { triviaDisplayTitle } from "@/utils/triviaTitle";
 import { siteUrl } from "@/config/site";
 import { inviteLinkPath } from "@/utils/inviteLink";
 import { useRoomMatchHistory } from "@/hooks/useRoomMatchHistory";
@@ -1069,6 +1070,25 @@ export function RoomLobbyV2() {
    * public list with the switch taken away, which is worse than the row.
    */
   const playsOwnTrivia = roomPlaysOwnTrivia(currentRoom, isPublicRoom, queue);
+
+  /**
+   * The heading over the lobby, and the small line beside the emblem.
+   *
+   * A MyTrivia Party room is SAVED under the brand — both doors into it write
+   * `room_name: "My Trivia Party"` — so the one heading on the screen said
+   * what kind of room it was and nothing said which room it was. The brand
+   * moves up beside the emblem and the heading carries the host's own name
+   * for it, or Untitled when they never gave one (owner: "my trivia party
+   * goes up next to the icon in category container and below goes either
+   * untitled or name host will provide for room").
+   *
+   * `triviaDisplayTitle` is the same rule the trivia cards use, brand-as-no-
+   * name included — the parties already saved carry that default and would
+   * otherwise read as named forever. Ordinary rooms keep their own name and
+   * the "Game Room" fallback, and get no kicker.
+   */
+  const heroName = playsOwnTrivia ? triviaDisplayTitle(currentRoom.room_name, t) : roomName;
+  const heroKicker = playsOwnTrivia ? t("extra.myTriviaPartyLabel") : undefined;
   const lobbyRules: LobbyRuleRow[] = [
     // No player-count picker on a classic room (owner's ask): the cap is 10
     // and the host starts whenever — with one friend or ten. The card no
@@ -1110,7 +1130,8 @@ export function RoomLobbyV2() {
   return (
     <UniversalLobby
       sceneArt={classicLobbyScene(currentRoom)}
-      roomName={roomName}
+      roomName={heroName}
+      roomKicker={heroKicker}
       icon={roomFace}
       onRename={isHost ? () => setShowIconPicker(true) : undefined}
       onBack={handleExitRoom}
