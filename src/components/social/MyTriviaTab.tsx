@@ -33,6 +33,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast";
 import { PUBLIC_SHARING_ENABLED } from "@/config/features";
+import { generateRoomIdentity } from "@/utils/roomNameGenerator";
+import { readAppLanguage } from "@/utils/appLanguage";
 
 // Localized time format helper
 function formatLocalTimeAgo(date: Date, t: (key: string, params?: Record<string, string | number>) => string): string {
@@ -601,6 +603,13 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
   const { createRoom } = useMultiplayerV2();
   const [isStartingTV, setIsStartingTV] = useState(false);
   const tiltDirection = post.id.charCodeAt(0) % 2 === 0 ? 15 : -15;
+  // Every post is dealt one of these at creation (TriviaCreationContext),
+  // parties included — a flat white banner behind the fallback icon threw
+  // that away. Restored here as the icon's backdrop rather than the void it
+  // used to fill: the "beautiful gradient" every other trivia card already
+  // wears (owner: "we need background for My Trivia Party cards behind the
+  // icon... use beautiful gradient and icons will be visible on them").
+  const gradientProps = getGradientProps(post.cover_gradient);
 
   const handlePlayOnTV = async () => {
     if (isStartingTV) return;
@@ -624,12 +633,19 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
           return;
         }
 
-        // Create room with "My Trivia Party" as default room name, trivia title as category
+        // The room gets a dealt name — a mood and a creature, same as every
+        // other room — not the brand string this literally used to pass.
+        // "My Trivia Party" is not a name `isGeneratedRoomName` recognises,
+        // so the lobby read it as a host rename and showed it verbatim
+        // instead of the party's own title (owner: "this my trivia party
+        // has title 'tt' but when i opened it - it shows 'my trivia party'
+        // as title too"). A real dealt name is what lets the lobby tell
+        // "still wears the name it was dealt" from "the host renamed it".
         const room = await createRoom(
           "custom",
           data.title || post.title || "My Trivia Party", // category_name (what's being played)
           customQuestions,
-          "My Trivia Party", // room_name (always "My Trivia Party")
+          generateRoomIdentity(readAppLanguage()).name, // room_name (dealt, not the brand)
           (data.cover_image as string | null) || null
         );
 
@@ -668,24 +684,19 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
       style={{ border: "2px solid rgba(236, 72, 153, 0.5)" }}
     >
       {/* Edit Button */}
-      <button 
+      <button
         onClick={(e) => { e.stopPropagation(); onEdit(post); }}
-        className={cn(
-          "absolute top-3 left-3 z-10 w-8 h-8 rounded-full backdrop-blur-sm flex items-center justify-center transition-colors",
-          // 40% black is a dark chip over a photo and a pale grey over the
-          // white fallback, where white-on-grey is barely a contrast at all.
-          post.cover_image ? "bg-black/40 hover:bg-black/60" : "bg-slate-900/70 hover:bg-slate-900/85",
-        )}
+        className="absolute top-3 left-3 z-10 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-colors"
       >
         <Pencil className="w-4 h-4 text-white" />
       </button>
 
 
-      {/* Cover image, or one of the four party icons on white — and nothing
-          written on either.
-          The title moved down beside the icon (owner: "we show my trivia
-          party icon and title user entered or untitled next to it, and
-          random my trivia party icon on banner above, no text on banner
+      {/* Cover image, or the gradient every trivia is dealt at creation with
+          one of the four party icons centred on it — and nothing written on
+          either. The title moved down beside the icon (owner: "we show my
+          trivia party icon and title user entered or untitled next to it,
+          and random my trivia party icon on banner above, no text on banner
           just icon"). A name over a photo needs a scrim and a shadow to be
           legible at all, and the same name in the same card twice — once on
           the banner, once in the meta row — was what put it up here. */}
@@ -693,23 +704,18 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
         {post.cover_image ? (
           <img src={post.cover_image} alt="" className="absolute inset-0 w-full h-full object-cover" />
         ) : (
-          /* No picture uploaded and none generated. A gradient stood here,
-             which said nothing about what the card was; the party icons say
-             it, dealt so a player's parties do not all wear the same one
-             (see partyCoverIcon.ts). */
-          <div className="absolute inset-0 flex items-center justify-center bg-white px-4">
-            <DynamicIcon
-              slug={coverIcon ?? PARTY_COVER_ICON_SLUGS[0]}
-              size={72}
-              shadow={false}
-              className="h-[72px] w-[72px] shrink-0"
-            />
-          </div>
+          <>
+            <div className={`absolute inset-0 ${gradientProps.className}`} style={gradientProps.style} />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <DynamicIcon
+                slug={coverIcon ?? PARTY_COVER_ICON_SLUGS[0]}
+                size={72}
+                className="h-[72px] w-[72px] shrink-0"
+              />
+            </div>
+          </>
         )}
-        <div className={cn(
-          "absolute top-3 right-3 backdrop-blur-sm rounded-full h-8 px-3 text-xs text-white flex items-center gap-1.5",
-          post.cover_image ? "bg-black/40" : "bg-slate-900/70",
-        )}>
+        <div className="absolute top-3 right-3 bg-black/40 backdrop-blur-sm rounded-full h-8 px-3 text-xs text-white flex items-center gap-1.5">
           {PUBLIC_SHARING_ENABLED && post.is_public !== false && (
             <Globe className="w-3.5 h-3.5" aria-hidden />
           )}
@@ -738,13 +744,15 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
           {/* Rides the meta row like the trivia and collection cards do. As a
               full-width row of its own underneath, it made the party card
               taller than everything beside it in the grid. */}
-          {/* The same filled pill the room cards play from, in the party's
-              own purple rather than mint or white — not ChunkyButton's
-              generic outline, which read as a lesser action beside every
-              filled Play around it (owner). */}
+          {/* The same filled pill the room cards play from, in the same
+              white the Join/Enter button on the rooms list wears — a fill
+              of its own (purple, then mint) each stood out as its own
+              colour language on a screen that already has one (owner:
+              "play buttons other color... just like we have on join button
+              on public rooms"). */}
           <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
             <RoomCardPlayButton
-              tone="purple"
+              tone="white"
               className="h-10 text-sm"
               onClick={handlePlayOnTV}
               disabled={isStartingTV}

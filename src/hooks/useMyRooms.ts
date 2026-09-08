@@ -20,6 +20,10 @@ export interface MyRoom {
   max_players: number | null;
   category_name: string | null;
   category_id: string | null;
+  /** Set when the room was built on one of the player's own trivias —
+   * MyTrivia Party rooms among them. Lets a card tell that apart from an
+   * ordinary category room without a second query. */
+  user_trivia_id: string | null;
   status: string;
   created_at: string;
   is_host: boolean;
@@ -311,6 +315,7 @@ async function fetchRoomsForUser(userId: string, options?: FetchRoomsOptions): P
       max_players: room.max_players ?? null,
       category_name: room.category_name,
       category_id: room.category_id,
+      user_trivia_id: room.user_trivia_id ?? null,
       status: room.status || "waiting",
       created_at: room.created_at || "",
       is_host: hostMap.get(room.id) || false,

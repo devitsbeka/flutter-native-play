@@ -355,7 +355,7 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
       {/* This panel sits inside the lobby's light sheet, so its ink is the
           lobby's dark purple — white type here was invisible (owner's
           screenshot). */}
-      <div className="p-4 rounded-2xl bg-white/50 border border-[#e8e0f5]">
+      <div className="p-6 rounded-2xl bg-white/50 border border-[#e8e0f5]">
         <AnimatePresence mode="wait">
           {isConnected ? (
             <motion.div
@@ -393,28 +393,29 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
                   words already translated in seven languages, rather than a
                   second string that has to be kept in step with it.
 
-                  The set beside it rather than above it (owner's ask): the
-                  same retro TV the pairing modal wears, so the sheet is
-                  recognisable as the TV one before a word of it is read, and
-                  the two lines read as one block against it. */}
-              <div className="mb-4 flex items-start gap-3">
+                  Stacked and centred now, not a small icon beside two left
+                  lines (owner's ask: "show tv in center, below icon show
+                  title... below title description"). The TV is the header's
+                  own art rather than a bullet next to it, so it reads first;
+                  the title and the sentence under it are both a size up from
+                  before, and the block gets real air above the instructions
+                  rather than sitting flush against them. */}
+              <div className="mb-8 flex flex-col items-center text-center">
                 <img
                   src={retroTvIcon}
                   alt=""
-                  className="h-12 w-12 shrink-0 object-contain"
+                  className="h-20 w-20 shrink-0 object-contain"
                 />
-                <div className="min-w-0 flex-1">
-                  <h3 className="font-display text-[19px] font-bold leading-[26px] text-[#402666]">
-                    {t("lobby.uPlayOnTv")}
-                  </h3>
-                  <p className="mt-0.5 text-[13px] leading-[18px] text-[#402666]/70">
-                    {t("extra.tvSheetPitch")}
-                  </p>
-                </div>
+                <h3 className="mt-3 font-display text-[24px] font-bold leading-[30px] text-[#402666]">
+                  {t("lobby.uPlayOnTv")}
+                </h3>
+                <p className="mt-2 max-w-[260px] text-[16px] leading-[22px] text-[#402666]/70">
+                  {t("extra.tvSheetPitch")}
+                </p>
               </div>
 
               {/* Instructions */}
-              <div className="flex items-center gap-3 mb-4">
+              <div className="flex items-center gap-3 mb-5">
                 <div className="w-10 h-10 rounded-xl bg-[#402666]/10 flex items-center justify-center flex-shrink-0">
                   <Globe className="w-5 h-5 text-[#523b76]" />
                 </div>

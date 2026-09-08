@@ -9,6 +9,7 @@ import iconBattleLounge from "@/assets/play-chooser/icon-crate.png";
 import iconWordsLounge from "@/assets/play-chooser/icon-words.webp";
 import iconPartyLounge from "@/assets/house-party.png";
 import { roomKind, routeForRoom } from "@/utils/roomRoutes";
+import { isGeneratedRoomName } from "@/utils/roomNameGenerator";
 import { roomCardAction } from "@/utils/roomCardAction";
 import { RoomCardPlayButton } from "@/components/team/RoomCardPlayButton";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
@@ -587,7 +588,24 @@ export function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = f
           // The classic party room is a game too: it wears My Trivia Party's
           // face when the host never picked an icon of their own.
           : { icon: iconPartyLounge, label: t("extra.myTriviaPartyLabel") };
-  const displayName = room.room_name || lounge?.label || t("extra.gameRoomLabel");
+  // A room built on one of the player's own trivias — a MyTrivia Party among
+  // them. The line under the room's own name used to show the trivia's raw
+  // title here ("tt"), which is what the room's OWN name is for; this line
+  // says what KIND of room it is, the way it does for every other room
+  // (owner: "instead tt we show My Trivia Party... replace 'tt' to always
+  // show My Trivia party").
+  const isPartyRoom = !!room.user_trivia_id;
+  // A party room never shows a dealt or icon-generated name here — only one
+  // the host actually typed. isGeneratedRoomName catches the client's own
+  // vocabulary; an empty name catches the moment before any name has
+  // landed at all, generated or otherwise (owner: "my trivia party should
+  // have name: Untitled... remove that random names from my trivia party
+  // rooms").
+  const displayName = isPartyRoom
+    ? (!room.room_name || isGeneratedRoomName(room.room_name)
+        ? t("extra.triviaUntitled")
+        : room.room_name)
+    : room.room_name || lounge?.label || t("extra.gameRoomLabel");
   // How long ago the room was made — the thing that tells two similar rooms
   // apart in a list of them.
   const createdAgo = useRoomAge(room.created_at);
@@ -954,9 +972,9 @@ export function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = f
                   <h3 className="font-display text-white text-lg leading-tight truncate drop-shadow-md">
                     {displayName}
                   </h3>
-                  {(room.category_name || (lounge && room.room_name)) && (
+                  {(isPartyRoom || room.category_name || (lounge && room.room_name)) && (
                     <p className="text-sm text-white/70 truncate font-medium drop-shadow-sm">
-                      {room.category_name ? localizeCategory(room.category_name) : lounge!.label}
+                      {isPartyRoom ? t("extra.myTriviaPartyLabel") : room.category_name ? localizeCategory(room.category_name) : lounge!.label}
                     </p>
                   )}
                 </div>
@@ -1057,7 +1075,24 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
           // The classic party room is a game too: it wears My Trivia Party's
           // face when the host never picked an icon of their own.
           : { icon: iconPartyLounge, label: t("extra.myTriviaPartyLabel") };
-  const displayName = room.room_name || lounge?.label || t("extra.gameRoomLabel");
+  // A room built on one of the player's own trivias — a MyTrivia Party among
+  // them. The line under the room's own name used to show the trivia's raw
+  // title here ("tt"), which is what the room's OWN name is for; this line
+  // says what KIND of room it is, the way it does for every other room
+  // (owner: "instead tt we show My Trivia Party... replace 'tt' to always
+  // show My Trivia party").
+  const isPartyRoom = !!room.user_trivia_id;
+  // A party room never shows a dealt or icon-generated name here — only one
+  // the host actually typed. isGeneratedRoomName catches the client's own
+  // vocabulary; an empty name catches the moment before any name has
+  // landed at all, generated or otherwise (owner: "my trivia party should
+  // have name: Untitled... remove that random names from my trivia party
+  // rooms").
+  const displayName = isPartyRoom
+    ? (!room.room_name || isGeneratedRoomName(room.room_name)
+        ? t("extra.triviaUntitled")
+        : room.room_name)
+    : room.room_name || lounge?.label || t("extra.gameRoomLabel");
   // How long ago the room was made — the thing that tells two similar rooms
   // apart in a list of them.
   const createdAgo = useRoomAge(room.created_at);
@@ -1289,9 +1324,9 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
                   <h3 className="font-display text-[#2b1a4a] text-lg leading-tight line-clamp-2">
                     {displayName}
                   </h3>
-                  {(room.category_name || (lounge && room.room_name)) && (
+                  {(isPartyRoom || room.category_name || (lounge && room.room_name)) && (
                     <p className="text-[#2b1a4a]/70 text-sm truncate mt-0.5">
-                      {room.category_name ? localizeCategory(room.category_name) : lounge!.label}
+                      {isPartyRoom ? t("extra.myTriviaPartyLabel") : room.category_name ? localizeCategory(room.category_name) : lounge!.label}
                     </p>
                   )}
                 </div>
@@ -1303,36 +1338,27 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
             <div className="relative z-10">
               <div className="bg-white/60 backdrop-blur-md rounded-2xl px-3 py-2.5 flex items-center justify-between gap-2">
                 {/* Left: TV marker (played or live on TV, no container) +
-                    player count (TV active players if available) + the faces
-                    of who is in there, which belong beside the number they
-                    are the count of.
+                    the faces of who is in there + the "+" for an open seat,
+                    which belong beside the number they are the count of.
 
-                    The "+" for an open seat lives HERE, before the faces,
-                    always — not only when the Play button is on the right.
-                    Putting it there only sometimes (on the right when there
-                    was no Play button to share the row with) meant the same
-                    room could show a Play button on one visit and not on the
-                    next, as who else was online changed, and the "+" jumped
-                    sides with it (owner: "it is confusing now"). One position
-                    for the host to learn, regardless of what the right side
-                    is doing. Same affordance the Public tab's cards already
-                    give the host. */}
+                    The "+" lives HERE, in this left-hand group, always — not
+                    only when the Play button is on the right. Putting it on
+                    the right only sometimes (when there was no Play button
+                    to share the row with) meant the same room could show a
+                    Play button on one visit and not on the next, as who else
+                    was online changed, and the "+" jumped sides with it
+                    (owner: "it is confusing now"). One GROUP for the host to
+                    learn, regardless of what the right side is doing.
+
+                    Within that group it sits AFTER the faces now, not before
+                    — the Public tab's own cards have always drawn it as the
+                    last seat in the row, and putting it first here was this
+                    tab's own invention, not something borrowed from Public
+                    (owner: "let's show + button next to the avatars on right
+                    side, not left side on private rooms too"). */}
                 <div className="flex items-center gap-2 min-w-0">
                   {playedOnTV && (
                     <img src={retroTv3d} alt="TV" className="w-7 h-7 object-contain drop-shadow select-none flex-shrink-0" draggable={false} />
-                  )}
-                  {canInvite && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onInvite?.(room);
-                      }}
-                      aria-label={t("extra.inviteFriendsTitle")}
-                      className="w-8 h-8 rounded-full border-2 border-dashed border-[#2b1a4a]/30 bg-white/70 flex items-center justify-center flex-shrink-0 transition-colors hover:bg-white active:scale-95"
-                    >
-                      <Plus className="w-4 h-4 text-[#2b1a4a]" />
-                    </button>
                   )}
 
                   {/* Avatars (use TV players if session is active). These are
@@ -1397,6 +1423,19 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
                       </div>
                     )}
                   </div>
+                  {canInvite && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onInvite?.(room);
+                      }}
+                      aria-label={t("extra.inviteFriendsTitle")}
+                      className="w-8 h-8 rounded-full border-2 border-dashed border-[#2b1a4a]/30 bg-white/70 flex items-center justify-center flex-shrink-0 transition-colors hover:bg-white active:scale-95"
+                    >
+                      <Plus className="w-4 h-4 text-[#2b1a4a]" />
+                    </button>
+                  )}
                 </div>
 
                 {/* Right: what this room is offering, when it is offering

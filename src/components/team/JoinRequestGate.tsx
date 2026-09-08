@@ -151,7 +151,7 @@ function JoinRequestModal({
     <PersonAskModal
       motionKey="join-gate"
       person={next}
-      onOpenProfile={() => next && openProfile(next.user_id, { hideTrivias: true })}
+      onOpenProfile={() => next && openProfile(next.user_id)}
       profileLabel={t("extra.joinRequestSeeProfile")}
       body={t("extra.joinRequestBody")}
       declineLabel={t("extra.joinRequestDecline")}

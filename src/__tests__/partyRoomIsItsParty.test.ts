@@ -83,9 +83,13 @@ describe("what the lobby does with it", () => {
     );
   });
 
-  it("takes the party's name only while the room still wears a dealt one", () => {
+  it("takes the party's name only while the room still wears a dealt one, or none at all", () => {
+    // A brand new party room reads user_trivia_id before any name — dealt or
+    // typed — has landed on the row at all; `!currentRoom.room_name` is what
+    // keeps that first instant showing the trivia's title too, rather than
+    // "Game Room" for the moment before a name exists to judge.
     expect(room).toMatch(
-      /isPartyRoom && isGeneratedRoomName\(currentRoom\.room_name\)\s*\n\s*\? triviaDisplayTitle\(partyTitle, t\)\s*\n\s*: currentRoom\.room_name \|\| t\("extra\.gameRoomDefault"\)/,
+      /isPartyRoom && \(!currentRoom\.room_name \|\| isGeneratedRoomName\(currentRoom\.room_name\)\)\s*\n\s*\? triviaDisplayTitle\(partyTitle, t\)\s*\n\s*: currentRoom\.room_name \|\| t\("extra\.gameRoomDefault"\)/,
     );
   });
 
@@ -93,5 +97,23 @@ describe("what the lobby does with it", () => {
     // The save stores `title || "MyTrivia Party"`, so the room would
     // otherwise be called the product.
     expect(room).toMatch(/triviaDisplayTitle\(partyTitle, t\)/);
+  });
+});
+
+/**
+ * The rename sheet's own auto-namer stays off for a party room.
+ *
+ * RoomIconPickerModal already had an `autoName` prop for exactly this shape
+ * of problem — a team's crest picker sets it false so browsing crests does
+ * not fight the captain's own typing (see the prop's own docstring). A party
+ * room's sheet left it at the default, so tapping through icons kept
+ * overwriting "Untitled" (or the trivia's own title) with a fresh AI-dealt
+ * name the host never asked for (owner: "if clicks another icon it
+ * shouldn't give room random name, remove that random names from my trivia
+ * party rooms").
+ */
+describe("the icon picker's own namer stays off for a party room", () => {
+  it("autoName is false exactly when isPartyRoom is true", () => {
+    expect(room).toMatch(/autoName=\{!isPartyRoom\}/);
   });
 });
