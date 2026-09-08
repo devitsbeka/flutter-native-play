@@ -77,7 +77,6 @@ import { resolveAvatarUrl, fallbackAvatarFor } from "@/utils/avatarUtils";
 import { useProGating } from "@/hooks/useProGating";
 import { ProPaywallModal } from "@/components/pro/ProPaywallModal";
 import { PlayBackdrop } from "@/components/shared/PlayBackdrop";
-import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
 import { PlayLimitModal } from "@/components/home/PlayLimitModal";
 import { usePlayLimit } from "@/hooks/usePlayLimit";
 import { useCurrency } from "@/hooks/useCurrency";
@@ -2026,7 +2025,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
             six more hiding off the edge. The detail that unfolds under the
             picked card, the trivia preview, the header and the footer keep
             the 520px reading width. */}
-        <div className={cn("mx-auto flex min-h-full w-full max-w-[700px] flex-col space-y-3 px-4 py-3 md:max-w-[1100px]", ownsRoute && "pb-[104px]")}>
+        <div className="mx-auto flex min-h-full w-full max-w-[700px] flex-col space-y-3 px-4 py-3 md:max-w-[1100px]">
         {/* What will you play? — a featured carousel, App Store style: one
             poster-tall card per mode with its own artwork, the title and
             blurb on a scrim at its foot, swiped through sideways and
@@ -2187,7 +2186,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                       and the games you play in a room, so the head count was
                       answering a question the two halves already answer. */}
                   <div
-                    className="absolute left-[calc(39*var(--u))] right-[calc(20*var(--u))] top-[76.25%] z-20"
+                    className="absolute left-[calc(39*var(--u))] right-[calc(24*var(--u))] top-[72%] z-20"
                   >
                     {/* The title runs to the card's edge: a Georgian or German
                         title is longer than the English the frame was set in. */}
@@ -2368,22 +2367,10 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         </>
       )}
 
-      {/* The app's own bar, on the screen the design puts it on (1102:5086).
-          Only on the route: as an overlay inside the rooms hub there is
-          already a bar under this, and two of them stack.
-
-          `treatAsHome` is what keeps the big button a Play button rather
-          than turning it into "go home" — this screen IS what Play opens, so
-          its own Play starts the game at the front of the shelf, or opens the
-          wall when there is nothing left to start. */}
-      {ownsRoute && !guessPicking && (
-        <UniversalBottomNav
-          treatAsHome
-          canPlay={canPlay}
-          isVip={isVip}
-          onPlayClick={() => startMode(friendsMode ? "library" : "quick")}
-        />
-      )}
+      {/* No bottom bar here (owner: "we don't need nav bar in bottom on this
+          page, remove it"). Every card starts its own mode on tap, so the
+          bar's Play button was a second way to do what any card already
+          does — not the only way in. */}
 
       {/* End of frosted popup panel */}
       </div>
