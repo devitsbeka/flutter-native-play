@@ -45,11 +45,11 @@ describe("the ring", () => {
     // The chip fills the ring: the ring is a flex box (flex-1 on the chip
     // means nothing under a block) and the chip is w-full.
     expect(universal).toMatch(/<div className=\{cn\("relative flex", className\)\}>/);
-    expect(universal).toMatch(/"relative flex h-\[52px\] w-full min-w-0 flex-1 items-center gap-2 rounded-\[20px\]/);
+    expect(universal).toMatch(/"relative flex h-\[63px\] w-full min-w-0 flex-1 items-center gap-2 rounded-bl-\[24px\]/);
     // While the round list is open the + is an X that closes it.
     expect(universal).toMatch(/onClick=\{categoryMenu\?\.open \? categoryMenu\.onClose : category\.onAdd\}/);
     expect(universal).toMatch(/aria-label=\{categoryMenu\?\.open \? "close" : "add category"\}/);
-    expect(universal).toMatch(/\{categoryMenu\?\.open \? \(\s*\n\s*<X className="h-6 w-6 text-\[#402666\]" strokeWidth=\{2\.4\} \/>/);
+    expect(universal).toMatch(/\{categoryMenu\?\.open \? \(\s*\n\s*<X className="h-6 w-6 text-\[#44246b\]" strokeWidth=\{2\.4\} \/>/);
     // Host only, and only while there is still a category to pick.
     expect(room).toMatch(/glow: isHost && needsCategorySelection,/);
     expect(room).not.toMatch(/rounds,\s*\n\s*glow:/);
@@ -74,7 +74,7 @@ describe("the round list drops under the chip", () => {
     const body = universal.indexOf('className="relative z-10 min-h-0 flex-1 overflow-y-auto overflow-x-hidden"');
     expect(row).toBeGreaterThan(-1);
     expect(row).toBeLessThan(body);
-    expect(universal).toMatch(/className="relative z-40 mx-auto mt-\[9px\] w-full max-w-\[700px\] shrink-0 px-4 md:max-w-\[520px\]"/);
+    expect(universal).toMatch(/className="relative z-40 mx-auto mt-\[13px\] w-full max-w-\[700px\] shrink-0 px-\[28px\] md:max-w-\[520px\]"/);
   });
 });
 

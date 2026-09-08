@@ -1,12 +1,12 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { ArrowLeft, Bell, BellRing, Check, Loader2, Pencil, Play, Plus, UserPlus, X } from "lucide-react";
+import { ArrowLeft, Bell, BellRing, Check, Loader2, Pencil, Plus, UserPlus, X } from "lucide-react";
 import SpotlightSearch from "@/components/search/SpotlightSearch";
+import { MyTriviaLiveLogo } from "@/components/shared/MyTriviaLiveLogo";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { cn } from "@/lib/utils";
 import bgBlob1 from "@/assets/tb-lobby/bg-blob-1.jpg";
 import bgBlob2 from "@/assets/tb-lobby/bg-blob-2.png";
-import chipQuestion from "@/assets/lobby/chip-question.webp";
 import chipTv from "@/assets/lobby/chip-tv.webp";
 import crownIcon from "@/assets/lobby/crown.png";
 import { resolveAvatarUrl, fallbackAvatarFor } from "@/utils/avatarUtils";
@@ -491,7 +491,18 @@ export function UniversalLobby({
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
         <img alt="" src={bgBlob1} className="absolute inset-0 h-full w-full object-cover" />
         <img alt="" src={bgBlob2} className="absolute inset-0 h-full w-full object-cover" />
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(249,219,255,0.5)_0%,rgba(249,219,255,0.3)_45%,rgba(249,219,255,0.5)_100%)]" />
+        {/* 1102:4081 — the play screens' shared wash: a flat white veil over
+            the blobs and a violet fall from the top, so the lobby, the
+            chooser it grew out of and the wall that can stop it are all
+            standing on the same colour. It replaced a pink gradient that was
+            as strong at the footer as at the header. */}
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage:
+              "linear-gradient(90deg, rgba(255,255,255,0.51) 0%, rgba(255,255,255,0.51) 100%), linear-gradient(180deg, rgba(152,124,255,0.3) 0%, rgba(255,255,255,0) 100%)",
+          }}
+        />
         {/* The scene: the tapped card's render, blurred to a haze. It fades
             in already blurred — the sharp-to-blur crossfade it used to open
             with read as a screen of its own flashing before the lobby. */}
@@ -522,7 +533,7 @@ export function UniversalLobby({
         {...arrive(0.18)}
         className="relative z-20 shrink-0 border-b border-[rgba(229,231,235,0.3)] px-4 py-3"
       >
-        <div className="mx-auto flex w-full max-w-[700px] items-center justify-between md:max-w-[520px]">
+        <div className="mx-auto flex w-full max-w-[700px] items-center justify-between gap-3 md:max-w-[520px]">
           <motion.button
             type="button"
             whileTap={{ scale: 0.9 }}
@@ -531,6 +542,12 @@ export function UniversalLobby({
           >
             <ArrowLeft className="h-6 w-6 text-[#4b5563]" />
           </motion.button>
+          {/* 1102:4155 — the wordmark, centred, as it is on every other
+              screen in this flow. The lobby's header was the one that left
+              the middle empty. */}
+          <div className="flex min-w-0 flex-1 items-center justify-center">
+            <MyTriviaLiveLogo responsive />
+          </div>
           <div className="flex items-center gap-1">
             <SpotlightSearch variant="button" />
             {/* It was a <span>. Every other header in the app opens the
@@ -590,13 +607,12 @@ export function UniversalLobby({
         <motion.div
           ref={categoryRowRef}
           {...arrive(0.24)}
-          className="relative z-40 mx-auto mt-[9px] w-full max-w-[700px] shrink-0 px-4 md:max-w-[520px]"
+          className="relative z-40 mx-auto mt-[13px] w-full max-w-[700px] shrink-0 px-[28px] md:max-w-[520px]"
         >
-          <div className="pl-[9px] pr-[3px]">
-            <div className="flex h-[52px] items-stretch gap-2">
+          <div>
+            <div className="flex h-[63px] items-stretch gap-2">
               <Ring on={!!category.glow} className="min-w-0 flex-1">
                 <Chip
-                  icon={chipQuestion}
                   iconSlug={category.iconSlug}
                   label={category.label}
                   trailing={category.trailing}
@@ -614,15 +630,12 @@ export function UniversalLobby({
                     whileTap={{ scale: 0.94 }}
                     onClick={categoryMenu?.open ? categoryMenu.onClose : category.onAdd}
                     aria-label={categoryMenu?.open ? "close" : "add category"}
-                    className={cn(
-                      "flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-[20px] bg-[rgba(252,247,255,0.6)]",
-                      RULE_BORDER,
-                    )}
+                    className="flex h-[63px] w-[63px] shrink-0 items-center justify-center rounded-bl-[24px] rounded-br-[54px] rounded-tl-[24px] rounded-tr-[24px] border-2 border-solid border-white bg-[#faebef] shadow-[0px_2px_8px_0px_rgba(51,51,51,0.06),0px_8px_0px_0px_#bf909b] transition-[transform,box-shadow] duration-100 active:translate-y-[4px] active:shadow-[0px_4px_0px_0px_#bf909b]"
                   >
                     {categoryMenu?.open ? (
-                      <X className="h-6 w-6 text-[#402666]" strokeWidth={2.4} />
+                      <X className="h-6 w-6 text-[#44246b]" strokeWidth={2.4} />
                     ) : (
-                      <Plus className="h-6 w-6 text-[#402666]" strokeWidth={2.4} />
+                      <Plus className="h-6 w-6 text-[#44246b]" strokeWidth={2.4} />
                     )}
                   </motion.button>
                 </Ring>
@@ -996,31 +1009,31 @@ export function UniversalLobby({
         {/* Shorter than it was: the caption and the button are the whole
             reason this bar exists, and it was carrying 12px of air above
             the caption and 16 below the button for no one (owner's ask). */}
-        <motion.div {...arrive(0.42)} className="relative px-4 pb-3 pt-1.5">
+        <motion.div {...arrive(0.42)} className="relative px-[28px] pb-[14px] pt-1.5">
         <div className="mx-auto w-full max-w-[700px] md:max-w-[520px]">
           {footerExtra}
           {start.disabled && captionBlock}
+          {/* 1102:4561: the violet slab, 63 tall with a hard #6906cd foot
+              under it and a white hairline inside its top edge. It was a flat
+              #8858d5 rectangle with three overlay gradients and a play
+              triangle beside the words; the mock presses like every other
+              button in the flow and says only what it does. */}
           {!start.captionOnly && (
           <motion.button
             type="button"
-            whileTap={start.disabled ? undefined : { scale: 0.98 }}
+            whileTap={start.disabled ? undefined : { scale: 0.99 }}
             onClick={start.onPress}
             disabled={start.disabled}
             className={cn(
-              "relative h-[60px] w-full overflow-hidden rounded-[20px] transition-opacity",
-              start.disabled && "opacity-50",
+              "relative flex h-[63px] w-full items-center justify-center overflow-hidden rounded-[28px] border-[1.5px] border-solid border-[#402666] bg-[linear-gradient(180deg,#a374e9_0%,#cf5eff_58%,#9f5dff_100%)] shadow-[0px_4px_0px_0px_#6906cd,0px_8px_16px_0px_rgba(102,51,153,0.3)] transition-[transform,box-shadow,opacity] duration-100",
+              start.disabled
+                ? "opacity-50"
+                : "active:translate-y-[2px] active:shadow-[0px_2px_0px_0px_#6906cd,0px_8px_16px_0px_rgba(102,51,153,0.3)]",
             )}
-            style={{ background: "linear-gradient(180deg, #8858d5 0%, #8858d5 50%, rgba(136,88,213,0.9) 100%)" }}
           >
-            <span className="absolute inset-0 rounded-[20px] bg-[linear-gradient(180deg,rgba(255,255,255,0.3)_0%,rgba(255,255,255,0.1)_50%,rgba(255,255,255,0)_100%)]" />
-            <span className="absolute left-2 right-2 top-0 h-px rounded-full bg-[linear-gradient(90deg,rgba(255,255,255,0)_0%,rgba(255,255,255,0.5)_50%,rgba(255,255,255,0)_100%)]" />
-            <span className="absolute inset-x-0 bottom-0 h-5 rounded-b-[20px] bg-[linear-gradient(0deg,rgba(0,0,0,0.1)_0%,rgba(0,0,0,0)_100%)]" />
-            <span className="relative flex h-full items-center justify-center gap-2 font-[Nunito] text-[18px] font-semibold leading-[28px] tracking-[-0.16px] text-white">
-              {start.loading ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
-              ) : (
-                start.icon ?? <Play className="h-5 w-5" strokeWidth={1.67} />
-              )}
+            <span aria-hidden className="pointer-events-none absolute inset-0 rounded-[inherit] shadow-[inset_0px_2px_0px_0px_rgba(255,255,255,0.45)]" />
+            <span className="relative flex h-full items-center justify-center gap-2 font-display text-[20px] font-medium leading-[26px] text-white [text-shadow:1px_2px_0px_rgba(0,0,0,0.25)]">
+              {start.loading ? <Loader2 className="h-5 w-5 animate-spin" /> : start.icon}
               {start.label}
             </span>
           </motion.button>
@@ -1359,18 +1372,14 @@ export function RoomTitle({
  * inside it at the size the row can hold.
  */
 function Chip({
-  icon,
   iconSlug,
-  iconShadow,
   label,
   trailing,
   onPress,
 }: {
-  icon: string;
-  /** The category's own icon. When set it replaces the static art — the
-      first round wears its category's face, not a generic question mark. */
+  /** The category's own icon, once one is picked. With nothing picked the
+      mock shows the words alone rather than a placeholder for it. */
   iconSlug?: string | null;
-  iconShadow?: boolean;
   label: string;
   /** A note pinned to the far right of the chip — "+5" extra rounds. */
   trailing?: string;
@@ -1380,26 +1389,28 @@ function Chip({
   return (
     <Tag
       type={onPress ? "button" : undefined}
-      whileTap={onPress ? { scale: 0.96 } : undefined}
+      whileTap={onPress ? { scale: 0.99 } : undefined}
       onClick={onPress}
+      // 1113:8161: the cream slab with a hard rose foot, the asymmetric
+      // 24/24/54/24 corner the whole play flow is cut to, and the label set
+      // back 33px from its edge. It was a translucent rule-row box with a
+      // question-mark placeholder in it, which read as one more field on a
+      // card rather than as the thing to press first.
       className={cn(
-        "relative flex h-[52px] w-full min-w-0 flex-1 items-center gap-2 rounded-[20px] bg-[rgba(252,247,255,0.6)] px-3 text-left",
-        RULE_BORDER,
+        "relative flex h-[63px] w-full min-w-0 flex-1 items-center gap-2 rounded-bl-[24px] rounded-br-[54px] rounded-tl-[24px] rounded-tr-[24px] border-2 border-solid border-white bg-[#faebef] pr-[16px] text-left shadow-[0px_2px_8px_0px_rgba(51,51,51,0.06),0px_8px_0px_0px_#bf909b]",
+        onPress && "transition-[transform,box-shadow] duration-100 active:translate-y-[4px] active:shadow-[0px_4px_0px_0px_#bf909b]",
+        // The picked category wears its own face; with nothing picked yet the
+        // mock shows the words alone, so the label takes the icon's place
+        // rather than standing beside a placeholder for it.
+        iconSlug ? "pl-[16px]" : "pl-[33px]",
       )}
     >
-      {iconSlug ? (
+      {iconSlug && (
         <span className="pointer-events-none shrink-0">
           <DynamicIcon slug={iconSlug} size={32} />
         </span>
-      ) : (
-        <img
-          alt=""
-          src={icon}
-          style={{ filter: iconShadow ? "drop-shadow(2px -2px 0 rgba(0,0,0,0.12))" : undefined }}
-          className="pointer-events-none h-8 w-8 shrink-0 object-contain"
-        />
       )}
-      <span className="min-w-0 flex-1 truncate font-[Nunito] text-[16px] font-medium leading-[19.5px] tracking-[-0.16px] text-[#402666]">
+      <span className="min-w-0 flex-1 truncate font-display text-[18px] font-bold leading-[26px] text-[#44246b]">
         {label}
       </span>
       {/* The "+N" pops as it changes: keyed by its value, so a new count
@@ -1413,7 +1424,7 @@ function Chip({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.6, y: 8 }}
             transition={{ type: "spring", stiffness: 520, damping: 22 }}
-            className="ml-2 shrink-0 font-[Nunito] text-[16px] font-bold leading-[19.5px] tracking-[-0.16px] text-[#402666]/60"
+            className="ml-2 shrink-0 font-display text-[18px] font-bold leading-[26px] text-[#44246b]/60"
           >
             {trailing}
           </motion.span>

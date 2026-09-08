@@ -17,17 +17,18 @@ import { useEffect, useState } from "react";
  * which is fine for a sentence and wrong for a clock — a timer that sits still
  * for sixty seconds looks broken.
  */
-export function PlayLimitCountdown({
-  resetsAt,
-  fallback,
-  label,
-}: {
-  /** When the window rolls over. Null when the app does not know yet. */
-  resetsAt: number | null | undefined;
-  /** The pre-formatted string, for when there is no timestamp to count to. */
-  fallback?: string | null;
-  label: string;
-}) {
+/**
+ * The clock itself, without the block it used to be welded to.
+ *
+ * The out-of-lives screen (Figma 1102:4315) puts the same ticking figure
+ * inside a sentence on the give-up row — "you can play again in 02:48:12" —
+ * rather than over a label, so the counting is a hook and the rendering is
+ * the caller's.
+ */
+export function usePlayLimitClock(
+  resetsAt: number | null | undefined,
+  fallback?: string | null,
+): string | null {
   const [remaining, setRemaining] = useState(() =>
     resetsAt ? Math.max(0, resetsAt - Date.now()) : 0,
   );
@@ -43,7 +44,21 @@ export function PlayLimitCountdown({
 
   // No timestamp: show whatever string the caller has rather than a zeroed
   // clock, which would claim the plays are already back.
-  const display = resetsAt ? formatClock(remaining) : (fallback ?? null);
+  return resetsAt ? formatClock(remaining) : (fallback ?? null);
+}
+
+export function PlayLimitCountdown({
+  resetsAt,
+  fallback,
+  label,
+}: {
+  /** When the window rolls over. Null when the app does not know yet. */
+  resetsAt: number | null | undefined;
+  /** The pre-formatted string, for when there is no timestamp to count to. */
+  fallback?: string | null;
+  label: string;
+}) {
+  const display = usePlayLimitClock(resetsAt, fallback);
   if (!display) return null;
 
   return (

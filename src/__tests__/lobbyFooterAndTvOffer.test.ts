@@ -78,7 +78,9 @@ describe("the footer floats over the list", () => {
 
   it("the caption line gets room around it, without the bar going tall", () => {
     expect(lobby).toMatch(/"mb-2 px-2"/);
-    expect(lobby).toMatch(/className="relative px-4 pb-3 pt-1\.5"/);
+    // 28px in either side, so the Start button lands where 1102:4561 draws
+    // it — 444 wide in a 500 frame.
+    expect(lobby).toMatch(/className="relative px-\[28px\] pb-\[14px\] pt-1\.5"/);
   });
 });
 

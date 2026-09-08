@@ -1623,6 +1623,12 @@ export const en: KaTranslations = {
   // ==========================================
   playLimit: {
     countdownLabel: "until 5 more free plays",
+    outOfLivesTitle: "You are out of lives",
+    outOfLivesSubtitle: "Pick a way to keep playing",
+    giveUpTitle: "Give up",
+    giveUpBody: "You can play again in {time}",
+    giveUpBodyUnknown: "Come back a little later to play again",
+    cancelAnytime: "cancel anytime",
     adRowTitle: "Watch a short ad",
     adRowBody: "Get {count} play back, right now",
     adRowAction: "Watch",
@@ -2746,6 +2752,7 @@ export const en: KaTranslations = {
     proExpiry: "Expires: {date}",
     proUnlimited: "Unlimited",
     upgradeBtn: "Upgrade",
+    tryProBtn: "Try PRO",
     proInviteFriendsLabel: "Invite friends",
     proInvitesLeft: "{count} remaining",
     proInviteAction: "Invite",

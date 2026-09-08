@@ -17,7 +17,6 @@ import { useGameInvitations } from "@/hooks/useGameInvitations";
 import { useAuth } from "@/contexts/AuthContext";
 import { CategoryArtwork } from "@/components/shared/CategoryArtwork";
 import { categoryGradient } from "@/utils/categoryGradient";
-import { useResponsiveVideo } from "@/hooks/useResponsiveVideo";
 import { createNotification, useNotifications } from "@/hooks/useNotifications";
 // Room names are AI-generated via edge function during room creation
 import { TVPlayModal } from "@/components/team/TVPlayModal";
@@ -51,7 +50,6 @@ import featuredBattle from "@/assets/play-chooser/featured-battle.webp";
 import featuredWords from "@/assets/play-chooser/featured-words.webp";
 import featuredLibrary from "@/assets/play-chooser/featured-library.webp";
 import featuredMyTrivias from "@/assets/play-chooser/featured-mytrivias.webp";
-import playersIcon from "@/assets/play-chooser/players.svg";
 import { LOBBY_SCENES, rememberLobbyScene } from "@/utils/lobbyScene";
 import { UniversalLobby, type LobbyPlayer } from "@/components/lobby/UniversalLobby";
 import { useDeveloperMode } from "@/contexts/DeveloperModeContext";
@@ -78,10 +76,18 @@ import type { Json } from "@/integrations/supabase/types";
 import { resolveAvatarUrl, fallbackAvatarFor } from "@/utils/avatarUtils";
 import { useProGating } from "@/hooks/useProGating";
 import { ProPaywallModal } from "@/components/pro/ProPaywallModal";
-// The padlock the locked bar wears. Figma exported an empty layer for it
-// (320x320 of nothing), and the project already ships this render at the
-// same size — greyscaled below to match the mock's silver lock.
-import lockRender from "@/assets/streak/lock.png";
+import { PlayBackdrop } from "@/components/shared/PlayBackdrop";
+import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
+import { PlayLimitModal } from "@/components/home/PlayLimitModal";
+import { usePlayLimit } from "@/hooks/usePlayLimit";
+import { useCurrency } from "@/hooks/useCurrency";
+import { formatCompactNumber } from "@/lib/utils";
+import coinIcon from "@/assets/icons/icon-coin.png";
+import gemIcon from "@/assets/icons/icon-gem.png";
+// The padlock over the locked bar's faces (Figma 1112:8157), at the size the
+// mock hangs it: 68px, over the three dimmed avatars rather than beside the
+// label.
+import lockRender from "@/assets/play-chooser/lock-friends.png";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { markProgrammaticScroll } from "@/utils/scrollTapGuard";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
@@ -133,6 +139,16 @@ type SelectionMode = "random" | "library" | "create" | "my-trivias" | null;
  */
 /** How long the chooser will hold on a card's handoff before giving up. */
 const HANDOFF_MAX_MS = 10000;
+
+/**
+ * A mode card's height, as a share of the shelf's scrollable width.
+ *
+ * Figma 1102:3113 draws the card 393x489 inside a 500-wide frame whose shelf
+ * is inset 26 either side: 393/448 of the width, and 489/448 of it tall. The
+ * width lives in a Tailwind class beside the card; this is the same number in
+ * the one place that needs it in script.
+ */
+const CARD_ASPECT_H = 489 / 448;
 
 export type GameChoice = "quick" | "guess" | "king" | "battle" | "words" | "library" | "mytrivias";
 // The same set as a runtime list, so the home's Play rail can deep-link a
@@ -205,7 +221,6 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   const { t } = useLanguage();
   // Which level of a picture game the player is up to.
   const { getCategoryProgress } = useCategoryProgress();
-  const bubbleVideo = useResponsiveVideo("/videos/floating-blob.mp4");
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -291,6 +306,32 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
    * request rather than guessing while the subscription is still loading.
    */
   const { isVip, requirePro, showProModal, setShowProModal } = useProGating();
+
+  /**
+   * Nothing left to play with.
+   *
+   * The home Play button already refuses to open this screen when the free
+   * games have run out (see outOfLivesGoesToTheOffer.test), but the screen is
+   * reachable a dozen other ways — a mission, a search result, the drawer, a
+   * link — and every one of them used to let a player pick a mode, choose a
+   * category, and hit the wall at the first question. The wall is shown here
+   * instead, on the tap (Figma 1102:5148 → 1102:4315).
+   */
+  const { canPlay, timeUntilNextPlay, resetsAt } = usePlayLimit();
+  const [showLimitWall, setShowLimitWall] = useState(false);
+  const blockedByLimit = !canPlay && !isVip;
+
+  /**
+   * The friends bar wears its padlock for either of two reasons: the room
+   * modes are a Pro feature, and a player with nothing left to play with
+   * cannot start one of them either. 1102:5148 is the second case — the same
+   * screen as 1102:2121 with the counters run down, the pill turned to "Try
+   * PRO", and the lock hung over the faces.
+   */
+  const friendsLocked = !isVip || blockedByLimit;
+
+  /** The two counters over the shelf (Figma 1102:4980 / 1102:4983). */
+  const { coins, gems } = useCurrency();
 
   /** The three faces on the bar: friends, the ones who are online first. */
   const friendFaces = useMemo(
@@ -655,6 +696,10 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
 
   const startMode = (key: GameChoice) => {
     if (isCreating) return;
+    // Out of games: every card on the shelf leads to the same wall, and it
+    // opens here rather than at the first question of a round that was
+    // never going to count.
+    if (blockedByLimit) return setShowLimitWall(true);
     rememberLobbyScene(key);
     setGameChoice(key);
     if (key === "words") {
@@ -863,8 +908,20 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     if (!el) return;
     const publish = () => {
       const cs = getComputedStyle(el);
-      const inner = el.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
-      el.style.setProperty("--row-h", `${Math.max(0, inner)}px`);
+      const padY = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
+      const contentW = el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+      // The tallest a card is ever drawn: the designed 393x489 poster at
+      // 87.72% of the row (1102:3113). The row is a flex-1 item, so on a tall
+      // screen it went on stretching past that and the leftover sat as a band
+      // of nothing between the shelf and the Play With Friends bar — 15px of
+      // it at the mock's own 500x946, which is exactly the gap the mock does
+      // not have. Capping the row at what a card can actually use costs the
+      // cards nothing (they were already capped at the same figure) and puts
+      // the bar back where it is drawn.
+      const natural = contentW * CARD_ASPECT_H;
+      el.style.maxHeight = `${Math.round(natural + padY)}px`;
+      const inner = el.clientHeight - padY;
+      el.style.setProperty("--row-h", `${Math.max(0, Math.min(inner, natural))}px`);
     };
     publish();
     const ro = new ResizeObserver(publish);
@@ -1804,26 +1861,12 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 bg-background flex flex-col overflow-hidden pt-[var(--safe-top)] pb-[var(--safe-bottom)]"
     >
-      {/* Bubble background video behind the whole page, washed light so the
-          form stays readable (negative z paints it under the content) */}
-      <div className="absolute inset-0 -z-10 pointer-events-none" aria-hidden>
-        <BackgroundVideo
-          sources={[
-            { src: bubbleVideo.webm, type: "video/webm" },
-            { src: bubbleVideo.mp4, type: "video/mp4" },
-          ]}
-          still="/videos/floating-blob-still.jpg"
-          className="absolute inset-0"
-        />
-        {/* Same soft wash the global background uses, so the blobs stay subtle */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "linear-gradient(180deg, rgba(249,219,255,0.5) 0%, rgba(249,219,255,0.3) 45%, rgba(249,219,255,0.5) 100%)",
-          }}
-        />
-      </div>
+      {/* The page's backdrop (Figma 1102:3080): the blob loop under a flat
+          white veil and a violet fall from the top. It replaced a pink wash
+          that was the same strength at the footer as at the header, which is
+          what made the old chooser read as a pink screen rather than as
+          cards on a haze. */}
+      <PlayBackdrop className="-z-10" />
 
       {/* Full-bleed: the page IS the screen. This was a frosted card inset
           from every edge, which cost a margin all the way round on a phone
@@ -1859,7 +1902,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
           nothing underneath and home is right. As an OVERLAY, opened by the
           Create button on the online-game page, home threw the player off the
           rooms list they were standing on and back to the top of the app. */}
-      <header className="relative z-20 shrink-0 border-b border-border/30 px-4 py-3">
+      <header className="relative z-20 shrink-0 px-4 py-3">
         <div className="mx-auto flex w-full max-w-[700px] items-center justify-between gap-3 md:max-w-[520px]">
           <motion.button
             type="button"
@@ -1916,6 +1959,52 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         </div>
       </header>
 
+      {/* What you have, and the way to stop needing it (Figma 1102:4980,
+          1102:4983 and 1113:8253). Only on the screen's own route: inside the
+          rooms hub this is an overlay over a page that carries its own
+          chrome, and a second counter row over the first read as a bug.
+
+          The green pill says "Upgrade" while there is still a game left in
+          the day and "Try PRO" once there is not — 1102:2121 against
+          1102:5148, which differ in exactly that word and in the padlock on
+          the friends bar below. */}
+      {ownsRoute && !guessPicking && (
+        <div className="relative z-20 flex shrink-0 items-center gap-[11px] pl-[22px] pr-[18px] pt-[5px]">
+          <button
+            type="button"
+            onClick={() => navigate("/power-ups?section=coins")}
+            className="flex h-[43px] shrink-0 items-center gap-[4px] rounded-[18px] border border-solid border-[#e8e0f5] bg-white/60 pl-[7px] pr-[13px] shadow-[0px_2.94px_0px_0px_#d8d0e8,0px_4.409px_11.758px_0px_rgba(0,0,0,0.1)] active:translate-y-[1px]"
+          >
+            <img alt="" src={coinIcon} className="h-[32.3px] w-[32.3px] object-contain" />
+            <span className="font-[Nunito] text-[16.16px] font-black leading-[25.13px] tracking-[-0.146px] text-[#334155]">
+              {formatCompactNumber(coins)}
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate("/power-ups?section=gems-lari")}
+            className="flex h-[43px] shrink-0 items-center gap-[4px] rounded-[18px] border border-solid border-[#e8e0f5] bg-white/60 pl-[7px] pr-[13px] shadow-[0px_2.94px_0px_0px_#d8d0e8,0px_4.409px_11.758px_0px_rgba(0,0,0,0.1)] active:translate-y-[1px]"
+          >
+            <img alt="" src={gemIcon} className="h-[32.3px] w-[32.3px] object-contain" />
+            <span className="font-[Nunito] text-[16.16px] font-black leading-[25.13px] tracking-[-0.146px] text-[#334155]">
+              {formatCompactNumber(gems)}
+            </span>
+          </button>
+          {!isVip && (
+            <button
+              type="button"
+              onClick={() => setShowProModal(true)}
+              className="relative ml-auto flex h-[43px] shrink-0 items-center justify-center overflow-hidden rounded-[18.39px] border-[1.5px] border-solid border-[#50d8b8] bg-[linear-gradient(180deg,#88e2ca_0%,#4accad_58%,#31c3a1_100%)] px-[19px] shadow-[0px_4px_0px_0px_#1e8e74,0px_8px_16px_0px_rgba(102,51,153,0.3)] transition-transform active:translate-y-[2px]"
+            >
+              <span aria-hidden className="pointer-events-none absolute inset-0 rounded-[inherit] shadow-[inset_0px_2px_0px_0px_rgba(255,255,255,0.45)]" />
+              <span className="font-display text-[18px] font-bold leading-[18px] text-white">
+                {t(blockedByLimit ? "extra.tryProBtn" : "extra.upgradeBtn")}
+              </span>
+            </button>
+          )}
+        </div>
+      )}
+
       {guessPicking ? (
         // The screen the Guess card opens. Its own scroller, like every
         // standalone page here — the document does not scroll on the device.
@@ -1937,7 +2026,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
             six more hiding off the edge. The detail that unfolds under the
             picked card, the trivia preview, the header and the footer keep
             the 520px reading width. */}
-        <div className="mx-auto flex min-h-full w-full max-w-[700px] flex-col space-y-3 px-4 py-3 md:max-w-[1100px]">
+        <div className={cn("mx-auto flex min-h-full w-full max-w-[700px] flex-col space-y-3 px-4 py-3 md:max-w-[1100px]", ownsRoute && "pb-[104px]")}>
         {/* What will you play? — a featured carousel, App Store style: one
             poster-tall card per mode with its own artwork, the title and
             blurb on a scrim at its foot, swiped through sideways and
@@ -1947,7 +2036,16 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
             unfolds its detail underneath — the random roll, the library
             preview, which side of the arena, the chosen trivia. */}
         <div className="flex min-h-0 flex-1 flex-col">
-          <h2 className="shrink-0 pb-[13px] pt-[7px] font-display text-[24px] leading-[28px] text-[#3a2260]">{t("extra.whatToPlay")}</h2>
+          {/* 1102:4978 places it: 27px in from the edge — 11 past the
+              column's own padding — and 151 down, which is what leaves 23px
+              of air over the shelf.
+
+              The FACE is not the mock's. It draws this in Nunito, which is
+              where the heading started and what the owner asked to be rid of
+              (see chooserHeadingFace.test): the two chooser headings and the
+              paywall's title wear the app's display face. Spacing from the
+              mock, typography from the ask. */}
+          <h2 className="shrink-0 pb-[9px] pl-[11px] pt-[22px] font-display text-[24px] leading-[28px] text-[#3a2260]">{t("extra.whatToPlay")}</h2>
 
           {/* The cards are the row's own items so they stretch to its
               height: a percentage height would not resolve through the
@@ -1961,7 +2059,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
               height and the side picker was two cut-off tops under it. */}
           <div
             ref={rowRef}
-            className="-mx-4 mt-[10px] flex min-h-[300px] flex-1 snap-x snap-mandatory scroll-px-4 items-start gap-3 overflow-x-auto overflow-y-hidden px-4 pb-2 pt-1 scrollbar-hide [container-type:inline-size]"
+            className="-mx-4 mt-[10px] flex min-h-[300px] flex-1 snap-x snap-mandatory scroll-px-[5.2%] items-start gap-3 overflow-x-auto overflow-y-hidden px-[5.2%] pb-2 pt-1 scrollbar-hide [container-type:inline-size] md:scroll-px-4 md:px-4"
           >
             {(
               [
@@ -1974,22 +2072,22 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                 // `crew` says which half of the shelf a card belongs to.
                 // "both" is for a mode that is a real game either way — your
                 // own trivias play solo and around a table alike.
-                { key: "quick", crew: "solo", art: featuredQuick, artTop: -1.71, descW: 273, players: "1", title: t("extra.modeQuickTitle"), desc: t("extra.modeQuickDesc") },
-                { key: "library", crew: "friends", art: featuredLibrary, artTop: -2.86, descW: 273, players: "2-10", title: t("extra.modeLibraryTitle"), desc: t("extra.libraryDesc") },
+                { key: "quick", crew: "solo", art: featuredQuick, artTop: -1.71, descW: 273, title: t("extra.modeQuickTitle"), desc: t("extra.modeQuickDesc") },
+                { key: "library", crew: "friends", art: featuredLibrary, artTop: -2.86, descW: 273, title: t("extra.modeLibraryTitle"), desc: t("extra.libraryDesc") },
                 // One player: a picture game is played alone, and starts the moment
                 // one is picked rather than opening a lobby (owner).
-                { key: "guess", crew: "solo", art: featuredGuess, artTop: 0.05, descW: 273, players: "1", title: t("extra.modeGuessTitle"), desc: t("extra.modeGuessDesc") },
+                { key: "guess", crew: "solo", art: featuredGuess, artTop: 0.05, descW: 273, title: t("extra.modeGuessTitle"), desc: t("extra.modeGuessDesc") },
                 // The King and Battle posters are developer-only until the
                 // modes are promoted — see DEVELOPER_ONLY_GAME_TYPES.
                 ...(developerMode
                   ? [
-                      { key: "king", crew: "friends", art: featuredKing, artTop: 0, descW: 273, players: "1-10", title: t("extra.modeKingTitle"), desc: t("lobby.kingCardDesc") },
-                      { key: "battle", crew: "friends", art: featuredBattle, artTop: -4.56, descW: 273, players: "4-10", title: t("extra.modeBattleTitle"), desc: t("gameTypes.teamBattleDesc") },
+                      { key: "king", crew: "friends", art: featuredKing, artTop: 0, descW: 273, title: t("extra.modeKingTitle"), desc: t("lobby.kingCardDesc") },
+                      { key: "battle", crew: "friends", art: featuredBattle, artTop: -4.56, descW: 273, title: t("extra.modeBattleTitle"), desc: t("gameTypes.teamBattleDesc") },
                     ]
                   : []),
-                { key: "words", crew: "solo", art: featuredWords, artTop: 0.04, descW: 329, players: "1-2", title: t("gameTypes.wordsTitle"), desc: t("extra.modeWordsDesc") },
-                { key: "mytrivias", crew: "both", art: featuredMyTrivias, artTop: -0.02, descW: 273, players: "1-10", title: t("extra.myTriviaOption"), desc: t("extra.myTriviaDesc") },
-              ] as { key: GameChoice; crew: "solo" | "friends" | "both"; art: string; artTop: number; descW: number; players: string | null; title: string; desc: string }[]
+                { key: "words", crew: "solo", art: featuredWords, artTop: 0.04, descW: 329, title: t("gameTypes.wordsTitle"), desc: t("extra.modeWordsDesc") },
+                { key: "mytrivias", crew: "both", art: featuredMyTrivias, artTop: -0.02, descW: 273, title: t("extra.myTriviaOption"), desc: t("extra.myTriviaDesc") },
+              ] as { key: GameChoice; crew: "solo" | "friends" | "both"; art: string; artTop: number; descW: number; title: string; desc: string }[]
             ).filter((card) => card.crew === "both" || card.crew === (friendsMode ? "friends" : "solo"))
              .map((card, i) => {
               const isPicked = gameChoice === card.key;
@@ -2021,19 +2119,27 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                     // be shown"). It also lets the placement below actually
                     // stick — with snap-start the browser pulled every centring
                     // back to the left edge the moment it settled.
-                    "group relative isolate block shrink-0 snap-center overflow-clip rounded-[28px] bg-[#e9d8ff] text-left [container-type:inline-size]",
-                    // The designed 393:686 poster at 84% of the column —
-                    // 146.6% of the row's width tall — or the row's height,
+                    // 1102:3113: the lilac wash the card fades into is also
+                    // the card itself, so the two never meet on a line —
+                    // #f3e6ff on the left, cooling to #f1f2ff on the right,
+                    // inside a near-white rim.
+                    "group relative isolate block shrink-0 snap-center overflow-clip rounded-[28px] border border-solid border-[#f6edff] bg-[linear-gradient(90deg,#f3e6ff_0%,#f1f2ff_100%)] text-left [container-type:inline-size]",
+                    // The designed 393:489 poster at 87.72% of the row's
+                    // scrollable width — 109.15% of it tall — or the row's
+                    // height,
                     // whichever is shorter. A short screen keeps the card's
                     // width and loses height instead: the copy is placed at
                     // a share of the height so it rides up with it, and the
                     // scene's masked foot and the wash meet wherever that
                     // leaves them. Never taller than the row, so never under
                     // the Create button. From tablet up the card is 320px.
-                    "w-[84%] max-w-[440px] h-[min(146.6cqw,var(--row-h))] md:w-[320px] md:h-[min(558px,var(--row-h))]",
+                    "w-[87.72%] max-w-[440px] h-[min(109.15cqw,var(--row-h))] md:w-[320px] md:h-[min(398px,var(--row-h))]",
                     isPicked
                       ? "animate-[mode-card-glow_2.6s_ease-in-out_infinite] motion-reduce:animate-none motion-reduce:shadow-[0px_0px_0px_3px_#7126d5,0px_12px_32px_0px_rgba(113,38,213,0.35)]"
-                      : "shadow-[0px_0px_0px_1px_rgba(0,0,0,0.06),0px_8px_24px_0px_rgba(15,23,41,0.1)]",
+                      // The 8px hard foot the whole screen is built on — the
+                      // friends bar and the lobby's buttons wear the same one
+                      // — rather than the soft drop it used to cast.
+                      : "shadow-[0px_0px_0px_1px_rgba(0,0,0,0.06),0px_8px_0px_0px_#d0bbe3]",
                   )}
                 >
                   {/* The render sits across the top 76.39% of the card in
@@ -2066,24 +2172,22 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                       className="absolute inset-0 transition-transform duration-500 ease-out group-active:scale-[1.04]"
                     />
                   </div>
-                  {/* 1013:1408 — the lavender wash over the lower 55%. */}
-                  <div className="absolute inset-x-0 bottom-0 z-10 h-[55%] bg-[linear-gradient(to_top,#f3e6ff_0%,#f3e6ff_50%,rgba(243,230,255,0)_100%)]" />
-                  {/* How many play: the peach pill, top right. */}
-                  {card.players && (
-                    <div className="absolute right-[calc(12*var(--u))] top-[calc(12*var(--u))] z-20 flex origin-top-right scale-[0.85] items-center gap-[calc(7*var(--u))] rounded-bl-[calc(25.046*var(--u))] rounded-br-[calc(12.57*var(--u))] rounded-tl-[calc(25.05*var(--u))] rounded-tr-[calc(20*var(--u))] border-solid border-white/65 bg-gradient-to-b from-[#fff3ed] to-[#f5cdcd] px-[calc(16*var(--u))] py-[calc(1*var(--u))] shadow-[0px_2.277px_6.831px_0px_rgba(151,64,64,0.06),0px_2.277px_0px_0px_#d6c7c4] border-[length:calc(3.415*var(--u))]">
-                      <img alt="" src={playersIcon} className="h-[calc(22.75*var(--u))] w-[calc(17.333*var(--u))]" />
-                      <span className="font-hero bg-gradient-to-b from-[#522b28] to-[#99665f] bg-clip-text text-[calc(32*var(--u))] capitalize leading-[calc(48*var(--u))] tracking-[-0.16px] text-transparent whitespace-nowrap">
-                        {card.players}
-                      </span>
-                    </div>
-                  )}
-                  {/* 20 design-px above the frame's own 78.86% — 10 more than
-                      the frame (owner's ask), so the title and its blurb (which
-                      wraps to two lines in several languages where the English
-                      is one) sit clear of the card's bottom edge. Written in
-                      --u so it scales with the card like every other measure. */}
+                  {/* 1102:3116 — the lavender wash, from 62.17% of the card
+                      down past its foot. It is the card's own colour, so the
+                      render dissolves into the surface rather than stopping
+                      on a line. */}
+                  <div className="absolute inset-x-0 bottom-[-6.96%] top-[62.17%] z-10 bg-[linear-gradient(to_top,#f3e6ff_0%,#f3e6ff_50%,rgba(243,230,255,0)_100%)]" />
+                  {/* 1102:3117: the title block at 76.25% of the card, 39
+                      design-px in. Written in --u so it scales with the card
+                      like every other measure.
+
+                      The peach "how many play" pill that used to sit top
+                      right is gone with the redesign (1102:3113 has no such
+                      layer): the shelf is split into the games you play alone
+                      and the games you play in a room, so the head count was
+                      answering a question the two halves already answer. */}
                   <div
-                    className="absolute left-[calc(39*var(--u))] right-[calc(20*var(--u))] top-[calc(78.86%_-_20*var(--u))] z-20"
+                    className="absolute left-[calc(39*var(--u))] right-[calc(20*var(--u))] top-[76.25%] z-20"
                   >
                     {/* The title runs to the card's edge: a Georgian or German
                         title is longer than the English the frame was set in. */}
@@ -2092,7 +2196,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                     </p>
                     <p
                       style={{ width: `calc(${card.descW} * var(--u))` }}
-                      className="mt-[calc(13*var(--u))] line-clamp-2 max-w-full font-[Nunito] text-[calc(18*var(--u))] leading-[calc(24*var(--u))] tracking-[-0.16px] text-[#4b5563]"
+                      className="mt-[calc(4*var(--u))] line-clamp-2 max-w-full font-[Nunito] text-[calc(18*var(--u))] leading-[calc(24*var(--u))] tracking-[-0.16px] text-[#4b5563]"
                     >
                       {card.desc}
                     </p>
@@ -2108,69 +2212,67 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
             <div aria-hidden className="w-px shrink-0" />
           </div>
 
-          {/* Play With Friends — Figma 1102:4545 (open) and 1102:6045
+          {/* Play With Friends — Figma 1102:4271 (open) and 1106:5171
               (locked), a 448x90 bar under the shelf with a hard 8px foot.
 
               It is the door to the other half of the chooser, and it is a
-              Pro door: coloured and pressable for a subscriber, white and
-              padlocked for everyone else, who get the paywall instead of
-              the room modes. Only on the solo half — once you are looking
-              at the friends games there is nothing left for it to offer. */}
+              Pro door. Both states wear the SAME bar: the mint-to-lavender
+              gradient, the #b3dfdb rim, the #c8d2ee foot. Locking it used to
+              turn the whole thing white and grey with a padlock beside the
+              words, which read as a disabled control rather than as a door
+              worth opening — the mock locks it by dimming the three faces to
+              40% and hanging the padlock over them, and leaves everything
+              else exactly as it is. Only on the solo half: once you are
+              looking at the friends games there is nothing left to offer. */}
           {!friendsMode && (
             <button
               type="button"
-              onClick={() => requirePro("rooms", () => { setFriendsMode(true); setGameChoice(null); })}
+              onClick={() =>
+                blockedByLimit
+                  ? setShowLimitWall(true)
+                  : requirePro("rooms", () => { setFriendsMode(true); setGameChoice(null); })
+              }
               aria-label={t("extra.playWithFriendsFeature")}
               className={cn(
-                "mb-[8px] mt-[14px] flex h-[90px] w-full shrink-0 items-center rounded-[28px] border border-solid transition-[transform,box-shadow] duration-100 md:mx-auto md:max-w-[520px]",
+                "relative mb-[8px] mt-[18px] flex h-[90px] w-full shrink-0 items-center overflow-hidden rounded-[28px] border border-solid border-[#b3dfdb] bg-gradient-to-r from-[#def5f5] to-[#f0e6ff] transition-[transform,box-shadow] duration-100 md:mx-auto md:max-w-[520px]",
                 // The foot is the whole shape of the press: 8px of solid
                 // colour under the bar that collapses to 4 as it goes down.
-                "active:translate-y-[4px]",
-                isVip
-                  ? "border-[#b3dfdb] bg-gradient-to-r from-[#def5f5] to-[#f0e6ff] shadow-[0px_8px_0px_0px_#c8d2ee] active:shadow-[0px_4px_0px_0px_#c8d2ee]"
-                  : "border-[#919191] bg-white shadow-[0px_8px_0px_0px_#919191] active:shadow-[0px_4px_0px_0px_#919191]",
+                "shadow-[0px_8px_0px_0px_#c8d2ee] active:translate-y-[4px] active:shadow-[0px_4px_0px_0px_#c8d2ee]",
               )}
             >
-              {/* The padlock: 62px at 12px in, which is what puts the
-                  locked label at 74 where the open one starts at 31. */}
-              {!isVip && (
-                <img
-                  alt=""
-                  src={lockRender}
-                  className="ml-[12px] h-[62px] w-[62px] shrink-0 object-contain grayscale"
-                />
-              )}
               <span
                 className={cn(
-                  "font-hero truncate text-[22px] capitalize leading-[48px] tracking-[-0.16px] [text-shadow:0px_2px_0px_white]",
-                  isVip ? "pl-[31px] text-[#402666]" : "text-[#919191]",
+                  "font-hero truncate text-[22px] capitalize leading-[48px] tracking-[-0.16px] text-[#402666] [text-shadow:0px_2px_0px_white]",
+                  friendsLocked ? "pl-[36px]" : "pl-[31px]",
                 )}
               >
                 {t("extra.playWithFriendsFeature")}
               </span>
               {/* Your friends, three of them, overlapping — the people the
                   other half of the shelf is for. Nothing is drawn when you
-                  have none: three strangers' faces would be inventing them. */}
-              {friendFaces.length > 0 && (
-                <span className="ml-auto flex shrink-0 items-center pl-3 pr-[21px]">
+                  have none: three strangers' faces would be inventing them.
+                  The padlock hangs here either way, because a locked bar with
+                  no friends yet still has to say it is locked. */}
+              <span className="relative ml-auto flex h-full shrink-0 items-center pl-3 pr-[21px]">
+                <span className={cn("flex items-center", friendsLocked && "opacity-40")}>
                   {friendFaces.map((friend, i) => (
                     <span
                       key={friend.friendId}
                       style={{
                         marginLeft: i === 0 ? 0 : -15,
-                        background: !isVip
-                          ? "#919191"
+                        background: friendsLocked
+                          ? "#ece9fd"
                           : friend.isOnline
                             ? "linear-gradient(135deg, rgb(147, 51, 234) 0%, rgb(236, 72, 153) 50%, rgb(249, 115, 22) 100%)"
                             : "linear-gradient(135deg, rgb(148, 163, 184) 0%, rgb(203, 213, 225) 100%)",
                       }}
                       className="flex size-[42.857px] items-center justify-center rounded-full p-[2.009px]"
                     >
-                      {/* The inner rim: gold on the open bar, grey on the
-                          locked one — both halves of it go grey (1106:5178),
-                          not just the ring around it. */}
-                      <span className={cn("flex size-full items-center justify-center rounded-full p-[1.339px]", isVip ? "bg-[#f6d878]" : "bg-[#919191]")}>
-                        <span className={cn("size-full overflow-hidden rounded-full", !isVip && "grayscale")}>
+                      {/* The inner rim: gold on the open bar, the same washed
+                          lilac as the ring on the locked one (1106:5178) —
+                          both halves of it go, not just the ring around it. */}
+                      <span className={cn("flex size-full items-center justify-center rounded-full p-[1.339px]", friendsLocked ? "bg-[#ece9fd]" : "bg-[#f6d878]")}>
+                        <span className={cn("size-full overflow-hidden rounded-full", friendsLocked && "grayscale")}>
                           <img
                             alt=""
                             src={resolveAvatarUrl(friend.avatarUrl) ?? fallbackAvatarFor(friend.nickname)}
@@ -2181,6 +2283,15 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                     </span>
                   ))}
                 </span>
+              </span>
+              {/* 1112:8157: 68px, over the faces rather than beside the
+                  words, 32 in from the bar's right edge. */}
+              {friendsLocked && (
+                <img
+                  alt=""
+                  src={lockRender}
+                  className="pointer-events-none absolute right-[32px] top-[8px] h-[68px] w-[68px] object-contain"
+                />
               )}
             </button>
           )}
@@ -2257,9 +2368,37 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         </>
       )}
 
+      {/* The app's own bar, on the screen the design puts it on (1102:5086).
+          Only on the route: as an overlay inside the rooms hub there is
+          already a bar under this, and two of them stack.
+
+          `treatAsHome` is what keeps the big button a Play button rather
+          than turning it into "go home" — this screen IS what Play opens, so
+          its own Play starts the game at the front of the shelf, or opens the
+          wall when there is nothing left to start. */}
+      {ownsRoute && !guessPicking && (
+        <UniversalBottomNav
+          treatAsHome
+          canPlay={canPlay}
+          isVip={isVip}
+          onPlayClick={() => startMode(friendsMode ? "library" : "quick")}
+        />
+      )}
+
       {/* End of frosted popup panel */}
       </div>
       )}
+
+      {/* Out of games: the wall (Figma 1102:4315), opened by any card on the
+          shelf rather than by the first question of a round that would not
+          have counted. */}
+      <PlayLimitModal
+        isOpen={showLimitWall}
+        onClose={() => setShowLimitWall(false)}
+        timeUntilNextPlay={timeUntilNextPlay}
+        resetsAt={resetsAt}
+        onPurchased={() => setShowLimitWall(false)}
+      />
 
       {/* The pre-room lobby (Figma 1018:5815) for the modes that have no
           room until they start: it grows out of the tapped card like every

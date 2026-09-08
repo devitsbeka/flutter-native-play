@@ -15,6 +15,8 @@ import {
 } from "@/config/extraPlays";
 import coinChunky from "@/assets/figma-home/coin-chunky.png";
 import gemChunky from "@/assets/figma-home/gem-chunky.png";
+import filmRender from "@/assets/playlimit/film.png";
+import heartRender from "@/assets/playlimit/heart.png";
 
 /**
  * "Play now" for a player who has run out: one game or three, paid for with
@@ -40,9 +42,11 @@ export function ExtraPlaysOffer({
    * option to watch an ad": not hidden, just unreadable as an action.
    *
    * "ad" renders it as its own row with a real button; "packs" renders the
-   * coins and gems below the PRO offer, where a paid shortcut belongs.
+   * coins and gems below the PRO offer, where a paid shortcut belongs; "wall"
+   * is the out-of-lives screen's own black slab (Figma 1102:4334), where the
+   * ad IS the row and the reward is stated on a chip at its end.
    */
-  section?: "all" | "ad" | "packs";
+  section?: "all" | "ad" | "packs" | "wall";
 }) {
   const { t } = useLanguage();
   const navigate = useNavigate();
@@ -153,6 +157,60 @@ export function ExtraPlaysOffer({
   // guidance for rewarded ads is the same: say what the reward is, and make
   // opting in a deliberate tap rather than a guess.
   const adPack = EXTRA_PLAY_PACKS.find((pack) => pack.ad);
+
+  // ── The same offer, as the out-of-lives wall draws it ────────────────────
+  //
+  // Figma 1102:4334: a pale frame with a black slab sitting a shade proud of
+  // it, the film render hanging over its top edge, and what you get back on a
+  // white chip at the far end. It is the only free way past the wall, so it is
+  // the first thing under the title and the only dark thing on the screen.
+  if (section === "wall") {
+    if (!adPack || !adsAvailable) return null;
+    const isPending = pending === `${adPack.games}:ad`;
+    return (
+      <div className="w-full">
+        <div className="relative h-[99px] w-full rounded-bl-[24px] rounded-br-[54px] rounded-tl-[24px] rounded-tr-[24px] border-2 border-solid border-white/60 bg-[rgba(252,247,255,0.6)] shadow-[0px_2px_8px_0px_rgba(102,51,153,0.06),0px_8px_24px_0px_rgba(102,51,153,0.12)]">
+          <motion.button
+            type="button"
+            onClick={() => void buy(adPack, "ad")}
+            disabled={!!pending}
+            whileTap={pending ? undefined : { scale: 0.99 }}
+            aria-label={t("playLimit.adRowTitle")}
+            className="absolute left-[-1px] top-[-2px] flex h-[98px] w-[calc(100%+2px)] items-center rounded-bl-[24px] rounded-br-[54px] rounded-tl-[24px] rounded-tr-[24px] border-2 border-solid border-[#949494] bg-[#5e5e5e] shadow-[0px_2px_8px_0px_rgba(51,51,51,0.06),0px_8px_0px_0px_#262626] transition-[transform,box-shadow] duration-100 active:translate-y-[4px] active:shadow-[0px_4px_0px_0px_#262626] disabled:opacity-70"
+          >
+            <img
+              alt=""
+              src={filmRender}
+              className="pointer-events-none absolute left-[14px] top-[-23px] h-[116px] w-[116px] object-contain"
+            />
+            <span className="absolute left-[142px] right-[110px] top-[18px] text-left font-display text-[20px] font-bold uppercase leading-[26px] text-white">
+              {t("playLimit.watchAd")}
+            </span>
+            {/* +1: what the ad is worth, on the same white chip the counters
+                over the shelf are drawn on. */}
+            <span className="absolute right-[24px] top-[22px] flex h-[43px] w-[81px] items-center rounded-[18px] border border-solid border-[#e8e0f5] bg-white/90 shadow-[0px_2.94px_0px_0px_#9ca29c,0px_4.409px_11.758px_0px_rgba(0,0,0,0.1)]">
+              {isPending ? (
+                <span className="mx-auto h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-600" />
+              ) : (
+                <>
+                  <img alt="" src={heartRender} className="ml-[10px] h-[33px] w-[33px] shrink-0 object-contain" />
+                  <span className="ml-[1px] font-[Nunito] text-[16.16px] font-black leading-[25.13px] tracking-[-0.146px] text-[#161e46]">
+                    +{adPack.games}
+                  </span>
+                </>
+              )}
+            </span>
+          </motion.button>
+        </div>
+        {refused && (
+          <p role="alert" className="mt-3 text-center text-xs font-semibold text-rose-500">
+            {refused === "ad_limit" ? t("playLimit.adLimitReached") : t("playLimit.purchaseFailed")}
+          </p>
+        )}
+      </div>
+    );
+  }
+
   if (section === "ad") {
     if (!adPack || !adsAvailable) return null;
     const isPending = pending === `${adPack.games}:ad`;

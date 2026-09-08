@@ -1622,6 +1622,12 @@ export const ka = {
   // ==========================================
   playLimit: {
     countdownLabel: "კიდევ 5 უფასო თამაშამდე",
+    outOfLivesTitle: "სიცოცხლეები ამოგეწურა",
+    outOfLivesSubtitle: "თამაშის გასაგრძელებლად აირჩიე",
+    giveUpTitle: "დანებება",
+    giveUpBody: "თამაშს {time}-ში განაგრძობ",
+    giveUpBodyUnknown: "თამაშის გასაგრძელებლად ცოტა ხანში დაბრუნდი",
+    cancelAnytime: "გააუქმე ნებისმიერ დროს",
     adRowTitle: "ნახე მოკლე რეკლამა",
     adRowBody: "დაიბრუნე {count} თამაში ახლავე",
     adRowAction: "ნახვა",
@@ -2751,6 +2757,7 @@ export const ka = {
     proExpiry: "ვადა: {date}",
     proUnlimited: "უვადო",
     upgradeBtn: "გაუმჯობესება",
+    tryProBtn: "სცადე PRO",
     proInviteFriendsLabel: "მეგობრების მოწვევა",
     proInvitesLeft: "{count} დარჩენილი",
     proInviteAction: "მოწვევა",

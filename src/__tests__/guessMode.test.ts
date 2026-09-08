@@ -58,8 +58,6 @@ describe("Guess replaced Random on the create screen", () => {
     );
     expect(create).not.toMatch(/\/game\?category=/);
     expect(create).not.toMatch(/setPreLobby\("guess"\)/);
-    // Both cards say so.
-    expect(create).toMatch(/key: "guess"[^}]*players: "1"/);
   });
 
   it("the question gets a screen, not a strip under the card", () => {
