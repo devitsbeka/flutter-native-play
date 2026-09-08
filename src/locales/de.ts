@@ -2002,6 +2002,7 @@ export const de: KaTranslations = {
     sidebarContinue: "Weiterspielen",
     sidebarQuickPlay: "Schnelles Spiel",
     changeScene: "Maskottchen wechseln",
+    pokeMascot: "Maskottchen anstupsen",
     playNGames: "Spiele {count} Spiele",
     nOfMDone: "{done}/{total} abgeschlossen",
     task: "Aufgabe",

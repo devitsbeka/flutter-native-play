@@ -21,6 +21,7 @@ import { GreenPlayButton } from "@/components/shared/GreenPlayButton";
 import type { QueueItem } from "@/hooks/useRoomCategoryQueue";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { MobileHeroWidgets, MobileProfileCard } from "@/components/home/MobileHome";
+import { AnimatedMascotScene } from "@/components/home/AnimatedMascotScene";
 import { RoomCard, RoomCardGrid } from "@/components/team/MyRoomsSection";
 import { AirbnbCategoryCard } from "@/components/discover/AirbnbCategoryCard";
 import type { MyRoom } from "@/hooks/useMyRooms";
@@ -191,6 +192,16 @@ export default function HomeShot() {
             onAdd={noop}
           />
         </div>
+      </div>
+    );
+  }
+  if (params.get("view") === "animated-scene") {
+    // The developer-mode home scene (AnimatedMascotScene), full-bleed at
+    // phone size, so it can be poked and screenshotted without an admin
+    // session.
+    return (
+      <div className="relative h-[100dvh] w-full overflow-hidden bg-[#faf6ff]">
+        <AnimatedMascotScene className="absolute inset-0 z-[4] select-none overflow-hidden" />
       </div>
     );
   }
