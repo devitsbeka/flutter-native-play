@@ -48,6 +48,10 @@ import type { QueueItem } from "@/hooks/useRoomCategoryQueue";
 import { classicLobbyScene } from "@/utils/lobbyScene";
 import { gameRoomsHasApproval, roomVisibilityFields } from "@/utils/roomVisibility";
 import { dealtRoomIcon, fetchCrestPool } from "@/utils/roomCrests";
+import coinIconAsset from "@/assets/tb-lobby/coin.png";
+import { NotEnoughStakeModal } from "@/components/home/NotEnoughStakeModal";
+import { useGameStake } from "@/hooks/useGameStake";
+import { REWARDS } from "@/config/rewardConfig";
 import { partyRoomIconUrl } from "@/utils/partyCoverIcon";
 import { isGeneratedRoomName } from "@/utils/roomNameGenerator";
 import { triviaDisplayTitle } from "@/utils/triviaTitle";
@@ -156,6 +160,10 @@ export function RoomLobbyV2() {
    */
   const enoughPlayersRef = useRef(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  // Can this player cover a seat at the table? The pot is collected when the
+  // round ends, but being told then is being told too late.
+  const { hasEnoughCoins } = useGameStake();
+  const [showNoStake, setShowNoStake] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
   const [isTVModeEnabled, setIsTVModeEnabled] = useState(() => searchParams.get("tvMode") === "true");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -983,6 +991,15 @@ export function RoomLobbyV2() {
       setStartAfterPick(false);
       setShowCategoryPicker(true);
     } else {
+      // A round with somebody else in it is played for a pot, and every seat
+      // pays the stake into it. Asked here rather than at the end, where the
+      // answer is a balance that already moved (owner: "when user enters room
+      // to play they should have 500 coins to participate"). A solo room is
+      // practice and costs nothing, so it is never blocked.
+      if (seatedPlayers >= 2 && !hasEnoughCoins) {
+        setShowNoStake(true);
+        return;
+      }
       handleStartGame();
     }
   };
@@ -1256,6 +1273,27 @@ export function RoomLobbyV2() {
         left: t("lobby.uLeftNote"),
         invited: t("lobby.uInvitedNote"),
       }}
+      /**
+       * What the round is played for.
+       *
+       * Every seat puts REWARDS.GAME_STAKE in and the pot goes to the top
+       * three — so the host has to be able to read the number BEFORE Start,
+       * not discover it on the coin counter afterwards. Counted off the
+       * seated players, which is what settle_room_round collects from: an
+       * invitation nobody accepted neither pays in nor is paid out.
+       *
+       * Hidden below two players, where there is no pot: the arena and the
+       * King's couch carry their own stake strips and are not this screen.
+       */
+      reward={
+        seatedPlayers >= 2
+          ? {
+              label: t("lobby.winnerTakes"),
+              icon: coinIconAsset,
+              amount: seatedPlayers * REWARDS.GAME_STAKE,
+            }
+          : undefined
+      }
       rules={lobbyRules}
       rulesText={[
         { key: "rules", heading: t("lobby.rulesHeading"), body: t("lobby.rulesClassic") },
@@ -1331,6 +1369,12 @@ export function RoomLobbyV2() {
         inviteLink={getShareLink(currentRoom.room_code)}
         roomId={currentRoom.id}
         roomCode={currentRoom.room_code}
+      />
+
+      {/* Not enough for a seat at the table. */}
+      <NotEnoughStakeModal
+        isOpen={showNoStake}
+        onClose={() => setShowNoStake(false)}
       />
 
       {/* Play on TV: the pairing code entry, as a sheet over the lobby.

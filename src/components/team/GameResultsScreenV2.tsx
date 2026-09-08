@@ -29,6 +29,7 @@ import { isUndecidedRound, UNDECIDED_ICON_SLUG } from "@/utils/undecidedRound";
 import { useCategoryIdentity } from "@/hooks/useCategoryIdentity";
 import { RoomQueueSheet } from "./RoomQueueSheet";
 import { calculateMultiplayerPayout } from "@/utils/multiplayerPayout";
+import { useRoomPot } from "@/hooks/useRoomPot";
 import { isGuestAccount } from "@/utils/guestAccount";
 import { AuthRequiredModal } from "@/components/shared/AuthRequiredModal";
 import { useLocalizedCategoryName } from "@/utils/categoryDisplayName";
@@ -58,9 +59,13 @@ export function GameResultsScreenV2() {
   const { t } = useLanguage();
   const localizeCategory = useLocalizedCategoryName();
   const { addCoins } = useCurrency();
+  const { settleRoomRound } = useRoomPot();
   const { trackMissionEvent } = useMissions();
   const { openProfile } = usePlayerProfile();
   const [coinsEarned, setCoinsEarned] = useState(0);
+  // What the stake cost when the pot went elsewhere — said out loud rather
+  // than left as a balance that quietly dropped.
+  const [coinsLost, setCoinsLost] = useState(0);
   const [showGuestSignUp, setShowGuestSignUp] = useState(false);
   const [showQueueSheet, setShowQueueSheet] = useState(false);
 
@@ -283,24 +288,48 @@ export function GameResultsScreenV2() {
           }
         }
 
-        // Unified reward policy — see multiplayerPayout.ts for the rules.
-        const { earnedCoins, isPractice, countsAsWin } = calculateMultiplayerPayout({
+        // The pot. Everybody at the table put 500 in and the table is what
+        // gets paid out — winner takes all at two players, 70/20/10 at three
+        // or more (owner's ask). The client names neither the stake nor the
+        // prize: settle_room_round collects, ranks and pays server-side, once
+        // per round however many devices call it, and hands back what
+        // actually moved for THIS player.
+        //
+        // The old path credited a number this device worked out from
+        // placement and raw score and then granted it to itself. Nobody paid
+        // anything in, so a room was free money — the more players, the more
+        // of it. What survives of that function is the practice rule and
+        // whether the win counts, which are not money.
+        const { isPractice, countsAsWin } = calculateMultiplayerPayout({
           playerCount: participants.length,
           myRank: myRankForPayout,
           myScore,
           isWin,
         });
-        setCoinsEarned(earnedCoins);
+
+        const settlement = await settleRoomRound(currentRoom.id, currentRoom.current_game_id ?? null);
+        if (settlement.unsettled && settlement.reason === "not_deployed") {
+          // The migration has not reached this project yet. Pay the old
+          // placement reward rather than nobody, so a round is never silently
+          // worthless in the window between shipping this and applying it.
+          const { earnedCoins } = calculateMultiplayerPayout({
+            playerCount: participants.length,
+            myRank: myRankForPayout,
+            myScore,
+            isWin,
+          });
+          if (earnedCoins > 0) await addCoins(earnedCoins, "quiz_reward");
+          setCoinsEarned(earnedCoins);
+        } else {
+          setCoinsEarned(Math.max(0, settlement.applied));
+          setCoinsLost(Math.max(0, -settlement.applied));
+        }
 
         // Missions: every room game counts as played; a real (non-practice)
         // room is a game with friends; ranked wins advance win missions
         void trackMissionEvent("game_played", 1);
         if (!isPractice) void trackMissionEvent("friend_game", 1);
         if (countsAsWin) void trackMissionEvent("game_won", 1);
-
-        if (earnedCoins > 0) {
-          await addCoins(earnedCoins, "quiz_reward");
-        }
 
         // Update profile stats — XP is placement-independent: every player
         // banks their raw score in every mode. Increment RPC, not an
@@ -348,7 +377,7 @@ export function GameResultsScreenV2() {
         if (statsKey) processedResultsGames.delete(statsKey);
       });
     }
-  }, [user, profile, myScore, myRankForPayout, isWin, isHost, currentRoom, setProfileLocal, rankedParticipants, addCoins, participants, mltAllVotersDone, isMostLikelyRound]);
+  }, [user, profile, myScore, myRankForPayout, isWin, isHost, currentRoom, setProfileLocal, rankedParticipants, addCoins, settleRoomRound, participants, mltAllVotersDone, isMostLikelyRound]);
 
   // Prefetch the questions a challenge link carries, so sharing is one tap
   // and not a wait.
@@ -620,6 +649,27 @@ export function GameResultsScreenV2() {
             >
               <img src={coinIcon} alt="Coins" className="w-5 h-5" />
               <span className="text-white font-bold text-lg">+{coinsEarned}</span>
+            </div>
+          </motion.div>
+        )}
+
+        {/* And what the stake cost when the pot went elsewhere. A room is
+            played for a pot now, so a round can end with the balance DOWN —
+            which has to be said here rather than discovered later on the
+            coin counter. */}
+        {coinsLost > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="flex items-center justify-center gap-4 mt-2"
+          >
+            <div
+              className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-slate-500/80"
+              style={{ boxShadow: "0 4px 0 rgba(51,65,85,0.4)" }}
+            >
+              <img src={coinIcon} alt="Coins" className="w-5 h-5 grayscale" />
+              <span className="text-white font-bold text-lg">-{coinsLost}</span>
             </div>
           </motion.div>
         )}
