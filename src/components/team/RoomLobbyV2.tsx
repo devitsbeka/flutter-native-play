@@ -111,45 +111,6 @@ export function RoomLobbyV2() {
     void fetchCrestPool().then(setIconPool);
   }, []);
   /**
-   * The party this room is playing, when it is playing one.
-   *
-   * A room built on a MyTrivia Party was dealt a creature and a made-up name
-   * like every other room: a parrot over "Cheerful Rabbits", which named
-   * neither the party nor the kind of thing it was (owner: "we should show
-   * one of the my trivia party icons here instead random icons and random
-   * name for room, we should show name user provided for their trivia party
-   * or untitled").
-   *
-   * The room row carries `category_name` — the trivia's title as it stood
-   * when the room was made — but not whether that trivia is a PARTY, and
-   * the four party icons belong to parties. So one row is read, once per
-   * room, and it also keeps the name current when the party is renamed.
-   */
-  const [partyTitle, setPartyTitle] = useState<string | null | undefined>(undefined);
-  const ownTriviaId = currentRoom?.user_trivia_id ?? null;
-  useEffect(() => {
-    if (!ownTriviaId) {
-      setPartyTitle(undefined);
-      return;
-    }
-    let alive = true;
-    void supabase
-      .from("user_quiz_posts")
-      .select("title, subject")
-      .eq("id", ownTriviaId)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (!alive) return;
-        // Only a party. A trivia the player wrote is not one of these, and
-        // dressing its room in balloons would say it was.
-        setPartyTitle(data?.subject === "personal" ? (data.title ?? "") : undefined);
-      });
-    return () => {
-      alive = false;
-    };
-  }, [ownTriviaId]);
-  const isPartyRoom = partyTitle !== undefined;
-  /**
    * Whether the room can start, for the handler rather than the button.
    *
    * `enoughPlayers` is worked out far below, after the early returns —
@@ -300,6 +261,61 @@ export function RoomLobbyV2() {
 
   const { matches } = useRoomMatchHistory(currentRoom?.id || null);
   const { queue, addToQueue, removeFromQueue, reorderQueue, replaceQueueItem } = useRoomCategoryQueue(currentRoom?.id || null);
+  /**
+   * The party this room is playing, when it is playing one.
+   *
+   * A room built on a MyTrivia Party was dealt a creature and a made-up name
+   * like every other room: a parrot over "Cheerful Rabbits", which named
+   * neither the party nor the kind of thing it was (owner: "we should show
+   * one of the my trivia party icons here instead random icons and random
+   * name for room, we should show name user provided for their trivia party
+   * or untitled").
+   *
+   * The room row carries `category_name` — the trivia's title as it stood
+   * when the room was made — but not whether that trivia is a PARTY, and
+   * the four party icons belong to parties. So one row is read, once per
+   * room, and it also keeps the name current when the party is renamed.
+   *
+   * The trivia checked is whichever one plays FIRST, not only one baked
+   * directly onto the room: a party trivia QUEUED into a room (rather than
+   * the room being created from it) carries its `user_trivia_id` on the
+   * queue row instead, and a room playing "round 1" from the queue is still
+   * a party room. Missing that case is what left a room playing a party
+   * showing a dealt name like "Crazy Zombies" instead of the party's own
+   * title (owner: "we don't give these rooms — where players going to play
+   * my trivia party — random names, host gives a name to that room").
+   */
+  const [partyTitle, setPartyTitle] = useState<string | null | undefined>(undefined);
+  // Round 1's trivia, whichever holds it: the room's own held round, exactly
+  // as heldRound below decides it (a category_id also holding that slot
+  // means round 1 is a category, not whatever sits at the head of the
+  // queue) — and only once neither is set does the queue's own head count.
+  const ownTriviaId =
+    currentRoom?.user_trivia_id
+    ?? (currentRoom?.category_id ? null : queue[0]?.user_trivia_id)
+    ?? null;
+  useEffect(() => {
+    if (!ownTriviaId) {
+      setPartyTitle(undefined);
+      return;
+    }
+    let alive = true;
+    void supabase
+      .from("user_quiz_posts")
+      .select("title, subject")
+      .eq("id", ownTriviaId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!alive) return;
+        // Only a party. A trivia the player wrote is not one of these, and
+        // dressing its room in balloons would say it was.
+        setPartyTitle(data?.subject === "personal" ? (data.title ?? "") : undefined);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [ownTriviaId]);
+  const isPartyRoom = partyTitle !== undefined;
   // The queue, made visible. More than one category has always been queueable
   // — the picker takes several at once and each becomes a round — but the chip
   // showed the room's single category_name, so three queued topics read as
