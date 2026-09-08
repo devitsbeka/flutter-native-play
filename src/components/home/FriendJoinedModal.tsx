@@ -4,7 +4,9 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import confetti from "canvas-confetti";
 import { Sparkles } from "lucide-react";
-import crownIcon from "@/assets/icons/icon-vip-crown.png";
+// The wordmark's crown, the same one the paywall wears — see the note
+// there. This modal is the other place a crown stands for Pro.
+import crownIcon from "@/assets/crown-3d.png";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface FriendJoinedModalProps {

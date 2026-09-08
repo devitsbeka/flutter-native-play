@@ -13,7 +13,12 @@ import { GLASS_SHEEN, SKIN_WHITE } from "@/components/shop/ProBannerCard";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { SubscriptionTerms } from "@/components/shared/SubscriptionTerms";
 
-import crownIcon from "@/assets/icons/icon-vip-crown.webp";
+// The brand's crown, not a stock one. `icon-vip-crown` is an ornate
+// jewelled render that belongs to nothing else in the app; this is the
+// crown that sits in the MyTrivia wordmark — the same bytes the logo SVG
+// embeds — so the screen that sells Pro wears the mark people already
+// know Pro by (owner's ask).
+import crownIcon from "@/assets/crown-3d.png";
 import benefitPlay from "@/assets/pro-banner/banner-gamepad.webp";
 import benefitWheel from "@/assets/pro-banner/banner-wheel.webp";
 import benefitNoAds from "@/assets/pro-banner/banner-no-ads.webp";
