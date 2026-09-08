@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -107,6 +107,27 @@ export default function TriviaLobby() {
   
   const isOwner = user?.id === trivia?.user_id;
   const canEdit = isOwner || isAdmin;
+
+  /**
+   * A MyTrivia Party has no lobby.
+   *
+   * This page is a leaderboard: who played it, ranked, with the social
+   * counters above it. A party is private — played by the friends its host
+   * invites and by nobody else — so it can only ever read "0 players / no
+   * one has played yet" (owner: "we don't have leaderboards, my trivia
+   * party is not public and other players do not play this, so remove this
+   * screen").
+   *
+   * The card no longer links here, but old links, notifications and Back
+   * do, so the page turns a party away itself rather than showing an empty
+   * board.
+   */
+  const isParty = (trivia?.subject ?? "") === "personal";
+  useEffect(() => {
+    if (!isLoading && trivia && isParty) {
+      navigate("/team?tab=private&filter=trivias", { replace: true });
+    }
+  }, [isLoading, trivia, isParty, navigate]);
 
   const handleBack = () => {
     navigate(-1);
@@ -409,6 +430,8 @@ export default function TriviaLobby() {
           <EditQuizModal
             isOpen={isEditModalOpen}
             onClose={() => setIsEditModalOpen(false)}
+            // Deleting from here deletes the page you are standing on.
+            onDeleted={() => navigate("/team?tab=private&filter=trivias", { replace: true })}
             quiz={{
               id: trivia.id,
               title: trivia.title,

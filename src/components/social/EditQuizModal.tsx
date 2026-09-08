@@ -32,6 +32,15 @@ interface EditQuizModalProps {
   quiz: any | null;
   isOpen: boolean;
   onClose: () => void;
+  /**
+   * The trivia was deleted and this screen is closing.
+   *
+   * The page that opened this editor may BE the thing just deleted — the
+   * trivia's own page has an Edit button — and closing the modal there
+   * leaves the player looking at a row that no longer exists. Whoever
+   * cannot survive that says so here and navigates away.
+   */
+  onDeleted?: () => void;
 }
 
 const COVER_GRADIENTS = [
@@ -45,7 +54,7 @@ const COVER_GRADIENTS = [
 
 type ViewMode = "info" | "questions";
 
-export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
+export function EditQuizModal({ quiz, isOpen, onClose, onDeleted }: EditQuizModalProps) {
   const { toast } = useToast();
   const { t } = useLanguage();
   const queryClient = useQueryClient();
@@ -200,12 +209,18 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
     
     setIsDeleting(true);
     try {
-      const { error } = await supabase
+      // `.select()` so the rows actually removed come back. A DELETE that
+      // matches nothing answers 204 with no error — RLS on somebody else's
+      // row, a stale id — and without this the screen said "deleted",
+      // closed, and left the thing sitting exactly where it was.
+      const { data: removed, error } = await supabase
         .from(tableName)
         .delete()
-        .eq("id", quiz.id);
+        .eq("id", quiz.id)
+        .select("id");
 
       if (error) throw error;
+      if (!removed?.length) throw new Error("delete matched no rows");
 
       toast({
         title: t("extra.deletedToast"),
@@ -215,6 +230,12 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
       queryClient.invalidateQueries({ queryKey: ["my-quiz-posts"] });
       queryClient.invalidateQueries({ queryKey: ["my-collections"] });
       onClose();
+      // The screen behind this one may BE the thing just deleted — the
+      // trivia's own page opens this editor. Closing the modal there
+      // put the player back on a page for a row that no longer exists,
+      // showing it unchanged, which is what "delete does nothing"
+      // looked like from the outside.
+      onDeleted?.();
     } catch (error) {
       console.error("Error deleting:", error);
       toast({
