@@ -1303,36 +1303,27 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
             <div className="relative z-10">
               <div className="bg-white/60 backdrop-blur-md rounded-2xl px-3 py-2.5 flex items-center justify-between gap-2">
                 {/* Left: TV marker (played or live on TV, no container) +
-                    player count (TV active players if available) + the faces
-                    of who is in there, which belong beside the number they
-                    are the count of.
+                    the faces of who is in there + the "+" for an open seat,
+                    which belong beside the number they are the count of.
 
-                    The "+" for an open seat lives HERE, before the faces,
-                    always — not only when the Play button is on the right.
-                    Putting it there only sometimes (on the right when there
-                    was no Play button to share the row with) meant the same
-                    room could show a Play button on one visit and not on the
-                    next, as who else was online changed, and the "+" jumped
-                    sides with it (owner: "it is confusing now"). One position
-                    for the host to learn, regardless of what the right side
-                    is doing. Same affordance the Public tab's cards already
-                    give the host. */}
+                    The "+" lives HERE, in this left-hand group, always — not
+                    only when the Play button is on the right. Putting it on
+                    the right only sometimes (when there was no Play button
+                    to share the row with) meant the same room could show a
+                    Play button on one visit and not on the next, as who else
+                    was online changed, and the "+" jumped sides with it
+                    (owner: "it is confusing now"). One GROUP for the host to
+                    learn, regardless of what the right side is doing.
+
+                    Within that group it sits AFTER the faces now, not before
+                    — the Public tab's own cards have always drawn it as the
+                    last seat in the row, and putting it first here was this
+                    tab's own invention, not something borrowed from Public
+                    (owner: "let's show + button next to the avatars on right
+                    side, not left side on private rooms too"). */}
                 <div className="flex items-center gap-2 min-w-0">
                   {playedOnTV && (
                     <img src={retroTv3d} alt="TV" className="w-7 h-7 object-contain drop-shadow select-none flex-shrink-0" draggable={false} />
-                  )}
-                  {canInvite && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onInvite?.(room);
-                      }}
-                      aria-label={t("extra.inviteFriendsTitle")}
-                      className="w-8 h-8 rounded-full border-2 border-dashed border-[#2b1a4a]/30 bg-white/70 flex items-center justify-center flex-shrink-0 transition-colors hover:bg-white active:scale-95"
-                    >
-                      <Plus className="w-4 h-4 text-[#2b1a4a]" />
-                    </button>
                   )}
 
                   {/* Avatars (use TV players if session is active). These are
@@ -1397,6 +1388,19 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
                       </div>
                     )}
                   </div>
+                  {canInvite && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onInvite?.(room);
+                      }}
+                      aria-label={t("extra.inviteFriendsTitle")}
+                      className="w-8 h-8 rounded-full border-2 border-dashed border-[#2b1a4a]/30 bg-white/70 flex items-center justify-center flex-shrink-0 transition-colors hover:bg-white active:scale-95"
+                    >
+                      <Plus className="w-4 h-4 text-[#2b1a4a]" />
+                    </button>
+                  )}
                 </div>
 
                 {/* Right: what this room is offering, when it is offering
