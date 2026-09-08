@@ -588,6 +588,13 @@ export function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = f
           // face when the host never picked an icon of their own.
           : { icon: iconPartyLounge, label: t("extra.myTriviaPartyLabel") };
   const displayName = room.room_name || lounge?.label || t("extra.gameRoomLabel");
+  // A room built on one of the player's own trivias — a MyTrivia Party among
+  // them. The line under the room's own name used to show the trivia's raw
+  // title here ("tt"), which is what the room's OWN name is for; this line
+  // says what KIND of room it is, the way it does for every other room
+  // (owner: "instead tt we show My Trivia Party... replace 'tt' to always
+  // show My Trivia party").
+  const isPartyRoom = !!room.user_trivia_id;
   // How long ago the room was made — the thing that tells two similar rooms
   // apart in a list of them.
   const createdAgo = useRoomAge(room.created_at);
@@ -954,9 +961,9 @@ export function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = f
                   <h3 className="font-display text-white text-lg leading-tight truncate drop-shadow-md">
                     {displayName}
                   </h3>
-                  {(room.category_name || (lounge && room.room_name)) && (
+                  {(isPartyRoom || room.category_name || (lounge && room.room_name)) && (
                     <p className="text-sm text-white/70 truncate font-medium drop-shadow-sm">
-                      {room.category_name ? localizeCategory(room.category_name) : lounge!.label}
+                      {isPartyRoom ? t("extra.myTriviaPartyLabel") : room.category_name ? localizeCategory(room.category_name) : lounge!.label}
                     </p>
                   )}
                 </div>
@@ -1058,6 +1065,13 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
           // face when the host never picked an icon of their own.
           : { icon: iconPartyLounge, label: t("extra.myTriviaPartyLabel") };
   const displayName = room.room_name || lounge?.label || t("extra.gameRoomLabel");
+  // A room built on one of the player's own trivias — a MyTrivia Party among
+  // them. The line under the room's own name used to show the trivia's raw
+  // title here ("tt"), which is what the room's OWN name is for; this line
+  // says what KIND of room it is, the way it does for every other room
+  // (owner: "instead tt we show My Trivia Party... replace 'tt' to always
+  // show My Trivia party").
+  const isPartyRoom = !!room.user_trivia_id;
   // How long ago the room was made — the thing that tells two similar rooms
   // apart in a list of them.
   const createdAgo = useRoomAge(room.created_at);
@@ -1289,9 +1303,9 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
                   <h3 className="font-display text-[#2b1a4a] text-lg leading-tight line-clamp-2">
                     {displayName}
                   </h3>
-                  {(room.category_name || (lounge && room.room_name)) && (
+                  {(isPartyRoom || room.category_name || (lounge && room.room_name)) && (
                     <p className="text-[#2b1a4a]/70 text-sm truncate mt-0.5">
-                      {room.category_name ? localizeCategory(room.category_name) : lounge!.label}
+                      {isPartyRoom ? t("extra.myTriviaPartyLabel") : room.category_name ? localizeCategory(room.category_name) : lounge!.label}
                     </p>
                   )}
                 </div>
