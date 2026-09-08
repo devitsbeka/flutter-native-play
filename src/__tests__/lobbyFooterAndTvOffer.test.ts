@@ -108,3 +108,51 @@ describe("the caption says which of the two things is missing", () => {
     }
   });
 });
+
+/**
+ * The haze is allowed to blur what is BEHIND the list, not the end of it.
+ *
+ * The scroller was padded by the footer's measured height, but the blur
+ * layers start 120px ABOVE the footer's own box — so scrolling to the end
+ * parked the last row inside the ramp: on screen, and smeared (owner: "when
+ * i scroll at the end blur covers last raw behind"). The padding has to
+ * clear the ramp, not the footer.
+ */
+describe("the list ends clear of the haze, not just of the footer", () => {
+  it("pads by the ramp as well as the measured footer", () => {
+    expect(lobby).toMatch(/style=\{\{ paddingBottom: footerHeight \+ FOOTER_HAZE_PX \}\}/);
+  });
+
+  it("and the constant is the same 120px the ramp is drawn with", () => {
+    expect(lobby).toMatch(/const FOOTER_HAZE_PX = 120;/);
+    // A Tailwind arbitrary value has to be a literal, so the two cannot be
+    // written from one source — this is what keeps them equal. (How many
+    // layers carry the class is the ramp's own test, above.)
+    expect(lobby).toMatch(/top-\[-120px\]/);
+  });
+});
+
+/**
+ * Invite is above the benches, not under them.
+ *
+ * At the foot of the players tab it was the one control you had to scroll
+ * to reach — and in a room full enough to need it, the row furthest down,
+ * sitting in the footer's haze (owner: "show invite button above players
+ * list to be visible"). It is also where 1123:8843 draws it.
+ */
+describe("the invite row comes before the players", () => {
+  it("is rendered above the benches on the players tab", () => {
+    const tab = lobby.slice(lobby.indexOf('key="players"'));
+    const invite = tab.indexOf("<LobbyInviteRow");
+    const benches = tab.indexOf('playersLayout === "columns"');
+    expect(invite).toBeGreaterThan(-1);
+    expect(benches).toBeGreaterThan(-1);
+    expect(invite).toBeLessThan(benches);
+  });
+
+  it("and still goes when the room is full", () => {
+    expect(lobby).toMatch(
+      /\{onInvite && !\(capacity && capacity\.taken >= capacity\.max\) && \(\s*\n\s*<LobbyInviteRow faces=\{inviteFaces\}/,
+    );
+  });
+});

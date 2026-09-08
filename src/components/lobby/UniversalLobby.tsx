@@ -312,6 +312,17 @@ export interface UniversalLobbyProps {
   children?: ReactNode;
 }
 
+/**
+ * How far the footer's blur ramp reaches ABOVE the footer's own box.
+ *
+ * Must stay equal to the `top-[-120px]` on the haze layers below — a
+ * Tailwind arbitrary value has to be a literal at build time, so the two
+ * cannot be written from one source. The scroller pads by this on top of
+ * the measured footer height; anything less and the last row ends up
+ * inside the ramp.
+ */
+const FOOTER_HAZE_PX = 120;
+
 const CARD_SHADOW = "shadow-[0px_2px_8px_0px_rgba(102,51,153,0.06),0px_8px_24px_0px_rgba(102,51,153,0.12)]";
 const RULE_BORDER = "border border-[rgba(156,100,181,0.5)]";
 
@@ -674,7 +685,13 @@ export function UniversalLobby({
         // it — measured rather than guessed, because the footer is one line
         // tall for a guest and three for a host with a caption under a
         // disabled Start.
-        style={{ paddingBottom: footerHeight }}
+        //
+        // Clear of the HAZE, not just of the footer's own box: the blur
+        // layers start FOOTER_HAZE_PX above the footer's top edge, so
+        // padding for the footer alone parked the last row inside the ramp
+        // — on screen, and smeared (owner: "when i scroll at the end blur
+        // covers last raw behind").
+        style={{ paddingBottom: footerHeight + FOOTER_HAZE_PX }}
       >
         <div className="mx-auto flex min-h-full w-full max-w-[700px] flex-col px-4 md:max-w-[520px]">
 
@@ -852,6 +869,16 @@ export function UniversalLobby({
                   transition={{ duration: 0.18 }}
                   className="mt-[16px] flex flex-col gap-[16px] px-[3px]"
                 >
+                  {/* Invite goes ABOVE the benches (owner's ask, and where
+                      1123:8843 draws it). At the foot of the list it was the
+                      one thing on this tab you had to scroll to reach — and
+                      in a room with enough people to need it, it was the row
+                      furthest from the top, sitting in the footer's haze. A
+                      room you are trying to fill should offer the way to
+                      fill it first. */}
+                  {onInvite && !(capacity && capacity.taken >= capacity.max) && (
+                    <LobbyInviteRow faces={inviteFaces} label={labels.invite} onPress={onInvite} />
+                  )}
                   {/* The gap is on the outer column, not just inside a group.
                       Each bench spaces its own rows at 10px and the column had
                       no gap at all, so on a two-bench mode the arena's second
@@ -941,9 +968,6 @@ export function UniversalLobby({
                         {playersHint}
                       </p>
                     )
-                  )}
-                  {onInvite && !(capacity && capacity.taken >= capacity.max) && (
-                    <LobbyInviteRow className="mt-[35px]" faces={inviteFaces} label={labels.invite} onPress={onInvite} />
                   )}
                   {playersExtra}
                 </motion.div>
