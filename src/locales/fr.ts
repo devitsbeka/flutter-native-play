@@ -4220,6 +4220,7 @@ export const fr: KaTranslations = {
     chooseCategoriesLabel: "Choisir des catégories",
     createGameRoomLabel: "Créer une salle de jeu",
     myTriviaPartyLabel: "My Trivia Party",
+    triviaUntitled: "Sans titre",
     yourQuestionsLabel: "Vos questions",
     chooseGameTypeLabel: "Choisissez à quoi jouer",
     tvPlayOnTv: "Jouer sur TV",

@@ -7,6 +7,8 @@ import { useNavigate } from "react-router-dom";
 import { Plus, Play, Loader2, Globe, Lock, ChevronDown, ChevronUp, Layers, Pencil, FileEdit, Trash2, Check } from "lucide-react";
 import triviaBuzzerIcon from "@/assets/trivia-buzzer.png";
 import iconGroupOfPeople from "@/assets/group-of-people.png";
+import { MyTriviaPartyLogo } from "@/components/brand/MyTriviaPartyLogo";
+import { triviaDisplayTitle } from "@/utils/triviaTitle";
 import { ownerHasSeenTrivia } from "@/utils/triviaFairPlay";
 import purpleHeart3d from "@/assets/icons/purple-heart-3d.png";
 import bookmark3d from "@/assets/icons/bookmark-3d-orange.png";
@@ -655,7 +657,11 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
       initial={isNew ? { opacity: 0, y: 20, rotate: tiltDirection } : { opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0, rotate: 0 }}
       transition={isNew ? { type: "spring", stiffness: 300, damping: 20, delay: index * 0.05 } : { delay: index * 0.05 }}
-      onClick={() => onEdit(post)}
+      // Tapping the card opens the party, the way tapping a trivia card
+      // opens the trivia (owner: "clicking on it we go on that trivia").
+      // Editing is what the pencil in the corner is for; the whole card
+      // meaning "edit" is why there was no way to simply go and look at one.
+      onClick={() => navigate(`/trivia/${post.id}`)}
       className="relative bg-card rounded-2xl overflow-hidden shadow-lg cursor-pointer hover:shadow-xl transition-shadow"
       style={{ border: "2px solid rgba(236, 72, 153, 0.5)" }}
     >
@@ -681,10 +687,11 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
             <div className="absolute inset-0 bg-black/20" />
           </>
         )}
-        <div className="absolute inset-0 flex items-center justify-center translate-y-5">
-          <h4 className="text-xl font-bold text-white text-center px-4 drop-shadow-lg">
-            {post.title}
-          </h4>
+        {/* The party's own wordmark, where its name used to be spelled out
+            in text. Below, the strip names THIS party — the trivia the
+            player wrote — so the two rows stop saying the same thing. */}
+        <div className="absolute inset-0 flex items-center justify-center translate-y-3">
+          <MyTriviaPartyLogo height={40} className="drop-shadow-lg" />
         </div>
         <div className="absolute top-3 right-3 bg-black/40 backdrop-blur-sm rounded-full h-8 px-3 text-xs text-white flex items-center gap-1.5">
           {PUBLIC_SHARING_ENABLED && post.is_public !== false && (
@@ -703,7 +710,7 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-foreground truncate">
-              {t("extra.myTriviaPartyLabel")}
+              {triviaDisplayTitle(post.title, t)}
             </p>
             <p className="text-xs text-muted-foreground">
               {formatLocalTimeAgo(new Date(post.created_at), t)}

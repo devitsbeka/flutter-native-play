@@ -4276,6 +4276,7 @@ export const it: KaTranslations = {
     chooseCategoriesLabel: "Scegli categorie",
     createGameRoomLabel: "Crea stanza gioco",
     myTriviaPartyLabel: "My Trivia Party",
+    triviaUntitled: "Senza titolo",
     yourQuestionsLabel: "Le tue domande",
     chooseGameTypeLabel: "Scegli cosa giocare",
     tvPlayOnTv: "Gioca su TV",
