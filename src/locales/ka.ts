@@ -1622,6 +1622,9 @@ export const ka = {
   // ==========================================
   playLimit: {
     countdownLabel: "კიდევ 5 უფასო თამაშამდე",
+    chooseHow: "თამაშის გასაგრძელებლად აირჩიე",
+    giveUp: "დანებება",
+    giveUpBody: "თამაშს განაგრძობთ {time}-ში",
     adRowTitle: "ნახე მოკლე რეკლამა",
     adRowBody: "დაიბრუნე {count} თამაში ახლავე",
     adRowAction: "ნახვა",

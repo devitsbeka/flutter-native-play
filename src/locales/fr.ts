@@ -1355,6 +1355,9 @@ export const fr: KaTranslations = {
   },
   playLimit: {
     countdownLabel: "avant 5 parties gratuites",
+    chooseHow: "Choisis comment continuer",
+    giveUp: "Abandonner",
+    giveUpBody: "Tu rejoues dans {time}",
     adRowTitle: "Regarder une courte pub",
     adRowBody: "Récupérez {count} partie, tout de suite",
     adRowAction: "Regarder",

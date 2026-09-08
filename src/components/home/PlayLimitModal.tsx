@@ -1,11 +1,10 @@
 import triviaBuzzer from "@/assets/icons/trivia-buzzer.png";
-import crownIcon from "@/assets/crown-icon.png";
-import hourglassIcon from "@/assets/playlimit/hourglass.png";
-import { PlayLimitCountdown } from "@/components/home/PlayLimitCountdown";
-import gamepadIcon from "@/assets/playlimit/gamepad.png";
+import brokenHeartIcon from "@/assets/playlimit/broken-heart.png";
+import crownDecorIcon from "@/assets/playlimit/crown-decor.png";
+import { usePlayLimitClock } from "@/hooks/usePlayLimitClock";
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Trophy, Lock, X } from "lucide-react";
+import { Sparkles, Trophy, Lock } from "lucide-react";
 import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
 import { getGuestProgress } from "@/hooks/useGuestProgress";
 import { ExtraPlaysOffer } from "@/components/home/ExtraPlaysOffer";
@@ -55,6 +54,9 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
     // holds the button closed, so a price is never missing from a live button.
     const storePrice = useStorePrice();
     const proPrice = storePrice("pro", PRICES.pro_monthly.USD, "pro_monthly");
+    // For the give-up card below — called unconditionally, ahead of the
+    // isGuest branch's early return, though only the non-guest card reads it.
+    const giveUpClock = usePlayLimitClock(resetsAt, timeUntilNextPlay);
     const guestProgress = getGuestProgress();
     
     // Calculate stats for guests
@@ -160,89 +162,77 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
       );
     }
 
-    // Registered non-PRO user — PRO upsell (Figma node 621-7033)
+    // Registered non-PRO user — out-of-lives screen (Figma node 1102:4315)
     const card = (
+      // A soft lavender wash rather than the flat white card this had
+      // before — the Figma reference has no enclosing card at all, its
+      // title sits straight on a blurred scene, and a dim modal backdrop
+      // behind bare title text would have made it unreadable. This is the
+      // closest a card shape gets to that without the scene art itself.
       <div
-        className="relative w-full max-w-sm rounded-[24px] bg-white p-6 text-center"
-        style={{ boxShadow: "0 8px 0 #E8E4EC, 0 12px 32px rgba(0,0,0,0.18)" }}
+        className="relative w-full max-w-sm rounded-[28px] p-6 text-center"
+        style={{
+          background: "linear-gradient(180deg, #F8F6FC 0%, #FFFFFF 60%)",
+          boxShadow: "0 12px 32px rgba(102,51,153,0.18)",
+        }}
       >
-        <button
-          onClick={onClose}
-          className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 transition-colors hover:bg-gray-200"
-          style={{ boxShadow: "0 2px 0 #E5E7EB" }}
-          aria-label="close"
-        >
-          <X className="h-4 w-4 text-gray-600" />
-        </button>
-
-        {/* The clock leads, because it is the only thing on this card that is
-            good news: the wait is finite and already running. The old layout
-            put a static "Next free play: 21m" in grey under the title, where
-            it read as a closed door and made the two offers below it look
-            like a toll rather than a choice. */}
-        <img src={hourglassIcon} alt="" className="mx-auto h-11 w-11 object-contain" />
-
-        <PlayLimitCountdown
-          resetsAt={resetsAt}
-          fallback={timeUntilNextPlay}
-          label={t("playLimit.countdownLabel")}
-        />
-
-        <h2 className="mt-4 font-display text-lg font-bold text-[#1E1B2E]">
+        <h2 className="font-display text-lg font-bold text-[#1E1B2E]">
           {t("playLimit.limitReached")}
         </h2>
+        <p className="mt-1 text-sm text-slate-500">{t("playLimit.chooseHow")}</p>
 
         {/* Free first. Nothing else on this card can be had for nothing, and
             burying it under two paid options is what got it reported as
             missing. */}
         <ExtraPlaysOffer section="ad" onPurchased={handlePurchased} />
 
-        {/* Then the subscription, in its own panel rather than as two feature
-            rows and a loose price. The hook is what it removes — the wait and
-            the ads — not a list of what it adds. */}
+        {/* Then the subscription — a card of its own, the crown floating
+            above it the way the clapperboard spills over the ad card, and
+            the CTA in the mint-to-teal gradient the whole screen leads with. */}
         <div
-          className="mt-3 rounded-2xl px-4 py-4 text-left"
+          className="relative mt-8 rounded-tl-[24px] rounded-tr-[24px] rounded-bl-[24px] rounded-br-[54px] border-2 border-white px-4 pb-4 pt-9 text-left"
           style={{
-            background: "linear-gradient(180deg, #FBF5FF 0%, #F4ECFF 100%)",
-            border: "1.5px solid #E9B5EE",
+            background: "linear-gradient(135deg, #d1f1e2 0%, #f9ffe2 100%)",
+            boxShadow: "0 8px 0 0 #a9c9b4, 0 2px 8px 0 rgba(102,51,153,0.06)",
           }}
         >
-          <div className="flex items-center gap-3">
-            <img src={gamepadIcon} alt="" className="h-10 w-10 shrink-0 object-contain" />
-            <div className="min-w-0 flex-1">
-              <p className="font-display text-[15px] font-bold leading-tight text-[#1E1B2E]">
-                {t("playLimit.proHookTitle")}
-              </p>
-              <p className="mt-0.5 text-[12.5px] leading-tight text-slate-600">
-                {t("playLimit.proHookBody")}
-              </p>
-            </div>
-          </div>
+          <img
+            src={crownDecorIcon}
+            alt=""
+            className="pointer-events-none absolute -top-7 left-1/2 h-16 w-16 -translate-x-1/2 object-contain"
+          />
+          <p className="text-center font-display text-base font-extrabold uppercase text-[#161e46]">
+            {t("playLimit.proHookTitle")}
+          </p>
+          <p className="mt-1 text-center text-[13px] leading-tight text-[#1c2c59]">
+            {t("playLimit.proHookBody")}
+          </p>
 
           {/* Price and period above the button, so both are read before the
               tap rather than after it. Guideline 3.1.2, and paywallPrice.test
-              fails if either goes missing. */}
-          <p className="mt-3 text-center">
+              fails if either goes missing. This is the real, live billing —
+              not the design reference's introductory-offer fine print, which
+              this screen has no trial wired up to honour. */}
+          <p className="mt-4 text-center">
             <span className="font-display text-2xl font-black text-[#1E1B2E]">{proPrice.display}</span>
             <span className="ml-1 text-sm text-slate-500">{monthLabel()}</span>
           </p>
 
-        <motion.button
-          onClick={handleUpgradeToPro}
-          // Not live while the store has told us nothing — see
-          // useProPurchase.storeReady.
-          disabled={isProcessing || !storeReady}
-          whileTap={{ scale: 0.97, y: 2 }}
-          className="mt-3 flex h-14 w-full items-center justify-center gap-2 rounded-2xl font-display text-base font-bold text-white disabled:opacity-60"
-          style={{
-            background: "linear-gradient(90deg, #29B36B 0%, #7CC94A 60%, #B7E356 100%)",
-            border: "2px solid #34D399",
-            boxShadow: "0 4px 0 0 #1F8F55, inset 0 1.5px 0 0 rgba(255,255,255,0.35)",
-          }}
-        >
-          <img src={crownIcon} alt="" className="h-6 w-6 object-contain" />
-          {t("playLimit.becomePro")}
-        </motion.button>
+          <motion.button
+            onClick={handleUpgradeToPro}
+            // Not live while the store has told us nothing — see
+            // useProPurchase.storeReady.
+            disabled={isProcessing || !storeReady}
+            whileTap={{ scale: 0.97, y: 2 }}
+            className="mt-3 flex h-14 w-full items-center justify-center rounded-2xl font-display text-base font-bold text-white disabled:opacity-60"
+            style={{
+              background: "linear-gradient(180deg, #88e2ca 0%, #4accad 58%, #31c3a1 100%)",
+              border: "1.5px solid #50d8b8",
+              boxShadow: "0 4px 0 0 #1e8e74, inset 0 2px 0 0 rgba(255,255,255,0.45)",
+            }}
+          >
+            {t("playLimit.becomePro")}
+          </motion.button>
 
           {/* The button above starts an auto-renewing subscription, so the
               renewal terms belong beside it — guideline 3.1.2. This card is
@@ -252,12 +242,35 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
         </div>
 
         {/* No coins/gems packs here.
-            Three offers on one card is one too many: the clock says wait, the
-            ad row says watch, PRO says stop waiting. A fourth and fifth way to
-            spend, sitting under the subscription, competed with the thing the
-            card is actually for and pushed the terms halfway up a scroll.
-            Coins and gems still buy plays — from the shop, which is where
-            someone who wants to spend is already going. */}
+            Three offers on one card is one too many: the ad row says watch,
+            PRO says stop waiting, and a fourth and fifth way to spend would
+            compete with both. Coins and gems still buy plays — from the
+            shop, which is where someone who wants to spend is already
+            going. */}
+
+        {/* The close button, honestly labelled: not a corner X, a full card
+            that says what closing costs — waiting out the clock rather than
+            watching an ad or going PRO — the way the rest of this screen
+            says what it offers. Tapping it is the only thing it does; the
+            backdrop still closes the same way on a tap outside the card. */}
+        <button
+          type="button"
+          onClick={onClose}
+          className="relative mt-3 flex w-full items-center gap-3 rounded-tl-[24px] rounded-tr-[24px] rounded-bl-[24px] rounded-br-[54px] border-2 border-[#f6f6f6] bg-[#fedada] p-3 text-left"
+          style={{ boxShadow: "0 8px 0 0 #ffbdbd, 0 2px 8px 0 rgba(255,106,106,0.06)" }}
+        >
+          <img src={brokenHeartIcon} alt="" className="h-12 w-12 shrink-0 object-contain" />
+          <span className="min-w-0">
+            <span className="block font-display text-base font-extrabold uppercase text-[#6d0a08]">
+              {t("playLimit.giveUp")}
+            </span>
+            {giveUpClock && (
+              <span className="mt-0.5 block text-[13px] leading-tight text-[#591c1d]">
+                {t("playLimit.giveUpBody", { time: giveUpClock })}
+              </span>
+            )}
+          </span>
+        </button>
       </div>
     );
 
