@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBackgroundGeneration } from "@/contexts/BackgroundGenerationContext";
+import { useTriviaCreation } from "@/contexts/TriviaCreationContext";
 import { useQueryClient } from "@tanstack/react-query";
 import confetti from "canvas-confetti";
 import { removeDuplicatesFromBatch } from "@/utils/duplicateDetection";
@@ -30,6 +31,11 @@ interface GeneratedQuestion {
 interface CreateQuizModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /**
+   * The generation has been handed to the background and this screen is
+   * closing. The page that opened it says so on its Create button.
+   */
+  onTriviaHandedOff?: () => void;
   onQuizCreated?: () => void;
   onSwitchToCollection?: () => void;
   overrideUserId?: string;
@@ -140,10 +146,11 @@ const TRIVIA_TOPIC_POOL = [
   { labelKey: "extra.topicFashion", icon_slug: "dress", isTranslationKey: true },
 ];
 
-export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToCollection, overrideUserId }: CreateQuizModalProps) {
+export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onTriviaHandedOff, onSwitchToCollection, overrideUserId }: CreateQuizModalProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const { startCoverGeneration, isGenerating: isGeneratingCover } = useBackgroundGeneration();
+  const { startTriviaGeneration, busy: triviaBusy } = useTriviaCreation();
   const queryClient = useQueryClient();
   
   // Publish is gone, so the open/edit mode went with it: everything is
@@ -287,6 +294,30 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
   const handleClose = () => {
     resetForm();
     onOpenChange(false);
+  };
+
+  /**
+   * Hand the generation over and get out of the way.
+   *
+   * This used to be the wait: an AI call of unknown length, fronted by a
+   * progress bar counted on a timer, with the wizard held open throughout
+   * and everything discarded if it was closed (owner: "i wait too long and
+   * if i cancel it shows nothing, disappears"). The request lives in
+   * TriviaCreationContext now — it finishes, saves and refreshes the list
+   * whether or not this screen is still on screen — and all that is left
+   * here is to say so and close.
+   */
+  const handOffGeneration = () => {
+    if (!startTriviaGeneration({
+      subject,
+      questionCount,
+      answerFormat,
+      difficulty,
+      isPublic,
+      coverGradient: selectedGradient,
+    })) return;
+    onTriviaHandedOff?.();
+    handleClose();
   };
 
   const generateQuestions = async () => {
@@ -806,18 +837,9 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
                 <ChevronLeft className="w-4 h-4 mr-2" />
                 {t("extra.backBtn")}
               </Button>
-              <ChunkyButton onClick={generateQuestions} disabled={isGenerating} className="flex-1">
-                {isGenerating ? (
-                  <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    {Math.round(generationProgress)}%
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-5 h-5 mr-2" />
-                    {t("extra.cqmGenerateBtn")}
-                  </>
-                )}
+              <ChunkyButton onClick={handOffGeneration} disabled={triviaBusy} className="flex-1">
+                <Sparkles className="w-5 h-5 mr-2" />
+                {t("extra.cqmGenerateBtn")}
               </ChunkyButton>
             </div>
 
