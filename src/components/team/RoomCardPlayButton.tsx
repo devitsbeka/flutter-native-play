@@ -1,13 +1,20 @@
 /**
  * The way into a room, on a room card (Figma 1058:325).
  *
- * One button in two colours: mint on the public list, white on the private
- * one. It used to be four different pills saying three different words —
- * a flat white "Join" with a green dot on My Rooms, the same white "Join"
- * or "Enter" on the public list, and the chunky mint "Play" only when a
- * room happened to be full — so the one act a card exists for looked like a
- * different act on every card. It says "Play" now, with the play triangle,
- * and the only thing that changes between the two lists is the colour.
+ * One button in three colours: mint on the public list, white on the
+ * private one, purple on a MyTrivia Party card. It used to be four
+ * different pills saying three different words — a flat white "Join" with
+ * a green dot on My Rooms, the same white "Join" or "Enter" on the public
+ * list, and the chunky mint "Play" only when a room happened to be full —
+ * so the one act a card exists for looked like a different act on every
+ * card. It says "Play" now, with the play triangle, and the only thing
+ * that changes between cards is the colour.
+ *
+ * The party card's own Play used to be a purple OUTLINE — transparent face,
+ * purple border and text, borrowed from ChunkyButton's generic "outline"
+ * variant rather than drawn to this button's own spec. It reads as a lesser
+ * action beside every filled, white Play on the rooms around it (owner: put
+ * this one in the same button, filled purple with white icon and text).
  *
  * The states a card still distinguishes (a live round pulsing, a join
  * request waiting on its host) do it through motion and their own label,
@@ -18,11 +25,12 @@ import { forwardRef } from "react";
 import { motion, type HTMLMotionProps } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-export type RoomCardTone = "mint" | "white";
+export type RoomCardTone = "mint" | "white" | "purple";
 
 const TONES: Record<RoomCardTone, string> = {
   mint: "bg-[#81f0c3] border-[#2bc889] text-[#320c69]",
   white: "bg-white border-[#d5c9e8] text-[#320c69]",
+  purple: "bg-[#7126d5] border-[#4e1a94] text-white",
 };
 
 export const RoomCardPlayButton = forwardRef<

@@ -1,12 +1,8 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { MY_TRIVIAS_PATH } from "@/utils/triviaListRoute";
-import { useQuery } from "@tanstack/react-query";
 import { ChevronRight, Plus } from "lucide-react";
 
-import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { supabase } from "@/integrations/supabase/client";
 import { MyRoomsSection } from "@/components/team/MyRoomsSection";
 import { useDeveloperMode } from "@/contexts/DeveloperModeContext";
 import { POPULAR_IMAGE_CATEGORY_IDS } from "@/config/popularImageCategories";
@@ -22,20 +18,16 @@ import featuredKing from "@/assets/play-chooser/featured-king.webp";
 import featuredBattle from "@/assets/play-chooser/featured-battle.webp";
 import featuredWords from "@/assets/play-chooser/featured-words.webp";
 import featuredMyTrivias from "@/assets/play-chooser/featured-mytrivias.webp";
-import triviaBuzzer from "@/assets/trivia-buzzer.png";
-import iconCollections from "@/assets/icon-collections.png";
-import iconHouseParty from "@/assets/house-party.png";
 import { useCategories } from "@/hooks/useCategories";
 import { useVipStatus } from "@/hooks/useVipStatus";
 import { AirbnbCategoryCard } from "@/components/discover/AirbnbCategoryCard";
 import { ProBannerReel } from "@/components/shop/MobileProCarousel";
-import { StartHereCard } from "@/components/home/StartHereCard";
 
 /**
  * The feature rails revealed BELOW the home hero when the player scrolls
- * (owner's ask): a light, chunky feed — active rooms, play modes, the
- * player's trivias, Pro and the day's deals — each a horizontally-scrolling
- * strip under a title and a two-or-three-word line.
+ * (owner's ask): a light, chunky feed — active rooms, play modes,
+ * categories and the day's deals — each a horizontally-scrolling strip
+ * under a title and a two-or-three-word line.
  *
  * It renders only the rails: the hero above it (mascot scene, friends reel,
  * profile card) and the scroller both live in MobileHomeScroll. Reordering
@@ -78,33 +70,6 @@ function dealMixed<T extends { id: string; category_id?: string; type?: string }
   }
   return out;
 }
-
-/** What a card on the My Trivias rail stands for, and the face it wears. */
-type TriviaKind = "trivia" | "party" | "collection";
-
-interface Trivia {
-  id: string;
-  title: string;
-  cover_image: string | null;
-  cover_gradient: string | null;
-  kind: TriviaKind;
-  created_at: string | null;
-}
-
-// The three things a player makes, each with the icon the create chooser
-// offers it under (owner's ask: a card says what it is). A party is a post
-// whose subject is "personal"; a collection is its own table.
-const KIND_ICON: Record<TriviaKind, string> = {
-  trivia: triviaBuzzer,
-  party: iconHouseParty,
-  collection: iconCollections,
-};
-
-const KIND_ROUTE: Record<TriviaKind, (id: string) => string> = {
-  trivia: (id) => `/trivia/${id}`,
-  party: (id) => `/trivia/${id}`,
-  collection: (id) => `/collection/${id}`,
-};
 
 /** A rail's title, with an optional "see all". */
 function RailHeader({
@@ -170,7 +135,6 @@ function Rail({ children }: { children: React.ReactNode }) {
 export function MobileHomeFeed() {
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const { user } = useAuth();
   const { developerMode } = useDeveloperMode();
 
   // The play chooser's own cards — same art, same order, same gating (King
@@ -204,52 +168,6 @@ export function MobileHomeFeed() {
   // count, to know whether "see all" has anything to show. Reported up
   // rather than fetched twice.
   const [roomsEmpty, setRoomsEmpty] = useState(false);
-
-  // Everything the player has made, newest first: standalone trivias and
-  // parties from the posts, and collections from their own table. The rail
-  // used to carry the posts alone, so a collection never appeared here.
-  const { data: trivias = [] } = useQuery({
-    queryKey: ["home-feed-my-trivias", user?.id],
-    queryFn: async () => {
-      const [{ data: posts }, { data: collections }] = await Promise.all([
-        supabase
-          .from("user_quiz_posts")
-          .select("id, title, cover_image, cover_gradient, subject, created_at")
-          .eq("user_id", user!.id)
-          .is("collection_id", null)
-          .order("created_at", { ascending: false })
-          .limit(10),
-        supabase
-          .from("quiz_collections")
-          .select("id, title, cover_image, cover_gradient, created_at")
-          .eq("user_id", user!.id)
-          .order("created_at", { ascending: false })
-          .limit(10),
-      ]);
-      const made: Trivia[] = [
-        ...(posts || []).map((p) => ({
-          id: p.id,
-          title: p.title,
-          cover_image: p.cover_image,
-          cover_gradient: p.cover_gradient,
-          kind: (p.subject === "personal" ? "party" : "trivia") as TriviaKind,
-          created_at: p.created_at,
-        })),
-        ...(collections || []).map((c) => ({
-          id: c.id,
-          title: c.title,
-          cover_image: c.cover_image,
-          cover_gradient: c.cover_gradient,
-          kind: "collection" as TriviaKind,
-          created_at: c.created_at,
-        })),
-      ];
-      return made
-        .sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? ""))
-        .slice(0, 10);
-    },
-    enabled: !!user?.id,
-  });
 
   return (
     <div className="flex flex-col gap-6 pt-5">
@@ -350,94 +268,10 @@ export function MobileHomeFeed() {
         </section>
       )}
 
-      {/* ── My Trivias (newest first, from the left) ────────────────────
-          Shown even when there are none. Hiding the whole section meant a
-          player who had never made one had no heading for it and no way in
-          — the feature was invisible to exactly the people who had not found
-          it yet. */}
-      <section>
-          <RailHeader
-            title={t("extra.railMyTrivias")}
-            action={
-              trivias.length === 0
-                ? {
-                    label: t("extra.railFirstTrivia"),
-                    onPress: () => navigate("/team", { state: { openTrivia: true } }),
-                    kind: "add",
-                  }
-                : { label: t("extra.allTriviasBtn"), onPress: () => navigate(MY_TRIVIAS_PATH) }
-            }
-          />
-          {/* Outside the scroller: the panel is the full width of the page,
-              and a full-width child of a horizontal flex row would be sized
-              by its content instead. */}
-          {trivias.length === 0 && (
-            <div className="px-4 pb-3 pt-1">
-              <StartHereCard
-                variant="trivia"
-                title={t("extra.railFirstTrivia")}
-                onPress={() => navigate("/team", { state: { openTrivia: true } })}
-              />
-            </div>
-          )}
-          <Rail>
-            {trivias.map((tr) => (
-              <button
-                key={`${tr.kind}-${tr.id}`}
-                type="button"
-                onClick={() => navigate(KIND_ROUTE[tr.kind](tr.id))}
-                className="flex w-[132px] shrink-0 snap-start flex-col gap-2 text-left"
-              >
-                {/* The card says what it is. A bare gradient carries its
-                    kind's icon large in the middle; a cover keeps the
-                    picture and wears the icon as a small badge in the
-                    corner, so the icon is visible either way. */}
-                <div
-                  className="relative h-[132px] w-full overflow-hidden rounded-[18px] border-2 border-white bg-cover bg-center shadow-[0_4px_10px_rgba(88,50,160,0.16)]"
-                  style={{
-                    background: tr.cover_image
-                      ? `url(${tr.cover_image}) center/cover`
-                      : tr.cover_gradient || "linear-gradient(135deg,#EC4899 0%,#8B5CF6 100%)",
-                  }}
-                >
-                  {tr.cover_image ? (
-                    <span className="absolute bottom-1.5 right-1.5 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 shadow-[0_2px_6px_rgba(60,30,90,0.25)]">
-                      <img src={KIND_ICON[tr.kind]} alt="" className="h-5 w-5 object-contain" draggable={false} />
-                    </span>
-                  ) : (
-                    <span className="absolute inset-0 flex items-center justify-center">
-                      <img
-                        src={KIND_ICON[tr.kind]}
-                        alt=""
-                        className="h-[56%] w-[56%] object-contain drop-shadow-[0_4px_10px_rgba(60,30,90,0.35)]"
-                        draggable={false}
-                      />
-                    </span>
-                  )}
-                </div>
-                <p className="line-clamp-2 px-0.5 font-[Nunito] text-[13px] font-bold leading-[16px] text-[#402666]">
-                  {tr.title}
-                </p>
-              </button>
-            ))}
-          </Rail>
-      </section>
-
-      {/* ── Pro (solo + friends) ──────────────────────────────────────── */}
-      <section>
-        <RailHeader title={t("extra.railPro")} />
-        <ProBannerReel
-          slides="pro"
-          purchasedItems={EMPTY_PURCHASES}
-          isPurchasing={null}
-          onItemClick={() => navigate("/profile?tab=PRO")}
-        />
-      </section>
-
-      {/* ── Daily offers — the same full-card, arrowed reel as Pro ──────
-          One deal fully in view at a time with arrows and dots, exactly as
-          the Pro reel above. The old 300px strip cut the second card and
-          its Purchase button off at the screen edge. */}
+      {/* ── Daily offers — the full-card, arrowed reel ───────────────────
+          One deal fully in view at a time with arrows and dots. The old
+          300px strip cut the second card and its Purchase button off at
+          the screen edge. */}
       <section>
         <RailHeader title={t("extra.railOffers")} />
         <ProBannerReel

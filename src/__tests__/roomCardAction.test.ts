@@ -87,7 +87,9 @@ describe("the card that draws it", () => {
   });
 
   it("draws no button at all when there is no action", () => {
-    // Not a disabled button, not an empty pill: nothing.
+    // Not a disabled button, not an empty pill: nothing. The host's own
+    // invite "+" lives on the LEFT of this row regardless (see
+    // roomCardInvite.test.ts) — it does not move over to fill this space.
     expect(source).toMatch(/\{action && \(\s*\/\*[\s\S]*?<RoomCardPlayButton/);
   });
 

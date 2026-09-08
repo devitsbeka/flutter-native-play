@@ -1271,7 +1271,13 @@ export function RoomLobbyV2() {
           />
         ),
       }}
-      tv={isHost ? { label: t("lobby.uPlayOnTv"), onPress: () => setIsTVModeEnabled(true) } : undefined}
+      /* TV mode pairs the room with a single screen everyone in the ROOM
+         plays toward — the friends the host invited. A public room has no
+         such group: whoever the list matches it with, one TV cannot be
+         "the" screen for, and the row offered a device nobody in a public
+         room has a reason to reach for (owner: "tv mode is for only
+         private rooms"). */
+      tv={isHost && !isPublicRoom ? { label: t("lobby.uPlayOnTv"), onPress: () => setIsTVModeEnabled(true) } : undefined}
       labels={{
         rules: t("lobby.uGameRules"),
         players: t("lobby.uPlayersTab"),

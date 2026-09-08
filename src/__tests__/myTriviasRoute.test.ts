@@ -22,7 +22,6 @@ import { join } from "node:path";
 import { MY_TRIVIAS_PATH } from "@/utils/triviaListRoute";
 
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
-const feed = read("src/components/home/MobileHomeFeed.tsx");
 const lobby = read("src/pages/TriviaLobby.tsx");
 const page = read("src/pages/TeamV2.tsx");
 
@@ -40,25 +39,12 @@ describe("the destination", () => {
 });
 
 describe("everyone who links there uses it", () => {
-  it("the home rail's All Trivias", () => {
-    expect(feed).toMatch(
-      /\{ label: t\("extra\.allTriviasBtn"\), onPress: \(\) => navigate\(MY_TRIVIAS_PATH\) \}/,
-    );
-    // The bare page, which is where it used to go. Scoped to this label:
-    // the ROOMS rail's "view all" is a bare /team and is right to be, since
-    // the rooms list is what that page opens on.
-    expect(feed).not.toMatch(
-      /\{ label: t\("extra\.allTriviasBtn"\), onPress: \(\) => navigate\("\/team"\) \}/,
-    );
-    expect(feed).toMatch(/\{ label: t\("extra\.viewAllRooms"\), onPress: \(\) => navigate\("\/team"\) \}/);
-  });
-
   it("and the trivia page, turning a party away and after a delete", () => {
     expect((lobby.match(/navigate\(MY_TRIVIAS_PATH, \{ replace: true \}\)/g) ?? []).length).toBe(2);
   });
 
   it("and nobody spells it out by hand any more", () => {
-    for (const [name, src] of [["MobileHomeFeed", feed], ["TriviaLobby", lobby]] as const) {
+    for (const [name, src] of [["TriviaLobby", lobby]] as const) {
       expect(src, name).not.toContain("tab=private&filter=trivias");
       expect(src, name).toContain('from "@/utils/triviaListRoute"');
     }

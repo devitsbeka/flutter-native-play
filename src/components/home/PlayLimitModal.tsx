@@ -1,12 +1,10 @@
 import triviaBuzzer from "@/assets/icons/trivia-buzzer.png";
-import crownRender from "@/assets/playlimit/crown.png";
-import brokenHeartRender from "@/assets/playlimit/heart-broken.png";
-import { usePlayLimitClock } from "@/components/home/PlayLimitCountdown";
+import brokenHeartIcon from "@/assets/playlimit/broken-heart.png";
+import crownDecorIcon from "@/assets/playlimit/crown-decor.png";
+import { usePlayLimitClock } from "@/hooks/usePlayLimitClock";
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Trophy, Lock, ArrowLeft } from "lucide-react";
-import { PlayBackdrop } from "@/components/shared/PlayBackdrop";
-import { MyTriviaLiveLogo } from "@/components/shared/MyTriviaLiveLogo";
+import { Sparkles, Trophy, Lock } from "lucide-react";
 import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
 import { getGuestProgress } from "@/hooks/useGuestProgress";
 import { ExtraPlaysOffer } from "@/components/home/ExtraPlaysOffer";
@@ -56,8 +54,9 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
     // holds the button closed, so a price is never missing from a live button.
     const storePrice = useStorePrice();
     const proPrice = storePrice("pro", PRICES.pro_monthly.USD, "pro_monthly");
-    // The wait, ticking, so the give-up row can say it in a sentence.
-    const clock = usePlayLimitClock(resetsAt, timeUntilNextPlay);
+    // For the give-up card below — called unconditionally, ahead of the
+    // isGuest branch's early return, though only the non-guest card reads it.
+    const giveUpClock = usePlayLimitClock(resetsAt, timeUntilNextPlay);
     const guestProgress = getGuestProgress();
     
     // Calculate stats for guests
@@ -163,103 +162,113 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
       );
     }
 
-    // Registered non-PRO user — the wall (Figma 1102:4315).
-    //
-    // It used to be a small white card in the middle of a dimmed screen: a
-    // clock, an ad row, a subscription panel, terms. Everything it says is
-    // still here, but the mock gives each of the three answers its own slab
-    // and lets them fill the screen — a black one for the ad, which is free,
-    // a mint one for PRO, which removes the wall entirely, and a rose one for
-    // waiting it out, which is what closing this is.
+    // Registered non-PRO user — out-of-lives screen (Figma node 1102:4315)
     const card = (
-      <div className="mx-auto flex w-full max-w-[500px] flex-col px-[19px] pb-8">
-        {/* 1102:4322 — the whole reason the screen exists, said once. */}
-        <h2 className="mx-auto mt-[43px] max-w-[340px] text-center font-display text-[38px] font-bold uppercase leading-[43px] tracking-[-1.16px] text-[#402666]">
-          {t("playLimit.outOfLivesTitle")}
+      // A soft lavender wash rather than the flat white card this had
+      // before — the Figma reference has no enclosing card at all, its
+      // title sits straight on a blurred scene, and a dim modal backdrop
+      // behind bare title text would have made it unreadable. This is the
+      // closest a card shape gets to that without the scene art itself.
+      <div
+        className="relative w-full max-w-sm rounded-[28px] p-6 text-center"
+        style={{
+          background: "linear-gradient(180deg, #F8F6FC 0%, #FFFFFF 60%)",
+          boxShadow: "0 12px 32px rgba(102,51,153,0.18)",
+        }}
+      >
+        <h2 className="font-display text-lg font-bold text-[#1E1B2E]">
+          {t("playLimit.limitReached")}
         </h2>
-        {/* 1102:4320 — and what to do about it, which is the list below. */}
-        <p className="mt-[16px] text-center font-[Nunito] text-[22px] font-normal leading-[26px] tracking-[-0.16px] text-[#1c2c59]">
-          {t("playLimit.outOfLivesSubtitle")}
-        </p>
+        <p className="mt-1 text-sm text-slate-500">{t("playLimit.chooseHow")}</p>
 
-        {/* Free first. It is the only door on this screen that costs nothing,
-            and burying it under a subscription is what got it reported as
-            missing the last time this screen was rearranged. */}
-        {/* `empty:hidden` because the offer renders nothing where rewarded
-            ads do not exist — on the web, and wherever the legacy quota is
-            still the rule. Without it the row's 50px of air stayed behind as
-            a gap with nothing in it. */}
-        <div className="mt-[50px] empty:hidden">
-          <ExtraPlaysOffer section="wall" onPurchased={handlePurchased} />
-        </div>
+        {/* Free first. Nothing else on this card can be had for nothing, and
+            burying it under two paid options is what got it reported as
+            missing. */}
+        <ExtraPlaysOffer section="ad" onPurchased={handlePurchased} />
 
-        {/* 1102:4323 — PRO, in its own panel with the crown hung over its
-            top edge. The hook is what it removes: the wait, and the ads. */}
-        <div className="relative mt-[43px]">
+        {/* Then the subscription — a card of its own, the crown floating
+            above it the way the clapperboard spills over the ad card, and
+            the CTA in the mint-to-teal gradient the whole screen leads with. */}
+        <div
+          className="relative mt-8 rounded-tl-[24px] rounded-tr-[24px] rounded-bl-[24px] rounded-br-[54px] border-2 border-white px-4 pb-4 pt-9 text-left"
+          style={{
+            background: "linear-gradient(135deg, #d1f1e2 0%, #f9ffe2 100%)",
+            boxShadow: "0 8px 0 0 #a9c9b4, 0 2px 8px 0 rgba(102,51,153,0.06)",
+          }}
+        >
           <img
+            src={crownDecorIcon}
             alt=""
-            src={crownRender}
-            className="pointer-events-none absolute left-1/2 top-[-42px] z-10 h-[107px] w-[107px] -translate-x-1/2 object-contain"
+            className="pointer-events-none absolute -top-7 left-1/2 h-16 w-16 -translate-x-1/2 object-contain"
           />
-          <div className="relative rounded-bl-[24px] rounded-br-[54px] rounded-tl-[24px] rounded-tr-[24px] border-2 border-solid border-white bg-[linear-gradient(270deg,#d1f1e2_0%,#f9ffe2_100%)] px-[31px] pb-[33px] pt-[80px] text-center shadow-[0px_2px_8px_0px_rgba(102,51,153,0.06),0px_8px_0px_0px_#a9c9b4]">
-            <p className="font-display text-[20px] font-bold uppercase leading-[26px] text-[#161e46]">
-              {t("paywall.title")}
-            </p>
-            <p className="mt-[7px] font-display text-[16px] font-normal leading-[20.7px] tracking-[-0.16px] text-[#1c2c59]">
-              {t("playLimit.proHookBody")}
-            </p>
+          <p className="text-center font-display text-base font-extrabold uppercase text-[#161e46]">
+            {t("playLimit.proHookTitle")}
+          </p>
+          <p className="mt-1 text-center text-[13px] leading-tight text-[#1c2c59]">
+            {t("playLimit.proHookBody")}
+          </p>
 
-            <motion.button
-              type="button"
-              onClick={handleUpgradeToPro}
-              // Not live while the store has told us nothing — see
-              // useProPurchase.storeReady.
-              disabled={isProcessing || !storeReady}
-              whileTap={isProcessing || !storeReady ? undefined : { scale: 0.99 }}
-              className="relative mt-[26px] flex h-[63px] w-full items-center justify-center overflow-hidden rounded-[18.39px] border-[1.5px] border-solid border-[#50d8b8] bg-[linear-gradient(180deg,#88e2ca_0%,#4accad_58%,#31c3a1_100%)] shadow-[0px_4px_0px_0px_#1e8e74,0px_8px_16px_0px_rgba(102,51,153,0.3)] transition-[transform,box-shadow] duration-100 active:translate-y-[2px] active:shadow-[0px_2px_0px_0px_#1e8e74,0px_8px_16px_0px_rgba(102,51,153,0.3)] disabled:opacity-60"
-            >
-              <span aria-hidden className="pointer-events-none absolute inset-0 rounded-[inherit] shadow-[inset_0px_2px_0px_0px_rgba(255,255,255,0.45)]" />
-              <span className="font-display text-[18px] font-bold leading-[26px] text-white">
-                {t("playLimit.becomePro")}
-              </span>
-            </motion.button>
+          {/* Price and period above the button, so both are read before the
+              tap rather than after it. Guideline 3.1.2, and paywallPrice.test
+              fails if either goes missing. This is the real, live billing —
+              not the design reference's introductory-offer fine print, which
+              this screen has no trial wired up to honour. */}
+          <p className="mt-4 text-center">
+            <span className="font-display text-2xl font-black text-[#1E1B2E]">{proPrice.display}</span>
+            <span className="ml-1 text-sm text-slate-500">{monthLabel()}</span>
+          </p>
 
-            {/* 1102:4328: what it costs and how often, in the small line
-                under the button — guideline 3.1.2 wants both on the screen
-                the tap happens on, not in the sheet that follows it. */}
-            <p className="mx-auto mt-[22px] max-w-[344px] font-display text-[13px] font-normal leading-[20px] tracking-[-0.16px] text-[#1c2c59] opacity-80">
-              {proPrice.display}
-              {monthLabel()} · {t("playLimit.cancelAnytime")}
-            </p>
+          <motion.button
+            onClick={handleUpgradeToPro}
+            // Not live while the store has told us nothing — see
+            // useProPurchase.storeReady.
+            disabled={isProcessing || !storeReady}
+            whileTap={{ scale: 0.97, y: 2 }}
+            className="mt-3 flex h-14 w-full items-center justify-center rounded-2xl font-display text-base font-bold text-white disabled:opacity-60"
+            style={{
+              background: "linear-gradient(180deg, #88e2ca 0%, #4accad 58%, #31c3a1 100%)",
+              border: "1.5px solid #50d8b8",
+              boxShadow: "0 4px 0 0 #1e8e74, inset 0 2px 0 0 rgba(255,255,255,0.45)",
+            }}
+          >
+            {t("playLimit.becomePro")}
+          </motion.button>
 
-            {/* The button above starts an auto-renewing subscription, so the
-                renewal terms belong beside it — guideline 3.1.2. */}
-            <SubscriptionTerms className="mt-2 text-center" onNavigate={onClose} />
-          </div>
+          {/* The button above starts an auto-renewing subscription, so the
+              renewal terms belong beside it — guideline 3.1.2. This card is
+              one of the likeliest places a reviewer reaches the paywall from,
+              and it had no terms on it at all. */}
+          <SubscriptionTerms className="mt-3 text-center" onNavigate={onClose} />
         </div>
 
-        {/* 1102:4329 — waiting it out. It is a real answer and the mock gives
-            it a row of its own rather than an X in a corner, so the countdown
-            has somewhere to be said in words. */}
+        {/* No coins/gems packs here.
+            Three offers on one card is one too many: the ad row says watch,
+            PRO says stop waiting, and a fourth and fifth way to spend would
+            compete with both. Coins and gems still buy plays — from the
+            shop, which is where someone who wants to spend is already
+            going. */}
+
+        {/* The close button, honestly labelled: not a corner X, a full card
+            that says what closing costs — waiting out the clock rather than
+            watching an ad or going PRO — the way the rest of this screen
+            says what it offers. Tapping it is the only thing it does; the
+            backdrop still closes the same way on a tap outside the card. */}
         <button
           type="button"
           onClick={onClose}
-          className="relative mt-[36px] h-[88px] w-full rounded-bl-[24px] rounded-br-[54px] rounded-tl-[24px] rounded-tr-[24px] border-2 border-solid border-[#f6f6f6] bg-[#fedada] text-left shadow-[0px_2px_8px_0px_rgba(255,106,106,0.06),0px_8px_0px_0px_#ffbdbd]"
+          className="relative mt-3 flex w-full items-center gap-3 rounded-tl-[24px] rounded-tr-[24px] rounded-bl-[24px] rounded-br-[54px] border-2 border-[#f6f6f6] bg-[#fedada] p-3 text-left"
+          style={{ boxShadow: "0 8px 0 0 #ffbdbd, 0 2px 8px 0 rgba(255,106,106,0.06)" }}
         >
-          <span className="absolute left-[-1px] top-[-2px] block h-[87px] w-[calc(100%+2px)] rounded-bl-[24px] rounded-br-[54px] rounded-tl-[24px] rounded-tr-[24px] border-2 border-solid border-[#ffd9d9] bg-[#ffdede] shadow-[0px_2px_8px_0px_rgba(102,51,153,0.06),0px_8px_0px_0px_#e8b9b9]">
-            <img
-              alt=""
-              src={brokenHeartRender}
-              className="pointer-events-none absolute left-[11px] top-[8px] h-[68px] w-[68px] object-contain"
-            />
-            <span className="absolute left-[93px] right-[12px] top-[9px] block font-display text-[20px] font-bold uppercase leading-[26px] text-[#6d0a08]">
-              {t("playLimit.giveUpTitle")}
+          <img src={brokenHeartIcon} alt="" className="h-12 w-12 shrink-0 object-contain" />
+          <span className="min-w-0">
+            <span className="block font-display text-base font-extrabold uppercase text-[#6d0a08]">
+              {t("playLimit.giveUp")}
             </span>
-            <span className="absolute left-[93px] right-[12px] top-[45px] block font-display text-[16px] font-normal leading-[20.7px] tracking-[-0.16px] text-[#591c1d]">
-              {clock
-                ? t("playLimit.giveUpBody", { time: clock })
-                : t("playLimit.giveUpBodyUnknown")}
-            </span>
+            {giveUpClock && (
+              <span className="mt-0.5 block text-[13px] leading-tight text-[#591c1d]">
+                {t("playLimit.giveUpBody", { time: giveUpClock })}
+              </span>
+            )}
           </span>
         </button>
       </div>
@@ -278,47 +287,16 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 z-[200] flex flex-col overflow-hidden bg-[#f6f1ff] pb-[var(--safe-bottom)] pt-[var(--safe-top)]"
+              className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 p-4 pt-[calc(1rem_+_var(--safe-top))] pb-[calc(1rem_+_var(--safe-bottom))] backdrop-blur-[2px]"
+              onClick={onClose}
             >
-              {/* 1102:4319: the same backdrop the chooser sits on, blurred,
-                  so the wall reads as the screen behind it rather than as a
-                  dialog dropped over a dimmed one. */}
-              <PlayBackdrop veil={0.41} blur />
-
-              {/* The app's own header (1102:4937), so the wall reads as a
-                  screen you are standing on rather than a dialog you are
-                  trapped in: the arrow is the way out, and the wordmark says
-                  you have not left. */}
-              <header className="relative z-10 shrink-0 px-4 py-3">
-                <div className="mx-auto flex h-[45px] w-full max-w-[500px] items-center justify-between gap-3">
-                  <motion.button
-                    type="button"
-                    whileTap={{ scale: 0.9 }}
-                    onClick={onClose}
-                    aria-label={t("common.back")}
-                    className="rounded-full p-2 transition-colors hover:bg-white/30"
-                  >
-                    <ArrowLeft className="h-6 w-6 text-[#4b5563]" />
-                  </motion.button>
-                  <div className="flex min-w-0 flex-1 items-center justify-center">
-                    <MyTriviaLiveLogo responsive />
-                  </div>
-                  {/* The width of the pair the other headers carry, so the
-                      wordmark lands in the middle of the screen rather than
-                      pushed right by an arrow with nothing opposite it. */}
-                  <span aria-hidden className="h-10 w-10 shrink-0" />
-                </div>
-              </header>
-
               <motion.div
-                initial={{ opacity: 0, y: 18 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 18 }}
+                initial={{ opacity: 0, y: 24, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 24, scale: 0.96 }}
                 transition={{ type: "spring", stiffness: 380, damping: 32 }}
-                // Its own scroller: the document does not scroll on the
-                // device (see nativeShell.ts), so a screen that outgrows the
-                // phone has to scroll itself or it is frozen.
-                className="relative z-10 min-h-0 flex-1 overflow-y-auto overflow-x-hidden"
+                onClick={(e) => e.stopPropagation()}
+                className="w-full max-w-sm"
               >
                 {card}
               </motion.div>

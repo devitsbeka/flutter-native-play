@@ -1623,12 +1623,9 @@ export const en: KaTranslations = {
   // ==========================================
   playLimit: {
     countdownLabel: "until 5 more free plays",
-    outOfLivesTitle: "You are out of lives",
-    outOfLivesSubtitle: "Pick a way to keep playing",
-    giveUpTitle: "Give up",
-    giveUpBody: "You can play again in {time}",
-    giveUpBodyUnknown: "Come back a little later to play again",
-    cancelAnytime: "cancel anytime",
+    chooseHow: "Choose how to continue",
+    giveUp: "Give up",
+    giveUpBody: "You'll be back in the game in {time}",
     adRowTitle: "Watch a short ad",
     adRowBody: "Get {count} play back, right now",
     adRowAction: "Watch",
