@@ -95,3 +95,26 @@ describe("the PRO card's height", () => {
     expect(CARD - (BUTTON_TOP + 59)).toBe(527 - (447 + 59));
   });
 });
+
+/**
+ * The gap above the PRO banner was three top-paddings stacked into one.
+ *
+ * The page wrapper, ShopStandardLayout's own root, and the reel's own
+ * container each opened with their own pt-4 — 48px nobody meant to draw
+ * together, parking the first banner nearly a screen's-height below the
+ * balance row (owner: "reduce space between sticky header and banners").
+ * Two of the three are trimmed; the reel keeps its own, since that padding
+ * is shared with the home rail and the profile's PRO tab, both of which
+ * open under a heading that already earns the space.
+ */
+describe("the gap above the shop's first banner", () => {
+  it("drops the page wrapper's own top padding", () => {
+    const powerUps = read("src/pages/PowerUps.tsx");
+    expect(powerUps).toMatch(/<div>\s*\n\s*<ShopStandardLayout/);
+    expect(powerUps).not.toMatch(/<div className="pt-4">\s*\n\s*<ShopStandardLayout/);
+  });
+
+  it("and trims ShopStandardLayout's own", () => {
+    expect(shop).toMatch(/className="flex-1 pt-1 pb-8"/);
+  });
+});
