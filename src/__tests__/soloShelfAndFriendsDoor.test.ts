@@ -55,6 +55,26 @@ describe("which half each mode sits on", () => {
   });
 });
 
+describe("every card says how many play", () => {
+  // My Trivias was the one card with no pill: it is on both halves, and a
+  // blank corner where every neighbour answers "how many?" reads as an
+  // answer of none (owner's ask). One to ten, the same as a room.
+  it.each(["quick", "guess", "words", "mytrivias", "library"])(
+    "%s carries a players count on the chooser",
+    (mode) => {
+      const card = create.match(new RegExp(`\\{ key: "${mode}",[^}]*\\}`))?.[0] ?? "";
+      expect(card, mode).toMatch(/players: "[\d-]+"/);
+    },
+  );
+
+  it("and the home rail agrees with it about My Trivias", () => {
+    // The rail promises "same art, same order, same gating" — a count on
+    // one surface and not the other is the two drifting apart.
+    const feed = read("src/components/home/MobileHomeFeed.tsx");
+    expect(feed).toMatch(/\{ key: "mytrivias", art: featuredMyTrivias, players: "1-10",/);
+  });
+});
+
 describe("the Play With Friends door", () => {
   it("is a Pro gate, not a plain toggle", () => {
     expect(create).toMatch(/requirePro\("rooms", \(\) => \{ setFriendsMode\(true\); setGameChoice\(null\); \}\)/);

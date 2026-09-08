@@ -188,7 +188,7 @@ export function MobileHomeFeed() {
         ]
       : []),
     { key: "words", art: featuredWords, players: "1-2", title: t("gameTypes.wordsTitle") },
-    { key: "mytrivias", art: featuredMyTrivias, players: null, title: t("extra.myTriviaOption") },
+    { key: "mytrivias", art: featuredMyTrivias, players: "1-10", title: t("extra.myTriviaOption") },
   ];
   const { categories } = useCategories();
   const { isVip } = useVipStatus();

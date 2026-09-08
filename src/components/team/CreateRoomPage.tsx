@@ -1988,7 +1988,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                     ]
                   : []),
                 { key: "words", crew: "solo", art: featuredWords, artTop: 0.04, descW: 329, players: "1-2", title: t("gameTypes.wordsTitle"), desc: t("extra.modeWordsDesc") },
-                { key: "mytrivias", crew: "both", art: featuredMyTrivias, artTop: -0.02, descW: 273, players: null, title: t("extra.myTriviaOption"), desc: t("extra.myTriviaDesc") },
+                { key: "mytrivias", crew: "both", art: featuredMyTrivias, artTop: -0.02, descW: 273, players: "1-10", title: t("extra.myTriviaOption"), desc: t("extra.myTriviaDesc") },
               ] as { key: GameChoice; crew: "solo" | "friends" | "both"; art: string; artTop: number; descW: number; players: string | null; title: string; desc: string }[]
             ).filter((card) => card.crew === "both" || card.crew === (friendsMode ? "friends" : "solo"))
              .map((card, i) => {
