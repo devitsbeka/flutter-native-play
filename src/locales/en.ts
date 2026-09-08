@@ -3649,6 +3649,7 @@ export const en: KaTranslations = {
     rlChooseCategory: "Choose Category",
     rlStartGame: "Start Game",
     rlNeedsSecondPlayer: "Invite a friend — a game needs two players",
+    rlWaitingOnInvites: "Invited — waiting for them to join",
     // Room menu & dialogs
     rlHowItWorks: "How it works",
     rlRenameRoom: "Rename room",

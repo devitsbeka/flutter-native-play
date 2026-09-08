@@ -3654,6 +3654,7 @@ export const ka = {
     rlChooseCategory: "აირჩიე კატეგორია",
     rlStartGame: "თამაშის დაწყება",
     rlNeedsSecondPlayer: "მოიწვიე მეგობარი — თამაში ორი მოთამაშიდან იწყება",
+    rlWaitingOnInvites: "მოწვეულია — ველოდებით შემოერთებას",
     // Room menu & dialogs
     rlHowItWorks: "როგორ მუშაობს",
     rlRenameRoom: "ოთახის სახელის შეცვლა",

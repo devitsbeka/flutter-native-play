@@ -62,7 +62,9 @@ describe("a disabled Start says why, where it can be seen", () => {
   });
 
   it("and it carries its gap on the side it now sits", () => {
-    expect(lobby).toMatch(/start\.disabled\s*\n\s*\? "mb-2"/);
+    // 12px, not 8: the footer floats over the list now, and the caption is
+    // the line that has to separate the button from what is behind it.
+    expect(lobby).toMatch(/start\.disabled\s*\n\s*\? "mb-3 px-2"/);
   });
 });
 

@@ -1201,7 +1201,14 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         // category and landing in the lobby: not a dropped frame, the
         // better part of a second of the wrong screen. `entering` lets the
         // destination hold its loader from the first paint.
-        handoff(`/team?join=${roomCode}`, { state: { entering: true } });
+        // ?tvMode=true: a room whose content is one of YOUR trivias opens
+        // the "Play on TV" sheet on arrival, the same as the Play-on-TV
+        // buttons on the My Trivias tab already do. This path — the play
+        // chooser's My Trivias tile — was the only way to build such a room
+        // that never offered the TV, so whether you were asked depended on
+        // which door you came through (owner's ask). The sheet is a sheet:
+        // tap outside and you are in the lobby.
+        handoff(`/team?join=${roomCode}&tvMode=true`, { state: { entering: true } });
         onClose();
       } else if (selectionMode === "create" && customTriviaQuestions) {
         // Create room with custom trivia questions
@@ -1248,7 +1255,9 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
           room = createdRoom;
           await persistQueuedRounds(createdRoom.id);
           
-          handoff(`/team?join=${roomCode}`, { state: { entering: true } });
+          // Same offer as the my-trivias branch above: a trivia you just
+          // wrote is TV material too.
+          handoff(`/team?join=${roomCode}&tvMode=true`, { state: { entering: true } });
           onClose();
         } else {
           // Fallback to old behavior if no persisted trivia ID

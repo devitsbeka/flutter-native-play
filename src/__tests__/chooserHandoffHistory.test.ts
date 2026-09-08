@@ -50,7 +50,10 @@ describe("the chooser hands off without staying behind", () => {
     expect(page).toMatch(/handoff\("\/game"\)/);
     expect(page).toMatch(/handoff\(gameChoice === "king" \? "\/king" : "\/team-battle"/);
     expect(page).toMatch(/handoff\("\/words", \{ state: \{ invite \} \}\)/);
-    expect(page.match(/handoff\(`\/team\?join=\$\{roomCode\}`/g) ?? []).toHaveLength(2);
+    // Both personal-trivia rooms now hand off with `&tvMode=true` — the
+    // lobby opens the Play-on-TV sheet for a room made of your own trivia.
+    // What this test is about is the handoff, not the query string.
+    expect(page.match(/handoff\(`\/team\?join=\$\{roomCode\}&tvMode=true`/g) ?? []).toHaveLength(2);
     expect(page).toMatch(/handoff\(`\/team\?join=\$\{walkInCode\}`/);
 
     // Nothing hands off with a raw push any more. The header's back arrow

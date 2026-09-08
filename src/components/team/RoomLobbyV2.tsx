@@ -860,6 +860,11 @@ export function RoomLobbyV2() {
    * for a second person to accept.
    */
   const seatedPlayers = participants.filter((p) => (p.status as string) !== "invited").length;
+  // Somebody the host already asked, who has not answered yet. Telling that
+  // host to "invite a friend" is telling them to do the thing they just did
+  // (owner's ask) — the room is not short of an invitation, it is short of
+  // an acceptance, and that is a different sentence.
+  const invitedPlayers = participants.filter((p) => (p.status as string) === "invited").length;
   // A room is two people. A lone host used to be allowed to start — a solo
   // round IS a real game — but this room is not where you play one: there is
   // a whole library to play by yourself, and a quick VS if you want an
@@ -1210,7 +1215,12 @@ export function RoomLobbyV2() {
                 || (!needsCategorySelection && !enoughPlayers),
               loading: isStarting,
               icon: needsCategorySelection ? <Plus className="h-5 w-5" /> : undefined,
-              caption: !needsCategorySelection && !enoughPlayers && !isStarting ? t("extra.rlNeedsSecondPlayer") : null,
+              caption:
+                !needsCategorySelection && !enoughPlayers && !isStarting
+                  ? invitedPlayers > 0
+                    ? t("extra.rlWaitingOnInvites")
+                    : t("extra.rlNeedsSecondPlayer")
+                  : null,
             }
           : {
               label: pingCooldown ? t("extra.pingHostSent") : t("extra.pingHostBtn"),
