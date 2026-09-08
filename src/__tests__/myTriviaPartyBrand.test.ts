@@ -149,9 +149,52 @@ describe("back lands on the list you came from", () => {
     expect(page).toMatch(/if \(fromUrl !== privateFilter\) setPrivateFilterState\(fromUrl\);/);
   });
 
-  it("and tapping a party opens it, rather than opening the editor", () => {
-    // The pencil is still what edits; the card body is how you go and look.
-    expect(tab).toMatch(/onClick=\{\(\) => navigate\(`\/trivia\/\$\{post\.id\}`\)\}/);
-    expect(tab).toMatch(/onEdit\(post\); \}\}/);
+  it("and a party opens its editor, not a leaderboard it can never fill", () => {
+    // This briefly routed to /trivia/:id, which is a leaderboard page —
+    // wrong for a party, which is private and played only by the friends
+    // its host invites, so the board reads "0 players" forever.
+    expect(tab).toMatch(/onClick=\{\(\) => onEdit\(post\)\}/);
+    expect(tab).not.toMatch(/onClick=\{\(\) => navigate\(`\/trivia\/\$\{post\.id\}`\)\}/);
+  });
+});
+
+/**
+ * A party has no lobby, and a delete has to actually delete.
+ *
+ * /trivia/:id is a leaderboard — who played a trivia, ranked, under the
+ * social counters. A MyTrivia Party is private and played by invitation, so
+ * that page can only ever say "0 players, no one has played yet" (owner:
+ * "we don't have leaderboards... remove this screen").
+ *
+ * And the delete on it did nothing visible. The DELETE itself was fine —
+ * verified against the real database, HTTP 204 and the row gone — but the
+ * page that opened the editor IS the trivia's own page, so closing the
+ * modal left the player looking at a row that no longer existed, unchanged.
+ * Nothing said it had worked, so nothing had, as far as anyone could tell.
+ */
+describe("a party has no lobby, and delete deletes", () => {
+  const lobby = read("src/pages/TriviaLobby.tsx");
+  const editor = read("src/components/social/EditQuizModal.tsx");
+  const roundEditor = read("src/components/social/EditRoundModal.tsx");
+
+  it("the page turns a party away, for the links already out there", () => {
+    expect(lobby).toMatch(/const isParty = \(trivia\?\.subject \?\? ""\) === "personal";/);
+    expect(lobby).toMatch(/if \(!isLoading && trivia && isParty\) \{/);
+    expect(lobby).toMatch(/navigate\("\/team\?tab=private&filter=trivias", \{ replace: true \}\)/);
+  });
+
+  it("a delete that removed nothing is not reported as success", () => {
+    // A DELETE matching no rows answers 204 with no error. Without asking
+    // for the rows back, "deleted" was said either way.
+    for (const [name, src] of [["EditQuizModal", editor], ["EditRoundModal", roundEditor]] as const) {
+      expect(src, name).toMatch(/\.select\("id"\);/);
+      expect(src, name).toMatch(/if \(!removed\?\.length\) throw new Error\("delete matched no rows"\);/);
+    }
+  });
+
+  it("and deleting the page you are standing on navigates off it", () => {
+    expect(editor).toMatch(/onDeleted\?: \(\) => void;/);
+    expect(editor).toMatch(/onDeleted\?\.\(\);/);
+    expect(lobby).toMatch(/onDeleted=\{\(\) => navigate\("\/team\?tab=private&filter=trivias", \{ replace: true \}\)\}/);
   });
 });

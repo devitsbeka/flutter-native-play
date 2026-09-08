@@ -656,11 +656,13 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
       initial={isNew ? { opacity: 0, y: 20, rotate: tiltDirection } : { opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0, rotate: 0 }}
       transition={isNew ? { type: "spring", stiffness: 300, damping: 20, delay: index * 0.05 } : { delay: index * 0.05 }}
-      // Tapping the card opens the party, the way tapping a trivia card
-      // opens the trivia (owner: "clicking on it we go on that trivia").
-      // Editing is what the pencil in the corner is for; the whole card
-      // meaning "edit" is why there was no way to simply go and look at one.
-      onClick={() => navigate(`/trivia/${post.id}`)}
+      // A party has no page to go to. /trivia/:id is a leaderboard — who
+      // played it, ranked — and a party is private, played by the friends
+      // its host invites and nobody else, so that screen is permanently
+      // "0 players, no one has played yet" (owner: "we don't have
+      // leaderboards, my trivia party is not public... remove this
+      // screen"). Playing is the Play button; this opens the editor.
+      onClick={() => onEdit(post)}
       className="relative bg-card rounded-2xl overflow-hidden shadow-lg cursor-pointer hover:shadow-xl transition-shadow"
       style={{ border: "2px solid rgba(236, 72, 153, 0.5)" }}
     >
