@@ -7,7 +7,6 @@ import { useNavigate } from "react-router-dom";
 import { Plus, Play, Loader2, Globe, Lock, ChevronDown, ChevronUp, Layers, Pencil, FileEdit, Trash2, Check } from "lucide-react";
 import triviaBuzzerIcon from "@/assets/trivia-buzzer.png";
 import iconGroupOfPeople from "@/assets/group-of-people.png";
-import { MyTriviaPartyLogo } from "@/components/brand/MyTriviaPartyLogo";
 import { triviaDisplayTitle } from "@/utils/triviaTitle";
 import { ownerHasSeenTrivia } from "@/utils/triviaFairPlay";
 import purpleHeart3d from "@/assets/icons/purple-heart-3d.png";
@@ -687,11 +686,13 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
             <div className="absolute inset-0 bg-black/20" />
           </>
         )}
-        {/* The party's own wordmark, where its name used to be spelled out
-            in text. Below, the strip names THIS party — the trivia the
-            player wrote — so the two rows stop saying the same thing. */}
-        <div className="absolute inset-0 flex items-center justify-center translate-y-3">
-          <MyTriviaPartyLogo height={40} className="drop-shadow-lg" />
+        {/* What the player called this party, or Untitled. The brand is
+            named once, beside the icon below; saying it up here as well
+            left the card with nothing on it naming THIS party. */}
+        <div className="absolute inset-0 flex items-center justify-center translate-y-5">
+          <h4 className="text-xl font-bold text-white text-center px-4 drop-shadow-lg">
+            {triviaDisplayTitle(post.title, t)}
+          </h4>
         </div>
         <div className="absolute top-3 right-3 bg-black/40 backdrop-blur-sm rounded-full h-8 px-3 text-xs text-white flex items-center gap-1.5">
           {PUBLIC_SHARING_ENABLED && post.is_public !== false && (
@@ -710,7 +711,7 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-foreground truncate">
-              {triviaDisplayTitle(post.title, t)}
+              {t("extra.myTriviaPartyLabel")}
             </p>
             <p className="text-xs text-muted-foreground">
               {formatLocalTimeAgo(new Date(post.created_at), t)}
