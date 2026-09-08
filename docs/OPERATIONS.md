@@ -4,7 +4,8 @@
 finish.** It is the only thing carrying state between runs; a run that leaves no
 trace here did not happen.
 
-Last updated: 2026-09-06 · seeded from repository state at `main` @ `21717c9`.
+Last updated: 2026-09-08 · seeded from repository state at `main` @ `21717c9`,
+run log below reflects work through `68443a8`.
 
 ---
 
@@ -81,6 +82,35 @@ is proposed, not executed.
 
 Seeded from the repo. Ordered by what unblocks the most.
 
+### Urgent — security, live today
+
+Full detail, evidence, and ready-to-paste fix SQL for both:
+`docs/qa-app-store-2026-09/00-EXECUTIVE-SUMMARY.md` (priority list) and its
+linked files. Confirmed live against production on 2026-09-08 by direct
+network testing (not hypothetical, not a browser test — see that file's
+methodology note).
+
+- [ ] **Any room's data is world-readable and griefable with no account at
+      all.** `game_rooms`/`room_participants` have carried
+      `FOR SELECT USING (true)` since the first migration
+      (`20251226102356_...sql`), never narrowed even after
+      `20260922100000_public_rooms.sql` built a "the room id is the secret"
+      model on top. Confirmed: reading real rooms/rosters with zero auth,
+      self-seating into a private room, rewriting its status, forging a live
+      Words game's state. Pure RLS fix, no rebuild needed —
+      `docs/qa-app-store-2026-09/01-CRITICAL-room-data-exposure.md`.
+- [ ] **`submit_tv_answer` pays any amount to any player, on request.** No
+      caller-identity check, no server-side recompute of points. Confirmed:
+      credited one player 999,000,000 points; credited a *different real
+      player* 5,000,000 points from an attacker's own session.
+      `docs/qa-app-store-2026-09/06-tv-mode-findings.md`, Finding 2.
+- [ ] **A guest cannot actually host a TV game — it fails silently and the
+      session sticks forever.** Undercuts the "reviewer can test multiplayer
+      without an account" submission note two sections down. Route the host
+      claim through the already-existing `tv_claim_session` RPC instead of an
+      unchecked direct table update.
+      `docs/qa-app-store-2026-09/06-tv-mode-findings.md`, Finding 1.
+
 ### Urgent — money, live today
 
 - [ ] **The deployed backend does not honour what the live web paywall
@@ -92,6 +122,13 @@ Seeded from the repo. Ordered by what unblocks the most.
       charged immediately against a free promise; and an annual purchase maps to
       tier `pro` (1 friend seat) when the paywall sells it as 5.
       **Action: ask Lovable to deploy those four, and nothing else.**
+      Re-checked 2026-09-08: still unresolved, and still unverifiable from
+      code alone whether the live deployment actually lags `main` — see
+      `docs/qa-app-store-2026-09/04-app-store-readiness-reaudit.md` §F-2.
+      A read-only probe of `create-pro-checkout` this pass created one real,
+      unused Stripe Checkout session as a side effect (no charge, expires on
+      its own) — avoid repeating that probe; the answer needs Lovable/Stripe
+      access, not more code-reading.
 
 ### Phase 0 blockers — submission
 
@@ -108,7 +145,10 @@ Seeded from the repo. Ordered by what unblocks the most.
 - [ ] All products **attached to this version**, not merely created.
 - [ ] Review notes: guest mode means no demo account is needed — say so
       outright; how to reach the paywall; how to reach Restore Purchases; how a
-      single reviewer can test multiplayer.
+      single reviewer can test multiplayer. **Blocked as of 2026-09-08: TV
+      mode's guest-host path is actually broken right now** (see the security
+      section above) — fix that before writing this note, or a reviewer
+      following it hits a stuck session.
 - [ ] On-device sandbox pass: purchase, restore after reinstall, push on a
       distribution build, universal link, camera, deletion, airplane mode.
 - [ ] TestFlight upload and internal test.
@@ -150,8 +190,12 @@ Seeded from the repo. Ordered by what unblocks the most.
 - [ ] The gem ladder is non-monotonic — the 1,500 pack is worse value per dollar
       than the 500 ($11.97 or below fixes it). Prices stay editable; ids do not.
 - [ ] **Server-side score verification** — the one acknowledged economy gap.
-      Bounded and ledgered, not verified. A project, not a patch; worth closing
-      before the economy carries real money at scale.
+      **Update 2026-09-08: worse than "not verified" for TV mode specifically
+      — `submit_tv_answer` is not bounded at all** (see the security section
+      above; classic rooms' `increment_participant_score` is at least
+      per-call-clamped, TV mode's points are accepted verbatim from the
+      client). A project, not a patch; worth closing before the economy
+      carries real money at scale, and TV mode should move first.
 
 ### Missing knowledge — needed before Phase 3
 
@@ -169,6 +213,11 @@ does not reopen it.
 - **2026-09-06** — Goal set at $100k MRR. Accepted that this makes international
   expansion the plan rather than a later phase, and that Georgia's role is to
   prove the funnel, not to carry the revenue.
+- **2026-09-08** — Commissioned a QA/stress-test pass ahead of resubmission.
+  Found the economy's "bounded, not verified" score-verification gap is
+  actually unbounded for TV mode, and found room privacy has been broken
+  since the very first migration. Both added to §5 as urgent-security items,
+  ahead of the pre-existing urgent-money item.
 
 ## 7. Run log
 
@@ -177,3 +226,22 @@ the next one. Keep it scannable — this is the file a week of work is read from
 
 - **2026-09-06** — Cockpit created and seeded from repository state. No work
   executed. Next run: start at §5, urgent block.
+- **2026-09-08** — Full QA/stress-test pass, findings only (no fixes applied
+  yet, by request — fixes wait for an explicit go-ahead). Ran the entire
+  baseline suite (typecheck/2346 unit tests/full SQL entitlement suite via a
+  disposable local Postgres/build/e2e — all green, see
+  `docs/qa-app-store-2026-09/05-baseline-test-suite.md`). Re-verified every
+  item in `IOS_APP_REVIEW_AUDIT.md` and this file's own §5 blockers against
+  current code (`04-app-store-readiness-reaudit.md`) — the ATT fix and the
+  video byte-range fix both hold up under direct re-testing, one PostHog item
+  both docs list as open is actually already fixed. Stress-tested classic
+  rooms, TV mode, and Words by driving their real Supabase contracts directly
+  over the network with concurrent simulated players (this sandbox's headless
+  browser can't reach the live project — see the methodology note in
+  `00-EXECUTIVE-SUMMARY.md` — so this was done one layer down, not through a
+  UI). That's where the two new urgent-security items in §5 came from, plus
+  five more scoring/capacity/race-condition bugs across the three modes,
+  written up with fixes in `docs/qa-app-store-2026-09/`. Left for the next
+  run: apply the fixes, starting with the two urgent-security items — nothing
+  in this pass touched app code, only this file, `.gitignore`, and the new
+  `docs/qa-app-store-2026-09/` reports.
