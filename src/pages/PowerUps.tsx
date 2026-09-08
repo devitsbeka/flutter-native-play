@@ -321,8 +321,14 @@ export default function PowerUps() {
                 background video, decoding continuously behind the identical
                 one in front of it. */}
 
-            {/* Standard Shop Layout - Hero carousel + product grids */}
-            <div className="pt-4">
+            {/* Standard Shop Layout - Hero carousel + product grids.
+                No top padding of its own: ShopStandardLayout already opens
+                with some, and the reel under that opens with more of its
+                own again — three paddings stacked into one gap nobody meant
+                to draw, parking the PRO banner nearly a screen's-height
+                below the balance row (owner: "reduce space between sticky
+                header and banners"). */}
+            <div>
               <ShopStandardLayout
                 sections={SHOP_SECTIONS}
                 gems={gems}

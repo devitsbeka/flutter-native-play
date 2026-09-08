@@ -173,7 +173,7 @@ export function ShopStandardLayout({
   );
 
   return (
-    <div className="flex-1 pt-4 pb-8">
+    <div className="flex-1 pt-1 pb-8">
       {/* The page opens on the two PRO tiers and nothing else (owner's ask).
           The reel used to carry the timed packages here too, so the first
           thing on the shop was a countdown on a coin bundle and the
