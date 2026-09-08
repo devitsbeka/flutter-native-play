@@ -7,6 +7,7 @@ import { SoundProvider } from "@/contexts/SoundContext";
 import { NotificationModalProvider } from "@/contexts/NotificationModalContext";
 import { NotificationsProvider } from "@/contexts/NotificationsContext";
 import { BackgroundGenerationProvider } from "@/contexts/BackgroundGenerationContext";
+import { TriviaCreationProvider } from "@/contexts/TriviaCreationContext";
 import { PlayerProfileProvider } from "@/contexts/PlayerProfileContext";
 import { AvatarModalProvider } from "@/contexts/AvatarModalContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
@@ -246,6 +247,7 @@ const App = () => (
           <OnboardingProvider>
             <NotificationModalProvider>
             <BackgroundGenerationProvider>
+            <TriviaCreationProvider>
               <PlayerProfileProvider>
                 <AvatarModalProvider>
                   <SplashScreen>
@@ -475,6 +477,7 @@ const App = () => (
                   </SplashScreen>
                 </AvatarModalProvider>
               </PlayerProfileProvider>
+            </TriviaCreationProvider>
             </BackgroundGenerationProvider>
             </NotificationModalProvider>
           </OnboardingProvider>
