@@ -184,7 +184,7 @@ describe("a party has no lobby, and delete deletes", () => {
   it("the page turns a party away, for the links already out there", () => {
     expect(lobby).toMatch(/const isParty = \(trivia\?\.subject \?\? ""\) === "personal";/);
     expect(lobby).toMatch(/if \(!isLoading && trivia && isParty\) \{/);
-    expect(lobby).toMatch(/navigate\("\/team\?tab=private&filter=trivias", \{ replace: true \}\)/);
+    expect(lobby).toMatch(/navigate\(MY_TRIVIAS_PATH, \{ replace: true \}\)/);
   });
 
   it("a delete that removed nothing is not reported as success", () => {
@@ -199,6 +199,6 @@ describe("a party has no lobby, and delete deletes", () => {
   it("and deleting the page you are standing on navigates off it", () => {
     expect(editor).toMatch(/onDeleted\?: \(\) => void;/);
     expect(editor).toMatch(/onDeleted\?\.\(\);/);
-    expect(lobby).toMatch(/onDeleted=\{\(\) => navigate\("\/team\?tab=private&filter=trivias", \{ replace: true \}\)\}/);
+    expect(lobby).toMatch(/onDeleted=\{\(\) => navigate\(MY_TRIVIAS_PATH, \{ replace: true \}\)\}/);
   });
 });
