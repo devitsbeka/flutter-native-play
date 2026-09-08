@@ -268,14 +268,18 @@ export function MobileHomeFeed() {
         </section>
       )}
 
-      {/* ── Daily offers — the full-card, arrowed reel ───────────────────
-          One deal fully in view at a time with arrows and dots. The old
-          300px strip cut the second card and its Purchase button off at
-          the screen edge. */}
+      {/* ── PRO — the full-card, arrowed reel ────────────────────────────
+          The two subscription tiers close the feed (owner's ask). It used
+          to be the timed packages: a countdown at the bottom of the home
+          page is an offer the player meets on their way out, and the thing
+          worth showing them there is the tier, which does not expire.
+
+          The packages are still sold — they are at the foot of the shop,
+          under the powers, where somebody already spending is reading. */}
       <section>
-        <RailHeader title={t("extra.railOffers")} />
+        <RailHeader title={t("extra.railPro")} />
         <ProBannerReel
-          slides="deals"
+          slides="pro"
           purchasedItems={EMPTY_PURCHASES}
           isPurchasing={null}
           onItemClick={() => navigate("/power-ups")}

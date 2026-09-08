@@ -174,14 +174,17 @@ export function ShopStandardLayout({
 
   return (
     <div className="flex-1 pt-4 pb-8">
-      {/* The reel opens the page with no heading over it. The banners say what
-          they are — a discount, an invite, a PRO tier — and "შეთავაზებები"
-          above them only repeated that, one line further from the offer.
+      {/* The page opens on the two PRO tiers and nothing else (owner's ask).
+          The reel used to carry the timed packages here too, so the first
+          thing on the shop was a countdown on a coin bundle and the
+          subscription was the third card along — reachable only by swiping
+          past an offer that expires. The packages are still sold; they are
+          at the foot of the page now, under the powers.
 
-          One reel at every width: it shows one banner on a phone and two or
-          three once there is room, so there is a single set of offers rather
-          than a phone version and a desktop version that drift apart. */}
+          No heading over it: the banners say what they are, and a line
+          above them only repeated it one row further from the offer. */}
       <ProBannerReel
+        slides="pro"
         purchasedItems={purchasedItems}
         isPurchasing={isPurchasing}
         onItemClick={handleItemClick}
@@ -233,6 +236,21 @@ export function ShopStandardLayout({
         </motion.div>
       ))}
 
+      {/* The timed packages, at the foot of the page (owner's ask). They
+          have a heading here where the PRO reel above does not: on a page
+          that ends in product grids, an unlabelled reel of countdowns reads
+          as one more grid that lost its title. */}
+      <section className="px-4 pt-2">
+        <h2 className="text-lg font-display font-bold text-foreground md:text-xl">
+          {t("extra.railOffers")}
+        </h2>
+      </section>
+      <ProBannerReel
+        slides="deals"
+        purchasedItems={purchasedItems}
+        isPurchasing={isPurchasing}
+        onItemClick={handleItemClick}
+      />
     </div>
   );
 }

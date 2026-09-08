@@ -518,7 +518,25 @@ export interface BannerTileContent {
  * three promises sit on tiles with their art hung over the top edge.
  */
 export const PRO_CARD_W = 426;
-export const PRO_CARD_H = 527;
+
+/**
+ * The hero is this card's one piece of slack, so it is where the height
+ * comes off.
+ *
+ * The frame draws it 279 tall on a 527 card — more than half the card given
+ * to a picture — which put the buy button below the fold on a phone: the
+ * offer was on screen and the way to take it was not (owner: "make sure our
+ * PRO banners are reduced in height, now it is not fully visible, needs
+ * scroll to see purchase button").
+ *
+ * Everything under the picture keeps the frame's own spacing exactly and
+ * simply moves up by the trim, so the card gets shorter without any of its
+ * parts being redrawn or re-measured. One number moves them all.
+ */
+const PRO_HERO_H = 200;
+const PRO_HERO_TRIM = 279 - PRO_HERO_H;
+
+export const PRO_CARD_H = 527 - PRO_HERO_TRIM;
 /** The solid ledge under the card — reserved by the stage, not clipped. */
 const PRO_CARD_FOOT = 8;
 
@@ -531,15 +549,15 @@ const PRO_CARD_FILL = "#f5ecfd";
 const PERK_LEFTS = [20, 155.226, 289.657];
 const PERK_W = 119.317;
 const PERK_H = 87.6;
-const PERK_TOP = 338.121;
+const PERK_TOP = 338.121 - PRO_HERO_TRIM;
 // The frame draws each icon at its own size — 51.7, 46.1, 53.3 — because the
 // three renders are different shapes. Ours are one square set, so they take
 // one size and one baseline: the frame's own, which is where its three icons
 // all end (~370.8).
 const PERK_ICON = 50;
-const PERK_ICON_TOP = 321;
+const PERK_ICON_TOP = 321 - PRO_HERO_TRIM;
 const PERK_LABEL_W = 98.635;
-const PERK_LABEL_TOP = 381.08;
+const PERK_LABEL_TOP = 381.08 - PRO_HERO_TRIM;
 // Two lines of 14, which is exactly what the frame's label box holds. Reserved
 // whether or not both are needed: without it a caption that wraps hangs below
 // its neighbours and the row reads as misaligned.
@@ -619,7 +637,8 @@ export function ProOfferCard({
             src={hero}
             alt=""
             draggable={false}
-            className="pointer-events-none absolute left-[-36px] top-[-1px] h-[279px] w-[495px] max-w-none object-cover"
+            className="pointer-events-none absolute left-[-36px] top-[-1px] w-[495px] max-w-none object-cover"
+            style={{ height: PRO_HERO_H }}
           />
           {/* 1119:5530 and 1119:5531: two bands of the card's own fill,
               blurred, laid across the picture's foot so it dissolves into the
@@ -630,8 +649,8 @@ export function ProOfferCard({
             <div
               key={left}
               aria-hidden
-              className="pointer-events-none absolute top-[241px] h-[80px] w-[398px] blur-[22px]"
-              style={{ left, background: PRO_CARD_FILL }}
+              className="pointer-events-none absolute h-[80px] w-[398px] blur-[22px]"
+              style={{ left, top: 241 - PRO_HERO_TRIM, background: PRO_CARD_FILL }}
             />
           ))}
 
@@ -646,7 +665,10 @@ export function ProOfferCard({
           )}
 
           {/* 1119:5532 — the name, in the face the app's own headings wear. */}
-          <p className="absolute left-[22px] right-[16px] top-[267px] truncate font-hero text-[26px] capitalize leading-[44.814px] tracking-[-0.1494px] text-[#402666]">
+          <p
+            className="absolute left-[22px] right-[16px] truncate font-hero text-[26px] capitalize leading-[44.814px] tracking-[-0.1494px] text-[#402666]"
+            style={{ top: 267 - PRO_HERO_TRIM }}
+          >
             {title}
           </p>
 
@@ -705,8 +727,9 @@ export function ProOfferCard({
               onAction?.();
             }}
             disabled={actionDisabled}
-            className="absolute left-[14px] top-[447px] flex h-[59px] w-[398px] items-center justify-center rounded-[18.282px] border border-solid disabled:cursor-not-allowed"
+            className="absolute left-[14px] flex h-[59px] w-[398px] items-center justify-center rounded-[18.282px] border border-solid disabled:cursor-not-allowed"
             style={{
+              top: 447 - PRO_HERO_TRIM,
               borderColor: actionActive ? ACTIVE_BORDER : "#e9e5fa",
               boxShadow: actionActive
                 ? ACTIVE_SHADOW
