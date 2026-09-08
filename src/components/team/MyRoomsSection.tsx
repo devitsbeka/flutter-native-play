@@ -1308,17 +1308,20 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
                     are the count of.
 
                     The "+" for an open seat lives HERE, before the faces,
-                    only when the Play button already has the right side
-                    (below) — otherwise it takes that side itself, since
-                    nothing else is using it. Same afforance the Public tab's
-                    cards already give the host; a room with only the host in
-                    it (screenshot: a wide bar and nobody to invite from it)
-                    was the one card in the app that never offered it. */}
+                    always — not only when the Play button is on the right.
+                    Putting it there only sometimes (on the right when there
+                    was no Play button to share the row with) meant the same
+                    room could show a Play button on one visit and not on the
+                    next, as who else was online changed, and the "+" jumped
+                    sides with it (owner: "it is confusing now"). One position
+                    for the host to learn, regardless of what the right side
+                    is doing. Same affordance the Public tab's cards already
+                    give the host. */}
                 <div className="flex items-center gap-2 min-w-0">
                   {playedOnTV && (
                     <img src={retroTv3d} alt="TV" className="w-7 h-7 object-contain drop-shadow select-none flex-shrink-0" draggable={false} />
                   )}
-                  {canInvite && action && (
+                  {canInvite && (
                     <button
                       type="button"
                       onClick={(e) => {
@@ -1418,7 +1421,7 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
                     deliberately treats /team as "already there" and never
                     navigates, so a player parked on this very list is the one
                     person a starting round cannot reach. */}
-                {action ? (
+                {action && (
                   /* The public list's button in white — same shape, same
                      word, same play triangle. Which list you are on is the
                      only difference between them.
@@ -1447,23 +1450,6 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
                     <Play className="w-3.5 h-3.5 fill-current" />
                     {t("extra.roomPlay")}
                   </RoomCardPlayButton>
-                ) : (
-                  // No Play button to share the row with (nobody else is
-                  // online) — the "+" takes the right side itself instead of
-                  // the left, since it is the only thing there.
-                  canInvite && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onInvite?.(room);
-                      }}
-                      aria-label={t("extra.inviteFriendsTitle")}
-                      className="w-8 h-8 rounded-full border-2 border-dashed border-[#2b1a4a]/30 bg-white/70 flex items-center justify-center flex-shrink-0 transition-colors hover:bg-white active:scale-95"
-                    >
-                      <Plus className="w-4 h-4 text-[#2b1a4a]" />
-                    </button>
-                  )
                 )}
               </div>
             </div>

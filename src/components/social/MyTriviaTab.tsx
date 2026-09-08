@@ -15,6 +15,7 @@ import bookmark3d from "@/assets/icons/bookmark-3d-orange.png";
 import pushButton3d from "@/assets/icons/push-button-3d.png";
 import collectionMagnetIcon from "@/assets/fridge-magnet-collection-2.png";
 import { ChunkyButton } from "@/components/ui/chunky-button";
+import { RoomCardPlayButton } from "@/components/team/RoomCardPlayButton";
 import { useMyQuizPosts } from "@/hooks/useSocialFeed";
 import { useMyCollections, useCollectionQuizzes } from "@/hooks/useCollections";
 import { useAuth } from "@/contexts/AuthContext";
@@ -737,10 +738,13 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
           {/* Rides the meta row like the trivia and collection cards do. As a
               full-width row of its own underneath, it made the party card
               taller than everything beside it in the grid. */}
+          {/* The same filled pill the room cards play from, in the party's
+              own purple rather than mint or white — not ChunkyButton's
+              generic outline, which read as a lesser action beside every
+              filled Play around it (owner). */}
           <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
-            <ChunkyButton
-              size="sm"
-              variant="outline"
+            <RoomCardPlayButton
+              tone="purple"
               className="h-10 text-sm"
               onClick={handlePlayOnTV}
               disabled={isStartingTV}
@@ -749,11 +753,11 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <>
-                  <Play className="w-4 h-4" />
+                  <Play className="w-3.5 h-3.5 fill-current" />
                   <span>{t("extra.playBtn")}</span>
                 </>
               )}
-            </ChunkyButton>
+            </RoomCardPlayButton>
           </div>
         </div>
 

@@ -16,6 +16,7 @@ import { RoundOrderModal } from "@/components/team/RoundOrderModal";
 import { RoomTitle } from "@/components/lobby/UniversalLobby";
 import { TriviaBeingMadeCard } from "@/components/team/TriviaBeingMadeCard";
 import { ChunkyButton } from "@/components/ui/chunky-button";
+import { RoomCardPlayButton } from "@/components/team/RoomCardPlayButton";
 import { GreenPlayButton } from "@/components/shared/GreenPlayButton";
 import type { QueueItem } from "@/hooks/useRoomCategoryQueue";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
@@ -140,6 +141,17 @@ export default function HomeShot() {
         <GreenPlayButton className="h-14 w-full text-base">ითამაშე</GreenPlayButton>
         <GreenPlayButton className="h-14 w-full text-base">Play</GreenPlayButton>
         <ChunkyButton variant="primary" size="lg" className="w-full">Purple stays Nunito</ChunkyButton>
+      </div>
+    );
+  }
+  if (params.get("view") === "play-tones") {
+    // The three RoomCardPlayButton tones side by side: mint (public), white
+    // (private), and the party card's new filled purple.
+    return (
+      <div className="flex min-h-[100dvh] w-full flex-col items-start gap-4 bg-[#f3e8ff] p-6">
+        <RoomCardPlayButton tone="mint"><span>▶ Play (mint)</span></RoomCardPlayButton>
+        <RoomCardPlayButton tone="white"><span>▶ Play (white)</span></RoomCardPlayButton>
+        <RoomCardPlayButton tone="purple"><span>▶ Play (purple)</span></RoomCardPlayButton>
       </div>
     );
   }

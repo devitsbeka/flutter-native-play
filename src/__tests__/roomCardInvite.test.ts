@@ -7,10 +7,12 @@
  * empty bar with nothing to tap, and a room with somebody else already in
  * it had no way to add a third without opening it first.
  *
- * The "+" and the Play button share one row, so which side it lands on
- * depends on whether Play is using the other one: before the faces when
- * Play has the right side, on the right itself when Play has nothing to
- * show (nobody else online) and the side is free.
+ * The "+" sits before the faces, in the SAME place, whether or not the room
+ * also has a Play button on the right. It briefly moved to the right side
+ * when there was no Play button to share the row with — but which side that
+ * was depended on who else happened to be online, so the same room could
+ * show the "+" on one side today and the other tomorrow, and the owner said
+ * so directly: "it is confusing now". One position, always.
  */
 
 import { describe, expect, it } from "vitest";
@@ -27,21 +29,24 @@ describe("the room card's own invite", () => {
     );
   });
 
-  it("before the faces when the Play button is on the right", () => {
+  it("always before the faces, never on the right", () => {
     const beforeFaces = grid.slice(
-      grid.indexOf('{canInvite && action && ('),
+      grid.indexOf('{canInvite && ('),
       grid.indexOf("Avatars (use TV players if session is active)"),
     );
     expect(beforeFaces).toMatch(/onInvite\?\.\(room\);/);
     expect(beforeFaces).toMatch(/aria-label=\{t\("extra\.inviteFriendsTitle"\)\}/);
+    // Not gated on `action` any more — it used to appear here only when a
+    // Play button was also on the right, and jump to the right side
+    // otherwise. Now it is unconditional on canInvite alone.
+    expect(grid).not.toMatch(/canInvite && action &&/);
   });
 
-  it("and on the right itself when there is no Play button to share it with", () => {
+  it("and the right side is Play or nothing — never the invite button", () => {
     const start = grid.lastIndexOf("</RoomCardPlayButton>");
     const rightSide = grid.slice(start, grid.indexOf("</GradientBackground>", start));
-    expect(rightSide).toMatch(/\) : \(/);
-    expect(rightSide).toMatch(/canInvite && \(/);
-    expect(rightSide).toMatch(/onInvite\?\.\(room\);/);
+    expect(rightSide).not.toMatch(/onInvite\?\.\(room\)/);
+    expect(grid).toMatch(/\{action && \(\s*\n\s*\/\* The public list's button in white/);
   });
 
   it("opens the same sheet the Public tab's cards use", () => {
