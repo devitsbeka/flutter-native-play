@@ -25,22 +25,6 @@ const rooms = read("src/components/team/MyRoomsSection.tsx");
 const card = read("src/components/home/StartHereCard.tsx");
 const category = read("src/components/discover/AirbnbCategoryCard.tsx");
 
-describe("the trivias rail no longer disappears", () => {
-  it("the section renders whether or not there are any", () => {
-    expect(feed).not.toMatch(/\{trivias\.length > 0 && \(\s*\n\s*<section>/);
-    expect(feed).toMatch(/railMyTrivias/);
-  });
-
-  it("and an empty one offers the way to make the first", () => {
-    expect(feed).toMatch(/\{trivias\.length === 0 && \(\s*\n\s*<div className="px-4 pb-3 pt-1">/);
-    expect(feed).toMatch(/<StartHereCard\s*\n\s*variant="trivia"/);
-    expect(feed).toMatch(/title=\{t\("extra\.railFirstTrivia"\)\}/);
-    // Straight to the create sheet, not to a list the player would then
-    // have to find it in.
-    expect(feed).toMatch(/onPress=\{\(\) => navigate\("\/team", \{ state: \{ openTrivia: true \} \}\)\}/);
-  });
-});
-
 describe("the rooms rail keeps its shape when empty", () => {
   it("the home rail gets a card, not the full-width panel", () => {
     expect(rooms).toMatch(/rooms\.length === 0 && homeRail && !searching \?/);
@@ -71,8 +55,7 @@ describe("the panel itself", () => {
     // a rail that failed to load rather than one waiting to be filled.
     expect(card).toMatch(/flex w-full flex-col items-center justify-center/);
     expect(card).toMatch(/border-2 border-dashed/);
-    // Both rails hand it a full-width box rather than a scroller.
-    expect(feed).toMatch(/<div className="px-4 pb-3 pt-1">\s*\n\s*<StartHereCard/);
+    // The rooms rail hands it a full-width box rather than a scroller.
     expect(rooms).toMatch(/<div className="px-4 pb-4">\s*\n\s*<StartHereCard/);
   });
 
@@ -125,9 +108,8 @@ describe("the rail headers", () => {
     expect(feed).toMatch(/aria-label=\{action\.label\}/);
   });
 
-  it("on both rails, from the real counts", () => {
+  it("from the real room count", () => {
     expect(feed).toMatch(/roomsEmpty\s*\n?\s*\? \{ label: t\("extra\.railFirstRoom"\)[^}]*kind: "add" \}/);
-    expect(feed).toMatch(/trivias\.length === 0\s*\n\s*\? \{/);
   });
 
   it("and the rooms count is reported up, not fetched twice", () => {

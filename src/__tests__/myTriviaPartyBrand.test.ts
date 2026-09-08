@@ -113,7 +113,6 @@ describe("the party and the friends icon are not the same picture", () => {
     "src/components/team/CreateRoomPage.tsx",
     "src/components/team/MyRoomsSection.tsx",
     "src/components/challenge/ChallengeTypeModal.tsx",
-    "src/components/home/MobileHomeFeed.tsx",
   ];
 
   it("every party surface wears the house", () => {
