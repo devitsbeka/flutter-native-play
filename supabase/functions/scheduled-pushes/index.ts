@@ -46,7 +46,19 @@ import { PUSH_META, pushMessage, type PushKind } from "../_shared/pushCopy.ts";
 
 const MAX_FREE_PLAYS = 5; // mirror of src/utils/playLimit.ts
 const PLAY_WINDOW_MS = 3 * 60 * 60 * 1000;
-const RUN_INTERVAL_MS = 30 * 60 * 1000;
+/**
+ * How long ago a refill may have landed and still be worth saying.
+ *
+ * This was `RUN_INTERVAL_MS + 5 minutes` — 35 — which assumes this function
+ * runs every half hour. Nothing in the repo sets that: the schedule lives in
+ * `cron.job` in the database, and if it is hourly then every refill that
+ * landed 36 to 60 minutes ago was dropped and the player heard nothing. An
+ * hour and a quarter covers an hourly schedule with room to spare, and is
+ * still a long way from "an exhausted window from last night", which is what
+ * this bound is really for. Saying it twice is prevented by push_log below,
+ * not by this number.
+ */
+const REFILL_CATCH_UP_MS = 75 * 60 * 1000;
 
 const EVENING_KINDS: PushKind[] = [
   "streak_saver",
@@ -410,7 +422,7 @@ Deno.serve(async (req: Request) => {
     const refillAt = c.freeWindowStart + PLAY_WINDOW_MS;
     // Only the window that JUST elapsed — an exhausted window from last night
     // is not news, and this is what keeps the push to one per refill.
-    if (refillAt > nowMs || refillAt < nowMs - (RUN_INTERVAL_MS + 5 * 60 * 1000)) continue;
+    if (refillAt > nowMs || refillAt < nowMs - REFILL_CATCH_UP_MS) continue;
     if (c.lastSeen !== null && c.lastSeen > refillAt) continue; // already came back
     if (c.local.hour < 10 || c.local.hour >= 22) continue;
     if (countToday(c.userId, "lives_full") >= 2) continue;
