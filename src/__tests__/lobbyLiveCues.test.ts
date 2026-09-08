@@ -32,7 +32,15 @@ describe("the ring", () => {
     // 1px, laid over the chip's own border: the same weight as the rule
     // boxes below, not a heavier band outside it.
     expect(ring).toMatch(/padding: 1px;/);
-    expect(universal).toMatch(/className="lobby-ring pointer-events-none absolute inset-0 z-10 rounded-\[20px\]"/);
+    // The ring's radius has to match the chip's own asymmetric 24/24/24/54
+    // corner exactly, or the two curves trace different paths and the
+    // chip's own border shows past the ring — a stray line behind the chip.
+    expect(universal).toMatch(
+      /className=\{cn\("lobby-ring pointer-events-none absolute inset-0 z-10", CHIP_RADIUS\)\}/,
+    );
+    expect(universal).toMatch(
+      /const CHIP_RADIUS = "rounded-bl-\[24px\] rounded-br-\[54px\] rounded-tl-\[24px\] rounded-tr-\[24px\]";/,
+    );
     expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\) \{\s*\n\s*\.lobby-ring \{ animation: none; \}/);
     // No flash variant any more: the "+N" pop is the cue for a round added.
     expect(css).not.toMatch(/lobby-ring-flash/);
@@ -49,7 +57,7 @@ describe("the ring", () => {
     // The chip fills the ring: the ring is a flex box (flex-1 on the chip
     // means nothing under a block) and the chip is w-full.
     expect(universal).toMatch(/<div className=\{cn\("relative flex", className\)\}>/);
-    expect(universal).toMatch(/"relative flex h-\[63px\] w-full min-w-0 flex-1 items-center rounded-bl-\[24px\]/);
+    expect(universal).toMatch(/CHIP_RADIUS,\s*\n\s*"relative flex h-\[63px\] w-full min-w-0 flex-1 items-center border-2/);
     // While the round list is open the + is an X that closes it.
     expect(universal).toMatch(/onClick=\{categoryMenu\?\.open \? categoryMenu\.onClose : category\.onAdd\}/);
     expect(universal).toMatch(/aria-label=\{categoryMenu\?\.open \? "close" : "add category"\}/);
