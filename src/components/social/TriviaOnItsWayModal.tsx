@@ -5,7 +5,7 @@ import { X } from "lucide-react";
 import { t } from "@/lib/i18n";
 import type { TriviaKind } from "@/contexts/TriviaCreationContext";
 import triviaBuzzer from "@/assets/trivia-buzzer.png";
-import iconGroupOfPeople from "@/assets/group-of-people.png";
+import iconHouseParty from "@/assets/house-party.png";
 
 /**
  * "It is being made. You can go."
@@ -32,7 +32,7 @@ export const SHOW_MS = 2000;
  */
 const ART: Record<TriviaKind, string> = {
   trivia: triviaBuzzer,
-  party: iconGroupOfPeople,
+  party: iconHouseParty,
 };
 
 export function TriviaOnItsWayModal({

@@ -25,8 +25,17 @@
  * solo"). {@link roundIsOwnTrivia} is what those screens ask.
  */
 
-/** The MyTrivia Party face, as a slug in the icon catalogue. */
-export const OWN_TRIVIA_ICON_SLUG = "group-of-people";
+/**
+ * The MyTrivia Party face, as a slug in the icon catalogue.
+ *
+ * It was "group-of-people", which is also what the Family PRO plan and
+ * the invite-a-friend benefits wear — so the party had no face of its
+ * own, it borrowed one (owner: "i noticed we use my trivia party icon as
+ * friends pro icon, so we need to replace my trivia party icon"). The
+ * catalogue already had the right one, filed under Events and titled
+ * "House Party".
+ */
+export const OWN_TRIVIA_ICON_SLUG = "house-party";
 
 /** The `source_type` a round picked from My Trivias is stored with. */
 export const OWN_TRIVIA_SOURCE = "user_trivia";

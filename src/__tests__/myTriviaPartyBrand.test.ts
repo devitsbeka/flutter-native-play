@@ -75,14 +75,66 @@ describe("the name is said once, and it names this party", () => {
 
   it("the brand stays where it was, beside the icon", () => {
     expect(tab).toMatch(/\{t\("extra\.myTriviaPartyLabel"\)\}/);
-    expect(tab).toMatch(/src=\{iconGroupOfPeople\}/);
+    expect(tab).toMatch(/src=\{iconHouseParty\}/);
   });
 
   it("and no wordmark was left behind anywhere", () => {
     expect(tab).not.toContain("MyTriviaPartyLogo");
     expect(chooser).not.toContain("MyTriviaPartyLogo");
     // The chooser's tile is an icon with its caption again, like the others.
-    expect(chooser).toMatch(/icon: iconGroupOfPeople, title: "My Trivia Party"/);
+    expect(chooser).toMatch(/icon: iconHouseParty, title: "My Trivia Party"/);
+  });
+});
+
+/**
+ * The party had no face of its own; it borrowed the friends one.
+ *
+ * `group-of-people.png` was the MyTrivia Party icon AND the Family PRO
+ * plan's header AND the invite-a-friend benefit — so the party looked like
+ * a subscription tier and a subscription tier looked like a party (owner:
+ * "i noticed we use my trivia party icon as friends pro icon, so we need to
+ * replace my trivia party icon").
+ *
+ * The catalogue already had the right one, filed under Events and titled
+ * "House Party". The friends artwork stays exactly where it was; only the
+ * party moves off it.
+ */
+describe("the party and the friends icon are not the same picture", () => {
+  const PARTY_SURFACES = [
+    "src/components/social/MyTriviaTab.tsx",
+    "src/components/social/CreateTriviaTypeModal.tsx",
+    "src/components/social/TriviaOnItsWayModal.tsx",
+    "src/components/social/DraftsList.tsx",
+    "src/components/team/TeamMenuScreen.tsx",
+    "src/components/team/CreateRoomPage.tsx",
+    "src/components/team/MyRoomsSection.tsx",
+    "src/components/challenge/ChallengeTypeModal.tsx",
+    "src/components/home/MobileHomeFeed.tsx",
+  ];
+
+  it("every party surface wears the house", () => {
+    for (const file of PARTY_SURFACES) {
+      const src = read(file);
+      expect(src, file).toContain("@/assets/house-party.png");
+      expect(src, file).not.toContain("@/assets/group-of-people.png");
+    }
+  });
+
+  it("and the friends artwork stays where it was", () => {
+    // The collision, from the other side: these mean people, not a party,
+    // and moving them would just swap which screen is wrong.
+    expect(read("src/components/shop/MobileProCarousel.tsx"))
+      .toContain("@/assets/group-of-people.png");
+    expect(read("src/features/home-v3/proBenefits.ts"))
+      .toContain("@/assets/icons/group-of-people.png");
+    expect(read("src/components/pro/ProPaywallModal.tsx"))
+      .toContain("@/assets/icons/group-of-people.png");
+  });
+
+  it("and the file is really there, not just imported", () => {
+    // A broken import here is a missing icon on nine screens at once.
+    const { existsSync } = require("node:fs") as typeof import("node:fs");
+    expect(existsSync(join(process.cwd(), "src/assets/house-party.png"))).toBe(true);
   });
 });
 

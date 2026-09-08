@@ -7,7 +7,7 @@ import SpotlightSearch from "@/components/search/SpotlightSearch";
 import { MyTriviaLiveLogo } from "@/components/shared/MyTriviaLiveLogo";
 import triviaBuzzer from "@/assets/trivia-buzzer.png";
 import iconCollections from "@/assets/icon-collections.png";
-import iconGroupOfPeople from "@/assets/group-of-people.png";
+import iconHouseParty from "@/assets/house-party.png";
 import danceFloor from "@/assets/dance-floor.png";
 import { DraftsList } from "./DraftsList";
 
@@ -71,7 +71,7 @@ export function CreateTriviaTypeModal({
     { key: "trivia", icon: triviaBuzzer, title: t("extra.triviaLabel"), onPick: () => onSelectSingle() },
     { key: "collection", icon: iconCollections, title: t("extra.collectionLabel"), onPick: () => onSelectCollection() },
     ...(onSelectPersonal
-      ? [{ key: "personal", icon: iconGroupOfPeople, title: "My Trivia Party", wide: true, onPick: () => onSelectPersonal() }]
+      ? [{ key: "personal", icon: iconHouseParty, title: "My Trivia Party", wide: true, onPick: () => onSelectPersonal() }]
       : []),
   ];
 
