@@ -11,6 +11,7 @@ import retroTvIcon from '@/assets/retro-tv-colored.png';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from "@/lib/toast";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useLocalizedCategoryName } from "@/utils/categoryDisplayName";
 import { QRCodeSVG } from 'qrcode.react';
 import { Avatar } from '@/components/shared/Avatar';
 import { TVGameOverScreen } from '@/components/tv/TVGameOverScreen';
@@ -50,6 +51,7 @@ const TVHostController: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useLanguage();
+  const localizeCategory = useLocalizedCategoryName();
   
   // Get state from TVGameContext instead of local state
   const {
@@ -607,7 +609,7 @@ const TVHostController: React.FC = () => {
     await addToQueue(item);
     
     if (item.source_type === "category") {
-      toast.success(t("extra.tvhAddedToQueue", { name: item.category_name }));
+      toast.success(t("extra.tvhAddedToQueue", { name: localizeCategory(item.category_name) }));
     } else if (item.source_type === "random") {
       toast.success(t("extra.tvhRandomRoundAdded"));
     } else if (item.source_type === "user_trivia") {
@@ -1154,7 +1156,7 @@ const TVHostController: React.FC = () => {
                   <span className="w-6 h-6 rounded-full bg-purple-500/30 flex items-center justify-center text-xs text-purple-200 font-bold">
                     {index + 1}
                   </span>
-                  <span className="flex-1 text-white font-medium">{item.category_name}</span>
+                  <span className="flex-1 text-white font-medium">{localizeCategory(item.category_name)}</span>
                   
                   {/* Replace button - stop drag propagation */}
                   <div 

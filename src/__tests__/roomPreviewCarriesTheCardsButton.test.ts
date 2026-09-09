@@ -45,7 +45,7 @@ describe("the sheet's footer", () => {
   });
 
   it("draws what it is handed and builds nothing of its own", () => {
-    expect(sheet).toMatch(/export type PreviewActionFactory = \(opts\?: \{ className\?: string; then\?: \(\) => void \}\) => ReactNode;/);
+    expect(sheet).toMatch(/export type PreviewActionFactory = \(opts\?: \{ className\?: string; tone\?: RoomCardTone; then\?: \(\) => void \}\) => ReactNode;/);
     expect(sheet).not.toMatch(/onJoin|onAsk|navigate\(/);
   });
 });
@@ -58,7 +58,7 @@ describe("the public card", () => {
 
   it("hands the same one to the sheet, which sizes it and closes on the tap", () => {
     expect(publicRooms).toMatch(/onPreview\(room, playButton\)/);
-    expect(publicRooms).toMatch(/action=\{previewing\?\.action\(\{ className: PREVIEW_BUTTON_CLASS, then: \(\) => setPreviewing\(null\) \}\)\}/);
+    expect(publicRooms).toMatch(/action=\{previewing\?\.action\(\{ className: PREVIEW_BUTTON_CLASS, tone: PREVIEW_BUTTON_TONE, then: \(\) => setPreviewing\(null\) \}\)\}/);
     expect(publicRooms).toMatch(/className=\{opts\.className\}/);
     expect(publicRooms).toMatch(/opts\.then\?\.\(\);/);
   });
@@ -74,7 +74,7 @@ describe("the private cards", () => {
     expect(myRooms).toMatch(/onPreview\(action \? playButton : undefined\);/);
     expect(myRooms).toMatch(/onPreview=\{\(action\) => setPreviewing\(\{ room, action \}\)\}/);
     expect(myRooms).toMatch(/onPreview=\{\(\) => setPreviewing\(\{ room \}\)\}/);
-    expect(myRooms).toMatch(/action=\{previewing\?\.action\?\.\(\{ className: PREVIEW_BUTTON_CLASS, then: \(\) => setPreviewing\(null\) \}\)\}/);
+    expect(myRooms).toMatch(/action=\{previewing\?\.action\?\.\(\{ className: PREVIEW_BUTTON_CLASS, tone: PREVIEW_BUTTON_TONE, then: \(\) => setPreviewing\(null\) \}\)\}/);
   });
 });
 

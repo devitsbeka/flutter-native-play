@@ -4,6 +4,7 @@ import { Trophy, Play, Crown, Sparkles } from 'lucide-react';
 import { ChunkyButton } from '@/components/ui/chunky-button';
 import { useTVPoll } from '@/hooks/useTVPoll';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useLocalizedCategoryName } from "@/utils/categoryDisplayName";
 import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
 import { toast } from "@/lib/toast";
 
@@ -23,6 +24,7 @@ export const ControllerPollResults: React.FC<ControllerPollResultsProps> = ({
   onGameStart,
 }) => {
   const { t } = useLanguage();
+  const localizeCategory = useLocalizedCategoryName();
   const { suggestions, finalizePollAndStartGame } = useTVPoll({
     sessionId,
     userId,
@@ -132,7 +134,7 @@ export const ControllerPollResults: React.FC<ControllerPollResultsProps> = ({
 
               {/* Name */}
               <div className="flex-1">
-                <p className="font-bold text-white">{suggestion.category_name}</p>
+                <p className="font-bold text-white">{localizeCategory(suggestion.category_name)}</p>
                 <p className="text-xs text-purple-300">
                   {suggestion.vote_count} {t("extra.tvVoteLabel")} • {suggestion.nickname}
                 </p>

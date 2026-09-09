@@ -58,7 +58,7 @@ describe("the invited face is black and white, beside the host", () => {
 
 describe("Confirm is green, and an X beside it says no", () => {
   it("private card", () => {
-    expect(mine).toMatch(/tone=\{room\.has_pending_invite \? "mint" : "white"\}/);
+    expect(mine).toMatch(/tone=\{opts\.tone \?\? \(room\.has_pending_invite \? "mint" : "white"\)\}/);
     expect(mine).toMatch(/\{room\.has_pending_invite && !isJoining && \(\s*\n\s*<button\s*\n\s*type="button"\s*\n\s*aria-label=\{t\("extra\.notifDecline"\)\}/);
     expect(mine).toMatch(/onDeclineInvite\?\.\(room\);/);
     expect(mine).toMatch(/onDeclineInvite=\{\(r\) => void handleDeclineInvite\(r\)\}/);
@@ -66,7 +66,7 @@ describe("Confirm is green, and an X beside it says no", () => {
   });
 
   it("public card", () => {
-    expect(pub).toMatch(/tone=\{invited \|\| ready \? "mint" : "white"\}/);
+    expect(pub).toMatch(/tone=\{opts\.tone \?\? \(invited \|\| ready \? "mint" : "white"\)\}/);
     expect(pub).toMatch(/\{invited && !busy && \(\s*\n\s*<button\s*\n\s*type="button"\s*\n\s*aria-label=\{t\("extra\.notifDecline"\)\}/);
     expect(pub).toMatch(/onDeclineInvite=\{\(r\) => void declineInvite\(r\)\}/);
     expect(pub).toMatch(/await declineRoomInvite\(room\.id, user\.id, invite\.notificationId\);/);

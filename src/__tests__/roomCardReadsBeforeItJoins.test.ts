@@ -121,7 +121,8 @@ describe("what opening it says", () => {
     expect(sheet).toMatch(/const shown = rounds\.length > 0 \? rounds : \[MIXED_ROUND\];/);
     expect(sheet).toMatch(/\{t\("lobby\.summaryRounds"\)\} · \{shown\.length\}/);
     expect(sheet).toMatch(/\{shown\.map\(\(round, i\) => \(/);
-    expect(sheet).toMatch(/\{round\.name \?\? t\("extra\.cpMixedCategory"\)\}/);
+    // In the reader's language (roomPreviewJoinIsGreenAndSpeaksYourLanguage.test.ts).
+    expect(sheet).toMatch(/\{localizeCategory\(round\.name\) \?\? t\("extra\.cpMixedCategory"\)\}/);
     expect(sheet).not.toMatch(/roomPreviewNoRounds/);
   });
 

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useLocalizedCategoryName } from "@/utils/categoryDisplayName";
 import { useTVGame } from '@/contexts/TVGameContext';
 import { useTVSessionQueue } from '@/hooks/useTVSessionQueue';
 import { SafeAvatar } from '@/components/shared/SafeAvatar';
@@ -21,6 +22,7 @@ const XP_REWARDS = [2000, 500, 200];
 
 export const TVResultsScreenV2: React.FC = () => {
   const { t } = useLanguage();
+  const localizeCategory = useLocalizedCategoryName();
   const { players, isHost, resetGame, sessionId, startNextRound } = useTVGame();
   const { queue } = useTVSessionQueue(sessionId);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -227,7 +229,7 @@ export const TVResultsScreenV2: React.FC = () => {
             <div className="bg-purple-500/30 backdrop-blur-sm rounded-xl px-4 py-2 flex items-center gap-2">
               <ArrowRight className="w-4 h-4 text-purple-300" />
               <span className="text-white/80 text-sm">{t("extra.tvNext")}</span>
-              <span className="text-white font-semibold text-sm">{nextRound.category_name}</span>
+              <span className="text-white font-semibold text-sm">{localizeCategory(nextRound.category_name)}</span>
             </div>
             <motion.p
               className="text-white/50 text-xs mt-2"

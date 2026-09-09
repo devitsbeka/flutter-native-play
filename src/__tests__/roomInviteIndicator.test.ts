@@ -46,7 +46,7 @@ describe("the card wears the invitation", () => {
     // The purple "Invited by …" pill was one thing too many on the row
     // (owner: "it is too much on cards"); see roomInviteConfirm.test.
     expect(card).toMatch(/const reservedForMe = room\.has_pending_invite && p\.user_id === user\?\.id;/);
-    expect(card).toMatch(/tone=\{room\.has_pending_invite \? "mint" : "white"\}/);
+    expect(card).toMatch(/tone=\{opts\.tone \?\? \(room\.has_pending_invite \? "mint" : "white"\)\}/);
     expect(card).not.toMatch(/RoomInviteBadge/);
   });
 

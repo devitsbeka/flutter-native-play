@@ -4,6 +4,7 @@ import { Trophy, Crown, Sparkles, Loader2 } from 'lucide-react';
 import { useTVPoll, PollSuggestion } from '@/hooks/useTVPoll';
 import { useTVGame } from '@/contexts/TVGameContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useLocalizedCategoryName } from "@/utils/categoryDisplayName";
 import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
 
 interface ControllerPollResultsGuestProps {
@@ -15,6 +16,7 @@ export const ControllerPollResultsGuest: React.FC<ControllerPollResultsGuestProp
 }) => {
   const { myPlayerId, players } = useTVGame();
   const { t } = useLanguage();
+  const localizeCategory = useLocalizedCategoryName();
   const myPlayer = players.find(p => p.id === myPlayerId);
   
   const { suggestions, loading, pollPhase } = useTVPoll({
@@ -91,7 +93,7 @@ export const ControllerPollResultsGuest: React.FC<ControllerPollResultsGuestProp
 
             {/* Name */}
             <div className="flex-1">
-              <p className="font-bold text-white">{suggestion.category_name}</p>
+              <p className="font-bold text-white">{localizeCategory(suggestion.category_name)}</p>
               <p className="text-xs text-purple-300">
                 {suggestion.vote_count} {t("extra.tvVoteUnit")} • {suggestion.nickname}
               </p>

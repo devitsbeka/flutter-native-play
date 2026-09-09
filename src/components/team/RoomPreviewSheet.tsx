@@ -20,11 +20,12 @@
 
 import type { ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { RoomCardPlayButton } from "@/components/team/RoomCardPlayButton";
+import { RoomCardPlayButton, type RoomCardTone } from "@/components/team/RoomCardPlayButton";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { roundIconSlug } from "@/utils/ownTriviaRound";
 import { undecidedRoundKind } from "@/utils/undecidedRound";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useLocalizedCategoryName } from "@/utils/categoryDisplayName";
 import { REWARDS } from "@/config/rewardConfig";
 import coinIcon from "@/assets/tb-lobby/coin.png";
 import questionIcon from "@/assets/lobby/chip-question.webp";
@@ -67,10 +68,18 @@ export function isMixedRound(round: PreviewRound): boolean {
  * button it draws — same tone, same word, same tap — and the sheet gives
  * it the sheet's size and asks it to close the sheet afterwards.
  */
-export type PreviewActionFactory = (opts?: { className?: string; then?: () => void }) => ReactNode;
+export type PreviewActionFactory = (opts?: { className?: string; tone?: RoomCardTone; then?: () => void }) => ReactNode;
 
 /** Both buttons in the sheet's footer wear this: the card's pill, one size up. */
 export const PREVIEW_BUTTON_CLASS = "flex-1 justify-center py-3 text-[15px]";
+/**
+ * The sheet's button is green whatever the card's was. On the card the
+ * colour says which room is one tap from a game; in the sheet the reader
+ * has just read the rounds and the stake and is one tap from it by
+ * definition, so it wears the mint every such button wears (owner: "show
+ * join button as green button on room preview modals").
+ */
+export const PREVIEW_BUTTON_TONE: RoomCardTone = "mint";
 
 interface RoomPreviewSheetProps {
   open: boolean;
@@ -95,6 +104,16 @@ export function RoomPreviewSheet({
   onClose,
 }: RoomPreviewSheetProps) {
   const { t } = useLanguage();
+  /**
+   * Each round in the reader's language. A round is stored under the name
+   * the host's picker was showing — "Guess the Logo" from an English
+   * client — and the sheet drew that literal string under a Georgian UI;
+   * "Random" and "Mixed" likewise (owner: "if i switch country to Georgia
+   * categories need translations"). The resolver every other round list
+   * uses maps any of the seven languages to the viewer's, and passes a
+   * trivia's own title through untouched.
+   */
+  const localizeCategory = useLocalizedCategoryName();
   // A seat costs the stake wherever it is taken — a room, a quick game, PRO
   // or not (see 20261102140000_quick_game_charges_everyone.sql). Under two
   // players there is no pot at all: settle_room_round calls that practice.
@@ -163,7 +182,7 @@ export function RoomPreviewSheet({
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-[15px] font-semibold text-[#402666]">
-                          {round.name ?? t("extra.cpMixedCategory")}
+                          {localizeCategory(round.name) ?? t("extra.cpMixedCategory")}
                         </span>
                         <span className="block text-xs text-[#402666]/60">
                           {t("lobby.uRoundLabel", { count: i + 1 })}
