@@ -40,8 +40,16 @@ interface MatchSummarySheetProps {
   rounds: SummaryRound[];
   /** Null when the room plays a trivia that brings its own question count. */
   questionsPerRound: number | null;
-  /** Null when nobody else is seated: a solo round is practice and free. */
-  stake: number | null;
+  /** What a seat pays into the pot, always — see the note on soloFree. */
+  stake: number;
+  /**
+   * True while the host is the only one seated, which costs nothing: a room
+   * of one settles as practice (settle_room_round returns 'practice' below
+   * two players — no stake, no pot, no prize). Shown as a footnote under the
+   * stake rather than in place of it, because a room is created for people
+   * to join and the seat costs the stake the moment one does.
+   */
+  soloFree: boolean;
   starting?: boolean;
   /**
    * A later match with people at the table: Start asks them first, so the
@@ -57,6 +65,7 @@ export function MatchSummarySheet({
   rounds,
   questionsPerRound,
   stake,
+  soloFree,
   starting = false,
   rematch = false,
   onChange,
@@ -123,13 +132,19 @@ export function MatchSummarySheet({
                 )}
                 <div className="rounded-xl border border-[#e8e0f5] bg-white/70 px-3 py-2.5">
                   <p className="text-[12px] text-[#402666]/60">{t("lobby.summaryStake")}</p>
-                  {stake === null ? (
-                    <p className="font-display text-[15px] font-bold leading-6 text-[#2bc889]">{t("lobby.summaryFree")}</p>
-                  ) : (
-                    <p className="flex items-center gap-1.5 font-display text-[20px] font-bold leading-6 text-[#402666]">
-                      <img src={coinIcon} alt="" className="h-5 w-5 object-contain" />
-                      {stake.toLocaleString()}
-                    </p>
+                  {/* The number, always. It read "Free — solo practice" while
+                      the host was the only one seated, which is true of a
+                      round played alone and the wrong answer to "what will
+                      this room cost?": every seat pays the stake as soon as
+                      somebody sits down, and a room is made for that (owner:
+                      "why it says free - solo practice ... per match cost is
+                      500 coins"). The free case is the footnote below. */}
+                  <p className="flex items-center gap-1.5 font-display text-[20px] font-bold leading-6 text-[#402666]">
+                    <img src={coinIcon} alt="" className="h-5 w-5 object-contain" />
+                    {stake.toLocaleString()}
+                  </p>
+                  {soloFree && (
+                    <p className="mt-0.5 text-[11px] font-bold leading-4 text-[#2bc889]">{t("lobby.summaryFree")}</p>
                   )}
                 </div>
               </div>

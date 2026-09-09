@@ -1655,7 +1655,7 @@ export const pt: KaTranslations = {
     summaryRematchTitle: "Prontos para a desforra?",
     summaryRematchHint: "Primeiro todos à mesa são questionados. Quem recusar sai da sala e o pote segue os lugares.",
     summaryAskTable: "Propor desforra",
-    summaryFree: "Grátis — treino a solo",
+    summaryFree: "Grátis enquanto estiveres sozinho",
     summaryStake: "Aposta por jogador",
     summaryRounds: "Rondas",
     summaryHint: "É isto que a tua sala vai jogar. Depois de criada, as rondas e as perguntas ficam fixas — a visibilidade pode mudar a qualquer altura.",

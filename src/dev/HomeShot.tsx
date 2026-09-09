@@ -302,7 +302,8 @@ export default function HomeShot() {
             { name: "Random", iconSlug: null },
           ]}
           questionsPerRound={Number(params.get("q") ?? 10)}
-          stake={params.get("solo") ? null : 500}
+          stake={500}
+          soloFree={Boolean(params.get("solo"))}
           onChange={noop}
           onConfirm={noop}
         />

@@ -1647,7 +1647,7 @@ export const de: KaTranslations = {
     summaryRematchTitle: "Bereit für die Revanche?",
     summaryRematchHint: "Zuerst werden alle am Tisch gefragt. Wer ablehnt, verlässt den Raum, und der Pot richtet sich nach den Plätzen.",
     summaryAskTable: "Revanche anfragen",
-    summaryFree: "Kostenlos — Solo-Training",
+    summaryFree: "Kostenlos, solange du allein bist",
     summaryStake: "Einsatz pro Spieler",
     summaryRounds: "Runden",
     summaryHint: "Das wird dein Raum spielen. Nach dem Erstellen stehen Runden und Fragen fest — die Sichtbarkeit lässt sich jederzeit ändern.",

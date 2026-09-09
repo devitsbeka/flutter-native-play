@@ -1786,7 +1786,8 @@ export function RoomLobbyV2() {
         open={showMatchSummary}
         rounds={summaryRounds}
         questionsPerRound={playsUserTrivia ? null : questionsPerRound(currentRoom.total_questions)}
-        stake={seatedPlayers >= 2 ? REWARDS.GAME_STAKE : null}
+        stake={REWARDS.GAME_STAKE}
+        soloFree={seatedPlayers < 2}
         starting={isStarting}
         rematch={askingTable}
         onChange={() => setShowMatchSummary(false)}

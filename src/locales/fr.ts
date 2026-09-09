@@ -1645,7 +1645,7 @@ export const fr: KaTranslations = {
     summaryRematchTitle: "Prêts pour la revanche ?",
     summaryRematchHint: "Tout le monde à la table est d'abord sondé. Qui refuse quitte la salle, et la cagnotte suit les places.",
     summaryAskTable: "Proposer la revanche",
-    summaryFree: "Gratuit — entraînement solo",
+    summaryFree: "Gratuit tant que tu es seul",
     summaryStake: "Mise par joueur",
     summaryRounds: "Manches",
     summaryHint: "Voilà ce que jouera ton salon. Une fois créé, les manches et les questions sont fixées — la visibilité peut changer à tout moment.",

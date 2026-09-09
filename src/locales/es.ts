@@ -1657,7 +1657,7 @@ export const es: KaTranslations = {
     summaryRematchTitle: "¿Listos para la revancha?",
     summaryRematchHint: "Primero se pregunta a todos en la mesa. Quien rechace sale de la sala y el bote sigue a los asientos.",
     summaryAskTable: "Proponer revancha",
-    summaryFree: "Gratis — práctica en solitario",
+    summaryFree: "Gratis mientras estés solo",
     summaryStake: "Apuesta por jugador",
     summaryRounds: "Rondas",
     summaryHint: "Esto es lo que jugará tu sala. Una vez creada, las rondas y las preguntas quedan fijas: la visibilidad se puede cambiar en cualquier momento.",
