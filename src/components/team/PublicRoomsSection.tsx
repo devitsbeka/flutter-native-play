@@ -20,6 +20,9 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { declineRoomInvite, pendingRoomInvites, type PendingInviteFrom } from "@/utils/pendingRoomInvites";
 import { RoomCardPlayButton } from "@/components/team/RoomCardPlayButton";
 import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
+import { NotEnoughStakeModal } from "@/components/home/NotEnoughStakeModal";
+import { useCurrency } from "@/hooks/useCurrency";
+import { REWARDS } from "@/config/rewardConfig";
 import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
 import { GradientBackground, ROOM_GRADIENT_PRESETS } from "@/components/ui/noisy-gradient-backgrounds";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
@@ -699,6 +702,8 @@ export function PublicRoomsSection({
   const { data, isLoading, refetch } = usePublicRooms();
   const queryClient = useQueryClient();
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [showNoStake, setShowNoStake] = useState(false);
+  const { coins } = useCurrency();
   // The room whose delete/leave is being confirmed, if any.
   const [removing, setRemoving] = useState<PublicRoom | null>(null);
   /**
@@ -1031,6 +1036,17 @@ export function PublicRoomsSection({
 
   const ask = async (room: PublicRoom) => {
     if (busyId) return;
+    // A room is played for a pot and every seat pays the stake into it, so
+    // the door is where that is said — not the settlement, by which point
+    // the answer is a balance that already moved, and not the host's Start,
+    // which is somebody else's screen (owner: "room matches also needs 500
+    // coins to participate, if not it should show the reason after click").
+    // The modal is the one every other screen uses, and it carries the way
+    // out of it: gems exchanged for coins, or the daily reward.
+    if (coins < REWARDS.GAME_STAKE) {
+      setShowNoStake(true);
+      return;
+    }
     setBusyId(room.id);
     try {
       // One door at a time, and the player closes it themselves: an ask
@@ -1153,6 +1169,9 @@ export function PublicRoomsSection({
         roomId={inviting?.id}
         roomCode={inviting?.room_code}
       />
+
+      {/* Why the knock did nothing: a seat costs the stake. */}
+      <NotEnoughStakeModal isOpen={showNoStake} onClose={() => setShowNoStake(false)} />
 
       <AlertDialog open={removing !== null} onOpenChange={(open) => !open && setRemoving(null)}>
         <AlertDialogContent className="bg-card border-border rounded-3xl max-w-sm">
