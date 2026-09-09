@@ -1242,8 +1242,9 @@ export function RoomCardGrid({ room, index, onJoin, onPreview, onDelete, onLeave
       }))
     : [...room.participants].sort((a, b) => Number(b.is_host) - Number(a.is_host));
 
-  // What this room is offering right now, or null when it offers nothing.
-  // See roomCardAction for why an empty room gets no button at all.
+  // What this room is offering right now. Never nothing: a room you hold
+  // a seat in is always enterable (see roomCardAction for why the empty
+  // room stopped going silent).
   const action = roomCardAction(room);
 
   /**
@@ -1691,12 +1692,14 @@ export function RoomCardGrid({ room, index, onJoin, onPreview, onDelete, onLeave
                               to play with. The lobby's own button says the
                               same words, so this is the first of two taps
                               rather than a promise it cannot keep.
-                      enter   somebody is online in a room you are in. Go and
-                              wait for them to start.
+                      enter   a room you hold a seat in. Go in — to wait
+                              for the others, or, as its host, to change it:
+                              rounds, question count, the TV.
 
-                    Nothing at all when no one else is online: most rooms in
-                    this list are old and empty, and a button on every one of
-                    them would say nothing about any of them.
+                    Every card carries one. An empty private room used to
+                    carry none, which left its host locked out of the only
+                    place the room can be edited (owner: "now it just lets
+                    host add friends from card").
 
                     RoundStartWatcher does not cover the live case. It
                     deliberately treats /team as "already there" and never
