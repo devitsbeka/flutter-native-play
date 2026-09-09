@@ -79,6 +79,15 @@ interface CategoryPickerModalProps {
    * a solo surface never lists them. Off unless the opener says otherwise.
    */
   allowParty?: boolean;
+  /**
+   * My Trivias is the host's own, unshared quiz — fine to hand a room, not
+   * to advertise. A published room's picker keeps the tile in place (still
+   * four cards, still the same grid) but greys it out and takes its tap
+   * away, the same "here, but not for this room" treatment the party
+   * category gets one screen over (owner: "when i'm creating public room
+   * we should exclude 'my trivia' option... show as black and white").
+   */
+  allowMyTrivias?: boolean;
   roomGradient?: string;
   excludeTriviaId?: string | null; // Trivia that was just played - should be hidden
 }
@@ -125,6 +134,7 @@ export function CategoryPickerModal({
   onAddToQueue,
   showQueueOption = true,
   allowParty = false,
+  allowMyTrivias = true,
   excludeTriviaId,
 }: CategoryPickerModalProps) {
   const { user } = useAuth();
@@ -384,21 +394,25 @@ export function CategoryPickerModal({
             <div className="grid grid-cols-2 gap-4 max-w-md mx-auto md:max-w-[1100px] md:grid-cols-4">
               {(
                 [
-                  { key: "random", icon: iconDiceCard, title: t("extra.cpRandomTitle"), desc: t("extra.cpRandomDesc"), onTap: () => togglePick({ type: "random" }), picked: isPicked({ type: "random" }) },
-                  { key: "random5", icon: iconFiveRounds, title: t("extra.cpRandom5Title"), desc: t("extra.cpRandom5Desc"), onTap: handlePickFiveRandom, picked: false },
-                  { key: "library", icon: iconLibraryCard, title: t("extra.cpLibraryTitle"), desc: t("extra.cpLibraryDesc"), onTap: () => setView("library"), picked: false },
-                  { key: "my-trivias", icon: stickerAlbum, title: t("extra.cpMyTriviasTitle"), desc: t("extra.cpMyTriviasDesc"), onTap: () => setView("my-trivias"), picked: false },
+                  { key: "random", icon: iconDiceCard, title: t("extra.cpRandomTitle"), desc: t("extra.cpRandomDesc"), onTap: () => togglePick({ type: "random" }), picked: isPicked({ type: "random" }), disabled: false },
+                  { key: "random5", icon: iconFiveRounds, title: t("extra.cpRandom5Title"), desc: t("extra.cpRandom5Desc"), onTap: handlePickFiveRandom, picked: false, disabled: false },
+                  { key: "library", icon: iconLibraryCard, title: t("extra.cpLibraryTitle"), desc: t("extra.cpLibraryDesc"), onTap: () => setView("library"), picked: false, disabled: false },
+                  { key: "my-trivias", icon: stickerAlbum, title: t("extra.cpMyTriviasTitle"), desc: t("extra.cpMyTriviasDesc"), onTap: () => setView("my-trivias"), picked: false, disabled: !allowMyTrivias },
                 ]
               ).map((card) => (
                 <motion.button
                   key={card.key}
-                  whileTap={{ scale: 0.96 }}
+                  whileTap={card.disabled ? undefined : { scale: 0.96 }}
                   transition={{ type: "spring", stiffness: 480, damping: 28 }}
-                  onClick={card.onTap}
+                  onClick={card.disabled ? undefined : card.onTap}
+                  disabled={card.disabled}
+                  aria-disabled={card.disabled}
                   className={`relative rounded-[24px] p-4 pt-6 bg-white/70 border border-solid text-left transition-shadow ${
-                    card.picked
-                      ? "border-[#7126d5] shadow-[0px_4px_4px_0px_rgba(113,38,213,0.42)]"
-                      : "border-[rgba(211,211,211,0.5)]"
+                    card.disabled
+                      ? "grayscale opacity-50 cursor-not-allowed border-[rgba(211,211,211,0.5)]"
+                      : card.picked
+                        ? "border-[#7126d5] shadow-[0px_4px_4px_0px_rgba(113,38,213,0.42)]"
+                        : "border-[rgba(211,211,211,0.5)]"
                   }`}
                 >
                   {card.picked && (

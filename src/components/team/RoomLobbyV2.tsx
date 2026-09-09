@@ -1587,6 +1587,7 @@ export function RoomLobbyV2() {
         onAddToQueue={handleAddToQueue}
         showQueueOption={true}
         allowParty={!currentRoom?.is_public}
+        allowMyTrivias={!currentRoom?.is_public}
         roomGradient={roomGradient?.gradient}
         excludeTriviaId={currentRoom?.user_trivia_id}
       />

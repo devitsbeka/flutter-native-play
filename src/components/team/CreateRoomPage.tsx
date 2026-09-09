@@ -2682,6 +2682,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         onAddToQueue={handleAddPreRoomQueueItem}
         showQueueOption={true}
         allowParty={!publishRoom}
+        allowMyTrivias={!publishRoom}
       />
 
       {/* Personal Trivia Modal - Game UI Style */}
