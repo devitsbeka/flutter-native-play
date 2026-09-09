@@ -100,3 +100,14 @@ describe("the words, in every language", () => {
     }
   });
 });
+
+describe("the buttons are bold", () => {
+  it("New Game, Continue and Ask for a rematch all carry font-bold over the chunky button's semibold", () => {
+    // Owner: "we need bold font on these buttons". The chunky button's own
+    // weight is semibold; the results screen's three tall buttons say so
+    // explicitly, and cn() lets the later class win.
+    const bold = results.match(/className="w-full font-bold"/g) ?? [];
+    expect(bold).toHaveLength(3);
+    expect(results).not.toMatch(/size="lg"\s*\n\s*className="w-full"\s*\n/);
+  });
+});
