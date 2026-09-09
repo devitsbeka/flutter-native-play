@@ -70,7 +70,10 @@ describe("where Create goes", () => {
 
   it("leaving the room the way the back arrow does, so nothing is half-exited", () => {
     expect(lobby).toMatch(/const handleDoneCreating = \(\) => \{[\s\S]*?exitRoom\(\);/);
-    expect(lobby).toMatch(/onPress: offerCreate \? handleDoneCreating : handleStartOrPick,/);
+    // Create raises the summary first; the sheet's own button is what
+    // leaves (see matchSummarySheet.test.ts).
+    expect(lobby).toMatch(/onPress: offerCreate \? handleCreatePress : handleStartOrPick,/);
+    expect(lobby).toMatch(/setShowMatchSummary\(false\);\s*\n\s*handleDoneCreating\(\);/);
   });
 
   it("and the hub reads that tab off the URL, which is why a param is enough", () => {

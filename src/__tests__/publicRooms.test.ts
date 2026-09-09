@@ -192,7 +192,7 @@ describe("the private tab and the lobby it opens", () => {
     expect(lobby).toMatch(
       /const awaitingPlayers = !needsCategorySelection && !enoughPlayers && !isStarting;/,
     );
-    expect(lobby).toMatch(/onPress: offerCreate \? handleDoneCreating : handleStartOrPick,/);
+    expect(lobby).toMatch(/onPress: offerCreate \? handleCreatePress : handleStartOrPick,/);
     expect(lobby).toMatch(/rlNeedsSecondPlayer/);
     // The button's disabled state is not the only guard: the category picker
     // can start a round on its own, and the last guest can leave between the
