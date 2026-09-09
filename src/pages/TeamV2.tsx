@@ -334,6 +334,14 @@ function TeamContentV2() {
    * Play on TV (owner: "when i'm on public tab and click + room remove
    * public/private tabs, it will be public ... when i'm on private tab and
    * click create room can't be public").
+   *
+   * But not listed YET. The row is born private on either tab, and the
+   * Public tab's intent rides in the draft store: the lobby reads it to show
+   * the public rules, and Create or Start is what flips is_public. Before
+   * this a public draft sat on everybody's Public list from the moment the
+   * button was pressed — no category, no Create, a room nobody had built
+   * (owner: "when i click + room, that room already exist on public list
+   * ... until i click create do not create room and show on public list").
    */
   const createRoomAndOpen = async (isPublic: boolean) => {
     const identity = generateRoomIdentity(readAppLanguage());
@@ -344,14 +352,15 @@ function TeamContentV2() {
       identity.name,
       null,
       undefined,
-      isPublic,
+      // Private until Create publishes it (draftWantsPublic).
+      false,
       // Ask-me on a public room; a private room has no door to guard.
       isPublic,
     );
     if (room) {
       // A draft until the host presses Create or Start in the lobby: backing
       // out before that, still alone, deletes it (see the lobby's back arrow).
-      rememberDraftRoom(room.id);
+      rememberDraftRoom(room.id, { publishAs: isPublic ? "public" : "private" });
       navigate(`/team?room=${room.room_code}`);
     }
   };

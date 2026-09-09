@@ -78,6 +78,18 @@ export function rememberPressedCreate(roomId: string | null | undefined): void {
  * same device that made them and is the only one that can back out of them.
  */
 export const DRAFT_ROOMS_KEY = "roomsDraft";
+/**
+ * The drafts that are to be PUBLISHED when Create settles them.
+ *
+ * A draft is made private whatever tab it came from: a public draft was on
+ * the Public list the moment "+ Room" was pressed, before a category, before
+ * Create — a room nobody had built, listed to everybody (owner: "when i
+ * click + room, that room already exist on public list ... until i click
+ * create do not create room and show on public list"). So the row is born
+ * private, the lobby treats it as public by intent (rules, counting, the
+ * door), and Create or Start flips is_public. This list is the intent.
+ */
+export const DRAFT_PUBLIC_KEY = "roomsDraftPublic";
 
 function readDraftIds(): string[] {
   try {
@@ -100,14 +112,47 @@ function writeDraftIds(ids: string[]): void {
   }
 }
 
-export function rememberDraftRoom(roomId: string | null | undefined): void {
+function readPublicIds(): string[] {
+  try {
+    const stored = localStorage.getItem(DRAFT_PUBLIC_KEY);
+    if (!stored) return [];
+    const parsed: unknown = JSON.parse(stored);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((id): id is string => typeof id === "string");
+  } catch {
+    return [];
+  }
+}
+
+function writePublicIds(ids: string[]): void {
+  try {
+    localStorage.setItem(DRAFT_PUBLIC_KEY, JSON.stringify(ids.slice(0, CREATE_OFFERED_MAX)));
+  } catch {
+    // Storage refused: the draft stays private, which is the safe side —
+    // the host can still publish it from the lobby's own rules.
+  }
+}
+
+export function rememberDraftRoom(
+  roomId: string | null | undefined,
+  opts: { publishAs?: "public" | "private" } = {},
+): void {
   if (!roomId) return;
   writeDraftIds([roomId, ...readDraftIds().filter((id) => id !== roomId)]);
+  const rest = readPublicIds().filter((id) => id !== roomId);
+  writePublicIds(opts.publishAs === "public" ? [roomId, ...rest] : rest);
 }
 
 export function forgetDraftRoom(roomId: string | null | undefined): void {
   if (!roomId) return;
   writeDraftIds(readDraftIds().filter((id) => id !== roomId));
+  writePublicIds(readPublicIds().filter((id) => id !== roomId));
+}
+
+/** Is this draft meant to be public once Create settles it? */
+export function draftWantsPublic(roomId: string | null | undefined): boolean {
+  if (!roomId) return false;
+  return readPublicIds().includes(roomId);
 }
 
 export function isDraftRoom(roomId: string | null | undefined): boolean {

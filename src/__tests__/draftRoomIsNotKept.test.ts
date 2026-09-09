@@ -76,7 +76,7 @@ describe("the draft memory", () => {
 
 describe("+ Room makes a draft; Create and Start settle it", () => {
   it("the hub remembers the row it just made as a draft", () => {
-    expect(hub).toMatch(/rememberDraftRoom\(room\.id\);\s*\n\s*navigate\(`\/team\?room=\$\{room\.room_code\}`\);/);
+    expect(hub).toMatch(/rememberDraftRoom\(room\.id, \{ publishAs: isPublic \? "public" : "private" \}\);\s*\n\s*navigate\(`\/team\?room=\$\{room\.room_code\}`\);/);
   });
 
   it("Create forgets it, and so does Start", () => {

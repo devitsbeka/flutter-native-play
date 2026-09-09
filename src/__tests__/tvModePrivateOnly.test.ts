@@ -24,8 +24,10 @@ describe("the lobby's Play on TV row", () => {
   it("reads the same flag the Visibility toggle writes", () => {
     // Not a second notion of "public" — the row and the toggle have to
     // agree the moment a host flips Visibility, not after a refetch.
+    // ...and the draft store's intent for a public draft, so the TV row is
+    // not offered on a room about to be published (draftIsPrivateUntilCreate.test).
     expect(lobby).toMatch(
-      /const isPublicRoom = Boolean\(\(currentRoom as \{ is_public\?: boolean \}\)\.is_public\);/,
+      /const isPublicRoom =\s*\n\s*Boolean\(\(currentRoom as \{ is_public\?: boolean \}\)\.is_public\) \|\|\s*\n\s*publishedNow \|\|\s*\n\s*draftWantsPublic\(currentRoom\.id\);/,
     );
   });
 });

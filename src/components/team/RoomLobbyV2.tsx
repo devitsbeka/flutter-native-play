@@ -55,7 +55,7 @@ import type { QueueItem } from "@/hooks/useRoomCategoryQueue";
 import { classicLobbyScene } from "@/utils/lobbyScene";
 import { gameRoomsHasApproval } from "@/utils/roomVisibility";
 import { dealtRoomIcon, fetchCrestPool } from "@/utils/roomCrests";
-import { forgetDraftRoom, hasPressedCreate, isDraftRoom, rememberPressedCreate } from "@/utils/roomCreateOffered";
+import { draftWantsPublic, forgetDraftRoom, hasPressedCreate, isDraftRoom, rememberPressedCreate } from "@/utils/roomCreateOffered";
 import { useParticipantPresence } from "@/hooks/useParticipantPresence";
 import coinIconAsset from "@/assets/tb-lobby/coin.png";
 import { NotEnoughStakeModal } from "@/components/home/NotEnoughStakeModal";
@@ -652,6 +652,31 @@ export function RoomLobbyV2() {
   };
 
   /**
+   * A draft the Public tab made is published here, not at birth.
+   *
+   * The row was born private so it would not sit on everybody's Public list
+   * before it was a room (owner: "until i click create do not create room
+   * and show on public list"). Create and Start are what make it one, so
+   * they flip is_public — once, on the host's own row — and the lobby
+   * treats the room as public from then on without waiting for the row to
+   * come back round. Returns whether the room is public afterwards.
+   */
+  const [publishedNow, setPublishedNow] = useState(false);
+  const publishDraft = async (): Promise<boolean> => {
+    if (!currentRoom) return false;
+    const alreadyPublic = Boolean((currentRoom as { is_public?: boolean }).is_public) || publishedNow;
+    if (alreadyPublic) return true;
+    if (!draftWantsPublic(currentRoom.id)) return false;
+    const { error } = await supabase.from("game_rooms").update({ is_public: true }).eq("id", currentRoom.id);
+    if (error) {
+      console.warn("[RoomLobbyV2] draft room was not published:", error.message);
+      return false;
+    }
+    setPublishedNow(true);
+    return true;
+  };
+
+  /**
    * "Create": the way out of a room that is set up but cannot start yet.
    *
    * A host alone in their own room met a dead Start button — the screen's one
@@ -670,7 +695,9 @@ export function RoomLobbyV2() {
    * back finds the same finished room, so a second offer of the same trip
    * would be a loop rather than a way on.
    */
-  const handleDoneCreating = () => {
+  const handleDoneCreating = async () => {
+    // Published first, so the list it lands on is the one it is on.
+    const isPublic = await publishDraft();
     rememberPressedCreate(currentRoom?.id);
     setRoomCreated(true);
     // Created is settled: the draft is a room now, and backing out keeps it.
@@ -681,7 +708,7 @@ export function RoomLobbyV2() {
     // waiting in it. Then the footer is just Start.
     if (enoughPlayersRef.current) return;
     exitRoom();
-    navigate(`/team?tab=${currentRoom?.is_public ? "public" : "private"}`, { replace: true });
+    navigate(`/team?tab=${isPublic ? "public" : "private"}`, { replace: true });
   };
 
   /**
@@ -718,7 +745,9 @@ export function RoomLobbyV2() {
 
   const handleStartGame = async () => {
     if (!currentRoom) return;
-    // A round played in it settles a draft as surely as Create does.
+    // A round played in it settles a draft as surely as Create does - and
+    // publishes one the Public tab made.
+    await publishDraft();
     forgetDraftRoom(currentRoom.id);
     // The button is disabled for this, but the category picker can start a
     // round on its own (startAfterPick) and the last player can leave between
@@ -1141,7 +1170,13 @@ export function RoomLobbyV2() {
   // Published to the rooms page, which decides how this room is played:
   // through, together, now. Read here rather than beside the Visibility row
   // that writes it, because the Start button below asks the same question.
-  const isPublicRoom = Boolean((currentRoom as { is_public?: boolean }).is_public);
+  // ...or a draft the Public tab made, which is born private and published
+  // by Create (draftWantsPublic); or one published a moment ago, before the
+  // row's own column has caught up (publishedNow).
+  const isPublicRoom =
+    Boolean((currentRoom as { is_public?: boolean }).is_public) ||
+    publishedNow ||
+    draftWantsPublic(currentRoom.id);
   /**
    * A PUBLIC room counts the people who are actually in the app.
    *

@@ -59,7 +59,10 @@ describe("what settles a room", () => {
   it("reads the room's own column — and nothing in the lobby writes it any more", () => {
     // The tab the room was made from decided (roomVisibilityFromTheTab
     // .test.ts); the lock lifts when there is nothing left to play.
-    expect(lobby).toMatch(/const isPublicRoom = Boolean\(\(currentRoom as \{ is_public\?: boolean \}\)\.is_public\);/);
+    // ...plus a public draft's intent and a publish that has just happened
+    // (draftIsPrivateUntilCreate.test.ts); the row's column is still the
+    // truth once it has caught up.
+    expect(lobby).toMatch(/const isPublicRoom =\s*\n\s*Boolean\(\(currentRoom as \{ is_public\?: boolean \}\)\.is_public\) \|\|\s*\n\s*publishedNow \|\|\s*\n\s*draftWantsPublic\(currentRoom\.id\);/);
     expect(lobby).not.toMatch(/roomVisibilityFields/);
   });
 });

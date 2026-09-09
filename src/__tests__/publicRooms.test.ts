@@ -163,11 +163,11 @@ describe("the private tab and the lobby it opens", () => {
     // better in the lobby the host is going to anyway.
     expect(page).toMatch(/const createRoomAndOpen = async \(isPublic: boolean\) => \{/);
     expect(page).toMatch(/onSelectGameRoom=\{\(\) => void createRoomAndOpen\(activeTab === "public"\)\}/);
-    // Named so the lobby has a title; published, and on the latch so the
-    // host still says who comes in, exactly when it was made from the
-    // Public tab (roomVisibilityFromTheTab.test.ts).
+    // Named so the lobby has a title; born private and on the latch exactly
+    // when it was made from the Public tab — Create is what publishes it
+    // (draftIsPrivateUntilCreate.test.ts).
     expect(page).toMatch(/generateRoomIdentity\(readAppLanguage\(\)\)/);
-    expect(page).toMatch(/undefined,\s*\n\s*isPublic,\s*\n(\s*\/\/[^\n]*\n)*\s*isPublic,\s*\n\s*\);/);
+    expect(page).toMatch(/undefined,\s*\n(\s*\/\/[^\n]*\n)*\s*false,\s*\n(\s*\/\/[^\n]*\n)*\s*isPublic,\s*\n\s*\);/);
   });
 
   it("a room is two people — a lone host cannot start one", () => {

@@ -30,7 +30,10 @@ describe("what + Room writes", () => {
     // isPublic, then requiresApproval — the last two arguments, and the
     // door is on the latch exactly when the room is public.
     expect(hub).toMatch(/const createRoomAndOpen = async \(isPublic: boolean\) => \{/);
-    expect(hub).toMatch(/undefined,\s*\n\s*isPublic,\s*\n(\s*\/\/[^\n]*\n)*\s*isPublic,\s*\n\s*\);/);
+    // The room is born PRIVATE either way now — a public draft is published
+    // by Create, not listed at birth (draftIsPrivateUntilCreate.test) — and
+    // the door is on the latch exactly when it is meant to be public.
+    expect(hub).toMatch(/undefined,\s*\n(\s*\/\/[^\n]*\n)*\s*false,\s*\n(\s*\/\/[^\n]*\n)*\s*isPublic,\s*\n\s*\);/);
   });
 
   it("and it is no longer named after the private room it used to make", () => {
@@ -69,7 +72,9 @@ describe("createRoom carries the door policy the same way it carries visibility"
 
 describe("the lobby's door row still decides, and still shows the truth", () => {
   it("the lobby reads the room's own column for what it is", () => {
-    expect(lobby).toMatch(/const isPublicRoom = Boolean\(\(currentRoom as \{ is_public\?: boolean \}\)\.is_public\);/);
+    // ...or the draft store's intent for a draft the Public tab made, or a
+    // publish that has just happened (draftIsPrivateUntilCreate.test).
+    expect(lobby).toMatch(/const isPublicRoom =\s*\n\s*Boolean\(\(currentRoom as \{ is_public\?: boolean \}\)\.is_public\) \|\|\s*\n\s*publishedNow \|\|\s*\n\s*draftWantsPublic\(currentRoom\.id\);/);
   });
 
   it("Joining reads the room's column, and only on a room that has a door worth guarding", () => {

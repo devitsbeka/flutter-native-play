@@ -64,12 +64,14 @@ describe("the state the button changes for", () => {
 describe("where Create goes", () => {
   it("to the hub, on the tab the room is listed under", () => {
     expect(lobby).toMatch(
-      /navigate\(`\/team\?tab=\$\{currentRoom\?\.is_public \? "public" : "private"\}`, \{ replace: true \}\);/,
+      // The tab is the one Create just published to, not the row's stale
+      // column (draftIsPrivateUntilCreate.test).
+      /navigate\(`\/team\?tab=\$\{isPublic \? "public" : "private"\}`, \{ replace: true \}\);/,
     );
   });
 
   it("leaving the room the way the back arrow does, so nothing is half-exited", () => {
-    expect(lobby).toMatch(/const handleDoneCreating = \(\) => \{[\s\S]*?exitRoom\(\);/);
+    expect(lobby).toMatch(/const handleDoneCreating = async \(\) => \{[\s\S]*?exitRoom\(\);/);
     // Create raises the summary first; the sheet's own button is what
     // leaves (see matchSummarySheet.test.ts).
     expect(lobby).toMatch(/onPress: offerCreate \? handleCreatePress : handleStartOrPick,/);
