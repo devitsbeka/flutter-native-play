@@ -34,6 +34,10 @@ import { AuthRequiredModal } from "@/components/shared/AuthRequiredModal";
 import { useLocalizedCategoryName } from "@/utils/categoryDisplayName";
 import { useRoomIconPool } from "@/hooks/useRoomIconPool";
 import { dealtRoomIcon } from "@/utils/roomCrests";
+import { useVipStatus } from "@/contexts/VipContext";
+import { PlayLimitModal } from "@/components/home/PlayLimitModal";
+import { applyRematchPick, sendRematchRequest, type RematchPick } from "@/utils/rematchRequests";
+import { Lock } from "lucide-react";
 
 // Games whose results were already counted on this device. Module-level (not a
 // ref) because the results screen can remount for the SAME game (results ->
@@ -124,7 +128,6 @@ export function GameResultsScreenV2() {
     startNewRound,
     startNextFromQueue,
     isHost,
-    startGame,
     isMostLikelyRound,
     hostIsObserver,
   } = useMultiplayerV2();
@@ -164,6 +167,13 @@ export function GameResultsScreenV2() {
 
   const [isStartingRematch, setIsStartingRematch] = useState(false);
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
+  // A player who is not the host asking for a rematch — PRO only, with a
+  // pick of their own. The picker is the host's; what happens on a pick is
+  // not, so the two are told apart here.
+  const { isVip } = useVipStatus();
+  const [showAskPicker, setShowAskPicker] = useState(false);
+  const [showAskWall, setShowAskWall] = useState(false);
+  const [isAsking, setIsAsking] = useState(false);
   const [challengeQuestions, setChallengeQuestions] = useState<any[]>([]);
   const hasFetchedChallengeQuestions = useRef(false);
 
@@ -478,84 +488,118 @@ export function GameResultsScreenV2() {
     }
   };
 
-  // Category picker handlers - directly from results screen
-  const handleSelectCategory = async (category: { id: string; name: string; iconSlug?: string | null }) => {
+  /**
+   * The host's New Game.
+   *
+   * It used to start the round on the spot: category written, startGame(),
+   * and every other player pulled into it by the room's realtime status
+   * whether they were still looking or not — and, since a room is played
+   * for a pot, staked for it. A new game is asked now (owner: "host starts
+   * new match with new pot and we should notify players in that room - do
+   * you want rematch showing host"): the room takes the pick and goes back
+   * to its lobby, everyone at the table gets "Rematch?" with the host's
+   * name on it, and the host presses Start in the lobby — where the stake
+   * is shown and a seat that cannot pay is refused — with whoever said yes.
+   */
+  const everyoneElse = () =>
+    participants.filter((p) => p.user_id !== user?.id && (p.status as string) !== "invited").map((p) => p.user_id);
+
+  const askRematch = async (pick: RematchPick, kind: "host_new_game" | "player_ask") => {
+    if (!currentRoom || !user) return 0;
+    return sendRematchRequest({
+      room: currentRoom,
+      requester: { id: user.id, nickname: profile?.nickname ?? null, avatar_url: profile?.avatar_url ?? null },
+      pick,
+      kind,
+      recipientIds: everyoneElse(),
+      title: t("extra.rematchRequestTitle"),
+      message:
+        kind === "host_new_game"
+          ? t("extra.rematchNewGameBody", { name: profile?.nickname || t("extra.friendFallback") })
+          : t("extra.rematchRequestBody", { name: profile?.nickname || t("extra.friendFallback") }),
+    });
+  };
+
+  const beginNewGame = async (pick: RematchPick) => {
     setShowCategoryPicker(false);
+    if (!currentRoom) return;
     setIsStartingRematch(true);
     try {
-      // Update room with selected category
-      await supabase
-        .from("game_rooms")
-        .update({
-          category_id: category.id,
-          category_name: category.name,
-          user_trivia_id: null, // Clear any previous trivia selection
-        })
-        .eq("id", currentRoom?.id);
-      
-      await startGame();
+      const applied = await applyRematchPick(currentRoom.id, pick);
+      if (!applied) {
+        // Somebody already started the next round; the lobby is not where
+        // this room is any more. Follow the room rather than fight it.
+        continueInRoom();
+        return;
+      }
+      try {
+        await askRematch(pick, "host_new_game");
+      } catch (e) {
+        // The room is already in its lobby with the pick; a notification
+        // that failed to write is not a reason to strand the host here.
+        console.error("[GameResults] rematch notifications failed:", e);
+      }
+      continueInRoom();
     } catch (error) {
-      console.error("Error starting game with category:", error);
+      console.error("Error starting new game:", error);
       toast.error(t("game.couldNotStartRound"));
     } finally {
       setIsStartingRematch(false);
     }
+  };
+
+  // Category picker handlers - directly from results screen
+  const handleSelectCategory = (category: { id: string; name: string; iconSlug?: string | null }) =>
+    beginNewGame({ source_type: "category", category_id: category.id, category_name: category.name, icon_slug: category.iconSlug ?? null });
+
+  /** A random pick is dealt HERE, once, so everyone is asked the same question. */
+  const dealRandomPick = async (): Promise<RematchPick | null> => {
+    const { data: categories } = await supabase
+      .from("categories")
+      .select("id, name, icon_slug, is_language_specific, language")
+      .eq("is_active", true);
+    const pool = filterCategoriesForLanguage(categories || []);
+    if (pool.length === 0) return null;
+    const randomCat = pool[Math.floor(Math.random() * pool.length)];
+    return { source_type: "random", category_id: randomCat.id, category_name: randomCat.name, icon_slug: randomCat.icon_slug ?? null };
   };
 
   const handleSelectRandom = async () => {
-    setShowCategoryPicker(false);
-    setIsStartingRematch(true);
-    try {
-      // Fetch a random category
-      const { data: categories } = await supabase
-        .from("categories")
-        .select("id, name, icon_slug, is_language_specific, language")
-        .eq("is_active", true);
+    const pick = await dealRandomPick();
+    if (pick) await beginNewGame(pick);
+    else setShowCategoryPicker(false);
+  };
 
-      const pool = filterCategoriesForLanguage(categories || []);
-      if (pool.length > 0) {
-        const randomCat = pool[Math.floor(Math.random() * pool.length)];
-        // Update room with random category
-        await supabase
-          .from("game_rooms")
-          .update({
-            category_id: randomCat.id,
-            category_name: randomCat.name,
-            user_trivia_id: null,
-          })
-          .eq("id", currentRoom?.id);
-        
-        await startGame();
-      }
+  const handleSelectTrivia = (trivia: { id: string; title: string }) =>
+    beginNewGame({ source_type: "user_trivia", user_trivia_id: trivia.id, category_name: trivia.title, category_id: null });
+
+  /**
+   * A player asking the host for a rematch, with their own pick.
+   *
+   * PRO only (owner: "other PRO players can play rematch ... with their
+   * rules like chose categories what they want not the host this time").
+   * Nothing is written to the room: the ask is a notification to the host
+   * and to every other seat, and the host's yes is what reshapes the room.
+   */
+  const handleAskPick = async (pick: RematchPick) => {
+    setShowAskPicker(false);
+    if (!currentRoom || !user) return;
+    setIsAsking(true);
+    try {
+      const sent = await askRematch(pick, "player_ask");
+      if (sent > 0) toast.success(t("extra.rematchAskSent"));
     } catch (error) {
-      console.error("Error starting random game:", error);
-      toast.error(t("game.couldNotStartRound"));
+      console.error("[GameResults] rematch ask failed:", error);
+      toast.error(t("extra.errorOccurred"));
     } finally {
-      setIsStartingRematch(false);
+      setIsAsking(false);
     }
   };
 
-  const handleSelectTrivia = async (trivia: { id: string; title: string }) => {
-    setShowCategoryPicker(false);
-    setIsStartingRematch(true);
-    try {
-      // Update room with user trivia
-      await supabase
-        .from("game_rooms")
-        .update({
-          user_trivia_id: trivia.id,
-          category_name: trivia.title,
-          category_id: null,
-        })
-        .eq("id", currentRoom?.id);
-      
-      await startGame();
-    } catch (error) {
-      console.error("Error starting trivia game:", error);
-      toast.error(t("game.couldNotStartRound"));
-    } finally {
-      setIsStartingRematch(false);
-    }
+  const handleAskRandom = async () => {
+    const pick = await dealRandomPick();
+    if (pick) await handleAskPick(pick);
+    else setShowAskPicker(false);
   };
 
   const handleAddToQueue = async (item: {
@@ -593,6 +637,16 @@ export function GameResultsScreenV2() {
           user_trivia_id: null,   // Clear - no current trivia
         })
         .eq("id", currentRoom.id);
+      // The same question as New Game: the room is back in its lobby with
+      // rounds queued, and the table is asked whether it wants them.
+      try {
+        await askRematch(
+          { source_type: item.source_type, category_id: item.category_id, category_name: item.category_name, user_trivia_id: item.user_trivia_id, icon_slug: item.icon_slug },
+          "host_new_game",
+        );
+      } catch (e) {
+        console.error("[GameResults] rematch notifications failed:", e);
+      }
     }
     
     // Navigate to lobby (continueInRoom will see status is already "waiting" and skip redundant DB update)
@@ -901,6 +955,21 @@ export function GameResultsScreenV2() {
           </>
         ) : (
           <>
+            {/* A player who is not the host can ask for a rematch on their
+                own terms — PRO's door; anyone else meets the PRO wall on the
+                tap, the same one the rooms hub shows (owner: "we need CTA
+                saying that player can ask rematch (if player is PRO user)"). */}
+            <ChunkyButton
+              variant="mint"
+              size="lg"
+              className="w-full"
+              onClick={() => (isVip ? setShowAskPicker(true) : setShowAskWall(true))}
+              disabled={isAsking}
+              icon={isAsking ? <Loader2 className="w-5 h-5 animate-spin" /> : isVip ? <ChevronRight className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
+            >
+              {t("extra.rematchAskCta")}
+            </ChunkyButton>
+
             {/* Non-host: nothing to do but wait, so say so like something is
                 still happening. A static line in the same slot the host's
                 button occupies reads as a button that has stopped working. */}
@@ -922,6 +991,22 @@ export function GameResultsScreenV2() {
         onClose={() => setShowQueueSheet(false)}
         queue={queue}
       />
+
+      {/* The asker's picker: one pick, no queue — a request is one game. */}
+      <CategoryPickerModal
+        isOpen={showAskPicker}
+        onClose={() => setShowAskPicker(false)}
+        onSelectCategory={(c) => void handleAskPick({ source_type: "category", category_id: c.id, category_name: c.name, icon_slug: c.iconSlug ?? null })}
+        onSelectRandom={() => void handleAskRandom()}
+        onSelectTrivia={(tr) => void handleAskPick({ source_type: "user_trivia", user_trivia_id: tr.id, category_name: tr.title, category_id: null })}
+        showQueueOption={false}
+        allowParty={!currentRoom?.is_public}
+        allowMyTrivias={!currentRoom?.is_public}
+        roomGradient={currentRoom?.background_gradient || undefined}
+        excludeTriviaId={currentRoom?.user_trivia_id}
+      />
+
+      <PlayLimitModal reason="rooms" isOpen={showAskWall} onClose={() => setShowAskWall(false)} />
 
       <CategoryPickerModal
         isOpen={showCategoryPicker}

@@ -578,7 +578,7 @@ describe("a knock answered from the activity list", () => {
   it("the join-request notification offers accept and decline and answers through the RPC", () => {
     const card = read("src/components/notifications/CompactNotificationCard.tsx");
     expect(card).toMatch(/const isJoinRequest = notification\.type === 'room_join_request';/);
-    expect(card).toMatch(/hasDualActions = \(isFriendRequest \|\| isGameInvite \|\| isJoinRequest\)/);
+    expect(card).toMatch(/hasDualActions = \(isFriendRequest \|\| isGameInvite \|\| isJoinRequest \|\| isRematch\)/);
     expect(card).toMatch(/onAcceptJoin\?\.\(roomId, requesterId, notification\.id\)/);
     expect(card).toMatch(/onDeclineJoin\?\.\(roomId, requesterId, notification\.id\)/);
     const hook = read("src/hooks/useRoomJoinRequests.ts");
