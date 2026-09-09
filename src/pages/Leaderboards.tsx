@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { BalanceStripRow } from "@/components/shared/BalanceStrip";
 import { MainLayout } from "@/components/layout/MainLayout";
 import bgLeaderGlobal from "@/assets/bgleader-global.webp";
 import starIcon from "@/assets/thiings/star.png";
@@ -341,7 +340,6 @@ export default function Leaderboards() {
           title={t("extra.ratingTitle")}
           showBack={false}
           rightElements={<HeaderActions />}
-          belowRow={<BalanceStripRow />}
         />
 
         <div className="relative flex-1 min-h-0 w-full max-w-xl mx-auto px-4 pt-5 pb-[calc(var(--bottom-nav-height)_+_var(--safe-bottom)_+_1rem)] md:pb-8 flex flex-col">

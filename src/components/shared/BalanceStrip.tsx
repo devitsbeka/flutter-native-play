@@ -73,15 +73,20 @@ export default BalancePills;
  * The balance strip as a row of its own, for the main screens that have no
  * profile card to carry the numbers.
  *
- * The home keeps its balances on the profile card. Explore, the shop and the
- * rating board have nowhere like that, so they hang this under their header
- * (PageHeader's `belowRow`), where it inherits the header's stickiness — but
- * not its surface: the strip brings its own, so it looks the same on Explore's
- * cover as it does on the shop and the rating board (see below).
+ * The home keeps its balances on the profile card. The shop has nowhere like
+ * that, so it hangs this under its header (PageHeader's `belowRow`), where it
+ * inherits the header's stickiness — but not its surface: the strip brings
+ * its own, so it frosts over whatever the page puts behind it (see below).
  *
- * The online-game hub is deliberately not one of them: the friends reel is
- * already on that row there, and two strips under one header is a header
- * nobody can see past.
+ * Explore and the rating board carried it too and no longer do. Both are
+ * browsing screens rather than spending ones — the numbers are not what you
+ * came for — and on both the strip was costing a band of the one thing those
+ * pages are: Explore's cover artwork and the rating board's first places.
+ * Tapping a balance lands in the shop, which is one tab away on either.
+ *
+ * The online-game hub is deliberately not one of them either: the friends
+ * reel is already on that row there, and two strips under one header is a
+ * header nobody can see past.
  *
  * Phones only. From md up the row above has the width for the balances a
  * page wants to show (the shop puts its own pills beside the title there),
