@@ -311,6 +311,17 @@ jobs:
           psql -h localhost -p 5432 -U postgres \
             -v ON_ERROR_STOP=1 -f supabase/tests/16-pro-welcome.sql
 
+      # What a public card advertises. The rounds come from the RPC because
+      # a stranger may not read room_category_queue at all, so the thing
+      # being proved is that the SECURITY DEFINER path answers them — in
+      # order, with both fallbacks.
+      - name: Assert public room rounds
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -p 5432 -U postgres \
+            -v ON_ERROR_STOP=1 -f supabase/tests/17-public-room-rounds.sql
+
       # A public room ends with its play. One rule for when it is over —
       # quiet an hour, and mid-round, finished, or played out with nothing
       # to play — the Public tab refuses to list such a room, and the sweep

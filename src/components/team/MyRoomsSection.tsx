@@ -25,6 +25,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { TVMirrorModal } from "@/components/tv/TVMirrorModal";
 import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
 import { NotEnoughStakeModal } from "@/components/home/NotEnoughStakeModal";
+import { RoomPreviewSheet } from "@/components/team/RoomPreviewSheet";
 import { useCurrency } from "@/hooks/useCurrency";
 import { REWARDS } from "@/config/rewardConfig";
 import { Capacitor } from "@capacitor/core";
@@ -247,6 +248,8 @@ export function MyRoomsSection({
   // and every extra tap starts the chain again.
   const [joiningRoomId, setJoiningRoomId] = useState<string | null>(null);
   const [showNoStake, setShowNoStake] = useState(false);
+  /** The room whose rounds and cost are being read. */
+  const [previewing, setPreviewing] = useState<MyRoom | null>(null);
   const { coins } = useCurrency();
 
   const handleJoin = async (room: MyRoom) => {
@@ -404,6 +407,16 @@ export function MyRoomsSection({
       {/* Why the tap did nothing: a seat at that table costs the stake. */}
       <NotEnoughStakeModal isOpen={showNoStake} onClose={() => setShowNoStake(false)} />
 
+      {/* What the card is, opened by tapping it. */}
+      <RoomPreviewSheet
+        open={previewing !== null}
+        roomName={previewing?.room_name || t("extra.roomDefaultName")}
+        rounds={previewing?.rounds ?? []}
+        questionsPerRound={previewing?.total_questions ?? null}
+        players={previewing?.participants.length ?? 0}
+        onClose={() => setPreviewing(null)}
+      />
+
       <InviteFriendsModal
         isOpen={inviting !== null}
         onClose={() => setInviting(null)}
@@ -505,6 +518,7 @@ export function MyRoomsSection({
                     room={room}
                     index={index}
                     onJoin={() => handleJoin(room)}
+                    onPreview={() => setPreviewing(room)}
                     onDelete={handleDeleteRoom}
                     onLeave={handleLeaveRoom}
                     onInvite={setInviting}
@@ -547,6 +561,7 @@ export function MyRoomsSection({
                       room={room}
                       index={index}
                       onJoin={() => handleJoin(room)}
+                      onPreview={() => setPreviewing(room)}
                       onDelete={handleDeleteRoom}
                       onLeave={handleLeaveRoom}
                       isJoining={joiningRoomId === room.id}
@@ -584,6 +599,8 @@ interface RoomCardProps {
   room: MyRoom;
   index: number;
   onJoin: () => void;
+  /** Tapping the card anywhere but a control: what does this room play? */
+  onPreview: () => void;
   onDelete: (roomId: string) => void;
   onLeave: (roomId: string) => void;
   fullWidth?: boolean;
@@ -593,7 +610,7 @@ interface RoomCardProps {
   homeRail?: boolean;
 }
 
-export function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = false, isJoining = false, homeRail = false }: RoomCardProps) {
+export function RoomCard({ room, index, onJoin, onPreview, onDelete, onLeave, fullWidth = false, isJoining = false, homeRail = false }: RoomCardProps) {
   const { t, language } = useLanguage();
   const localizeCategory = useLocalizedCategoryName();
   const isMobile = useIsMobile();
@@ -786,9 +803,10 @@ export function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = f
   };
 
   const handleClick = () => {
-    // Only trigger join if not swiping, and not while it is already opening
+    // The card reads; the button acts. See RoomCardGrid's handleClick.
     if (!isSwiping.current && !isJoining) {
-      onJoin();
+      if (roomKind(room) === "classic") onPreview();
+      else onJoin();
     }
   };
 
@@ -1083,6 +1101,8 @@ interface RoomCardGridProps {
   room: MyRoom;
   index: number;
   onJoin: () => void;
+  /** Tapping the card anywhere but a control: what does this room play? */
+  onPreview: () => void;
   onDelete: (roomId: string) => void;
   onLeave: (roomId: string) => void;
   /** The host's way to fill this room from the list, without opening it. */
@@ -1093,7 +1113,7 @@ interface RoomCardGridProps {
   onDeclineInvite?: (room: MyRoom) => void;
 }
 
-export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite, isJoining = false, onDeclineInvite }: RoomCardGridProps) {
+export function RoomCardGrid({ room, index, onJoin, onPreview, onDelete, onLeave, onInvite, isJoining = false, onDeclineInvite }: RoomCardGridProps) {
   const { user } = useAuth();
   const { openProfile } = usePlayerProfile();
   const { t } = useLanguage();
@@ -1195,6 +1215,10 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
     room.participants.length > 0 &&
     room.participants.every(p => room.online_participants.some(op => op.user_id === p.user_id));
   
+  // Rounds beyond the one named beside the room's name. A room whose queue
+  // has not loaded reports none and the card reads as it always did.
+  const extraRounds = Math.max(0, (room.rounds?.length ?? 0) - 1);
+
   // For display: use TV active players if there's an active TV session
   const displayPlayerCount = hasTVSession && room.tv_active_players > 0 
     ? room.tv_active_players 
@@ -1265,8 +1289,17 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
   };
 
   const handleClick = () => {
+    // The card opens what the room IS; the button does what it offers.
+    // A tap used to join, so the only way to read a room was to enter it
+    // (owner: "only button click opens room ... click on card shows
+    // categories list and cost for participating").
+    //
+    // Except a lounge — the King's couch, the arena — which carries its own
+    // stake and its own idea of a round, so the sheet would describe it
+    // wrongly. Their card keeps the tap it had.
     if (!isSwiping.current && !isJoining) {
-      onJoin();
+      if (roomKind(room) === "classic") onPreview();
+      else onJoin();
     }
   };
 
@@ -1367,6 +1400,11 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
                     the running age was one pill too many on a row already
                     carrying the count and the way out (owner's ask). The dot
                     still says whether anyone is there. */}
+                {/* Seats first, on the left. */}
+                <div className="flex flex-shrink-0 items-center gap-1.5 rounded-full bg-white/60 backdrop-blur-sm px-2.5 py-1">
+                  <Users className="w-3.5 h-3.5 text-[#2b1a4a]" />
+                  <span className="text-[#2b1a4a] font-bold text-xs">{displayPlayerCount}</span>
+                </div>
                 {isNew && (
                   <span className="inline-flex items-center gap-1.5 whitespace-nowrap px-2.5 py-1 rounded-full bg-white/60 backdrop-blur-sm text-[#2b1a4a] font-bold text-xs">
                     <span
@@ -1379,17 +1417,12 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
                 )}
               </div>
 
-              {/* Right: how many are in the room, then the menu.
-                  Up here rather than down in the glass bar, where it used to
-                  sit between the faces and the left edge and push both of
-                  them along. The bottom row's job is who is in there and the
-                  way in; the count is a fact about the room, and it reads as
-                  one beside the room's age. */}
+              {/* Right: the controls. The count used to lead this group and
+                  moved to the left of the card, where the eye lands first
+                  (owner: "show players count on left side of the cards") —
+                  it is a fact about the room, not something to press, and it
+                  was sharing a row with two things that are. */}
               <div className="flex items-center gap-2">
-                <div className="flex flex-shrink-0 items-center gap-1.5 rounded-full bg-white/60 backdrop-blur-sm px-2.5 py-1">
-                  <Users className="w-3.5 h-3.5 text-[#2b1a4a]" />
-                  <span className="text-[#2b1a4a] font-bold text-xs">{displayPlayerCount}</span>
-                </div>
 
               {/* The way out, in the open on every device — the same
                   trash (host) / log-out (guest) the public tab wears.
@@ -1427,8 +1460,18 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
                     {displayName}
                   </h3>
                   {(isPartyRoom || room.category_name || (lounge && room.room_name)) && (
-                    <p className="text-[#2b1a4a]/70 text-sm truncate mt-0.5">
-                      {isPartyRoom ? t("extra.myTriviaPartyLabel") : room.category_name ? localizeCategory(room.category_name) : lounge!.label}
+                    <p className="text-[#2b1a4a]/70 text-sm truncate mt-0.5 flex items-center gap-1.5">
+                      <span className="truncate">
+                        {isPartyRoom ? t("extra.myTriviaPartyLabel") : room.category_name ? localizeCategory(room.category_name) : lounge!.label}
+                      </span>
+                      {/* How much more there is, without saying what (owner:
+                          "show +X if there are more rounds in the room
+                          selected"). Tapping the card is what names them. */}
+                      {extraRounds > 0 && (
+                        <span className="shrink-0 rounded-full bg-white/60 px-2 py-0.5 text-xs font-bold text-[#2b1a4a]">
+                          +{extraRounds}
+                        </span>
+                      )}
                     </p>
                   )}
                 </div>

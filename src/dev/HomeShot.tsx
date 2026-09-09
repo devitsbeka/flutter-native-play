@@ -344,9 +344,9 @@ export default function HomeShot() {
     return (
       <div className="min-h-[100dvh] w-full space-y-4 bg-[#faf6ff] p-4">
         <div className="grid grid-cols-1 gap-3">
-          <RoomCardGrid room={alone} index={0} onJoin={noop} onDelete={noop} onLeave={noop} onInvite={noop} />
-          <RoomCardGrid room={withGuest} index={1} onJoin={noop} onDelete={noop} onLeave={noop} onInvite={noop} />
-          <RoomCardGrid room={invited} index={2} onJoin={noop} onDelete={noop} onLeave={noop} onInvite={noop} />
+          <RoomCardGrid room={alone} index={0} onJoin={noop} onPreview={noop} onDelete={noop} onLeave={noop} onInvite={noop} />
+          <RoomCardGrid room={withGuest} index={1} onJoin={noop} onPreview={noop} onDelete={noop} onLeave={noop} onInvite={noop} />
+          <RoomCardGrid room={invited} index={2} onJoin={noop} onPreview={noop} onDelete={noop} onLeave={noop} onInvite={noop} />
         </div>
       </div>
     );
@@ -422,7 +422,7 @@ export default function HomeShot() {
         <div className="overflow-x-auto pb-4 scrollbar-hide">
           <div className="flex gap-3 px-4">
             {rooms.map((room, index) => (
-              <RoomCard key={room.id} room={room} index={index} onJoin={noop} onDelete={noop} onLeave={noop} homeRail />
+              <RoomCard key={room.id} room={room} index={index} onJoin={noop} onPreview={noop} onDelete={noop} onLeave={noop} homeRail />
             ))}
           </div>
         </div>
