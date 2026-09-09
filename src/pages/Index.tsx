@@ -1167,7 +1167,6 @@ export default function Index() {
             onMenu={() => setIsSideMenuOpen(true)}
             onTerms={() => navigate("/terms")}
             onPrivacy={() => navigate("/privacy-policy")}
-            searchButton={<SpotlightSearch variant="button" />}
           />
         )}
 

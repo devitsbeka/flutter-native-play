@@ -2097,7 +2097,10 @@ export const en: KaTranslations = {
     rotateToPortrait: "Please rotate your device to portrait mode",
     familyFriendsSubject: "Family and friends",
     perMonthShort: "/mo",
-    guestTagline: "Challenge your friends and create your own trivia on any topic.",
+    // The break is deliberate — it keeps "create your own trivia" from
+    // splitting across lines under the castle door. Rendered with
+    // whitespace-pre-line; the other locales carry no \n and wrap naturally.
+    guestTagline: "Challenge your friends and create your\nown trivia on any topic.",
     appleSignInBtn: "Sign in with Apple",
     guestTermsIntro: "By creating an account you confirm that you have read and agree to the",
     guestTermsService: "Terms of Service",

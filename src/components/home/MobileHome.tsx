@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Menu, Search } from "lucide-react";
+import { Menu } from "lucide-react";
 import { t } from "@/lib/i18n";
 import myTriviaLogo from "@/assets/mytrivia-logo.svg";
 import guestCastleDoor from "@/assets/figma-home/guest-castle-door.webp";
@@ -9,6 +9,7 @@ import streakFire from "@/assets/figma-home/streak-fire.png";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { useWavyRect } from "@/components/home/wave";
 import { BackgroundVideo } from "@/components/shared/BackgroundVideo";
+import { GuestLanguagePicker } from "@/components/home/GuestLanguagePicker";
 import heroScene from "@/assets/figma-landing/hero-scene.png";
 
 // Figma: Hom — the mobile home states, all drawn on a 500x946 frame:
@@ -510,7 +511,6 @@ interface MobileGuestHeroProps {
   onMenu: () => void;
   onTerms: () => void;
   onPrivacy: () => void;
-  searchButton: React.ReactNode;
 }
 
 // node 632:296 — logo and tagline up top, the Georgian trophy map filling
@@ -523,12 +523,13 @@ export function MobileGuestHero({
   onMenu,
   onTerms,
   onPrivacy,
-  searchButton,
 }: MobileGuestHeroProps) {
   return (
     <div className="md:hidden pointer-events-none absolute inset-0 z-20 flex flex-col overflow-hidden">
-      {/* Header (node 632:308 / 632:385): burger and search only — the
-          wordmark lives in the body on this state */}
+      {/* Header (node 632:308 / 632:385): burger and the language puck —
+          the wordmark lives in the body on this state. The puck replaced
+          SpotlightSearch here; see GuestLanguagePicker for why search is the
+          wrong offer to a signed-out visitor. */}
       <div className="pointer-events-auto flex h-[70px] shrink-0 items-center justify-between px-4 py-3">
         <button
           type="button"
@@ -538,23 +539,24 @@ export function MobileGuestHero({
         >
           <Menu className="size-6 text-gray-600" />
         </button>
-        {searchButton ?? (
-          <span className="flex size-9 items-center justify-center">
-            <Search className="size-5 text-gray-600" />
-          </span>
-        )}
+        <GuestLanguagePicker />
       </div>
 
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, type: "spring" }}
-        className="flex shrink-0 flex-col items-center px-4 pt-[9px]"
+        // Lifted 30px with `top`, not a translate utility: framer writes its
+        // own transform on this element for the entrance and would overwrite
+        // one. `top` on a relatively positioned box is a paint-time offset,
+        // so the band below keeps its height and the art is free to be
+        // placed on its own terms.
+        className="relative -top-[30px] flex shrink-0 flex-col items-center px-4 pt-[9px]"
       >
         {/* 661x172 lockup rendered at the frame's 66.511px crown height,
             which is exactly the designed 255.605px wide */}
         <img src={myTriviaLogo} alt="MyTrivia" className="h-[66.511px] w-auto select-none" draggable={false} />
-        <p className="mt-[16.5px] max-w-[394px] text-center text-[18px] leading-[27px] tracking-[-0.16px] text-[#002b63]">
+        <p className="mt-[16.5px] max-w-[394px] whitespace-pre-line text-center text-[18px] leading-[27px] tracking-[-0.16px] text-[#002b63]">
           {t("extra.guestTagline")}
         </p>
       </motion.div>
@@ -568,16 +570,53 @@ export function MobileGuestHero({
           horizontal edge across the page on phones whose band is shorter
           than the frame's; on those it simply scales down. max-w keeps it
           off the page gutters on short-and-wide viewports, where fitting by
-          height alone would otherwise run it edge to edge. */}
-      <div className="relative mt-[16px] min-h-0 flex-1">
+          height alone would otherwise run it edge to edge.
+
+          It is drawn a quarter larger than the band and hangs that quarter
+          off the bottom, behind the provider buttons: h-125% with
+          bottom:-25% keeps the TOP pinned exactly where the band starts, so
+          the extra size all goes downward into the buttons rather than up
+          into the tagline. That overlap is why the button stack below owns a
+          z-index — without one the absolutely positioned art would paint
+          over it and swallow the taps.
+
+          The idle breath is deliberately barely there: 2.2% over 6s from
+          origin-bottom, so the frame settles on its base like something
+          standing rather than floating. <MotionConfig reducedMotion="user">
+          in App.tsx drops the scale for anyone who asks for less motion,
+          leaving the opacity fade — no call-site guard needed. */}
+      {/* Below 700px tall the band is squeezed to a sliver — the art lands
+          around 60px high there, which reads as a smudge rather than a
+          castle — so the whole band goes, matching the max-height:700px
+          short-screen convention already used across the quiz screens. The
+          band is dropped rather than just its contents: hiding only the art
+          would leave its flex-1 behind as a band of empty lavender, and on a
+          screen that short the space is better given back to the buttons. */}
+      <div className="relative mt-[16px] min-h-0 flex-1 [@media(max-height:700px)]:hidden">
         <motion.img
           src={guestCastleDoor}
           alt=""
           draggable={false}
           initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.7, ease: "easeOut" }}
-          className="pointer-events-none absolute inset-x-0 bottom-0 mx-auto h-full max-w-[76%] select-none object-contain object-bottom"
+          animate={{ opacity: 1, scale: [1, 1.022, 1] }}
+          transition={{
+            opacity: { duration: 0.7, ease: "easeOut" },
+            scale: { duration: 6, ease: "easeInOut", repeat: Infinity, delay: 0.7 },
+          }}
+          className="pointer-events-none absolute inset-x-0 bottom-[calc(-25%_+_30px)] z-0 mx-auto h-[125%] max-w-[76%] origin-bottom select-none object-contain object-bottom [-webkit-mask-image:linear-gradient(to_bottom,black_80%,transparent_98%)] [mask-image:linear-gradient(to_bottom,black_80%,transparent_98%)]"
+        />
+
+        {/* The frosted half of the same transition. The mask above dissolves
+            the artwork itself; this blurs and lightens the ground it sits on
+            across the same span, so the button stack reads as resting on a
+            soft bed rather than as a hard edge laid over a picture. It is
+            masked in from the top for the same reason the art is masked out
+            — an unmasked backdrop-filter has a visible start line. Sits at
+            z-5: above the art, below the z-10 buttons, and
+            pointer-events-none so it never eats a tap. */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 bottom-[-64px] z-[5] h-[128px] bg-gradient-to-b from-white/0 to-white/55 backdrop-blur-[6px] [-webkit-mask-image:linear-gradient(to_bottom,transparent,black_70%)] [mask-image:linear-gradient(to_bottom,transparent,black_70%)]"
         />
       </div>
 
@@ -585,7 +624,7 @@ export function MobileGuestHero({
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.5, type: "spring" }}
-        className="pointer-events-auto shrink-0 px-4 min-[420px]:px-6"
+        className="pointer-events-auto relative z-10 shrink-0 px-4 min-[420px]:px-6"
       >
         {/* Provider stack. Apple leads as the HIG black button — guideline
             4.8 wants it at least as prominent as any other login, and the
