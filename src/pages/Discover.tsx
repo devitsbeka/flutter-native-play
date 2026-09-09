@@ -159,12 +159,24 @@ export default function Discover() {
     );
     if (!plan) return { note: "", hasTrial: false, priceLine: "", trialDays: 0 };
     const price = resolvePrice(plan.productId, PRICES[plan.priceKey].USD, plan.priceKey).display;
-    // The trial is whatever the store product actually carries, not a figure
-    // from the bundle — promising free days App Store Connect does not grant
-    // is the same 2.3.1 problem here as on the paywall itself. The button
-    // follows the same answer: "Try for free" only over a product that has
-    // a free period, "Get PRO" otherwise, as the paywall's own button does.
-    const trialDays = products.find((p) => p.productId === plan.productId)?.introFreeDays;
+    // Who is allowed to promise a trial depends on who can grant one — the
+    // same rule, and the same reasoning, as ProPaywallModal.trialDaysFor and
+    // PlayLimitModal.
+    //
+    // This cover was the one surface reading only the native half, so on the
+    // web it always concluded there was no trial and sold the year outright
+    // — while create-pro-checkout was granting three free days to anyone who
+    // pressed the button. The offer on the first screen contradicted the
+    // checkout behind it.
+    const trialDays = Capacitor.isNativePlatform()
+      // On a phone only App Store Connect can grant one, so only App Store
+      // Connect gets to claim one: a number in the bundle cannot make
+      // StoreKit honour anything, and advertising one it will not honour is
+      // a 2.3.1 rejection.
+      ? products.find((p) => p.productId === plan.productId)?.introFreeDays
+      // On the web the app owns the offer, and create-pro-checkout grants it.
+      // proPlans pins this number against the edge function's TRIAL_DAYS.
+      : plan.trialDays;
     const note = (trialDays ? t("discover.promoNoteTrial") : t("discover.promoNote"))
       .replace("{days}", String(trialDays ?? 0))
       .replace("{price}", price)

@@ -49,6 +49,17 @@ describe("the period comes from the plan, not the sentence", () => {
     expect(discover).toMatch(/hasTrial: Boolean\(trialDays\)/);
   });
 
+  it("asks the right authority for the trial on each platform", () => {
+    // The cover read only introFreeDays, so on the web it always concluded
+    // there was no trial and sold the year outright — while
+    // create-pro-checkout was granting three free days to whoever pressed
+    // the button. Native asks the store; web asks the plan.
+    const discover = read("src/pages/Discover.tsx");
+    expect(discover).toMatch(/Capacitor\.isNativePlatform\(\)/);
+    expect(discover).toMatch(/\?\s*products\.find\(\(p\) => p\.productId === plan\.productId\)\?\.introFreeDays/);
+    expect(discover).toMatch(/:\s*plan\.trialDays/);
+  });
+
   it("the trial button names the length the store granted, in every locale", () => {
     // Same shape as promoNote/promoNoteTrial: the number is filled in from
     // the product, never written into the sentence — a locale that hard-codes
