@@ -618,34 +618,21 @@ export function GameResultsScreenV2() {
   }, [currentRoom, user]);
 
   /**
-   * The back arrow, after a match.
+   * The back arrow, after a match: the lobby, and the room waits.
    *
-   * A private room is the players' own: back is the lobby, and the room
-   * waits for them. A PUBLIC room is made for one play (owner: "hosts are
-   * creating public rooms for one play ... make sure public rooms when
-   * round or several rounds, matches will end, room will be deleted"). Its
-   * match is over here; the only way it goes on is a rematch, asked with
-   * New Game (or by a PRO player) while everyone is still on this screen.
-   * So the host's back closes the room — cancelled and archived, which
-   * every listing already hides and which sends the guests out with "Room
-   * was closed" — and a guest's back gives up their seat.
+   * It used to close a public room — cancelled and archived, the guests
+   * sent out — on the reading that a public room was made for one play.
+   * The rule is finer now: a public room is public ONCE. Its first round
+   * turns it private (complete_room_round, and the host's own completion
+   * write), and from then on it is the players' own — they may keep
+   * playing in it, and nothing lists it again (owner: "public room is
+   * public only once than it becomes private room with no ability to make
+   * the room public again. players in it can play more but room stays
+   * private"). So by the time anyone is on this screen the room IS a
+   * private room, and back is what it is for one: the lobby.
    */
   const handleBackToRoom = () => {
-    if (!isPublicRoom || !currentRoom) {
-      continueInRoom();
-      return;
-    }
-    if (isHost) {
-      void supabase
-        .from("game_rooms")
-        .update({ status: "cancelled", is_archived: true })
-        .eq("id", currentRoom.id);
-      exitRoom();
-      navigate("/team?tab=public", { replace: true });
-      return;
-    }
-    void leaveRoomPermanently();
-    navigate("/team?tab=public", { replace: true });
+    continueInRoom();
   };
 
   // Get next queue item for display

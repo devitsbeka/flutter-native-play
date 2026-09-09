@@ -1037,7 +1037,18 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
                   console.log(`[MP] All ${activePlayers.length} players finished - marking room completed`);
                   let completeQuery = supabase
                     .from("game_rooms")
-                    .update({ status: "completed", completed_at: new Date().toISOString(), last_activity_at: new Date().toISOString() })
+                    .update({
+                      status: "completed",
+                      completed_at: new Date().toISOString(),
+                      last_activity_at: new Date().toISOString(),
+                      // A public room is public once: played, it is the
+                      // players' own private room from here on (owner:
+                      // "public room is public only once than it becomes
+                      // private room"). complete_room_round does the same
+                      // server-side for every device; this is the host's
+                      // own write landing a round earlier.
+                      ...(await roomVisibilityFields(false)),
+                    })
                     .eq("id", roomId)
                     .eq("status", "playing"); // Prevent double-update race
                   // CAS on the game id: if a new round started between our room
