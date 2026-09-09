@@ -1914,7 +1914,7 @@ export const en: KaTranslations = {
     summaryRematchTitle: "Ready for a rematch?",
     summaryRematchHint: "Everyone at the table is asked first. Whoever declines leaves the room, and the pot follows the seats.",
     summaryAskTable: "Ask for rematch",
-    summaryFree: "Free — solo practice",
+    summaryFree: "Free while you're the only player",
     summaryStake: "Stake per player",
     summaryRounds: "Rounds",
     summaryHint: "This is what your room will play. Once it is created the rounds and questions are set — visibility can change any time.",

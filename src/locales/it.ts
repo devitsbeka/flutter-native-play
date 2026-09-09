@@ -1650,7 +1650,7 @@ export const it: KaTranslations = {
     summaryRematchTitle: "Pronti per la rivincita?",
     summaryRematchHint: "Prima si chiede a tutti al tavolo. Chi rifiuta lascia la stanza e il piatto segue i posti.",
     summaryAskTable: "Proponi rivincita",
-    summaryFree: "Gratis — allenamento da solo",
+    summaryFree: "Gratis finché sei da solo",
     summaryStake: "Puntata per giocatore",
     summaryRounds: "Round",
     summaryHint: "Ecco cosa giocherà la tua stanza. Una volta creata, round e domande restano fissi: la visibilità si può cambiare in qualsiasi momento.",

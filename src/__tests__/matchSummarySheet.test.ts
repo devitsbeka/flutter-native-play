@@ -77,9 +77,10 @@ describe("Create opens the summary; Start opens the match", () => {
     expect(lobby).toMatch(/const summaryRounds = \[\s*\.\.\.\(heldRound \? \[\{ name: heldRound\.name, iconSlug: heldRound\.iconSlug \?\? null \}\] : \[\]\),\s*\.\.\.queue\.map/);
   });
 
-  it("carries the question count and the stake the pot line already shows", () => {
+  it("carries the question count and what a seat costs", () => {
     expect(lobby).toMatch(/questionsPerRound=\{playsUserTrivia \? null : questionsPerRound\(currentRoom\.total_questions\)\}/);
-    expect(lobby).toMatch(/stake=\{seatedPlayers >= 2 \? REWARDS\.GAME_STAKE : null\}/);
+    // The stake unconditionally — see "what a seat costs" below.
+    expect(lobby).toMatch(/stake=\{REWARDS\.GAME_STAKE\}\s*\n\s*soloFree=\{seatedPlayers < 2\}/);
   });
 });
 
@@ -111,15 +112,45 @@ describe("the sheet is the lobby's own", () => {
     expect(lobby).toMatch(panel);
   });
 
-  it("says free for a solo room and shows the coin for a table", () => {
-    expect(sheet).toMatch(/stake === null \? \(/);
-    expect(sheet).toMatch(/\{t\("lobby\.summaryFree"\)\}/);
+  it("quotes the stake, with free as a footnote rather than the answer", () => {
+    // See "what a seat costs" below for why it is not the other way round.
     expect(sheet).toMatch(/\{stake\.toLocaleString\(\)\}/);
+    expect(sheet).not.toMatch(/stake === null \? \(/);
+    expect(sheet).toMatch(/\{soloFree && \(\s*\n\s*<p [^>]*>\{t\("lobby\.summaryFree"\)\}<\/p>/);
   });
 
   it("its confirm says Create, which is the tap that opened it", () => {
     expect(sheet).toMatch(/t\("extra\.createBtn"\)/);
     expect(sheet).not.toMatch(/t\("lobby\.uStartGame"\)/);
+  });
+});
+
+describe("what a seat costs, and who it costs it", () => {
+  it("the number is shown whether or not anybody has sat down yet", () => {
+    // It read "Free — solo practice" until a second player arrived, which
+    // is what a round played alone settles as (settle_room_round: below two
+    // players, 'practice' — no stake, no pot, no prize) and the wrong
+    // answer to what the room will cost, since a room is created for people
+    // to join and every seat pays the stake the moment one does (owner:
+    // "why it says free - solo practice, what does it mean, per match cost
+    // is 500 coins").
+    expect(sheet).toMatch(/stake: number;/);
+    expect(sheet).not.toMatch(/stake: number \| null;/);
+    expect(sheet).toMatch(/soloFree: boolean;/);
+  });
+
+  it("and it is the same number for everyone — PRO stakes like anybody else", () => {
+    // Deliberately unlike a quick game, where settle_quick_game returns
+    // 'vip_free' rather than take the loss: there is nobody on the other
+    // side of a quick game, and here there is. Exempting PRO would mean the
+    // rest of the table funding the PRO player's winnings.
+    const pot = read("supabase/migrations/20261015100000_room_round_pot.sql");
+    expect(pot).toMatch(/Everyone stakes, PRO included\./);
+    expect(pot).not.toMatch(/vip_subscriptions/);
+    // And nothing on the way in quietly waives it either: the lobby's own
+    // stake check is about the balance, not about the subscription.
+    const gate = lobby.slice(lobby.indexOf("const handleStartOrPick = () => {"), lobby.indexOf("const summaryRounds = ["));
+    expect(gate).not.toMatch(/isVip/);
   });
 });
 
