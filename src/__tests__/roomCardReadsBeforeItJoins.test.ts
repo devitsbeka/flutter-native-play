@@ -116,12 +116,24 @@ describe("what opening it says", () => {
     // The card's chip reads "Mixed" for such a room; the sheet said "the
     // host has not picked a round yet" under Rounds · 0 (owner: "show
     // mixed category instead"). One row now: the mystery box, "Mixed".
-    expect(sheet).toMatch(/export const MIXED_ROUND: PreviewRound = \{ name: null, icon_slug: null, source_type: "random" \};/);
+    expect(sheet).toMatch(/export const MIXED_ROUND: PreviewRound = \{ name: null, icon_slug: null, source_type: "mixed" \};/);
     expect(sheet).toMatch(/const shown = rounds\.length > 0 \? rounds : \[MIXED_ROUND\];/);
     expect(sheet).toMatch(/\{t\("lobby\.summaryRounds"\)\} · \{shown\.length\}/);
     expect(sheet).toMatch(/\{shown\.map\(\(round, i\) => \(/);
     expect(sheet).toMatch(/\{round\.name \?\? t\("extra\.cpMixedCategory"\)\}/);
     expect(sheet).not.toMatch(/roomPreviewNoRounds/);
+  });
+
+  it("and a mixed round wears the question mark, not an empty tile", () => {
+    // A queued mixed round is a "category" named "Mixed" in the picker's
+    // language with no slug, so the tile drew DynamicIcon's nothing
+    // (owner: "as a mixed category icon use this question mark icon, it
+    // is empty now"). The name is what identifies it; the icon is the
+    // lobby's own question-mark chip. A random round keeps the mystery box.
+    expect(sheet).toMatch(/import questionIcon from "@\/assets\/lobby\/chip-question\.webp";/);
+    expect(sheet).toMatch(/return round\.source_type === "mixed" \|\| undecidedRoundKind\(null, round\.name\) === "mixed";/);
+    expect(sheet).toMatch(/\{isMixedRound\(round\) \? \(\s*\n\s*<img src=\{questionIcon\} alt="" className="h-7 w-7 object-contain" \/>/);
+    expect(sheet).toMatch(/<DynamicIcon slug=\{roundIconSlug\(\{ \.\.\.round, category_name: round\.name \}\)\} size=\{22\} shadow=\{false\} \/>/);
   });
 });
 

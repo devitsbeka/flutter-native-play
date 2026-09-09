@@ -266,15 +266,19 @@ export default function HomeShot() {
     );
   }
   if (params.get("view") === "preview") {
-    // The card's preview sheet for a room whose host queued no round: it
-    // plays a mixed round, and says so, beside the stake and the card's
+    // The card's preview sheet: a random round (mystery box), a real one,
+    // and a mixed one (the question mark), beside the stake and the card's
     // own Join. Close is the unfilled pill.
     return (
       <div className="h-[100dvh] w-full bg-[#e9dcf7]">
         <RoomPreviewSheet
           open
-          roomName="Sleepy Hamsters"
-          rounds={[]}
+          roomName="Noisy Vampires"
+          rounds={[
+            { name: "Random", icon_slug: null, source_type: "random" },
+            { name: "Guess the Logo", icon_slug: "magnifying-glass", source_type: "category" },
+            { name: "Mixed", icon_slug: null, source_type: "category" },
+          ]}
           questionsPerRound={5}
           players={1}
           action={

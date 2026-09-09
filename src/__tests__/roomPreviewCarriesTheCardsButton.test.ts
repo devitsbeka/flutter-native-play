@@ -97,12 +97,15 @@ describe("the round rows", () => {
     // giant faint placeholder (owner: "show more narrow containers for
     // each category with icons").
     expect(sheet).toMatch(/className="flex min-h-\[58px\] items-center gap-2 rounded-xl border border-\[#e8e0f5\] bg-white\/70 py-2 pl-2 pr-3"/);
-    expect(sheet).toMatch(/<span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-\[#7126d5\]\/10">\s*\n\s*<DynamicIcon slug=\{roundIconSlug\(round\)\} size=\{22\} shadow=\{false\} \/>/);
+    expect(sheet).toMatch(/<span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-\[#7126d5\]\/10">\s*\n\s*\{isMixedRound\(round\) \? \(/);
+    expect(sheet).toMatch(/<DynamicIcon slug=\{roundIconSlug\(\{ \.\.\.round, category_name: round\.name \}\)\} size=\{22\} shadow=\{false\} \/>/);
     expect(sheet).toMatch(/t\("lobby\.uRoundLabel", \{ count: i \+ 1 \}\)/);
     expect(sheet).not.toMatch(/className="h-6 w-6 shrink-0"/);
   });
 
-  it("a random or mixed round wears the mystery box, like everywhere else", () => {
+  it("a random round wears the mystery box like everywhere else; a mixed one the question mark", () => {
+    // roomCardReadsBeforeItJoins.test pins the question mark itself.
     expect(sheet).toMatch(/import \{ roundIconSlug \} from "@\/utils\/ownTriviaRound";/);
+    expect(sheet).toMatch(/import \{ undecidedRoundKind \} from "@\/utils\/undecidedRound";/);
   });
 });
