@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
 import { AnimatePresence, motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import { Plus, Users, Tv, Airplay, Cast, UserPlus, Trash2, LogOut, MonitorPlay, Play, Check, X } from "lucide-react";
-import { declineRoomInvite } from "@/utils/pendingRoomInvites";
+import { acceptRoomInvite, declineRoomInvite } from "@/utils/pendingRoomInvites";
 import { useMyRooms, MyRoom, RoomFilter, isActiveTVSession } from "@/hooks/useMyRooms";
 import iconKingLounge from "@/assets/play-chooser/icon-king.webp";
 import iconBattleLounge from "@/assets/play-chooser/icon-crate.png";
@@ -266,6 +266,11 @@ export function MyRoomsSection({
     if (roomKind(room) === "classic" && !room.is_host && coins < REWARDS.GAME_STAKE) {
       setShowNoStake(true);
       return;
+    }
+    // Confirm answers the invite first, so the card stops asking once the
+    // seat is taken (owner: "do not show confirm button again").
+    if (room.has_pending_invite && room.pending_invite_from) {
+      acceptRoomInvite(room.pending_invite_from.notificationId);
     }
     setJoiningRoomId(room.id);
     try {

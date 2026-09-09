@@ -51,6 +51,24 @@ export function pendingRoomInvites(notifications: readonly InviteNotification[])
 }
 
 /**
+ * Yes, from the card.
+ *
+ * Confirm used to only open the room, and nothing marked the invite's
+ * notification read — so the card still said Confirm, in green, after the
+ * seat had been taken and the room played (owner: "when i confirm once on
+ * room invitation and i enter the room, do not show confirm button again,
+ * i should be in a room after confirmation"). Answering it is what
+ * retires the invite everywhere: the badge, the grey face, the button.
+ * Fire-and-forget: the seat is already the player's, and the tap that
+ * takes them into the room must not wait on a bookkeeping write.
+ */
+export function acceptRoomInvite(notificationId: string): void {
+  void markNotificationActioned(notificationId, "accepted").catch((error) => {
+    console.error("[pendingRoomInvites] accept failed:", error);
+  });
+}
+
+/**
  * No, from the card.
  *
  * The seat the host reserved is given up — a seat that stays at the table

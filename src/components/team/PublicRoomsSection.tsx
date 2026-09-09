@@ -17,7 +17,7 @@ import { onlineUserIds } from "@/utils/presence";
 import { AnimatePresence, motion } from "framer-motion";
 import { Globe, Loader2, Users, Clock, Trash2, LogOut, X, UserPlus, Play, Plus, Check } from "lucide-react";
 import { useNotifications } from "@/hooks/useNotifications";
-import { declineRoomInvite, pendingRoomInvites, type PendingInviteFrom } from "@/utils/pendingRoomInvites";
+import { acceptRoomInvite, declineRoomInvite, pendingRoomInvites, type PendingInviteFrom } from "@/utils/pendingRoomInvites";
 import { RoomCardPlayButton } from "@/components/team/RoomCardPlayButton";
 import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
 import { NotEnoughStakeModal } from "@/components/home/NotEnoughStakeModal";
@@ -261,7 +261,12 @@ function PublicRoomCard({
   // the seats and the way out (owner's ask).
   const isNew = useRoomIsNew(room.created_at);
 
-  const enter = () => navigate(publicRoomPath(room));
+  const enter = () => {
+    // Confirm answers the invite first, so the card stops asking once the
+    // seat is taken (owner: "do not show confirm button again").
+    if (invited && inviteFrom) acceptRoomInvite(inviteFrom.notificationId);
+    navigate(publicRoomPath(room));
+  };
 
   /**
    * The card's button, as a factory: the card draws it, and hands the same
