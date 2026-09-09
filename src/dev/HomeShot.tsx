@@ -249,8 +249,9 @@ export default function HomeShot() {
         <RematchWaitSheet
           open
           seats={[
-            { user_id: "1", nickname: "TriviaMaste", avatar_url: FACE, ready: true },
-            { user_id: "2", nickname: "Gloria", avatar_url: null, ready: false },
+            { user_id: "1", nickname: "TriviaMaste", avatar_url: FACE, answer: "ready" },
+            { user_id: "2", nickname: "Gloria", avatar_url: null, answer: "waiting" },
+            { user_id: "3", nickname: "Marco", avatar_url: null, answer: "declined" },
           ]}
           stake={500}
           onCancel={noop}

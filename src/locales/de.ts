@@ -2240,6 +2240,7 @@ export const de: KaTranslations = {
     rematchWaitHint: "Alle am Tisch wurden gefragt. Wer ablehnt, verlässt den Raum — der Pot richtet sich nach den Plätzen.",
     rematchWaitReady: "Bereit",
     rematchWaitPending: "Überlegt…",
+    rematchWaitDeclined: "Abgelehnt",
     rematchWaitStart: "Mit {count} starten",
     rematchWaitUndecided: "{count} überlegen noch — sie verlassen den Raum, wenn du jetzt startest.",
     notifPlay: "Spielen",

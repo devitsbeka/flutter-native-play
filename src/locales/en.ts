@@ -2563,6 +2563,7 @@ export const en: KaTranslations = {
     rematchWaitHint: "Everyone at the table has been asked. Whoever declines leaves the room — the pot follows the seats.",
     rematchWaitReady: "Ready",
     rematchWaitPending: "Deciding…",
+    rematchWaitDeclined: "Declined",
     rematchWaitStart: "Start with {count}",
     rematchWaitUndecided: "{count} still deciding — they leave the room if you start now.",
     notifPlay: "Play",

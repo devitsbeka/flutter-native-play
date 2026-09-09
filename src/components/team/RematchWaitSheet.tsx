@@ -3,29 +3,43 @@
  *
  * Every seat has the "Rematch?" card in front of it; this is the host's
  * side of the same moment - who has said yes, who is still deciding, who
- * has already left - and the way to start with whoever is in. A seat that
- * declined is gone from the list (the seat itself was given up); a seat
- * still deciding when the host starts is removed from the room, because
- * whoever plays is staked and nobody is staked for a game they did not
- * say yes to (owner: "who accepts plays the match, who do not leaves the
- * room, and pot changes based on players count").
+ * has said no - and the way to start with whoever is in. A seat still
+ * deciding when the host starts is removed from the room, because whoever
+ * plays is staked and nobody is staked for a game they did not say yes to
+ * (owner: "who accepts plays the match, who do not leaves the room, and pot
+ * changes based on players count").
+ *
+ * It is drawn as the table itself: the faces, in the same circle they wear
+ * in the players list, each with what they have answered under it and a
+ * badge on the face (owner: "show host- players avatars in circle how we
+ * show it and show live who accept and who did not"). It replaced a list of
+ * names under a buzzer, where the one thing the host was waiting on - the
+ * answers - was the smallest thing on the sheet.
+ *
+ * "Who did not" includes the noes, which is why a seat's answer is passed in
+ * rather than read here: declining gives the seat up, so the row is gone
+ * from the room and only the caller's snapshot of who was ASKED still knows
+ * that person was ever at the table.
  *
  * The lobby's own sheet, like the match summary before it.
  */
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, Loader2 } from "lucide-react";
+import { Check, Loader2, X } from "lucide-react";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
 import { useLanguage } from "@/contexts/LanguageContext";
-import buzzerIcon from "@/assets/trivia-buzzer.png";
+import { cn } from "@/lib/utils";
 import coinIcon from "@/assets/tb-lobby/coin.png";
+
+/** Said yes, still deciding, or gave the seat up. */
+export type RematchAnswer = "ready" | "waiting" | "declined";
 
 export interface RematchSeat {
   user_id: string;
   nickname: string;
   avatar_url: string | null;
-  ready: boolean;
+  answer: RematchAnswer;
 }
 
 interface RematchWaitSheetProps {
@@ -40,8 +54,8 @@ interface RematchWaitSheetProps {
 
 export function RematchWaitSheet({ open, seats, stake, starting = false, onCancel, onStart }: RematchWaitSheetProps) {
   const { t } = useLanguage();
-  const ready = seats.filter((s) => s.ready).length;
-  const undecided = seats.length - ready;
+  const ready = seats.filter((s) => s.answer === "ready").length;
+  const undecided = seats.filter((s) => s.answer === "waiting").length;
   const playing = ready + 1;
 
   return (
@@ -63,44 +77,21 @@ export function RematchWaitSheet({ open, seats, stake, starting = false, onCance
             onClick={(e) => e.stopPropagation()}
           >
             <div className="rounded-2xl border border-[#e8e0f5] bg-white/50 p-6">
+              {/* The table, first: the faces are what the host is waiting on. */}
+              <ul className="mb-4 flex max-h-[224px] flex-wrap items-start justify-center gap-x-3 gap-y-4 overflow-y-auto">
+                {seats.map((seat) => (
+                  <RematchFace key={seat.user_id} seat={seat} />
+                ))}
+              </ul>
+
               <div className="mb-5 flex flex-col items-center text-center">
-                <img src={buzzerIcon} alt="" className="h-16 w-16 shrink-0 object-contain" />
-                <h3 className="mt-3 font-display text-[24px] font-bold leading-[30px] text-[#402666]">
+                <h3 className="font-display text-[24px] font-bold leading-[30px] text-[#402666]">
                   {t("extra.rematchWaitTitle")}
                 </h3>
                 <p className="mt-2 max-w-[300px] text-[14px] leading-[20px] text-[#402666]/70">
                   {t("extra.rematchWaitHint")}
                 </p>
               </div>
-
-              <ul className="mb-4 max-h-[236px] space-y-2 overflow-y-auto">
-                {seats.map((seat) => (
-                  <li
-                    key={seat.user_id}
-                    className="flex items-center gap-3 rounded-xl border border-[#e8e0f5] bg-white/70 px-3 py-2"
-                  >
-                    <SafeAvatarImage
-                      avatarUrl={seat.avatar_url}
-                      fallback={seat.nickname}
-                      containerClassName="h-9 w-9 shrink-0 overflow-hidden rounded-full"
-                    />
-                    <span className="min-w-0 flex-1 truncate font-display text-[15px] font-bold text-[#402666]">
-                      {seat.nickname}
-                    </span>
-                    {seat.ready ? (
-                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#2bc889]/15 px-2.5 py-1 text-xs font-bold text-[#1f9c6a]">
-                        <Check className="h-3.5 w-3.5" />
-                        {t("extra.rematchWaitReady")}
-                      </span>
-                    ) : (
-                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#402666]/[0.07] px-2.5 py-1 text-xs font-bold text-[#402666]/60">
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        {t("extra.rematchWaitPending")}
-                      </span>
-                    )}
-                  </li>
-                ))}
-              </ul>
 
               <div className="mb-5 flex items-center justify-between rounded-xl border border-[#e8e0f5] bg-white/70 px-3 py-2.5">
                 <span className="text-[12px] text-[#402666]/60">{t("lobby.winnerTakes")}</span>
@@ -134,5 +125,69 @@ export function RematchWaitSheet({ open, seats, stake, starting = false, onCance
         </motion.div>
       )}
     </AnimatePresence>
+  );
+}
+
+/**
+ * One asked seat: the face in its circle, a badge for the answer, the name
+ * and the answer in words under it.
+ *
+ * The circle is the players list's own — same ring, same greying for
+ * somebody who is not (yet) in — so a face here reads as the same person
+ * the host was just sitting with. Only a yes comes up in colour; deciding
+ * and declined are grey, which is the whole answer at a glance.
+ */
+function RematchFace({ seat }: { seat: RematchSeat }) {
+  const { t } = useLanguage();
+  const said = seat.answer;
+  return (
+    <li className="flex w-[76px] flex-col items-center gap-1.5">
+      <span className="relative block">
+        <span
+          className={cn(
+            "block h-14 w-14 overflow-hidden rounded-full bg-[#e9d8ff]",
+            said === "ready"
+              ? "shadow-[0px_0px_0px_2px_rgba(43,200,137,0.85)]"
+              : "shadow-[0px_0px_0px_2px_rgba(148,163,184,0.75)]",
+            said !== "ready" && "opacity-45 grayscale",
+          )}
+        >
+          <SafeAvatarImage
+            avatarUrl={seat.avatar_url}
+            fallback={seat.nickname}
+            containerClassName="h-full w-full"
+          />
+        </span>
+        <span
+          className={cn(
+            "pointer-events-none absolute -bottom-0.5 -right-0.5 flex h-[22px] w-[22px] items-center justify-center rounded-full text-white shadow-[0_1px_3px_rgba(0,0,0,0.3)]",
+            said === "ready" && "bg-[#2bc889]",
+            said === "waiting" && "bg-[#9c64b5]",
+            said === "declined" && "bg-[#e2556b]",
+          )}
+        >
+          {said === "ready" && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
+          {said === "waiting" && <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={3} />}
+          {said === "declined" && <X className="h-3.5 w-3.5" strokeWidth={3} />}
+        </span>
+      </span>
+      <span className="w-full truncate text-center font-display text-[12px] font-bold leading-4 text-[#402666]">
+        {seat.nickname}
+      </span>
+      <span
+        className={cn(
+          "w-full truncate text-center font-[Nunito] text-[10px] font-bold leading-3",
+          said === "ready" && "text-[#1f9c6a]",
+          said === "waiting" && "text-[#402666]/55",
+          said === "declined" && "text-[#c2415a]",
+        )}
+      >
+        {said === "ready"
+          ? t("extra.rematchWaitReady")
+          : said === "waiting"
+            ? t("extra.rematchWaitPending")
+            : t("extra.rematchWaitDeclined")}
+      </span>
+    </li>
   );
 }

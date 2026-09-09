@@ -80,11 +80,12 @@ describe("the answer", () => {
 });
 
 describe("the host starts with whoever said yes", () => {
-  it("the wait sheet lists the seats with their answer and the pot for those in", () => {
-    expect(wait).toMatch(/const ready = seats\.filter\(\(s\) => s\.ready\)\.length;/);
+  it("the wait sheet shows the table's answers and the pot for those in", () => {
+    expect(wait).toMatch(/const ready = seats\.filter\(\(s\) => s\.answer === "ready"\)\.length;/);
     expect(wait).toMatch(/\{\(playing \* stake\)\.toLocaleString\(\)\}/);
     expect(wait).toMatch(/disabled=\{starting \|\| ready === 0\}/);
-    expect(lobby).toMatch(/ready: \(p\.status as string\) === "ready",/);
+    // Who said what: see rematchAnswersAreShown.test.ts.
+    expect(lobby).toMatch(/answer: !seated \? "declined" : \(seated\.status as string\) === "ready" \? "ready" : "waiting",/);
   });
 
   it("and the undecided leave the table before the stake is taken", () => {
@@ -104,10 +105,11 @@ describe("two players sit centred on the podium", () => {
 });
 
 describe("the words, in every language", () => {
-  it("all seven carry the thirteen keys", () => {
+  it("all seven carry the fourteen keys", () => {
     const keys = [
       "rematchGateHostBody", "rematchGateAskBody", "rematchGatePlay", "rematchGateLeave",
-      "rematchWaitTitle", "rematchWaitHint", "rematchWaitReady", "rematchWaitPending", "rematchWaitStart", "rematchWaitUndecided",
+      "rematchWaitTitle", "rematchWaitHint", "rematchWaitReady", "rematchWaitPending", "rematchWaitDeclined",
+      "rematchWaitStart", "rematchWaitUndecided",
       "summaryRematchTitle", "summaryRematchHint", "summaryAskTable",
     ];
     for (const lang of ["en", "ka", "de", "es", "fr", "it", "pt"]) {

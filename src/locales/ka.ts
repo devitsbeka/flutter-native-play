@@ -2568,6 +2568,7 @@ export const ka = {
     rematchWaitHint: "ყველას ვკითხეთ მაგიდასთან. ვინც უარს იტყვის, ოთახს ტოვებს — ფონდი ადგილების მიხედვით იცვლება.",
     rematchWaitReady: "მზადაა",
     rematchWaitPending: "ფიქრობს…",
+    rematchWaitDeclined: "უარი თქვა",
     rematchWaitStart: "დაწყება {count} მოთამაშით",
     rematchWaitUndecided: "{count} ჯერ ფიქრობს — თუ ახლა დაიწყებ, ისინი ოთახს დატოვებენ.",
     notifPlay: "ითამაშე",

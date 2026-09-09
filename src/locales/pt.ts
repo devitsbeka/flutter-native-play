@@ -2256,6 +2256,7 @@ export const pt: KaTranslations = {
     rematchWaitHint: "Todos à mesa foram questionados. Quem recusar sai da sala — o pote segue os lugares.",
     rematchWaitReady: "Pronto",
     rematchWaitPending: "A decidir…",
+    rematchWaitDeclined: "Recusou",
     rematchWaitStart: "Começar com {count}",
     rematchWaitUndecided: "{count} ainda a decidir — saem da sala se começares agora.",
     notifPlay: "Jogar",
