@@ -624,7 +624,7 @@ export const pt: KaTranslations = {
     reportReasonTitle: "O que há de errado?",
     reportDetailsPlaceholder: "Adicione detalhes (opcional)",
     blockConfirmTitle: "Bloquear este jogador?",
-    blockConfirmBody: "Os quizzes e comentários dessa pessoa deixarão de aparecer. Você pode desbloquear nas Configurações.",
+    blockConfirmBody: "Os quizzes e comentários dessa pessoa deixarão de aparecer. Você pode desbloquear em Configurações → Privacidade.",
     reason: { inappropriate: "Conteúdo inapropriado", harassment: "Assédio ou abuso", spam: "Spam", cheating: "Trapaça", other: "Outra coisa" },
   },
   dailyRewards: {

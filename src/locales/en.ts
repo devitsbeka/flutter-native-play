@@ -741,7 +741,7 @@ export const en: KaTranslations = {
     reportReasonTitle: "What's wrong?",
     reportDetailsPlaceholder: "Add details (optional)",
     blockConfirmTitle: "Block this player?",
-    blockConfirmBody: "Their quizzes and comments will stop appearing. You can unblock from Settings.",
+    blockConfirmBody: "Their quizzes and comments will stop appearing. You can unblock from Settings → Privacy.",
     reason: {
       inappropriate: "Inappropriate content",
       harassment: "Harassment or abuse",

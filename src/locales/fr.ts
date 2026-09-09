@@ -617,7 +617,7 @@ export const fr: KaTranslations = {
     reportReasonTitle: "Quel est le problème ?",
     reportDetailsPlaceholder: "Ajoutez des détails (facultatif)",
     blockConfirmTitle: "Bloquer ce joueur ?",
-    blockConfirmBody: "Ses quiz et commentaires n'apparaîtront plus. Tu peux le débloquer dans les Réglages.",
+    blockConfirmBody: "Ses quiz et commentaires n'apparaîtront plus. Tu peux le débloquer dans Réglages → Confidentialité.",
     reason: { inappropriate: "Contenu inapproprié", harassment: "Harcèlement ou abus", spam: "Spam", cheating: "Triche", other: "Autre chose" },
   },
   dailyRewards: {
