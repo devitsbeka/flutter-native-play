@@ -31,7 +31,7 @@ import { RoomIconPickerModal } from "@/components/team/RoomIconPickerModal";
 import { MyTriviasPickerModal } from "@/components/team/MyTriviasPickerModal";
 import { GameStylePersonalTrivia } from "@/components/team/GameStylePersonalTrivia";
 import { useNavigate } from "react-router-dom";
-import { cn } from "@/lib/utils";
+import { cn, formatCompactNumber } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useIconLibrary } from "@/hooks/useIconLibrary";
 import iconCollections from "@/assets/icon-collections.png";
@@ -85,6 +85,12 @@ import { BalancePills } from "@/components/shared/BalanceStrip";
 // mock hangs it: 68px, over the three dimmed avatars rather than beside the
 // label.
 import lockRender from "@/assets/play-chooser/lock-friends.png";
+// The two badges every mode card wears: a coin for what a game costs and the
+// little crowd for how many can play it. Both numbers come from
+// GAME_MODE_META so the chooser and the home rail cannot disagree.
+import playersIcon from "@/assets/play-chooser/players.svg";
+import coinIcon from "@/assets/icons/icon-coin.png";
+import { GAME_MODE_META } from "@/config/gameModeMeta";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { markProgrammaticScroll } from "@/utils/scrollTapGuard";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
@@ -2075,6 +2081,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
              .map((card, i) => {
               const isPicked = gameChoice === card.key;
               const busy = isPicked && isCreating;
+              const { price, players } = GAME_MODE_META[card.key];
               return (
                 /* One card, to the Figma 1013:1406 pixel: the frame there is
                    393 × 686, so every inner measure is written in --u, one
@@ -2160,15 +2167,35 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                       render dissolves into the surface rather than stopping
                       on a line. */}
                   <div className="absolute inset-x-0 bottom-[-6.96%] top-[62.17%] z-10 bg-[linear-gradient(to_top,#f3e6ff_0%,#f3e6ff_50%,rgba(243,230,255,0)_100%)]" />
+                  {/* What it costs and who it seats, in the card's two top
+                      corners — the price in coins on the left, the head count
+                      on the right. Both are written in --u like everything
+                      else on the card, so they hold their proportion from a
+                      phone's 316px card to the tablet's 320.
+
+                      A mode priced `null` draws no coin badge: My Trivias is
+                      your own questions and has never cost anything, so a
+                      badge reading 0 would be answering a question nobody
+                      asked. The head count has no such exception — a blank
+                      corner beside neighbours that answer "how many?" reads
+                      as an answer of none. */}
+                  {price !== null && !busy && (
+                    <div aria-label={`${price} ${t("common.coins")}`} className="absolute left-[calc(16*var(--u))] top-[calc(16*var(--u))] z-20 flex items-center gap-[calc(5*var(--u))] rounded-[calc(24*var(--u))] border-[length:calc(3*var(--u))] border-solid border-white/65 bg-gradient-to-b from-[#fff8e8] to-[#ffdca6] px-[calc(11*var(--u))] py-[calc(2*var(--u))] shadow-[0px_calc(3*var(--u))_0px_0px_#d8b878,0px_calc(3*var(--u))_calc(9*var(--u))_0px_rgba(151,110,42,0.12)]">
+                      <img alt="" src={coinIcon} className="h-[calc(26*var(--u))] w-[calc(26*var(--u))] shrink-0 object-contain" />
+                      <span className="whitespace-nowrap bg-gradient-to-b from-[#5c3d10] to-[#9a7434] bg-clip-text font-hero text-[calc(22*var(--u))] leading-[calc(32*var(--u))] tracking-[-0.18px] text-transparent">
+                        {formatCompactNumber(price)}
+                      </span>
+                    </div>
+                  )}
+                  <div aria-label={`${players} ${t("extra.playersHeader")}`} className="absolute right-[calc(16*var(--u))] top-[calc(16*var(--u))] z-20 flex items-center gap-[calc(6*var(--u))] rounded-[calc(24*var(--u))] border-[length:calc(3*var(--u))] border-solid border-white/65 bg-gradient-to-b from-[#fff3ed] to-[#f5cdcd] px-[calc(11*var(--u))] py-[calc(2*var(--u))] shadow-[0px_calc(3*var(--u))_0px_0px_#d6c7c4,0px_calc(3*var(--u))_calc(9*var(--u))_0px_rgba(151,64,64,0.08)]">
+                    <img alt="" src={playersIcon} className="h-[calc(22*var(--u))] w-[calc(17*var(--u))] shrink-0" />
+                    <span className="whitespace-nowrap bg-gradient-to-b from-[#522b28] to-[#99665f] bg-clip-text font-hero text-[calc(22*var(--u))] leading-[calc(32*var(--u))] tracking-[-0.18px] text-transparent">
+                      {players}
+                    </span>
+                  </div>
                   {/* 1102:3117: the title block at 76.25% of the card, 39
                       design-px in. Written in --u so it scales with the card
-                      like every other measure.
-
-                      The peach "how many play" pill that used to sit top
-                      right is gone with the redesign (1102:3113 has no such
-                      layer): the shelf is split into the games you play alone
-                      and the games you play in a room, so the head count was
-                      answering a question the two halves already answer. */}
+                      like every other measure. */}
                   <div
                     className="absolute left-[calc(39*var(--u))] right-[calc(24*var(--u))] top-[72%] z-20"
                   >
