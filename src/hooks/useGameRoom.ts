@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { t } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
+import { roomIconOrNull } from "@/utils/categoryIcons";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/lib/toast";
 import { generateRoomName, getDefaultRoomName } from "@/utils/roomNameGenerator";
@@ -99,7 +100,8 @@ export function useGameRoom() {
         });
         if (!nameError && nameData?.name) {
           roomName = nameData.name;
-          roomIcon = nameData.icon_url || null;
+          // Never a category's icon (utils/categoryIcons).
+          roomIcon = await roomIconOrNull(nameData.icon_url);
         }
       } catch (e) {
         console.log('Using fallback room name generator');

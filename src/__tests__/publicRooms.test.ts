@@ -913,9 +913,10 @@ describe("every room wears a face, and the card leads with its category", () => 
     const pub = read("src/components/team/PublicRoomsSection.tsx");
     expect(pub).toMatch(/room\.room_icon \?\? lounge\?\.icon \?\? dealtRoomIcon\(room\.id, iconPool\)/);
     // A dealt room face is never one a category wears: the pool strikes out
-    // any library icon whose slug is a category's icon (owner's rule).
-    expect(crests).toMatch(/from\("categories"\)\.select\("icon_slug, icon"\)/);
-    expect(crests).toMatch(/!\(r\.slug && categoryIcons\.has\(String\(r\.slug\)\)\)/);
+    // any library icon a category wears, through the one list every way a
+    // room gets an icon reads (roomIconsAreNotCategoryIcons.test.ts).
+    expect(crests).toMatch(/fetchCategoryIconSlugs\(\),/);
+    expect(crests).toMatch(/!isCategoryIcon\(r, categoryIcons\)/);
   });
 
   it("the public card says სათამაშო ოთახი and drops the FIRST ROUND caption", () => {

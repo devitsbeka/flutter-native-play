@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { fetchCategoryIconSlugs, isCategoryIcon } from "@/utils/categoryIcons";
 
 /**
  * The crests a Battle room wears when its captains have not chosen yet.
@@ -16,27 +17,22 @@ import { supabase } from "@/integrations/supabase/client";
  * One shared pool, ordered so every client deals from the same deck.
  *
  * A room's dealt face must never be one a CATEGORY wears (owner's rule) — so
- * the library icons whose slug is a category's icon are struck out before the
- * deck is dealt. A wider fetch than 80 leaves room to still hand back ~80
- * after the strike.
+ * the library icons a category wears (utils/categoryIcons: every category's
+ * slug, and the mystery box) are struck out before the deck is dealt. A
+ * wider fetch than 80 leaves room to still hand back ~80 after the strike.
  */
 export async function fetchCrestPool(): Promise<string[]> {
-  const [{ data: lib }, { data: cats }] = await Promise.all([
+  const [{ data: lib }, categoryIcons] = await Promise.all([
     supabase
       .from("icon_library")
       .select("icon_url, slug")
       .not("icon_url", "is", null)
       .order("icon_url")
       .limit(240),
-    supabase.from("categories").select("icon_slug, icon"),
+    fetchCategoryIconSlugs(),
   ]);
-  const categoryIcons = new Set<string>();
-  (cats ?? []).forEach((c) => {
-    if (c.icon_slug) categoryIcons.add(String(c.icon_slug));
-    if (c.icon) categoryIcons.add(String(c.icon));
-  });
   return (lib ?? [])
-    .filter((r) => r.icon_url && !(r.slug && categoryIcons.has(String(r.slug))))
+    .filter((r) => r.icon_url && !isCategoryIcon(r, categoryIcons))
     .map((r) => r.icon_url as string)
     .slice(0, 80);
 }
