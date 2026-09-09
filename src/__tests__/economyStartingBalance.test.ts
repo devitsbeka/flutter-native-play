@@ -197,6 +197,25 @@ describe("economy_config tells the truth about the rest of it too", () => {
     expect(configValue("powerup_price_replace")).toBe(REWARDS.POWER_UP_PRICES.replace);
   });
 
+  it("the VIP prices and the ad, which the first pass left behind", () => {
+    // Found by reading the live table back after applying that migration
+    // and diffing ALL of it, not only the rows it names: the three it
+    // missed were the three furthest from the truth. The VIP rows said
+    // 5/20/50 gems against a shop charging 30/100/250, and the ad row
+    // promised coins for something that has paid a play for months.
+    const vip = read("supabase/migrations/20261102120000_economy_config_vip_and_ads.sql");
+    const value = (id: string): number => {
+      const m = vip.match(new RegExp(`\\('${id}',\\s*(-?\\d+),`));
+      if (!m) throw new Error(`row '${id}' is not in the migration`);
+      return Number(m[1]);
+    };
+    for (const [period, gems] of Object.entries(REWARDS.VIP_PRICES)) {
+      expect(value(`vip_price_${period}`), period).toBe(gems);
+    }
+    expect(value("ad_watch_coins")).toBe(REWARDS.AD_WATCH_COINS);
+    expect(REWARDS.AD_WATCH_COINS).toBe(0);
+  });
+
   it("and it is written as an upsert, because some of these rows are new", () => {
     expect(migration).toMatch(/ON CONFLICT \(id\) DO UPDATE\s*\n\s*SET value\s+= EXCLUDED\.value,/);
   });
