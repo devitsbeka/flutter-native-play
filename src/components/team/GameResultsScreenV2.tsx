@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -30,6 +30,8 @@ import { useCategoryIdentity } from "@/hooks/useCategoryIdentity";
 import { RoomQueueSheet } from "./RoomQueueSheet";
 import { calculateMultiplayerPayout } from "@/utils/multiplayerPayout";
 import { useRoomPot, type RoomPotLine } from "@/hooks/useRoomPot";
+import { useMatchInfo } from "@/hooks/useMatchInfo";
+import { FooterHaze } from "@/components/shared/FooterHaze";
 import { isGuestAccount } from "@/utils/guestAccount";
 import { AuthRequiredModal } from "@/components/shared/AuthRequiredModal";
 import { useLocalizedCategoryName } from "@/utils/categoryDisplayName";
@@ -51,6 +53,10 @@ const processedResultsGames = new Set<string>();
  * list — first place in the middle, taller than the two beside it.
  */
 const PODIUM_ORDER = [1, 0, 2] as const;
+/** How far above the footer its haze reaches (FooterHaze's top-[-120px]). */
+const FOOTER_HAZE_PX = 120;
+/** The screen's violet ground at the bottom of its gradient, as "r,g,b". */
+const RESULTS_HAZE_TINT = "155,137,245";
 /** Two players: side by side, centred - no empty third step (owner's ask). */
 const TWO_UP_ORDER = [0, 1] as const;
 
@@ -126,6 +132,26 @@ export function GameResultsScreenV2() {
   // Every seat's line in the pot — what each place won or paid — so the
   // podium can say it under the medals, not only this player's own.
   const [potLines, setPotLines] = useState<Record<string, RoomPotLine>>({});
+  /**
+   * The footer floats over the list of seats, behind the lobby's haze, so
+   * the tiles keep going under the button — blurred, so you can see there
+   * is more and that it scrolls (owner: "use same background blur behind
+   * the button what we use in lobby in bottom"). The list pads its own
+   * bottom by the footer's measured height plus the haze, so every tile
+   * is still reachable.
+   */
+  const footerRef = useRef<HTMLDivElement>(null);
+  const [footerHeight, setFooterHeight] = useState(0);
+  useLayoutEffect(() => {
+    const node = footerRef.current;
+    if (!node) return;
+    const read = () => setFooterHeight(node.getBoundingClientRect().height);
+    read();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(read);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
   const [showGuestSignUp, setShowGuestSignUp] = useState(false);
   const [showQueueSheet, setShowQueueSheet] = useState(false);
 
@@ -315,44 +341,11 @@ export function GameResultsScreenV2() {
   };
 
   /**
-   * Which game this round belongs to, and which round of it this is - off
-   * room_games, where every round of the room is a row and game_number is
-   * the match it was played in (owner: "show which round it was - Game 1,
-   * Round 2"). Null until read, and hidden when the room predates the
-   * numbering.
+   * Which game this round belongs to, and which round of it this is
+   * (useMatchInfo — the countdown reads the same). Null until read, and
+   * hidden when the room predates the numbering.
    */
-  const [matchInfo, setMatchInfo] = useState<{ game: number; round: number; roundIds: string[] } | null>(null);
-  useEffect(() => {
-    const roomId = currentRoom?.id;
-    const gameId = currentRoom?.current_game_id;
-    if (!roomId || !gameId) {
-      setMatchInfo(null);
-      return;
-    }
-    let cancelled = false;
-    void (async () => {
-      const { data } = await supabase
-        .from("room_games")
-        .select("id, game_number, created_at")
-        .eq("room_id", roomId)
-        .order("created_at", { ascending: true });
-      if (cancelled || !data) return;
-      const current = data.find((g) => g.id === gameId);
-      if (!current) {
-        setMatchInfo(null);
-        return;
-      }
-      const rounds = data.filter((g) => g.game_number === current.game_number);
-      setMatchInfo({
-        game: current.game_number,
-        round: rounds.findIndex((g) => g.id === gameId) + 1,
-        roundIds: rounds.map((g) => g.id),
-      });
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [currentRoom?.id, currentRoom?.current_game_id]);
+  const matchInfo = useMatchInfo(currentRoom?.id, currentRoom?.current_game_id);
 
   /**
    * The match's standings, once its last round is in: every round's pot
@@ -828,7 +821,7 @@ export function GameResultsScreenV2() {
         button — off the screen. Bled into the insets and self-padded, the
         box is exactly the viewport and the gradient covers the status bar. */}
     <div className="h-[100dvh] w-full overflow-hidden safe-bleed bg-gradient-to-b from-[#7C6AE5] to-[#9B89F5]">
-      <div className="w-full h-full flex flex-col max-w-[700px] mx-auto">
+      <div className="relative w-full h-full flex flex-col max-w-[700px] mx-auto">
       {/* Back Button Header — with the room it belongs to centred, so a
           result read out of context still names its room. */}
       <div className="flex items-center px-4 pt-3 pb-0 flex-shrink-0">
@@ -1007,7 +1000,8 @@ export function GameResultsScreenV2() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="w-full max-w-[468px] flex-1 min-h-0 overflow-y-auto pb-3"
+            className="w-full max-w-[468px] flex-1 min-h-0 overflow-y-auto"
+            style={{ paddingBottom: footerHeight + FOOTER_HAZE_PX }}
           >
             {/* The design's tiles (1157:10225): the lobby's chunky shape —
                 24/24/24/54 corners, a rose wash and an 8px rose foot — with
@@ -1058,11 +1052,13 @@ export function GameResultsScreenV2() {
           inset is already the root's own padding (safe-bleed), so this
           carries plain spacing — env(safe-area-inset-bottom) here again
           would double-count the inset. */}
+      <div ref={footerRef} className="absolute inset-x-0 bottom-0 z-20">
+      <FooterHaze tint={RESULTS_HAZE_TINT} />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="p-4 pb-5 space-y-3"
+        className="relative p-4 pb-5 space-y-3"
       >
         {/* The whole match, once its last round is in: every seat's coins
             over all of its rounds, first to last. */}
@@ -1241,6 +1237,7 @@ export function GameResultsScreenV2() {
           </>
         )}
       </motion.div>
+      </div>
 
       {/* Category Picker Modal */}
       <RoomQueueSheet

@@ -41,8 +41,11 @@ describe("the results screen", () => {
   it("says which round of which game, inside the category pill under its name", () => {
     // It stood above the pill; the design (Figma 1157:10058) sets it under
     // the category's name inside the pill (resultsScreenFigma.test.ts).
-    expect(results).toMatch(/\.from\("room_games"\)\s*\.select\("id, game_number, created_at"\)/);
-    expect(results).toMatch(/round: rounds\.findIndex\(\(g\) => g\.id === gameId\) \+ 1,/);
+    // The reading lives in useMatchInfo now, shared with the countdown.
+    const hook = read("src/hooks/useMatchInfo.ts");
+    expect(hook).toMatch(/\.from\("room_games"\)\s*\.select\("id, game_number, created_at"\)/);
+    expect(hook).toMatch(/round: rounds\.findIndex\(\(g\) => g\.id === gameId\) \+ 1,/);
+    expect(results).toMatch(/const matchInfo = useMatchInfo\(currentRoom\?\.id, currentRoom\?\.current_game_id\);/);
     const chip = results.indexOf("rounded-full bg-white/15 backdrop-blur-sm");
     const name = results.indexOf("{localizeCategory(currentRoom.category_name)}");
     const label = results.indexOf('t("extra.matchRoundLabel", { game: matchInfo.game, round: matchInfo.round })');

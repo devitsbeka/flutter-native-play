@@ -22,6 +22,11 @@ interface RoundCountdownProps {
   categoryName: string | null | undefined;
   /** `categories.icon_slug`, resolved by the caller. */
   iconSlug?: string | null;
+  /** The room this round is played in: its face and its name, for the pill at the top. */
+  roomName?: string | null;
+  roomIcon?: string | null;
+  /** Which game and which round of it — shown under the room's name when known. */
+  matchInfo?: { game: number; round: number } | null;
 }
 
 /**
@@ -37,7 +42,7 @@ interface RoundCountdownProps {
  * including one who was on Discover a second ago and has just been brought
  * here.
  */
-export function RoundCountdown({ number, categoryId, categoryName, iconSlug }: RoundCountdownProps) {
+export function RoundCountdown({ number, categoryId, categoryName, iconSlug, roomName, roomIcon, matchInfo }: RoundCountdownProps) {
   const { t } = useLanguage();
   const localizeCategory = useLocalizedCategoryName();
   // An undecided round is named in the language of whoever picked it, and
@@ -77,6 +82,31 @@ export function RoundCountdown({ number, categoryId, categoryName, iconSlug }: R
 
   return (
     <div className="fixed inset-0 z-[120] flex flex-col items-center justify-center gap-6 bg-[#2E1065] px-8 text-center">
+      {/* Which room, and which game and round of it — the results screen's
+          pill, at the top, so the count says where it is being counted
+          (owner: "show room icon + title game-round info here too"). */}
+      {roomName && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="absolute inset-x-0 top-[calc(12px_+_var(--safe-top,0px))] flex justify-center px-4"
+        >
+          <div className="flex max-w-[294px] items-center gap-3 rounded-full bg-white/15 py-2 pl-3 pr-5 backdrop-blur-sm">
+            {roomIcon && <img src={roomIcon} alt="" className="h-10 w-10 shrink-0 object-contain drop-shadow-sm" />}
+            <div className="min-w-0 flex flex-col text-left">
+              <span className="truncate font-[Nunito] text-[16px] font-medium leading-6 tracking-[-0.16px] text-white">
+                {roomName}
+              </span>
+              {matchInfo && (
+                <span className="text-[12px] font-bold uppercase leading-[18px] tracking-[0.3px] text-white/60">
+                  {t("extra.matchRoundLabel", { game: matchInfo.game, round: matchInfo.round })}
+                </span>
+              )}
+            </div>
+          </div>
+        </motion.div>
+      )}
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}

@@ -18,6 +18,9 @@ import { RoomLobbyV2 } from "@/components/team/RoomLobbyV2";
 import { RoundCountdown } from "@/components/team/RoundCountdown";
 import { useRoundCountdown, useRoundStartHold } from "@/hooks/useRoundCountdown";
 import { useCategoryIdentity } from "@/hooks/useCategoryIdentity";
+import { useMatchInfo } from "@/hooks/useMatchInfo";
+import { useRoomIconPool } from "@/hooks/useRoomIconPool";
+import { dealtRoomIcon } from "@/utils/roomCrests";
 import { MultiplayerGameScreenV2 } from "@/components/team/MultiplayerGameScreenV2";
 import { GameResultsScreenV2 } from "@/components/team/GameResultsScreenV2";
 import { FriendsStoriesBar } from "@/components/team/FriendsStoriesBar";
@@ -111,6 +114,10 @@ function TeamContentV2() {
   // seconds long, and players sit on this page for far longer than that
   // beforehand.
   const roundCategory = useCategoryIdentity(currentRoom?.category_id);
+  // For the countdown's pill: the room's face and which game and round
+  // this is (owner: "show room icon + title game-round info here too").
+  const roundMatchInfo = useMatchInfo(currentRoom?.id, currentRoom?.current_game_id);
+  const roomIconPool = useRoomIconPool();
   const { playSound } = useSound();
   const { 
     sendInvitation,
@@ -1170,6 +1177,9 @@ function TeamContentV2() {
         categoryId={roundCategory.categoryId ?? currentRoom.category_id}
         categoryName={currentRoom.category_name}
         iconSlug={roundCategory.iconSlug}
+        roomName={currentRoom.room_name || t("extra.gameRoomLabel")}
+        roomIcon={currentRoom.room_icon ?? dealtRoomIcon(currentRoom.id, roomIconPool)}
+        matchInfo={roundMatchInfo}
       />
     );
   }

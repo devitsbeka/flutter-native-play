@@ -81,7 +81,9 @@ describe("fourth down", () => {
   });
 
   it("the tiles stand 17px apart in a list that scrolls, not in a card", () => {
-    expect(results).toMatch(/className="w-full max-w-\[468px\] flex-1 min-h-0 overflow-y-auto pb-3"/);
+    // ...padded by the floating footer's measured height, so the last tile
+    // clears the haze (countdownNamesTheRoomAndResultsHaze.test.ts).
+    expect(results).toMatch(/className="w-full max-w-\[468px\] flex-1 min-h-0 overflow-y-auto"\s*\n\s*style=\{\{ paddingBottom: footerHeight \+ FOOTER_HAZE_PX \}\}/);
     expect(results).toMatch(/<div className="space-y-\[17px\]">/);
     expect(results).not.toMatch(/max-w-xs bg-white\/10 backdrop-blur-sm rounded-2xl p-3/);
   });
