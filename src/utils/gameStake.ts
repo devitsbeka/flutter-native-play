@@ -1,7 +1,8 @@
 /**
  * What a finished quick game costs or pays.
  *
- * Win +500, lose -500, draw nothing — but the loss has an edge the rule as
+ * Win +500, lose -500, draw nothing, for everybody — a subscription buys
+ * unlimited plays, not a private price list. The loss has an edge the rule as
  * stated does not cover, and it is the one that was going wrong: the currency
  * RPC refuses any debit that would take a balance below zero. Asking it for
  * the full 500 against 300 coins therefore took NOTHING, and the result
@@ -23,8 +24,15 @@ export interface GameSettlementInput {
   outcome: GameOutcome;
   /** The player's balance as the game ends. */
   coins: number;
-  /** PRO players do not pay the stake. They still earn the win. */
-  isVip: boolean;
+  /**
+   * Unused by the arithmetic, kept so callers need not change shape.
+   *
+   * PRO used to skip the loss here and in settle_quick_game. A quick game
+   * costs 500 for everybody now (owner: "per match cost is 500 coins, for
+   * PRO and no PRO users, same"), matching a room, where PRO has always
+   * staked. See 20261102140000_quick_game_charges_everyone.sql.
+   */
+  isVip?: boolean;
 }
 
 export interface GameSettlement {
@@ -39,7 +47,6 @@ export interface GameSettlement {
 export function resolveGameSettlement({
   outcome,
   coins,
-  isVip,
 }: GameSettlementInput): GameSettlement {
   if (outcome === "win") {
     const credit = REWARDS.GAME_WIN_REWARD;
@@ -47,10 +54,6 @@ export function resolveGameSettlement({
   }
 
   if (outcome === "draw") {
-    return { credit: 0, debit: 0, delta: 0 };
-  }
-
-  if (isVip) {
     return { credit: 0, debit: 0, delta: 0 };
   }
 

@@ -5,7 +5,6 @@ import {
   calculateXP,
   getMaxDailySpins,
   getVipDailyPowerUps,
-  shouldSkipStake,
 } from "@/utils/vipMultipliers";
 
 // PRO is a paid tier, so every benefit here is something a player has bought.
@@ -42,15 +41,12 @@ describe("getMaxDailySpins", () => {
   });
 });
 
-describe("shouldSkipStake", () => {
-  it("lets PRO members play without paying the stake", () => {
-    expect(shouldSkipStake(true)).toBe(true);
-  });
-
-  it("still charges free players", () => {
-    expect(shouldSkipStake(false)).toBe(false);
-  });
-});
+// shouldSkipStake was here. A quick game costs 500 for everybody now, PRO
+// included — the rule a room has always had, where the pot is other players'
+// money (owner: "per match cost is 500 coins, for PRO and no PRO users,
+// same"). The helper returned `isVip` unchanged and had one caller, so it
+// went with the exemption; what replaced the benefit is the welcome bundle a
+// subscription opens with. See quickGameChargesEveryone.test.ts.
 
 describe("getVipDailyPowerUps", () => {
   it("grants one of each power-up a day", () => {
