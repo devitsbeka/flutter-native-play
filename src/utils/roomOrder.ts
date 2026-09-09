@@ -41,8 +41,12 @@ export function roomRecency(room: OrderableRoom): number {
 }
 
 export function compareRooms(a: OrderableRoom, b: OrderableRoom): number {
-  if (!!a.hasFullRoster !== !!b.hasFullRoster) return a.hasFullRoster ? -1 : 1;
+  // An invitation first, above even a room that can be played right now:
+  // somebody is waiting on this player's answer, and a card that scrolls
+  // away is an answer that never comes (owner: "show rooms with invitation
+  // first to see and don't lose in scroll").
   if (!!a.hasPendingInvite !== !!b.hasPendingInvite) return a.hasPendingInvite ? -1 : 1;
+  if (!!a.hasFullRoster !== !!b.hasFullRoster) return a.hasFullRoster ? -1 : 1;
   if (!!a.hasLiveTV !== !!b.hasLiveTV) return a.hasLiveTV ? -1 : 1;
   return roomRecency(b) - roomRecency(a);
 }

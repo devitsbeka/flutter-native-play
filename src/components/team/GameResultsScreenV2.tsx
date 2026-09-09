@@ -127,6 +127,7 @@ export function GameResultsScreenV2() {
     resetMultiplayer,
     currentRoom,
     exitRoom,
+    leaveRoomPermanently,
     continueInRoom,
     startNewRound,
     startNextFromQueue,
@@ -524,8 +525,35 @@ export function GameResultsScreenV2() {
     fetchQuestions();
   }, [currentRoom, user]);
 
+  /**
+   * The back arrow, after a match.
+   *
+   * A private room is the players' own: back is the lobby, and the room
+   * waits for them. A PUBLIC room is made for one play (owner: "hosts are
+   * creating public rooms for one play ... make sure public rooms when
+   * round or several rounds, matches will end, room will be deleted"). Its
+   * match is over here; the only way it goes on is a rematch, asked with
+   * New Game (or by a PRO player) while everyone is still on this screen.
+   * So the host's back closes the room — cancelled and archived, which
+   * every listing already hides and which sends the guests out with "Room
+   * was closed" — and a guest's back gives up their seat.
+   */
   const handleBackToRoom = () => {
-    continueInRoom();
+    if (!isPublicRoom || !currentRoom) {
+      continueInRoom();
+      return;
+    }
+    if (isHost) {
+      void supabase
+        .from("game_rooms")
+        .update({ status: "cancelled", is_archived: true })
+        .eq("id", currentRoom.id);
+      exitRoom();
+      navigate("/team?tab=public", { replace: true });
+      return;
+    }
+    void leaveRoomPermanently();
+    navigate("/team?tab=public", { replace: true });
   };
 
   // Get next queue item for display
