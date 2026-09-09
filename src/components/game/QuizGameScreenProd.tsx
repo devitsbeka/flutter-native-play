@@ -12,6 +12,7 @@ import { QuizAnswerButton, QuizAnswerState } from "@/components/ui/quiz-answer-b
 import { QuizTrueFalseButton, type QuizTrueFalseState } from "@/components/ui/quiz-true-false-button";
 import { QuizPowerUpBar } from "@/components/ui/quiz-power-up-bar";
 import { ChunkyButton } from "@/components/ui/chunky-button";
+import { AnswerFeedbackCard } from "./AnswerFeedbackCard";
 import { TimerBadge } from "@/components/game/TimerBadge";
 import { PowerUpType as UIPowerUpType } from "@/components/ui/quiz-power-up-button";
 import { useAIIcon } from "@/hooks/useAIIcon";
@@ -528,6 +529,27 @@ export function QuizGameScreenProd() {
           })}
         </div>
       )}
+
+      {/* Answer feedback — Figma 1154:9157. Same card the solo rounds get:
+          the verdict, somewhere to keep the question or flag it, and a few
+          words about the answer, sitting over the next button. */}
+      <AnimatePresence>
+        {answerRevealed && currentQuestion && (
+          <motion.div
+            key={`feedback-${currentQuestionIndex}`}
+            className="px-4 pt-2 pb-6 [@media(max-height:700px)]:pb-4 [@media(max-height:600px)]:pb-2 flex-shrink-0"
+          >
+            <AnswerFeedbackCard
+              isCorrect={!!lastAnswerCorrect}
+              questionId={currentQuestion.id}
+              questionText={currentQuestion.question}
+              correctAnswer={currentQuestion.correctAnswer}
+              categoryId={currentQuestion.categoryId}
+              source="quick-game"
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Bottom Area - Power-ups OR Next Button */}
       <div className="px-4 pb-2 [@media(max-height:700px)]:pb-1 [@media(max-height:600px)]:pb-0.5 flex-shrink-0">
