@@ -121,7 +121,7 @@ describe("a public room cannot be created without something to play", () => {
     expect(lobby).toMatch(
       /const awaitingPlayers = !needsCategorySelection && !enoughPlayers && !isStarting;/,
     );
-    expect(lobby).toMatch(/const offerCreate = awaitingPlayers && !roomCreated;/);
+    expect(lobby).toMatch(/const offerCreate = !needsCategorySelection && !isStarting && !roomCreated;/);
     expect(lobby).toMatch(/const needsCategorySelection = !hasContent;/);
     expect(lobby).toMatch(
       /const hasContent = queue\.length > 0 \|\| currentRoom\.category_id \|\| currentRoom\.user_trivia_id;/,

@@ -135,7 +135,12 @@ describe("what the lobby does with it", () => {
   });
 
   it("offers Create only while it is still owed", () => {
-    expect(lobby).toMatch(/const offerCreate = awaitingPlayers && !roomCreated;/);
+    // Not gated on being short of players any more: a public room is listed
+    // the moment it exists, so somebody could arrive before the host
+    // pressed anything and the summary would never be shown at all.
+    expect(lobby).toMatch(
+      /const offerCreate = !needsCategorySelection && !isStarting && !roomCreated;/,
+    );
   });
 
   it("writes it before leaving, so coming back finds the offer spent", () => {

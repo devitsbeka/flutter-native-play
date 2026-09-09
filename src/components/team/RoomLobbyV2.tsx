@@ -558,6 +558,11 @@ export function RoomLobbyV2() {
   const handleDoneCreating = () => {
     rememberPressedCreate(currentRoom?.id);
     setRoomCreated(true);
+    // Only leave when leaving is the point. The trip to the list exists to
+    // go and find a second player; with somebody already here it would walk
+    // the host out of a room that is ready to start, past the people
+    // waiting in it. Then the footer is just Start.
+    if (enoughPlayersRef.current) return;
     exitRoom();
     navigate(`/team?tab=${currentRoom?.is_public ? "public" : "private"}`, { replace: true });
   };
@@ -1080,18 +1085,27 @@ export function RoomLobbyV2() {
    */
   const awaitingPlayers = !needsCategorySelection && !enoughPlayers && !isStarting;
   /**
-   * ...and the first time, the button is a way out of it rather than a dead
-   * Start: "Create", which hands the host back to the list their room leads,
-   * because the second player has to come from there.
+   * A room that has something to play but has not been created yet.
    *
-   * Once. Pressing it and coming back finds the same finished room, so
-   * offering the same trip again is a loop; from then on the footer says the
-   * true thing — Start, dead until somebody else is here — and arms itself
-   * the moment they are (owner: "when i click create once we should show
-   * disable start game button again and when there are minimum 2 online
-   * players in the room - we show start game as clickable").
+   * Create comes before Start, always — it is the tap that raises the
+   * summary and settles the room, and a host who never sees it never got to
+   * check what they made.
+   *
+   * It used to require `awaitingPlayers`, and that lost the summary exactly
+   * where it mattered most: a public room is listed the moment it exists, so
+   * somebody could walk in before the host pressed anything. The room then
+   * had enough players, the button skipped straight to Start — and the room
+   * was already settled by being listed, so the host had lost the right to
+   * change it without ever having been shown it.
+   *
+   * Once per room either way: pressing it and coming back finds the same
+   * room, and from then on the footer says the true thing — Start, dead
+   * until somebody else is here, arming itself the moment they are (owner:
+   * "when i click create once we should show disable start game button
+   * again and when there are minimum 2 online players in the room - we show
+   * start game as clickable").
    */
-  const offerCreate = awaitingPlayers && !roomCreated;
+  const offerCreate = !needsCategorySelection && !isStarting && !roomCreated;
 
   const heldRound = (currentRoom.category_id || currentRoom.user_trivia_id)
     ? {
