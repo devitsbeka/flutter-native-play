@@ -29,20 +29,48 @@ interface RoomPotResponse {
   deltas?: { user_id: string; staked?: number; place?: number; prize?: number }[];
 }
 
+/** One seat's line in the settlement: what they paid in, what they took out. */
+export interface RoomPotLine {
+  staked: number;
+  prize: number;
+  /** prize − staked, signed. */
+  net: number;
+}
+
 export interface RoomPotSettlement {
   /** Signed, from this player's seat: prize minus stake. */
   applied: number;
   /** Everything staked into this round. */
   pot: number;
+  /**
+   * Every seat's line, by user id — so the podium can say what each place
+   * won, not only what this device's player did. Empty when the server
+   * reported nothing (the function is missing, or predates the migration
+   * that reports the ledger back to every device).
+   */
+  lines: Record<string, RoomPotLine>;
   /** True when the round settled nothing because the function is missing. */
   unsettled: boolean;
   reason: string;
 }
 
-const NOTHING: RoomPotSettlement = { applied: 0, pot: 0, unsettled: true, reason: "no_room" };
+const NOTHING: RoomPotSettlement = { applied: 0, pot: 0, lines: {}, unsettled: true, reason: "no_room" };
+
+/** The server's deltas, folded to one line per seat. */
+function foldLines(deltas: RoomPotResponse["deltas"]): Record<string, RoomPotLine> {
+  const lines: Record<string, RoomPotLine> = {};
+  for (const d of deltas ?? []) {
+    const line = lines[d.user_id] ?? { staked: 0, prize: 0, net: 0 };
+    line.staked += d.staked ?? 0;
+    line.prize += d.prize ?? 0;
+    line.net = line.prize - line.staked;
+    lines[d.user_id] = line;
+  }
+  return lines;
+}
 
 export function useRoomPot() {
-  const { user, setProfileLocal } = useAuth();
+  const { user, profile, setProfileLocal } = useAuth();
 
   const settleRoomRound = useCallback(
     async (roomId: string, gameId: string | null): Promise<RoomPotSettlement> => {
@@ -72,16 +100,40 @@ export function useRoomPot() {
           return { ...NOTHING, reason: missing ? "not_deployed" : "error" };
         }
 
+        // What the balance was before the server said what it is now. Read
+        // BEFORE setProfileLocal below, for the fallback further down.
+        const balanceBefore = profile?.coins;
         if (typeof data?.coins === "number") setProfileLocal({ coins: data.coins });
 
+        const lines = foldLines(data?.deltas);
+
         // What moved for THIS player: their prize, less the stake they paid.
-        const mine = (data?.deltas ?? []).filter((d) => d.user_id === user.id);
-        const staked = mine.reduce((sum, d) => sum + (d.staked ?? 0), 0);
-        const prize = mine.reduce((sum, d) => sum + (d.prize ?? 0), 0);
+        //
+        // A round settles once, on whichever device asks first; every other
+        // device is told `already_settled`. The function reports the ledger
+        // back on that answer now (the deltas-for-everyone migration), so
+        // every screen has the lines. Until that migration is applied, a
+        // second device gets no lines at all — and the winner's screen showed
+        // nothing while the loser's showed the stake gone. In that one
+        // window, the balance the server just
+        // reported against the balance this device last knew is the best
+        // account of what moved; it is only ever used when there is nothing
+        // better, and only for this player's own line.
+        let applied = lines[user.id]?.net ?? 0;
+        if (
+          !lines[user.id] &&
+          data?.reason === "already_settled" &&
+          typeof data.coins === "number" &&
+          typeof balanceBefore === "number" &&
+          data.coins !== balanceBefore
+        ) {
+          applied = data.coins - balanceBefore;
+        }
 
         return {
-          applied: prize - staked,
+          applied,
           pot: data?.pot ?? 0,
+          lines,
           unsettled: false,
           reason: data?.reason ?? "settled",
         };
@@ -90,7 +142,7 @@ export function useRoomPot() {
         return { ...NOTHING, reason: "error" };
       }
     },
-    [user, setProfileLocal],
+    [user, profile?.coins, setProfileLocal],
   );
 
   return { settleRoomRound, stakeAmount: REWARDS.GAME_STAKE };

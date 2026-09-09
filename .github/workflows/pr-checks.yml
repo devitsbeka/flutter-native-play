@@ -279,3 +279,14 @@ jobs:
           psql -h localhost -p 5432 -U postgres \
             -v ON_ERROR_STOP=1 -f supabase/tests/14-streak-milestones.sql
 
+      # The room pot. A room round is played for a stake, settled once,
+      # server-side: every seat pays in, the table is paid out, nothing is
+      # minted — and every device that asks is told what moved, not only
+      # the first. The file existed; CI had never run it.
+      - name: Assert room pot rules
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -p 5432 -U postgres \
+            -v ON_ERROR_STOP=1 -f supabase/tests/15-room-pot.sql
+

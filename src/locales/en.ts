@@ -3287,7 +3287,6 @@ export const en: KaTranslations = {
     rematch: "Rematch",
     continueBtn: "Continue",
     // Game Results V2
-    addCategory: "Add Category",
     challengeFriend: "Challenge Friend",
     waitingForHostResult: "Waiting for host",
     challengeResults: "Challenge Results",

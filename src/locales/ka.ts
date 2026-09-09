@@ -3292,7 +3292,6 @@ export const ka = {
     rematch: "რემატჩი",
     continueBtn: "გაგრძელება",
     // Game Results V2
-    addCategory: "კატეგორიის დამატება",
     challengeFriend: "გამოწვიე მეგობარი",
     waitingForHostResult: "ველოდებით ჰოსტს",
     challengeResults: "ჩელენჯის შედეგები",
