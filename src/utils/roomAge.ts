@@ -40,3 +40,23 @@ export function roomAgeLabel(createdAt: string | null | undefined, now: number =
   if (days < 30) return { key: "extra.timeWeeksAgo", count: Math.floor(days / 7) };
   return { key: "extra.timeMonthsAgo", count: Math.floor(days / 30) };
 }
+
+/** How long a room reads as "new" on its card. */
+export const NEW_ROOM_MS = HOUR;
+
+/**
+ * Is this room still new — made within the last hour?
+ *
+ * The card used to carry its age at every step ("20 წუთის წინ", "გუშინ",
+ * "2 კვირის წინ"), beside the host, the seats and the way out — one pill
+ * too many on a row that was already full (owner: "it is too much on
+ * cards, show new if room is new (1 hour) after that don't show date
+ * label"). So the card says "New" while that is true, and then says
+ * nothing about time at all.
+ */
+export function isNewRoom(createdAt: string | null | undefined, now: number = Date.now()): boolean {
+  if (!createdAt) return false;
+  const created = new Date(createdAt).getTime();
+  if (Number.isNaN(created)) return false;
+  return now - created < NEW_ROOM_MS;
+}

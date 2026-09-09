@@ -290,10 +290,10 @@ describe("a room card offers one way in", () => {
     // The public list wears mint only on a room that can start; every other
     // card on it is the same shape in white.
     expect(read("src/components/team/PublicRoomsSection.tsx")).toMatch(
-      /tone=\{invited \? "purple" : ready \? "mint" : "white"\}/,
+      /tone=\{invited \|\| ready \? "mint" : "white"\}/,
     );
     expect(read("src/components/team/MyRoomsSection.tsx")).toMatch(
-      /<RoomCardPlayButton\s*\n\s*tone=\{room\.has_pending_invite \? "purple" : "white"\}/,
+      /<RoomCardPlayButton\s*\n\s*tone=\{room\.has_pending_invite \? "mint" : "white"\}/,
     );
     for (const lang of ["en", "ka", "de", "es", "fr", "it", "pt"]) {
       expect(read(`src/locales/${lang}.ts`), lang).toMatch(/roomPlay: "/);

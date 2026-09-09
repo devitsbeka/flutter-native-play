@@ -1,3 +1,5 @@
+import { supabase } from "@/integrations/supabase/client";
+import { markNotificationActioned } from "@/utils/notificationActions";
 /**
  * The rooms somebody has asked this player into and not been answered yet,
  * keyed by room, with who asked.
@@ -17,9 +19,12 @@
 export interface PendingInviteFrom {
   nickname: string | null;
   avatar_url: string | null;
+  /** The invite's own notification — answered when the seat is taken or given up. */
+  notificationId: string;
 }
 
 interface InviteNotification {
+  id: string;
   type: string;
   read_at: string | null;
   data: unknown;
@@ -38,8 +43,21 @@ export function pendingRoomInvites(notifications: readonly InviteNotification[])
       byRoom.set(data.room_id, {
         nickname: data.sender_nickname ?? null,
         avatar_url: data.sender_avatar ?? null,
+        notificationId: n.id,
       });
     }
   }
   return byRoom;
+}
+
+/**
+ * No, from the card.
+ *
+ * The seat the host reserved is given up — a seat that stays at the table
+ * is staked when a round settles — and the invite's notification is marked
+ * declined, which is what takes the grey face and the buttons off the card.
+ */
+export async function declineRoomInvite(roomId: string, userId: string, notificationId: string): Promise<void> {
+  await supabase.from("room_participants").delete().eq("room_id", roomId).eq("user_id", userId);
+  await markNotificationActioned(notificationId, "declined");
 }

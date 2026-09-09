@@ -334,7 +334,7 @@ export default function HomeShot() {
       ...base,
       is_host: false,
       has_pending_invite: true,
-      pending_invite_from: { nickname: "Britney", avatar_url: null },
+      pending_invite_from: { nickname: "Britney", avatar_url: null, notificationId: "shot-invite" },
     };
     return (
       <div className="min-h-[100dvh] w-full space-y-4 bg-[#faf6ff] p-4">

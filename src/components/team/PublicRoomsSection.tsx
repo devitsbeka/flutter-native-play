@@ -16,9 +16,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { onlineUserIds } from "@/utils/presence";
 import { AnimatePresence, motion } from "framer-motion";
 import { Globe, Loader2, Users, Clock, Trash2, LogOut, X, UserPlus, Play, Plus, Check } from "lucide-react";
-import { RoomInviteBadge } from "@/components/team/RoomInviteBadge";
 import { useNotifications } from "@/hooks/useNotifications";
-import { pendingRoomInvites, type PendingInviteFrom } from "@/utils/pendingRoomInvites";
+import { declineRoomInvite, pendingRoomInvites, type PendingInviteFrom } from "@/utils/pendingRoomInvites";
 import { RoomCardPlayButton } from "@/components/team/RoomCardPlayButton";
 import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
 import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
@@ -51,7 +50,7 @@ import crownIcon from "@/assets/crown-icon.png";
 import sceneArena from "@/assets/tb-lobby/scene-arena.webp";
 import { useDeveloperMode } from "@/contexts/DeveloperModeContext";
 import { ContentReportButton } from "@/components/social/ContentReportButton";
-import { useRoomAge } from "@/hooks/useRoomAge";
+import { useRoomIsNew } from "@/hooks/useRoomAge";
 
 /**
  * The Public tab: rooms anyone can find, and ask to be let into.
@@ -133,14 +132,20 @@ function PublicRoomCard({
   onRemove,
   busy,
   inviteFrom = null,
+  me = null,
+  onDeclineInvite,
 }: {
   room: PublicRoom;
   /**
    * Somebody asked this player into this room and has not been answered.
    * A published room you were asked into lists HERE, not under Private, so
-   * the badge and the Confirm button have to be on this card too.
+   * the grey seat and the Confirm / deny pair have to be on this card too.
    */
   inviteFrom?: PendingInviteFrom | null;
+  /** The viewer's own face, for the seat that is theirs to take. */
+  me?: CardPlayer | null;
+  /** Give the reserved seat up. */
+  onDeclineInvite?: (room: PublicRoom) => void;
   players: CardPlayer[];
   /** A Battle room's two team crests — its real face on the card. */
   crests?: { a: string | null; b: string | null };
@@ -243,9 +248,10 @@ function PublicRoomCard({
   // The scene is DARKENED under the ink (reduced opacity over deep purple,
   // a dark wash, an inner shadow), so every card writes in the same white.
   const ink = INK.pale;
-  // When the room was made, beside its host — the same wording the private
-  // card's badge uses ("20 წუთის წინ", "გუშინ"), ticking as it ages.
-  const createdAgo = useRoomAge(room.created_at);
+  // "New" for the room's first hour, then nothing about time at all — the
+  // running age was one pill too many on a row already carrying the host,
+  // the seats and the way out (owner's ask).
+  const isNew = useRoomIsNew(room.created_at);
 
   const enter = () => navigate(publicRoomPath(room));
 
@@ -367,14 +373,13 @@ function PublicRoomCard({
               </span>
             </button>
 
-            {/* When it was made, next to who made it (owner: "show date when
-                room was created - next to the host"). */}
-            {createdAgo && (
+            {/* New, for an hour, next to who made it — and then no time label
+                at all (owner's ask). */}
+            {isNew && (
               <span className={`shrink-0 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-bold ${ink.pill} ${ink.text}`}>
-                {createdAgo}
+                {t("extra.roomStatusNew")}
               </span>
             )}
-            {invited && <RoomInviteBadge from={inviteFrom} />}
           </div>
 
           {/* Seats. The lounges are what this is for — their card is
@@ -508,6 +513,13 @@ function PublicRoomCard({
         {(seatsToDraw > 0 || canInvite) && (
           <div className="relative z-10 flex items-center gap-1 pb-2 flex-wrap">
             {Array.from({ length: seatsToDraw }, (_, i) => {
+              // The seat reserved for the viewer, when they were asked and
+              // have not said yes: their own face, in black and white,
+              // right after the people who are really in (owner: "show
+              // avatar who was invited as black and white besides the host
+              // avatar"). The faces list carries seated players only, so
+              // the reserved seat is drawn from the viewer's own profile.
+              const reservedForMe = invited && !!me && i === players.length + 1;
               const person: CardPlayer | undefined =
                 i === 0
                   ? {
@@ -515,10 +527,10 @@ function PublicRoomCard({
                       nickname: room.host_nickname,
                       avatar_url: room.host_avatar_url,
                     }
-                  : players[i - 1];
+                  : players[i - 1] ?? (reservedForMe ? me : undefined);
               return person ? (
                 <span key={person.user_id} className="relative shrink-0">
-                  <span className={`block w-8 h-8 rounded-full overflow-hidden border-2 ${ink.ring}`}>
+                  <span className={`block w-8 h-8 rounded-full overflow-hidden border-2 ${ink.ring} ${reservedForMe ? "grayscale opacity-70" : ""}`}>
                     <SafeAvatarImage
                       avatarUrl={person.avatar_url}
                       fallback={person.nickname || "?"}
@@ -526,7 +538,7 @@ function PublicRoomCard({
                       containerClassName="w-full h-full"
                     />
                   </span>
-                  {online.has(person.user_id) && (
+                  {!reservedForMe && online.has(person.user_id) && (
                     <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-white" />
                   )}
                 </span>
@@ -597,7 +609,7 @@ function PublicRoomCard({
                 a room that can start says Play, and it is the only one that
                 goes mint. */}
             <RoomCardPlayButton
-              tone={invited ? "purple" : ready ? "mint" : "white"}
+              tone={invited || ready ? "mint" : "white"}
               disabled={busy || waiting || blocked}
               onClick={(e) => {
                 e.stopPropagation();
@@ -609,7 +621,9 @@ function PublicRoomCard({
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
               ) : invited ? (
                 // An invitation is answered, not played: entering takes the
-                // seat and reads the invite (owner: "button saying confirm").
+                // seat and reads the invite. Green, like every button that
+                // is one tap from a game (owner: "show green button -
+                // confirm button and X besides that green button to deny").
                 <>
                   <Check className="w-3.5 h-3.5" strokeWidth={3} />
                   {t("common.confirm")}
@@ -630,6 +644,20 @@ function PublicRoomCard({
                 t("extra.roomJoinLive")
               )}
             </RoomCardPlayButton>
+            {/* No: the reserved seat is given up and the invite answered. */}
+            {invited && !busy && (
+              <button
+                type="button"
+                aria-label={t("extra.notifDecline")}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDeclineInvite?.(room);
+                }}
+                className={`w-9 h-9 rounded-full flex items-center justify-center hover:bg-white/80 active:scale-95 transition ${ink.pill} ${ink.text}`}
+              >
+                <X className="w-4 h-4" strokeWidth={2.5} />
+              </button>
+            )}
             {/* Waiting is undoable: one game at a time means the ask must
                 be withdrawable to knock on another door. */}
             {waiting && !busy && (
@@ -676,12 +704,29 @@ export function PublicRoomsSection({
    */
   const [inviting, setInviting] = useState<PublicRoom | null>(null);
 
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { friends } = useFriends();
   const friendIds = useMemo(() => new Set(friends.map((f) => f.friendId)), [friends]);
   // Rooms this player was asked into — the same map the Private tab reads.
   const { notifications } = useNotifications();
   const pendingInvites = useMemo(() => pendingRoomInvites(notifications), [notifications]);
+  const me = useMemo<CardPlayer | null>(
+    () => (user ? { user_id: user.id, nickname: profile?.nickname ?? null, avatar_url: profile?.avatar_url ?? null } : null),
+    [user, profile?.nickname, profile?.avatar_url],
+  );
+  const declineInvite = async (room: PublicRoom) => {
+    const invite = pendingInvites.get(room.id);
+    if (!user || !invite) return;
+    try {
+      await declineRoomInvite(room.id, user.id, invite.notificationId);
+      toast.success(t("extra.notifDeclined"));
+      void queryClient.invalidateQueries({ queryKey: PUBLIC_ROOMS_KEY });
+      void queryClient.invalidateQueries({ queryKey: ["public-room-players"] });
+    } catch (e) {
+      console.error("[PublicRooms] decline invite failed", e);
+      toast.error(t("extra.errorOccurred"));
+    }
+  };
 
   // Who is on each couch changes the moment somebody sits down or gets up,
   // and the cards used to learn it on the next 25-second poll — join a room,
@@ -1088,6 +1133,8 @@ export function PublicRoomsSection({
           onRemove={setRemoving}
           busy={busyId === room.id}
           inviteFrom={pendingInvites.get(room.id) ?? null}
+          me={me}
+          onDeclineInvite={(r) => void declineInvite(r)}
         />
       ))}
 
