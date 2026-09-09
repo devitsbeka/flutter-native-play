@@ -58,3 +58,29 @@ describe("the PRO card is a title and a button, nothing between", () => {
     expect(modal).toMatch(/t\(trialDays \? "paywall\.footnoteTrial" : "paywall\.footnote"\)/);
   });
 });
+
+/**
+ * The rooms-locked headline fits in two lines, not three or four.
+ *
+ * This screen's own sentence — "Go PRO and invite friends to play" — says
+ * more than the reference's own headline, which only names the limit. At
+ * the mock's own 38px on its own 340px cap, the longer Georgian sentence
+ * wrapped one word at a time — four lines (owner: "show title on 2 lines
+ * not 3, reduce font size if you can't fin on two lines, reduce
+ * description text a little below too"). It gets the width the card
+ * actually has and a smaller size; the "lives" headline, short enough to
+ * fit as drawn, keeps the mock's own size exactly.
+ */
+describe("the rooms-locked headline fits without crowding the lives one", () => {
+  it("is smaller and wider only for the rooms reason", () => {
+    expect(modal).toMatch(
+      /reason === "rooms"\s*\n\s*\? "max-w-\[380px\] text-\[30px\] leading-\[36px\] tracking-\[-0\.6px\]"\s*\n\s*: "max-w-\[340px\] text-\[38px\] leading-\[43px\] tracking-\[-1\.16px\]",/,
+    );
+  });
+
+  it("and the line under it shrinks with it, only for rooms", () => {
+    expect(modal).toMatch(
+      /reason === "rooms" \? "text-\[19px\] leading-\[23px\] tracking-\[-0\.16px\]" : "text-\[22px\] leading-\[26px\] tracking-\[-0\.16px\]",/,
+    );
+  });
+});
