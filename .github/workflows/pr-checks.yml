@@ -290,3 +290,15 @@ jobs:
           psql -h localhost -p 5432 -U postgres \
             -v ON_ERROR_STOP=1 -f supabase/tests/15-room-pot.sql
 
+      # The subscription welcome. It is granted by a trigger on
+      # vip_subscriptions, which the webhook writes on every renewal — so
+      # what is proved here is mostly what does NOT grant: a renewal, an
+      # expired row, ad_free, and a second call from the edge function,
+      # which shares the same iap_events claim.
+      - name: Assert subscription welcome rules
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -p 5432 -U postgres \
+            -v ON_ERROR_STOP=1 -f supabase/tests/16-pro-welcome.sql
+
