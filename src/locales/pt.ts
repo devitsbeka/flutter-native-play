@@ -630,6 +630,9 @@ export const pt: KaTranslations = {
   dailyRewards: {
     ...en.dailyRewards,
     missed: "Perdido",
+    // A day further along the road than today: the requirement is the
+    // weekday named above it — come back then, with the streak intact.
+    locked: "Bloqueado",
     title: "Recompensas diárias",
     subtitle: "Entre todo dia para ganhar recompensas!",
     day: "Dia {day}",

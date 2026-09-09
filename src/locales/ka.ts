@@ -753,6 +753,9 @@ export const ka = {
   dailyRewards: {
     // A weekday that passed unclaimed — the calendar view names it.
     missed: "გაცდენილი",
+    // A day further along the road than today: the requirement is the
+    // weekday named above it — come back then, with the streak intact.
+    locked: "ჩაკეტილია",
     title: "ჯილდოები",
     subtitle: "მიიღე ჯილდო ყოველდღიურად",
     day: "დღე {day}",

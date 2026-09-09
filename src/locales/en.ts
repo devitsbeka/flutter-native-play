@@ -755,6 +755,9 @@ export const en: KaTranslations = {
   dailyRewards: {
     // A weekday that passed unclaimed — the calendar view names it.
     missed: "Missed",
+    // A day further along the road than today: the requirement is the
+    // weekday named above it — come back then, with the streak intact.
+    locked: "Locked",
     title: "Rewards",
     subtitle: "Claim a reward every day",
     day: "Day {day}",

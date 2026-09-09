@@ -3,11 +3,11 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 /**
- * Two things about the daily-rewards card.
+ * Two things about a stop on the daily-rewards road.
  *
  * A "Claim" you cannot press, over a running countdown. The cause was four
  * date bases where there should have been one — see dailyRewardsWeek.test.ts
- * for that half. This file covers what the card DRAWS.
+ * for that half. This file covers what a stop DRAWS.
  *
  * Reproduced and fixed in a browser with the timezone emulated to UTC+4 and
  * the clock inside the window where the two calendars disagree — the same
@@ -18,29 +18,45 @@ import { join } from "node:path";
  *
  * Wednesday was the DEVICE's today; Tuesday was the day the reward actually
  * belonged to. The old card offered a button on a day that had not started.
+ *
+ * The week was a row of seven cards when this was written and is a road down
+ * the screen now, with a medallion for each day instead of a card. None of
+ * what is asserted here was about the card: it is about what the gift does,
+ * and about a button that must not appear on a day that has not started.
  */
 const modal = readFileSync(
   join(process.cwd(), "src/components/home/DailyRewardsModal.tsx"),
   "utf8"
 );
 
-describe("what the middle of the card shows", () => {
+describe("what the face of a stop shows", () => {
   it("is always the gift, never the prize", () => {
     // The prize used to replace the gift here while the receipt appeared on
-    // the button below — the answer in two places, and the opened box, which
+    // the chip below — the answer in two places, and the opened box, which
     // is the thing that says "you opened it", never seen at all.
-    const middle = modal.match(
-      /<div className="relative flex h-\[96px\][\s\S]*?\n {6}<\/div>/
-    );
-    expect(middle, "expected the card's middle").not.toBeNull();
-    expect(middle![0]).toMatch(/src=\{showOpenGift \? giftOpenIcon : giftClosedIcon\}/);
-    expect(middle![0], "the prize belongs on the button, once").not.toMatch(/RewardPill|awarded\.coins/);
+    const medallion = modal.match(/{\/\* Always the gift[\s\S]*?\n {6}<\/motion\.div>/);
+    expect(medallion, "expected the stop's medallion").not.toBeNull();
+    expect(modal, "open and closed art, chosen once").toMatch(/const art = isFinal/);
+    expect(medallion![0]).toMatch(/src=\{art\}/);
+    expect(medallion![0], "the prize belongs on the chip, once").not.toMatch(/RewardPill|awarded\.coins/);
   });
 
   it("has no leftover prize component", () => {
-    // RewardPill existed only for the middle. Left behind it would be dead
-    // code that still compiles and still looks like the intended design.
+    // RewardPill existed only for the face of the card. Left behind it would
+    // be dead code that still compiles and still looks like the intended
+    // design.
     expect(modal).not.toMatch(/function RewardPill/);
+  });
+
+  it("keeps the surprise: the road promises no amount before it is opened", () => {
+    // The one thing the whole design rests on. claim_daily_reward decides
+    // what a day pays — the ladder, the PRO Plus multiplier and the rolled
+    // surprise are all its — so a locked stop that named a figure would be
+    // this screen guessing at the server's answer in advance.
+    const locked = modal.match(/state === "future" \? \([\s\S]*?\n {8}\) :/);
+    expect(locked, "expected the locked chip").not.toBeNull();
+    expect(locked![0]).toMatch(/dailyRewards\.locked/);
+    expect(locked![0]).not.toMatch(/coinIcon|gemIcon|receipt\./);
   });
 
   it("opens, then settles", () => {

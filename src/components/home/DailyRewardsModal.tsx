@@ -1,9 +1,11 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Check, Lock, Clock, Crown } from "lucide-react";
+import { X, Check, Lock, Clock, Crown, Flame } from "lucide-react";
 import coinPurseIcon from "@/assets/icons/icon-coin-purse.png";
 import giftClosedIcon from "@/assets/icons/gift-box.png";
 import giftOpenIcon from "@/assets/icons/unboxing-gift.png";
+import chestClosedIcon from "@/assets/icons/icon-chest-box.png";
+import treasureIcon from "@/assets/icons/pile-of-treasure.png";
 import { useSound } from "@/contexts/SoundContext";
 import { useRewardTimers, useDailyRewardsClaim } from "@/hooks/useRewardTimers";
 import confetti from "canvas-confetti";
@@ -20,25 +22,35 @@ import powerFreeze from "@/assets/powers/freeze.png";
 import powerReplace from "@/assets/powers/replace.png";
 import { TimeIcon } from "@/components/shared/TimeIcon";
 import { mergeDailyReceipts, type ClaimedReward } from "@/utils/dailyRewardReceipts";
+import { RewardRoadCanvas } from "./RewardRoadCanvas";
+import { ROAD, clampChipX, roadHeight, roadNodes } from "./rewardRoad";
 
 /**
- * The footprint every state of a day card's bottom slot shares: the Claim
- * button, the receipt, the lock, the countdown.
+ * The footprint every state of a stop's chip shares: the Claim button, the
+ * receipt, the lock, the countdown.
  *
- * One constant because they occupy the same place in turn, and a card that
- * changed size as it went from Claim to claimed would jump. They were five
- * separate copies of `w-[144px]`, which is a set of numbers that agree only
- * until someone edits one of them.
+ * One constant because they occupy the same place in turn, and a stop that
+ * changed size as it went from Claim to claimed would shift the road under
+ * it. They were five separate copies of a width, which is a set of numbers
+ * that agree only until someone edits one of them.
  *
- * 184 inside a 272px card with px-3 leaves 32px of gradient each side. The
- * receipt takes the same width as a minimum and grows past it only for a
- * receipt wider than that, which is why it alone is min-w.
+ * The receipt takes this as a MINIMUM and grows past it for a claim with a
+ * gem and a power-up on it; everything else takes it exactly. That is also
+ * why ROAD.chipWidth exists and is larger — it is the clearance the geometry
+ * keeps at both edges so the widest receipt still has both ends on screen.
+ *
+ * 128 rather than the 184 the cards used. That number was chosen against a
+ * 272px card, and on a road drawn 280-420px wide it made every chip a bar
+ * across the map: the lock and the countdown were mostly empty pill, and a
+ * "Missed" ran under the medallion of the stop beside it. It is a floor for
+ * the widest receipt, not the everyday width — the receipt grows past it and
+ * everything else is comfortably inside it.
  *
  * Written out in full rather than built from a number: these are read as text
  * by Tailwind's scanner, so `w-[${n}px]` produces no class at all.
  */
-const PILL_W = "w-[184px]";
-const PILL_W_MIN = "min-w-[184px]";
+const PILL_W = "w-[128px]";
+const PILL_W_MIN = "min-w-[128px]";
 
 /**
  * The box a power-up badge is drawn in on the receipt pill, in px.
@@ -68,7 +80,7 @@ interface DailyRewardsModalProps {
   onClaim?: () => void;
 }
 
-// Per-day card gradients: bright same-family color pairs — cross-family
+// Per-day medallion gradients: bright same-family color pairs — cross-family
 // blends (teal into rose etc.) muddy out in the middle and read dark
 const DAY_GRADIENTS: [string, string][] = [
   ["#34D399", "#2563EB"], // Mon teal → blue
@@ -80,7 +92,7 @@ const DAY_GRADIENTS: [string, string][] = [
   ["#FDE047", "#F59E0B"], // Sun gold
 ];
 
-const cardGradient = (index: number) => {
+const stopGradient = (index: number) => {
   const [from, to] = DAY_GRADIENTS[index % DAY_GRADIENTS.length];
   return `linear-gradient(215deg, ${from} 0%, ${to} 100%)`;
 };
@@ -107,7 +119,7 @@ const celebrateClaim = () => {
  *
  * What that looked like: in any timezone east of UTC, between local midnight
  * and the offset, the local date is already tomorrow while the row holding
- * today's claim is still stamped yesterday. The card this screen called
+ * today's claim is still stamped yesterday. The stop this screen called
  * "today" therefore found no claim and drew a closed gift with a Claim
  * button, while the timer — reading the right row — knew the day was spent
  * and disabled it. A Claim you cannot press, over a running countdown.
@@ -121,7 +133,7 @@ const celebrateClaim = () => {
  */
 export const rewardISO = (d: Date) => d.toISOString().split("T")[0];
 
-/** The UTC weekday, Monday = 0, to match the row of cards. */
+/** The UTC weekday, Monday = 0, to match the order of the stops. */
 const utcWeekIndex = (d: Date) => (d.getUTCDay() + 6) % 7;
 
 /** Monday..Sunday of the UTC week containing `today`. */
@@ -152,9 +164,21 @@ function ClaimedAmount({ icon, value, className = "" }: { icon: string; value: s
   );
 }
 
-function DayRewardCard({
+/**
+ * One stop on the road: the medallion, the weekday above it, and the chip
+ * hanging under it that says what this day is doing.
+ *
+ * Absolutely positioned over the canvas at the coordinates the geometry
+ * gives, medallion centred on the road. The chip is clamped back inside the
+ * map's edges independently of the medallion — see clampChipX — so the
+ * widest receipt cannot hang off a narrow phone.
+ */
+function RoadStop({
   date,
   index,
+  x,
+  y,
+  mapWidth,
   state,
   phase,
   awarded,
@@ -167,8 +191,11 @@ function DayRewardCard({
 }: {
   date: Date;
   index: number;
+  x: number;
+  y: number;
+  mapWidth: number;
   state: DayState;
-  /** The reveal runs only on today's card; every other card gets "idle". */
+  /** The reveal runs only on today's stop; every other stop gets "idle". */
   phase: ClaimPhase;
   awarded: ClaimedReward | null;
   /** The receipt for an already-claimed day; null for pre-receipt claims. */
@@ -182,46 +209,76 @@ function DayRewardCard({
 }) {
   const isMissed = state === "missed";
   const showOpenGift = state === "claimed" || phase === "revealed";
+  const isToday = state === "today";
+  /** The last stop of the week is the one worth walking to, so it is treasure. */
+  const isFinal = index === 6;
 
   /**
    * What this day paid. `awarded` is what the server just handed back and is
-   * only ever set on today's card; `claimedReward` is what the tables
+   * only ever set on today's stop; `claimedReward` is what the tables
    * remember. Preferring the live one matters because it needs no round
    * trip: the receipt appears with the confetti rather than after a refetch
    * that may not have happened yet.
-   *
-   * This prop was being passed and never read — the reveal leaned entirely
-   * on handleClaim writing into claimedRewards, and any day the tables had
-   * nothing for fell through to a bare check.
    */
   const receipt = awarded ?? claimedReward;
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.04 }}
-      className="relative flex h-[260px] w-[272px] flex-shrink-0 snap-center flex-col items-center justify-between overflow-hidden rounded-[24px] px-3 py-6"
-      style={{
-        background: cardGradient(index),
-        filter: isMissed
-          ? "saturate(0.25) brightness(0.92)"
-          : state === "future"
-            ? "saturate(0.75) brightness(1.05)"
-            : undefined,
-      }}
-    >
-      {/* Weekday label — the calendar, not a streak counter */}
-      <span className="font-display text-2xl font-bold capitalize text-white drop-shadow-sm">
-        {formatWeekday(date, language)}
-      </span>
+  // Today's stop is the biggest thing on the road and the rest are plainly
+  // smaller, so where you are is legible before a word is read. Bigger than
+  // this and a medallion covers the road it stands on.
+  const size = isToday ? 80 : 62;
+  const art = isFinal
+    ? showOpenGift
+      ? treasureIcon
+      : chestClosedIcon
+    : showOpenGift
+      ? giftOpenIcon
+      : giftClosedIcon;
 
-      {/* The middle: a gift until it is opened. What is inside is the
+  return (
+    <>
+      {/* Weekday label — the calendar, not a streak counter. On the meadow
+          rather than on the medallion, so the gift keeps the whole face. */}
+      <div
+        className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-full bg-white/85 px-2.5 py-0.5 text-[11px] font-bold capitalize text-[#402666] shadow-[0_1px_2px_rgba(64,38,102,0.14)]"
+        style={{ left: x, top: y - size / 2 - 8, opacity: isMissed ? 0.6 : 1 }}
+      >
+        {formatWeekday(date, language)}
+      </div>
+
+      {/* The medallion: a gift until it is opened. What is inside is the
           server's decision, so nothing is promised here — the surprise IS
           the feature. */}
-      <div className="relative flex h-[96px] items-center justify-center">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.7 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: index * 0.04, type: "spring", stiffness: 320, damping: 22 }}
+        className="absolute z-10 flex items-center justify-center rounded-full"
+        // Offset by half itself rather than by a -translate-x-1/2 class:
+        // framer-motion writes the element's `transform` outright for the
+        // entrance scale, which REPLACES a Tailwind translate instead of
+        // composing with it. That put every medallion's top-left corner on
+        // the road rather than its centre — the gifts sat half a medallion
+        // down and to the right of the stop they belong to, and the weekday
+        // label above them (a plain div, so its translate survived) was the
+        // only thing in the right place.
+        style={{
+          left: x - size / 2,
+          top: y - size / 2,
+          width: size,
+          height: size,
+          background: stopGradient(index),
+          boxShadow: isToday
+            ? "0 0 0 5px rgba(255,255,255,0.95), 0 8px 18px rgba(64,38,102,0.28)"
+            : "0 0 0 4px rgba(255,255,255,0.92), 0 4px 10px rgba(64,38,102,0.18)",
+          filter: isMissed
+            ? "saturate(0.2) brightness(0.95)"
+            : state === "future"
+              ? "saturate(0.7) brightness(1.06)"
+              : undefined,
+        }}
+      >
         {/* Always the gift — closed, then open. What was inside is shown once,
-            on the button, where the day's receipt already lives.
+            on the chip below, where the day's receipt already lives.
 
             It used to be shown twice: the prize replaced the gift here AND
             the receipt appeared below it, so the moment of opening had the
@@ -229,10 +286,10 @@ function DayRewardCard({
             "you opened it" — was never seen at all. */}
         <motion.img
           key={showOpenGift ? "open" : "closed"}
-          src={showOpenGift ? giftOpenIcon : giftClosedIcon}
+          src={art}
           alt=""
-          className="h-[88px] w-[88px] object-contain drop-shadow-[0_4px_8px_rgba(0,0,0,0.2)]"
-          style={{ opacity: isMissed ? 0.55 : 1 }}
+          className="object-contain drop-shadow-[0_3px_6px_rgba(0,0,0,0.22)]"
+          style={{ width: size * 0.66, height: size * 0.66, opacity: isMissed ? 0.55 : 1 }}
           animate={
             phase === "opening"
               ? { rotate: [0, -10, 10, -8, 8, -5, 5, 0], scale: [1, 1.08, 1.08, 1.12, 1.12, 1.15, 1.15, 1.2] }
@@ -252,122 +309,132 @@ function DayRewardCard({
                 : { repeat: Infinity, duration: 1.8, ease: "easeInOut" }
           }
         />
-      </div>
 
-      {/* State row */}
-      {state === "claimed" || (state === "today" && phase === "revealed") ? (
-        receipt ? (
-          // The receipt: check + what the day actually paid, one centered
-          // line always (nowrap, everything shrink-0) — no "Claimed" label,
-          // the check says it. Coins are constant; the bonus is at most one
-          // more kind — see claim_daily_reward's "never a third pill" rule.
-          //
-          // The spacing is optical, not nominal, and that is the whole point.
-          // A uniform gap-3 with px-3 measured DEAD EVEN in the box model and
-          // still looked wrong, because what a reader sees is the ink, and
-          // every glyph here carries a different amount of its own padding:
-          // the lucide check sits ~3px inside its 20px box, the coin PNG ~4px
-          // inside its 18px, the snowflake almost none, and a digit ends
-          // flush. Measured off a 3x screenshot, uniform 12px produced:
-          //
-          //     left 15.3 | check->coin 17.0 | coin->125 6.4
-          //               | 125->power 12.7 | right 13.3
-          //
-          // Two faults in that. The three that should match — the two edges
-          // and the gap after the check — ran 15.3 / 17.0 / 13.3. And the
-          // separation BETWEEN rewards (12.7) was only twice the separation
-          // inside one (6.4), so "125" and the snowflake read as a single
-          // run instead of two things.
-          //
-          // So: rewards are held ~20px apart — a clear 3x the 6px that binds
-          // an icon to its own number — and the edges keep 2px of asymmetry,
-          // because the check's ink starts ~1px further inside its box than
-          // the trailing digit's does. Change an icon and these want
-          // re-measuring; they are chosen against the art that is here.
-          //
-          // The edges are 19/21 rather than the 11/13 that first balanced
-          // them: the pill was asked to sit wider. PILL_W is what actually
-          // decides the width in every ordinary case — the content is
-          // narrower than that and centres inside it — so the padding is the
-          // floor for the widest receipt rather than the everyday spacing.
-          <div
-            className={`flex h-[50px] ${PILL_W_MIN} max-w-full items-center justify-center whitespace-nowrap rounded-[18px] pl-[19px] pr-[21px]`}
-            style={{ background: "rgba(255,255,255,0.3)" }}
-          >
-            <Check className="h-5 w-5 shrink-0 text-white" />
-            <ClaimedAmount icon={coinIcon} value={String(receipt.coins)} className="ml-2" />
-            {receipt.gems > 0 && (
-              <ClaimedAmount icon={gemIcon} value={String(receipt.gems)} className="ml-[18px]" />
-            )}
-            {/* The power-up badge is NOT sized or spaced like the currency
-                icons beside it, because matching those numbers is what made
-                it look wrong. Both were 18px boxes with gap-0.5, and on
-                screen the snowflake was half again as big as the gem and sat
-                twice as close to its number.
+        {/* The ring that says "here, now". Only ever on one stop. */}
+        {isToday && canClaim && phase === "idle" && (
+          <motion.span
+            className="pointer-events-none absolute inset-[-10px] rounded-full border-[3px] border-white/80"
+            animate={{ scale: [1, 1.16, 1], opacity: [0.85, 0, 0.85] }}
+            transition={{ repeat: Infinity, duration: 1.9, ease: "easeOut" }}
+          />
+        )}
+      </motion.div>
 
-                The art is why. Measured off the alpha channel, the coin and
-                gem fill about two thirds of their square — 11.4 and 12.0px of
-                ink in an 18px box, with 3.4 and 3.1px of clear space on the
-                right. Every power badge fills its file edge to edge: 17.9px
-                of ink in that same box, and 0.1px on the right. So the same
-                18 drew a bigger icon and the same gap-0.5 drew a tighter gap.
+      {/* The chip: one slot, one footprint, whatever this day is doing. */}
+      <div
+        className="absolute z-10 flex -translate-x-1/2 justify-center"
+        style={{ left: clampChipX(x, mapWidth), top: y + size / 2 + 10 }}
+      >
+        {state === "claimed" || (state === "today" && phase === "revealed") ? (
+          receipt ? (
+            // The receipt: check + what the day actually paid, one centered
+            // line always (nowrap, everything shrink-0) — no "Claimed" label,
+            // the check says it. Coins are constant; the bonus is at most one
+            // more kind — see claim_daily_reward's "never a third pill" rule.
+            //
+            // The spacing is optical, not nominal, and that is the whole point.
+            // A uniform gap-3 with px-3 measured DEAD EVEN in the box model
+            // and still looked wrong, because what a reader sees is the ink,
+            // and every glyph here carries a different amount of its own
+            // padding: the lucide check sits ~3px inside its 20px box, the
+            // coin PNG ~4px inside its 18px, the snowflake almost none, and a
+            // digit ends flush. Measured off a 3x screenshot, uniform 12px
+            // produced:
+            //
+            //     left 15.3 | check->coin 17.0 | coin->125 6.4
+            //               | 125->power 12.7 | right 13.3
+            //
+            // Two faults in that. The three that should match — the two edges
+            // and the gap after the check — ran 15.3 / 17.0 / 13.3. And the
+            // separation BETWEEN rewards (12.7) was only twice the separation
+            // inside one (6.4), so "125" and the snowflake read as a single
+            // run instead of two things.
+            //
+            // So: rewards are held ~20px apart — a clear 3x the 6px that binds
+            // an icon to its own number — and the edges keep 2px of asymmetry,
+            // because the check's ink starts ~1px further inside its box than
+            // the trailing digit's does. Change an icon and these want
+            // re-measuring; they are chosen against the art that is here.
+            //
+            // Only the pill's shell changed when the week became a road: it is
+            // shorter and fully round to sit under a medallion. Every number
+            // below is horizontal and was measured against these icons at this
+            // size, so all of them are the ones that were measured.
+            <div
+              className={`flex h-[44px] ${PILL_W_MIN} max-w-full items-center justify-center whitespace-nowrap rounded-full pl-[19px] pr-[21px] shadow-[0_2px_6px_rgba(64,38,102,0.22)]`}
+              style={{ background: stopGradient(index), filter: isMissed ? "saturate(0.2)" : undefined }}
+            >
+              <Check className="h-4 w-4 shrink-0 text-white" />
+              <ClaimedAmount icon={coinIcon} value={String(receipt.coins)} className="ml-2" />
+              {receipt.gems > 0 && (
+                <ClaimedAmount icon={gemIcon} value={String(receipt.gems)} className="ml-[18px]" />
+              )}
+              {/* The power-up badge is NOT sized or spaced like the currency
+                  icons beside it, because matching those numbers is what made
+                  it look wrong. Both were 18px boxes with gap-0.5, and on
+                  screen the snowflake was half again as big as the gem and sat
+                  twice as close to its number.
 
-                POWER_ICON_PX is the box that puts a badge's INK at ~12px
-                tall, matching the coin's 12.1 and the gem's 10.4 — it comes
-                out at 12.0/12.4/12.2/12.1 for freeze, 5050, replace and
-                time-drain, so one number serves all four. gap-[5px] then puts
-                ~5.5px of clear space before the digit against the currencies'
-                5.1-5.4.
+                  The art is why. Measured off the alpha channel, the coin and
+                  gem fill about two thirds of their square — 11.4 and 12.0px of
+                  ink in an 18px box, with 3.4 and 3.1px of clear space on the
+                  right. Every power badge fills its file edge to edge: 17.9px
+                  of ink in that same box, and 0.1px on the right. So the same
+                  18 drew a bigger icon and the same gap-0.5 drew a tighter gap.
 
-                object-contain is not decoration either: freeze is 356x393 and
-                replace 379x405, so the old square box without it stretched
-                both about 10% wide. */}
-            {receipt.powerUp && (
-              <span className="ml-[18px] flex shrink-0 items-center gap-[5px] text-sm font-black text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)]">
-                {receipt.powerUp === "time-drain" ? (
-                  <TimeIcon size={POWER_ICON_PX} />
-                ) : (
-                  <img
-                    src={POWER_ICONS[receipt.powerUp] || power5050}
-                    alt=""
-                    width={POWER_ICON_PX}
-                    height={POWER_ICON_PX}
-                    className="shrink-0 object-contain"
-                  />
-                )}
-                {receipt.powerUpCount}
-              </span>
-            )}
+                  POWER_ICON_PX is the box that puts a badge's INK at ~12px
+                  tall, matching the coin's 12.1 and the gem's 10.4 — it comes
+                  out at 12.0/12.4/12.2/12.1 for freeze, 5050, replace and
+                  time-drain, so one number serves all four. gap-[5px] then puts
+                  ~5.5px of clear space before the digit against the currencies'
+                  5.1-5.4.
+
+                  object-contain is not decoration either: freeze is 356x393 and
+                  replace 379x405, so the old square box without it stretched
+                  both about 10% wide. */}
+              {receipt.powerUp && (
+                <span className="ml-[18px] flex shrink-0 items-center gap-[5px] text-sm font-black text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)]">
+                  {receipt.powerUp === "time-drain" ? (
+                    <TimeIcon size={POWER_ICON_PX} />
+                  ) : (
+                    <img
+                      src={POWER_ICONS[receipt.powerUp] || power5050}
+                      alt=""
+                      width={POWER_ICON_PX}
+                      height={POWER_ICON_PX}
+                      className="shrink-0 object-contain"
+                    />
+                  )}
+                  {receipt.powerUpCount}
+                </span>
+              )}
+            </div>
+          ) : (
+            // Neither the receipt columns nor the ledger has anything for this
+            // day, so there is no honest amount to show and the check alone
+            // marks it taken. Inventing a plausible figure here would be the
+            // screen lying about the player's own ledger, which is worse than
+            // a day that says only "taken".
+            <div
+              className={`flex h-[44px] ${PILL_W} items-center justify-center rounded-full shadow-[0_2px_6px_rgba(64,38,102,0.22)]`}
+              style={{ background: stopGradient(index) }}
+            >
+              <Check className="h-5 w-5 text-white" />
+            </div>
+          )
+        ) : isMissed ? (
+          <div className={`flex h-[44px] ${PILL_W} items-center justify-center rounded-full bg-white/80 shadow-[0_1px_3px_rgba(64,38,102,0.16)]`}>
+            <span className="text-[13px] font-bold text-[#402666]/55">{t("dailyRewards.missed")}</span>
           </div>
-        ) : (
-          // Neither the receipt columns nor the ledger has anything for this
-          // day, so there is no honest amount to show and the check alone
-          // marks it taken. Inventing a plausible figure here would be the
-          // screen lying about the player's own ledger, which is worse than
-          // a day that says only "taken".
-          <div
-            className={`flex h-[50px] ${PILL_W} items-center justify-center rounded-[18px]`}
-            style={{ background: "rgba(255,255,255,0.3)" }}
-          >
-            <Check className="h-6 w-6 text-white" />
+        ) : state === "future" ? (
+          // Locked, and the road says why: it is further along than today.
+          // The weekday above the medallion is the requirement — come back
+          // then, with the streak intact.
+          <div className={`flex h-[44px] ${PILL_W} items-center justify-center gap-1.5 rounded-full bg-white/80 shadow-[0_1px_3px_rgba(64,38,102,0.16)]`}>
+            <Lock className="h-3.5 w-3.5 text-[#402666]/50" />
+            <span className="text-[13px] font-bold text-[#402666]/55">{t("dailyRewards.locked")}</span>
           </div>
-        )
-      ) : isMissed ? (
-        <div
-          className={`flex h-[50px] ${PILL_W} items-center justify-center rounded-[18px]`}
-          style={{ background: "rgba(255,255,255,0.22)" }}
-        >
-          <span className="text-base font-bold text-white/85">{t("dailyRewards.missed")}</span>
-        </div>
-      ) : state === "future" ? (
-        <div
-          className={`flex h-[50px] ${PILL_W} items-center justify-center rounded-[18px]`}
-          style={{ background: "rgba(255,255,255,0.25)" }}
-        >
-          <Lock className="h-5 w-5 text-white/80" />
-        </div>
-      ) : (
-        !canClaim && phase === "idle" ? (
+        ) : !canClaim && phase === "idle" ? (
           // Today, but not yet. The word "Claim" on a button that cannot be
           // pressed is the screen arguing with itself — and with the very
           // countdown underneath it. Say the wait instead.
@@ -375,34 +442,32 @@ function DayRewardCard({
           // This is belt and braces: with the calendars aligned, a spent day
           // renders as "claimed" above and never reaches here. It still
           // covers the gap while this week's claims are being fetched, when
-          // the timer already knows the day is gone and the card does not.
-          <div
-            className={`flex h-[50px] ${PILL_W} items-center justify-center rounded-[18px]`}
-            style={{ background: "rgba(255,255,255,0.25)" }}
-          >
-            <span className="font-mono text-base font-bold text-white/90">{timeLeft}</span>
+          // the timer already knows the day is gone and the stop does not.
+          <div className={`flex h-[44px] ${PILL_W} items-center justify-center rounded-full bg-white/85 shadow-[0_1px_3px_rgba(64,38,102,0.16)]`}>
+            <span className="font-mono text-[13px] font-bold text-[#402666]/70">{timeLeft}</span>
           </div>
         ) : (
-        <motion.button
-          onClick={canClaim && phase === "idle" ? onClaim : undefined}
-          disabled={!canClaim || phase !== "idle"}
-          whileTap={canClaim ? { scale: 0.95 } : undefined}
-          animate={canClaim && phase === "idle" ? { scale: [1, 1.04, 1] } : undefined}
-          transition={canClaim && phase === "idle" ? { repeat: Infinity, duration: 1.6 } : undefined}
-          className={`h-[50px] ${PILL_W} rounded-[18px] text-lg font-bold text-black disabled:opacity-60`}
-          style={{
-            background: "linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(254,254,254,0.6) 100%)",
-          }}
-        >
-          {phase === "opening" ? "…" : t("dailyRewards.claim")}
-        </motion.button>
-        )
-      )}
-    </motion.div>
+          <motion.button
+            onClick={canClaim && phase === "idle" ? onClaim : undefined}
+            disabled={!canClaim || phase !== "idle"}
+            whileTap={canClaim ? { scale: 0.95 } : undefined}
+            animate={canClaim && phase === "idle" ? { scale: [1, 1.05, 1] } : undefined}
+            transition={canClaim && phase === "idle" ? { repeat: Infinity, duration: 1.6 } : undefined}
+            className={`h-[44px] ${PILL_W} rounded-full text-[15px] font-bold text-white disabled:opacity-60`}
+            style={{
+              background: "linear-gradient(180deg, #8B5CF6 0%, #7126D5 100%)",
+              boxShadow: "0 3px 0 #5B1BA8, 0 6px 14px rgba(113,38,213,0.35)",
+            }}
+          >
+            {phase === "opening" ? "…" : t("dailyRewards.claim")}
+          </motion.button>
+        )}
+      </div>
+    </>
   );
 }
 
-export function DailyRewardsModal({ isOpen, onClose, onClaim }: DailyRewardsModalProps) {
+export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: DailyRewardsModalProps) {
   const { t, language } = useLanguage();
   const { playSound, vibrate } = useSound();
   const { user } = useAuth();
@@ -413,29 +478,36 @@ export function DailyRewardsModal({ isOpen, onClose, onClaim }: DailyRewardsModa
   const [showFlyingCoins, setShowFlyingCoins] = useState(false);
   const [showFlyingGems, setShowFlyingGems] = useState(false);
   const [phase, setPhase] = useState<ClaimPhase>("idle");
-  // Which days of this week have a claim recorded, as local yyyy-mm-dd.
+  // Which days of this week have a claim recorded, as UTC yyyy-mm-dd.
   const [claimedDates, setClaimedDates] = useState<Set<string>>(new Set());
   // Per-day receipts (what each claim paid), keyed the same way. Days claimed
-  // before the receipt columns existed have none and show a plain "Claimed".
+  // before the receipt columns existed have none and show a plain check.
   const [claimedRewards, setClaimedRewards] = useState<Record<string, ClaimedReward>>({});
   // What the server actually granted. The gift hides the amount until the
   // claim comes back; PRO Plus multipliers and the once-per-day guard are all
   // decided server-side, so what is revealed is what was actually paid.
   const [awarded, setAwarded] = useState<{ coins: number; gems: number; powerUp: string | null; powerUpCount: number } | null>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const resizeObserverRef = useRef<ResizeObserver | null>(null);
+  // The map is drawn at the width the device actually gives it — the modal is
+  // a share of the viewport, so that is anything from a narrow phone to the
+  // desktop cap. Zero until measured, which is the signal not to draw yet.
+  const [mapWidth, setMapWidth] = useState(0);
 
   const week = weekOf(new Date());
   const todayISO = rewardISO(new Date());
   const todayIndex = utcWeekIndex(new Date());
 
-  // This week's claims, so the row can say which days were taken and which
+  const nodes = useMemo(() => roadNodes(week.length, mapWidth), [week.length, mapWidth]);
+  const mapHeight = useMemo(() => roadHeight(week.length), [week.length]);
+
+  // This week's claims, so the road can say which days were taken and which
   // slipped past — and what each of them paid.
   //
   // Two sources, because one is not enough. user_daily_rewards carries the
   // receipt columns, which is the complete answer: coins, gems AND the
   // power-up. But they are only filled in for days claimed since the
   // migration that added them, so an older claim leaves them NULL and the
-  // card fell back to a bare check — which is why one day in the week showed
+  // stop fell back to a bare check — which is why one day in the week showed
   // "100" and the rest showed nothing but a tick.
   //
   // currency_grants is the second source and it is not a guess: the same
@@ -486,61 +558,6 @@ export function DailyRewardsModal({ isOpen, onClose, onClaim }: DailyRewardsModa
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, user]);
 
-  // Mouse-drag scrolling with momentum for the day-cards row. Touch keeps
-  // native scrolling; snap is lifted while dragging (assigning scrollLeft
-  // under "snap mandatory" fights the browser and feels broken) and light
-  // proximity snapping returns once the momentum settles.
-  const drag = useRef({ down: false, moved: false, startX: 0, startScroll: 0, lastX: 0, lastT: 0, v: 0, raf: 0 });
-
-  const dragPointerDown = (e: React.PointerEvent) => {
-    if (e.pointerType !== "mouse") return;
-    const el = scrollContainerRef.current;
-    if (!el) return;
-    cancelAnimationFrame(drag.current.raf);
-    el.style.scrollSnapType = "none";
-    drag.current = { down: true, moved: false, startX: e.clientX, startScroll: el.scrollLeft, lastX: e.clientX, lastT: performance.now(), v: 0, raf: 0 };
-  };
-
-  const dragPointerMove = (e: React.PointerEvent) => {
-    const s = drag.current;
-    if (!s.down) return;
-    const el = scrollContainerRef.current;
-    if (!el) return;
-    const dx = e.clientX - s.startX;
-    if (Math.abs(dx) > 5) s.moved = true;
-    el.scrollLeft = s.startScroll - dx;
-    const now = performance.now();
-    const dt = now - s.lastT;
-    if (dt > 0) s.v = (s.lastX - e.clientX) / dt;
-    s.lastX = e.clientX;
-    s.lastT = now;
-  };
-
-  const dragPointerUp = () => {
-    const s = drag.current;
-    if (!s.down) return;
-    s.down = false;
-    const el = scrollContainerRef.current;
-    if (!el) return;
-    let v = s.v * 16;
-    const glide = () => {
-      if (Math.abs(v) < 0.5) {
-        el.style.scrollSnapType = "x proximity";
-        return;
-      }
-      el.scrollLeft += v;
-      v *= 0.92;
-      s.raf = requestAnimationFrame(glide);
-    };
-    s.raf = requestAnimationFrame(glide);
-    // A real drag must not trigger the card's claim button on release
-    if (s.moved) {
-      const swallow = (ev: Event) => { ev.stopPropagation(); ev.preventDefault(); };
-      el.addEventListener("click", swallow, { capture: true, once: true });
-      setTimeout(() => el.removeEventListener("click", swallow, { capture: true } as any), 0);
-    }
-  };
-
   // Sync claimed state with timer hook
   useEffect(() => {
     setClaimedToday(!canClaimDaily);
@@ -556,20 +573,39 @@ export function DailyRewardsModal({ isOpen, onClose, onClaim }: DailyRewardsModa
     return () => window.removeEventListener("keydown", onKey);
   }, [isOpen, onClose]);
 
-  // Scroll to center today's card when the modal opens
-  useEffect(() => {
-    if (isOpen && scrollContainerRef.current) {
-      const container = scrollContainerRef.current;
-      // Card i's center = px-6 edge padding (24) + i * (272 card + 16 gap)
-      // + half a card; subtracting half the viewport centers it exactly, so
-      // both peeking neighbors show through with equal gaps.
-      const cardWidth = 272 + 16; // w-[272px] + gap-4 (16px)
-      const scrollPosition = 24 + todayIndex * cardWidth + 136 - container.offsetWidth / 2;
-      setTimeout(() => {
-        container.scrollTo({ left: Math.max(0, scrollPosition), behavior: "smooth" });
-      }, 100);
-    }
-  }, [isOpen, todayIndex]);
+  /**
+   * Measure the map, and centre today's stop in the window.
+   *
+   * A ref callback rather than an effect on the ref: the scroller does not
+   * exist while the modal is closed, so there is no node to measure until
+   * AnimatePresence has mounted it, and an effect keyed on `isOpen` runs
+   * before the entrance transform has settled. The observer then keeps the
+   * width honest through a rotation or a desktop resize.
+   */
+  const attachScroller = useCallback(
+    (node: HTMLDivElement | null) => {
+      // React calls the ref with null as the modal unmounts, which is the one
+      // chance to drop the observer — there is no cleanup phase for a ref
+      // callback otherwise, and the modal is mounted and unmounted every time
+      // it opens.
+      resizeObserverRef.current?.disconnect();
+      resizeObserverRef.current = null;
+      if (!node) return;
+
+      setMapWidth(node.clientWidth);
+      // Stop i's centre is a known y; subtracting half the window puts today
+      // in the middle of it, with the road running off both edges. Jumped, not
+      // smoothed: the modal is still arriving, and a scroll animation racing
+      // the entrance reads as a stumble.
+      node.scrollTop = Math.max(0, ROAD.head + todayIndex * ROAD.step - node.clientHeight / 2);
+
+      if (typeof ResizeObserver === "undefined") return;
+      const observer = new ResizeObserver(() => setMapWidth(node.clientWidth));
+      observer.observe(node);
+      resizeObserverRef.current = observer;
+    },
+    [todayIndex]
+  );
 
   const handleClaim = async () => {
     if (claimedToday || !canClaimDaily || phase !== "idle") return;
@@ -623,6 +659,11 @@ export function DailyRewardsModal({ isOpen, onClose, onClaim }: DailyRewardsModa
     return iso < todayISO ? "missed" : "future";
   };
 
+  // How far along the road has actually been walked — gold up to here, plain
+  // road after. Today counts as reached whether or not it has been claimed:
+  // you are standing on it.
+  const travelledThrough = todayIndex;
+
   return (
     <>
       <AnimatePresence mode="wait">
@@ -641,60 +682,107 @@ export function DailyRewardsModal({ isOpen, onClose, onClaim }: DailyRewardsModa
               exit={{ opacity: 0, y: 24, scale: 0.96 }}
               transition={{ type: "spring", stiffness: 380, damping: 32 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-md overflow-hidden rounded-[24px] bg-white"
+              role="dialog"
+              aria-modal="true"
+              aria-label={t("dailyRewards.title")}
+              // A map wants room: 80% of the viewport in both directions,
+              // capped so it does not become a billboard on a desktop and
+              // floored so it does not become a slot on a small phone.
+              className="relative flex h-[80dvh] max-h-[760px] w-[80vw] min-w-[280px] max-w-[420px] flex-col overflow-hidden rounded-[28px] bg-white"
               style={{ boxShadow: "0 8px 0 #E8E4EC, 0 12px 32px rgba(0,0,0,0.18)" }}
             >
               {/* Close */}
               <button
                 onClick={onClose}
-                className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 transition-colors hover:bg-gray-200"
+                className="absolute right-4 top-4 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 transition-colors hover:bg-gray-200"
                 style={{ boxShadow: "0 2px 0 #E5E7EB" }}
                 aria-label="close"
               >
                 <X className="h-4 w-4 text-gray-600" />
               </button>
 
-              {/* Header: coin purse + title/subtitle */}
-              <div className="flex items-center gap-3 px-6 pt-6">
-                <img src={coinPurseIcon} alt="" className="h-[64px] w-[64px] object-contain" />
-                <div>
-                  <h2 className="font-display text-xl font-bold text-[#402666]">
+              {/* Header: coin purse + title/subtitle, with the streak beside it */}
+              <div className="flex shrink-0 items-center gap-3 px-5 pb-3 pt-5">
+                <img src={coinPurseIcon} alt="" className="h-[52px] w-[52px] shrink-0 object-contain" />
+                <div className="min-w-0 pr-10">
+                  <h2 className="font-display text-lg font-bold text-[#402666]">
                     {t("dailyRewards.title")}
                   </h2>
-                  <p className="mt-0.5 text-sm text-[#402666]/70">{t("dailyRewards.subtitle")}</p>
+                  <p className="mt-0.5 text-[13px] leading-snug text-[#402666]/70">{t("dailyRewards.subtitle")}</p>
                 </div>
               </div>
 
-              {/* Weekday cards — next card peeks in from the right */}
-              <div
-                ref={scrollContainerRef}
-                className="scrollbar-hide mt-6 flex cursor-grab select-none gap-4 overflow-x-auto px-6 pb-2 active:cursor-grabbing"
-                style={{ scrollSnapType: "x proximity" }}
-                onPointerDown={dragPointerDown}
-                onPointerMove={dragPointerMove}
-                onPointerUp={dragPointerUp}
-                onPointerLeave={dragPointerUp}
-              >
-                {week.map((date, index) => (
-                  <DayRewardCard
-                    key={rewardISO(date)}
-                    date={date}
-                    index={index}
-                    state={stateOf(date, index)}
-                    phase={index === todayIndex ? phase : "idle"}
-                    awarded={index === todayIndex ? awarded : null}
-                    claimedReward={claimedRewards[rewardISO(date)] ?? null}
-                    canClaim={canClaimDaily && !claimedToday}
-                    timeLeft={dailyTimeLeft}
-                    onClaim={handleClaim}
-                    language={language}
-                    t={t}
-                  />
-                ))}
+              {/* The road itself: a fixed-height box that scrolls itself.
+                  The document does not scroll on iOS (nativeShell disables
+                  the webview's scroller outright), so a map that simply grew
+                  would be frozen solid on the device — CLAUDE.md rule 4b.
+
+                  min-h-0 is what makes flex-1 mean "take what is left and
+                  scroll the rest": without it the box refuses to shrink below
+                  its content and the map pushes the footer off the modal. */}
+              <div className="relative min-h-0 flex-1">
+                <div
+                  ref={attachScroller}
+                  className="scrollbar-hide absolute inset-0 overflow-y-auto overscroll-contain"
+                >
+                  <div className="relative" style={{ width: "100%", height: mapHeight }}>
+                    {mapWidth > 0 && (
+                      <>
+                        <RewardRoadCanvas
+                          width={mapWidth}
+                          height={mapHeight}
+                          nodes={nodes}
+                          travelledThrough={travelledThrough}
+                        />
+                        {week.map((date, index) => (
+                          <RoadStop
+                            key={rewardISO(date)}
+                            date={date}
+                            index={index}
+                            x={nodes[index].x}
+                            y={nodes[index].y}
+                            mapWidth={mapWidth}
+                            state={stateOf(date, index)}
+                            phase={index === todayIndex ? phase : "idle"}
+                            awarded={index === todayIndex ? awarded : null}
+                            claimedReward={claimedRewards[rewardISO(date)] ?? null}
+                            canClaim={canClaimDaily && !claimedToday}
+                            timeLeft={dailyTimeLeft}
+                            onClaim={handleClaim}
+                            language={language}
+                            t={t}
+                          />
+                        ))}
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* The road runs on under the header and the footer rather
+                    than stopping at them — these two fades are what sell that.
+                    Anchored to the scrolling box, not to the modal, so a
+                    footer that wraps to two rows cannot leave a fade stranded
+                    in the middle of it. */}
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-7 bg-gradient-to-b from-white to-transparent" />
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-7 bg-gradient-to-t from-white to-transparent" />
               </div>
 
-              {/* Next-claim timer + VIP bonus */}
-              <div className="flex min-h-[46px] items-center justify-center gap-2 px-6 pb-5 pt-2">
+              {/* Next-claim timer, the streak, and the VIP bonus */}
+              <div className="flex min-h-[52px] shrink-0 flex-wrap items-center justify-center gap-2 px-5 pb-4 pt-2">
+                {currentStreak > 0 && (
+                  <div
+                    className="flex items-center gap-1.5 rounded-full px-3 py-1.5"
+                    style={{
+                      background: "linear-gradient(135deg, #FFE4CC 0%, #FFC9A3 100%)",
+                      boxShadow: "0 2px 0 #FCA97A",
+                    }}
+                  >
+                    <Flame className="h-4 w-4 text-orange-600" />
+                    <span className="text-sm font-bold text-orange-700">
+                      {t("dailyRewards.daysInRow", { days: currentStreak })}
+                    </span>
+                  </div>
+                )}
                 {!canClaimDaily && (
                   <div
                     className="flex items-center gap-1.5 rounded-full px-3 py-1.5"

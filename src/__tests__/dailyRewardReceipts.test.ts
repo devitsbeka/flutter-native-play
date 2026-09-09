@@ -133,7 +133,11 @@ describe("what the card does with it", () => {
 
   it("still shows the opened gift for a claimed day", () => {
     expect(modal).toMatch(/const showOpenGift = state === "claimed" \|\| phase === "revealed";/);
-    expect(modal).toMatch(/src=\{showOpenGift \? giftOpenIcon : giftClosedIcon\}/);
+    // The last stop of the week is a chest rather than a gift, so the art is
+    // picked before the render rather than inline — the flag still decides
+    // open or closed, for both pairs.
+    expect(modal).toMatch(/showOpenGift\s*\n?\s*\? treasureIcon\s*\n?\s*: chestClosedIcon/);
+    expect(modal).toMatch(/showOpenGift\s*\n?\s*\? giftOpenIcon\s*\n?\s*: giftClosedIcon/);
   });
 
   it("asks the ledger for the week as well as the rewards table", () => {
@@ -178,8 +182,12 @@ describe("the receipt pill's spacing", () => {
     "utf8"
   );
   // The receipt pill is the one whose width is a MINIMUM — every other state
-  // of the slot takes PILL_W exactly.
-  const pill = modal.match(/<div\s+className=\{`flex h-\[50px\] \$\{PILL_W_MIN\}[\s\S]*?\n {10}<\/div>/)?.[0] ?? "";
+  // of the slot takes PILL_W exactly. Found by that, and by the shape of its
+  // own closing tag, rather than by its height and its indentation: those two
+  // said nothing about the spacing this file measures, and both changed when
+  // the week of cards became a road (a shorter, fully round chip hanging under
+  // a medallion), which failed seven tests that had no quarrel with the code.
+  const pill = modal.match(/<div\s+className=\{`flex h-\[\d+px\] \$\{PILL_W_MIN\}[\s\S]*?\n\s*<\/div>\n/)?.[0] ?? "";
 
   it("has a pill to measure", () => {
     expect(pill, "expected the receipt pill").not.toBe("");
@@ -264,15 +272,20 @@ describe("the receipt pill's spacing", () => {
    * out by hand next to it.
    */
   it("gives every state of the slot the same footprint", () => {
-    expect(modal).toMatch(/const PILL_W = "w-\[184px\]"/);
-    expect(modal).toMatch(/const PILL_W_MIN = "min-w-\[184px\]"/);
+    expect(modal).toMatch(/const PILL_W = "w-\[128px\]"/);
+    expect(modal).toMatch(/const PILL_W_MIN = "min-w-\[128px\]"/);
 
-    // No literal width left anywhere in the slot.
-    expect(modal).not.toMatch(/h-\[50px\] w-\[\d+px\]/);
+    // And all five siblings really do read the constant, at one height —
+    // which height is the road's business and may change with it, but a
+    // sixth state written out by hand is what this catches.
+    const heights = [...modal.matchAll(/h-\[(\d+)px\] \$\{PILL_W(_MIN)?\}/g)].map((m) => m[1]);
+    expect(heights.length, "expected the receipt and its five siblings").toBe(6);
+    expect(new Set(heights).size, "one footprint, not six").toBe(1);
 
-    // And all five siblings really do read the constant.
-    const uses = modal.match(/h-\[50px\] \$\{PILL_W\}/g) ?? [];
-    expect(uses.length, "expected the five non-receipt states").toBe(5);
+    // No literal width left in the slot — checked at the slot's own height,
+    // so the purse in the header keeps its h-[52px] w-[52px] without being
+    // mistaken for a sixth state.
+    expect(modal).not.toMatch(new RegExp(`h-\\[${heights[0]}px\\] w-\\[\\d+px\\]`));
   });
 
   it("shows a power-up count as a bare number", () => {
