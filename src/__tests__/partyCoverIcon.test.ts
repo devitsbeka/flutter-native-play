@@ -245,6 +245,6 @@ describe("the party's Play button matches the rooms list, not a colour of its ow
     // A ready-to-start room goes mint and says Play; everything else — Join,
     // Enter, waiting on the host — is the white this party button now
     // shares.
-    expect(publicRooms).toMatch(/tone=\{ready \? "mint" : "white"\}/);
+    expect(publicRooms).toMatch(/tone=\{invited \? "purple" : ready \? "mint" : "white"\}/);
   });
 });
