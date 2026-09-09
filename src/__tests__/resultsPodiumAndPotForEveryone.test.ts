@@ -63,19 +63,20 @@ describe("the podium", () => {
     expect(results).toMatch(/const PODIUM_ORDER = \[1, 0, 2\] as const;/);
     // Three steps for three or more; a pair sits centred on two
     // (rematchAskedAtStart.test pins the two-up case).
-    expect(results).toMatch(/"max-w-xs grid-cols-3"/);
-    expect(results).toMatch(/"w-full grid items-end gap-2 flex-shrink-0"/);
+    expect(results).toMatch(/"max-w-\[362px\] grid-cols-3 gap-2"/);
+    expect(results).toMatch(/"w-full grid items-end flex-shrink-0 pt-2"/);
   });
 
-  it("first place is the bigger face", () => {
-    expect(results).toMatch(/first \? "w-20 h-20 border-amber-300[^"]*" : "w-14 h-14 border-white\/40"/);
+  it("first place is the bigger face — 110 to the 76 beside it, all three in the gold ring", () => {
+    // Figma 1157:10233..10244 (resultsScreenFigma.test.ts).
+    expect(results).toMatch(/"border-2 border-\[#fcd34d\] shadow-\[0_0_0_4px_rgba\(251,191,36,0\.35\)\]",\s*\n\s*first \? "w-\[110px\] h-\[110px\]" : "w-\[76px\] h-\[76px\]"/);
   });
 
   it("a medal under each face, and the coins under the medal", () => {
     const step = results.slice(results.indexOf(": PODIUM_ORDER).map((idx) => {"), results.indexOf("{/* Everyone from fourth down."));
     const avatar = step.indexOf("<SafeAvatar");
     const medal = step.indexOf("{placeMark(idx, p.rank)}");
-    const coins = step.indexOf("<PotLine net={netFor(p)} />");
+    const coins = step.indexOf("<PotLine net={netFor(p)} tone=");
     expect(avatar).toBeGreaterThan(-1);
     expect(medal).toBeGreaterThan(avatar);
     expect(coins).toBeGreaterThan(medal);
