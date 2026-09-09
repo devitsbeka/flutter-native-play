@@ -5,7 +5,7 @@ import { Bell, BellOff, ChevronDown, Trash2, X } from 'lucide-react';
 import { useNotifications, Notification } from '@/hooks/useNotifications';
 import { NotificationTabs } from '@/components/notifications/NotificationTabs';
 import { useGenerationNotifications } from '@/hooks/useGenerationNotifications';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useFriends } from '@/hooks/useFriends';
 import { useGameInvitations } from '@/hooks/useGameInvitations';
@@ -26,6 +26,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { answerJoinRequest } from '@/hooks/useRoomJoinRequests';
 import { answerRematchRequest } from '@/utils/rematchRequests';
 import { useAuth } from '@/contexts/AuthContext';
+import { useMultiplayerV2 } from '@/contexts/MultiplayerContextV2';
 import { PUBLIC_SHARING_ENABLED } from "@/config/features";
 import { useContentModeration } from '@/hooks/useContentModeration';
 import {
@@ -49,6 +50,22 @@ let pendingLeaveRead: ReturnType<typeof setTimeout> | null = null;
 
 export default function Notifications() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { currentRoom, phase: roomPhase } = useMultiplayerV2();
+  /**
+   * Where Back goes when this page was opened from inside a room.
+   *
+   * The lobby's bell opens this page; its Back used to be history's -1,
+   * which is not always the lobby the player was standing in (owner: "when
+   * i click activity to see notifications in lobby i shouldn't leave the
+   * lobby, make sure we stay in lobby when i click back"). So the bell
+   * hands the room's route along, and failing that the room still held in
+   * context names it; Back goes there, replacing this entry. /team?room=CODE
+   * shows the lobby when the room is still held and re-enters it when not.
+   */
+  const backToRoom =
+    (location.state as { backTo?: string } | null)?.backTo ??
+    (currentRoom && roomPhase !== "idle" ? routeForRoom(currentRoom) : null);
   const { language, t } = useLanguage();
   const { notifications: allNotifications, unreadCount, loading, markAsRead, markAllAsRead, markManyAsRead, deleteNotification, clearAllNotifications } = useNotifications();
   const { generationNotifications, hasActiveGenerations } = useGenerationNotifications();
@@ -476,7 +493,11 @@ export default function Notifications() {
       {/* The shared header. The bell that used to sit beside the title is
           gone with it — the page is the notifications list, so an icon
           repeating that said nothing the title did not. */}
-      <PageHeader title={t("extra.notifActivity")} className="z-20" />
+      <PageHeader
+        title={t("extra.notifActivity")}
+        className="z-20"
+        onBack={backToRoom ? () => navigate(backToRoom, { replace: true }) : undefined}
+      />
 
       {/* Tabs. Sticky offset is 76px — the PageHeader's height only. This
           page scrolls inside MainLayout, whose scroller already starts below

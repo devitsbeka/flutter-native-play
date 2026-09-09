@@ -40,7 +40,9 @@ describe("the lobby's bell", () => {
       "src/components/team/RoomLobbyV2.tsx",
       "src/components/team/CreateRoomPage.tsx",
     ]) {
-      expect(read(file), file).toMatch(/onBell=\{\(\) => navigate\("\/notifications"\)\}/);
+      // The classic lobby also hands the room's route along, so Activity's
+      // Back comes back to it (activityBackReturnsToLobby.test).
+      expect(read(file), file).toMatch(/onBell=\{\(\) => navigate\("\/notifications"(?:, \{ state: \{ backTo: routeForRoom\(currentRoom\) \} \})?\)\}/);
     }
   });
 });

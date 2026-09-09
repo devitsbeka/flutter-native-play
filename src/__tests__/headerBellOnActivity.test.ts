@@ -81,7 +81,9 @@ describe("the bell itself", () => {
 describe("how the activity page gets its header", () => {
   it("uses PageHeader's default actions", () => {
     const page = readFileSync(join(process.cwd(), "src/pages/Notifications.tsx"), "utf8");
-    expect(page).toMatch(/<PageHeader title=\{t\("extra\.notifActivity"\)\}/);
+    // The header now also takes an onBack when the page was opened from a
+    // room (activityBackReturnsToLobby.test); the title is unchanged.
+    expect(page).toMatch(/<PageHeader\s*\n?\s*title=\{t\("extra\.notifActivity"\)\}/);
     expect(page, "nothing is passed, so the default is what must behave")
       .not.toMatch(/rightElements=/);
   });

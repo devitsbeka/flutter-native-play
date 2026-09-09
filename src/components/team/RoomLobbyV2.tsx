@@ -19,6 +19,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { toast } from "@/lib/toast";
 import { supabase } from "@/integrations/supabase/client";
+import { routeForRoom } from "@/utils/roomRoutes";
 import { OWN_TRIVIA_ICON_SLUG, roomPlaysOwnTrivia, roundIconSlug } from "@/utils/ownTriviaRound";
 import { isUndecidedRound, UNDECIDED_ICON_SLUG } from "@/utils/undecidedRound";
 import { MatchSummarySheet } from "./MatchSummarySheet";
@@ -1626,7 +1627,12 @@ export function RoomLobbyV2() {
       onRename={canRename ? () => setShowIconPicker(true) : undefined}
       onBack={handleExitRoom}
       unreadCount={unreadCount}
-      onBell={() => navigate("/notifications")}
+      // The Activity page is a look, not a way out: its Back comes back to
+      // THIS room. The route rides along so the page can return here even
+      // if the room is no longer held in context by then - /team?room=CODE
+      // re-enters it (owner: "when i click activity to see notifications in
+      // lobby i shouldn't leave the lobby").
+      onBell={() => navigate("/notifications", { state: { backTo: routeForRoom(currentRoom) } })}
       category={(() => {
         // Just the FIRST round on the chip, with its category's own icon and
         // a "(+N)" when more are queued (owner's ask). The first round is the
