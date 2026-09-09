@@ -24,58 +24,87 @@ const POWER_UP_NAME_KEYS: Record<PowerUpType, string> = {
   "time-drain": "powerups.timeDrain.name",
 };
 
+// The two-or-three-word version of what the power does. `description` is a
+// full sentence built for the in-game sheet and runs past two lines in a
+// shop row, so these are their own strings rather than a truncation.
+const POWER_UP_SHORT_KEYS: Record<PowerUpType, string> = {
+  "5050": "powerups.fiftyFifty.short",
+  freeze: "powerups.freeze.short",
+  replace: "powerups.replace.short",
+  "time-drain": "powerups.timeDrain.short",
+};
+
 interface MyPowersSectionProps {
-  powerUps: Record<PowerUpType, number>;
   onPurchaseSingle: (powerType: PowerUpType) => Promise<void>;
   isPurchasing: string | null;
   canAffordCoins: (amount: number) => boolean;
   onCardClick?: (type: PowerUpType) => void;
 }
 
-export function MyPowersSection({ powerUps, onPurchaseSingle, isPurchasing, canAffordCoins, onCardClick }: MyPowersSectionProps) {
+/**
+ * The shop's power-up shelf: one full-width row per power.
+ *
+ * It was a four-across grid of tiles whose headline number was how many you
+ * already own. That is inventory, not a storefront — it read as a wallet,
+ * the icons were 32px, and there was no room left to say what any of them
+ * actually did. A row per power buys the width to carry a real icon, the
+ * name, a plain-language line, and the price where a price belongs.
+ *
+ * The owned count is deliberately gone: what you have is not what you are
+ * being sold, and it is still on the in-game power sheet where it matters.
+ */
+export function MyPowersSection({ onPurchaseSingle, isPurchasing, canAffordCoins, onCardClick }: MyPowersSectionProps) {
   const { t } = useLanguage();
-  // Triple-layer defense: ensure powerUps is always a valid object
-  const safeData = powerUps ?? { "5050": 0, freeze: 0, replace: 0, "time-drain": 0 };
-  
+
   return (
     <div className="px-4 pt-1.5 pb-4 relative z-10">
-      <h2 className="text-lg font-display font-bold text-foreground mb-4">{t("extra.myPowers")}</h2>
-      
-      <div className="grid grid-cols-4 gap-3 mt-6">
+      <h2 className="text-lg font-display font-bold text-foreground mb-4">{t("extra.superPowers")}</h2>
+
+      <div className="flex flex-col gap-2.5">
         {POWER_UP_ORDER.map((type) => {
-          const count = safeData[type] ?? 0;
           const isLoading = isPurchasing === `single_${type}`;
           const price = REWARDS.POWER_UP_PRICES[type] ?? 100;
           const canAfford = canAffordCoins(price);
-          
+
           return (
             <div
               key={type}
               onClick={() => onCardClick?.(type)}
-              className="relative flex flex-col items-center gap-3 px-3 pt-7 pb-4 rounded-[24px] liquid-glass cursor-pointer active:scale-95 transition-transform"
+              className="flex items-center gap-3.5 rounded-[22px] liquid-glass px-3.5 py-3 cursor-pointer active:scale-[0.98] transition-transform"
             >
               <img
                 src={POWER_UP_ICONS[type]}
                 alt=""
-                className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 object-contain"
+                className="w-14 h-14 shrink-0 object-contain"
               />
-              <span className="font-bold text-lg text-foreground -mb-1">
-                {count}
-              </span>
-              <span className="font-normal text-sm text-foreground text-center leading-tight">
-                {t(POWER_UP_NAME_KEYS[type])}
-              </span>
+
+              {/* min-w-0 so a long translation wraps inside the row instead
+                  of pushing the price button off the end. */}
+              <div className="min-w-0 flex-1">
+                <div className="font-bold text-[15px] leading-tight text-foreground">
+                  {t(POWER_UP_NAME_KEYS[type])}
+                </div>
+                <div className="mt-0.5 text-[13px] leading-snug text-muted-foreground">
+                  {t(POWER_UP_SHORT_KEYS[type])}
+                </div>
+              </div>
+
               <button
                 onClick={(e) => { e.stopPropagation(); onCardClick?.(type); }}
                 disabled={isLoading}
-                className="flex items-center justify-center gap-1 px-2.5 py-1 rounded-full bg-warning/20 border border-warning/30 text-warning-foreground hover:bg-warning/30 transition-colors disabled:opacity-50 whitespace-nowrap min-w-fit"
+                aria-label={`${t(POWER_UP_NAME_KEYS[type])} — ${price}`}
+                className={`flex shrink-0 items-center justify-center gap-1.5 rounded-full border px-3.5 py-2 whitespace-nowrap transition-colors disabled:opacity-50 ${
+                  canAfford
+                    ? "bg-warning/20 border-warning/30 text-warning-foreground hover:bg-warning/30"
+                    : "bg-muted/40 border-border text-muted-foreground"
+                }`}
               >
                 {isLoading ? (
-                  <div className="w-3 h-3 border-2 border-warning border-t-transparent rounded-full animate-spin" />
+                  <div className="w-3.5 h-3.5 border-2 border-warning border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <>
-                    <img src={coinIcon} alt="" className="w-3.5 h-3.5 shrink-0" />
-                    <span className="text-xs font-semibold">{price}</span>
+                    <img src={coinIcon} alt="" className="w-4 h-4 shrink-0" />
+                    <span className="text-sm font-semibold">{price}</span>
                   </>
                 )}
               </button>

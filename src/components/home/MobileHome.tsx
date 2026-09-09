@@ -9,7 +9,7 @@ import streakFire from "@/assets/figma-home/streak-fire.png";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { useWavyRect } from "@/components/home/wave";
 import { BackgroundVideo } from "@/components/shared/BackgroundVideo";
-import { GuestLanguagePicker } from "@/components/home/GuestLanguagePicker";
+import { LanguagePicker } from "@/components/shared/LanguagePicker";
 import heroScene from "@/assets/figma-landing/hero-scene.png";
 
 // Figma: Hom — the mobile home states, all drawn on a 500x946 frame:
@@ -528,7 +528,7 @@ export function MobileGuestHero({
     <div className="md:hidden pointer-events-none absolute inset-0 z-20 flex flex-col overflow-hidden">
       {/* Header (node 632:308 / 632:385): burger and the language puck —
           the wordmark lives in the body on this state. The puck replaced
-          SpotlightSearch here; see GuestLanguagePicker for why search is the
+          SpotlightSearch here; see LanguagePicker for why search is the
           wrong offer to a signed-out visitor. */}
       <div className="pointer-events-auto flex h-[70px] shrink-0 items-center justify-between px-4 py-3">
         <button
@@ -539,7 +539,7 @@ export function MobileGuestHero({
         >
           <Menu className="size-6 text-gray-600" />
         </button>
-        <GuestLanguagePicker />
+        <LanguagePicker />
       </div>
 
       <motion.div

@@ -6,6 +6,8 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { NotificationsPanel } from "@/components/home/NotificationsPanel";
 import SpotlightSearch from "@/components/search/SpotlightSearch";
 import { isOnActivityScreen } from "@/utils/activityRoute";
+import { useAuth } from "@/hooks/useAuth";
+import { LanguagePicker } from "@/components/shared/LanguagePicker";
 
 interface HeaderActionsProps {
   className?: string;
@@ -18,6 +20,7 @@ export function HeaderActions({ className = "", showSearch = true }: HeaderActio
   const [showNotificationsPanel, setShowNotificationsPanel] = useState(false);
   const { unreadCount } = useNotifications();
   const { pathname } = useLocation();
+  const { user } = useAuth();
 
   // On the activity screen the bell has nowhere to go: the panel it opens is
   // the same list, drawn as a sheet with a close button over the page you are
@@ -28,6 +31,20 @@ export function HeaderActions({ className = "", showSearch = true }: HeaderActio
   // the number of unread notifications is visible. It just stops being a
   // control: no press, no hover lift, no tap scale.
   const isDestination = isOnActivityScreen(pathname);
+
+  // Signed out, neither control has anything to act on: search looks through
+  // your own library and rooms, and the bell's list is per-account, so both
+  // sat there offering nothing. The language puck takes the slot instead —
+  // the one setting a visitor can usefully change before signing in, and the
+  // same control the guest home already carries. Returned after every hook
+  // above has run, so the hook order is identical in both branches.
+  if (!user) {
+    return (
+      <div className={`flex items-center gap-1 ${className}`}>
+        <LanguagePicker />
+      </div>
+    );
+  }
 
   const badge = unreadCount > 0 && (
     <motion.div

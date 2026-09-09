@@ -281,7 +281,7 @@ export default function PowerUps() {
         <PageHeader
           title={t("menu.shop")}
           showBack={false}
-          titleAccessory={<WalletPills className="ml-3 hidden md:flex" />}
+          titleAccessory={user ? <WalletPills className="ml-3 hidden md:flex" /> : undefined}
         />
 
         {/* The currency pills are the shop's own, not header furniture, so
@@ -304,9 +304,16 @@ export default function PowerUps() {
          * at 0, so the band parks flush under it and the two scroll as one
          * fixed header stack. Same z as the header — anything meant to pass
          * beneath them must stay below 20. */}
-        <div className="sticky top-[76px] z-20 md:hidden">
-          <ShopHeader />
-        </div>
+        {/* Signed out every figure in it is a zero — a wallet band that
+            says 0 coins, 0 gems and shows a piggy bank reads as a broken
+            account rather than an invitation. The whole sticky wrapper goes,
+            not just its contents, or an empty 56px band keeps the shop
+            pushed down. */}
+        {user && (
+          <div className="sticky top-[76px] z-20 md:hidden">
+            <ShopHeader />
+          </div>
+        )}
 
         <div className="flex flex-1 min-h-0">
           {/* Main content. No percentage cap: the scene beside it is capped
@@ -338,7 +345,6 @@ export default function PowerUps() {
                 onItemClick={handlePurchase}
                 onSinglePowerPurchase={handleSinglePowerPurchase}
                 initialScrollSection={initialScrollSection}
-                powerUps={shopData.powerUps}
                 canAffordCoins={canAffordCoins}
                 onPowerCardClick={handlePowerCardClick}
               />

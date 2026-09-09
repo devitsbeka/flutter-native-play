@@ -17,7 +17,6 @@ interface ShopStandardLayoutProps {
   onItemClick: (item: ShopItem) => Promise<void>;
   onSinglePowerPurchase: (powerType: PowerUpType) => Promise<void>;
   initialScrollSection?: string;
-  powerUps: Record<PowerUpType, number>;
   canAffordCoins: (amount: number) => boolean;
   onPowerCardClick?: (type: PowerUpType) => void;
 }
@@ -31,7 +30,6 @@ export function ShopStandardLayout({
   onItemClick,
   onSinglePowerPurchase,
   initialScrollSection,
-  powerUps,
   canAffordCoins,
   onPowerCardClick,
 }: ShopStandardLayoutProps) {
@@ -190,9 +188,8 @@ export function ShopStandardLayout({
         onItemClick={handleItemClick}
       />
 
-      {/* My Powers Section - individual purchase */}
+      {/* Super Powers Section - individual purchase */}
       <MyPowersSection
-        powerUps={powerUps ?? { "5050": 0, freeze: 0, replace: 0, "time-drain": 0 }}
         onPurchaseSingle={onSinglePowerPurchase}
         isPurchasing={isPurchasing}
         canAffordCoins={canAffordCoins}

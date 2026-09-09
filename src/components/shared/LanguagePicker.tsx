@@ -10,14 +10,15 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 /**
- * The guest header's right-hand control: a puck showing the language you are
- * reading in, opening the list of the seven we ship.
+ * The signed-out header's right-hand control: a puck showing the language
+ * you are reading in, opening the list of the seven we ship.
  *
- * It stands where SpotlightSearch used to. Search is a poor first thing to
- * offer someone who has not signed in — there is nothing of theirs to find —
- * whereas the language is the one setting that decides whether the rest of
- * the screen is readable at all, and a guest arriving from the wrong locale
- * has no other way to change it before signing in.
+ * It stands where search and the notification bell used to, on the guest
+ * home and in every PageHeader. Neither earns its place signed out: there is
+ * nothing of yours to find and nothing to be notified about. The language,
+ * by contrast, decides whether the rest of the screen is readable at all,
+ * and a visitor arriving from the wrong locale had no other way to change it
+ * before signing in.
  *
  * Chunky-white 3D, the same vocabulary as the logged-in home's cards
  * (LoggedInHomeV2Mobile's CARD): white face, a solid lavender edge under it
@@ -28,7 +29,7 @@ import {
  * flag on the puck repaints the moment a language is picked; Index consumes
  * the same context, which is what re-translates the screen behind it.
  */
-export function GuestLanguagePicker() {
+export function LanguagePicker() {
   const { language, setLanguage, currentLanguage, t } = useLanguage();
 
   return (

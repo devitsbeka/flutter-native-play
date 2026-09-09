@@ -188,22 +188,22 @@ export const en: KaTranslations = {
     title: "Power-ups",
     subtitle: "Use in game",
     fiftyFifty: {
-      name: "50/50",
+      name: "50/50", short: "Removes two answers",
       description: "Two wrong answers disappear, leaving only two options",
       hint: "Best when you're not sure!",
     },
     freeze: {
-      name: "Freeze",
+      name: "Freeze", short: "Pauses the timer",
       description: "Time freezes for 10 seconds. Think calmly about the question!",
       hint: "Use when the question is hard and you need more time!",
     },
     replace: {
-      name: "Replace",
+      name: "Replace", short: "Swaps the question",
       description: "Don't like the question? Replace it with a new one!",
       hint: "If the question is too hard, try a new one",
     },
     timeDrain: {
-      name: "Time",
+      name: "Time", short: "Adds 10 seconds",
       description: "Adds 10 seconds to your timer",
       hint: "Great in the final seconds!",
     },
@@ -910,7 +910,7 @@ export const en: KaTranslations = {
     title: "Shop",
     starterPack: "Boost Powers",
     forBeginners: "For Beginners",
-    megaPowers: "Super Powers",
+    megaPowers: "Special Packs",
     winMoreGames: "Win More Games",
     vipStatus: "VIP Status",
     vipBenefits: "2xp / unlimited play",
@@ -3033,6 +3033,7 @@ export const en: KaTranslations = {
     iconHintsAnswer: "Icon hints at the answer!",
     // Power-ups
     myPowers: "My Powers",
+    superPowers: "Super Powers",
     powerFiftyFifty: "50/50",
     powerFiftyFiftyDesc: "Two incorrect answers disappear, leaving only one incorrect and the correct answer. This makes your choice easier!",
     powerFreeze: "Freeze",
