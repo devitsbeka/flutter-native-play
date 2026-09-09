@@ -35,11 +35,12 @@ describe("the age, next to the host", () => {
     expect(pub).not.toMatch(/useRoomAge\(/);
   });
 
-  it("follows the host pill, in the card's own pill, and stays on one line", () => {
-    const hostPill = header.indexOf("openProfile(room.host_user_id)");
+  it("leads the top row now that the host label moved down to the seats, and stays on one line", () => {
+    // The host pill left the top row (hostLabelLeadsTheFaces.test); New is
+    // the first thing on it.
+    expect(header).not.toMatch(/openProfile\(room\.host_user_id\)/);
     const age = header.indexOf("{isNew && (");
-    expect(hostPill).toBeGreaterThan(-1);
-    expect(age).toBeGreaterThan(hostPill);
+    expect(age).toBeGreaterThan(-1);
     expect(header).toMatch(
       /\{isNew && \(\s*\n\s*<span className=\{`shrink-0 whitespace-nowrap rounded-full px-2\.5 py-1 text-xs font-bold \$\{ink\.pill\} \$\{ink\.text\}`\}>\s*\n\s*\{t\("extra\.roomStatusNew"\)\}/,
     );

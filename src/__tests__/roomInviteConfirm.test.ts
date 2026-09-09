@@ -49,7 +49,7 @@ describe("the invited face is black and white, beside the host", () => {
     // The public faces query lists seated players only, so the reserved seat
     // has to come from the viewer's profile.
     expect(pub).toMatch(/const reservedForMe = invited && !!me && i === players\.length \+ 1;/);
-    expect(pub).toMatch(/: players\[i - 1\] \?\? \(reservedForMe \? me : undefined\);/);
+    expect(pub).toMatch(/= players\[i - 1\] \?\? \(reservedForMe \? me : undefined\);/);
     expect(pub).toMatch(/\$\{reservedForMe \? "grayscale opacity-70" : ""\}/);
     expect(pub).toMatch(/\{!reservedForMe && online\.has\(person\.user_id\) && \(/);
     expect(pub).toMatch(/me=\{me\}/);
