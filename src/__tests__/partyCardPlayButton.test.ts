@@ -29,9 +29,9 @@ const button = read("src/components/team/RoomCardPlayButton.tsx");
 const tab = read("src/components/social/MyTriviaTab.tsx");
 const publicRooms = read("src/components/team/PublicRoomsSection.tsx");
 
-describe("RoomCardPlayButton's three tones", () => {
-  it("purple stays defined, even though the party card has moved off it", () => {
-    expect(button).toMatch(/export type RoomCardTone = "mint" \| "white" \| "purple";/);
+describe("RoomCardPlayButton's tones", () => {
+  it("purple stays defined, even though the party card has moved off it; outline joined for the preview sheet's Close", () => {
+    expect(button).toMatch(/export type RoomCardTone = "mint" \| "white" \| "purple" \| "outline";/);
     expect(button).toMatch(/purple: "bg-\[#7126d5\] border-\[#4e1a94\] text-white",/);
     expect(button).toMatch(/white: "bg-white border-\[#d5c9e8\] text-\[#320c69\]",/);
   });

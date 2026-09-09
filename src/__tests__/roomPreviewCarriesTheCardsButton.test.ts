@@ -34,7 +34,11 @@ const myRooms = read("src/components/team/MyRoomsSection.tsx");
 describe("the sheet's footer", () => {
   it("is Close and the card's button, in the card's own pill, the same size", () => {
     expect(sheet).toMatch(/export const PREVIEW_BUTTON_CLASS = "flex-1 justify-center py-3 text-\[15px\]";/);
-    expect(sheet).toMatch(/<RoomCardPlayButton tone="white" className=\{PREVIEW_BUTTON_CLASS\} onClick=\{onClose\}>\s*\n\s*\{t\("common\.close"\)\}\s*\n\s*<\/RoomCardPlayButton>\s*\n\s*\{action\}/);
+    // Close is the same pill unfilled — RoomCardPlayButton's `outline`
+    // tone, white's stroke and no face (owner: "close button do not need
+    // white color, show with just stroke") — not a second shape.
+    expect(sheet).toMatch(/<RoomCardPlayButton tone="outline" className=\{PREVIEW_BUTTON_CLASS\} onClick=\{onClose\}>\s*\n\s*\{t\("common\.close"\)\}\s*\n\s*<\/RoomCardPlayButton>\s*\n\s*\{action\}/);
+    expect(read("src/components/team/RoomCardPlayButton.tsx")).toMatch(/outline: "bg-transparent border-x-2 border-t-2 border-\[#d5c9e8\] text-\[#320c69\]",/);
     // The chunky outline Close is gone: two shapes in one row read as two
     // ranks of button.
     expect(sheet).not.toMatch(/ChunkyButton/);

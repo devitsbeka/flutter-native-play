@@ -2238,7 +2238,6 @@ export const fr: KaTranslations = {
     rematchGateLeave: "Quitter la salle",
     rematchWaitTitle: "Revanche proposée",
     roomPreviewEyebrow: "Aperçu de la salle",
-    roomPreviewNoRounds: "L'hôte n'a pas encore choisi de manche.",
     rematchWaitHint: "Tout le monde à la table a été sondé. Qui refuse quitte la salle — la cagnotte suit les places.",
     rematchWaitReady: "Prêt",
     rematchWaitPending: "Réfléchit…",
