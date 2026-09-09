@@ -20,7 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { OWN_TRIVIA_ICON_SLUG, roomPlaysOwnTrivia, roundIconSlug } from "@/utils/ownTriviaRound";
 import { isUndecidedRound, UNDECIDED_ICON_SLUG } from "@/utils/undecidedRound";
 import { MatchSummarySheet } from "./MatchSummarySheet";
-import { RematchWaitSheet } from "./RematchWaitSheet";
+import { RematchWaitSheet, type RematchSeat } from "./RematchWaitSheet";
 import { sendRematchRequest, type RematchPick } from "@/utils/rematchRequests";
 import { siteUrl } from "@/config/site";
 import { inviteLinkPath } from "@/utils/inviteLink";
@@ -160,6 +160,16 @@ export function RoomLobbyV2() {
   const [showNoStake, setShowNoStake] = useState(false);
   const [showMatchSummary, setShowMatchSummary] = useState(false);
   const [showRematchWait, setShowRematchWait] = useState(false);
+  /**
+   * Who was ASKED, taken when the ask goes out.
+   *
+   * Not read off `participants` at render time: saying no gives the seat up
+   * (answerRematchRequest deletes the row), so a declined player is not in
+   * the room any more and a list built from the room would simply lose them
+   * — leaving the host to work out "who did not" from a gap. The snapshot
+   * remembers the table; the room says what each of them has answered since.
+   */
+  const [askedSeats, setAskedSeats] = useState<Omit<RematchSeat, "answer">[]>([]);
   /**
    * Why the summary sheet is open: Create (the room, once) or Start on a
    * later match, which asks the table rather than commits. Set by Start,
@@ -1507,8 +1517,27 @@ export function RoomLobbyV2() {
       toast.error(t("extra.errorOccurred"));
       return;
     }
+    setAskedSeats(
+      tableToAsk.map((p) => ({ user_id: p.user_id, nickname: p.nickname, avatar_url: p.avatar_url })),
+    );
     setShowRematchWait(true);
   };
+
+  /**
+   * The asked table, as it stands right now.
+   *
+   * `participants` is kept live by the room's own realtime channel, so a yes
+   * (the player's row goes "ready") and a no (the row is deleted) both land
+   * here without the host touching anything — which is what makes the sheet
+   * answer live.
+   */
+  const rematchSeats: RematchSeat[] = askedSeats.map((seat) => {
+    const seated = participants.find((p) => p.user_id === seat.user_id);
+    return {
+      ...seat,
+      answer: !seated ? "declined" : (seated.status as string) === "ready" ? "ready" : "waiting",
+    };
+  });
 
   const startWithWhoSaidYes = async () => {
     if (!currentRoom) return;
@@ -1771,12 +1800,7 @@ export function RoomLobbyV2() {
       {/* The host's side of the ask: who said yes, and Start with them. */}
       <RematchWaitSheet
         open={showRematchWait}
-        seats={tableToAsk.map((p) => ({
-          user_id: p.user_id,
-          nickname: p.nickname,
-          avatar_url: p.avatar_url,
-          ready: (p.status as string) === "ready",
-        }))}
+        seats={rematchSeats}
         stake={REWARDS.GAME_STAKE}
         starting={isStarting}
         onCancel={() => setShowRematchWait(false)}

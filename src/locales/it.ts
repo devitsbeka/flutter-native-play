@@ -2249,6 +2249,7 @@ export const it: KaTranslations = {
     rematchWaitHint: "Tutti al tavolo sono stati interpellati. Chi rifiuta lascia la stanza: il piatto segue i posti.",
     rematchWaitReady: "Pronto",
     rematchWaitPending: "Sta decidendo…",
+    rematchWaitDeclined: "Ha rifiutato",
     rematchWaitStart: "Inizia in {count}",
     rematchWaitUndecided: "{count} stanno ancora decidendo: lasceranno la stanza se inizi ora.",
     notifPlay: "Gioca",
