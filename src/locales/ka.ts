@@ -3454,6 +3454,7 @@ export const ka = {
     timeExpired: "დრო ამოიწურა!",
     answerWas: "პასუხი: {answer}",
     nextQuestionSoon: "შემდეგი კითხვა მალე...",
+    roundWaitingForPlayers: "ველოდებით კიდევ {count} მოთამაშეს — ჯილდოები ყველას თამაშის შემდეგ",
     // TVIdleScreen
     tvQuiz: "TV კვიზი",
     tvLeaderboard: "ლიდერბორდი",

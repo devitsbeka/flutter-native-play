@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useMultiplayerV2, settleMostLikelyVotes } from "@/contexts/MultiplayerContextV2";
 import { activeRoundPlayers } from "@/utils/roundPlayers";
+import { playersStillOut, roundSettleTiming } from "@/utils/roundSettlement";
 import { useMissions } from "@/hooks/useMissions";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -154,6 +155,35 @@ export function GameResultsScreenV2() {
         p.status === "finished" ||
         (p.current_question ?? 0) >= (currentRoom?.total_questions ?? Infinity)
     );
+
+  /**
+   * A private round pays out when everybody has played it.
+   *
+   * Private rooms are invited friends playing at different times, so the
+   * first player to finish arrives here with a scoreboard of one. Settling
+   * then would rank a full room against that and pay out on it. The whole
+   * chain — the round snapshot, the stats and the pot — waits until every
+   * seat that can still answer has, or until the round's own deadline ends
+   * the wait with whoever played (owner: "private rooms can be played in
+   * different times and when all invited players play the round we give
+   * rewards after that").
+   *
+   * A public room is unaffected: it settles the moment the round ends,
+   * which is what "results instantly" means over there.
+   */
+  const isPublicRoom = Boolean((currentRoom as { is_public?: boolean } | null)?.is_public);
+  const roundCtx = { hostIsObserver, hostUserId: currentRoom?.host_user_id };
+  const settleHold = roundSettleTiming({
+    isPublic: isPublicRoom,
+    participants,
+    ctx: roundCtx,
+    totalQuestions: currentRoom?.total_questions,
+    startedAt: currentRoom?.started_at,
+  });
+  const waitingForPlayers = settleHold === "waiting_for_players";
+  const stillOut = waitingForPlayers
+    ? playersStillOut(participants, roundCtx, currentRoom?.total_questions).length
+    : 0;
 
   const { queue, addToQueue } = useRoomCategoryQueue(currentRoom?.id || null);
   // The category this game was played in, resolved to its own slug and
@@ -317,6 +347,11 @@ export function GameResultsScreenV2() {
     // (or the wait expired): claiming complete_room_round earlier would
     // snapshot cumulative totals before the majority points exist.
     if (!mltAllVotersDone) return;
+    // A private round holds the whole chain until everyone has played (or
+    // the deadline ends the wait). Nothing is charged meanwhile: the stakes
+    // are collected by the settlement itself, so an unsettled round has
+    // taken nothing from anyone.
+    if (waitingForPlayers) return;
     if (user && profile && currentRoom && !hasUpdatedStats.current && !(statsKey && processedResultsGames.has(statsKey))) {
       hasUpdatedStats.current = true;
       if (statsKey) processedResultsGames.add(statsKey);
@@ -387,6 +422,30 @@ export function GameResultsScreenV2() {
           setPotLines(settlement.lines);
         }
 
+        // Tell the players who are not here.
+        //
+        // A private round settles when the LAST person plays it, and by then
+        // the ones who played this morning are gone — without this they
+        // would find out they had won by noticing their balance had changed.
+        // Only for a room that waits: a public round is settled in front of
+        // everyone who was in it (owner's choice of push for this).
+        //
+        // Fire-and-forget, and the server decides everything: it re-reads
+        // the round, refuses one that has not actually settled, and claims
+        // one push per player per round so several devices arriving at once
+        // cannot ring the same phone twice.
+        if (!isPublicRoom && currentRoom.current_game_id) {
+          supabase.functions
+            .invoke("send-social-push", {
+              body: {
+                kind: "room_round_settled",
+                roomId: currentRoom.id,
+                gameId: currentRoom.current_game_id,
+              },
+            })
+            .catch(() => {});
+        }
+
         // Missions: every room game counts as played; a real (non-practice)
         // room is a game with friends; ranked wins advance win missions
         void trackMissionEvent("game_played", 1);
@@ -439,7 +498,7 @@ export function GameResultsScreenV2() {
         if (statsKey) processedResultsGames.delete(statsKey);
       });
     }
-  }, [user, profile, myScore, myRankForPayout, isWin, isHost, currentRoom, setProfileLocal, rankedParticipants, addCoins, settleRoomRound, participants, mltAllVotersDone, isMostLikelyRound]);
+  }, [user, profile, myScore, myRankForPayout, isWin, isHost, currentRoom, setProfileLocal, rankedParticipants, addCoins, settleRoomRound, participants, mltAllVotersDone, isMostLikelyRound, waitingForPlayers, isPublicRoom]);
 
   // Prefetch the questions a challenge link carries, so sharing is one tap
   // and not a wait.
@@ -735,6 +794,21 @@ export function GameResultsScreenV2() {
 
       {/* Middle Section: the podium, then everyone from fourth down */}
       <div className="flex-1 min-h-0 flex flex-col items-center gap-3 px-4 pt-4 overflow-hidden">
+        {/* A private round still out with somebody. The scores so far are
+            right there under this line — they are real, they are just not
+            everyone's yet — and the medals carry no coin pills, because
+            nothing has been staked or paid while the round is open. Said
+            here rather than as a toast: it is the answer to "where are my
+            coins", and it has to be on screen when that is asked. */}
+        {waitingForPlayers && (
+          <motion.p
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="shrink-0 rounded-full bg-white/15 px-4 py-2 text-center font-[Nunito] text-sm font-bold text-white/90"
+          >
+            {t("extra.roundWaitingForPlayers", { count: stillOut })}
+          </motion.p>
+        )}
         {/* The podium: second on the left, first in the middle and taller,
             third on the right — a medal under each face and, under the
             medal, what the place was worth (owner: "show first 3 places

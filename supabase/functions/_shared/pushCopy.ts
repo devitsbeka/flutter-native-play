@@ -38,6 +38,7 @@ export type PushKind =
   | "friend_accept"
   | "challenge_beaten"
   | "room_ping"
+  | "room_round_settled"
   | "team_poke";
 
 export const PUSH_LANGUAGES = ["ka", "en", "de", "es", "fr", "it", "pt"] as const;
@@ -64,6 +65,9 @@ export const PUSH_META: Record<PushKind, { icon: string; route: string }> = {
   challenge_beaten: { icon: `${SITE}/push/sword.png`, route: "/" },
   // route is built by the caller: /team?join={room_code}
   room_ping: { icon: `${SITE}/push/bell.png`, route: "/team" },
+  // The round they played hours ago has finished for everyone. Route is
+  // built by the caller: /team?join={room_code}
+  room_round_settled: { icon: `${SITE}/push/trophy.png`, route: "/team" },
   // route is built by the caller: /team-battle?code={room_code}
   team_poke: { icon: `${SITE}/push/bell.png`, route: "/team-battle" },
 };
@@ -203,6 +207,15 @@ export const PUSH_COPY: Record<PushKind, Record<string, PushMessage>> = {
     fr: { title: "{name} t'appelle", body: "Les joueurs attendent dans {room} — reviens et lance la partie." },
     it: { title: "{name} ti sta chiamando", body: "I giocatori aspettano in {room} — torna e avvia la partita." },
     pt: { title: "{name} está chamando você", body: "Os jogadores esperam em {room} — volte e comece o jogo." },
+  },
+  room_round_settled: {
+    ka: { title: "რაუნდი დასრულდა — „{room}“", body: "ყველამითამაშა. ნახე ვინ გაიმარჯვა და რა მიიღე." },
+    en: { title: "The round is done — {room}", body: "Everyone has played. See who won and what you got." },
+    de: { title: "Die Runde ist vorbei — {room}", body: "Alle haben gespielt. Sieh nach, wer gewonnen hat und was du bekommen hast." },
+    es: { title: "La ronda terminó — {room}", body: "Ya jugaron todos. Mira quién ganó y qué te llevaste." },
+    fr: { title: "La manche est terminée — {room}", body: "Tout le monde a joué. Vois qui a gagné et ce que tu as reçu." },
+    it: { title: "Il round è finito — {room}", body: "Hanno giocato tutti. Guarda chi ha vinto e cosa hai ottenuto." },
+    pt: { title: "A rodada terminou — {room}", body: "Todos jogaram. Veja quem ganhou e o que você recebeu." },
   },
   team_poke: {
     ka: { title: "{name} გეძახის — დრო მიდის!", body: "შენი სვლაა Trivia Battle-ში და გუნდი ქულებს კარგავს. დაბრუნდი და უპასუხე." },
