@@ -28,6 +28,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast";
 import {
   filterPublicRooms,
+  FRESH_RING_MS,
   PUBLIC_ROOMS_KEY,
   isFreshOwnRoom,
   publicRoomPath,
@@ -113,18 +114,6 @@ interface CardPlayer {
   nickname: string | null;
   avatar_url: string | null;
 }
-
-/**
- * How long the ring on a room you just made stays up.
- *
- * It is a greeting, not a status. Long enough to catch the eye of somebody
- * who has just pressed back and is looking for their room; short enough that
- * it never becomes part of how the card looks (owner's ask). The card keeps
- * its place at the top of the list for the full ten minutes either way — the
- * ring answers "which one", the position answers "what should I do next",
- * and they are different questions with different lifespans.
- */
-const FRESH_RING_MS = 3000;
 
 function PublicRoomCard({
   room,

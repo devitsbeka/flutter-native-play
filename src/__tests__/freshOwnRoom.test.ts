@@ -143,7 +143,11 @@ describe("the ring on the card", () => {
     // Superseded: the ring used to be drawn for as long as the card led the
     // list. It is a greeting, not a status — left up it becomes part of how
     // the card looks and stops meaning "this one is new".
-    expect(section).toMatch(/const FRESH_RING_MS = 3000;/);
+    //
+    // The three seconds moved next to the ten minutes (usePublicRooms) when
+    // the Private tab started ringing the same room: one clock, so the two
+    // tabs cannot greet the same room for different lengths of time.
+    expect(read("src/hooks/usePublicRooms.ts")).toMatch(/export const FRESH_RING_MS = 3000;/);
     expect(section).toMatch(/setTimeout\(\(\) => setRingUp\(false\), FRESH_RING_MS\)/);
     expect(section).toMatch(/\{ringUp && \(/);
     expect(section).not.toMatch(/\{freshlyMine && \(\s*\n\s*<span/);
