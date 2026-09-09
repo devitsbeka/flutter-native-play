@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { motion } from "framer-motion";
 import { PRICES } from "@/config/pricing";
 import { Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -218,27 +219,113 @@ export function ProBannerReel({ purchasedItems, isPurchasing, onItemClick, slide
     setCurrentIndex(Math.min(SLIDES.length - 1, Math.max(0, idx)));
   }, [SLIDES.length, pageWidth]);
 
-  // Mouse drag. Touch already drags the reel natively; a pointer without
-  // touch does not, and on desktop the reel is the main way to browse.
-  const drag = useRef<{ startX: number; startScroll: number; moved: boolean } | null>(null);
+  // Which slide is under a finger. Pressing one sinks it a little, the way
+  // every other card on this page answers a touch — the reel was the one
+  // surface that gave nothing back until it had already moved.
+  const [pressedId, setPressedId] = useState<string | null>(null);
+
+  // Mouse drag. Touch already drags the reel natively, with the platform's
+  // own momentum; a pointer without touch does not, and on desktop the reel
+  // is the main way to browse. Releasing one used to simply stop dead
+  // wherever the cursor was, leaving scroll-snap to drag the reel back — a
+  // flick and a slow shove did exactly the same thing.
+  const drag = useRef<{
+    startX: number;
+    startScroll: number;
+    moved: boolean;
+    lastX: number;
+    lastT: number;
+    velocity: number;
+  } | null>(null);
+
+  // Survives past pointerup so the click that follows can be swallowed.
+  // `drag.current` cannot do this job: endDrag nulls it on pointerup, which
+  // fires BEFORE click, so the guard read undefined every time and a drag
+  // navigated to the PRO page as though it had been tapped.
+  const draggedRef = useRef(false);
+
+  // Snap fights a programmatic smooth scroll, so it is lifted for the length
+  // of the gesture and put back once the throw has landed.
+  const snapRestore = useRef<number | null>(null);
+  const setSnap = (on: boolean) => {
+    const el = reelRef.current;
+    if (el) el.style.scrollSnapType = on ? "" : "none";
+  };
+
   const onPointerDown = (e: React.PointerEvent) => {
     lastInteraction.current = Date.now();
+    draggedRef.current = false;
     if (e.pointerType === "touch") return;
     const el = reelRef.current;
     if (!el) return;
-    drag.current = { startX: e.clientX, startScroll: el.scrollLeft, moved: false };
+    if (snapRestore.current) { clearTimeout(snapRestore.current); snapRestore.current = null; }
+    setSnap(false);
+    drag.current = {
+      startX: e.clientX,
+      startScroll: el.scrollLeft,
+      moved: false,
+      lastX: e.clientX,
+      lastT: e.timeStamp,
+      velocity: 0,
+    };
   };
+
   const onPointerMove = (e: React.PointerEvent) => {
     const el = reelRef.current;
-    if (!drag.current || !el) return;
-    const dx = e.clientX - drag.current.startX;
-    if (Math.abs(dx) > 3) drag.current.moved = true;
-    el.scrollLeft = drag.current.startScroll - dx;
+    const d = drag.current;
+    if (!d || !el) return;
+    const dx = e.clientX - d.startX;
+    if (Math.abs(dx) > 3) { d.moved = true; draggedRef.current = true; setPressedId(null); }
+    el.scrollLeft = d.startScroll - dx;
+
+    // Exponentially smoothed px/ms, so one jittery sample cannot decide the
+    // throw but a genuine flick still registers immediately.
+    const dt = e.timeStamp - d.lastT;
+    if (dt > 0) {
+      const instant = (e.clientX - d.lastX) / dt;
+      d.velocity = d.velocity * 0.7 + instant * 0.3;
+      d.lastX = e.clientX;
+      d.lastT = e.timeStamp;
+    }
   };
-  const endDrag = () => { drag.current = null; };
+
+  const endDrag = () => {
+    setPressedId(null);
+    const el = reelRef.current;
+    const d = drag.current;
+    drag.current = null;
+    if (!el) return;
+    if (!d) { setSnap(true); return; }
+
+    const w = pageWidth();
+    const raw = el.scrollLeft / w;
+    // Dragging left moves the content left, i.e. towards the NEXT slide, so
+    // a negative velocity throws forward.
+    const FLICK = 0.35; // px/ms — a deliberate flick, not a slow shove
+    let target: number;
+    if (d.velocity < -FLICK) target = Math.floor(raw) + 1;
+    else if (d.velocity > FLICK) target = Math.ceil(raw) - 1;
+    else target = Math.round(raw);
+
+    // One slide per throw. Projecting the whole momentum would let a hard
+    // flick skip past two cards on a reel that only ever holds a handful,
+    // which reads as a glitch rather than as speed.
+    const from = Math.round(d.startScroll / w);
+    target = Math.max(from - 1, Math.min(from + 1, target));
+    target = Math.max(0, Math.min(lastIndex, target));
+
+    el.scrollTo({ left: target * w, behavior: "smooth" });
+    // Snap goes back on only once the smooth scroll has landed; restoring it
+    // immediately makes the browser jump to its own idea of the nearest
+    // slide and the throw is lost.
+    snapRestore.current = window.setTimeout(() => { setSnap(true); snapRestore.current = null; }, 420);
+  };
+
+  useEffect(() => () => { if (snapRestore.current) clearTimeout(snapRestore.current); }, []);
+
   // A drag that moved must not also fire the banner underneath it.
   const swallowClickAfterDrag = (e: React.MouseEvent) => {
-    if (drag.current?.moved) { e.preventDefault(); e.stopPropagation(); }
+    if (draggedRef.current) { e.preventDefault(); e.stopPropagation(); draggedRef.current = false; }
   };
 
   useEffect(() => {
@@ -282,7 +369,7 @@ export function ProBannerReel({ purchasedItems, isPurchasing, onItemClick, slide
           const isDealSlide = slide.type === "deal";
           const activeDeal = slide.id === "deal-daily" ? dailyDeal : hourlyDeal;
           return (
-          <div
+          <motion.div
             key={slide.id}
             // Centred, because the slides are not all the same height: a
             // tier card with its benefits stacked into a list is taller than
@@ -290,6 +377,17 @@ export function ProBannerReel({ purchasedItems, isPurchasing, onItemClick, slide
             // from the ceiling with the difference below it.
             className="flex shrink-0 snap-center items-center"
             style={{ width: `calc((100% - ${REEL_GAP * (perView - 1)}px) / ${perView})` }}
+            // Sinks under a finger and springs back on release. Set on
+            // pointerdown for every pointer type — unlike the drag handling
+            // below, this one is as much for touch as for a mouse — and
+            // released the moment the gesture turns into a swipe, so the
+            // card is not still shrinking while it travels.
+            onPointerDown={() => setPressedId(slide.id)}
+            onPointerUp={() => setPressedId(null)}
+            onPointerCancel={() => setPressedId(null)}
+            onPointerLeave={() => setPressedId(null)}
+            animate={{ scale: pressedId === slide.id ? 0.955 : 1 }}
+            transition={{ type: "spring", stiffness: 420, damping: 32, mass: 0.7 }}
           >
             {isDealSlide ? (
               <DealBannerCard
@@ -345,7 +443,7 @@ export function ProBannerReel({ purchasedItems, isPurchasing, onItemClick, slide
                 );
               })()
             )}
-          </div>
+          </motion.div>
           );
         })}
       </div>

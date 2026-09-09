@@ -88,6 +88,15 @@ export default function PowerUps() {
   const [showAuthModal, setShowAuthModal] = useState(false);
 
   const handlePowerCardClick = (type: PowerUpType) => {
+    // Signed out the row's price pill is already dimmed, because the balance
+    // it is compared against is zero — but the tap still opened the power
+    // shop, which then had nothing to sell and no way to buy it. Every other
+    // buy path on this page (handlePurchase, handleSinglePowerPurchase)
+    // already answers this with the sign-in prompt; this one was the gap.
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
     setSelectedPowerType(type);
     setShowPowerShopModal(true);
   };
