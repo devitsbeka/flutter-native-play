@@ -71,9 +71,10 @@ describe("what the card says without being opened", () => {
     expect(publicRooms).toMatch(
       /<div className=\{`flex shrink-0 items-center gap-1\.5 rounded-full px-2\.5 py-1 \$\{ink\.pill\}`\}>\s*\n\s*<Users/,
     );
-    // Private: the same pill, first in the left group, before "New".
+    // Private: the same pill, first in the left group, before "New" — only
+    // a running round's "Live" leads it (liveRoomCardSaysLive.test).
     expect(myRooms).toMatch(
-      /\{\/\* Seats first, on the left\. \*\/\}\s*\n\s*<div className="flex flex-shrink-0 items-center gap-1\.5 rounded-full bg-white\/60 backdrop-blur-sm px-2\.5 py-1">/,
+      /\{isLive && <LiveBadge \/>\}\s*\n\s*<div className="flex flex-shrink-0 items-center gap-1\.5 rounded-full bg-white\/60 backdrop-blur-sm px-2\.5 py-1">/,
     );
   });
 

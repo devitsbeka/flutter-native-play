@@ -4,7 +4,7 @@ import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
 import { AnimatePresence, motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import { Plus, Users, Tv, Airplay, Cast, UserPlus, Trash2, LogOut, MonitorPlay, Play, Check, X } from "lucide-react";
 import { acceptRoomInvite, declineRoomInvite } from "@/utils/pendingRoomInvites";
-import { useMyRooms, MyRoom, RoomFilter, isActiveTVSession } from "@/hooks/useMyRooms";
+import { useMyRooms, MyRoom, RoomFilter, isActiveTVSession, isRoomLive } from "@/hooks/useMyRooms";
 import iconKingLounge from "@/assets/play-chooser/icon-king.webp";
 import iconBattleLounge from "@/assets/play-chooser/icon-crate.png";
 import iconWordsLounge from "@/assets/play-chooser/icon-words.webp";
@@ -616,6 +616,36 @@ interface RoomCardProps {
   homeRail?: boolean;
 }
 
+/**
+ * "Live", first on the row, pulsing: a round is running in this room now.
+ *
+ * A player who left the lobby before the countdown, or whose phone slept
+ * through it, comes back to a list where the room looked exactly as it did
+ * before — "New", the count, the faces — while the others were already
+ * answering. Every second on the list is a question missed, so the card
+ * says so before anything else: the pill leads the row and breathes, the
+ * one thing on the list allowed to move (owner: "show live label instead
+ * new label on room card and show first, make it pulsing a little for more
+ * visibility"). "New" steps aside while it is up; a room in play is not
+ * news, it is happening.
+ */
+function LiveBadge({ className = "" }: { className?: string }) {
+  const { t } = useLanguage();
+  return (
+    <motion.span
+      animate={{ scale: [1, 1.06, 1] }}
+      transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#ff4d6d] px-2.5 py-1 text-xs font-bold text-white shadow-[0_2px_8px_rgba(255,77,109,0.45)] ${className}`}
+    >
+      <span className="relative flex h-1.5 w-1.5 shrink-0">
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/80" />
+        <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-white" />
+      </span>
+      {t("extra.roomStatusLive")}
+    </motion.span>
+  );
+}
+
 export function RoomCard({ room, index, onJoin, onPreview, onDelete, onLeave, fullWidth = false, isJoining = false, homeRail = false }: RoomCardProps) {
   const { t, language } = useLanguage();
   const localizeCategory = useLocalizedCategoryName();
@@ -672,8 +702,11 @@ export function RoomCard({ room, index, onJoin, onPreview, onDelete, onLeave, fu
     room.room_icon ?? lounge?.icon ?? (isPartyRoom ? iconPartyLounge : dealtRoomIcon(room.id, iconPool));
   // How long ago the room was made — the thing that tells two similar rooms
   // apart in a list of them.
-  // "New" for the room's first hour, then no time label at all (owner's ask).
-  const isNew = useRoomIsNew(room.created_at);
+  // A round is running in this room right now (LiveBadge).
+  const isLive = isRoomLive(room);
+  // "New" for the room's first hour, then no time label at all (owner's
+  // ask) - and not while the room is live, which outranks it.
+  const isNew = useRoomIsNew(room.created_at) && !isLive;
 
   // NEW LOGIC: has_players_in_room = someone is actually INSIDE this room
   const hasPlayersInRoom = room.has_players_in_room;
@@ -908,7 +941,9 @@ export function RoomCard({ room, index, onJoin, onPreview, onDelete, onLeave, fu
                 </div>
               )}
               <div className="absolute left-[18px] right-[18px] top-[20px] z-10 flex items-start justify-between">
-                {isNew ? (
+                {isLive ? (
+                  <LiveBadge />
+                ) : isNew ? (
                   <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-black/25 px-2.5 py-1 font-[Nunito] text-xs font-bold leading-4 tracking-[-0.16px] text-white backdrop-blur-[4px]">
                     <span
                       className={`h-1.5 w-1.5 shrink-0 animate-pulse rounded-full ${
@@ -1177,8 +1212,11 @@ export function RoomCardGrid({ room, index, onJoin, onPreview, onDelete, onLeave
     room.room_icon ?? lounge?.icon ?? (isPartyRoom ? iconPartyLounge : dealtRoomIcon(room.id, iconPool));
   // How long ago the room was made — the thing that tells two similar rooms
   // apart in a list of them.
-  // "New" for the room's first hour, then no time label at all (owner's ask).
-  const isNew = useRoomIsNew(room.created_at);
+  // A round is running in this room right now (LiveBadge).
+  const isLive = isRoomLive(room);
+  // "New" for the room's first hour, then no time label at all (owner's
+  // ask) - and not while the room is live, which outranks it.
+  const isNew = useRoomIsNew(room.created_at) && !isLive;
 
   /**
    * The room I just made, marked the way the Public tab marks it.
@@ -1455,7 +1493,9 @@ export function RoomCardGrid({ room, index, onJoin, onPreview, onDelete, onLeave
                     the running age was one pill too many on a row already
                     carrying the count and the way out (owner's ask). The dot
                     still says whether anyone is there. */}
-                {/* Seats first, on the left. */}
+                {/* Live first, when it is: the one thing a returning player
+                    must not miss (LiveBadge). Then the seats. */}
+                {isLive && <LiveBadge />}
                 <div className="flex flex-shrink-0 items-center gap-1.5 rounded-full bg-white/60 backdrop-blur-sm px-2.5 py-1">
                   <Users className="w-3.5 h-3.5 text-[#2b1a4a]" />
                   <span className="text-[#2b1a4a] font-bold text-xs">{displayPlayerCount}</span>

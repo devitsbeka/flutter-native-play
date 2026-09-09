@@ -370,9 +370,12 @@ export default function HomeShot() {
       has_pending_invite: true,
       pending_invite_from: { nickname: "Britney", avatar_url: null, notificationId: "shot-invite" },
     };
+    // A room with a round running: "Live" leads the row and pulses.
+    const live = { ...withGuest, status: "playing" };
     return (
       <div className="min-h-[100dvh] w-full space-y-4 bg-[#faf6ff] p-4">
         <div className="grid grid-cols-1 gap-3">
+          <RoomCardGrid room={live} index={3} onJoin={noop} onPreview={noop} onDelete={noop} onLeave={noop} onInvite={noop} />
           <RoomCardGrid room={alone} index={0} onJoin={noop} onPreview={noop} onDelete={noop} onLeave={noop} onInvite={noop} />
           <RoomCardGrid room={withGuest} index={1} onJoin={noop} onPreview={noop} onDelete={noop} onLeave={noop} onInvite={noop} />
           <RoomCardGrid room={invited} index={2} onJoin={noop} onPreview={noop} onDelete={noop} onLeave={noop} onInvite={noop} />

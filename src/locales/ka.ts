@@ -2608,6 +2608,7 @@ export const ka = {
     notifAddFriend: "მეგობრად დამატება",
     // Room status badges
     roomStatusNew: "ახალი",
+    roomStatusLive: "ლაივი",
     roomStatusCompleted: "დასრულდა",
     roomStatusWaiting: "მოლოდინი",
     roomJoinLive: "შეუერთდი",

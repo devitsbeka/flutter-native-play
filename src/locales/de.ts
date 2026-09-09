@@ -2277,6 +2277,7 @@ export const de: KaTranslations = {
     notifAcceptRequest: "Anfrage annehmen",
     notifAddFriend: "Freund hinzufügen",
     roomStatusNew: "Neu",
+    roomStatusLive: "Live",
     roomStatusCompleted: "Beendet",
     roomStatusWaiting: "Wartend",
     roomJoinLive: "Beitreten",

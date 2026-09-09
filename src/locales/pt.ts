@@ -2293,6 +2293,7 @@ export const pt: KaTranslations = {
     notifAcceptRequest: "Aceitar pedido",
     notifAddFriend: "Adicionar amigo",
     roomStatusNew: "Novo",
+    roomStatusLive: "Ao vivo",
     roomStatusCompleted: "Terminado",
     roomStatusWaiting: "Aguardando",
     roomJoinLive: "Entrar",

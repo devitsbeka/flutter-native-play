@@ -2606,6 +2606,7 @@ export const en: KaTranslations = {
     notifAddFriend: "Add friend",
     // Room status badges
     roomStatusNew: "New",
+    roomStatusLive: "Live",
     roomStatusCompleted: "Completed",
     roomStatusWaiting: "Waiting",
     roomJoinLive: "Join",
