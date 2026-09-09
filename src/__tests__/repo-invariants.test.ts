@@ -79,7 +79,10 @@ describe("repo invariants", () => {
       // migration deletes them and the build fails two dozen lines away from
       // the cause.
       "purchase_shop_item",
+      "purchase_power_up",
+      "grant_reward_power_up",
       "ensure_default_power_ups",
+      "claim_vip_frame",
     ];
 
     // Match the definition, not the bare name. A substring check passes for a

@@ -89,7 +89,7 @@ charged nothing.
 
 2. **Run the three SQL files below**, in order, in the Lovable SQL editor.
 
-3. **Ask Lovable to deploy the edge functions.** One sentence, nothing else.
+3. **Ask Lovable to deploy the edge functions.** The exact prompt is below.
 
 Step 2 before step 3 on purpose. Lovable regenerates
 `src/integrations/supabase/types.ts` on a sync, and this branch hand-added five
@@ -172,6 +172,100 @@ UNION ALL SELECT 'client INSERT policy on user_avatar_frames', count(*)::text, '
 ```
 
 Read-only. Run it as often as you like.
+
+---
+
+## Which edge functions, and what to say to Lovable
+
+### The three that need deploying
+
+| Function | Why |
+|---|---|
+| `stripe-gem-webhook` | §1 — handles `customer.subscription.*` now. This is the one that matters. |
+| `create-pro-checkout` | §2 — requires auth, and reads the repriced `_shared/pricing.ts` |
+| `create-gem-checkout` | §9 — price key from `pack.id`, and the repriced table |
+
+`supabase/functions/_shared/` is not deployable on its own — Deno bundles it
+into each function that imports it, so those files ship with the three above
+automatically. Nothing to ask for there.
+
+### The two that do NOT need anything
+
+`verify-receipt` and `revenuecat-webhook` also bundle `_shared/iap.ts`, which
+this branch touched — but the change is purely additive: `creditSubscriptionWelcome`
+gained an `export` keyword and an optional `platform` argument that defaults to
+the expression it replaced. Neither function passes it, so their behaviour is
+identical whether they carry the old bundle or the new one. Including them does
+no harm; leaving them alone does none either.
+
+### The prompt
+
+Copy this as-is:
+
+> Please deploy these three Supabase edge functions from the current `main`,
+> exactly as the code stands, and nothing else:
+>
+> - `stripe-gem-webhook`
+> - `create-pro-checkout`
+> - `create-gem-checkout`
+>
+> They import shared modules from `supabase/functions/_shared/`, which are
+> bundled automatically — no action needed there.
+>
+> Please do **not**:
+> - regenerate or edit `src/integrations/supabase/types.ts`
+> - edit, refactor or rewrite anything under `supabase/functions/`
+> - add, remove or update dependencies, or touch `package.json`,
+>   `package-lock.json` or `bun.lock`
+> - change any other file in the repo
+>
+> If something looks wrong or missing, please stop and tell me instead of
+> fixing it.
+
+### The prompt is not the protection — the order is
+
+Asking nicely is worth doing and is not a guarantee. Two things actually
+protect you:
+
+**Run the SQL first (step 2 before step 3).** `types.ts` gets wrecked when it
+is regenerated against a database that does not have the functions yet — the
+generator writes what it finds, and what it finds is nothing. Once
+`20261104110000` is applied, the five names below exist in the database, so a
+regeneration produces them and the whole risk evaporates. This is the real fix;
+the prompt is the belt.
+
+**Check afterwards.** These five signatures are what a bad regeneration
+deletes:
+
+```
+purchase_shop_item   purchase_power_up   grant_reward_power_up
+ensure_default_power_ups   claim_vip_frame
+```
+
+`src/__tests__/repo-invariants.test.ts` names all five, so:
+
+```bash
+git pull
+npx vitest run src/__tests__/repo-invariants.test.ts
+```
+
+fails with a message naming the missing one, rather than two dozen errors at
+the call sites. `git diff HEAD~1 --stat` is also worth a glance — a deploy
+should not have changed any file.
+
+### If it happens anyway
+
+`types.ts` was last correct in commit `9b3fad6`:
+
+```bash
+git checkout 9b3fad6 -- src/integrations/supabase/types.ts
+npx vitest run src/__tests__/repo-invariants.test.ts   # should pass
+git commit -m "Restore the RPC types Lovable regenerated away"
+git push
+```
+
+Nothing else in the repo depends on the regenerated content, so restoring the
+one file is the whole fix.
 
 ---
 
