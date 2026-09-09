@@ -1,5 +1,6 @@
 /**
- * A room made from "+ Room" opens on Public, with the door on the latch.
+ * A room made from "+ Room" on the Public tab is public, with the door on
+ * the latch.
  *
  * "+ Room" made a PRIVATE room, so the lobby's Visibility row opened on
  * "Private" and a host who wanted to be found had to notice a rule row on
@@ -7,12 +8,11 @@
  * other people can find. Published is the useful default; "Ask me" is what
  * keeps that safe, because a room that lists itself the moment it exists
  * should still let its host say who walks in (owner: "we should show public
- * always selected when user clicks + room, it is public as default but user
- * can switch and create private room too but show always public and ask me -
- * as selected").
+ * always selected when user clicks + room ... show always public and ask me
+ * - as selected").
  *
- * Neither is locked: both are rows in the lobby the host is already standing
- * in, one tap from here.
+ * Since then the Visibility row has gone altogether: the tab decides
+ * (roomVisibilityFromTheTab.test.ts). The door stays a row in the lobby.
  */
 
 import { describe, expect, it } from "vitest";
@@ -27,18 +27,20 @@ const visibility = read("src/utils/roomVisibility.ts");
 
 describe("what + Room writes", () => {
   it("asks for both, in the order createRoom takes them", () => {
-    // isPublic, then requiresApproval — the last two arguments.
-    expect(hub).toMatch(/const createRoomAndOpen = async \(\) => \{/);
-    expect(hub).toMatch(/undefined,\s*\n\s*true,\s*\n\s*true,\s*\n\s*\);/);
+    // isPublic, then requiresApproval — the last two arguments, and the
+    // door is on the latch exactly when the room is public.
+    expect(hub).toMatch(/const createRoomAndOpen = async \(isPublic: boolean\) => \{/);
+    expect(hub).toMatch(/undefined,\s*\n\s*isPublic,\s*\n(\s*\/\/[^\n]*\n)*\s*isPublic,\s*\n\s*\);/);
   });
 
   it("and it is no longer named after the private room it used to make", () => {
     expect(hub).not.toMatch(/createPrivateRoomAndOpen/);
   });
 
-  it("both doors on the page take that one path", () => {
+  it("both doors on the page take that one path, and the tab says which room", () => {
     // The + on the tab row, and the chooser's Game Room card.
-    expect((hub.match(/void createRoomAndOpen\(\)/g) ?? []).length).toBe(2);
+    expect((hub.match(/void createRoomAndOpen\(activeTab === "public"\)/g) ?? []).length).toBe(2);
+    expect(hub).not.toMatch(/void createRoomAndOpen\(\)/);
   });
 });
 
@@ -65,19 +67,17 @@ describe("createRoom carries the door policy the same way it carries visibility"
   });
 });
 
-describe("the lobby's two rows still decide, and still show the truth", () => {
-  it("Visibility reads the room's own column, so Public is selected because it IS public", () => {
-    expect(lobby).toMatch(/value: isPublicRoom \? "public" : "private",/);
+describe("the lobby's door row still decides, and still shows the truth", () => {
+  it("the lobby reads the room's own column for what it is", () => {
     expect(lobby).toMatch(/const isPublicRoom = Boolean\(\(currentRoom as \{ is_public\?: boolean \}\)\.is_public\);/);
   });
 
-  it("Joining likewise, and only on a room that has a door worth guarding", () => {
+  it("Joining reads the room's column, and only on a room that has a door worth guarding", () => {
     expect(lobby).toMatch(/value: needsApproval \? "ask" : "open",/);
     expect(lobby).toMatch(/isPublicRoom && hasApprovalColumn && !playsOwnTrivia/);
   });
 
-  it("and the host can still switch either — neither default is a lock", () => {
-    expect(lobby).toMatch(/onChange: isHost \? \(v: string\) => void setVisibility\(v\) : undefined,/);
+  it("and the host can still switch the door — the default is not a lock", () => {
     expect(lobby).toMatch(/onChange: isHost \? \(v: string\) => void setApproval\(v\) : undefined,/);
   });
 });

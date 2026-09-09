@@ -450,10 +450,16 @@ describe("a rule with one answer is not a rule", () => {
     expect(king).not.toMatch(/key: "visibility"/);
   });
 
-  it("the rooms that can publish keep theirs, and it acts", () => {
-    for (const [name, src] of [["classic", room], ["battle", battle]] as const) {
-      expect(src, name).toMatch(/key: "visibility"/);
-      expect(src, name).toMatch(/onChange: isHost \?/);
-    }
+  it("the battle arena keeps its visibility row, and it acts", () => {
+    expect(battle).toMatch(/key: "visibility"/);
+    expect(battle).toMatch(/onChange: isHost \?/);
+  });
+
+  it("the classic room has none either — the tab it was made from decided", () => {
+    // roomVisibilityFromTheTab.test.ts: a room from the Public tab is
+    // public, one from the Private tab is private, and the lobby does not
+    // offer to change it.
+    expect(room).not.toMatch(/key: "visibility"/);
+    expect(room).toMatch(/onChange: isHost \?/);
   });
 });
