@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { t } from "@/lib/i18n";
 
 import { FriendsStoriesBar } from "@/components/team/FriendsStoriesBar";
+import { BalancePills } from "@/components/shared/BalanceStrip";
 import { MobileHeroWidgets, MobileProfileCard, NAV_CHROME } from "@/components/home/MobileHome";
 import { MobileHomeFeed } from "@/components/home/MobileHomeFeed";
 import { useWaveStrip } from "@/components/home/wave";
@@ -129,10 +130,23 @@ export function MobileHomeScroll({
             className="absolute inset-0 z-[5] cursor-pointer"
           />
 
-          {/* Friends reel, riding the top of the hero as it always did — padded
-              down by the floating header's measured height so it sits below
-              it rather than underneath it. */}
-          <div className="relative z-20 px-4 pt-[var(--home-header-h,64px)] lg:pl-[26px]">
+          {/* What you have, in the place the game-mode selection screen puts
+              it (CreateRoomPage, Figma 1102:4980 / 1102:4983): the first row
+              under the header, on the same 22/18 insets and 11px gap, so the
+              two screens read as one app. It is hung off the floating
+              header's measured height, and the friends reel — which used to
+              be this row — now follows it. */}
+          <div className="relative z-20 flex items-center gap-[11px] pl-[22px] pr-[18px] pt-[calc(var(--home-header-h,64px)_+_5px)]">
+            <BalancePills
+              coins={coins}
+              gems={gems}
+              onCoinsClick={onCoinsClick}
+              onGemsClick={onGemsClick}
+            />
+          </div>
+
+          {/* Friends reel, directly under the balances. */}
+          <div className="relative z-20 px-4 pt-[10px] lg:pl-[26px]">
             <FriendsStoriesBar onAddFriendClick={onAddFriend} />
           </div>
 
