@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ChevronRight, TrendingUp } from "lucide-react";
 import { TimerBadge } from "@/components/game/TimerBadge";
 import { ChunkyButton } from "@/components/ui/chunky-button";
+import { AnswerFeedbackCard } from "@/components/game/AnswerFeedbackCard";
 import { getCategoryById } from "@/data/categories";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast";
@@ -1467,6 +1468,24 @@ export default function CategoryQuizPage() {
           </AnimatePresence>
         </div>
       )}
+
+      {/* Answer feedback — Figma 1154:9157. Lands over the next button once
+          an answer is in: the verdict, somewhere to keep the question or
+          flag it, and a few words about the answer. */}
+      <AnimatePresence>
+        {isAnswered && currentQuestion && (
+          <motion.div key={`feedback-${currentQuestionIndex}`} className="px-4 pt-2 flex-shrink-0">
+            <AnswerFeedbackCard
+              isCorrect={selectedAnswer === currentQuestion.correct_answer}
+              questionId={currentQuestion.id}
+              questionText={currentQuestion.question}
+              correctAnswer={currentQuestion.correct_answer}
+              categoryId={categoryId}
+              source="category"
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Bottom Area - Power-ups OR Next Button (same as QuizGameScreenProd) */}
       <div className="px-4 pb-4 pt-2 flex-shrink-0">

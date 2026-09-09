@@ -4563,4 +4563,20 @@ export const fr: KaTranslations = {
     row_educational_subtitle: "Les catégories qui vous rendent un peu plus malin",
   },
 
+  answerFeedback: {
+    correctTitle: "C'est juste",
+    incorrectTitle: "Presque",
+    correct1: "{answer} — c'est bien ça.",
+    correct2: "Exact. C'est {answer}.",
+    correct3: "Tu l'avais : {answer}. Continue comme ça.",
+    correct4: "Juste — {answer}. À retenir.",
+    wrong1: "La réponse était {answer}. Maintenant tu le sais.",
+    wrong2: "De peu — c'était {answer}.",
+    wrong3: "Pas cette fois : {answer} était la bonne. La prochaine est pour toi.",
+    wrong4: "C'était {answer}. Tout le monde en rate — continue.",
+    favorite: "Garder la question",
+    favorited: "Gardée",
+    report: "Signaler la question",
+    reported: "Signalée — merci",
+  },
 };
