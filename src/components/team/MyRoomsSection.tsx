@@ -1284,6 +1284,27 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
                   />
                   {createdAgo || t("extra.roomStatusWaiting")}
                 </span>
+                {/* Somebody is waiting for this player in here. The invite
+                    already sorted the card to the top and sits in the
+                    notification centre; on the card itself nothing said so,
+                    and a room you were asked into looked like every other
+                    (owner's ask). Their face, so it also says who. */}
+                {room.has_pending_invite && (
+                  <span className="inline-flex min-w-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-[#7126d5] py-0.5 pl-0.5 pr-2.5 text-xs font-bold text-white shadow-[0_2px_6px_rgba(113,38,213,0.35)]">
+                    {room.pending_invite_from?.avatar_url ? (
+                      <SafeAvatarImage
+                        avatarUrl={room.pending_invite_from.avatar_url}
+                        fallback={room.pending_invite_from.nickname ?? "?"}
+                        containerClassName="h-5 w-5 shrink-0 overflow-hidden rounded-full"
+                      />
+                    ) : (
+                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/20">
+                        <UserPlus className="h-3 w-3" />
+                      </span>
+                    )}
+                    <span className="truncate">{t("extra.roomInvitedYou")}</span>
+                  </span>
+                )}
               </div>
 
               {/* Right: how many are in the room, then the menu.

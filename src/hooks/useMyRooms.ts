@@ -79,6 +79,8 @@ export interface MyRoom {
   // notifications context already holds every one of them, and an invite is
   // "pending" exactly as long as its notification is unread.
   has_pending_invite: boolean;
+  // Who asked, from the invite notification's snapshot of the sender.
+  pending_invite_from: { nickname: string | null; avatar_url: string | null } | null;
 }
 
 // Active TV session statuses that indicate a "LIVE" game - paired means TV is connected and waiting for host
@@ -354,6 +356,7 @@ async function fetchRoomsForUser(userId: string, options?: FetchRoomsOptions): P
       has_recent_activity: hasRecentActivity,
       // Filled in by the hook, which is where the notifications live.
       has_pending_invite: false,
+      pending_invite_from: null,
     };
   });
 }
@@ -440,14 +443,23 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
    * so opening the room, which marks the notification read, retires the
    * invite without a second source of truth to keep in step.
    */
-  const invitedRoomIds = useMemo(() => {
-    const ids = new Set<string>();
+  const pendingInvites = useMemo(() => {
+    const byRoom = new Map<string, MyRoom["pending_invite_from"]>();
     for (const n of notifications) {
       if (n.type !== "room_invite" || n.read_at) continue;
-      const roomId = (n.data as { room_id?: string } | null)?.room_id;
-      if (roomId) ids.add(roomId);
+      const data = n.data as {
+        room_id?: string;
+        sender_nickname?: string | null;
+        sender_avatar?: string | null;
+      } | null;
+      if (data?.room_id && !byRoom.has(data.room_id)) {
+        byRoom.set(data.room_id, {
+          nickname: data.sender_nickname ?? null,
+          avatar_url: data.sender_avatar ?? null,
+        });
+      }
     }
-    return ids;
+    return byRoom;
   }, [notifications]);
 
   const {
@@ -507,10 +519,13 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
 
   // Client-side filtering and sorting
   const filteredRooms = useMemo(() => {
-    let result: MyRoom[] = invitedRoomIds.size
-      ? activeRooms.map((room) =>
-          invitedRoomIds.has(room.id) ? { ...room, has_pending_invite: true } : room
-        )
+    let result: MyRoom[] = pendingInvites.size
+      ? activeRooms.map((room) => {
+          const from = pendingInvites.get(room.id);
+          return from === undefined
+            ? room
+            : { ...room, has_pending_invite: true, pending_invite_from: from };
+        })
       : activeRooms;
 
     /**
@@ -600,10 +615,13 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
     );
 
     return result;
-  }, [activeRooms, filter, friendIds, searchQuery, invitedRoomIds, visibility, developerMode]);
+  }, [activeRooms, filter, friendIds, searchQuery, pendingInvites, visibility, developerMode]);
 
   return {
     rooms: filteredRooms.slice(0, limit),
+    // Rooms in THIS list somebody is waiting for the player in - counted
+    // before the limit, so a tab badge sees every one of them.
+    pendingInviteCount: filteredRooms.filter((room) => room.has_pending_invite).length,
     loading,
     refreshRooms: () => queryClient.invalidateQueries({ queryKey: [MY_ROOMS_KEY] }),
     filter,

@@ -226,11 +226,19 @@ export default function HomeShot() {
       has_others_online: true,
       has_players_in_room: true,
     };
+    // A room this player was asked into and has not opened yet.
+    const invited = {
+      ...base,
+      is_host: false,
+      has_pending_invite: true,
+      pending_invite_from: { nickname: "Britney", avatar_url: null },
+    };
     return (
       <div className="min-h-[100dvh] w-full space-y-4 bg-[#faf6ff] p-4">
         <div className="grid grid-cols-1 gap-3">
           <RoomCardGrid room={alone} index={0} onJoin={noop} onDelete={noop} onLeave={noop} onInvite={noop} />
           <RoomCardGrid room={withGuest} index={1} onJoin={noop} onDelete={noop} onLeave={noop} onInvite={noop} />
+          <RoomCardGrid room={invited} index={2} onJoin={noop} onDelete={noop} onLeave={noop} onInvite={noop} />
         </div>
       </div>
     );
