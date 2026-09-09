@@ -778,9 +778,17 @@ export function GameResultsScreenV2() {
                 a grey question mark — stood in for the one category the rest
                 of the app draws as the mystery box. */}
             <CategoryArtwork
-              categoryId={resultsCategory.categoryId ?? currentRoom.category_id}
+              // Never a stale id's picture on a mixed round, and never a
+              // question mark on a round that has no category at all — the
+              // same two rules the countdown applies.
+              categoryId={
+                isUndecidedRound(currentRoom.category_id, currentRoom.category_name)
+                  ? null
+                  : resultsCategory.categoryId ?? currentRoom.category_id
+              }
               iconSlug={
                 isUndecidedRound(currentRoom.category_id, currentRoom.category_name)
+                || (!currentRoom.category_id && !resultsCategory.iconSlug)
                   ? UNDECIDED_ICON_SLUG
                   : resultsCategory.iconSlug
               }

@@ -1,3 +1,4 @@
+import { isUndecidedRound, UNDECIDED_ICON_SLUG } from "@/utils/undecidedRound";
 /**
  * A round built on one of the player's own trivias.
  *
@@ -44,6 +45,8 @@ export interface RoundLike {
   source_type?: string | null;
   icon_slug?: string | null;
   user_trivia_id?: string | null;
+  category_id?: string | null;
+  category_name?: string | null;
 }
 
 /** Is this round one of the player's own trivias? */
@@ -63,7 +66,16 @@ export function roundIsOwnTrivia(round: RoundLike | null | undefined): boolean {
 export function roundIconSlug(round: RoundLike | null | undefined): string | undefined {
   if (!round) return undefined;
   if (round.icon_slug) return round.icon_slug;
-  return roundIsOwnTrivia(round) ? OWN_TRIVIA_ICON_SLUG : undefined;
+  if (roundIsOwnTrivia(round)) return OWN_TRIVIA_ICON_SLUG;
+  // A round with no category yet — random, or mixed — is the one round with
+  // a well-known face, and it was the one the lobby chip drew with none: a
+  // random round at the head of the queue said "Random" beside an empty
+  // slot while the round list under it drew the box (owner: "check why we
+  // do not show mixed category icon").
+  if (round.source_type === "random" || isUndecidedRound(round.category_id, round.category_name)) {
+    return UNDECIDED_ICON_SLUG;
+  }
+  return undefined;
 }
 
 /**
