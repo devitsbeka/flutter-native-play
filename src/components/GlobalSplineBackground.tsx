@@ -9,7 +9,7 @@ import { useResponsiveVideo } from "@/hooks/useResponsiveVideo";
 const BACKGROUND_PAGES = ["/", "/game", "/discover", "/leaderboards", "/profile", "/auth", "/power-ups"];
 
 // Pages where particles should be disabled for performance
-const NO_PARTICLES_PAGES = ["/", "/discover", "/game", "/leaderboards", "/power-ups", "/team"];
+const NO_PARTICLES_PAGES = ["/", "/discover", "/game", "/leaderboards", "/power-ups"];
 
 // Pages where the white radial mask should be hidden (they have their own solid background)
 const NO_RADIAL_MASK_PAGES = ["/game", "/power-ups"];
@@ -17,25 +17,7 @@ const NO_RADIAL_MASK_PAGES = ["/game", "/power-ups"];
 // Pages where the radial mask is hidden on phones only. The leaderboard shows
 // its own artwork from md up, but on a phone it wants exactly the shop's
 // backdrop — the blob video and wash with no white vignette on top.
-const NO_RADIAL_MASK_MOBILE_PAGES = ["/leaderboards", "/team"];
-
-/**
- * The rooms page's Public tab wears this backdrop; its Private tab does not.
- *
- * /team was excluded outright, so the Public tab — other people's rooms,
- * the one list on that page that is a place rather than a drawer — sat on
- * the flat page grey while the shop and the leaderboard beside it drift
- * over the blobs (owner: "when i switch from private tab to public show
- * blob video background"). The tab is in the URL (TeamV2 keeps ?tab in
- * step with its state), so this reads it from there: absent means Public,
- * as the page itself defaults, and the legacy ?tab=explore still means
- * Public because those links are in notifications already sent.
- */
-export function isPublicRoomsLocation(pathname: string, search: string): boolean {
-  if (pathname !== "/team") return false;
-  const tab = new URLSearchParams(search).get("tab");
-  return tab === null || tab === "public" || tab === "explore";
-}
+const NO_RADIAL_MASK_MOBILE_PAGES = ["/leaderboards"];
 
 // White sparkle particle with glow effect - using CSS animation for better performance
 const SparkleParticle = ({ delay, x, size, duration }: { delay: number; x: number; size: number; duration: number }) => (
@@ -93,15 +75,12 @@ export const GlobalSplineBackground = memo(function GlobalSplineBackground() {
   const isMobile = useIsBreakpointDown("md");
   const blobVideo = useResponsiveVideo("/videos/floating-blob.mp4");
   
-  // Check if current page should show background. The rooms page shows it
-  // on its Public tab only (isPublicRoomsLocation); the lounges under
-  // /team-battle and the rest of /team keep their own.
+  // Check if current page should show background (include team check here)
   const isTeamRoute = location.pathname.startsWith("/team");
-  const isPublicRooms = isPublicRoomsLocation(location.pathname, location.search);
-  const shouldShow = isPublicRooms || (!isTeamRoute && BACKGROUND_PAGES.some(page => {
+  const shouldShow = !isTeamRoute && BACKGROUND_PAGES.some(page => {
     if (page === "/") return location.pathname === "/";
     return location.pathname.startsWith(page);
-  }));
+  });
   
   // Check if particles should be disabled for performance
   const shouldShowParticles = shouldShow && !NO_PARTICLES_PAGES.includes(location.pathname);
