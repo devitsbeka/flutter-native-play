@@ -41,6 +41,24 @@ describe("Create opens the summary; Start opens the match", () => {
     expect(lobby).toMatch(/onChange=\{\(\) => setShowMatchSummary\(false\)\}/);
   });
 
+  it("and a player arriving first cannot rob the host of it", () => {
+    // A public room is listed the moment it exists, so somebody can walk in
+    // before the host has pressed anything. While Create required
+    // `awaitingPlayers` that filled the room, skipped the button straight to
+    // Start, and the summary was never shown — on a room that was already
+    // settled by being listed. Create depends on the ROUND being decided
+    // now, not on the seats being empty.
+    expect(lobby).toMatch(/const offerCreate = !needsCategorySelection && !isStarting && !roomCreated;/);
+    expect(lobby).not.toMatch(/const offerCreate = awaitingPlayers && !roomCreated;/);
+  });
+
+  it("and confirming it only walks the host out when there is nobody to walk out on", () => {
+    // The trip to the rooms list is for finding a second player. With one
+    // already here it would carry the host out of a room that is ready to
+    // start, past the person waiting in it.
+    expect(lobby).toMatch(/if \(enoughPlayersRef\.current\) return;\s*\n\s*exitRoom\(\);/);
+  });
+
   it("Start no longer detours through it — the stake check still stands", () => {
     const gate = lobby.slice(lobby.indexOf("const handleStartOrPick = () => {"), lobby.indexOf("const summaryRounds = ["));
     expect(gate).toMatch(/if \(seatedPlayers >= 2 && !hasEnoughCoins\) \{\s*setShowNoStake\(true\);\s*return;\s*\}/);
