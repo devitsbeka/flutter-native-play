@@ -61,6 +61,45 @@ describe("repo invariants", () => {
     }
   });
 
+  it("keeps the out-of-order migration safe to run out of order", () => {
+    // docs/PRICING_ROLLOUT.md tells the operator to run 20261104140000 FIRST,
+    // ahead of every other migration, because it closes `apply_currency_grant`
+    // — the uncapped credit primitive that is live and callable by any
+    // signed-in user. That instruction is the whole point of the file.
+    //
+    // It shipped with five bare REVOKE statements, three of them naming
+    // functions that 20261104110000 and 20261104130000 create. Run first, as
+    // instructed, it died at the third:
+    //
+    //   ERROR: 42883: function public.grant_power_ups(uuid, text, integer)
+    //          does not exist
+    //
+    // and since the SQL editor runs a file in one transaction, the two
+    // revokes that mattered rolled back with it. The migration whose job was
+    // "close the live hole now" closed nothing.
+    //
+    // Note what does NOT catch this: checking that every REVOKE names a
+    // function some earlier migration creates. In repo order it does — the
+    // ordering only breaks because a human was told to skip ahead. The
+    // property that actually has to hold is that this file assumes nothing
+    // about what else has run.
+    const sql = read("supabase/migrations/20261104140000_internal_functions_are_internal.sql");
+
+    const bare = [...sql.matchAll(/^\s*REVOKE\s+[^;]*?ON\s+FUNCTION\s+\S+/gim)].map((m) =>
+      m[0].trim().replace(/\s+/g, " "),
+    );
+    expect(
+      bare,
+      "a bare REVOKE raises 42883 if the function is not there yet, and takes the whole file down with it — guard it with to_regprocedure",
+    ).toEqual([]);
+
+    expect(sql, "the guarded form is what makes this runnable first").toContain("to_regprocedure");
+
+    // And it must still be loud if the function it exists for is absent,
+    // rather than skipping it and reporting success.
+    expect(sql).toMatch(/RAISE EXCEPTION[^;]*apply_currency_grant/);
+  });
+
   it("keeps the entitlement RPC types in the generated Supabase types", () => {
     const types = read("src/integrations/supabase/types.ts");
 

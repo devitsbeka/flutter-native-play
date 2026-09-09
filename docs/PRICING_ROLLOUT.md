@@ -175,6 +175,19 @@ predates everything else on this branch, and is **safe to apply on its own, in
 any order, with the old client still deployed** — nothing legitimate calls
 these five from a browser.
 
+> **It did not used to be.** The first version was five bare `REVOKE`
+> statements, three of them naming functions that `20261104110000` and
+> `20261104130000` create. Run first — which is what this section tells you to
+> do — it died at the third with
+> `ERROR: 42883: function public.grant_power_ups(uuid, text, integer) does not exist`,
+> and because the SQL editor runs a file in one transaction, the two revokes
+> that mattered rolled back with it.
+>
+> It now checks `to_regprocedure` per function and skips what is not there yet,
+> reporting which. Verified in four orders: this one first on a database with
+> none of the others, then the rest; twice in a row; and the natural sequence
+> on a fresh database. All four end with zero of the five callable.
+
 ---
 
 ## Verify it applied

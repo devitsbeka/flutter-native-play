@@ -46,20 +46,57 @@
 -- that this migration is the one place to look, and so applying it to a
 -- database that already has them is still correct.
 
-REVOKE ALL ON FUNCTION public.apply_currency_grant(uuid, text, integer, integer, text)
-  FROM PUBLIC, anon, authenticated;
+-- Written as a loop over signatures, and skipping what is not there yet, for
+-- one specific reason: THIS migration is the urgent one. `apply_currency_grant`
+-- is live and callable today, while the other four are either harmless
+-- (befriend_room_players) or do not exist yet — `grant_power_ups`,
+-- `claim_avatar_generation` and `refund_avatar_generation` arrive with
+-- 20261104110000 and 20261104130000, which also revoke themselves properly.
+--
+-- Written as five bare REVOKE statements, running this first — which is the
+-- whole point of it — fails at the third with
+--
+--   ERROR: 42883: function public.grant_power_ups(uuid, text, integer) does not exist
+--
+-- and takes the two that matter down with it, because the editor runs the
+-- script in one transaction. A migration whose job is "close the live hole
+-- now" must not depend on migrations that close later ones.
+--
+-- `to_regprocedure` returns NULL for a function that does not exist rather
+-- than raising, which is the whole trick. Every line is idempotent, so this
+-- is safe to run before, between or after the others, and safe to run twice.
+DO $$
+DECLARE
+  fn text;
+  revoked int := 0;
+  skipped int := 0;
+BEGIN
+  FOREACH fn IN ARRAY ARRAY[
+    'public.apply_currency_grant(uuid, text, integer, integer, text)',
+    'public.befriend_room_players()',
+    'public.grant_power_ups(uuid, text, integer)',
+    'public.claim_avatar_generation(uuid, boolean)',
+    'public.refund_avatar_generation(uuid)'
+  ] LOOP
+    IF to_regprocedure(fn) IS NOT NULL THEN
+      EXECUTE format('REVOKE ALL ON FUNCTION %s FROM PUBLIC, anon, authenticated', fn);
+      revoked := revoked + 1;
+      RAISE NOTICE 'revoked %', fn;
+    ELSE
+      skipped := skipped + 1;
+      RAISE NOTICE 'skipped % - not created yet; its own migration revokes it', fn;
+    END IF;
+  END LOOP;
 
-REVOKE ALL ON FUNCTION public.befriend_room_players()
-  FROM PUBLIC, anon, authenticated;
+  RAISE NOTICE '% revoked, % not present yet', revoked, skipped;
 
-REVOKE ALL ON FUNCTION public.grant_power_ups(uuid, text, integer)
-  FROM PUBLIC, anon, authenticated;
-
-REVOKE ALL ON FUNCTION public.claim_avatar_generation(uuid, boolean)
-  FROM PUBLIC, anon, authenticated;
-
-REVOKE ALL ON FUNCTION public.refund_avatar_generation(uuid)
-  FROM PUBLIC, anon, authenticated;
+  -- The one that is live today. If it is missing, something is wrong with the
+  -- database rather than with the ordering, and silently doing nothing would
+  -- be the worst outcome for the statement whose whole job is to close it.
+  IF to_regprocedure('public.apply_currency_grant(uuid, text, integer, integer, text)') IS NULL THEN
+    RAISE EXCEPTION 'apply_currency_grant is not in this database - nothing was closed';
+  END IF;
+END $$;
 
 -- The service role bypasses this entirely (it is not subject to function
 -- privileges the way a signed-in role is), and a SECURITY DEFINER function
