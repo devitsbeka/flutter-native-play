@@ -90,12 +90,18 @@ jobs:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
 
+      # The system deps come through apt, and an apt index the job never
+      # uses can be broken on the runner — Google Chrome's answered a hash
+      # mismatch mid-update and took three deploys down in a row before a
+      # single smoke test ran. The image already carries a Chrome, so those
+      # deps are there: a failed deps pass is a warning, and the browser
+      # itself is still installed (or taken from the cache).
       - name: Install Playwright Chromium
         run: |
-          if [ "${{ steps.playwright-cache.outputs.cache-hit }}" = "true" ]; then
-            npx playwright install-deps chromium
-          else
-            npx playwright install --with-deps chromium
+          npx playwright install-deps chromium \
+            || echo "::warning::playwright install-deps failed; relying on the runner image's own browser deps"
+          if [ "${{ steps.playwright-cache.outputs.cache-hit }}" != "true" ]; then
+            npx playwright install chromium
           fi
 
       - name: Smoke tests
