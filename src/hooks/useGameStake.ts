@@ -1,10 +1,8 @@
 import { useCallback } from "react";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useAuth } from "@/hooks/useAuth";
-import { useVipStatus } from "@/hooks/useVipStatus";
 import { supabase } from "@/integrations/supabase/client";
 import { REWARDS } from "@/config/rewardConfig";
-import { shouldSkipStake } from "@/utils/vipMultipliers";
 import { resolveGameSettlement, type GameOutcome } from "@/utils/gameStake";
 
 export interface GameStakeResult {
@@ -20,6 +18,8 @@ export interface GameStakeResult {
   drawAmount: number;
   netWinProfit: number;
   netLoss: number;
+  /** Always false: a quick game costs the stake for everybody. Kept so the
+   *  screens reading it need not all change at once. */
   isVipFreePlay: boolean;
 }
 
@@ -33,20 +33,22 @@ interface SettlementResponse {
 export function useGameStake(): GameStakeResult {
   const { coins, spendCoins, addCoins, canAffordCoins } = useCurrency();
   const { user, setProfileLocal } = useAuth();
-  const { isVip } = useVipStatus();
 
   const stakeAmount = REWARDS.GAME_STAKE;
   const winAmount = REWARDS.GAME_WIN_REWARD;    // 500
   const drawAmount = REWARDS.GAME_DRAW_REFUND;  // 0
 
-  // VIP users skip loss deduction entirely
-  const isVipFreePlay = shouldSkipStake(isVip);
+  // A quick game costs the stake for everybody, PRO included — the same
+  // rule a room has always had, where the pot is other players' money
+  // (owner: "give me sql to charge pro users too on quick games"). PRO's
+  // benefit is unlimited plays, not a discount on every loss.
+  const isVipFreePlay = false;
 
   // Net profit/loss from player's perspective (post-game model)
   const netWinProfit = winAmount;   // +500
   const netLoss = stakeAmount;      // -500 (deducted on loss)
 
-  const hasEnoughCoins = isVipFreePlay || canAffordCoins(stakeAmount);
+  const hasEnoughCoins = canAffordCoins(stakeAmount);
   const canPlay = hasEnoughCoins;
 
   /**
@@ -59,20 +61,19 @@ export function useGameStake(): GameStakeResult {
    */
   const settleLocally = useCallback(
     async (outcome: GameOutcome): Promise<number> => {
-      const { credit, debit } = resolveGameSettlement({ outcome, coins, isVip });
+      const { credit, debit } = resolveGameSettlement({ outcome, coins });
       if (credit > 0) return (await addCoins(credit, "stake_win")) ? credit : 0;
       if (debit > 0) return (await spendCoins(debit)) ? -debit : 0;
       return 0;
     },
-    [addCoins, spendCoins, coins, isVip],
+    [addCoins, spendCoins, coins],
   );
 
   /**
    * Settle a finished game in one server call.
    *
    * The amount is not sent. `settle_quick_game` decides what a win and a loss
-   * are worth, floors the debit at the balance, exempts PRO from the loss,
-   * counts the day's ceiling against the NET of both directions, and records
+   * are worth, floors the debit at the balance, counts the day's ceiling against the NET of both directions, and records
    * the match id so a second call for the same game moves nothing.
    *
    * What comes back is what actually moved, so the result screen announces

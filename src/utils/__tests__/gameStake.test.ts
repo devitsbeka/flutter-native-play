@@ -50,9 +50,16 @@ describe("quick game settlement", () => {
       .toEqual({ credit: 0, debit: 0, delta: 0 });
   });
 
-  it("spares PRO players the stake but still pays them for a win", () => {
+  it("charges a PRO player exactly what it charges anybody else", () => {
+    // It used to spare them the loss, here and in settle_quick_game. One
+    // price now, matching a room, where PRO has always staked because the
+    // pot is the other players' money (owner: "per match cost is 500 coins,
+    // for PRO and no PRO users, same"). isVip is ignored rather than
+    // removed, so a caller still passing it gets the same answer.
     expect(resolveGameSettlement({ outcome: "lose", coins: 1000, isVip: true }))
-      .toEqual({ credit: 0, debit: 0, delta: 0 });
+      .toEqual({ credit: 0, debit: 500, delta: -500 });
+    expect(resolveGameSettlement({ outcome: "lose", coins: 1000 }))
+      .toEqual({ credit: 0, debit: 500, delta: -500 });
     expect(resolveGameSettlement({ outcome: "win", coins: 1000, isVip: true }))
       .toEqual({ credit: 500, debit: 0, delta: 500 });
   });

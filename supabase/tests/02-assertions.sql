@@ -407,18 +407,35 @@ SELECT pg_temp.must_equal(
   (SELECT coins FROM public.profiles WHERE user_id = '33333333-3333-3333-3333-333333333333'), 0,
   'a balance never goes below zero');
 
--- PRO plays for free, and is still paid for a win.
+-- PRO pays the stake like everybody else, and is still paid for a win.
+--
+-- It used to return 'vip_free' and take nothing. One price now, matching a
+-- room, where PRO has always staked because the pot is the other players'
+-- money (owner: "per match cost is 500 coins, for PRO and no PRO users,
+-- same"). What a subscription buys is unlimited plays and the welcome
+-- bundle — not a discount on every loss.
 UPDATE public.profiles SET coins = 600
  WHERE user_id = '33333333-3333-3333-3333-333333333333';
 INSERT INTO public.vip_subscriptions (user_id, vip_tier, expires_at)
 VALUES ('33333333-3333-3333-3333-333333333333','pro', now() + interval '30 days')
 ON CONFLICT (user_id) DO UPDATE SET expires_at = EXCLUDED.expires_at;
+-- Taken AFTER the subscription is written, because writing it pays the
+-- welcome bundle (20261102110000) — 25,000 coins the moment a tier lands.
+-- The pair below has to net to zero against whatever that left, not against
+-- the balance before it.
+CREATE TEMP TABLE pro_baseline AS
+  SELECT coins FROM public.profiles WHERE user_id = '33333333-3333-3333-3333-333333333333';
+
 SELECT pg_temp.must_equal(
-  (public.settle_quick_game('lose', 'pro-1') ->> 'reason'), 'vip_free',
-  'a PRO player loses nothing');
+  (public.settle_quick_game('lose', 'pro-1') ->> 'applied')::integer, -500,
+  'a PRO player pays the stake like everybody else');
 SELECT pg_temp.must_equal(
   (public.settle_quick_game('win', 'pro-2') ->> 'applied')::integer, 500,
   'and still earns a win');
+SELECT pg_temp.must_equal(
+  (SELECT coins FROM public.profiles WHERE user_id = '33333333-3333-3333-3333-333333333333'),
+  (SELECT coins FROM pro_baseline),
+  'so a win and a loss leave a subscriber exactly where they began');
 
 -- The amount is never the client's to name, and the outcome is checked.
 SELECT pg_temp.must_fail(
