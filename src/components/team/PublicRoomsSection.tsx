@@ -47,6 +47,7 @@ import crownIcon from "@/assets/crown-icon.png";
 import sceneArena from "@/assets/tb-lobby/scene-arena.webp";
 import { useDeveloperMode } from "@/contexts/DeveloperModeContext";
 import { ContentReportButton } from "@/components/social/ContentReportButton";
+import { useRoomAge } from "@/hooks/useRoomAge";
 
 /**
  * The Public tab: rooms anyone can find, and ask to be let into.
@@ -240,6 +241,9 @@ function PublicRoomCard({
   // The scene is DARKENED under the ink (reduced opacity over deep purple,
   // a dark wash, an inner shadow), so every card writes in the same white.
   const ink = INK.pale;
+  // When the room was made, beside its host — the same wording the private
+  // card's badge uses ("20 წუთის წინ", "გუშინ"), ticking as it ages.
+  const createdAgo = useRoomAge(room.created_at);
 
   const enter = () => navigate(publicRoomPath(room));
 
@@ -361,18 +365,13 @@ function PublicRoomCard({
               </span>
             </button>
 
-            {/* Guideline 1.2: a public room is user-generated content — its
-                name, its icon and its host's are all typed or chosen by a
-                stranger — and this list is where a reviewer meets it. There
-                was nothing to tap here; report and block hung off a profile
-                two screens away. Hidden on your own room. */}
-            <ContentReportButton
-              contentType="room"
-              contentId={room.id}
-              authorUserId={room.host_user_id}
-              roomId={room.id}
-              className={`h-8 w-8 shrink-0 ${ink.text} hover:bg-white/15`}
-            />
+            {/* When it was made, next to who made it (owner: "show date when
+                room was created - next to the host"). */}
+            {createdAgo && (
+              <span className={`shrink-0 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-bold ${ink.pill} ${ink.text}`}>
+                {createdAgo}
+              </span>
+            )}
           </div>
 
           {/* Seats. The lounges are what this is for — their card is
@@ -397,6 +396,22 @@ function PublicRoomCard({
                 {effectiveSeats ? `${room.player_count}/${effectiveSeats}` : room.player_count}
               </span>
             </div>
+            {/* Guideline 1.2: a public room is user-generated content — its
+                name, its icon and its host's are all typed or chosen by a
+                stranger — and this list is where a reviewer meets it. There
+                was nothing to tap here; report and block hung off a profile
+                two screens away. Hidden on your own room. It sits with the
+                card's other controls, between the seats and the way out
+                (owner: "show report icon between players and leave room
+                icon"), not beside the host's name where it read as part of
+                the name. */}
+            <ContentReportButton
+              contentType="room"
+              contentId={room.id}
+              authorUserId={room.host_user_id}
+              roomId={room.id}
+              className={`h-8 w-8 shrink-0 hover:bg-white/80 ${ink.pill} ${ink.text}`}
+            />
             {/* The way OUT, for the people who are in: the host deletes
                 the room, a seated guest leaves it. Nobody else has anything
                 to remove, so nobody else sees a button. */}
