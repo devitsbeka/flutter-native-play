@@ -54,7 +54,7 @@ describe("activity is stamped where it happens", () => {
   });
 
   it("and so does completion", () => {
-    expect(ctx).toMatch(/status: "completed", completed_at: new Date\(\)\.toISOString\(\), last_activity_at: new Date\(\)\.toISOString\(\)/);
+    expect(ctx).toMatch(/status: "completed",\s*\n\s*completed_at: new Date\(\)\.toISOString\(\),\s*\n\s*last_activity_at: new Date\(\)\.toISOString\(\),/);
   });
 
   it("the rejoin reads the whole row, not one column", () => {
