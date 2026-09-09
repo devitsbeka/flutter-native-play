@@ -55,6 +55,21 @@ const INCORRECT: Palette = {
   iconTint: "#C2415F",
 };
 
+/**
+ * The fade the answer list wears while the card is up.
+ *
+ * The card's scrim blurs and darkens what is behind it, but the list is a
+ * scroll container and still ends in a hard clip at its own bottom edge —
+ * an answer sliced through the middle. Masking the list's last 64px to
+ * transparent is what actually removes the cut; the scrim then sits over
+ * the fade. Applied only while the card is showing: with the card away,
+ * the last answer should be solid.
+ */
+export const answersFadeUnderFeedback = {
+  maskImage: "linear-gradient(to bottom, #000 calc(100% - 64px), transparent 100%)",
+  WebkitMaskImage: "linear-gradient(to bottom, #000 calc(100% - 64px), transparent 100%)",
+} as const;
+
 type ReportState = "idle" | "busy" | "sent" | "failed";
 
 export interface AnswerFeedbackCardProps {
@@ -162,12 +177,40 @@ export function AnswerFeedbackCard({
 
   return (
     <motion.div
-      className={className}
+      className={`relative ${className ?? ""}`}
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 16 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
     >
+      {/* What the card sits on top of.
+          On a short screen the answer list runs out of room and the card
+          lands over it, and an opaque edge cuts whichever answer is under
+          it clean in half. This band is that edge: the blur ramps in and
+          the ground darkens toward the card, so the list dissolves under
+          it instead of being guillotined by it. On a tall screen there is
+          nothing behind it and it costs nothing to look at.
+          Bled past the page's standard 16px gutter so the fade reaches the
+          screen edges, which is where the answer buttons reach. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 bottom-full h-16"
+        style={{
+          backdropFilter: "blur(10px)",
+          WebkitBackdropFilter: "blur(10px)",
+          maskImage: "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.6) 45%, #000 100%)",
+          WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.6) 45%, #000 100%)",
+        }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 bottom-full h-16"
+        style={{
+          background:
+            "linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.08) 45%, rgba(0,0,0,0.22) 100%)",
+        }}
+      />
+
       <div
         className="relative w-full rounded-[24px] px-5 pt-4 pb-5"
         style={{

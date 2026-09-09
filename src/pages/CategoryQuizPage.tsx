@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ChevronRight, TrendingUp } from "lucide-react";
 import { TimerBadge } from "@/components/game/TimerBadge";
 import { ChunkyButton } from "@/components/ui/chunky-button";
-import { AnswerFeedbackCard } from "@/components/game/AnswerFeedbackCard";
+import { AnswerFeedbackCard, answersFadeUnderFeedback } from "@/components/game/AnswerFeedbackCard";
 import { getCategoryById } from "@/data/categories";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast";
@@ -1402,7 +1402,10 @@ export default function CategoryQuizPage() {
 
       {/* Answer Buttons */}
       {isTrueFalseQuestion ? (
-        <div className="flex-1 min-h-0 px-4 pt-2 flex gap-3 items-center justify-center">
+        <div
+          className="flex-1 min-h-0 px-4 pt-2 flex gap-3 items-center justify-center"
+          style={isAnswered ? answersFadeUnderFeedback : undefined}
+        >
           {/* popLayout, or the question change stalls: in the default mode an
               exiting element keeps its layout slot until its exit animation
               ends, so the OLD answers held their places — with a staggered
@@ -1439,7 +1442,10 @@ export default function CategoryQuizPage() {
           </AnimatePresence>
         </div>
       ) : (
-        <div className="flex-1 px-4 pt-2 flex flex-col gap-2 overflow-y-auto min-h-0">
+        <div
+          className="flex-1 px-4 pt-2 flex flex-col gap-2 overflow-y-auto min-h-0"
+          style={isAnswered ? answersFadeUnderFeedback : undefined}
+        >
           {/* popLayout — see the true/false block above. */}
           <AnimatePresence mode="popLayout">
             {currentQuestion?.allAnswers?.map((answer, index) => {
