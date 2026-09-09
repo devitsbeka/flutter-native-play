@@ -5,14 +5,22 @@ import { isRoomLive } from "@/hooks/useMyRooms";
  *
  *   "live"   a round is running in there right now
  *   "start"  you host it, and somebody is online to play with
- *   "enter"  somebody is online in a room you have a seat in
- *   null     nobody else is online — there is nothing to offer
+ *   "enter"  the room is yours to walk into — a seat you hold, whether or
+ *            not anybody else is online right now
  *
- * The null is the point of this. Most rooms on the list are old ones with
- * nobody in them, and a button on every card is a button that says nothing
- * about any of them. One appears when there is actually somebody to play
- * with, and which one says whose move it is: the host starts the round,
- * everyone else goes in and waits for it.
+ * There used to be a fourth answer, null: nobody else online, so no button
+ * at all. It made the list quieter and it made a private room unenterable.
+ * A room's host alone at their table had no way back into it — no way to
+ * add a round, change the question count, or put it on the TV — because
+ * the card only ever offered anything once somebody else was awake. The
+ * lobby is where a room is edited, and a room you hold a seat in is one
+ * you may always walk into (owner: "users should be able enter private
+ * rooms and if they are host they should be able to modify room, add
+ * categories, change questions count in rounds, use TV mode").
+ *
+ * Which word the button carries says whose move it is: the host starts a
+ * round when there is somebody to play it with; everyone, host included,
+ * otherwise goes in.
  *
  * "Online" here means online in the app, not sitting in this room. That is
  * deliberate and it is what makes the feature work: a round now reaches
@@ -22,7 +30,7 @@ import { isRoomLive } from "@/hooks/useMyRooms";
  * navigates into the lobby would be waiting for something that no longer has
  * to happen.
  */
-export type RoomCardAction = "live" | "start" | "enter" | null;
+export type RoomCardAction = "live" | "start" | "enter";
 
 export function roomCardAction(room: {
   status: string;
@@ -44,6 +52,8 @@ export function roomCardAction(room: {
   // answer, because somebody wanted you there specifically.
   if (room.has_pending_invite) return "enter";
 
-  if (!room.has_others_online) return null;
+  // Nobody else online: the room is still yours to enter — the host to
+  // set it up, a guest to wait at the table — just not, yet, to start.
+  if (!room.has_others_online) return "enter";
   return room.is_host ? "start" : "enter";
 }

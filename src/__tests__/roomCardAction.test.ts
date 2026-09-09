@@ -7,11 +7,14 @@ import { compareRooms } from "@/utils/roomOrder";
 /**
  * The button on a room card.
  *
- * Every card used to carry one only while a round was live, so the list read
- * as a shelf of dormant rooms even when the people in them were online and
- * looking for a game. Now the card answers the one question worth asking of
- * it — is there anybody to play with, and whose move is it — and stays quiet
- * when the answer is nobody.
+ * Every card used to carry one only while a round was live, then only while
+ * somebody else was online — and a host alone in their private room had no
+ * way into it at all: the card let them add friends and nothing else, and
+ * the lobby, the one place a room's rounds, question count and TV are set,
+ * was unreachable (owner: "users should be able enter private rooms and if
+ * they are host they should be able to modify room ... now it just lets
+ * host add friends from card"). Now every card offers a way in, and the
+ * word on it says whose move it is.
  */
 const room = (over: Partial<Parameters<typeof roomCardAction>[0]> = {}) => ({
   status: "waiting",
@@ -22,11 +25,20 @@ const room = (over: Partial<Parameters<typeof roomCardAction>[0]> = {}) => ({
 });
 
 describe("what a room card offers", () => {
-  it("offers nothing when nobody else is online", () => {
-    // The whole point of the null. Most rooms on this list are old, and a
-    // button on every one of them says nothing about any of them.
-    expect(roomCardAction(room({ is_host: true }))).toBeNull();
-    expect(roomCardAction(room({ is_host: false }))).toBeNull();
+  it("offers a way in even when nobody else is online", () => {
+    // A room you hold a seat in is always yours to walk into. The host goes
+    // in to set it up — rounds, question count, TV — and a guest to wait at
+    // the table. Not a start, though: there is nobody to start with.
+    expect(roomCardAction(room({ is_host: true }))).toBe("enter");
+    expect(roomCardAction(room({ is_host: false }))).toBe("enter");
+  });
+
+  it("never goes silent", () => {
+    // The null answer is gone from the type, not just from the cases: a
+    // silent card is a locked room.
+    const src = readFileSync(join(process.cwd(), "src/utils/roomCardAction.ts"), "utf8");
+    expect(src).toMatch(/export type RoomCardAction = "live" \| "start" \| "enter";/);
+    expect(src).not.toMatch(/return null/);
   });
 
   it("offers the host the start of a round", () => {
@@ -64,9 +76,9 @@ describe("what a room card offers", () => {
     });
 
     it("does not count a TV merely paired and waiting", () => {
-      // Connected is not playing; without others online there is still
-      // nothing to offer.
-      expect(roomCardAction(room({ tv_status: "paired" }))).toBeNull();
+      // Connected is not playing: the card offers the way in, not the
+      // pulse of a round already running.
+      expect(roomCardAction(room({ tv_status: "paired" }))).toBe("enter");
     });
   });
 });
