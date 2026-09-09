@@ -59,10 +59,14 @@ describe("the results screen", () => {
   });
 
   it("sums every round's settled pot into the match's standings", () => {
+    // Through useMatchRounds now (resultsRoundByRound.test.ts): every round
+    // of the match read back off the ledger, the totals folded from them.
     expect(results).toMatch(/const matchOver = queue\.length === 0 && !waitingForPlayers;/);
-    expect(results).toMatch(/matchInfo\.roundIds\.length < 2 \|\| !matchOver \|\| !hasPotLines/);
-    expect(results).toMatch(/for \(const id of matchInfo\.roundIds\) \{\s*const \{ lines \} = await settleRoomRound\(roomId, id\);/);
-    expect(results).toMatch(/\.sort\(\(a, b\) => b\.net - a\.net\)/);
+    expect(results).toMatch(/const matchRounds = useMatchRounds\(currentRoom\?\.id, matchInfo, hasPotLines, settleRoomRound\);/);
+    expect(results).toMatch(/const matchStandings = matchRounds && matchRounds\.length >= 2 && matchOver \? matchTotals\(matchRounds\) : null;/);
+    const hook = read("src/hooks/useMatchRounds.ts");
+    expect(hook).toMatch(/Promise\.all\(ids\.map\(\(id\) => settleRoomRound\(roomId, id\)\)\)/);
+    expect(hook).toMatch(/\.sort\(\(a, b\) => b\.net - a\.net\)/);
     expect(results).toMatch(/t\("extra\.matchStandingsTitle", \{ game: matchInfo\.game, rounds: matchInfo\.roundIds\.length \}\)/);
   });
 });

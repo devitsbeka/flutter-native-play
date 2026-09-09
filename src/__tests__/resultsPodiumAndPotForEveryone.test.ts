@@ -88,7 +88,8 @@ describe("the podium", () => {
   });
 
   it("and the list starts from fourth, or is not there", () => {
-    expect(results).toMatch(/\{rankedParticipants\.length > PODIUM_ORDER\.length && \(/);
+    // ...or when the match has rounds to tell (resultsRoundByRound.test.ts).
+    expect(results).toMatch(/\{\(rankedParticipants\.length > PODIUM_ORDER\.length \|\| \(matchRounds && matchInfo\)\) && \(/);
     expect(results).toMatch(/rankedParticipants\.slice\(PODIUM_ORDER\.length\)\.map/);
   });
 });
