@@ -1323,7 +1323,10 @@ function TeamContentV2() {
       {/* Flex wrapper for main content + right sidebar */}
       <div className="flex min-h-full">
         {/* Main Content Area */}
-        <div id="team-main-content" className="flex-1 flex flex-col pb-[calc(var(--bottom-nav-height)_+_var(--safe-bottom)_+_1rem)] lg:pb-0 bg-background min-w-0">
+        {/* The Public tab sits on the app-wide blob backdrop, which
+            GlobalSplineBackground paints under this page for that tab alone;
+            an opaque page grey here would hide it. Private keeps the grey. */}
+        <div id="team-main-content" className={`flex-1 flex flex-col pb-[calc(var(--bottom-nav-height)_+_var(--safe-bottom)_+_1rem)] lg:pb-0 min-w-0 ${activeTab === "public" ? "bg-transparent" : "bg-background"}`}>
           {/* STICKY: Tabs - sits below the page header */}
           <div
             className="sticky z-20 bg-background/95 backdrop-blur-md w-full max-w-full will-change-transform"
