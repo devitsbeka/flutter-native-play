@@ -144,6 +144,20 @@ function TeamContentV2() {
     if (roomsLocked) return setShowRoomsWall(true);
     void createPrivateRoomAndOpen();
   };
+  /**
+   * The Private tab's create button, behind the same door.
+   *
+   * It wore no padlock and opened the chooser for everybody, which put a
+   * free-looking button next to a locked one on the tab beside it — and the
+   * wall behind that lock already promises both halves of what the chooser
+   * makes ("Create game rooms and trivias", playLimit.roomsLockedBody). One
+   * gate for one wall (owner: "when user is not pro we should lock 'create'
+   * button too").
+   */
+  const openCreateType = () => {
+    if (roomsLocked) return setShowRoomsWall(true);
+    setShowCreateTypeModal(true);
+  };
   // Ads are strictly opt-in: a player sees one only by pressing a button
   // that says so (extra plays, spins, power-ups). Room creation, challenges
   // and TV flows run without any ad gate.
@@ -1375,9 +1389,7 @@ function TeamContentV2() {
                     {...(triviaBusy
                       ? { disabled: true }
                       : instantTouchProps(() =>
-                          activeTab === "public"
-                            ? openCreateRoom()
-                            : setShowCreateTypeModal(true),
+                          activeTab === "public" ? openCreateRoom() : openCreateType(),
                         ))}
                     aria-busy={triviaBusy || undefined}
                     className={`hidden md:flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-primary text-primary-foreground shadow-sm shrink-0 text-sm font-bold${
@@ -1389,9 +1401,7 @@ function TeamContentV2() {
                         chooser, which leads with a room and offers the three
                         trivia types under it. */}
                     {triviaBusy && <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2.5} />}
-                    {!triviaBusy && activeTab === "public" && roomsLocked && (
-                      <Lock className="h-4 w-4" strokeWidth={2.5} />
-                    )}
+                    {!triviaBusy && roomsLocked && <Lock className="h-4 w-4" strokeWidth={2.5} />}
                     {triviaBusy
                       ? t("extra.triviaCreatingBtn")
                       : activeTab === "public"
@@ -1423,10 +1433,11 @@ function TeamContentV2() {
                     filterOptions={privateFilterOptionsShown}
                     searchQuery={privateSearchQuery}
                     onSearchQueryChange={setPrivateSearchQuery}
-                    onAddClick={() => setShowCreateTypeModal(true)}
+                    onAddClick={openCreateType}
                     addButtonText={t("extra.createBtn")}
                     addBusy={triviaBusy}
                     addBusyText={t("extra.triviaCreatingBtn")}
+                    addLocked={roomsLocked}
                   />
                 )}
               </div>
