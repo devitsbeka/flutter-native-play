@@ -1,5 +1,4 @@
 import { ArrowLeft } from "lucide-react";
-import { motion } from "framer-motion";
 import { createPortal } from "react-dom";
 import { useLocation, useNavigate } from "react-router-dom";
 import { HeaderActions } from "@/components/shared/HeaderActions";
@@ -107,46 +106,53 @@ export function PageHeader({
           document.body,
         )}
 
+      {/* The surface belongs to the title row, not to the <header>.
+       *
+       * The header is also the frame for `belowRow` — the balance strip —
+       * and that strip is deliberately translucent: 80% fill over a blur, so
+       * the page shows through it as frost. A background on the <header>
+       * itself sits directly behind the strip, which is then blurring an
+       * opaque wash and frosting nothing. Paint the row, leave the rest of
+       * the header clear, and the strip has real page content behind it on
+       * every screen that carries one. */}
       <header
         className={
           overlay
-            ? `relative z-20 transition-colors duration-200 ${
-                docked
-                  ? "bg-white md:bg-white/95 md:backdrop-blur-md md:[-webkit-backdrop-filter:blur(12px)]"
-                  : "bg-transparent"
-              } ${className}`
-            : `sticky top-0 z-20 bg-background md:backdrop-blur-md border-b border-border/30 ${className}`
+            ? `relative z-20 ${className}`
+            : `sticky top-0 z-20 border-b border-border/30 ${className}`
         }
       >
-        {/* 76px tall like the home header, so the search/bell icons land at
-            the same vertical spot on every page.
+        {/* 76px tall and 16px in from both edges on every page, overlay or
+            not, so the title and the search/bell pair land on exactly the
+            same pixels wherever you are.
 
-            26px of side padding in the overlay variant, 16 everywhere else:
-            on artwork there is no surface edge to line the title up with, and
-            Explore's design sets the title and the icons in from the screen
-            by 26. On a page wash the header lines up with the content below
-            it instead, which is padded by 16. */}
+            The overlay variant used to inset by 26 (Explore's own figure,
+            from a frame where there is no surface edge to line up with).
+            That is a 10px sideways jump of the title and of both icons every
+            time you cross between Explore and any other tab, and a header
+            that moves when the page changes reads as the app slipping rather
+            than as two designs. One number, everywhere. */}
         <div
-          className={`flex items-center justify-between h-[76px] w-full ${
-            overlay ? "px-[26px]" : "px-4"
+          className={`flex items-center justify-between h-[76px] w-full px-4 transition-colors duration-200 ${
+            overlay
+              ? docked
+                ? "bg-white md:bg-white/95 md:backdrop-blur-md md:[-webkit-backdrop-filter:blur(12px)]"
+                : "bg-transparent"
+              : "bg-background"
           }`}
         >
         {/* Left: Back button + Title */}
         <div className="flex items-center gap-3">
           {showBack && (
-            <motion.button
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
+            <button
+              type="button"
               onClick={handleBack}
               className="flex items-center justify-center w-10 h-10 rounded-full bg-white/80 backdrop-blur-sm text-slate-700 shadow-sm hover:bg-white transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
-            </motion.button>
+            </button>
           )}
-          <motion.h1
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.05 }}
+          <h1
             className={`text-xl font-display font-bold uppercase tracking-wide transition-colors duration-200 ${
               overlay
                 ? docked
@@ -156,20 +162,16 @@ export function PageHeader({
             }`}
           >
             {title}
-          </motion.h1>
+          </h1>
           {titleAccessory}
         </div>
 
         {/* Right: search and bell by default, so every page carries the same
             pair in the same place as Explore. A page passes its own only when
             it has controls of its own to put there. */}
-        <motion.div
-          initial={{ opacity: 0, x: 10 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="flex items-center gap-2"
-        >
+        <div className="flex items-center gap-2">
           {rightElements ?? <HeaderActions />}
-        </motion.div>
+        </div>
         </div>
 
         {belowRow}

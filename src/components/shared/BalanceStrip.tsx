@@ -75,9 +75,9 @@ export default BalancePills;
  *
  * The home keeps its balances on the profile card. Explore, the shop and the
  * rating board have nowhere like that, so they hang this under their header
- * (PageHeader's `belowRow`), where it inherits the header's surface and its
- * stickiness — over Explore's cover at rest, on the white the header docks
- * to once the sheet is up, on the page wash everywhere else.
+ * (PageHeader's `belowRow`), where it inherits the header's stickiness — but
+ * not its surface: the strip brings its own, so it looks the same on Explore's
+ * cover as it does on the shop and the rating board (see below).
  *
  * The online-game hub is deliberately not one of them: the friends reel is
  * already on that row there, and two strips under one header is a header
@@ -100,8 +100,23 @@ export function BalanceStripRow() {
   // the numbers to belong to.
   if (!user) return null;
 
+  // A surface of its own rather than whatever the page happens to put behind
+  // it. It used to inherit the header's: opaque wash on the shop and the
+  // rating board, bare video on Explore — one strip wearing three
+  // backgrounds, which is the same complaint as a header that moves.
+  //
+  // 80% of the page wash with a blur behind it, so what is under the strip
+  // (Explore's cover, the shop's first row on the way past) shows through as
+  // frost rather than as a hard band, and a 1px rule on top to part it from
+  // the title row. The same three everywhere the strip appears.
+  //
+  // Padded to px-4 — the header row's own inset — so the coin pill's left
+  // edge lines up with the title above it instead of sitting 6px further in.
   return (
-    <div className="flex items-center gap-[11px] pb-[10px] pl-[22px] pr-[18px] pt-[2px] md:hidden">
+    <div
+      className="flex items-center gap-[11px] border-t border-border/30 bg-background/80 px-4 pb-[10px] pt-[8px]
+                 backdrop-blur-md [-webkit-backdrop-filter:blur(12px)] md:hidden"
+    >
       <BalancePills
         coins={coins}
         gems={gems}

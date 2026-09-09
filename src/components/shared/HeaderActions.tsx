@@ -65,7 +65,17 @@ export function HeaderActions({ className = "", showSearch = true }: HeaderActio
   return (
     <>
       <div className={`flex items-center gap-1 ${className}`}>
-        {showSearch && <SpotlightSearch variant="button" />}
+        {/* Forced to the bell's 40px box. The button variant pads a 20px
+            glyph by 8 — a 36px target — so on every page that takes the
+            default pair the search sat 4px narrower than the bell and pushed
+            it 4px off where Explore, whose own toggle is 40, draws it. Same
+            two boxes, same places, every page. */}
+        {showSearch && (
+          <SpotlightSearch
+            variant="button"
+            className="!p-0 flex h-10 w-10 items-center justify-center"
+          />
+        )}
 
         {isDestination ? (
           // A readout, not a button. role="status" so a screen reader
