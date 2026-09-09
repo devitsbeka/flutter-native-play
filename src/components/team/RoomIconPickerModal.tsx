@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { fetchCategoryIconSlugs, isCategoryIcon } from "@/utils/categoryIcons";
 import triviaBuzzer from "@/assets/trivia-buzzer.png";
 
 const RECENT_ROOM_ICONS_KEY = "recent-room-icons";
@@ -135,6 +136,30 @@ export function RoomIconPickerModal({
   const [isSearching, setIsSearching] = useState(false);
   const [isCategoryLoading, setIsCategoryLoading] = useState(false);
   const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
+  /**
+   * The icons a category wears, which this sheet never offers.
+   *
+   * A room or a team wearing a category's icon reads as that category on
+   * every card that draws both (utils/categoryIcons). The dealt pool and
+   * the name generator already keep them off a room; this is the third
+   * way — the host's own tap — and it is filtered at the one place every
+   * grid reads (`visible`) rather than in each fetch, so search, the
+   * category tabs, the suggestions and the recents all agree.
+   */
+  const [categoryIconSlugs, setCategoryIconSlugs] = useState<ReadonlySet<string>>(() => new Set());
+  useEffect(() => {
+    let live = true;
+    void fetchCategoryIconSlugs().then((slugs) => {
+      if (live) setCategoryIconSlugs(slugs);
+    });
+    return () => {
+      live = false;
+    };
+  }, []);
+  const visible = useCallback(
+    (icons: IconItem[]) => icons.filter((icon) => !isCategoryIcon(icon, categoryIconSlugs)),
+    [categoryIconSlugs],
+  );
   const [editableName, setEditableName] = useState(roomName);
   const [isGeneratingName, setIsGeneratingName] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -401,11 +426,11 @@ export function RoomIconPickerModal({
     setSearchResults([]);
   };
 
-  // Determine which icons to display
+  // Determine which icons to display — never one a category wears.
   const getDisplayIcons = () => {
-    if (searchQuery.trim()) return searchResults;
-    if (selectedCategory !== "all") return categoryIcons;
-    return suggestedIcons;
+    if (searchQuery.trim()) return visible(searchResults);
+    if (selectedCategory !== "all") return visible(categoryIcons);
+    return visible(suggestedIcons);
   };
 
   const getDisplayLoading = () => {
@@ -416,6 +441,7 @@ export function RoomIconPickerModal({
 
   const displayIcons = getDisplayIcons();
   const isDisplayLoading = getDisplayLoading();
+  const visibleRecentIcons = visible(recentIcons);
 
   if (!isOpen) return null;
 
@@ -566,7 +592,7 @@ export function RoomIconPickerModal({
             <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full">
               <div className="p-4 space-y-4">
               {/* Recent icons section - only show if there are recent icons and not searching */}
-              {!searchQuery.trim() && selectedCategory === "all" && recentIcons.length > 0 && (
+              {!searchQuery.trim() && selectedCategory === "all" && visibleRecentIcons.length > 0 && (
                 <>
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-medium text-muted-foreground">
@@ -575,7 +601,7 @@ export function RoomIconPickerModal({
                   </div>
                   
                   <div className="grid grid-cols-4 gap-3">
-                    {recentIcons.slice(0, 4).map((icon) => (
+                    {visibleRecentIcons.slice(0, 4).map((icon) => (
                       <button
                         key={icon.id}
                         type="button"

@@ -361,3 +361,12 @@ jobs:
           psql -h localhost -p 5432 -U postgres \
             -v ON_ERROR_STOP=1 -f supabase/tests/18-public-once.sql
 
+      # A room never wears a category's icon: the trigger that undresses one
+      # on insert and on update, executed against the real table.
+      - name: Assert a room never wears a category's icon
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -p 5432 -U postgres \
+            -v ON_ERROR_STOP=1 -f supabase/tests/20-room-icons.sql
+

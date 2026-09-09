@@ -4,6 +4,7 @@ import { isRoomStale } from "@/utils/roomStale";
 import { isPublicRoomOver } from "@/utils/publicRoomOver";
 import { t as tStandalone } from "@/utils/standaloneTranslation";
 import { supabase } from "@/integrations/supabase/client";
+import { roomIconOrNull } from "@/utils/categoryIcons";
 import { roomApprovalFields, roomVisibilityFields } from "@/utils/roomVisibility";
 import type { Json } from "@/integrations/supabase/types";
 import { useAuth } from "./AuthContext";
@@ -1396,11 +1397,14 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           .invoke('generate-room-name', {
             body: { language: readAppLanguage() },
           })
-          .then(({ data, error: nameError }) => {
+          .then(async ({ data, error: nameError }) => {
             if (!nameError && data?.name) {
+              // Never a category's icon (utils/categoryIcons): the namer
+              // matches the creature's word, and "astronaut" is Astronomy's.
+              const roomIcon = await roomIconOrNull(data.icon_url);
               return supabase
                 .from("game_rooms")
-                .update({ room_name: data.name, room_icon: data.icon_url || null })
+                .update({ room_name: data.name, room_icon: roomIcon })
                 .eq("id", createdRoomId);
             }
           })

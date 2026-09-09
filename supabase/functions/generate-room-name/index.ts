@@ -118,10 +118,42 @@ function validateName(name: string, language: LangCode): boolean {
   return true;
 }
 
-// Search for icons matching keywords - prioritizes exact matches
+/**
+ * The icons a room may NOT wear: every one a category wears, plus the
+ * mystery box every undecided round wears. A room wearing Astronomy's
+ * astronaut reads as Astronomy on the card that draws both (owner: "we
+ * shouldn't use icons on rooms if we use that icon in our category
+ * library"). The client keeps the same list in src/utils/categoryIcons.ts,
+ * and the strip_category_room_icon trigger on game_rooms is the same rule
+ * in the database.
+ */
+const RESERVED_CATEGORY_ICON_SLUGS = ['mystery-box'];
+
+async function fetchCategoryIconSlugs(supabase: SupabaseClient): Promise<Set<string>> {
+  const slugs = new Set<string>(RESERVED_CATEGORY_ICON_SLUGS);
+  const { data, error } = await supabase.from('categories').select('icon_slug, icon');
+  if (!error && data) {
+    for (const c of data as Array<{ icon_slug: string | null; icon: string | null }>) {
+      if (c.icon_slug) slugs.add(String(c.icon_slug));
+      if (c.icon) slugs.add(String(c.icon));
+    }
+  }
+  return slugs;
+}
+
+/** One of the matches a room may wear, at random, or null when none may be. */
+function pickWearable(rows: IconRow[] | null | undefined, categoryIcons: Set<string>): IconRow | null {
+  const wearable = (rows ?? []).filter((r) => r.icon_url && !categoryIcons.has(r.slug));
+  if (wearable.length === 0) return null;
+  return wearable[Math.floor(Math.random() * wearable.length)];
+}
+
+// Search for icons matching keywords - prioritizes exact matches. Never a
+// category's icon: "astronaut" is a creature here and Astronomy's face there.
 async function searchIconByKeyword(
   supabase: SupabaseClient,
-  keyword: string
+  keyword: string,
+  categoryIcons: Set<string>,
 ): Promise<string | null> {
   const normalizedKeyword = keyword.toLowerCase().trim();
   
@@ -132,11 +164,10 @@ async function searchIconByKeyword(
     .ilike('title', normalizedKeyword)
     .limit(5);
   
-  if (!exactError && exactMatches && exactMatches.length > 0) {
-    const matches = exactMatches as IconRow[];
-    const randomMatch = matches[Math.floor(Math.random() * matches.length)];
-    console.log(`Found icon by exact title: "${randomMatch.slug}" for keyword "${keyword}"`);
-    return randomMatch.icon_url;
+  const exact = exactError ? null : pickWearable(exactMatches as IconRow[], categoryIcons);
+  if (exact) {
+    console.log(`Found icon by exact title: "${exact.slug}" for keyword "${keyword}"`);
+    return exact.icon_url;
   }
   
   const { data: prefixMatches, error: prefixError } = await supabase
@@ -146,11 +177,10 @@ async function searchIconByKeyword(
     .ilike('title', `${normalizedKeyword}%`)
     .limit(10);
   
-  if (!prefixError && prefixMatches && prefixMatches.length > 0) {
-    const matches = prefixMatches as IconRow[];
-    const randomMatch = matches[Math.floor(Math.random() * matches.length)];
-    console.log(`Found icon by prefix: "${randomMatch.slug}" for keyword "${keyword}"`);
-    return randomMatch.icon_url;
+  const prefix = prefixError ? null : pickWearable(prefixMatches as IconRow[], categoryIcons);
+  if (prefix) {
+    console.log(`Found icon by prefix: "${prefix.slug}" for keyword "${keyword}"`);
+    return prefix.icon_url;
   }
   
   const { data: titleMatches, error: titleError } = await supabase
@@ -160,11 +190,10 @@ async function searchIconByKeyword(
     .ilike('title', `%${normalizedKeyword}%`)
     .limit(10);
   
-  if (!titleError && titleMatches && titleMatches.length > 0) {
-    const matches = titleMatches as IconRow[];
-    const randomMatch = matches[Math.floor(Math.random() * matches.length)];
-    console.log(`Found icon by title: "${randomMatch.slug}" for keyword "${keyword}"`);
-    return randomMatch.icon_url;
+  const title = titleError ? null : pickWearable(titleMatches as IconRow[], categoryIcons);
+  if (title) {
+    console.log(`Found icon by title: "${title.slug}" for keyword "${keyword}"`);
+    return title.icon_url;
   }
   
   const { data: tagMatches, error: tagError } = await supabase
@@ -174,30 +203,30 @@ async function searchIconByKeyword(
     .contains('tags', [normalizedKeyword])
     .limit(10);
   
-  if (!tagError && tagMatches && tagMatches.length > 0) {
-    const matches = tagMatches as IconRow[];
-    const randomMatch = matches[Math.floor(Math.random() * matches.length)];
-    console.log(`Found icon by tag: "${randomMatch.slug}" for keyword "${keyword}"`);
-    return randomMatch.icon_url;
+  const tag = tagError ? null : pickWearable(tagMatches as IconRow[], categoryIcons);
+  if (tag) {
+    console.log(`Found icon by tag: "${tag.slug}" for keyword "${keyword}"`);
+    return tag.icon_url;
   }
   
   console.log(`No icon found for keyword "${keyword}"`);
   return null;
 }
 
-// Get random icon as ultimate fallback
-async function getRandomIcon(supabase: SupabaseClient): Promise<string | null> {
-  const { data: randomIcon, error } = await supabase
+// Get random icon as ultimate fallback — a handful, so one is left after
+// the category strike.
+async function getRandomIcon(supabase: SupabaseClient, categoryIcons: Set<string>): Promise<string | null> {
+  const { data: randomIcons, error } = await supabase
     .from('icon_library')
     .select('slug, icon_url')
     .not('icon_url', 'is', null)
     .order('random()')
-    .limit(1);
+    .limit(10);
   
-  if (!error && randomIcon && randomIcon.length > 0) {
-    const icons = randomIcon as IconRow[];
-    console.log(`Using random fallback icon: ${icons[0].slug}`);
-    return icons[0].icon_url;
+  const pick = error ? null : pickWearable(randomIcons as IconRow[], categoryIcons);
+  if (pick) {
+    console.log(`Using random fallback icon: ${pick.slug}`);
+    return pick.icon_url;
   }
   
   return null;
@@ -228,9 +257,12 @@ serve(async (req) => {
     }
 
     let selectedIconUrl: string | null = null;
+    const categoryIcons = await fetchCategoryIconSlugs(supabase);
 
     // If specific icon requested, find it by slug and return with themed name
-    if (iconSlug) {
+    // — unless a category wears it, in which case the name comes without it
+    // and the room is dealt a face like any room with none.
+    if (iconSlug && !categoryIcons.has(iconSlug)) {
       const { data: specificIcon, error: specificError } = await supabase
         .from('icon_library')
         .select('slug, title, icon_url')
@@ -256,9 +288,9 @@ serve(async (req) => {
     if (!validateName(name, language)) {
       console.error(`Invalid generated name: ${name}`);
       const fallback = generateThemedRoomName(language);
-      selectedIconUrl = await searchIconByKeyword(supabase, fallback.iconKeyword);
+      selectedIconUrl = await searchIconByKeyword(supabase, fallback.iconKeyword, categoryIcons);
       if (!selectedIconUrl) {
-        selectedIconUrl = await getRandomIcon(supabase);
+        selectedIconUrl = await getRandomIcon(supabase, categoryIcons);
       }
       return new Response(
         JSON.stringify({ name: fallback.name, icon_url: selectedIconUrl }),
@@ -267,10 +299,10 @@ serve(async (req) => {
     }
 
     // Search for matching icon based on keyword
-    selectedIconUrl = await searchIconByKeyword(supabase, iconKeyword);
+    selectedIconUrl = await searchIconByKeyword(supabase, iconKeyword, categoryIcons);
     
     if (!selectedIconUrl) {
-      selectedIconUrl = await getRandomIcon(supabase);
+      selectedIconUrl = await getRandomIcon(supabase, categoryIcons);
     }
 
     console.log(`Final result: name="${name}", icon_url="${selectedIconUrl?.substring(0, 50)}..."`);
