@@ -74,9 +74,12 @@ describe("what a card says it costs and who it seats", () => {
     expect(row![1], mode).toMatch(/^(10|[0-9])(-(10|[0-9]))?$/);
   });
 
-  it("prices every mode but My Trivias, which is your own questions", () => {
+  it("prices every mode but My Trivias (silent) and Words (says Free); Guess at its own stake", () => {
+    // guessStake.test pins the Guess and Words rows and the Free badge.
     expect(meta).toMatch(/mytrivias: \{ players: "1-10", price: null \}/);
-    for (const mode of GAME_CHOICES.filter((m) => m !== "mytrivias")) {
+    expect(meta).toMatch(/guess: \{ players: "1", price: REWARDS\.GUESS_STAKE \}/);
+    expect(meta).toMatch(/words: \{ players: "1-2", price: 0 \}/);
+    for (const mode of GAME_CHOICES.filter((m) => !["mytrivias", "guess", "words"].includes(m))) {
       expect(meta, mode).toMatch(new RegExp(`${mode}: \\{ players: "[^"]+", price: REWARDS\\.GAME_STAKE \\}`));
     }
   });

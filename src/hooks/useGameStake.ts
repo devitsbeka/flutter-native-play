@@ -14,6 +14,13 @@ export interface GameStakeResult {
    * Returns what actually moved, signed.
    */
   settleGame: (outcome: GameOutcome, matchId?: string) => Promise<number>;
+  /**
+   * Settle a solo picture game — the Guess card's — at its own stake:
+   * REWARDS.GUESS_STAKE in, the same out on a pass, off on a fail.
+   * `settle_guess_game` decides the amount; the run's id keeps a second
+   * call from moving anything.
+   */
+  settleGuessGame: (outcome: GameOutcome, runId: string) => Promise<number>;
   winAmount: number;
   drawAmount: number;
   netWinProfit: number;
@@ -122,11 +129,51 @@ export function useGameStake(): GameStakeResult {
     [user, setProfileLocal, settleLocally],
   );
 
+  const settleGuessGame = useCallback(
+    async (outcome: GameOutcome, runId: string): Promise<number> => {
+      if (!user) return 0;
+      const client = supabase as unknown as {
+        rpc: (fn: string, args: Record<string, unknown>) => Promise<{
+          data: SettlementResponse | null;
+          error: { message: string; code?: string } | null;
+        }>;
+      };
+      try {
+        const { data, error } = await client.rpc("settle_guess_game", {
+          p_outcome: outcome,
+          p_reference: runId,
+        });
+        if (error) {
+          // The migration has not reached this project yet: settle at the
+          // card's own stake the old way rather than not at all.
+          const missing = error.code === "PGRST202" || /settle_guess_game/i.test(error.message);
+          if (!missing) {
+            console.error("[useGameStake] settle_guess_game failed:", error);
+            return 0;
+          }
+          if (outcome === "win") return (await addCoins(REWARDS.GUESS_STAKE, "stake_win")) ? REWARDS.GUESS_STAKE : 0;
+          if (outcome === "lose") {
+            const debit = Math.min(REWARDS.GUESS_STAKE, Math.max(0, Math.floor(coins)));
+            return debit > 0 && (await spendCoins(debit)) ? -debit : 0;
+          }
+          return 0;
+        }
+        if (typeof data?.coins === "number") setProfileLocal({ coins: data.coins });
+        return typeof data?.applied === "number" ? data.applied : 0;
+      } catch (err) {
+        console.error("[useGameStake] settle_guess_game threw:", err);
+        return 0;
+      }
+    },
+    [user, setProfileLocal, addCoins, spendCoins, coins],
+  );
+
   return {
     canPlay,
     hasEnoughCoins,
     stakeAmount,
     settleGame,
+    settleGuessGame,
     winAmount,
     drawAmount,
     netWinProfit,

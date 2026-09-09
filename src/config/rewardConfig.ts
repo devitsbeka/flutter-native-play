@@ -15,6 +15,11 @@ export const REWARDS = {
   // ===== GAME STAKE SYSTEM =====
   GAME_STAKE: 500,           // Entry fee per game (1 gem value)
   GAME_WIN_REWARD: 500,      // Winner gets +500 (post-game)
+  // A solo picture game (the Guess card): 200 to play, +200 for a pass,
+  // -200 for a fail. Decided by settle_guess_game server-side; this is the
+  // number the card prints (owner: "guess game cost should be 200 instead
+  // 500, player plays solo and wins +200 if wins, -200 if looses").
+  GUESS_STAKE: 200,
   GAME_DRAW_REFUND: 0,       // No coin change on draw
   GAME_LOSE_REWARD: 0,       // Loser already paid stake
 

@@ -19,6 +19,7 @@ export function NotEnoughStakeModal({
   isOpen,
   onClose,
   onDailyRewards,
+  stake,
 }: {
   isOpen: boolean;
   onClose: () => void;
@@ -27,12 +28,15 @@ export function NotEnoughStakeModal({
    * own opener; the rest fall through to the home screen, which does.
    */
   onDailyRewards?: () => void;
+  /** The stake being asked for; the quick game's when not given. */
+  stake?: number;
 }) {
   const { t } = useLanguage();
   const { toast } = useToast();
   const navigate = useNavigate();
   const { coins, gems, exchangeGemsForCoins } = useCurrency();
-  const { stakeAmount } = useGameStake();
+  const { stakeAmount: quickStake } = useGameStake();
+  const stakeAmount = stake ?? quickStake;
 
   // A single atomic RPC — a spend-then-add pair could take the gems and never
   // deliver the coins.

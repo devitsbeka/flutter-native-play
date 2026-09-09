@@ -5404,6 +5404,10 @@ export type Database = {
         }
         Returns: number
       }
+      settle_guess_game: {
+        Args: { p_outcome: string; p_reference?: string }
+        Returns: Json
+      }
       settle_quick_game: {
         Args: { p_outcome: string; p_reference?: string }
         Returns: Json

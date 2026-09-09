@@ -91,6 +91,8 @@ import lockRender from "@/assets/play-chooser/lock-friends.png";
 import playersIcon from "@/assets/play-chooser/players.svg";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import { GAME_MODE_META } from "@/config/gameModeMeta";
+import { REWARDS } from "@/config/rewardConfig";
+import { NotEnoughStakeModal } from "@/components/home/NotEnoughStakeModal";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { markProgrammaticScroll } from "@/utils/scrollTapGuard";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
@@ -1533,7 +1535,15 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
    * opens, on that category. The tap IS the choice, so it arms Create the
    * way every other card's tap does.
    */
+  // The Guess card's stake is checked at the door, like the quick game's:
+  // a player short of it is offered the ways to cover it, not a game that
+  // cannot pay out (owner: "-200 if looses").
+  const [showGuessStake, setShowGuessStake] = useState(false);
   const pickGuessCategory = (cat: Category) => {
+    if (coins < REWARDS.GUESS_STAKE) {
+      setShowGuessStake(true);
+      return;
+    }
     // Straight into the round: a countdown, then questions.
     //
     // A solo picture game used to CREATE A ROOM to play one round in: a
@@ -1553,8 +1563,11 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     //
     // Playing a picture game WITH friends is still the Library's room,
     // which is where that belongs.
+    // `guessStake` is what the level page settles on: 200 in, +200 on a
+    // pass, -200 on a fail (settle_guess_game). A level reached from the
+    // library map carries no such flag and stays what it was.
     const level = getCategoryProgress(cat.category_id ?? cat.id) || 1;
-    handoff(`/play/${cat.category_id ?? cat.id}/${level}`, { state: { countdown: true } });
+    handoff(`/play/${cat.category_id ?? cat.id}/${level}`, { state: { countdown: true, guessStake: true } });
     onClose();
   };
 
@@ -2179,11 +2192,18 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                       asked. The head count has no such exception — a blank
                       corner beside neighbours that answer "how many?" reads
                       as an answer of none. */}
+                  {/* The same pill for a price and for "Free": a free mode
+                      (price 0) says the word where the others say the
+                      number, with no coin, so Words reads as free rather
+                      than as costing nothing (owner: "say free instead
+                      coins"). A mode priced null draws nothing here. */}
                   {price !== null && !busy && (
-                    <div aria-label={`${price} ${t("common.coins")}`} className="absolute left-[calc(16*var(--u))] top-[calc(16*var(--u))] z-20 flex items-center gap-[calc(5*var(--u))] rounded-[calc(24*var(--u))] border-[length:calc(3*var(--u))] border-solid border-white/65 bg-gradient-to-b from-[#fff8e8] to-[#ffdca6] px-[calc(11*var(--u))] py-[calc(2*var(--u))] shadow-[0px_calc(3*var(--u))_0px_0px_#d8b878,0px_calc(3*var(--u))_calc(9*var(--u))_0px_rgba(151,110,42,0.12)]">
-                      <img alt="" src={coinIcon} className="h-[calc(26*var(--u))] w-[calc(26*var(--u))] shrink-0 object-contain" />
+                    <div aria-label={price === 0 ? t("discover.free") : `${price} ${t("common.coins")}`} className="absolute left-[calc(16*var(--u))] top-[calc(16*var(--u))] z-20 flex items-center gap-[calc(5*var(--u))] rounded-[calc(24*var(--u))] border-[length:calc(3*var(--u))] border-solid border-white/65 bg-gradient-to-b from-[#fff8e8] to-[#ffdca6] px-[calc(11*var(--u))] py-[calc(2*var(--u))] shadow-[0px_calc(3*var(--u))_0px_0px_#d8b878,0px_calc(3*var(--u))_calc(9*var(--u))_0px_rgba(151,110,42,0.12)]">
+                      {price > 0 && (
+                        <img alt="" src={coinIcon} className="h-[calc(26*var(--u))] w-[calc(26*var(--u))] shrink-0 object-contain" />
+                      )}
                       <span className="whitespace-nowrap bg-gradient-to-b from-[#5c3d10] to-[#9a7434] bg-clip-text font-hero text-[calc(22*var(--u))] leading-[calc(32*var(--u))] tracking-[-0.18px] text-transparent">
-                        {formatCompactNumber(price)}
+                        {price === 0 ? t("discover.free") : formatCompactNumber(price)}
                       </span>
                     </div>
                   )}
@@ -2586,6 +2606,9 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* A Guess pick short of its 200: the ways to cover it. */}
+      <NotEnoughStakeModal isOpen={showGuessStake} onClose={() => setShowGuessStake(false)} stake={REWARDS.GUESS_STAKE} />
 
       {/* Deliberate crest choice — the same icon picker the lobby uses. */}
       {crestPickerFor && (

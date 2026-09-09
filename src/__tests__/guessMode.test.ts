@@ -53,8 +53,10 @@ describe("Guess replaced Random on the create screen", () => {
     // walk-in, and was left behind afterwards; the versus screen meant an
     // opponent, a stake and a reveal to sit through (owner: "no need to
     // show the versus game page here").
+    // ...and, since the Guess card got its own stake, the level is told it
+    // is a staked run (guessStake.test).
     expect(create).toMatch(
-      /const level = getCategoryProgress\(cat\.category_id \?\? cat\.id\) \|\| 1;\s*\n\s*handoff\(`\/play\/\$\{cat\.category_id \?\? cat\.id\}\/\$\{level\}`, \{ state: \{ countdown: true \} \}\);/,
+      /const level = getCategoryProgress\(cat\.category_id \?\? cat\.id\) \|\| 1;\s*\n\s*handoff\(`\/play\/\$\{cat\.category_id \?\? cat\.id\}\/\$\{level\}`, \{ state: \{ countdown: true, guessStake: true \} \}\);/,
     );
     expect(create).not.toMatch(/\/game\?category=/);
     expect(create).not.toMatch(/setPreLobby\("guess"\)/);

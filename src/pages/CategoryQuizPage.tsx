@@ -22,6 +22,7 @@ import { RegisterPromptModal } from "@/components/home/RegisterPromptModal";
 import { getGuestProgress } from "@/hooks/useGuestProgress";
 import { useMissions } from "@/hooks/useMissions";
 import { useCurrency } from "@/hooks/useCurrency";
+import { useGameStake } from "@/hooks/useGameStake";
 import { REWARDS } from "@/config/rewardConfig";
 import confetti from "canvas-confetti";
 import { calculateLevel } from "@/utils/levelCalculation";
@@ -159,6 +160,23 @@ export default function CategoryQuizPage() {
   const location = useLocation();
   const wantsCountdown = Boolean((location.state as { countdown?: boolean } | null)?.countdown);
   const [countdown, setCountdown] = useState<number | null>(wantsCountdown ? 3 : null);
+  /**
+   * The Guess card's stake.
+   *
+   * A level opened from the Guess card is a staked solo game: 200 in, +200
+   * on a pass, -200 on a fail (owner: "guess game cost should be 200 ...
+   * player plays solo and wins +200 if wins, -200 if looses"). The same
+   * level opened from the library map carries no flag and costs nothing,
+   * as it always has. The run's id is minted once here so the settlement
+   * cannot be applied twice for one game, however the results screen
+   * re-renders or the request retries.
+   */
+  const guessStake = Boolean((location.state as { guessStake?: boolean } | null)?.guessStake);
+  const guessRunId = useRef<string>(
+    typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `guess-${Date.now()}-${Math.random()}`,
+  );
+  const [guessDelta, setGuessDelta] = useState<number | null>(null);
+  const { settleGuessGame } = useGameStake();
   const { t } = useLanguage();
   const { user, profile } = useAuth();
   const { updateLevelProgress } = useCategoryProgress();
@@ -464,6 +482,13 @@ export default function CategoryQuizPage() {
       setSavedStars(result.stars);
       const earned = score * 10 + result.stars * 20;
       setPointsEarned(earned);
+
+      // A pass is a win at the Guess card's stake, a fail a loss. Settled
+      // once per run; what comes back is what actually moved.
+      if (guessStake) {
+        const applied = await settleGuessGame(result.stars >= 1 ? "win" : "lose", guessRunId.current);
+        setGuessDelta(applied);
+      }
 
       trackQuizCompleted({
         categoryId: categoryId!,
@@ -1232,6 +1257,24 @@ export default function CategoryQuizPage() {
               </motion.p>
             )}
             
+            {/* The Guess card's stake, as it actually moved: +200 on a
+                pass, -200 on a fail, nothing when the server declined
+                (a daily ceiling, an empty balance). */}
+            {guessStake && !isSaving && guessDelta !== null && guessDelta !== 0 && (
+              <motion.p
+                initial={{ scale: 0, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                transition={{ delay: 0.4, type: "spring" }}
+                className={`mb-3 flex items-center justify-center gap-1.5 text-lg font-bold ${guessDelta > 0 ? "text-emerald-600" : "text-rose-600"}`}
+              >
+                {guessDelta > 0 ? `+${guessDelta}` : guessDelta}
+                <img src={coinIcon} alt="" className="w-5 h-5 inline" />
+                <span className="text-sm font-semibold text-muted-foreground">
+                  {guessDelta > 0 ? t("extra.quizStakeWon") : t("extra.quizStakeLost")}
+                </span>
+              </motion.p>
+            )}
+
             {/* Inline Level-Up Banner */}
             {didLevelUp && !isSaving && (
               <motion.div
