@@ -45,7 +45,7 @@ Deno.serve(async (req: Request) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabase = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
-    const { kind, friendshipId, attemptId, roomId } = await req.json().catch(() => ({}));
+    const { kind, friendshipId, attemptId, roomId, gameId } = await req.json().catch(() => ({}));
 
     // ---- Who is asking (required for the friend events) -------------------
     const readCaller = async (): Promise<string | null> => {
@@ -213,6 +213,94 @@ Deno.serve(async (req: Request) => {
       person = { name: String(params.name), avatarUrl: caller?.avatar_url };
       route = `/team?join=${encodeURIComponent(room.room_code)}`;
       detail = "";
+    } else if (kind === "room_round_settled") {
+      // A private room's round has finished for everyone.
+      //
+      // Those rooms are played at different times, so the people who played
+      // first are long gone by the time the last one finishes — and the
+      // round only pays out once everybody has. Without this they would
+      // learn they won by noticing their balance had changed.
+      //
+      // Fans out, unlike every branch above: the recipients are everybody
+      // in the room except whoever's device did the settling, since they
+      // are looking at the result already. It therefore claims and sends
+      // here rather than falling through to the single-recipient tail.
+      if (!roomId || typeof roomId !== "string" || !gameId || typeof gameId !== "string") {
+        return json({ error: "roomId and gameId are required" }, 400);
+      }
+      const callerId = await readCaller();
+      if (!callerId) return json({ error: "Authorization required" }, 401);
+
+      const { data: room } = await supabase
+        .from("game_rooms")
+        .select("id, room_code, room_name")
+        .eq("id", roomId)
+        .maybeSingle();
+      if (!room) return json({ error: "Room not found" }, 404);
+
+      const { data: membership } = await supabase
+        .from("room_participants")
+        .select("id")
+        .eq("room_id", room.id)
+        .eq("user_id", callerId)
+        .maybeSingle();
+      if (!membership) return json({ error: "Not in this room" }, 403);
+
+      // Only for a round that really did settle. The client asks for this
+      // right after settle_room_round returns, and `stakes_applied` is what
+      // that function sets when it claims the round — so this is the server
+      // checking the claim rather than believing the caller.
+      const { data: game } = await supabase
+        .from("room_games")
+        .select("id, stakes_applied")
+        .eq("id", gameId)
+        .eq("room_id", room.id)
+        .maybeSingle();
+      if (!game) return json({ error: "Round not found" }, 404);
+      if (!game.stakes_applied) return json({ sent: 0, skipped: "not_settled" });
+
+      const { data: seats } = await supabase
+        .from("room_participants")
+        .select("user_id, status")
+        .eq("room_id", room.id);
+
+      // An invitation nobody accepted played nothing and is owed nothing.
+      const recipients = (seats ?? [])
+        .filter((s) => s.user_id !== callerId && String(s.status) !== "invited")
+        .map((s) => s.user_id as string);
+      if (recipients.length === 0) return json({ sent: 0, skipped: "nobody_away" });
+
+      const roomLabel = room.room_name?.trim() || room.room_code;
+      const settledRoute = `/team?join=${encodeURIComponent(room.room_code)}`;
+      let sent = 0;
+      let failed = 0;
+      for (const userId of recipients) {
+        // One per player per round, however many devices reach the results
+        // screen and ask: the unique (kind, detail) index is the claim.
+        const { error: claimError } = await supabase
+          .from("push_log")
+          .insert({ user_id: userId, kind: "room_round_settled", detail: `${gameId}:${userId}` });
+        if (claimError) continue; // 23505 = somebody else already told them
+
+        const { data: seat } = await supabase
+          .from("profiles")
+          .select("preferred_language")
+          .eq("user_id", userId)
+          .maybeSingle();
+
+        const seatMsg = pushMessage("room_round_settled", seat?.preferred_language, { room: roomLabel });
+        const seatResult = await sendToUsers(
+          supabase,
+          [userId],
+          seatMsg.title,
+          seatMsg.body,
+          { route: settledRoute, notification_type: "room_round_settled" },
+          PUSH_META.room_round_settled.icon,
+        );
+        sent += seatResult.sent;
+        failed += seatResult.failed;
+      }
+      return json({ sent, failed });
     } else if (kind === "team_poke") {
       // A teammate calling the player on the spot in a Trivia Battle: the
       // clock is running, the spotlight is not answering, and the team is

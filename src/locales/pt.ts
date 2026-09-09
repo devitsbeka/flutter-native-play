@@ -3053,6 +3053,7 @@ export const pt: KaTranslations = {
     timeExpired: "O tempo acabou!",
     answerWas: "Resposta: {answer}",
     nextQuestionSoon: "Próxima pergunta em breve...",
+    roundWaitingForPlayers: "Faltam {count} para jogar — as recompensas chegam quando todos jogarem",
     tvQuiz: "Quiz de TV",
     tvLeaderboard: "Ranking",
     tvRandom: "Aleatório",

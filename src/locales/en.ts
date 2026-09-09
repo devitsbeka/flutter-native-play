@@ -3449,6 +3449,7 @@ export const en: KaTranslations = {
     timeExpired: "Time expired!",
     answerWas: "Answer: {answer}",
     nextQuestionSoon: "Next question soon...",
+    roundWaitingForPlayers: "Waiting for {count} more to play — rewards land when everyone has",
     // TVIdleScreen
     tvQuiz: "TV Quiz",
     tvLeaderboard: "Leaderboard",
