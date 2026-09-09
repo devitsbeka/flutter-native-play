@@ -256,7 +256,10 @@ describe("the room name in the lobby", () => {
   it("keeps the host's rename control with it", () => {
     // Tapping the name is the host's way to rename; the palette is gone —
     // the background is the game's own scene now, not a picked gradient.
-    expect(lobby).toMatch(/onRename=\{isHost \? \(\) => setShowIconPicker\(true\) : undefined\}/);
+    // The pencil is the host's, and closes once a public room is
+    // created — see publishedRoomIsSettled.test.ts.
+    expect(lobby).toMatch(/onRename=\{canRename \? \(\) => setShowIconPicker\(true\) : undefined\}/);
+    expect(lobby).toMatch(/const canRename = isHost && !publishedRoom;/);
     expect(lobby).not.toMatch(/onClick=\{\(\) => setShowGradientPicker\(true\)\}/);
   });
 

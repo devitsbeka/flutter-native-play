@@ -65,6 +65,25 @@ describe("what a settled public room will not let the host do", () => {
     expect(lobby).toMatch(/: isHost && !rulesLocked\n/);
     expect(lobby).toMatch(/canEdit=\{isHost && !rulesLocked\}/);
   });
+
+  it("or rename it, or change its face", () => {
+    // The card somebody tapped is the room they get. On publishedRoom
+    // rather than rulesLocked: a live match may still be renamed, which
+    // was never part of what a stranger was shown before joining.
+    expect(lobby).toMatch(/const canRename = isHost && !publishedRoom;/);
+    expect(lobby).toMatch(/onRename=\{canRename \? \(\) => setShowIconPicker\(true\) : undefined\}/);
+  });
+
+  it("and there is no other way in — every room write is behind one of these", () => {
+    // The picker writes the category (handleSelectCategory / Random /
+    // Trivia / AddToQueue) and it is unreachable while locked; the rename
+    // sheet writes the name and icon and is behind canRename; visibility
+    // and approval are the two that stay open on purpose. The gradient
+    // picker is mounted but nothing opens it.
+    expect(lobby).not.toMatch(/setShowGradientPicker\(true\)/);
+    const writes = (lobby.match(/\.from\("game_rooms"\)\s*\n\s*\.update\(/g) ?? []).length;
+    expect(writes, "a new game_rooms write needs a lock decision").toBe(9);
+  });
 });
 
 describe("what it still lets the host do", () => {

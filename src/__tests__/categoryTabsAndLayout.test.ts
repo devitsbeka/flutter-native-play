@@ -278,7 +278,10 @@ describe("the room title in the lobby header", () => {
   });
 
   it("is the host's way in to rename, and a guest's plain title", () => {
-    expect(lobby).toMatch(/onRename=\{isHost \? \(\) => setShowIconPicker\(true\) : undefined\}/);
+    // The pencil is the host's, and closes once a public room is
+    // created — see publishedRoomIsSettled.test.ts.
+    expect(lobby).toMatch(/onRename=\{canRename \? \(\) => setShowIconPicker\(true\) : undefined\}/);
+    expect(lobby).toMatch(/const canRename = isHost && !publishedRoom;/);
   });
 
   it("does not stretch the back button itself", () => {

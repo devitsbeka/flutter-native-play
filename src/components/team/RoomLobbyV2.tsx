@@ -1165,6 +1165,19 @@ export function RoomLobbyV2() {
    */
   const publishedRoom = isPublicRoom && roomCreated;
   const rulesLocked = matchLive || publishedRoom;
+  /**
+   * The pencil settles with the rest of it.
+   *
+   * A room people are picking off a list should not rename or re-face
+   * itself under them either — the card they tapped is the room they get
+   * (owner: "we let hosts switch public/private, only that option").
+   *
+   * On `publishedRoom` rather than `rulesLocked`, so a live match can still
+   * be renamed: a name changing mid-round is nothing anyone was shown
+   * before they joined, and taking that away would be a change nobody
+   * asked for.
+   */
+  const canRename = isHost && !publishedRoom;
   // The + that asks to be friends, on everyone in the room who is not one
   // yet and is not you (owner's ask: people become friends in the lobby).
   // If they have already asked YOU, the same tap accepts — sendFriendRequest
@@ -1360,7 +1373,7 @@ export function RoomLobbyV2() {
       sceneArt={classicLobbyScene(currentRoom)}
       roomName={roomName}
       icon={roomFace}
-      onRename={isHost ? () => setShowIconPicker(true) : undefined}
+      onRename={canRename ? () => setShowIconPicker(true) : undefined}
       onBack={handleExitRoom}
       unreadCount={unreadCount}
       onBell={() => navigate("/notifications")}
