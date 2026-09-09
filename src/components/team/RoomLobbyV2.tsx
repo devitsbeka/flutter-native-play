@@ -1523,18 +1523,25 @@ export function RoomLobbyV2() {
       /* A guest's way out, above the ping. The only leave was behind their
          own row on the Players tab and the back arrow, neither of which
          reads as "leave this room" (owner's ask). The host keeps the
-         delete in the menu; this is for the people who were invited in. */
+         delete in the menu; this is for the people who were invited in.
+
+         A line, not a slab. It wore a white chunky button first, and two
+         stacked slabs made the way out as loud as the way in (owner: "leave
+         room do not need white button, show as icon + text, without white
+         button but make sure it is visible"). So: the icon and the words in
+         the footer's own dark ink, bold, on a 44px tap target — the same
+         weight as the caption under the button, and nothing to compete
+         with the violet slab below it. */
       footerExtra={
         !isHost ? (
-          <ChunkyButton
-            variant="whitePurple"
-            size="md"
-            className="mb-2 w-full"
+          <button
+            type="button"
             onClick={() => setShowLeaveConfirm(true)}
+            className="mx-auto mb-1 flex min-h-[44px] items-center justify-center gap-2 px-4 font-display text-[17px] font-bold leading-[22px] text-[#402666] transition-opacity active:opacity-60"
           >
-            <LogOut className="mr-2 h-4 w-4" />
+            <LogOut className="h-[18px] w-[18px] shrink-0" strokeWidth={2.4} />
             {t("team.leaveRoom")}
-          </ChunkyButton>
+          </button>
         ) : null
       }
       start={

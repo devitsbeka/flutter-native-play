@@ -20,12 +20,18 @@ const lobby = read("src/components/team/RoomLobbyV2.tsx");
 const universal = read("src/components/lobby/UniversalLobby.tsx");
 
 describe("a guest can leave from the lobby footer", () => {
-  it("a Leave button above the footer's own button, for guests only", () => {
+  it("a Leave line above the footer's own button, for guests only", () => {
     const extra = lobby.slice(lobby.indexOf("footerExtra={"), lobby.indexOf("start={", lobby.indexOf("footerExtra={")));
     expect(extra).toMatch(/!isHost \? \(/);
     expect(extra).toMatch(/onClick=\{\(\) => setShowLeaveConfirm\(true\)\}/);
     expect(extra).toMatch(/\{t\("team\.leaveRoom"\)\}/);
-    expect(extra).toMatch(/<LogOut className="mr-2 h-4 w-4" \/>/);
+    expect(extra).toMatch(/<LogOut className="h-\[18px\] w-\[18px\] shrink-0" strokeWidth=\{2\.4\} \/>/);
+  });
+
+  it("as icon and words in the footer's dark ink, not a white slab (owner's ask), on a real tap target", () => {
+    const extra = lobby.slice(lobby.indexOf("footerExtra={"), lobby.indexOf("start={", lobby.indexOf("footerExtra={")));
+    expect(extra).not.toMatch(/<ChunkyButton/);
+    expect(extra).toMatch(/min-h-\[44px\][^"]*font-display text-\[17px\] font-bold[^"]*text-\[#402666\]/);
   });
 
   it("through the existing confirm, which still offers both ways out", () => {
