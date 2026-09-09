@@ -19,11 +19,17 @@ interface CurrencyExchangeModalProps {
   onClose: () => void;
 }
 
-// Canonical rate: 1 gem = 500 coins (rewardConfig.ts)
+// Canonical rates (rewardConfig.ts). A gem BUYS 500 coins; buying a gem back
+// costs 750. The spread is what stops the shop's coin bonus from being a gem
+// printer — see the note on GEM_TO_COINS_RATE. The preview below has to use
+// the same two numbers the server does, or the modal quotes a trade it will
+// not make.
 const COINS_PER_GEM = REWARDS.GEM_TO_COINS_RATE;
+const COINS_PER_GEM_SELL = REWARDS.COINS_PER_GEM_SELL_RATE;
 
-// Predefined exchange amounts
-const COIN_TO_GEM_PRESETS = [500, 1500, 2500, 5000];
+// Predefined exchange amounts. Multiples of the SELL rate, so a preset never
+// leaves a remainder the player did not ask to keep.
+const COIN_TO_GEM_PRESETS = [750, 1500, 3000, 7500];
 const GEM_TO_COIN_PRESETS = [1, 2, 5, 10];
 
 type ExchangeDirection = "coins-to-gems" | "gems-to-coins";
@@ -34,7 +40,7 @@ export function CurrencyExchangeModal({ isOpen, onClose }: CurrencyExchangeModal
   const { t } = useLanguage();
   
   const [direction, setDirection] = useState<ExchangeDirection>("coins-to-gems");
-  const [amount, setAmount] = useState(COINS_PER_GEM);
+  const [amount, setAmount] = useState(COINS_PER_GEM_SELL);
   const [isExchanging, setIsExchanging] = useState(false);
 
   const isCoinsToGems = direction === "coins-to-gems";
@@ -42,7 +48,9 @@ export function CurrencyExchangeModal({ isOpen, onClose }: CurrencyExchangeModal
   // Calculate exchange result
   const getExchangeResult = () => {
     if (isCoinsToGems) {
-      return Math.floor(amount / COINS_PER_GEM);
+      // Floors exactly as exchange_currency does: a partial gem is not a gem,
+      // and the server charges only for whole ones.
+      return Math.floor(amount / COINS_PER_GEM_SELL);
     } else {
       return amount * COINS_PER_GEM;
     }
@@ -57,7 +65,7 @@ export function CurrencyExchangeModal({ isOpen, onClose }: CurrencyExchangeModal
   const handleDirectionSwitch = () => {
     playSound("button-click");
     setDirection(prev => prev === "coins-to-gems" ? "gems-to-coins" : "coins-to-gems");
-    setAmount(isCoinsToGems ? 1 : COINS_PER_GEM);
+    setAmount(isCoinsToGems ? 1 : COINS_PER_GEM_SELL);
   };
 
   const handlePresetClick = (preset: number) => {
@@ -66,13 +74,13 @@ export function CurrencyExchangeModal({ isOpen, onClose }: CurrencyExchangeModal
   };
 
   const handleIncrement = () => {
-    const step = isCoinsToGems ? COINS_PER_GEM : 1;
+    const step = isCoinsToGems ? COINS_PER_GEM_SELL : 1;
     setAmount(prev => prev + step);
   };
 
   const handleDecrement = () => {
-    const step = isCoinsToGems ? COINS_PER_GEM : 1;
-    const min = isCoinsToGems ? COINS_PER_GEM : 1;
+    const step = isCoinsToGems ? COINS_PER_GEM_SELL : 1;
+    const min = isCoinsToGems ? COINS_PER_GEM_SELL : 1;
     setAmount(prev => Math.max(min, prev - step));
   };
 
@@ -246,9 +254,12 @@ export function CurrencyExchangeModal({ isOpen, onClose }: CurrencyExchangeModal
           </p>
         )}
         
+        {/* The minimum is the SELL rate — what a gem costs to buy back, not
+            what one buys. Quoting 500 here told a player 500 coins was enough
+            and the server then refused with "Need at least 750". */}
         {!hasValidResult && canAfford && (
           <p className="text-center text-xs text-muted-foreground">
-            {t("shop.minimumRequired").replace("{amount}", String(COINS_PER_GEM))}
+            {t("shop.minimumRequired").replace("{amount}", String(COINS_PER_GEM_SELL))}
           </p>
         )}
 

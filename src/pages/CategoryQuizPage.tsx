@@ -227,7 +227,7 @@ export default function CategoryQuizPage() {
   const { toast: showToast } = useToast();
   
   // Power-up state
-  const { powerUps, usePowerUp: consumePowerUp, addPowerUp } = useUserPowerUps();
+  const { powerUps, usePowerUp: consumePowerUp, awardPowerUp } = useUserPowerUps();
   const [earnPowerUpType, setEarnPowerUpType] = useState<PowerUpType | null>(null);
   const [hiddenAnswers, setHiddenAnswers] = useState<string[]>([]);
   const [usedPowerUpsThisQuestion, setUsedPowerUpsThisQuestion] = useState<Set<PowerUpType>>(new Set());
@@ -819,8 +819,10 @@ export default function CategoryQuizPage() {
     }
   }, [questions, currentQuestionIndex, isAnswered, usedPowerUpsThisQuestion, powerUps, consumePowerUp, hiddenAnswers, user]);
 
-  // Watch a rewarded ad to earn the missing power-up. addPowerUp persists to
-  // user_power_ups, so grant only when the ad actually rewarded — never fail open.
+  // Watch a rewarded ad to earn the missing power-up. The grant persists, so
+  // only ask for it when the ad actually rewarded — never fail open. The
+  // server caps this at MAX_ADS_PER_DAY through the 'ad_reward' row in
+  // power_up_grant_limits, because "I watched an ad" is the client's word.
   const handleWatchAdForPowerUp = useCallback(async () => {
     const type = earnPowerUpType;
     setEarnPowerUpType(null);
@@ -830,11 +832,11 @@ export default function CategoryQuizPage() {
       toast.error(t("modals.adFailed"));
       return;
     }
-    const ok = await addPowerUp(type, 1);
+    const ok = await awardPowerUp("ad_reward", type, 1);
     if (ok) {
       toast.success(`+1 ${POWER_UP_EARN_LABELS[type]}`);
     }
-  }, [earnPowerUpType, addPowerUp, t]);
+  }, [earnPowerUpType, awardPowerUp, t]);
 
   // Build power-ups for UI bar
   const powerUpsForUI = useMemo(() => {

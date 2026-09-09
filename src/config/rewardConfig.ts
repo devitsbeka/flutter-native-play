@@ -88,7 +88,23 @@ export const REWARDS = {
   AD_WATCH_EXTRA_SPINS: 2,   // Extra spins from ad
 
   // ===== GEM EXCHANGE =====
-  GEM_TO_COINS_RATE: 500,    // 1 gem = 500 coins
+  //
+  // Two rates, and the gap between them is deliberate.
+  //
+  // A gem BUYS 500 coins. Selling coins back costs 750 — you do not get the
+  // same rate in both directions, which is how every soft-currency economy
+  // has always worked and was the one thing this one was missing.
+  //
+  // Losslessly, at a flat 500 both ways, the shop's own coin bonus closed a
+  // loop: coins_15000 sells 15 000 coins for 24 gems, and 15 000 coins bought
+  // back 30. +6 gems a run, unbounded, and both halves were two taps apart in
+  // the shipped UI. Any coin bonus above 0% did it; the spread leaves room for
+  // up to 50% before it reopens, and the largest pack pays 25%.
+  //
+  // src/config/__tests__/shopValue.test.ts asserts that headroom, so a new
+  // coin pack cannot quietly reintroduce it.
+  GEM_TO_COINS_RATE: 500,      // what a gem buys
+  COINS_PER_GEM_SELL_RATE: 750, // what buying a gem back costs
 
   // ===== NEW PLAYER STARTING BALANCE =====
   // Mirrored by the DEFAULT on profiles.coins/gems, which is what actually

@@ -63,10 +63,10 @@ export default function PowerUps() {
   // Use consolidated shop data hook for faster loading
   const { data: shopData } = useShopPageData();
   
-  const { addPowerUp, refetch } = useUserPowerUps();
-  const { gems, coins, spendGems, spendCoins, canAffordCoins, addCoins, addGems } = useCurrency();
-  const { activateVip } = useVipStatus();
-  const { unlockFrame } = useAvatarFrames();
+  const { buyPowerUp, refetch } = useUserPowerUps();
+  const { gems, coins, spendCoins, canAffordCoins, purchaseShopItem } = useCurrency();
+  const { refresh: refreshVipStatus } = useVipStatus();
+  const { refetch: refetchFrames } = useAvatarFrames();
   const { playSound } = useSound();
   const { notify } = useNotificationModal();
   const { t } = useLanguage();
@@ -119,30 +119,27 @@ export default function PowerUps() {
     setIsPurchasing(`single_${powerType}`);
 
     try {
-      const spent = await spendCoins(price, {
-        productId: `single_${powerType}`,
-        productType: "powerup",
-        valueReceived: { [powerType]: 1 },
-      });
+      // The price the button showed is REWARDS.POWER_UP_PRICES; the price
+      // CHARGED is economy_config's, read server-side. The retry-once dance
+      // that used to be here existed because the coins were already gone by
+      // the time the grant was attempted — one transaction, so it cannot
+      // happen.
+      const bought = await buyPowerUp(powerType, 1);
+      await refetch();
 
-      if (spent) {
-        // Coins already spent — retry a failed grant once instead of silent loss
-        const granted =
-          (await addPowerUp(powerType, 1)) || (await addPowerUp(powerType, 1));
-        await refetch();
-        if (!granted) {
-          notify.error(t("shop.purchaseFailed"));
-          return;
-        }
-        playSound("reward");
-        trackPowerUpPurchased({
-          powerUpType: powerType,
-          quantity: 1,
-          currency: "coins",
-          price,
-          isBundle: false,
-        });
+      if (!bought) {
+        notify.error(t("shop.purchaseFailed"));
+        return;
       }
+
+      playSound("reward");
+      trackPowerUpPurchased({
+        powerUpType: powerType,
+        quantity: 1,
+        currency: "coins",
+        price,
+        isBundle: false,
+      });
     } catch (error) {
       console.error("Single power purchase failed:", error);
       notify.error(t("shop.purchaseFailed"));
@@ -178,79 +175,49 @@ export default function PowerUps() {
     setIsPurchasing(item.id);
 
     try {
-      // Build value received for transaction log
-      let valueReceived: { [key: string]: number | string } = {};
-      let productType = "powerup";
-      
-      if (item.value) {
-        valueReceived = { coins: item.value };
-        productType = "coins";
-      } else if (item.vipDuration) {
-        valueReceived = { vip_days: item.vipDuration };
-        productType = "vip";
-      } else if (item.frameId) {
-        valueReceived = { frame_id: item.frameId };
-        productType = "frame";
-      } else if (item.powerType && item.amount) {
-        valueReceived = { [item.powerType]: item.amount };
-      } else if (isBundleId(item.id)) {
-        valueReceived = bundleValueReceived(item.id);
-        productType = "bundle";
-      }
+      // ONE call. This used to be a debit followed by a separate grant —
+      // `spendGems(price)`, then `addCoins` / `activateVip` / `addPowerUp` /
+      // `unlockFrame` depending on what was bought — with the network in
+      // between and a `grantFailed` flag to cope with the half that could
+      // fail on its own.
+      //
+      // The half that mattered was the other one. Every grant call was
+      // reachable without the debit: `grant_vip_days` took a duration and
+      // nothing else, `credit_gameplay_reward('shop_grant', ...)` took an
+      // amount, and both were granted to `authenticated`. Skipping
+      // `spendGems` was the entire exploit, and no amount of retry logic on
+      // this side could have closed it.
+      //
+      // `purchase_shop_item` reads the price and the contents from
+      // `shop_catalog`, debits, grants and writes the receipt in one
+      // transaction. There is no longer a state where the gems are gone and
+      // the goods did not arrive, so there is nothing here to compensate for.
+      const result = await purchaseShopItem(item.id);
 
-      const spent = await spendGems(item.price, {
-        productId: item.id,
-        productType,
-        valueReceived,
-      });
-      if (!spent) {
-        setIsPurchasing(null);
-        return;
-      }
-
-      // Gems are already spent past this point — retry a failed power grant once
-      // rather than silently losing the purchase
-      const grantPowerUp = async (type: PowerUpType, amount: number): Promise<boolean> =>
-        (await addPowerUp(type, amount)) || (await addPowerUp(type, amount));
-
-      let grantFailed = false;
-
-      if (item.value) {
-        if (!(await addCoins(item.value, "shop_grant", item.id))) grantFailed = true;
-      } else if (item.vipDuration) {
-        await activateVip(item.vipDuration);
-      } else if (item.frameId) {
-        await unlockFrame(item.frameId);
-      } else if (item.powerType && item.amount) {
-        if (!(await grantPowerUp(item.powerType, item.amount))) grantFailed = true;
-        await refetch();
-      } else if (isBundleId(item.id)) {
-        const { powers, coins: coinAmount, gems: gemAmount = 0, vip } = getBundleContents(item.id);
-        for (const type of ALL_POWER_TYPES) {
-          if (!(await grantPowerUp(type, powers))) grantFailed = true;
-        }
-        if (coinAmount > 0) {
-          if (!(await addCoins(coinAmount, "shop_grant", item.id))) grantFailed = true;
-        }
-        if (gemAmount > 0) {
-          if (!(await addGems(gemAmount, "shop_grant", item.id))) grantFailed = true;
-        }
-        if (vip) {
-          await activateVip(vip);
-        }
-        await refetch();
-      }
-
-      if (grantFailed) {
+      if (!result) {
         notify.error(t("shop.purchaseFailed"));
         setIsPurchasing(null);
         return;
       }
 
+      // Only the caches the server just invalidated. Balances came back with
+      // the receipt and are already applied.
+      await refetch();
+      if (item.vipDuration) refreshVipStatus();
+      if (item.frameId) await refetchFrames();
+
       playSound("reward");
       trackShopItemPurchased({
         itemId: item.id,
-        productType,
+        productType: item.value
+          ? "coins"
+          : item.vipDuration
+            ? "vip"
+            : item.frameId
+              ? "frame"
+              : isBundleId(item.id)
+                ? "bundle"
+                : "powerup",
         currency: item.currency,
         price: item.price,
       });

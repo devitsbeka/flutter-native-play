@@ -130,6 +130,24 @@ jobs:
           psql -h localhost -p 5432 -U postgres \
             -v ON_ERROR_STOP=1 -f supabase/tests/03-pro-seats.sql
 
+      # The shop's purchase path. Three free-grant holes closed at once —
+      # grant_vip_days took a duration and nothing else, credit_gameplay_reward
+      # accepted the 'shop_grant' kind with a 2000-gems-a-day ceiling, and
+      # adjust_power_up took any positive delta — plus the coins/gems arbitrage
+      # that turned 24 gems into 30 through the exchange. All of it is "the
+      # grant works without the debit", which no amount of client code can
+      # assert; this executes both halves against a real Postgres.
+      #
+      # It also caught a 42702 in the new SQL itself: a RETURNS TABLE column
+      # named after a table column made an ON CONFLICT clause ambiguous, which
+      # CREATE FUNCTION accepts happily and only fails when called.
+      - name: Assert shop purchase and exchange rules
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -p 5432 -U postgres \
+            -f supabase/tests/18-shop-purchase.sql
+
       # Multi-round rooms: cumulative scoreboard totals must accumulate for
       # every participant (not just the host), exactly once per round —
       # complete_room_round's contract. The client-side version of this write

@@ -52,7 +52,7 @@ const SPIN_POWER_UP_TYPES: PowerUpType[] = ["5050", "freeze", "replace", "time-d
 export function useRewards() {
   const { user, profile, updateProfile } = useAuth();
   const { addCoins, addGems, addCurrency } = useCurrency();
-  const { addPowerUp } = useUserPowerUps();
+  const { awardPowerUp } = useUserPowerUps();
   const { isVip } = useVipStatus();
   const queryClient = useQueryClient();
 
@@ -119,9 +119,13 @@ export function useRewards() {
       } else if (result.type === "gems") {
         await addGems(result.value, "spin", result.label);
       } else if (result.type === "powerup") {
-        // Grant a random power-up (SPIN_REWARDS "powerup" segments were never granted)
+        // Grant a random power-up (SPIN_REWARDS "powerup" segments were never granted).
+        // Bounded server-side by the 'spin' row in power_up_grant_limits, the
+        // same way the coin and gem segments are bounded by
+        // currency_grant_limits — the segment is the client's to report, the
+        // ceiling is not.
         const type = SPIN_POWER_UP_TYPES[Math.floor(Math.random() * SPIN_POWER_UP_TYPES.length)];
-        await addPowerUp(type, Math.max(1, result.value));
+        await awardPowerUp("spin", type, Math.max(1, result.value));
       }
 
       await invalidateSpinInfo();

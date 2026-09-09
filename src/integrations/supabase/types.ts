@@ -4847,9 +4847,32 @@ export type Database = {
         Returns: undefined
       }
       ensure_admin_lifetime_pro: { Args: never; Returns: boolean }
+      claim_vip_frame: { Args: { p_frame_id: string }; Returns: boolean }
+      ensure_default_power_ups: {
+        Args: never
+        Returns: {
+          owned: number
+          power_type: string
+        }[]
+      }
       exchange_currency: {
         Args: { p_amount: number; p_direction: string }
         Returns: {
+          new_coins: number
+          new_gems: number
+        }[]
+      }
+      purchase_power_up: {
+        Args: { p_quantity?: number; p_type: string }
+        Returns: {
+          new_coins: number
+          owned: number
+        }[]
+      }
+      purchase_shop_item: {
+        Args: { p_item_id: string }
+        Returns: {
+          granted: Json
           new_coins: number
           new_gems: number
         }[]
@@ -4963,6 +4986,7 @@ export type Database = {
         }
       }
       grant_pro_seat: { Args: { p_holder_id: string }; Returns: Json }
+      grant_reward_power_up: { Args: { p_amount?: number; p_kind: string; p_type: string }; Returns: number }
       grant_vip_days: {
         Args: { p_duration: string }
         Returns: {

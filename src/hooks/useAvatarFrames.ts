@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/lib/toast";
@@ -117,6 +117,28 @@ export function useAvatarFrames() {
   const [equippedFrame, setEquippedFrame] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const fetchFrames = useCallback(async () => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase
+        .from("user_avatar_frames")
+        .select("*")
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+
+      const frames = new Set(data?.map((f) => f.frame_id) || []);
+      setUnlockedFrames(frames);
+
+      const equipped = data?.find((f) => f.is_equipped);
+      setEquippedFrame(equipped?.frame_id || null);
+    } catch (error) {
+      console.error("Error fetching avatar frames:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
   // Fetch user's unlocked frames
   useEffect(() => {
     if (!user) {
@@ -126,45 +148,33 @@ export function useAvatarFrames() {
       return;
     }
 
-    const fetchFrames = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("user_avatar_frames")
-          .select("*")
-          .eq("user_id", user.id);
-
-        if (error) throw error;
-
-        const frames = new Set(data?.map((f) => f.frame_id) || []);
-        setUnlockedFrames(frames);
-
-        const equipped = data?.find((f) => f.is_equipped);
-        setEquippedFrame(equipped?.frame_id || null);
-      } catch (error) {
-        console.error("Error fetching avatar frames:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchFrames();
-  }, [user]);
+  }, [user, fetchFrames]);
 
-  const unlockFrame = async (frameId: string): Promise<boolean> => {
+  /**
+   * Claim one of the three subscriber frames.
+   *
+   * Replaces `unlockFrame`, which INSERTed the row from the client against a
+   * matching "users can insert their own frames" policy — so every frame in
+   * the shop was free to anyone who called the table directly, and the gem
+   * debit beside it was decorative. Worse for these three: the component
+   * asked its OWN `isVip` before inserting, which is not a check.
+   *
+   * `claim_vip_frame` re-reads the subscription server-side and refuses
+   * anything that is not one of the three. Paid frames go through
+   * `purchase_shop_item`; leaderboard frames are written by the reward
+   * function under the service role.
+   */
+  const claimVipFrame = async (frameId: string): Promise<boolean> => {
     if (!user) return false;
 
     try {
-      const { error } = await supabase.from("user_avatar_frames").insert({
-        user_id: user.id,
-        frame_id: frameId,
-      });
-
+      const { error } = await supabase.rpc("claim_vip_frame", { p_frame_id: frameId });
       if (error) throw error;
-
-      setUnlockedFrames((prev) => new Set([...prev, frameId]));
+      await fetchFrames();
       return true;
     } catch (error) {
-      console.error("Error unlocking frame:", error);
+      console.error("Error claiming subscriber frame:", error);
       toast.error(tStandalone("extra.frameUnlockFailed"));
       return false;
     }
@@ -212,7 +222,8 @@ export function useAvatarFrames() {
     unlockedFrames,
     equippedFrame,
     loading,
-    unlockFrame,
+    refetch: fetchFrames,
+    claimVipFrame,
     equipFrame,
     isFrameUnlocked,
     getEquippedFrameData,

@@ -28,13 +28,16 @@ export type VipDuration = "day" | "2days" | "week" | "month" | "10days";
  * duration" rather than silently handing out the wrong amount of time.
  */
 
-export const VIP_PRICES: Record<VipDuration, number> = {
-  day: 3,
-  "2days": 0, // only ever granted by a deal, never sold on its own
-  week: 12,
-  month: 35,
-  "10days": 0,
-};
+/**
+ * VIP prices are REWARDS.VIP_PRICES in src/config/rewardConfig.ts, and on the
+ * server they are `shop_catalog`. There used to be a third table right here —
+ * `day: 3, week: 12, month: 35` — exported on this context as `prices`, read
+ * by nothing, and disagreeing with the shop by a factor of twenty.
+ *
+ * It is gone rather than corrected, for the reason utils/currency.ts was
+ * gutted rather than fixed: a price table nobody reads, sitting next to a
+ * price surface, is a table the next person reaches for.
+ */
 
 // Base benefits for all PRO users
 // VIP_BENEFITS uses translation keys - consumers should call t() on descriptions
@@ -81,7 +84,7 @@ interface VipContextType {
   subscription: VipSubscription | null;
   isVip: boolean;
   loading: boolean;
-  activateVip: (duration: VipDuration) => Promise<boolean>;
+  refresh: () => void;
   getDaysRemaining: () => number;
   getXpMultiplier: () => number;
   getMaxDailySpins: () => number;
@@ -90,7 +93,6 @@ interface VipContextType {
   tierBenefits: typeof VIP_BENEFITS_BY_TIER.pro;
   isProPlus: () => boolean;
   getDailyRewardMultiplier: () => number;
-  prices: typeof VIP_PRICES;
 }
 
 const VipContext = createContext<VipContextType | null>(null);
@@ -112,8 +114,8 @@ export function VipProvider({ children }: { children: ReactNode }) {
     }
   });
 
-  // activateVip lives outside the effect but needs to re-read the row after a
-  // first-time grant, when there is no local subscription to patch.
+  // `refresh` lives outside the effect but has to re-run the fetch the effect
+  // owns, so the effect publishes it here.
   const fetchVipStatusRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
@@ -206,41 +208,22 @@ export function VipProvider({ children }: { children: ReactNode }) {
     };
   }, [user]);
 
-  const activateVip = async (duration: VipDuration): Promise<boolean> => {
-    if (!user) return false;
-
-    try {
-      // The server owns the duration → days mapping and the stacking rule now.
-      // Passing a duration name rather than a computed expiry is the whole
-      // point: the old code sent an expires_at of its own choosing straight
-      // into the table, so the date was only ever as trustworthy as the
-      // client that picked it.
-      const { data, error } = await supabase.rpc("grant_vip_days", {
-        p_duration: duration,
-      });
-
-      if (error) throw error;
-
-      const granted = Array.isArray(data) ? data[0] : data;
-      if (!granted?.expires_at) throw new Error("No expiry returned from grant_vip_days");
-
-      setSubscription((prev) =>
-        prev
-          ? { ...prev, expires_at: granted.expires_at, vip_tier: granted.vip_tier }
-          : prev,
-      );
-      // A first-time grant has no row in state yet; re-read so the new row,
-      // and the id the rest of the app expects, arrive intact.
-      if (!subscription) fetchVipStatusRef.current?.();
-
-      setIsVip(true);
-      toast.success(t("extra.vipActivatedToast"));
-      return true;
-    } catch (error) {
-      console.error("Error activating VIP:", error);
-      toast.error(t("extra.vipActivationFailed"));
-      return false;
-    }
+  /**
+   * Re-read the subscription row.
+   *
+   * Replaces `activateVip`, which called `grant_vip_days` directly. That
+   * function took a duration and nothing else, was granted to `authenticated`,
+   * and stacked — so the shop's "spend gems, then activate" pair could be run
+   * without the spending half, from the console, in a loop. It is revoked from
+   * clients now (20261104110000) and VIP time is bought through
+   * `purchase_shop_item`, which debits and grants in one transaction.
+   *
+   * What is left for this context to do afterwards is notice. The realtime
+   * subscription on `vip_subscriptions` above usually gets there first; this
+   * is for the caller that wants the new state before it draws.
+   */
+  const refresh = (): void => {
+    fetchVipStatusRef.current?.();
   };
 
   const getDaysRemaining = (): number => {
@@ -263,13 +246,12 @@ export function VipProvider({ children }: { children: ReactNode }) {
   const isProPlus = (): boolean => subscription?.vip_tier === 'pro_plus';
   const getDailyRewardMultiplier = (): number => isProPlus() ? 1.5 : 1;
 
-  // user included beyond the state deps because activateVip closes over it
   const value: VipContextType = useMemo(
     () => ({
       subscription,
       isVip,
       loading,
-      activateVip,
+      refresh,
       getDaysRemaining,
       getXpMultiplier,
       getMaxDailySpins,
@@ -278,7 +260,6 @@ export function VipProvider({ children }: { children: ReactNode }) {
       tierBenefits: getTierBenefits(),
       isProPlus,
       getDailyRewardMultiplier,
-      prices: VIP_PRICES,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [subscription, isVip, loading, user]

@@ -41,8 +41,8 @@ const rarityShadows = {
 
 export function AvatarFrameShop({ onClose }: AvatarFrameShopProps) {
   const { profile } = useAuth();
-  const { unlockFrame, equipFrame, isFrameUnlocked, equippedFrame } = useAvatarFrames();
-  const { gems, spendGems, canAffordGems } = useCurrency();
+  const { claimVipFrame, equipFrame, isFrameUnlocked, equippedFrame } = useAvatarFrames();
+  const { gems, canAffordGems, purchaseShopItem } = useCurrency();
   const { isVip } = useVipStatus();
   const { playSound } = useSound();
   const { notify } = useNotificationModal();
@@ -59,10 +59,13 @@ export function AvatarFrameShop({ onClose }: AvatarFrameShopProps) {
         return;
       }
       
-      // VIP frames are free - auto-unlock if not already
+      // VIP frames are free — but "free" is the server's call, not this
+      // component's. The check above is `isVip` out of a React context, which
+      // is a hint; claim_vip_frame re-reads the subscription and refuses if it
+      // has lapsed.
       if (!isFrameUnlocked(frame.id)) {
-        const unlocked = await unlockFrame(frame.id);
-        if (!unlocked) return;
+        const claimed = await claimVipFrame(frame.id);
+        if (!claimed) return;
       }
       
       // Toggle equip
@@ -99,18 +102,11 @@ export function AvatarFrameShop({ onClose }: AvatarFrameShopProps) {
     setIsPurchasing(true);
 
     try {
-      const spent = await spendGems(frame.price, {
-        productId: frame.id,
-        productType: "frame",
-        valueReceived: { frame_id: frame.id },
-      });
-      if (!spent) {
-        setIsPurchasing(false);
-        return;
-      }
-
-      const unlocked = await unlockFrame(frame.id);
-      if (!unlocked) {
+      // Debit and unlock in one call. It was `spendGems` then `unlockFrame`,
+      // and the second half was an INSERT the client was allowed to make on
+      // its own — so the first half was optional.
+      const result = await purchaseShopItem(`frame_${frame.id}`);
+      if (!result) {
         setIsPurchasing(false);
         return;
       }

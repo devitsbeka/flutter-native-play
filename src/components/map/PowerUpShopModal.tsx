@@ -35,7 +35,7 @@ const POWER_UP_TYPES: PowerUpType[] = ["5050", "freeze", "replace", "time-drain"
 const POWER_UP_PRICES: Record<PowerUpType, number> = REWARDS.POWER_UP_PRICES as Record<PowerUpType, number>;
 
 export function PowerUpShopModal({ isOpen, onClose, initialSelectedType }: PowerUpShopModalProps) {
-  const { powerUps, isLoading, addPowerUp } = useUserPowerUps();
+  const { powerUps, isLoading, buyPowerUp } = useUserPowerUps();
   const { coins, spendCoins, canAffordCoins } = useCurrency();
   const { playSound, vibrate } = useSound();
   const { t } = useLanguage();
@@ -107,17 +107,14 @@ export function PowerUpShopModal({ isOpen, onClose, initialSelectedType }: Power
 
     setIsPurchasing(true);
     try {
-      const spent = await spendCoins(totalPrice, {
-        productId: selectedType,
-        productType: "powerup",
-        valueReceived: { [selectedType]: quantity },
-      });
-      if (!spent) {
+      // One call: the server reads the coin price from economy_config, debits
+      // and grants. It was spendCoins() with a price out of the bundle, then a
+      // separate addPowerUp() — and the second worked without the first.
+      const bought = await buyPowerUp(selectedType, quantity);
+      if (!bought) {
         setIsPurchasing(false);
         return;
       }
-
-      await addPowerUp(selectedType, quantity);
       
       playSound("reward");
       vibrate([50, 30, 50]);

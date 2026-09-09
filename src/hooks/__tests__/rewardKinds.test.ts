@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 
 /**
@@ -21,14 +21,40 @@ function kindsFromTypeScript(): string[] {
   return [...union[1].matchAll(/"([a-z_]+)"/g)].map((m) => m[1]).sort();
 }
 
+/**
+ * The kinds the table ends up holding.
+ *
+ * The seed file is still the list — widening this to every migration pulls in
+ * `stake_loss`, which settle_quick_game adds as a server-only kind and which
+ * the client union rightly does not carry.
+ *
+ * What is scanned across ALL migrations is the DELETEs. An applied migration
+ * cannot be edited, so removing a kind has to be a later one — which is what
+ * happened to `shop_grant` when the shop stopped trusting the client with
+ * money (20261104110000) — and reading the seed alone goes on asserting a row
+ * that is no longer there.
+ */
 function kindsFromMigration(): string[] {
-  const sql = readFileSync(
-    resolve(REPO, "supabase/migrations/20260813150000_server_authoritative_currency.sql"),
+  const dir = resolve(REPO, "supabase/migrations");
+  const seed = readFileSync(
+    resolve(dir, "20260813150000_server_authoritative_currency.sql"),
     "utf8",
   );
-  const insert = sql.match(/INSERT INTO public\.currency_grant_limits[\s\S]*?ON CONFLICT/);
+  const insert = seed.match(/INSERT INTO public\.currency_grant_limits[\s\S]*?ON CONFLICT/);
   if (!insert) throw new Error("Could not find the currency_grant_limits seed");
-  return [...insert[0].matchAll(/\('([a-z_]+)',/g)].map((m) => m[1]).sort();
+
+  const kinds = new Set([...insert[0].matchAll(/\('([a-z_]+)',/g)].map((m) => m[1]));
+
+  for (const file of readdirSync(dir).filter((f) => f.endsWith(".sql")).sort()) {
+    const sql = readFileSync(resolve(dir, file), "utf8");
+    for (const del of sql.matchAll(
+      /DELETE FROM public\.currency_grant_limits WHERE kind = '([a-z_]+)'/g,
+    )) {
+      kinds.delete(del[1]);
+    }
+  }
+
+  return [...kinds].sort();
 }
 
 describe("reward kinds", () => {

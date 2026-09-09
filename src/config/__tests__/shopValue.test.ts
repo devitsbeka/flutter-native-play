@@ -120,6 +120,30 @@ describe("the atomic ladders the references are built from", () => {
     }
   });
 
+  it("keeps every coin bonus below the exchange spread", () => {
+    // THE assertion this file exists for. `exchange_currency` buys coins at
+    // 500 to the gem and sells them back at 750, and a coin pack that pays
+    // MORE than 750 coins per gem closes the loop again:
+    //
+    //   spend gems on coins -> exchange the coins back -> more gems than you
+    //   started with, unbounded, two taps apart in the shipped UI.
+    //
+    // That is exactly what happened at a flat 500 both ways: coins_15000 sold
+    // 15 000 coins for 24 gems and they bought back 30. Any new pack, or any
+    // rate change, has to stay under the sell rate.
+    for (const pack of COIN_PACKS) {
+      expect(
+        pack.coins / pack.gems,
+        `${pack.id} pays ${(pack.coins / pack.gems).toFixed(0)} coins/gem against a ${REWARDS.COINS_PER_GEM_SELL_RATE} sell rate — the arbitrage is open again`,
+      ).toBeLessThan(REWARDS.COINS_PER_GEM_SELL_RATE);
+    }
+  });
+
+  it("prices a gem bought back above a gem sold", () => {
+    // A spread of zero is the bug. A NEGATIVE spread would be worse.
+    expect(REWARDS.COINS_PER_GEM_SELL_RATE).toBeGreaterThan(REWARDS.GEM_TO_COINS_RATE);
+  });
+
   it("sells no power bundle for more than the single packs would cost", () => {
     for (const bundle of POWER_BUNDLES) {
       const listValue = bundle.powers * POWER_TYPE_COUNT * GEMS_PER_POWER_LIST;

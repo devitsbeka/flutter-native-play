@@ -236,10 +236,10 @@ const CANONICAL_PRICE_IDS: Record<string, string> = {
 };
 
 export function GemShopModal({ isOpen, onClose, defaultCategory }: GemShopModalProps) {
-  const { gems, spendGems, addCoins } = useCurrency();
+  const { gems, purchaseShopItem } = useCurrency();
   const { playSound } = useSound();
-  const { activateVip, isVip, getDaysRemaining } = useVipStatus();
-  const { addPowerUp } = useUserPowerUps();
+  const { refresh: refreshVipStatus, isVip, getDaysRemaining } = useVipStatus();
+  const { refetch: refetchPowerUps } = useUserPowerUps();
   const { SHOP_SECTIONS } = useShopData();
   const { t } = useLanguage();
 
@@ -295,56 +295,26 @@ export function GemShopModal({ isOpen, onClose, defaultCategory }: GemShopModalP
     setIsPurchasing(item.id);
 
     try {
-      // Build value received for transaction log
-      let valueReceived: { [key: string]: number | string } = {};
-      
-      if (item.category === "coins" && item.value) {
-        valueReceived = { coins: item.value };
-      } else if (item.category === "vip" && item.vipDuration) {
-        valueReceived = { vip_days: item.vipDuration };
-      } else if (item.category === "powerup") {
-        if (item.powerType && item.amount) {
-          valueReceived = { [item.powerType]: item.amount };
-        } else {
-          const bundleAmount = item.id.includes("small") ? 2 : item.id.includes("large") ? 10 : 5;
-          valueReceived = { 
-            "5050": bundleAmount, 
-            freeze: bundleAmount, 
-            replace: bundleAmount, 
-            "time-drain": bundleAmount 
-          };
-        }
-      }
+      // One call, and the server decides both halves.
+      //
+      // This was a debit followed by a grant chosen from `item.category` — and
+      // note what that grant did when the category was a power bundle: it read
+      // the AMOUNT out of the id ("small" -> 2, "large" -> 10, anything else
+      // -> 5). The receipt written above it did the same arithmetic a second
+      // time, separately. Neither had anything to do with what was charged.
+      //
+      // `shop_catalog` carries the contents next to the price, so an id is
+      // now the only thing this has to be right about.
+      const result = await purchaseShopItem(item.id);
 
-      const spent = await spendGems(price, {
-        productId: item.id,
-        productType: item.category,
-        valueReceived,
-      });
-      
-      if (!spent) {
+      if (!result) {
+        toast.error(t("shop.purchaseFailed"));
         setIsPurchasing(null);
         return;
       }
 
-      // Handle different item types
-      if (item.category === "coins" && item.value) {
-        await addCoins(item.value, "shop_grant", item.id);
-      } else if (item.category === "vip" && item.vipDuration) {
-        await activateVip(item.vipDuration);
-      } else if (item.category === "powerup") {
-        if (item.powerType && item.amount) {
-          // Individual power-up
-          await addPowerUp(item.powerType, item.amount);
-        } else {
-          // Bundle - determine amount based on bundle type
-          const bundleAmount = item.id.includes("small") ? 2 : item.id.includes("large") ? 10 : 5;
-          await addPowerUp("5050", bundleAmount);
-          await addPowerUp("freeze", bundleAmount);
-          await addPowerUp("replace", bundleAmount);
-          await addPowerUp("time-drain", bundleAmount);
-        }
-      }
+      await refetchPowerUps();
+      if (item.category === "vip") refreshVipStatus();
 
       // Success animation
       playSound("reward");

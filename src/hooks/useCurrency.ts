@@ -24,6 +24,15 @@ export interface TransactionLog {
  *
  * Adding a kind here means adding a row to that table in a migration, or the
  * grant is rejected as unknown.
+ *
+ * `shop_grant` used to be on this list and is deliberately not any more. It was
+ * how a shop purchase DELIVERED what was bought, so its ceiling had to be
+ * enormous — 200 000 coins and 500 gems a call, a million and 2 000 a day —
+ * and, like every kind here, it was callable directly with no evidence that a
+ * debit had happened. The ceiling was the exploit. Shop purchases go through
+ * `purchaseShopItem` below, which debits and grants in one transaction, and
+ * the row has been deleted from `currency_grant_limits` so the old call now
+ * fails as an unknown kind.
  */
 export type RewardKind =
   | "quiz_reward"
@@ -33,7 +42,6 @@ export type RewardKind =
   | "chest"
   | "mission"
   | "ad_reward"
-  | "shop_grant"
   | "feed_trivia";
 
 export function useCurrency() {
@@ -255,11 +263,58 @@ export function useCurrency() {
     reference?: string,
   ): Promise<boolean> => grant(kind, coinsAmount, gemsAmount, reference);
 
+  /**
+   * Buy one thing from the shop.
+   *
+   * The server owns the price and the contents; this names an id and nothing
+   * else. That is the whole change: a purchase used to be `spendGems(price)`
+   * followed by a separate grant call, with the network in between, so the
+   * debit could simply be skipped — and the grant call, `grant_vip_days` or
+   * `credit_gameplay_reward('shop_grant', ...)`, worked perfectly well on its
+   * own. Unlimited PRO and 2 000 free gems a day, from the browser console.
+   *
+   * Returns the new balances and a receipt of what was granted, so the caller
+   * does not have to guess what an id delivers. `null` means the purchase did
+   * not happen and nothing was charged — the two failures worth telling apart
+   * are an unaffordable price and an unknown id, and both leave the balance
+   * untouched.
+   */
+  const purchaseShopItem = async (
+    itemId: string,
+  ): Promise<{ coins: number; gems: number; granted: Record<string, unknown> } | null> => {
+    if (!user) return null;
+
+    try {
+      const { data, error } = await supabase.rpc("purchase_shop_item", {
+        p_item_id: itemId,
+      });
+
+      if (error) {
+        if (error.message?.includes("Insufficient")) return null;
+        throw error;
+      }
+
+      const row = Array.isArray(data) ? data[0] : data;
+      if (!row) return null;
+
+      setProfileLocal({ coins: row.new_coins, gems: row.new_gems });
+      return {
+        coins: row.new_coins,
+        gems: row.new_gems,
+        granted: (row.granted ?? {}) as Record<string, unknown>,
+      };
+    } catch (error) {
+      console.error(`Error purchasing ${itemId}:`, error);
+      return null;
+    }
+  };
+
   return {
     coins,
     gems,
     addCoins,
     spendCoins,
+    purchaseShopItem,
     addGems,
     spendGems,
     canAffordCoins,

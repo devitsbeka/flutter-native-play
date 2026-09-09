@@ -41,6 +41,13 @@ describe("repo invariants", () => {
       "claim_leaderboard_reward",
       "credit_gameplay_reward",
       "exchange_currency",
+      // Added when the shop stopped trusting the client with money
+      // (20261104110000). Same reason as the six above: the call sites are
+      // typed against these, so a regeneration against a database missing the
+      // migration deletes them and the build fails two dozen lines away from
+      // the cause.
+      "purchase_shop_item",
+      "ensure_default_power_ups",
     ];
 
     // Match the definition, not the bare name. A substring check passes for a

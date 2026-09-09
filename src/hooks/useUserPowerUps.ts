@@ -6,6 +6,16 @@ import type { ShopPageData } from "@/hooks/useShopPageData";
 
 export type PowerUpType = "5050" | "freeze" | "replace" | "time-drain";
 
+/**
+ * Why a power-up is being awarded.
+ *
+ * Each has its own per-award and per-day ceiling in `power_up_grant_limits`.
+ * The kind is a required argument rather than an optional one so that adding a
+ * new award path is a compile error until someone decides what it costs —
+ * the same rule `RewardKind` applies to coins and gems.
+ */
+export type PowerUpRewardKind = "spin" | "ad_reward" | "level_up" | "chest" | "mission";
+
 export interface UserPowerUp {
   power_up_type: PowerUpType;
   quantity: number;
@@ -34,75 +44,25 @@ async function fetchPowerUps(userId: string): Promise<Record<PowerUpType, number
     return powerUpMap;
   }
 
-  // Initialize power-ups for new user
-  const inserts = Object.entries(DEFAULT_POWER_UPS).map(([type, quantity]) => ({
-    user_id: userId,
-    power_up_type: type,
-    quantity,
-  }));
+  // Initialize power-ups for a new user.
+  //
+  // Was a direct INSERT, which the "users can insert their own power-ups"
+  // policy allowed — and that policy is what let anyone write themselves any
+  // quantity they liked. The policy is gone (20261104110000) and the starting
+  // amounts are decided server-side by this function, which is the same set as
+  // DEFAULT_POWER_UPS above.
+  const { data: seeded, error: seedError } = await supabase.rpc("ensure_default_power_ups");
 
-  const { error: insertError } = await supabase
-    .from("user_power_ups")
-    .insert(inserts);
-
-  if (insertError) {
-    console.error("Error initializing power-ups:", insertError);
+  if (seedError) {
+    console.error("Error initializing power-ups:", seedError);
+    return { ...DEFAULT_POWER_UPS };
   }
 
-  return { ...DEFAULT_POWER_UPS };
-}
-
-// Fallback for when the adjust_power_up migration isn't applied yet:
-// read the fresh server quantity, then conditionally write on top of it
-// (guarded by .eq("quantity", current) so concurrent writers can't be clobbered).
-async function fallbackAdjust(
-  userId: string,
-  type: PowerUpType,
-  delta: number
-): Promise<number | null> {
-  for (let attempt = 0; attempt < 2; attempt++) {
-    const { data: row, error: readError } = await supabase
-      .from("user_power_ups")
-      .select("quantity")
-      .eq("user_id", userId)
-      .eq("power_up_type", type)
-      .maybeSingle();
-
-    if (readError) {
-      console.error("Error reading power-up quantity:", readError);
-      return null;
-    }
-
-    const current = row?.quantity ?? 0;
-    const next = Math.max(0, current + delta);
-
-    if (!row) {
-      const { error: insertError } = await supabase
-        .from("user_power_ups")
-        .insert({ user_id: userId, power_up_type: type, quantity: next });
-      if (insertError) {
-        // Unique violation means another writer created the row — retry the update path
-        continue;
-      }
-      return next;
-    }
-
-    const { data: updated, error: updateError } = await supabase
-      .from("user_power_ups")
-      .update({ quantity: next })
-      .eq("user_id", userId)
-      .eq("power_up_type", type)
-      .eq("quantity", current)
-      .select("quantity");
-
-    if (updateError) {
-      console.error("Error updating power-up quantity:", updateError);
-      return null;
-    }
-    if (updated && updated.length > 0) return next;
-    // Lost the race against a concurrent write — re-read and retry once
+  const powerUpMap: Record<PowerUpType, number> = { ...DEFAULT_POWER_UPS };
+  for (const row of seeded ?? []) {
+    powerUpMap[row.power_type as PowerUpType] = row.owned ?? 0;
   }
-  return null;
+  return powerUpMap;
 }
 
 // Atomic delta adjustment via SECURITY DEFINER RPC; returns the new quantity
@@ -118,7 +78,7 @@ async function adjustPowerUpRpc(type: PowerUpType, delta: number): Promise<numbe
     p_delta: delta,
   });
   if (error) {
-    console.warn("adjust_power_up RPC failed, falling back to direct update:", error.message);
+    console.error("adjust_power_up failed:", error.message);
     return null;
   }
   return typeof data === "number" ? data : null;
@@ -141,10 +101,7 @@ export function useUserPowerUps() {
     async (type: PowerUpType, delta: number): Promise<number | null> => {
       if (!user?.id) return null;
 
-      let newQuantity = await adjustPowerUpRpc(type, delta);
-      if (newQuantity === null) {
-        newQuantity = await fallbackAdjust(user.id, type, delta);
-      }
+      const newQuantity = await adjustPowerUpRpc(type, delta);
       if (newQuantity === null) return null;
 
       // Sync cache from the authoritative server value
@@ -172,14 +129,82 @@ export function useUserPowerUps() {
     [user?.id, powerUps, adjustPowerUp]
   );
 
-  // Add power-ups (e.g., from rewards)
-  const addPowerUp = useCallback(
-    async (type: PowerUpType, amount: number): Promise<boolean> => {
+  /**
+   * Award a power-up the player earned — a spin segment, a rewarded ad, a
+   * level-up.
+   *
+   * Takes a `kind` now, and that is the whole point. This used to be
+   * `adjustPowerUp(type, +amount)`, and `adjust_power_up` accepted any
+   * positive delta from any signed-in caller, so one console line was an
+   * unlimited supply. It is debit-only now; awards go through
+   * `grant_reward_power_up`, which bounds the amount per call and per day
+   * against `power_up_grant_limits` — the same trade
+   * `credit_gameplay_reward` makes for coins.
+   *
+   * A rejection here is not transient. It means the award was bigger than the
+   * kind allows or the day's allowance is spent.
+   */
+  const awardPowerUp = useCallback(
+    async (kind: PowerUpRewardKind, type: PowerUpType, amount = 1): Promise<boolean> => {
       if (!user?.id || amount <= 0) return false;
-      const newQuantity = await adjustPowerUp(type, amount);
-      return newQuantity !== null;
+
+      const { data, error } = await supabase.rpc("grant_reward_power_up", {
+        p_kind: kind,
+        p_type: type,
+        p_amount: amount,
+      });
+
+      if (error) {
+        console.error(`Error awarding ${kind} power-up:`, error.message);
+        return false;
+      }
+
+      const quantity = typeof data === "number" ? data : null;
+      if (quantity === null) return false;
+
+      queryClient.setQueryData<Record<PowerUpType, number>>(queryKey, (prev) =>
+        prev ? { ...prev, [type]: quantity } : prev
+      );
+      queryClient.setQueryData<ShopPageData>(["shopPageData", user.id], (prev) =>
+        prev ? { ...prev, powerUps: { ...prev.powerUps, [type]: quantity } } : prev
+      );
+      return true;
     },
-    [user?.id, adjustPowerUp]
+    [user?.id, queryClient, queryKey]
+  );
+
+  /**
+   * Buy power-ups with coins.
+   *
+   * The price is `powerup_price_*` in economy_config, read server-side. It was
+   * `spendCoins(REWARDS.POWER_UP_PRICES[type])` followed by a separate grant,
+   * with the price coming out of the bundle — so both halves were the
+   * client's to choose.
+   */
+  const buyPowerUp = useCallback(
+    async (type: PowerUpType, quantity: number): Promise<boolean> => {
+      if (!user?.id || quantity <= 0) return false;
+
+      const { data, error } = await supabase.rpc("purchase_power_up", {
+        p_type: type,
+        p_quantity: quantity,
+      });
+
+      if (error) {
+        console.error(`Error buying ${type}:`, error.message);
+        return false;
+      }
+
+      const row = Array.isArray(data) ? data[0] : data;
+      if (!row) return false;
+
+      queryClient.setQueryData<Record<PowerUpType, number>>(queryKey, (prev) =>
+        prev ? { ...prev, [type]: row.owned } : prev
+      );
+      queryClient.invalidateQueries({ queryKey: ["shopPageData", user.id] });
+      return true;
+    },
+    [user?.id, queryClient, queryKey]
   );
 
   const refetch = useCallback(() => {
@@ -192,7 +217,8 @@ export function useUserPowerUps() {
     isLoading,
     error: error as Error | null,
     usePowerUp,
-    addPowerUp,
+    awardPowerUp,
+    buyPowerUp,
     refetch,
   };
 }
