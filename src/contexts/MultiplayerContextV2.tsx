@@ -1426,6 +1426,20 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       // Check if room is stale (1+ hour of inactivity) and needs reset
       const stale = isRoomStale(room);
       
+      if (stale && (room.status === "playing" || room.status === "completed") && room.is_public) {
+        // A public room is made for one play. An hour after its last round
+        // with nobody coming back for a rematch, it is over — closing it
+        // beats reviving an empty, locked lobby onto the Public tab for the
+        // next person to walk into (owner's ask).
+        console.log(`[MP] Public room ${room.room_code} is stale (${room.status}), closing it`);
+        await supabase
+          .from("game_rooms")
+          .update({ status: "cancelled", is_archived: true })
+          .eq("id", room.id);
+        toast.error(tStandalone("extra.mpRoomIsClosed"));
+        return false;
+      }
+
       if (stale && (room.status === "playing" || room.status === "completed")) {
         console.log(`[MP] Room ${room.room_code} is stale (${room.status}), resetting to lobby`);
         
