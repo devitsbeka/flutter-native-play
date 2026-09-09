@@ -50,6 +50,12 @@ describe("the guest's footer: the wait, the button, the way out", () => {
     expect(captionBelow).toBeLessThan(extraBelow);
   });
 
+  it("and gives the caption air under it before the live button", () => {
+    // Over a live button the line sat hard on the slab's top edge (owner:
+    // "move up a little waiting for host row, needs breathing space below").
+    expect(universal).toMatch(/: start\.captionAbove\s*\n(?:\s*\/\/.*\n)*\s*\? "mb-3 px-2"/);
+  });
+
   it("the classic lobby asks for exactly that for a guest", () => {
     expect(lobby).toMatch(/caption: t\("team\.waitingForHost"\),\s*\n\s*captionPulse: true,[\s\S]*?captionAbove: true,/);
     expect(lobby).toMatch(/footerExtraPlacement="below"/);

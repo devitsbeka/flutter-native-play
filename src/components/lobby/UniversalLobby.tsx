@@ -487,7 +487,13 @@ export function UniversalLobby({
                   ? "pt-4"
                   : start.disabled
                     ? "mb-2 px-2"
-                    : "[&:not(:first-child)]:mt-3 px-2",
+                    : start.captionAbove
+                      // A guest's "waiting for the host" over a live button
+                      // sat hard on its top edge; the line needs air under
+                      // it before the slab (owner: "move up a little
+                      // waiting for host row, needs breathing space below").
+                      ? "mb-3 px-2"
+                      : "[&:not(:first-child)]:mt-3 px-2",
               )}
             >
               <p className="text-center font-[Nunito] text-[16px] font-medium leading-[19.5px] tracking-[-0.16px] text-[#402666]">
