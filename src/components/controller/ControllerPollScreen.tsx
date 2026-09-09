@@ -26,6 +26,7 @@ import { filterCategoriesForLanguage } from '@/utils/languageCategoryFilter';
 import { excludePartyCategories } from '@/config/partyCategories';
 import { toast } from "@/lib/toast";
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useLocalizedCategoryName } from "@/utils/categoryDisplayName";
 
 interface Category {
   id: string;
@@ -68,6 +69,7 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
 }) => {
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const localizeCategory = useLocalizedCategoryName();
   
   const handleBack = () => {
     // Always navigate to /team - the rooms page
@@ -534,7 +536,7 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-white text-sm truncate">{suggestion.category_name}</p>
+                        <p className="font-medium text-white text-sm truncate">{localizeCategory(suggestion.category_name)}</p>
                         <p className="text-xs text-purple-300">
                           {suggestion.source_type === 'category' ? t("extra.tvCategoryType") : (
                             <span className="text-yellow-400">⚠️ {t("extra.tvYourTriviaSkip")}</span>
@@ -650,7 +652,7 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
                         </div>
                       )}
                       <div className="flex-1">
-                        <p className="font-medium text-white text-sm">{suggestion.category_name}</p>
+                        <p className="font-medium text-white text-sm">{localizeCategory(suggestion.category_name)}</p>
                         <p className="text-xs text-purple-300">
                           {suggestion.source_type === 'category' ? t("extra.categoryLabel") : t("extra.tvHostTrivia")}
                         </p>
@@ -808,7 +810,7 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
 
                     {/* Name and type indicator */}
                     <div className="flex-1 text-left">
-                      <p className="font-medium text-white">{suggestion.category_name}</p>
+                      <p className="font-medium text-white">{localizeCategory(suggestion.category_name)}</p>
                       <p className="text-xs text-purple-300">
                         {isHostTrivia ? (
                           <span className="text-yellow-400">{t("extra.tvHostTrivia")}</span>

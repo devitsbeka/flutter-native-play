@@ -25,7 +25,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { TVMirrorModal } from "@/components/tv/TVMirrorModal";
 import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
 import { NotEnoughStakeModal } from "@/components/home/NotEnoughStakeModal";
-import { PREVIEW_BUTTON_CLASS, RoomPreviewSheet, type PreviewActionFactory } from "@/components/team/RoomPreviewSheet";
+import { PREVIEW_BUTTON_CLASS, PREVIEW_BUTTON_TONE, RoomPreviewSheet, type PreviewActionFactory } from "@/components/team/RoomPreviewSheet";
 import { useCurrency } from "@/hooks/useCurrency";
 import { REWARDS } from "@/config/rewardConfig";
 import { Capacitor } from "@capacitor/core";
@@ -419,7 +419,7 @@ export function MyRoomsSection({
         rounds={previewing?.room.rounds ?? []}
         questionsPerRound={previewing?.room.total_questions ?? null}
         players={previewing?.room.participants.length ?? 0}
-        action={previewing?.action?.({ className: PREVIEW_BUTTON_CLASS, then: () => setPreviewing(null) })}
+        action={previewing?.action?.({ className: PREVIEW_BUTTON_CLASS, tone: PREVIEW_BUTTON_TONE, then: () => setPreviewing(null) })}
         onClose={() => setPreviewing(null)}
       />
 
@@ -1298,7 +1298,7 @@ export function RoomCardGrid({ room, index, onJoin, onPreview, onDelete, onLeave
    */
   const playButton: PreviewActionFactory = (opts = {}) => (
     <RoomCardPlayButton
-      tone={room.has_pending_invite ? "mint" : "white"}
+      tone={opts.tone ?? (room.has_pending_invite ? "mint" : "white")}
       className={opts.className}
       onClick={(e) => {
         e.stopPropagation();

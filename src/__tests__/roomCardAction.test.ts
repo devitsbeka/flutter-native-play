@@ -126,12 +126,13 @@ describe("the card that draws it", () => {
     // rooms I am already in, so theirs is always white; the public list
     // saves mint for the room that can actually start.
     // White at rest; mint while an invitation waits to be confirmed — one tap from a game.
-    expect(source).toMatch(/<RoomCardPlayButton\s*\n\s*tone=\{room\.has_pending_invite \? "mint" : "white"\}/);
+    // The preview sheet may ask for its own colour (roomPreviewJoinIsGreen.test.ts).
+    expect(source).toMatch(/<RoomCardPlayButton\s*\n\s*tone=\{opts\.tone \?\? \(room\.has_pending_invite \? "mint" : "white"\)\}/);
     const publicList = readFileSync(
       join(process.cwd(), "src/components/team/PublicRoomsSection.tsx"),
       "utf8",
     );
-    expect(publicList).toMatch(/tone=\{invited \|\| ready \? "mint" : "white"\}/);
+    expect(publicList).toMatch(/tone=\{opts\.tone \?\? \(invited \|\| ready \? "mint" : "white"\)\}/);
     const button = readFileSync(
       join(process.cwd(), "src/components/team/RoomCardPlayButton.tsx"),
       "utf8",

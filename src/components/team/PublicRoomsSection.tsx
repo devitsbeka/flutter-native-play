@@ -21,7 +21,7 @@ import { acceptRoomInvite, declineRoomInvite, pendingRoomInvites, type PendingIn
 import { RoomCardPlayButton } from "@/components/team/RoomCardPlayButton";
 import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
 import { NotEnoughStakeModal } from "@/components/home/NotEnoughStakeModal";
-import { PREVIEW_BUTTON_CLASS, RoomPreviewSheet, type PreviewActionFactory } from "@/components/team/RoomPreviewSheet";
+import { PREVIEW_BUTTON_CLASS, PREVIEW_BUTTON_TONE, RoomPreviewSheet, type PreviewActionFactory } from "@/components/team/RoomPreviewSheet";
 import { useCurrency } from "@/hooks/useCurrency";
 import { REWARDS } from "@/config/rewardConfig";
 import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
@@ -275,7 +275,7 @@ function PublicRoomCard({
    */
   const playButton: PreviewActionFactory = (opts = {}) => (
     <RoomCardPlayButton
-      tone={invited || ready ? "mint" : "white"}
+      tone={opts.tone ?? (invited || ready ? "mint" : "white")}
       disabled={busy || waiting || blocked}
       className={opts.className}
       onClick={(e) => {
@@ -1236,7 +1236,7 @@ export function PublicRoomsSection({
         rounds={previewing?.room.rounds ?? []}
         questionsPerRound={previewing?.room.total_questions ?? null}
         players={previewing?.room.player_count ?? 0}
-        action={previewing?.action({ className: PREVIEW_BUTTON_CLASS, then: () => setPreviewing(null) })}
+        action={previewing?.action({ className: PREVIEW_BUTTON_CLASS, tone: PREVIEW_BUTTON_TONE, then: () => setPreviewing(null) })}
         onClose={() => setPreviewing(null)}
       />
 

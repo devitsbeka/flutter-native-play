@@ -19,6 +19,7 @@ import { toast } from "@/lib/toast";
 import confetti from "canvas-confetti";
 import { calculatePoints } from "@/utils/scoring";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useLocalizedCategoryName } from "@/utils/categoryDisplayName";
 
 const TIME_PER_QUESTION = 15;
 
@@ -51,6 +52,7 @@ function shuffleAnswers(correct: string, incorrect: string[]): string[] {
 }
 
 export default function ChallengeLanding() {
+  const localizeCategory = useLocalizedCategoryName();
   const { code } = useParams<{ code: string }>();
   const navigate = useNavigate();
   const { t } = useLanguage();
@@ -317,7 +319,7 @@ export default function ChallengeLanding() {
                   size={22}
                   className="drop-shadow-none"
                 />
-                <p className="text-sm text-white/60">{challenge.category_name}</p>
+                <p className="text-sm text-white/60">{localizeCategory(challenge.category_name)}</p>
               </div>
             )}
           </div>

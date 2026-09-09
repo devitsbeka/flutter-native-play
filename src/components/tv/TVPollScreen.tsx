@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useLocalizedCategoryName } from "@/utils/categoryDisplayName";
 import { QRCodeSVG } from 'qrcode.react';
 import { Users, Vote, Timer, Sparkles, Crown } from 'lucide-react';
 import { useTVGame } from '@/contexts/TVGameContext';
@@ -233,6 +234,7 @@ const SuggestionCard: React.FC<SuggestionCardProps> = ({
   hasVotes,
 }) => {
   const { t } = useLanguage();
+  const localizeCategory = useLocalizedCategoryName();
   const [previousVotes, setPreviousVotes] = useState(suggestion.vote_count);
   const [isAnimating, setIsAnimating] = useState(false);
 
@@ -312,7 +314,7 @@ const SuggestionCard: React.FC<SuggestionCardProps> = ({
 
       {/* Category name */}
       <h3 className="text-base font-bold text-white text-center mb-2 line-clamp-1">
-        {suggestion.category_name}
+        {localizeCategory(suggestion.category_name)}
       </h3>
 
       {/* Vote count */}

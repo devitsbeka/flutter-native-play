@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { BellRing, Bot, Check, ChevronLeft, Star, UserPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useLocalizedCategoryName } from "@/utils/categoryDisplayName";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFriends } from "@/hooks/useFriends";
 import { useCategories } from "@/hooks/useCategories";
@@ -437,6 +438,7 @@ function PhaseRps() {
 
 function PhaseBoard() {
   const { t } = useLanguage();
+  const localizeCategory = useLocalizedCategoryName();
   const { state, tiles, participants, room, isSpotlight, pickTile, playedBy, advance } = useTeamBattle();
   const { categories } = useCategories();
   const secondsLeft = useServerDeadline(state?.deadline, advance);
@@ -511,7 +513,7 @@ function PhaseBoard() {
                       size={64}
                     />
                     <p className="text-[#313740] font-bold text-[15px] text-center leading-tight line-clamp-2">
-                      {tile.category_name}
+                      {localizeCategory(tile.category_name)}
                     </p>
                     {played ? (
                       <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#2A2550]/10 text-[#2A2550]/70 text-[10px] font-bold max-w-full">
@@ -619,6 +621,7 @@ function TurnQuestionCard({
 
 function PhaseRapidFire() {
   const { t } = useLanguage();
+  const localizeCategory = useLocalizedCategoryName();
   const { user, profile } = useAuth();
   const {
     state, room, tiles, participants, isSpotlight, myTeam, submitAnswer,
@@ -796,7 +799,7 @@ function PhaseRapidFire() {
               ))}
             <p className="text-white font-bold truncate">
               {isSpotlight ? t("teamBattle.yourTurn") : t("teamBattle.watching", { name: player?.nickname ?? "…" })}
-              <span className="text-white/60 font-normal"> · {tile.category_name}</span>
+              <span className="text-white/60 font-normal"> · {localizeCategory(tile.category_name)}</span>
             </p>
           </div>
           {canPoke && (
