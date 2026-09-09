@@ -12,7 +12,7 @@ import { QuizAnswerButton, QuizAnswerState } from "@/components/ui/quiz-answer-b
 import { QuizTrueFalseButton, type QuizTrueFalseState } from "@/components/ui/quiz-true-false-button";
 import { QuizPowerUpBar } from "@/components/ui/quiz-power-up-bar";
 import { ChunkyButton } from "@/components/ui/chunky-button";
-import { AnswerFeedbackCard } from "./AnswerFeedbackCard";
+import { AnswerFeedbackCard, answersFadeUnderFeedback } from "./AnswerFeedbackCard";
 import { TimerBadge } from "@/components/game/TimerBadge";
 import { PowerUpType as UIPowerUpType } from "@/components/ui/quiz-power-up-button";
 import { useAIIcon } from "@/hooks/useAIIcon";
@@ -483,7 +483,10 @@ export function QuizGameScreenProd() {
 
       {/* Answer Buttons */}
       {isTrueFalseQuestion ? (
-        <div className="flex-1 min-h-0 w-full px-4 mt-0 flex gap-3 [@media(max-height:600px)]:gap-2 pb-2 items-center">
+        <div
+          className="flex-1 min-h-0 w-full px-4 mt-0 flex gap-3 [@media(max-height:600px)]:gap-2 pb-2 items-center"
+          style={answerRevealed ? answersFadeUnderFeedback : undefined}
+        >
           {currentQuestion.allAnswers.map((answer, index) => {
             const isTrue = answer.toLowerCase() === "მართალია" || answer.toLowerCase() === "true";
             if (hiddenAnswers.includes(answer)) return null;
@@ -505,7 +508,10 @@ export function QuizGameScreenProd() {
           })}
         </div>
       ) : (
-        <div className="flex-1 px-4 mt-0 flex flex-col gap-3 [@media(max-height:700px)]:gap-2 [@media(max-height:600px)]:gap-1.5 overflow-y-auto min-h-0 pb-2">
+        <div
+          className="flex-1 px-4 mt-0 flex flex-col gap-3 [@media(max-height:700px)]:gap-2 [@media(max-height:600px)]:gap-1.5 overflow-y-auto min-h-0 pb-2"
+          style={answerRevealed ? answersFadeUnderFeedback : undefined}
+        >
           {currentQuestion.allAnswers.map((answer, index) => {
             const isHidden = hiddenAnswers.includes(answer);
             if (isHidden) return null;
