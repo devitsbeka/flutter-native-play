@@ -164,11 +164,18 @@ export function ShopStandardLayout({
     await onItemClick(item);
   };
 
-  // Frames stay hidden; the ×3 powers packs section is gone — individual
-  // powers are already purchasable in My Powers right above it
-  const displaySections = sections.filter(
-    (section) => section.id !== "frames" && section.id !== "powers"
-  );
+  // What the shop page does NOT show. Frames stay hidden; the ×3 powers
+  // packs section is gone because individual powers are already purchasable
+  // in the Super Powers shelf right above it; VIP Status and Special Packs
+  // are off (owner's ask).
+  //
+  // Filtered here rather than dropped from SHOP_SECTIONS, because
+  // GemShopModal builds its own tabs from that same list and still sells
+  // VIP — deleting the sections at source would empty a surface nobody asked
+  // to change. Nothing deep-links to either id (the ?section= links in the
+  // app point at coins, gems-lari and powers only).
+  const HIDDEN_SECTIONS = new Set(["frames", "powers", "vip", "mega-powers"]);
+  const displaySections = sections.filter((section) => !HIDDEN_SECTIONS.has(section.id));
 
   return (
     <div className="flex-1 pt-1 pb-8">
