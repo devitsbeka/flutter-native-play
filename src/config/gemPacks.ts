@@ -74,7 +74,7 @@ export const GEM_PACKS: GemPack[] = [
     baseGems: 1500,
     bonusGems: 0,
     gems: 1500,
-    priceUsd: 12.99,
+    priceUsd: 10.99,
     name: "1500",
     productId: "io.mytrivia.gems.1500",
   },

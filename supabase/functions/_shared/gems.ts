@@ -50,7 +50,7 @@ export const GEM_PACKS: Record<string, GemPack> = {
   gems_1500: {
     id: "gems_1500",
     gems: 1500,
-    priceUsd: 12.99,
+    priceUsd: 10.99,
     storeProductId: "io.mytrivia.gems.1500",
     name: "1500 ალმასი - დიდი პაკეტი",
     description: "1500 ალმასის შეძენა MyTrivia-ში.",

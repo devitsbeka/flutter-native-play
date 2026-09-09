@@ -11,6 +11,15 @@ import timeDrainIcon from "@/assets/powers/time-drain.webp";
 import coinIcon from "@/assets/icons/icon-coin.webp";
 import gemIcon from "@/assets/icons/icon-gem.webp";
 import { GEM_PACKS } from "@/config/gemPacks";
+import { REWARDS } from "@/config/rewardConfig";
+import {
+  COIN_PACKS,
+  GEMS_PER_POWER_LIST,
+  POWER_BUNDLES,
+  POWER_TYPE_COUNT,
+  COINS_PER_GEM_LIST,
+  STARTER_BUNDLES,
+} from "@/config/shopValue";
 import iconStarterPack from "@/assets/icons/icon-starter-pack.webp";
 import iconVipCrown from "@/assets/icons/icon-vip-crown.webp";
 import iconMagicOrb from "@/assets/icons/magic-orb.webp";
@@ -67,93 +76,110 @@ export function useShopData() {
 
   return useMemo(() => {
     // ECONOMY CONSTANTS (from rewardConfig)
-    // 1 GEL = 10 gems, 1 gem = 500 coins
-    // VIP: day=30, week=100, month=250 gems
+    // 1 gem = 500 coins. VIP prices come from REWARDS.VIP_PRICES below rather
+    // than being written out here — they are set against the SUBSCRIPTION
+    // price and moved when the lari rate was unified, and a second copy in a
+    // comment is how the last set went stale.
+    //
+    // The "1 GEL = 10 gems" anchor that used to be stated here was never true
+    // of the shipped ladder: the packs sat about 5x away from it, and quoting
+    // it made every value calculation below read as more grounded than it was.
     
     // Hot Deals - Starter Pack Section
-    // Value calculation: 1 power-up ≈ 1 gem (based on 500 coin game stake)
-    // 2x all powers = 8 power-ups = ~8 gems value
-    const STARTER_PACK_ITEMS: ShopItem[] = [
-      {
-        id: "starter_bundle",
-        name: t("shop.starterPack"),
-        description: `2x ${t("shop.allPowers")} + 500 ${t("shop.coin")}`,
-        price: 10,  // 8 powers + 1 gem worth of coins = 9, sell for 10 (slight premium for convenience)
-        currency: "gems",
+    //
+    // Priced like the rotating deals: declare a discount, and let
+    // src/config/shopValue.ts work out both the reference and the price from
+    // the contents. These three are the reason that module exists.
+    //
+    // They were 10 / 20 / 35 gems against contents that the SAME shop
+    // assembled for 8 / 21 / 33 from the Mega Powers and Coins sections two
+    // rows down — so the "starter pack" cost 25% more than its own parts, and
+    // two of the three wore a discount badge while doing it. The hand-written
+    // arithmetic in the old comments was not wrong, it was measured against
+    // the 1-gem-per-power list rate and simply did not know the shop undercut
+    // itself.
+    const STARTER_PACK_ART: Record<string, { nameKey: string; badge: ShopItem["badge"] }> = {
+      starter_bundle: { nameKey: "shop.starterPack", badge: "new" },
+      starter_bundle_medium: { nameKey: "shop.mediumPackage", badge: "popular" },
+      starter_bundle_large: { nameKey: "shop.largePackage", badge: "best-value" },
+    };
+
+    const STARTER_PACK_ITEMS: ShopItem[] = STARTER_BUNDLES.map((bundle) => {
+      const art = STARTER_PACK_ART[bundle.id];
+      return {
+        id: bundle.id,
+        name: t(art.nameKey),
+        description: `${bundle.contents.powers}x ${t("shop.allPowers")} + ${bundle.contents.coins} ${t("shop.coin")}`,
+        price: bundle.price,
+        currency: "gems" as const,
         icon: <img src={iconStarterPack} alt="" width={50} height={50} loading="lazy" decoding="async" className="w-[50px] h-[50px] object-contain" />,
         gradient: "transparent",
-        badge: "new",
-      },
-      {
-        id: "starter_bundle_medium",
-        name: t("shop.mediumPackage"),
-        description: `5x ${t("shop.allPowers")} + 1000 ${t("shop.coin")}`,
-        price: 20,  // 20 powers (20 gems) + 2 gems coins = 22, sell for 20 = 9% discount
-        currency: "gems",
-        icon: <img src={iconStarterPack} alt="" width={50} height={50} loading="lazy" decoding="async" className="w-[50px] h-[50px] object-contain" />,
-        gradient: "transparent",
-        badge: "popular",
-        savings: 10,
-      },
-      {
-        id: "starter_bundle_large",
-        name: t("shop.largePackage"),
-        description: `10x ${t("shop.allPowers")} + 2500 ${t("shop.coin")}`,
-        price: 35,  // 40 powers (40 gems) + 5 gems coins = 45, sell for 35 = 22% discount
-        currency: "gems",
-        icon: <img src={iconStarterPack} alt="" width={50} height={50} loading="lazy" decoding="async" className="w-[50px] h-[50px] object-contain" />,
-        gradient: "transparent",
-        badge: "best-value",
-        savings: 22,
-      },
-    ];
+        badge: art.badge,
+        savings: bundle.savings,
+      };
+    });
 
     // Hot Deals - Mega Powers Section (powers only, no coins)
-    const MEGA_POWERS_ITEMS: ShopItem[] = [
-      {
-        id: "power_bundle_small",
-        name: t("shop.powerPackOrb"),
-        description: `2x ${t("shop.allPowers")}`,
-        price: 7,  // 8 powers worth 8 gems, sell for 7 = 12% discount
-        currency: "gems",
-        icon: <img src={iconMagicOrb} alt="" width={50} height={50} loading="lazy" decoding="async" className="w-[50px] h-[50px] object-contain" />,
-        gradient: "transparent",
-        savings: 12,
-      },
-      {
-        id: "power_bundle_large",
-        name: t("shop.powerPackForge"),
-        description: `10x ${t("shop.allPowers")}`,
-        price: 28,  // 40 powers worth 40 gems, sell for 28 = 30% discount
-        currency: "gems",
-        icon: <img src={iconMagicForge} alt="" width={50} height={50} loading="lazy" decoding="async" className="w-[50px] h-[50px] object-contain" />,
-        gradient: "transparent",
-        savings: 30,
-      },
-    ];
+    //
+    // Built from POWER_BUNDLES in src/config/shopValue.ts, which is also what
+    // every other bundle's reference price is computed against — so a price
+    // cannot be changed here without moving the number the starter packs and
+    // the rotating deals are measured by. That is the drift these two rows
+    // caused: they undercut the list rate the starter packs were priced
+    // against, and nothing connected the two.
+    //
+    // The savings are derived rather than stated. They came to 12% and 30%
+    // against the 1-gem-per-power list rate, which is what the hand-written
+    // figures said, and those were right — unlike the starter packs'.
+    const MEGA_POWERS_ART: Record<string, { nameKey: string; icon: string }> = {
+      power_bundle_small: { nameKey: "shop.powerPackOrb", icon: iconMagicOrb },
+      power_bundle_large: { nameKey: "shop.powerPackForge", icon: iconMagicForge },
+    };
 
-    // VIP Section - aligned with rewardConfig.ts VIP_PRICES
+    const MEGA_POWERS_ITEMS: ShopItem[] = POWER_BUNDLES.map((bundle) => {
+      const art = MEGA_POWERS_ART[bundle.id];
+      const listValue = bundle.powers * POWER_TYPE_COUNT * GEMS_PER_POWER_LIST;
+      return {
+        id: bundle.id,
+        name: t(art.nameKey),
+        description: `${bundle.powers}x ${t("shop.allPowers")}`,
+        price: bundle.gems,
+        currency: "gems" as const,
+        icon: <img src={art.icon} alt="" width={50} height={50} loading="lazy" decoding="async" className="w-[50px] h-[50px] object-contain" />,
+        gradient: "transparent",
+        savings: Math.round((1 - bundle.gems / listValue) * 100),
+      };
+    });
+
+    // VIP Section - priced FROM rewardConfig.ts VIP_PRICES rather than
+    // repeating the numbers, because these are set against the subscription
+    // price (see the note there) and a hardcoded copy here would have to move
+    // with it. It did not, twice.
+    //
     // (no 1-day option — week and month keep the section an even pair)
     //
     // Neither row carries a `savings` percentage any more, and that is the
     // point. They used to: -52% on the week and -72% on the month, both
-    // measured against REWARDS.VIP_PRICES.day (30 gems) x the number of days —
-    // 210 gems for a week, 900 for a month. Those are not prices anybody can
-    // pay. The shop has never listed a 1-day VIP (see the line above), so the
-    // discount was against a figure with no purchasable original, which is
-    // exactly the reference-price claim guideline 2.3.1 calls out.
+    // measured against a 1-day VIP price times the number of days. This shop
+    // has never listed a 1-day VIP, so the discount was against a figure with
+    // no purchasable original — exactly the reference-price claim guideline
+    // 2.3.1 calls out.
     //
-    // The two honest fixes were to list a 1-day VIP at 30 gems and let the
-    // comparison stand, or to drop the badge. Dropping it, because a 1-day VIP
-    // is not an offer anyone here wants to make — it would exist only to be
-    // the expensive thing the real items are cheaper than, and the section is
-    // deliberately an even pair. The prices themselves are unchanged.
+    // The two honest fixes were to list a 1-day VIP and let the comparison
+    // stand, or to drop the badge. Dropping it, because a 1-day VIP is not an
+    // offer anyone here wants to make — it would exist only to be the
+    // expensive thing the real items are cheaper than, and the section is
+    // deliberately an even pair.
+    //
+    // Note the home screen's GemShopModal DOES sell a 1-day VIP, from the same
+    // VIP_PRICES table. So the comparison could be honestly made there. It
+    // still is not, for the same reason.
     const VIP_PROMO_ITEMS: ShopItem[] = [
       {
         id: "vip_week_deal",
         name: t("shop.vipWeek"),
         description: t("shop.vipBenefitsWeek"),
-        price: 100,  // 100 gems = 10 GEL
+        price: REWARDS.VIP_PRICES.week,
         currency: "gems",
         icon: <img src={iconVipCrown} alt="" width={50} height={50} loading="lazy" decoding="async" className="w-[50px] h-[50px] object-contain" />,
         gradient: "transparent",
@@ -164,7 +190,7 @@ export function useShopData() {
         id: "vip_month",
         name: t("shop.vipMonth"),
         description: t("shop.vipBenefitsMonth"),
-        price: 250,  // 250 gems = 25 GEL
+        price: REWARDS.VIP_PRICES.month,
         currency: "gems",
         icon: <img src={iconVipCrown} alt="" width={50} height={50} loading="lazy" decoding="async" className="w-[50px] h-[50px] object-contain" />,
         gradient: "transparent",
@@ -235,53 +261,42 @@ export function useShopData() {
       badge: index === 0 ? "new" as const : index === 1 ? "popular" as const : frame.rarity === "legendary" ? "best-value" as const : null,
     }));
 
-    // Coins Section - 1 gem = 500 coins base rate
-    const COINS_ITEMS: ShopItem[] = [
-      {
-        id: "coins_500",
-        name: `500 ${t("shop.coin")}`,
-        description: t("shop.coinsDescSmall"),
-        price: 1,  // Exact rate: 500 coins = 1 gem
-        currency: "gems",
+    // Coins Section
+    //
+    // Built from COIN_PACKS in src/config/shopValue.ts. The larger two pay a
+    // bonus over the base 500-coins-per-gem rate, and the savings figure is
+    // derived from that rather than stated, so a pack cannot advertise a bonus
+    // it does not pay.
+    //
+    // That bonus is only safe because the coins→gems exchange now charges a
+    // spread. It did not: `exchange_currency` bought and sold at a flat 500,
+    // so 24 gems bought 15 000 coins which sold back for 30, and the two
+    // halves of that loop were both in the shipped UI. See the migration
+    // 20261104110000_shop_purchase_and_exchange_spread.sql.
+    const COINS_ART: Record<string, { descriptionKey: string; gradient: string; badge?: ShopItem["badge"] }> = {
+      coins_500: { descriptionKey: "shop.coinsDescSmall", gradient: "linear-gradient(135deg, hsl(45 90% 60%) 0%, hsl(40 85% 50%) 100%)" },
+      coins_1500: { descriptionKey: "shop.coinsDescMedium", gradient: "linear-gradient(135deg, hsl(40 90% 55%) 0%, hsl(35 85% 48%) 100%)" },
+      coins_5000: { descriptionKey: "shop.coinsDescLarge", gradient: "linear-gradient(135deg, hsl(35 90% 52%) 0%, hsl(25 85% 45%) 100%)", badge: "popular" },
+      coins_15000: { descriptionKey: "shop.coinsDescMega", gradient: "linear-gradient(135deg, hsl(25 90% 50%) 0%, hsl(15 85% 45%) 100%)", badge: "best-value" },
+    };
+
+    const COINS_ITEMS: ShopItem[] = COIN_PACKS.map((pack) => {
+      const listPrice = pack.coins / COINS_PER_GEM_LIST;
+      const savings = Math.round((1 - pack.gems / listPrice) * 100);
+      const art = COINS_ART[pack.id];
+      return {
+        id: pack.id,
+        name: `${pack.coins} ${t("shop.coin")}`,
+        description: t(art.descriptionKey),
+        price: pack.gems,
+        currency: "gems" as const,
         icon: <img src={coinIcon} alt="" width={32} height={32} loading="lazy" decoding="async" className="w-8 h-8" />,
-        gradient: "linear-gradient(135deg, hsl(45 90% 60%) 0%, hsl(40 85% 50%) 100%)",
-        value: 500,
-      },
-      {
-        id: "coins_1500",
-        name: `1500 ${t("shop.coin")}`,
-        description: t("shop.coinsDescMedium"),
-        price: 3,  // 1500 coins = 3 gems (exact rate)
-        currency: "gems",
-        icon: <img src={coinIcon} alt="" width={32} height={32} loading="lazy" decoding="async" className="w-8 h-8" />,
-        gradient: "linear-gradient(135deg, hsl(40 90% 55%) 0%, hsl(35 85% 48%) 100%)",
-        value: 1500,
-      },
-      {
-        id: "coins_5000",
-        name: `5000 ${t("shop.coin")}`,
-        description: t("shop.coinsDescLarge"),
-        price: 9,  // 5000 coins = 10 gems, sell for 9 = 10% bonus
-        currency: "gems",
-        icon: <img src={coinIcon} alt="" width={32} height={32} loading="lazy" decoding="async" className="w-8 h-8" />,
-        gradient: "linear-gradient(135deg, hsl(35 90% 52%) 0%, hsl(25 85% 45%) 100%)",
-        value: 5000,
-        badge: "popular",
-        savings: 10,
-      },
-      {
-        id: "coins_15000",
-        name: `15000 ${t("shop.coin")}`,
-        description: t("shop.coinsDescMega"),
-        price: 24,  // 15000 coins = 30 gems, sell for 24 = 20% bonus
-        currency: "gems",
-        icon: <img src={coinIcon} alt="" width={32} height={32} loading="lazy" decoding="async" className="w-8 h-8" />,
-        gradient: "linear-gradient(135deg, hsl(25 90% 50%) 0%, hsl(15 85% 45%) 100%)",
-        value: 15000,
-        badge: "best-value",
-        savings: 20,
-      },
-    ];
+        gradient: art.gradient,
+        value: pack.coins,
+        badge: art.badge,
+        ...(savings > 0 ? { savings } : {}),
+      };
+    });
 
     // Gems Section (real money). Built from GEM_PACKS so the shop grid, the
     // "not enough gems" modal, the Stripe checkout and the App Store catalog

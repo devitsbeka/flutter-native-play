@@ -24,11 +24,25 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { REWARDS } from "@/config/rewardConfig";
 
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
+
+/**
+ * Every migration, in the order Postgres applies them.
+ *
+ * Used where a row's CURRENT value is what matters rather than which file set
+ * it: an applied migration cannot be edited, so a correction is always a new
+ * file, and a test pinned to one filename goes on asserting the superseded
+ * number.
+ */
+const migrationFiles = (): string[] =>
+  readdirSync(join(process.cwd(), "supabase/migrations"))
+    .filter((f) => f.endsWith(".sql"))
+    .sort()
+    .map((f) => `supabase/migrations/${f}`);
 const migration = read("supabase/migrations/20261102100000_starting_balance_and_pro_welcome.sql");
 const iap = read("supabase/functions/_shared/iap.ts");
 const economyHook = read("src/hooks/useEconomyConfig.ts");
@@ -217,11 +231,19 @@ describe("economy_config tells the truth about the rest of it too", () => {
     // missed were the three furthest from the truth. The VIP rows said
     // 5/20/50 gems against a shop charging 30/100/250, and the ad row
     // promised coins for something that has paid a play for months.
-    const vip = read("supabase/migrations/20261102120000_economy_config_vip_and_ads.sql");
+    //
+    // Reads the LAST value written for each row across all migrations, not one
+    // named file. An applied migration cannot be edited — a correction has to
+    // be a new one — so pinning this to a filename meant the test would go on
+    // asserting a superseded number, which is exactly what happened when VIP
+    // was repriced against the subscription in 20260909130000.
     const value = (id: string): number => {
-      const m = vip.match(new RegExp(`\\('${id}',\\s*(-?\\d+),`));
-      if (!m) throw new Error(`row '${id}' is not in the migration`);
-      return Number(m[1]);
+      const pattern = new RegExp(`\\('${id}',\\s*(-?\\d+),`);
+      const hits = migrationFiles()
+        .map((file) => read(file).match(pattern))
+        .filter((m): m is RegExpMatchArray => m !== null);
+      if (hits.length === 0) throw new Error(`row '${id}' is in no migration`);
+      return Number(hits[hits.length - 1][1]);
     };
     for (const [period, gems] of Object.entries(REWARDS.VIP_PRICES)) {
       expect(value(`vip_price_${period}`), period).toBe(gems);

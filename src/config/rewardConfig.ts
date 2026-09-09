@@ -3,8 +3,13 @@
 // ECONOMY BALANCE:
 // - 1 Gem = 500 Coins
 // - Game stake: 500 coins (win = 1000, lose = 0, draw = 250)
-// - 30 gems = 15,000 coins = 1 day VIP = 3 GEL
-// - New player gets 1500 coins (3 free games) + 3 gems (1500 coins value)
+// - New player gets 5000 coins (10 free games) + 3 gems (1500 coins value)
+//
+// No lari figures here. Gem prices are global and money prices are not, so a
+// line like "30 gems = 3 GEL" is only true in one market and only until the
+// ladder moves — which is exactly what happened to the one that used to be
+// here: it stated a "1 GEL = 10 gems" anchor the packs had drifted 5x from.
+// The money side lives in src/config/pricing.ts alone.
 
 export const REWARDS = {
   // ===== GAME STAKE SYSTEM =====
@@ -115,13 +120,32 @@ export const REWARDS = {
   } as Record<string, number>,
 
   // ===== VIP PRICES (gems) =====
-  // 1 day = 30 gems = 3 GEL
-  // Longer periods get better value
+  //
+  // Priced so that buying PRO with gems costs what the SUBSCRIPTION costs, in
+  // every currency. That is the whole reason these numbers are what they are,
+  // and it is not obvious from looking at them:
+  //
+  //   month = 570 gems. At the best pack rate that is $3.99 and 4.99 GEL —
+  //   exactly `pro_monthly` in src/config/pricing.ts.
+  //
+  // They were 30/55/100/250, which worked out at 4.81 GEL for a month (fine)
+  // and $1.75 (not fine — the subscription is $3.99). The gem route was 56%
+  // off PRO for everyone outside Georgia, with no renewal and no trial
+  // attached. That gap was really the two lari rates showing through; see the
+  // long note on PRICES, which is the other half of this fix. The two move
+  // TOGETHER or the gap reopens.
+  //
+  // The old comments claimed "1 day = 30 gems = 3 GEL", from a "1 GEL = 10
+  // gems" anchor the ladder had drifted 5x away from. Deliberately no
+  // money figures here now: the gem price is global, the money price is not,
+  // and writing one next to the other is how the last set went stale.
+  //
+  // Longer periods still get better value: 70, 62.5, 32.9, 19 gems per day.
   VIP_PRICES: {
-    day: 30,      // 30 gems = 3 GEL (base rate)
-    "2days": 55,  // 55 gems — a shade under 2x day, deal-only
-    week: 100,    // 100 gems = 10 GEL (52% discount vs daily)
-    month: 250,   // 250 gems = 25 GEL (72% discount vs daily)
+    day: 70,
+    "2days": 125,  // a shade under 2x day, deal-only
+    week: 230,
+    month: 570,
   },
 
   // ===== MULTIPLAYER STAKE REWARDS =====

@@ -92,20 +92,37 @@ serve(async (req) => {
       apiVersion: "2023-10-16",
     });
 
-    // Get user from auth header (optional for guest checkout)
+    // A subscription must belong to somebody.
+    //
+    // This used to accept an unauthenticated request and write the literal
+    // string "guest" into the session and subscription metadata. That is not a
+    // user id, so the webhook has nothing to grant the entitlement to and no
+    // later flow can reconcile the payment against an account — the money
+    // arrives and there is no way to find out whose it is. The gem checkout
+    // has always required auth; this is the same rule.
+    //
+    // Unreachable from the app's own UI in any case: the paywall sends a
+    // signed-out visitor to /auth before it ever calls this.
     const authHeader = req.headers.get("Authorization");
-    let userId: string | null = null;
-    let userEmail: string | null = null;
-
-    if (authHeader) {
-      const token = authHeader.replace("Bearer ", "");
-      const { data: userData, error: userError } = await supabase.auth.getUser(token);
-
-      if (!userError && userData.user) {
-        userId = userData.user.id;
-        userEmail = userData.user.email || null;
-      }
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: userData, error: userError } = await supabase.auth.getUser(token);
+
+    if (userError || !userData.user) {
+      return new Response(
+        JSON.stringify({ error: "Invalid user" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const userId: string = userData.user.id;
+    const userEmail: string | null = userData.user.email || null;
 
     const { tierId, period, language } = await req.json();
 
@@ -136,9 +153,10 @@ serve(async (req) => {
     const amount = priceOf(line.priceKey, currency);
     const sku = `${line.sku}_${currency}`;
 
-    // Get or create Stripe customer if user is authenticated
+    // Get or create Stripe customer. `userEmail` can still be null for an
+    // account created without one, in which case Checkout collects it.
     let customerId: string | undefined;
-    if (userId && userEmail) {
+    if (userEmail) {
       const customers = await stripe.customers.list({
         email: userEmail,
         limit: 1,
@@ -174,7 +192,6 @@ serve(async (req) => {
     // Create Stripe Checkout session for subscription
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
-      customer_email: customerId ? undefined : undefined, // Will be collected during checkout for guests
       payment_method_types: ["card"],
       line_items: [
         {
@@ -209,7 +226,7 @@ serve(async (req) => {
       cancel_url: `${origin}/checkout/cancelled`,
       locale: "auto",
       metadata: {
-        user_id: userId || "guest",
+        user_id: userId,
         tier_id: tierId,
         sku,
         friend_invites: tier.friendInvites.toString(),
@@ -221,8 +238,12 @@ serve(async (req) => {
         ...(interval === "year" && TRIAL_DAYS_YEARLY > 0
           ? { trial_period_days: TRIAL_DAYS_YEARLY }
           : {}),
+        // The webhook reads BOTH of these off the subscription object —
+        // `user_id` to know whose entitlement this is and `tier_id` to know
+        // what to grant. A subscription without them is unusable, which is why
+        // the auth check above is not optional.
         metadata: {
-          user_id: userId || "guest",
+          user_id: userId,
           tier_id: tierId,
           friend_invites: tier.friendInvites.toString(),
         },
@@ -230,7 +251,7 @@ serve(async (req) => {
       allow_promotion_codes: true,
     });
 
-    console.log(`[PRO-CHECKOUT] Created session for ${amount} ${currency} ${interval}ly, tier=${tierId}, trial=${interval === "year" ? TRIAL_DAYS_YEARLY : 0}d, user=${userId || "guest"}, session=${session.id}`);
+    console.log(`[PRO-CHECKOUT] Created session for ${amount} ${currency} ${interval}ly, tier=${tierId}, trial=${interval === "year" ? TRIAL_DAYS_YEARLY : 0}d, user=${userId}, session=${session.id}`);
 
     return new Response(
       JSON.stringify({ url: session.url, sessionId: session.id }),

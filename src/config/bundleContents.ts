@@ -10,6 +10,7 @@
 // a pure function of the bundle id, which is what makes it testable.
 
 import { ALL_SHOP_DEALS } from "@/config/shopDeals";
+import { POWER_BUNDLES, STARTER_BUNDLES } from "@/config/shopValue";
 
 export type PowerUpKey = "5050" | "freeze" | "replace" | "time-drain";
 
@@ -24,12 +25,16 @@ export interface BundleContents {
 }
 
 export const BUNDLE_CONTENTS: Record<string, BundleContents> = {
-  starter_bundle: { powers: 2, coins: 500 },
-  starter_bundle_medium: { powers: 5, coins: 1000 },
-  starter_bundle_large: { powers: 10, coins: 2500 },
-  power_bundle_small: { powers: 2, coins: 0 },
+  // Starter packs and the two pure-power bundles come from shopValue.ts,
+  // which is also where their PRICES are computed from these same contents.
+  // Written out twice, a bundle could advertise one thing and grant another —
+  // and the shop's reference prices would be measured against contents nobody
+  // receives.
+  ...Object.fromEntries(STARTER_BUNDLES.map((b) => [b.id, { powers: b.contents.powers, coins: b.contents.coins }])),
+  ...Object.fromEntries(POWER_BUNDLES.map((b) => [b.id, { powers: b.powers, coins: 0 }])),
+  // Sold only by the home screen's GemShopModal, which carries its own
+  // catalogue; no priced row in the shop grid corresponds to them.
   mega_power_bundle: { powers: 5, coins: 0 },
-  power_bundle_large: { powers: 10, coins: 0 },
   power_combo_bundle: { powers: 3, coins: 0 },
   ...Object.fromEntries(ALL_SHOP_DEALS.map((deal) => [deal.id, deal.contents])),
 };

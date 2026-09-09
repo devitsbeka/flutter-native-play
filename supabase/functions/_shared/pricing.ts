@@ -44,10 +44,10 @@ export const PRICES: Record<PriceKey, Record<Currency, number>> = {
   pro_monthly: { GEL: 4.99, USD: 3.99, EUR: 3.99 },
   pro_annual: { GEL: 59.88, USD: 23.88, EUR: 23.88 },
   pro_plus_monthly: { GEL: 9.99, USD: 7.99, EUR: 7.99 },
-  gems_100: { GEL: 2.72, USD: 0.99, EUR: 0.99 },
-  gems_500: { GEL: 10.97, USD: 3.99, EUR: 3.99 },
-  gems_1500: { GEL: 35.72, USD: 12.99, EUR: 12.99 },
-  gems_5000: { GEL: 96.22, USD: 34.99, EUR: 34.99 },
+  gems_100: { GEL: 1.24, USD: 0.99, EUR: 0.99 },
+  gems_500: { GEL: 4.99, USD: 3.99, EUR: 3.99 },
+  gems_1500: { GEL: 13.74, USD: 10.99, EUR: 10.99 },
+  gems_5000: { GEL: 43.74, USD: 34.99, EUR: 34.99 },
 };
 
 export function priceOf(key: PriceKey, currency: Currency): number {

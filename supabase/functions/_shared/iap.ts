@@ -287,11 +287,22 @@ export async function syncSubscription(
  * rather than leaving somebody paid-up and empty-handed with the ledger
  * saying it was done.
  */
-async function creditSubscriptionWelcome(
+export async function creditSubscriptionWelcome(
   supabase: SupabaseClient,
   userId: string,
   tier: string,
   entitlement: { productId: string; store: string; transactionId: string },
+  /**
+   * Where the subscription was bought, for the analytics row.
+   *
+   * Defaults to deriving it from the RevenueCat store name, which is what
+   * every caller inside this file wants. The Stripe subscription webhook
+   * passes "web" explicitly — it shares this function so that a web
+   * subscriber and a store subscriber are paid the same bundle, once, off the
+   * same `iap_events` claim, rather than through a second implementation that
+   * could disagree about the amount or pay it twice.
+   */
+  platform?: string,
 ): Promise<void> {
   const bundle = SUBSCRIPTION_WELCOME[tier];
   if (!bundle) return;
@@ -335,7 +346,7 @@ async function creditSubscriptionWelcome(
     product_id: entitlement.productId,
     product_type: "subscription_welcome",
     value_received: bundle,
-    platform: entitlement.store === "play_store" ? "android" : "ios",
+    platform: platform ?? (entitlement.store === "play_store" ? "android" : "ios"),
   });
 }
 

@@ -60,18 +60,45 @@ export type PriceKey =
  * The price of each thing in each currency.
  *
  * USD is the App Store tier the product is configured at, so it is the anchor
- * — those are the figures a phone charges outside Georgia.
+ * — those are the figures a phone charges outside Georgia. EUR mirrors USD,
+ * which is how Apple's own tiers line up either side of the Atlantic.
  *
- * GEL is the home market and is priced for it, which is why lari is the only
- * column that moves when the offer changes: PRO is 4.99 a month, PRO with
- * friends 9.99, and a year 59.88. Everywhere else keeps the App Store tiers.
- * For gems it is the figure Georgian buyers have
- * been shown all along — the USD price at the 2.75 rate the old converter
- * used — so that making the charge match the display changes nobody's price.
+ * **GEL is 1.25x USD for everything, and that single rate is load-bearing.**
  *
- * EUR mirrors USD, which is how Apple's own tiers line up either side of the
- * Atlantic. Every one of these is a business decision and a one-line change;
- * none of them is derived at runtime.
+ * It used to be two rates: subscriptions at 1.25x and gems at 2.75x — the
+ * latter inherited from the flat multiplier the old `usdToGel` converter
+ * applied, kept at the time so that making the charge match the display would
+ * not move anybody's price. Both halves were defensible on their own. Together
+ * they were not, because of how the two ladders meet:
+ *
+ *   VIP is priced in GEMS, globally. Gems are priced in MONEY, per currency.
+ *
+ * So the real cost of a month of VIP is set by whatever the gem rate is in
+ * your currency, and with two rates it came out at 4.81 GEL (against a 4.99
+ * GEL subscription — fine) but only $1.75 (against a $3.99 subscription).
+ * Every buyer outside Georgia could have PRO for 56% off by taking the gem
+ * route, which has no renewal and no trial attached to it. There is no way to
+ * fix that with a per-currency VIP price, because VIP does not have one.
+ *
+ * With one rate the two routes agree everywhere: 570 gems is $3.99 and 4.99
+ * GEL, which is what the subscription costs in each. See VIP_PRICES in
+ * src/config/rewardConfig.ts, which is the other half of this and moved with
+ * it.
+ *
+ * The consequence to be aware of: gem-priced goods that are NOT VIP — powers,
+ * coin packs, frames — got materially cheaper in lari, because Georgian
+ * buyers had been paying 2.2x what dollar buyers paid for the same in-game
+ * item. That is the overcharge coming off, not a discount.
+ *
+ * The annual subscription is the one row that does not follow 1.25x, and
+ * deliberately: 59.88 GEL is 4.99 x 12, so the year carries no discount in
+ * lari and buys the five friend seats instead, while 23.88 USD is half the
+ * monthly rate. A subscription cannot be arbitraged into another currency, so
+ * a per-market discount there creates no seam. Gems can, which is why they
+ * cannot.
+ *
+ * Every one of these is a business decision and a one-line change; none of
+ * them is derived at runtime.
  */
 export const PRICES: Record<PriceKey, Record<Currency, number>> = {
   pro_monthly: { GEL: 4.99, USD: 3.99, EUR: 3.99 },
@@ -84,10 +111,15 @@ export const PRICES: Record<PriceKey, Record<Currency, number>> = {
   // above about lari being priced for its own market.
   pro_annual: { GEL: 59.88, USD: 23.88, EUR: 23.88 },
   pro_plus_monthly: { GEL: 9.99, USD: 7.99, EUR: 7.99 },
-  gems_100: { GEL: 2.72, USD: 0.99, EUR: 0.99 },
-  gems_500: { GEL: 10.97, USD: 3.99, EUR: 3.99 },
-  gems_1500: { GEL: 35.72, USD: 12.99, EUR: 12.99 },
-  gems_5000: { GEL: 96.22, USD: 34.99, EUR: 34.99 },
+  // 1.25x USD, and monotonic in gems per unit of money. gems_1500 was 12.99,
+  // which made it strictly dominated: three of the 500 pack is the same 1500
+  // gems for 11.97, so the middle rung was the worst deal on the ladder AND
+  // the one carrying no badge. At 10.99 the rate climbs 101 -> 125 -> 137 ->
+  // 143 gems per dollar, which is what a ladder is supposed to do.
+  gems_100: { GEL: 1.24, USD: 0.99, EUR: 0.99 },
+  gems_500: { GEL: 4.99, USD: 3.99, EUR: 3.99 },
+  gems_1500: { GEL: 13.74, USD: 10.99, EUR: 10.99 },
+  gems_5000: { GEL: 43.74, USD: 34.99, EUR: 34.99 },
 };
 
 export function priceOf(key: PriceKey, currency: Currency): number {
