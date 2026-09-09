@@ -871,12 +871,20 @@ describe("the cards read on every gradient, and every card shows its way out", (
     expect(trashButtons.length).toBe(2);
   });
 
-  it("a classic party room wears My Trivia Party's icon, unless the host picked one", () => {
+  it("a party room wears My Trivia Party's icon; a classic room that isn't one gets a dealt crest", () => {
+    // A "Mixed"-category room (no party at all) once inherited My Trivia
+    // Party's icon on its private-tab card, because the classic branch of
+    // `lounge` fell back to it unconditionally regardless of isPartyRoom
+    // (owner: "on default rooms with classic trivia rounds in it should
+    // have random icon on room card on private tab list"). The fallback is
+    // gated on isPartyRoom now: a genuine party room still wears the house
+    // icon, and everything else falls to a crest dealt from the shared pool.
     const mine = read("src/components/team/MyRoomsSection.tsx");
-    expect(mine).toMatch(/iconPartyLounge, label: t\("extra\.myTriviaPartyLabel"\)/);
-    // What the host picked wins over the game's stock face — the King
-    // couch's dressed icon shows on its card too.
-    expect(mine).toMatch(/room\.room_icon \?\? lounge\?\.icon/);
+    expect(
+      (mine.match(
+        /room\.room_icon \?\? lounge\?\.icon \?\? \(isPartyRoom \? iconPartyLounge : dealtRoomIcon\(room\.id, iconPool\)\)/g,
+      ) ?? []).length,
+    ).toBe(2);
     const pub = read("src/components/team/PublicRoomsSection.tsx");
     expect(pub).toMatch(/lounge\?\.icon \?\? room\.room_icon|room\.room_icon \?\? lounge\?\.icon/);
   });
