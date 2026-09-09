@@ -83,37 +83,38 @@ describe("what the lobby does with it", () => {
     );
   });
 
-  it("takes the party's name only while the room still wears a dealt one, or none at all", () => {
-    // A brand new party room reads user_trivia_id before any name — dealt or
-    // typed — has landed on the row at all; `!currentRoom.room_name` is what
-    // keeps that first instant showing the trivia's title too, rather than
-    // "Game Room" for the moment before a name exists to judge.
-    expect(room).toMatch(
-      /isPartyRoom && \(!currentRoom\.room_name \|\| isGeneratedRoomName\(currentRoom\.room_name\)\)\s*\n\s*\? triviaDisplayTitle\(partyTitle, t\)\s*\n\s*: currentRoom\.room_name \|\| t\("extra\.gameRoomDefault"\)/,
-    );
+  it("the room's own name carries no party-only branch — room.room_name, like any other room", () => {
+    // Tried the other way round too (party name only while the room still
+    // wore a dealt one, else Untitled) and walked back (owner: "we don't
+    // need 'untitled', use random names for my trivia party rooms as we do
+    // on other rooms") — a party room's heading is exactly what every other
+    // room's is.
+    expect(room).toMatch(/const roomName = currentRoom\.room_name \|\| t\("extra\.gameRoomDefault"\);/);
   });
 
-  it("and an unnamed party is Untitled, not the brand", () => {
-    // The save stores `title || "MyTrivia Party"`, so the room would
-    // otherwise be called the product.
+  it("the chip still names the trivia, Untitled included for one that was never named", () => {
+    // The heading above is just the room's name now; what the chip names —
+    // the round being played — is still the trivia's own title, the same
+    // triviaDisplayTitle fallback everywhere else a trivia's own name is
+    // shown.
     expect(room).toMatch(/triviaDisplayTitle\(partyTitle, t\)/);
   });
 });
 
 /**
- * The rename sheet's own auto-namer stays off for a party room.
+ * The rename sheet's own auto-namer is back on for a party room too.
  *
- * RoomIconPickerModal already had an `autoName` prop for exactly this shape
- * of problem — a team's crest picker sets it false so browsing crests does
- * not fight the captain's own typing (see the prop's own docstring). A party
- * room's sheet left it at the default, so tapping through icons kept
- * overwriting "Untitled" (or the trivia's own title) with a fresh AI-dealt
- * name the host never asked for (owner: "if clicks another icon it
- * shouldn't give room random name, remove that random names from my trivia
- * party rooms").
+ * A party room's sheet briefly turned it off (`autoName={!isPartyRoom}`),
+ * on the reasoning that tapping through icons kept overwriting "Untitled"
+ * (or the trivia's own title) with a fresh AI-dealt name. That traded away
+ * the dealt name entirely — a fresh party room now stays untitled forever
+ * unless the host types something — so a party room's rename sheet deals
+ * one exactly like every other room's does (owner: "bring back random
+ * names"). It still never overwrites a name typed in THIS sheet session —
+ * `hasManuallyEditedName` guards that regardless of `autoName`.
  */
-describe("the icon picker's own namer stays off for a party room", () => {
-  it("autoName is false exactly when isPartyRoom is true", () => {
-    expect(room).toMatch(/autoName=\{!isPartyRoom\}/);
+describe("the icon picker's own namer is on for every room, party included", () => {
+  it("carries no party-only override", () => {
+    expect(room).not.toMatch(/autoName=/);
   });
 });

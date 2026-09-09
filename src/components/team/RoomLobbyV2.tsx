@@ -53,7 +53,6 @@ import { NotEnoughStakeModal } from "@/components/home/NotEnoughStakeModal";
 import { useGameStake } from "@/hooks/useGameStake";
 import { REWARDS } from "@/config/rewardConfig";
 import { partyRoomIconUrl } from "@/utils/partyCoverIcon";
-import { isGeneratedRoomName } from "@/utils/roomNameGenerator";
 import { triviaDisplayTitle } from "@/utils/triviaTitle";
 import { useFriends } from "@/hooks/useFriends";
 import {
@@ -947,22 +946,13 @@ export function RoomLobbyV2() {
   enoughPlayersRef.current = enoughPlayers;
   const canStartGame = participants.length >= 1;
   const roomGradient = getGradientById(currentRoom?.background_gradient);
-  /**
-   * A party room is called what the party is called.
-   *
-   * Only while the room still wears the name it was dealt: a host who has
-   * renamed it keeps their name, which `isGeneratedRoomName` is what tells
-   * apart — every room is created with a generated name, so "is it named?"
-   * cannot be answered by asking whether a name exists.
-   *
-   * `triviaDisplayTitle` handles the party that was never named: the save
-   * stores the brand rather than a blank, so an unnamed party arrives here
-   * already looking titled, and titled the same as every other one.
-   */
-  const roomName =
-    isPartyRoom && (!currentRoom.room_name || isGeneratedRoomName(currentRoom.room_name))
-      ? triviaDisplayTitle(partyTitle, t)
-      : currentRoom.room_name || t("extra.gameRoomDefault");
+  // A party room's own name is a room name, full stop — dealt at creation
+  // and renamed through the same sheet every other room uses, with no
+  // "Untitled"/trivia-title stand-in for it (owner: "we don't need
+  // 'untitled', use random names for my trivia party rooms as we do on
+  // other rooms"). The trivia's own title still names the CHIP below —
+  // what the room plays, not what it's called.
+  const roomName = currentRoom.room_name || t("extra.gameRoomDefault");
 
   // What the universal lobby shows for this room.
   const hasContent = queue.length > 0 || currentRoom.category_id || currentRoom.user_trivia_id;
@@ -1233,14 +1223,15 @@ export function RoomLobbyV2() {
           // resolved here too rather than only at the picker.
           : roundIconSlug(firstQueue);
         return {
-          // A party's chip names the PRODUCT, not the party's own title.
-          // The heading under the emblem already carries the title the host
-          // picked, so the chip repeating it said nothing twice and left
-          // nothing on the screen saying this room was a party at all
-          // (owner). Only a real party: a room built on a trivia the player
-          // merely WROTE keeps its round's own name, which is its topic.
+          // The chip names what is actually being played: the trivia's own
+          // title, the same one the round list and the "+" picker show for
+          // every other round. The generic product name ("My Trivia Party")
+          // sat here once and said nothing about THIS party in particular —
+          // triviaDisplayTitle is the same fallback the room's own heading
+          // above it uses, so a still-unnamed trivia reads as "Untitled"
+          // here too rather than repeating the brand.
           label: isPartyRoom
-            ? t("extra.myTriviaPartyLabel")
+            ? triviaDisplayTitle(partyTitle, t)
             : freshStart || !firstName
               ? t("lobby.uSelectCategory")
               : firstName,
@@ -1578,15 +1569,6 @@ export function RoomLobbyV2() {
         currentIconUrl={roomFace}
         roomName={roomName}
         onConfirm={handleUpdateRoomIconAndName}
-        // The sheet's own AI namer rewrites the name field on every icon tap
-        // — right for an ordinary room choosing a face for the first time,
-        // wrong for a party, whose identity is the trivia it plays. Left on,
-        // browsing icons kept overwriting "Untitled" (or the trivia's own
-        // title) with a fresh random name the host never asked for and had
-        // to notice and delete (owner: "if clicks another icon it shouldn't
-        // give room random name, remove that random names from my trivia
-        // party rooms").
-        autoName={!isPartyRoom}
       />
 
       {/* The rounds, in the order they play, drop under the chip: see the

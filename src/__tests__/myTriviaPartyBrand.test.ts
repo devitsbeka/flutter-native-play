@@ -206,29 +206,30 @@ describe("a party has no lobby, and delete deletes", () => {
 });
 
 /**
- * The lobby heading said what kind of room it was, not which room it was.
+ * The lobby's category chip names the party's trivia, not the product.
  *
- * A MyTrivia Party room is SAVED under the brand, so the one big heading over
- * the lobby read "My Trivia Party" for every party anyone ever made (owner:
- * "my trivia party goes up next to the icon in category container and below
- * goes either untitled or name host will provide for room").
+ * The chip briefly named the PRODUCT instead — every party's chip read "My
+ * Trivia Party", the same brand string regardless of which trivia the room
+ * was actually playing. That name belongs on the round list and the "+"
+ * picker for every other kind of round; a party's chip repeating the brand
+ * said nothing about THIS party (owner: "show my trivia party name in
+ * category picker raw instead 'my trivia party'").
  *
- * The heading half is settled next door in partyRoomIsItsParty: `roomName`
- * resolves to the party's own title while the room still wears a dealt name,
- * and to Untitled when the party was never named. What is here is the other
- * half — the kind, said on the category chip, so a room called "Untitled"
- * still says what it is.
+ * The heading is a different thing, settled next door in
+ * partyRoomIsItsParty: `roomName` is just `currentRoom.room_name` now, the
+ * same as every other room's — no party-only branch, no Untitled stand-in.
+ * The chip's job is different from the heading's (what's being played, not
+ * what the room is called), so it keeps its own `triviaDisplayTitle`
+ * reading — Untitled here means "this trivia was never named", not
+ * anything about the room.
  */
-describe("the lobby says what kind of room it is, on the chip", () => {
+describe("the lobby names the trivia on the chip, not the product", () => {
   const roomLobby = read("src/components/team/RoomLobbyV2.tsx");
   const universal = read("src/components/lobby/UniversalLobby.tsx");
 
-  it("the brand is the chip's label, not a caption beside the emblem", () => {
-    // The heading under the emblem already carries the title the host
-    // picked, so a caption beside the emblem said nothing twice — and the
-    // chip, which is where a player looks to see what the room plays, was
-    // repeating the party's title instead of naming the product (owner).
-    expect(roomLobby).toMatch(/label: isPartyRoom\s*\n\s*\? t\("extra\.myTriviaPartyLabel"\)/);
+  it("the chip reads the party's own trivia title", () => {
+    expect(roomLobby).toMatch(/label: isPartyRoom\s*\n\s*\? triviaDisplayTitle\(partyTitle, t\)/);
+    expect(roomLobby).not.toMatch(/label: isPartyRoom\s*\n\s*\? t\("extra\.myTriviaPartyLabel"\)/);
     expect(roomLobby).not.toMatch(/heroKicker|roomKicker/);
     expect(universal).not.toMatch(/kicker/);
   });
