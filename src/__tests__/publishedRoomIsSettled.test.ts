@@ -27,20 +27,23 @@ const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 const lobby = read("src/components/team/RoomLobbyV2.tsx");
 
 describe("what settles a room", () => {
-  it("being listed with something to play — not the host having pressed Create", () => {
-    // The first cut keyed this on `roomCreated`, and left a hole: Create is
-    // only offered while a room is short of players, so a public room that
-    // filled up and never had it pressed stayed fully editable with two
-    // people in it (owner: "it is a public room but i still see i can
-    // modify room, add categories, switch question count tabs").
-    expect(lobby).toMatch(/const publishedRoom = isPublicRoom && !needsCategorySelection;/);
-    expect(lobby).not.toMatch(/const publishedRoom = isPublicRoom && roomCreated;/);
+  it("the host pressing Create — a draft they are still building is not settled", () => {
+    // "+ Room" publishes on creation, so a room is public long before it is
+    // finished. Locking on "public and has a round" took the category and
+    // the name away from a host who had not said they were done (owner: "i
+    // didn't clicked create yet but can't add categories or change icon or
+    // room name, enable it before i click create").
+    expect(lobby).toMatch(/const publishedRoom = isPublicRoom && roomCreated;/);
+    expect(lobby).not.toMatch(/const publishedRoom = isPublicRoom && !needsCategorySelection;/);
   });
 
-  it("and an empty public room stays open, because picking a round is all it can do", () => {
-    // "+ Room" publishes on creation, so the host lands in a public room
-    // with no round yet. Locking on `isPublicRoom` alone would strand them
-    // there. The pick is what settles it.
+  it("and Create can always be reached, which is what makes that safe", () => {
+    // Keying it on the tap failed once, because Create was only offered
+    // while the room was short of players: a room somebody joined first
+    // could never be created and so never locked. It depends on the round
+    // now, not on the seats, so every public room with something to play
+    // can reach it.
+    expect(lobby).toMatch(/const offerCreate = !needsCategorySelection && !isStarting && !roomCreated;/);
     expect(lobby).toMatch(/const needsCategorySelection = !hasContent;/);
     expect(lobby).toMatch(
       /const hasContent = queue\.length > 0 \|\| currentRoom\.category_id \|\| currentRoom\.user_trivia_id;/,
@@ -56,6 +59,18 @@ describe("what settles a room", () => {
     // writes — so the unlock needs no separate path to keep in step.
     expect(lobby).toMatch(/const isPublicRoom = Boolean\(\(currentRoom as \{ is_public\?: boolean \}\)\.is_public\);/);
     expect(lobby).toMatch(/roomVisibilityFields\(value === "public"\)/);
+  });
+});
+
+describe("the chip keeps its inset whether or not it has a +", () => {
+  it("carries the + button's own margin when there is no + to carry it", () => {
+    // The + sits inside the pill's right edge with mr-[20px]; the label
+    // half only reserves the 8px gap before it. With the + gone — a guest,
+    // or a settled room — the "+N" pill inherited that 8px and read as
+    // touching the edge.
+    const universal = read("src/components/lobby/UniversalLobby.tsx");
+    expect(universal).toMatch(/action \? "pr-\[8px\]" : "pr-\[20px\]",/);
+    expect(universal).toMatch(/className="mr-\[20px\] flex size-\[40px\] shrink-0/);
   });
 });
 

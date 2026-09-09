@@ -1189,19 +1189,20 @@ export function RoomLobbyV2() {
    * playing and if host could modify room after players joined that would be
    * confusing and unfair").
    *
-   * What settles it is being listed with something to play — not the host
-   * having pressed Create. That was the first cut and it left the hole this
-   * replaces: a room fills up and starts before anyone presses Create (the
-   * button is only offered while the room is short of players), so a public
-   * room with two people in it sat there fully editable (owner: "it is a
-   * public room but i still see i can modify room, add categories, switch
-   * question count tabs").
+   * Create is what settles it. Until that tap the room is a draft the host
+   * is still building — "+ Room" publishes on creation, so a room is public
+   * long before it is finished, and locking on that alone took the category
+   * and the name away from a host who had not said they were done (owner:
+   * "i didn't clicked create yet but can't add categories or change icon or
+   * room name, enable it before i click create, disable when room is public
+   * already").
    *
-   * An EMPTY public room stays open, because it has to: "+ Room" publishes
-   * on creation, so the host lands in a room with no round yet and picking
-   * one is the only thing they can do. That pick is what settles it — which
-   * is the same rule as "we need at least category for match to create
-   * public room", read from the room instead of from a tap.
+   * Keying it on the tap failed once before, for a reason that is now
+   * fixed rather than avoided: Create was only offered while the room was
+   * short of players, so a room somebody joined first could never be
+   * created and so never locked. Create depends on the round being decided
+   * now, not on the seats (see offerCreate), so every public room with
+   * something to play can reach this.
    *
    * What stays is the visibility row itself: a host who wants their room
    * back can make it private, and everything is editable again the moment
@@ -1210,7 +1211,7 @@ export function RoomLobbyV2() {
    * also how a host changes their mind about a category they have already
    * put on the list.
    */
-  const publishedRoom = isPublicRoom && !needsCategorySelection;
+  const publishedRoom = isPublicRoom && roomCreated;
   const rulesLocked = matchLive || publishedRoom;
   /**
    * The pencil settles with the rest of it.
