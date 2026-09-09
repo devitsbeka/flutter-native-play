@@ -12,7 +12,9 @@ import { QuizAnswerButton, QuizAnswerState } from "@/components/ui/quiz-answer-b
 import { QuizTrueFalseButton, type QuizTrueFalseState } from "@/components/ui/quiz-true-false-button";
 import { QuizPowerUpBar } from "@/components/ui/quiz-power-up-bar";
 import { ChunkyButton } from "@/components/ui/chunky-button";
-import { AnswerFeedbackCard, answersFadeUnderFeedback } from "./AnswerFeedbackCard";
+import { AnswerFeedbackCard } from "./AnswerFeedbackCard";
+import { QuizBottomBlur } from "./QuizBottomBlur";
+import { useFooterHeight } from "@/hooks/useFooterHeight";
 import { TimerBadge } from "@/components/game/TimerBadge";
 import { PowerUpType as UIPowerUpType } from "@/components/ui/quiz-power-up-button";
 import { useAIIcon } from "@/hooks/useAIIcon";
@@ -72,6 +74,10 @@ export function QuizGameScreenProd() {
   const [freezeTimeLeft, setFreezeTimeLeft] = useState(0);
   // Momentary "+10წ" pill over the time power button after using it.
   const [showTimeDrainBadge, setShowTimeDrainBadge] = useState(false);
+
+  // The floating foot is out of flow, so the answer list is padded by
+  // exactly its height and every answer stays scrollable into view.
+  const [footerRef, footerHeight] = useFooterHeight<HTMLDivElement>();
 
   const currentQuestion = questions[currentQuestionIndex];
   const isLastQuestion = currentQuestionIndex === questions.length - 1;
@@ -352,7 +358,7 @@ export function QuizGameScreenProd() {
   return (
     <div className="w-full h-full bg-[#7E7ADB] overflow-hidden">
       {/* Content wrapper with max-width for desktop/tablet, centered */}
-      <div className="w-full h-full flex flex-col max-w-[700px] md:max-w-[520px] mx-auto">
+      <div className="w-full h-full flex flex-col max-w-[700px] md:max-w-[520px] mx-auto relative">
 
       {/* Header - Different layout for solo vs challenge mode */}
       <div className="flex items-center justify-between px-4 pt-3 py-1 mb-2 [@media(max-height:700px)]:py-0.5 [@media(max-height:700px)]:mb-1 [@media(max-height:600px)]:pt-1 [@media(max-height:600px)]:py-0 [@media(max-height:600px)]:mb-0.5 flex-shrink-0">
@@ -484,8 +490,8 @@ export function QuizGameScreenProd() {
       {/* Answer Buttons */}
       {isTrueFalseQuestion ? (
         <div
-          className="flex-1 min-h-0 w-full px-4 mt-0 flex gap-3 [@media(max-height:600px)]:gap-2 pb-2 items-center"
-          style={answerRevealed ? answersFadeUnderFeedback : undefined}
+          className="flex-1 min-h-0 w-full px-4 mt-0 flex gap-3 [@media(max-height:600px)]:gap-2 items-center"
+          style={{ paddingBottom: footerHeight }}
         >
           {currentQuestion.allAnswers.map((answer, index) => {
             const isTrue = answer.toLowerCase() === "მართალია" || answer.toLowerCase() === "true";
@@ -509,8 +515,8 @@ export function QuizGameScreenProd() {
         </div>
       ) : (
         <div
-          className="flex-1 px-4 mt-0 flex flex-col gap-3 [@media(max-height:700px)]:gap-2 [@media(max-height:600px)]:gap-1.5 overflow-y-auto min-h-0 pb-2"
-          style={answerRevealed ? answersFadeUnderFeedback : undefined}
+          className="flex-1 px-4 mt-0 flex flex-col gap-3 [@media(max-height:700px)]:gap-2 [@media(max-height:600px)]:gap-1.5 overflow-y-auto min-h-0"
+          style={{ paddingBottom: footerHeight }}
         >
           {currentQuestion.allAnswers.map((answer, index) => {
             const isHidden = hiddenAnswers.includes(answer);
@@ -536,6 +542,13 @@ export function QuizGameScreenProd() {
         </div>
       )}
 
+      {/* The floating foot: the feedback card and the next button, on the
+          frosted ramp. Out of flow on purpose — the answers run underneath
+          it and blur out as they go, instead of being clipped short of it
+          with a hard edge. */}
+      <div ref={footerRef} className="absolute inset-x-0 bottom-0 z-20">
+      <QuizBottomBlur />
+
       {/* Answer feedback — Figma 1154:9157. Same card the solo rounds get:
           the verdict, somewhere to keep the question or flag it, and a few
           words about the answer, sitting over the next button. */}
@@ -543,7 +556,7 @@ export function QuizGameScreenProd() {
         {answerRevealed && currentQuestion && (
           <motion.div
             key={`feedback-${currentQuestionIndex}`}
-            className="px-4 pt-2 pb-6 [@media(max-height:700px)]:pb-4 [@media(max-height:600px)]:pb-2 flex-shrink-0"
+            className="relative px-4 pt-2 pb-5 [@media(max-height:700px)]:pb-4 [@media(max-height:600px)]:pb-2 flex-shrink-0"
           >
             <AnswerFeedbackCard
               isCorrect={!!lastAnswerCorrect}
@@ -558,7 +571,7 @@ export function QuizGameScreenProd() {
       </AnimatePresence>
 
       {/* Bottom Area - Power-ups OR Next Button */}
-      <div className="px-4 pb-2 [@media(max-height:700px)]:pb-1 [@media(max-height:600px)]:pb-0.5 flex-shrink-0">
+      <div className="relative px-4 pb-2 [@media(max-height:700px)]:pb-1 [@media(max-height:600px)]:pb-0.5 flex-shrink-0">
         <div className="pb-[env(safe-area-inset-bottom)]">
           <AnimatePresence mode="wait">
             {answerRevealed ? (
@@ -593,6 +606,7 @@ export function QuizGameScreenProd() {
             )}
           </AnimatePresence>
         </div>
+      </div>
       </div>
 
       {/* Screen-wide freeze effect */}
