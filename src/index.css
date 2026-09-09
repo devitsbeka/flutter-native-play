@@ -846,11 +846,21 @@
   from { transform: scaleX(1); }
   to { transform: scaleX(0.42); }
 }
+@keyframes reward-road-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2.5px); }
+}
+@keyframes reward-road-twinkle {
+  0%, 100% { transform: scale(0.86); opacity: 0.55; }
+  50% { transform: scale(1.1); opacity: 1; }
+}
 
 .reward-road__sway,
 .reward-road__drift,
 .reward-road__flutter,
-.reward-road__wing {
+.reward-road__wing,
+.reward-road__bob,
+.reward-road__twinkle {
   transform-box: fill-box;
   will-change: transform;
 }
@@ -879,9 +889,25 @@
   animation-iteration-count: infinite;
   animation-direction: alternate;
 }
+/* A crystal that swayed would be the one thing anybody noticed, so it floats;
+   a sparkle does what sparkles do. */
+.reward-road__bob {
+  transform-origin: 50% 100%;
+  animation-name: reward-road-bob;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+.reward-road__twinkle {
+  transform-origin: 50% 65%;
+  animation-name: reward-road-twinkle;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
 @media (prefers-reduced-motion: reduce) {
   .reward-road__sway,
   .reward-road__drift,
   .reward-road__flutter,
-  .reward-road__wing { animation: none; }
+  .reward-road__wing,
+  .reward-road__bob,
+  .reward-road__twinkle { animation: none; }
 }

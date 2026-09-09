@@ -182,8 +182,8 @@ export type SceneryKind =
   | "bush"
   | "flower"
   | "grass"
-  | "rock"
-  | "mushroom"
+  | "crystal"
+  | "sparkle"
   | "cloud"
   | "butterfly";
 
@@ -226,10 +226,13 @@ const GROUND: { kind: SceneryKind; weight: number; scale: [number, number] }[] =
   { kind: "bush", weight: 3, scale: [1.0, 1.5] },
   { kind: "flower", weight: 4, scale: [0.7, 1.0] },
   { kind: "grass", weight: 4, scale: [0.7, 1.1] },
-  { kind: "rock", weight: 1, scale: [0.7, 1.1] },
-  // Mushrooms are drawn small inside their box, so they need a larger scale
-  // than the rest to read as a mushroom rather than as a red speck.
-  { kind: "mushroom", weight: 1, scale: [0.9, 1.2] },
+  // A gem and a sparkle rather than a rock and a toadstool: the ground beside
+  // a rewards road should be made of the things the rewards are made of, and
+  // those two were the only objects in the scene that belonged to no part of
+  // this app. Drawn small inside their box, so they take a larger scale than
+  // the plants to read as anything at all.
+  { kind: "crystal", weight: 1, scale: [0.9, 1.3] },
+  { kind: "sparkle", weight: 1, scale: [0.9, 1.3] },
 ];
 
 const pickKind = (r: number) => {
@@ -309,9 +312,9 @@ export function scenery(nodes: RoadNode[], width: number, height: number): Scene
       kind: "butterfly",
       x: 24 + rand() * Math.max(1, width - 48),
       y: 60 + rand() * Math.max(1, height - 120),
-      // Same reason as the mushrooms: a butterfly is two small wings, and
-      // below about this size it is a coloured dot.
-      scale: 0.95 + rand() * 0.4,
+      // Same reason as the crystals: below about this size a butterfly is a
+      // coloured dot however carefully it is drawn.
+      scale: 1.05 + rand() * 0.45,
       flip: rand() < 0.5,
       delay: rand() * 5,
       duration: 5 + rand() * 3,

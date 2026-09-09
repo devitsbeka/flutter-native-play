@@ -83,22 +83,47 @@ interface DailyRewardsModalProps {
   onClaim?: () => void;
 }
 
-// Per-day medallion gradients: bright same-family color pairs — cross-family
-// blends (teal into rose etc.) muddy out in the middle and read dark
-const DAY_GRADIENTS: [string, string][] = [
-  ["#34D399", "#2563EB"], // Mon teal → blue
-  ["#A78BFA", "#D946EF"], // Tue violet → fuchsia
-  ["#FBBF24", "#F97316"], // Wed amber → orange
-  ["#FB7185", "#EC4899"], // Thu coral → pink
-  ["#22D3EE", "#3B82F6"], // Fri cyan → blue
-  ["#818CF8", "#A855F7"], // Sat indigo → violet
-  ["#FDE047", "#F59E0B"], // Sun gold
+/**
+ * Per-day medallion colours: a bright same-family pair — cross-family blends
+ * (teal into rose etc.) muddy out in the middle and read dark — and the
+ * darker shade under it.
+ *
+ * The third colour is not a variation on the second, it is the app's whole
+ * idiom: every card, button and badge here is a gradient sitting on a HARD
+ * offset edge of its own darker shade, with a hairline of white inset along
+ * the top (MissionsModal's cards, game-modal's shell, the shop's buttons).
+ * A blurred drop shadow instead of that edge is what made the first cut of
+ * these medallions read as somebody else's component library.
+ */
+const DAY_GRADIENTS: [string, string, string][] = [
+  ["#34D399", "#2563EB", "#1D4ED8"], // Mon teal → blue
+  ["#A78BFA", "#D946EF", "#A21CAF"], // Tue violet → fuchsia
+  ["#FBBF24", "#F97316", "#C2410C"], // Wed amber → orange
+  ["#FB7185", "#EC4899", "#BE185D"], // Thu coral → pink
+  ["#22D3EE", "#3B82F6", "#1D4ED8"], // Fri cyan → blue
+  ["#818CF8", "#A855F7", "#7126D5"], // Sat indigo → violet
+  ["#FDE047", "#F59E0B", "#B45309"], // Sun gold
 ];
 
 const stopGradient = (index: number) => {
   const [from, to] = DAY_GRADIENTS[index % DAY_GRADIENTS.length];
   return `linear-gradient(215deg, ${from} 0%, ${to} 100%)`;
 };
+
+/** The hard edge a stop's medallion and its receipt stand on. */
+const stopEdge = (index: number) => DAY_GRADIENTS[index % DAY_GRADIENTS.length][2];
+
+/**
+ * The white chip the app draws on a tinted ground: a hairline violet border
+ * over a hard edge of the same family. Lifted from MissionsModal's chipStyle
+ * so the weekday labels, the lock and the countdown are literally the same
+ * object as every other chip in the product.
+ */
+const CHIP_SURFACE = {
+  background: "#FFFFFF",
+  border: "1.5px solid #E8E0F5",
+  boxShadow: "0 2px 0 #EDE6F7",
+} as const;
 
 const celebrateClaim = () => {
   confetti({
@@ -244,8 +269,8 @@ function RoadStop({
       {/* Weekday label — the calendar, not a streak counter. On the meadow
           rather than on the medallion, so the gift keeps the whole face. */}
       <div
-        className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-full bg-white/85 px-2.5 py-0.5 text-[11px] font-bold capitalize text-[#402666] shadow-[0_1px_2px_rgba(64,38,102,0.14)]"
-        style={{ left: x, top: y - size / 2 - 8, opacity: isMissed ? 0.6 : 1 }}
+        className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-full px-2.5 py-0.5 text-[11px] font-bold capitalize text-[#402666]"
+        style={{ ...CHIP_SURFACE, left: x, top: y - size / 2 - 10, opacity: isMissed ? 0.65 : 1 }}
       >
         {formatWeekday(date, language)}
       </div>
@@ -273,9 +298,11 @@ function RoadStop({
           width: size,
           height: size,
           background: stopGradient(index),
+          // ring, hard edge, the app's white inset hairline, and only then a
+          // soft shadow to lift it off the ground.
           boxShadow: isToday
-            ? "0 0 0 5px rgba(255,255,255,0.95), 0 8px 18px rgba(64,38,102,0.28)"
-            : "0 0 0 4px rgba(255,255,255,0.92), 0 4px 10px rgba(64,38,102,0.18)",
+            ? `0 0 0 5px #FFFFFF, 0 6px 0 ${stopEdge(index)}, inset 0 2px 0 rgba(255,255,255,0.4), 0 10px 18px rgba(64,38,102,0.18)`
+            : `0 0 0 4px #FFFFFF, 0 4px 0 ${stopEdge(index)}, inset 0 1.5px 0 rgba(255,255,255,0.35), 0 7px 12px rgba(64,38,102,0.12)`,
           filter: isMissed
             ? "saturate(0.2) brightness(0.95)"
             : state === "future"
@@ -390,8 +417,11 @@ function RoadStop({
             // below is horizontal and was measured against these icons at this
             // size, so all of them are the ones that were measured.
             <div
-              className={`flex h-[44px] ${PILL_W_MIN} max-w-full items-center justify-center whitespace-nowrap rounded-full pl-[19px] pr-[21px] shadow-[0_2px_6px_rgba(64,38,102,0.22)]`}
-              style={{ background: stopGradient(index), filter: isMissed ? "saturate(0.2)" : undefined }}
+              className={`flex h-[44px] ${PILL_W_MIN} max-w-full items-center justify-center whitespace-nowrap rounded-full pl-[19px] pr-[21px]`}
+              style={{
+                background: stopGradient(index),
+                boxShadow: `0 3px 0 ${stopEdge(index)}, inset 0 1.5px 0 rgba(255,255,255,0.35)`,
+              }}
             >
               <Check className="h-4 w-4 shrink-0 text-white" />
               <ClaimedAmount icon={coinIcon} value={String(receipt.coins)} className="ml-2" />
@@ -445,21 +475,24 @@ function RoadStop({
             // screen lying about the player's own ledger, which is worse than
             // a day that says only "taken".
             <div
-              className={`flex h-[44px] ${PILL_W} items-center justify-center rounded-full shadow-[0_2px_6px_rgba(64,38,102,0.22)]`}
-              style={{ background: stopGradient(index) }}
+              className={`flex h-[44px] ${PILL_W} items-center justify-center rounded-full`}
+              style={{
+                background: stopGradient(index),
+                boxShadow: `0 3px 0 ${stopEdge(index)}, inset 0 1.5px 0 rgba(255,255,255,0.35)`,
+              }}
             >
               <Check className="h-5 w-5 text-white" />
             </div>
           )
         ) : isMissed ? (
-          <div className={`flex h-[44px] ${PILL_W} items-center justify-center rounded-full bg-white/80 shadow-[0_1px_3px_rgba(64,38,102,0.16)]`}>
+          <div className={`flex h-[44px] ${PILL_W} items-center justify-center rounded-full`} style={CHIP_SURFACE}>
             <span className="text-[13px] font-bold text-[#402666]/55">{t("dailyRewards.missed")}</span>
           </div>
         ) : state === "future" ? (
           // Locked, and the road says why: it is further along than today.
           // The weekday above the medallion is the requirement — come back
           // then, with the streak intact.
-          <div className={`flex h-[44px] ${PILL_W} items-center justify-center gap-1.5 rounded-full bg-white/80 shadow-[0_1px_3px_rgba(64,38,102,0.16)]`}>
+          <div className={`flex h-[44px] ${PILL_W} items-center justify-center gap-1.5 rounded-full`} style={CHIP_SURFACE}>
             <Lock className="h-3.5 w-3.5 text-[#402666]/50" />
             <span className="text-[13px] font-bold text-[#402666]/55">{t("dailyRewards.locked")}</span>
           </div>
@@ -472,7 +505,8 @@ function RoadStop({
           // renders as "claimed" above and never reaches here. It still
           // covers the gap while this week's claims are being fetched, when
           // the timer already knows the day is gone and the stop does not.
-          <div className={`flex h-[44px] ${PILL_W} items-center justify-center rounded-full bg-white/85 shadow-[0_1px_3px_rgba(64,38,102,0.16)]`}>
+          <div className={`flex h-[44px] ${PILL_W} items-center justify-center gap-1.5 rounded-full`} style={CHIP_SURFACE}>
+            <Clock className="h-3.5 w-3.5 text-[#402666]/45" />
             <span className="font-mono text-[13px] font-bold text-[#402666]/70">{timeLeft}</span>
           </div>
         ) : null}
@@ -702,8 +736,14 @@ export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: D
               // A map wants room: 80% of the viewport in both directions,
               // capped so it does not become a billboard on a desktop and
               // floored so it does not become a slot on a small phone.
-              className="relative flex h-[80dvh] max-h-[760px] w-[80vw] min-w-[280px] max-w-[420px] flex-col overflow-hidden rounded-[28px] bg-white"
-              style={{ boxShadow: "0 8px 0 #E8E4EC, 0 12px 32px rgba(0,0,0,0.18)" }}
+              className="relative flex h-[80dvh] max-h-[760px] w-[80vw] min-w-[280px] max-w-[420px] flex-col overflow-hidden rounded-[28px]"
+              // The shell every modal in this app is built on: the lavender
+              // gradient, not white, over the same hard edge. A white sheet
+              // between two of these reads as a different app.
+              style={{
+                background: "linear-gradient(180deg, #FDFAFF 0%, #F4EEFB 100%)",
+                boxShadow: "0 8px 0 #E8E4EC, 0 12px 32px rgba(0,0,0,0.18)",
+              }}
             >
               {/* Close */}
               <button
@@ -777,42 +817,54 @@ export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: D
                     Anchored to the scrolling box, not to the modal, so a
                     footer that wraps to two rows cannot leave a fade stranded
                     in the middle of it. */}
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-7 bg-gradient-to-b from-white to-transparent" />
-                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-7 bg-gradient-to-t from-white to-transparent" />
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-7 bg-gradient-to-b from-[#FDFAFF] to-transparent" />
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-7 bg-gradient-to-t from-[#F4EEFB] to-transparent" />
               </div>
 
-              {/* Next-claim timer, the streak, and the VIP bonus */}
-              <div className="flex min-h-[52px] shrink-0 flex-wrap items-center justify-center gap-2 px-5 pb-4 pt-2">
-                {currentStreak > 0 && (
-                  <div
-                    className="flex items-center gap-1.5 rounded-full px-3 py-1.5"
-                    style={{
-                      background: "linear-gradient(135deg, #FFE4CC 0%, #FFC9A3 100%)",
-                      boxShadow: "0 2px 0 #FCA97A",
-                    }}
-                  >
-                    <Flame className="h-4 w-4 text-orange-600" />
-                    <span className="text-sm font-bold text-orange-700">
-                      {t("dailyRewards.daysInRow", { days: currentStreak })}
-                    </span>
+              {/* The streak, and the VIP bonus when there is one.
+                  
+                  This was three floating pills in three different pastels —
+                  a peach one for the streak, an amber one for the clock, a
+                  purple-pink one for VIP — sitting under the map like
+                  stickers. It is the SAME streak row the missions sheet
+                  draws, to the pixel: the green gradient on its hard edge,
+                  the white square badge, the label, and the count in a white
+                  pill. Two screens, one component's worth of design.
+
+                  The countdown is not here any more. It belongs to today's
+                  stop, where the gift you cannot open yet is, and the modal
+                  opens centred on it — a second clock down here was the
+                  screen saying the same thing twice in two different
+                  colours. */}
+              <div className="flex shrink-0 items-center gap-2 px-4 pb-4 pt-2">
+                <div
+                  className="flex flex-1 items-center justify-between rounded-2xl px-3 py-2.5"
+                  style={{
+                    background: "linear-gradient(90deg, #2DD4A0 0%, #10B981 100%)",
+                    boxShadow: "0 3px 0 0 #0EA97C, inset 0 1.5px 0 0 rgba(255,255,255,0.35)",
+                  }}
+                >
+                  <div className="flex min-w-0 items-center gap-2">
+                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white">
+                      <Flame className="h-4 w-4 fill-amber-400 text-amber-400" />
+                    </div>
+                    <span className="truncate text-sm font-bold text-white">{t("missions.streak")}</span>
                   </div>
-                )}
-                {!canClaimDaily && (
-                  <div
-                    className="flex items-center gap-1.5 rounded-full px-3 py-1.5"
-                    style={{
-                      background: "linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)",
-                      boxShadow: "0 2px 0 #FCD34D",
-                    }}
-                  >
-                    <Clock className="h-4 w-4 text-amber-600" />
-                    <span className="font-mono text-sm font-bold text-amber-700">{dailyTimeLeft}</span>
+                  <div className="ml-2 shrink-0 rounded-full bg-white px-3 py-1 text-xs font-bold text-[#0F766E]">
+                    {currentStreak} {t("missions.days")}
                   </div>
-                )}
+                </div>
+
                 {isProPlus() && (
-                  <div className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 px-3 py-1.5">
+                  <div
+                    className="flex shrink-0 items-center gap-1.5 rounded-2xl px-3 py-2.5"
+                    style={{
+                      background: "linear-gradient(90deg, #A855F7 0%, #EC4899 100%)",
+                      boxShadow: "0 3px 0 0 #BE185D, inset 0 1.5px 0 0 rgba(255,255,255,0.35)",
+                    }}
+                  >
                     <Crown className="h-4 w-4 text-white" />
-                    <span className="text-sm font-bold text-white">{t("extra.vipBonusPercent")}</span>
+                    <span className="text-xs font-bold text-white">{t("extra.vipBonusPercent")}</span>
                   </div>
                 )}
               </div>

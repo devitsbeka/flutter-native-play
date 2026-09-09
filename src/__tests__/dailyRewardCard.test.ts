@@ -104,3 +104,74 @@ describe("today, but not yet", () => {
     expect(modal, "the Claim chip is gone").not.toMatch(/\{phase === "opening" \? "…" : t\("dailyRewards\.claim"\)\}/);
   });
 });
+
+/**
+ * The road has to look like the rest of this app, and that is not a matter of
+ * taste that can be left to whoever edits it next.
+ *
+ * The first cut was a green meadow with flat cartoon trees, toadstools and
+ * grey rocks on a white sheet — a competent illustration of a different
+ * product. Everything else here is lavender: modals are the #FDFAFF -> #F4EEFB
+ * gradient (game-modal.tsx, MissionsModal), cards are a saturated gradient
+ * standing on a HARD offset edge of their own darker shade with a white
+ * hairline inset along the top, and chips are white with a #E8E0F5 hairline
+ * over a 2px edge. A blurred drop shadow and a flat fill are what make a
+ * component read as imported from somewhere else.
+ *
+ * These assertions are the palette, not the drawing: what a plant is shaped
+ * like is free, what it is coloured with is not.
+ */
+describe("the road is drawn in the app's own language", () => {
+  const canvas = readFileSync(
+    join(process.cwd(), "src/components/home/RewardRoadCanvas.tsx"),
+    "utf8"
+  );
+
+  it("floats on the lavender the other modals are built on", () => {
+    expect(modal).toMatch(/linear-gradient\(180deg, #FDFAFF 0%, #F4EEFB 100%\)/);
+    // The white sheet, gone: it read as a different app between two modals
+    // that share a background.
+    expect(modal).not.toMatch(/rounded-\[28px\] bg-white/);
+    // And the ground under the road is the same family, not a green field.
+    expect(canvas).toMatch(/id="road-ground"[\s\S]{0,200}?stopColor="#FDFAFF"/);
+  });
+
+  it("stands every medallion and receipt on a hard edge, with the inset hairline", () => {
+    // Three colours per day, the third being the edge — a gradient pair alone
+    // cannot draw this idiom.
+    expect(modal).toMatch(/const DAY_GRADIENTS: \[string, string, string\]\[\]/);
+    expect(modal).toMatch(/0 6px 0 \$\{stopEdge\(index\)\}, inset 0 2px 0 rgba\(255,255,255/);
+    expect(modal).toMatch(/0 3px 0 \$\{stopEdge\(index\)\}, inset 0 1\.5px 0 rgba\(255,255,255/);
+    // No blurred-shadow chips left where the app draws a hard edge.
+    expect(modal).not.toMatch(/shadow-\[0_2px_6px_rgba\(64,38,102/);
+  });
+
+  it("draws its white chips the way every other chip in the app is drawn", () => {
+    expect(modal).toMatch(/border: "1\.5px solid #E8E0F5"/);
+    expect(modal).toMatch(/boxShadow: "0 2px 0 #EDE6F7"/);
+  });
+
+  it("has no colour in the scenery that the app does not already speak", () => {
+    // Every plant takes one of the medallion gradients by id. A literal fill
+    // outside that set is how the meadow got its sage greens and its brown
+    // toadstools; the trunk and the butterfly's body are the two named
+    // exceptions, both drawn once.
+    const fills = [...canvas.matchAll(/fill="(#[0-9A-Fa-f]{6})"/g)].map((m) => m[1].toUpperCase());
+    const allowed = new Set(["#FFFFFF", "#C9A98C", "#5B4B7A", "#FFF7E0", "#E1D6F3"]);
+    expect(fills.filter((f) => !allowed.has(f)), "literal fills in the scenery").toEqual([]);
+  });
+
+  it("puts the streak in the same row the missions sheet uses", () => {
+    // It was a peach pill with a flame in it, floating under the map with two
+    // other pills in two more pastels. One design, used twice, beats two.
+    expect(modal).toMatch(/linear-gradient\(90deg, #2DD4A0 0%, #10B981 100%\)/);
+    expect(modal).toMatch(/0 3px 0 0 #0EA97C, inset 0 1\.5px 0 0 rgba\(255,255,255,0\.35\)/);
+    expect(modal).toMatch(/t\("missions\.streak"\)/);
+
+    // And only one clock in the modal: the one under today's stop, where the
+    // gift you cannot open yet is. The amber pill that used to repeat it in
+    // the footer is gone.
+    expect(modal.match(/timeLeft=\{dailyTimeLeft\}/g)?.length, "one countdown").toBe(1);
+    expect(modal).not.toMatch(/linear-gradient\(135deg, #FEF3C7/);
+  });
+});
