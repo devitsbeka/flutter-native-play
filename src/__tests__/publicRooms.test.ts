@@ -182,7 +182,9 @@ describe("the private tab and the lobby it opens", () => {
     // you asked into it (owner's ask). Counted in ANSWERERS, so the host of
     // their own trivia — who sits out of it — needs two guests, not one.
     expect(lobby).toMatch(/const answeringPlayers = seatedPlayers - \(willBeObserver \? 1 : 0\);/);
-    expect(lobby).toMatch(/const enoughPlayers = answeringPlayers >= 2;/);
+    expect(lobby).toMatch(
+      /const enoughPlayers =\s*\n\s*isPublicRoom && presenceLoaded \? onlineAnswerers >= 2 : answeringPlayers >= 2;/,
+    );
     // Short of a second player the button no longer offers to start at all:
     // it becomes "Create" and hands the host back to the list (see
     // createButtonInsteadOfDeadStart.test.ts). So the state is still named

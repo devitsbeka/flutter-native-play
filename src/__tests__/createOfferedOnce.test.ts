@@ -149,7 +149,9 @@ describe("what the lobby does with it", () => {
     expect(lobby).toMatch(
       /const awaitingPlayers = !needsCategorySelection && !enoughPlayers && !isStarting;/,
     );
-    expect(lobby).toMatch(/const enoughPlayers = answeringPlayers >= 2;/);
+    expect(lobby).toMatch(
+      /const enoughPlayers =\s*\n\s*isPublicRoom && presenceLoaded \? onlineAnswerers >= 2 : answeringPlayers >= 2;/,
+    );
   });
 
   it("and the caption keeps explaining the wait either way", () => {
