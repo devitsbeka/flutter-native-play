@@ -112,14 +112,21 @@ export function RoomLobbyV2() {
     void fetchCrestPool().then(setIconPool);
   }, []);
   /**
-   * Is the "Create" way-out still on offer for this room?
+   * Has the host pressed Create on this room?
    *
-   * Read per room rather than once: the lobby survives the host moving
-   * between rooms, and the answer is about the room, not the mount.
+   * It is the moment a room stops being a draft. Before it, the lobby is
+   * where the room is built; after it, a PUBLIC room is a thing other people
+   * are looking at on a list, and what it says it plays has to stay true
+   * (see rulesLocked). It is also why Create is offered once.
+   *
+   * Read per room rather than once — the lobby survives the host moving
+   * between rooms — and seeded on the first render rather than by the effect
+   * alone, so a created room is never briefly editable while the effect
+   * catches up.
    */
-  const [createOffered, setCreateOffered] = useState(false);
+  const [roomCreated, setRoomCreated] = useState(() => hasPressedCreate(currentRoom?.id));
   useEffect(() => {
-    setCreateOffered(!hasPressedCreate(currentRoom?.id));
+    setRoomCreated(hasPressedCreate(currentRoom?.id));
   }, [currentRoom?.id]);
   /**
    * Whether the room can start, for the handler rather than the button.
@@ -549,7 +556,7 @@ export function RoomLobbyV2() {
    */
   const handleDoneCreating = () => {
     rememberPressedCreate(currentRoom?.id);
-    setCreateOffered(false);
+    setRoomCreated(true);
     exitRoom();
     navigate(`/team?tab=${currentRoom?.is_public ? "public" : "private"}`, { replace: true });
   };
@@ -1070,7 +1077,7 @@ export function RoomLobbyV2() {
    * disable start game button again and when there are minimum 2 online
    * players in the room - we show start game as clickable").
    */
-  const offerCreate = awaitingPlayers && createOffered;
+  const offerCreate = awaitingPlayers && !roomCreated;
 
   const heldRound = (currentRoom.category_id || currentRoom.user_trivia_id)
     ? {
@@ -1138,6 +1145,26 @@ export function RoomLobbyV2() {
    * time (owner: "they can make the room private if they want").
    */
   const matchLive = currentRoom.status === "playing";
+  /**
+   * A published room is played as it was listed.
+   *
+   * The Public tab tells a stranger what a room plays before they ask to
+   * come in, and that card is the only thing they have to go on. A host who
+   * could still swap the category and the question count afterwards would be
+   * answering a different question than the one people joined for (owner:
+   * "players entering public room they should have info what they are
+   * playing and if host could modify room after players joined that would be
+   * confusing and unfair").
+   *
+   * So a public room is settled at Create, exactly as a live match is
+   * settled at Start — one lock, two reasons. What stays is the visibility
+   * row itself: a host who wants their room back can make it private, and
+   * everything is editable again the moment they do (owner: "we let hosts
+   * switch public/private, only that option ... i can modify if i switch to
+   * private but not on public").
+   */
+  const publishedRoom = isPublicRoom && roomCreated;
+  const rulesLocked = matchLive || publishedRoom;
   // The + that asks to be friends, on everyone in the room who is not one
   // yet and is not you (owner's ask: people become friends in the lobby).
   // If they have already asked YOU, the same tap accepts — sendFriendRequest
@@ -1288,12 +1315,18 @@ export function RoomLobbyV2() {
     // No player-count picker on a classic room (owner's ask): the cap is 10
     // and the host starts whenever — with one friend or ten. The card no
     // longer draws ten empty chairs to imply otherwise.
-    ...(playsUserTrivia ? [] : [{
+    //
+    // A published room drops the row outright rather than showing it frozen
+    // (owner: "we don't show other 5,10,20 questions tabs"): the length is
+    // settled, and a dead control invites a tap that does nothing. A LIVE
+    // match still shows it — that one comes back when the round ends, so it
+    // is worth leaving where the host can see it.
+    ...(playsUserTrivia || publishedRoom ? [] : [{
       key: "questions",
       label: t("lobby.uQuestionsPerRound"),
       options: QUESTIONS_PER_ROUND.map((n) => ({ value: String(n), label: String(n) })),
       value: String(questionsPerRound(currentRoom.total_questions)),
-      onChange: isHost && !matchLive ? (v: string) => void setQuestions(v) : undefined,
+      onChange: isHost && !rulesLocked ? (v: string) => void setQuestions(v) : undefined,
     } satisfies LobbyRuleRow]),
     ...(playsOwnTrivia ? [] : [{
       key: "visibility",
@@ -1373,10 +1406,10 @@ export function RoomLobbyV2() {
           onPress:
             rounds > 1
               ? () => setShowRoundOrder(true)
-              : isHost && !matchLive
+              : isHost && !rulesLocked
                 ? () => { setStartAfterPick(false); setShowCategoryPicker(true); }
                 : undefined,
-          onAdd: isHost && !matchLive ? () => { setStartAfterPick(false); setShowCategoryPicker(true); } : undefined,
+          onAdd: isHost && !rulesLocked ? () => { setStartAfterPick(false); setShowCategoryPicker(true); } : undefined,
           // The host's chip and + wear the travelling ring only until a
           // category is picked — a pointer to the thing to do, not a
           // permanent decoration. Nobody else's chip wears it; they see
@@ -1395,7 +1428,7 @@ export function RoomLobbyV2() {
             // The same round the chip names — so the list's "1" and the chip
             // cannot disagree about which category opens the game.
             current={heldRound}
-            canEdit={isHost && !matchLive}
+            canEdit={isHost && !rulesLocked}
             onReorder={reorderQueue}
             onPromote={handlePromoteToFirst}
             onRemove={removeFromQueue}

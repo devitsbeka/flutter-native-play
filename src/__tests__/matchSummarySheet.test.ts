@@ -45,10 +45,14 @@ describe("Create opens the summary, not the match", () => {
 
 describe("a started match is played as confirmed", () => {
   it("the question and round editors close while a round is live", () => {
+    // A live match is one of two reasons the editors close; a published
+    // room is the other (see publishedRoomIsSettled.test.ts). One lock, so
+    // they cannot disagree about what "settled" means.
     expect(lobby).toMatch(/const matchLive = currentRoom\.status === "playing";/);
-    expect(lobby).toMatch(/onChange: isHost && !matchLive \? \(v: string\) => void setQuestions\(v\) : undefined,/);
-    expect(lobby).toMatch(/onAdd: isHost && !matchLive \? \(\) => \{ setStartAfterPick\(false\); setShowCategoryPicker\(true\); \} : undefined,/);
-    expect(lobby).toMatch(/canEdit=\{isHost && !matchLive\}/);
+    expect(lobby).toMatch(/const rulesLocked = matchLive \|\| publishedRoom;/);
+    expect(lobby).toMatch(/onChange: isHost && !rulesLocked \? \(v: string\) => void setQuestions\(v\) : undefined,/);
+    expect(lobby).toMatch(/onAdd: isHost && !rulesLocked \? \(\) => \{ setStartAfterPick\(false\); setShowCategoryPicker\(true\); \} : undefined,/);
+    expect(lobby).toMatch(/canEdit=\{isHost && !rulesLocked\}/);
   });
 
   it("but visibility stays the host's to change", () => {

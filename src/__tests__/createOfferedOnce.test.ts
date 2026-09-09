@@ -123,18 +123,23 @@ describe("remembering the rooms whose Create has been pressed", () => {
 
 describe("what the lobby does with it", () => {
   it("reads it per room, because the lobby outlives any one room", () => {
-    expect(lobby).toMatch(/const \[createOffered, setCreateOffered\] = useState\(false\);/);
+    // Seeded on the first render as well as by the effect: a created room
+    // must never be briefly editable while the effect catches up, now that
+    // the same flag settles a published room's rules.
     expect(lobby).toMatch(
-      /setCreateOffered\(!hasPressedCreate\(currentRoom\?\.id\)\);\s*\n\s*\}, \[currentRoom\?\.id\]\);/,
+      /const \[roomCreated, setRoomCreated\] = useState\(\(\) => hasPressedCreate\(currentRoom\?\.id\)\);/,
+    );
+    expect(lobby).toMatch(
+      /setRoomCreated\(hasPressedCreate\(currentRoom\?\.id\)\);\s*\n\s*\}, \[currentRoom\?\.id\]\);/,
     );
   });
 
   it("offers Create only while it is still owed", () => {
-    expect(lobby).toMatch(/const offerCreate = awaitingPlayers && createOffered;/);
+    expect(lobby).toMatch(/const offerCreate = awaitingPlayers && !roomCreated;/);
   });
 
   it("writes it before leaving, so coming back finds the offer spent", () => {
-    expect(lobby).toMatch(/rememberPressedCreate\(currentRoom\?\.id\);\s*\n\s*setCreateOffered\(false\);/);
+    expect(lobby).toMatch(/rememberPressedCreate\(currentRoom\?\.id\);\s*\n\s*setRoomCreated\(true\);/);
   });
 
   it("and the button goes back to a dead Start once it is", () => {
