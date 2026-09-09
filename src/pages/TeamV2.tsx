@@ -129,9 +129,20 @@ function TeamContentV2() {
    */
   const roomsLocked = !isVip;
   const [showRoomsWall, setShowRoomsWall] = useState(false);
+  // "+ Room" goes straight to a lobby. It used to open the play chooser —
+  // "what will you play?", with the solo games and a Play With Friends
+  // door — but somebody on the rooms hub pressing a button called Room has
+  // already answered that, and the chooser was two screens between them
+  // and the room they asked for (owner: "when i'm on online game page and
+  // i click +room i should see lobby instantly"). The chooser is still the
+  // home Play button's destination, where the solo games ARE the question;
+  // it arrives here via location.state, not this handler.
+  //
+  // The same room the Private tab's Create → Game Room makes, so the two
+  // doors on this page cannot make two different kinds of room.
   const openCreateRoom = () => {
     if (roomsLocked) return setShowRoomsWall(true);
-    setShowCreateModal(true);
+    void createPrivateRoomAndOpen();
   };
   // Ads are strictly opt-in: a player sees one only by pressing a button
   // that says so (extra plays, spins, power-ups). Room creation, challenges
@@ -1443,7 +1454,7 @@ function TeamContentV2() {
                   {showsPrivateRooms && (privateFilterApplied !== "all" || hasRooms || !hasTrivias) && (
                     <MyRoomsSection
                       hideTV
-                      onCreateRoom={() => setShowCreateModal(true)}
+                      onCreateRoom={openCreateRoom}
                       onShowAllRooms={() => setShowAllGamesModal(true)}
                       vertical
                       visibility="private"
