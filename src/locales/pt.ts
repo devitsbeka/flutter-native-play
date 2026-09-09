@@ -764,6 +764,7 @@ export const pt: KaTranslations = {
     coins: "Moedas",
     gems: "Gemas",
     withBonuses: "Com bônus",
+    gemsBlurb: "Compre com dinheiro real",
     smallPackage: "Mini",
     mediumPackage: "Médio",
     largePackage: "Grande",

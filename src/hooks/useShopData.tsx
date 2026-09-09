@@ -350,9 +350,19 @@ export function useShopData() {
         items: COINS_ITEMS,
       },
       {
+        // The only untranslated string on a price surface in the app: this
+        // read "$ Buy with USD", hardcoded, above four cards that correctly
+        // render ₾ or € through useStorePrice. A Georgian buyer was told to
+        // buy with dollars over a lari price.
+        //
+        // The replacement names no currency at all, deliberately — the cards
+        // know which one the buyer is being charged in and this row does not.
+        // The id still says "lari" for the same reason the ShopItem currency
+        // does: it is the internal name for "real money", and renaming it
+        // reaches further than this fix.
         id: "gems-lari",
         title: t("common.gems"),
-        description: "$ Buy with USD",
+        description: t("shop.gemsBlurb"),
         videoSrc: "/videos/gems.mp4",
         items: GEMS_ITEMS,
       },

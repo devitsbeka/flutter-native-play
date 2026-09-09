@@ -1,112 +1,31 @@
-import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/lib/toast";
-import { Eye, EyeOff, Save, CreditCard, Check, AlertTriangle, Loader2 } from "lucide-react";
+import { CreditCard } from "lucide-react";
 
-interface AppSetting {
-  key: string;
-  value: string | null;
-  description: string | null;
-  is_secret: boolean;
-}
-
+/**
+ * Where the app's keys live — which is not here.
+ *
+ * This page used to read and WRITE `app_settings`: an input for
+ * `stripe_secret_key`, a masked field, a Save button, and setup instructions
+ * telling the operator to paste an `sk_live_…` into it.
+ *
+ * Nothing has ever read that table. All three Stripe functions call
+ * `Deno.env.get("STRIPE_SECRET_KEY")`. So the form configured nothing while
+ * looking exactly like it had — and stored a live payment credential in a
+ * database column in plaintext, which is the one place AGENTS.md §5 says real
+ * secrets must never go.
+ *
+ * The rows are deleted in 20261104120000 and the state, the fetch and the save
+ * went with them. What is left is the instructions, corrected — including the
+ * subscription events, whose absence is why a web PRO purchase used to charge
+ * the card and grant nothing.
+ */
 export default function Settings() {
-  const [settings, setSettings] = useState<AppSetting[]>([]);
-  const [editedValues, setEditedValues] = useState<Record<string, string>>({});
-  const [showSecrets, setShowSecrets] = useState<Record<string, boolean>>({});
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-
-  useEffect(() => {
-    fetchSettings();
-  }, []);
-
-  const fetchSettings = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("app_settings")
-        .select("*")
-        .order("key");
-
-      if (error) throw error;
-
-      setSettings(data || []);
-      // Initialize edited values with current values
-      const values: Record<string, string> = {};
-      data?.forEach((setting) => {
-        values[setting.key] = setting.value || "";
-      });
-      setEditedValues(values);
-    } catch (error) {
-      console.error("Error fetching settings:", error);
-      toast.error("Failed to load settings");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSave = async (key: string) => {
-    setIsSaving(true);
-    try {
-      const { error } = await supabase
-        .from("app_settings")
-        .update({
-          value: editedValues[key] || null,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("key", key);
-
-      if (error) throw error;
-
-      toast.success(`${key} updated successfully`);
-      fetchSettings();
-    } catch (error) {
-      console.error("Error saving setting:", error);
-      toast.error("Failed to save setting");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const maskValue = (value: string | null) => {
-    if (!value) return "";
-    if (value.length <= 8) return "••••••••";
-    return "••••••••" + value.slice(-4);
-  };
-
-  const isConfigured = (key: string) => {
-    const setting = settings.find((s) => s.key === key);
-    return setting?.value && setting.value.length > 0;
-  };
-
-  const hasChanges = (key: string) => {
-    const setting = settings.find((s) => s.key === key);
-    return editedValues[key] !== (setting?.value || "");
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  const stripeSettings = settings.filter((s) =>
-    s.key.startsWith("stripe_")
-  );
-
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Settings</h1>
         <p className="text-muted-foreground">
-          Configure API keys and application settings
+          Where the app's keys and secrets actually live
         </p>
       </div>
 
@@ -118,105 +37,45 @@ export default function Settings() {
             <CardTitle>Payment Settings</CardTitle>
           </div>
           <CardDescription>
-            Configure Stripe for processing real-money gem purchases
+            Stripe keys are Supabase platform secrets, not database rows
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          {stripeSettings.length === 0 ? (
-            <p className="text-muted-foreground text-sm">
-              No payment settings found. Please check database configuration.
-            </p>
-          ) : (
-            stripeSettings.map((setting) => (
-              <div key={setting.key} className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor={setting.key} className="flex items-center gap-2">
-                    {setting.key === "stripe_secret_key"
-                      ? "Stripe Secret Key"
-                      : "Stripe Webhook Secret"}
-                    {isConfigured(setting.key) ? (
-                      <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
-                        <Check className="w-3 h-3 mr-1" />
-                        Configured
-                      </Badge>
-                    ) : (
-                      <Badge variant="secondary" className="bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300">
-                        <AlertTriangle className="w-3 h-3 mr-1" />
-                        Not configured
-                      </Badge>
-                    )}
-                  </Label>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  {setting.description}
-                </p>
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <Input
-                      id={setting.key}
-                      type={showSecrets[setting.key] ? "text" : "password"}
-                      value={
-                        showSecrets[setting.key]
-                          ? editedValues[setting.key] || ""
-                          : editedValues[setting.key]
-                          ? maskValue(editedValues[setting.key])
-                          : ""
-                      }
-                      onChange={(e) => {
-                        if (showSecrets[setting.key]) {
-                          setEditedValues((prev) => ({
-                            ...prev,
-                            [setting.key]: e.target.value,
-                          }));
-                        }
-                      }}
-                      placeholder={
-                        setting.key === "stripe_secret_key"
-                          ? "sk_live_..."
-                          : "whsec_..."
-                      }
-                      className="pr-10"
-                      readOnly={!showSecrets[setting.key]}
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-full px-3"
-                      onClick={() =>
-                        setShowSecrets((prev) => ({
-                          ...prev,
-                          [setting.key]: !prev[setting.key],
-                        }))
-                      }
-                    >
-                      {showSecrets[setting.key] ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
-                      )}
-                    </Button>
-                  </div>
-                  <Button
-                    onClick={() => handleSave(setting.key)}
-                    disabled={!hasChanges(setting.key) || isSaving}
-                  >
-                    {isSaving ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Save className="w-4 h-4" />
-                    )}
-                  </Button>
-                </div>
-              </div>
-            ))
-          )}
+        <CardContent className="space-y-4 text-sm">
+          {/*
+            This page used to render an input for `stripe_secret_key`, link to
+            dashboard.stripe.com/apikeys, and save whatever was typed into
+            `app_settings`.
 
-          <div className="pt-4 border-t">
-            <h4 className="font-medium mb-2">Setup Instructions</h4>
-            <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
+            No edge function has ever read that table. All three Stripe
+            functions use Deno.env.get("STRIPE_SECRET_KEY"). So the form did
+            nothing at all except put a live sk_live_… into a Postgres column
+            in plaintext — the one place AGENTS.md §5 says real secrets must
+            never go — and left whoever used it believing payments were
+            configured.
+
+            The rows are deleted in 20261104120000. What replaces the form is
+            the truth about where the keys go.
+          */}
+          <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-3">
+            <p className="font-medium">There is nothing to enter here.</p>
+            <p className="text-muted-foreground mt-1">
+              This page used to accept a Stripe secret key and store it in the
+              database. Nothing ever read it — the edge functions read
+              environment secrets — so the form configured nothing while
+              looking like it had, and put a live key in a table besides.
+            </p>
+          </div>
+
+          <div>
+            <h4 className="font-medium mb-2">Where the keys go</h4>
+            <ol className="text-muted-foreground space-y-2 list-decimal list-inside">
               <li>
-                Go to{" "}
+                Supabase Dashboard → Edge Functions → Secrets. Set{" "}
+                <code>STRIPE_SECRET_KEY</code> and{" "}
+                <code>STRIPE_WEBHOOK_SECRET</code>.
+              </li>
+              <li>
+                Get the secret key from{" "}
                 <a
                   href="https://dashboard.stripe.com/apikeys"
                   target="_blank"
@@ -225,11 +84,10 @@ export default function Settings() {
                 >
                   Stripe Dashboard → API Keys
                 </a>
+                .
               </li>
-              <li>Copy your Secret key (starts with sk_live_ or sk_test_)</li>
-              <li>Paste it above and click Save</li>
               <li>
-                For webhooks, go to{" "}
+                In{" "}
                 <a
                   href="https://dashboard.stripe.com/webhooks"
                   target="_blank"
@@ -238,9 +96,19 @@ export default function Settings() {
                 >
                   Stripe Dashboard → Webhooks
                 </a>
+                , add the endpoint{" "}
+                <code>your-app-url/functions/v1/stripe-gem-webhook</code> and
+                copy its signing secret into{" "}
+                <code>STRIPE_WEBHOOK_SECRET</code>.
               </li>
-              <li>Add endpoint: your-app-url/functions/v1/stripe-gem-webhook</li>
-              <li>Copy the Signing secret and paste above</li>
+              <li>
+                <strong>Subscribe that endpoint to the subscription events</strong>{" "}
+                as well as <code>checkout.session.completed</code>:{" "}
+                <code>customer.subscription.created</code>,{" "}
+                <code>.updated</code> and <code>.deleted</code>. Without them a
+                web PRO purchase charges the card and grants nothing — the
+                endpoint handles both, despite the name.
+              </li>
             </ol>
           </div>
         </CardContent>

@@ -62,16 +62,31 @@ SELECT * FROM public.credit_gameplay_reward('level_up', 500, 0, 'j');
 INSERT INTO public.vip_subscriptions (user_id, vip_tier, expires_at)
 VALUES ('11111111-1111-1111-1111-111111111111','pro_plus','2099-01-01');
 
+-- Cases 9 to 11 were "grant_vip_days as a signed-in user", and they expected
+-- it to work. It does not any more, and that is the fix rather than a
+-- regression: the function took a duration and nothing else, was granted to
+-- `authenticated`, and stacks — so a loop in the browser console was unlimited
+-- PRO, with no gems spent. 20261104110000 revokes it from clients and routes
+-- the shop through purchase_shop_item, which debits and grants together.
+--
+-- What it still does — the duration mapping, the stacking, the refusal of an
+-- unknown duration — is unchanged and is exercised through the purchase path
+-- in supabase/tests/18-shop-purchase.sql, which is where those three cases
+-- went.
+
 \echo ''
-\echo '=== 9. grant_vip_days with a valid duration (must SUCCEED) ==='
+\echo '=== 9. grant_vip_days as a signed-in user (must FAIL: permission denied) ==='
 SELECT * FROM public.grant_vip_days('week');
 
 \echo ''
-\echo '=== 10. grant_vip_days with a bogus duration (must FAIL) ==='
+\echo '=== 10. ...for a bogus duration too, and for the same reason (must FAIL) ==='
+-- Note the error must be `permission denied`, not `Unknown VIP duration`. The
+-- second would mean the caller got INTO the body — see 08-money-not-anon.sql,
+-- which exists because that distinction was the whole bug once already.
 SELECT * FROM public.grant_vip_days('decade');
 
 \echo ''
-\echo '=== 11. Stacking: a second week extends rather than resets ==='
+\echo '=== 11. Stacking now happens through a purchase (see 18-shop-purchase) ==='
 SELECT * FROM public.grant_vip_days('week');
 
 \echo ''

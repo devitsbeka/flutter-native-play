@@ -918,6 +918,7 @@ export const ka = {
     coins: "მონეტები",
     gems: "ალმასები",
     withBonuses: "ბონუსებით",
+    gemsBlurb: "იყიდე ნამდვილი ფულით",
     smallPackage: "პატარა",
     mediumPackage: "საშუალო",
     largePackage: "დიდი",

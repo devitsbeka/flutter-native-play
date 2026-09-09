@@ -98,7 +98,19 @@ serve(async (req) => {
     // the shop displayed a converted GEL figure — display and charge in two
     // different currencies, neither matching the other.
     const currency = currencyForLanguage(language);
-    const priceKey = `gems_${pack.gems}` as PriceKey;
+    // Keyed by the pack's ID, not its gem COUNT.
+    //
+    // `pack.gems` is the total credited — base plus bonus — so the first pack
+    // to advertise "1500 +300" would have made this `gems_1800`, which is in
+    // no PRICES row: `priceOf` reads `PRICES[undefined][currency]` and throws,
+    // and the checkout answers 500 for everyone buying that pack. It works
+    // today only because every bonus happens to be zero.
+    //
+    // This is the same bug src/config/gemPacks.ts records at length — the
+    // store SKU was looked up by gem count, so adding a bonus silently
+    // unmapped it — fixed on the native path by keying on the id and left
+    // here. The ids already ARE the price keys; the invariant test asserts it.
+    const priceKey = pack.id as PriceKey;
     const amount = priceOf(priceKey, currency);
     const copy = gemPackCopy(pack.gems, language);
     const sku = `GEMS_${pack.gems}_${currency}`;

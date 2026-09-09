@@ -1,9 +1,34 @@
 # Pricing and economics audit — Stripe, IAP, gems, coins
 
 Date: 2026-09-09. Read against `main` at the commit this branch forked from.
-`npx vitest run` passes (265 files, 2766 tests) — **every finding below is
-something the existing suite does not cover.** Where a finding contradicts a
-comment in the code, the comment is quoted so the disagreement is visible.
+`npx vitest run` passed at the time (265 files, 2766 tests) — **every finding
+below was something the existing suite did not cover.** Where a finding
+contradicts a comment in the code, the comment is quoted so the disagreement is
+visible.
+
+> ## Status: all of it is fixed on this branch
+>
+> Every section below is implemented, with the tests that would have caught it.
+> The suite is now 268 files / 2844 tests, plus
+> `supabase/tests/18-shop-purchase.sql` — 28 cases executed against a real
+> Postgres and wired into `pr-checks.yml`, because none of the SQL findings can
+> be asserted from TypeScript.
+>
+> **Two things still need a person, and neither is code:**
+>
+> 1. **Register the subscription events in the Stripe dashboard.** The webhook
+>    handles them now, but Stripe only delivers what the endpoint is subscribed
+>    to. Add `customer.subscription.created`, `.updated` and `.deleted`
+>    alongside `checkout.session.completed`. Until then §1 is only half fixed.
+> 2. **Deploy through Lovable.** Migrations and edge functions ship that way
+>    (AGENTS.md §4a) — merging to `main` is not deploying. Deploy the functions
+>    and apply `20261104100000`, `20261104110000` and `20261104120000` before
+>    the client reaches a device, or the client will call RPCs that do not
+>    exist yet.
+>
+> The sections are kept as written rather than rewritten in the past tense: the
+> reasoning is why the code looks the way it does now, and the commit messages
+> point back here.
 
 ## What "checking Stripe" means here, and what it does not
 
@@ -455,9 +480,9 @@ built:
 
 ---
 
-## Action plan
+## Action plan — all complete
 
-Ordered by money at risk, not by effort.
+Ordered by money at risk, not by effort. What each one turned into:
 
 ### Now — before another web subscription is sold
 
@@ -541,3 +566,46 @@ Ordered by money at risk, not by effort.
     `supabase/config.toml`. It defaults to `verify_jwt = true`, which is what
     you want, but every other payment function states it — and §2 makes the
     setting load-bearing.
+
+
+---
+
+## What it turned into
+
+| § | Fix | Where |
+|---|---|---|
+| 1 | Subscription events handled; decision logic split into an import-free module so vitest can reach it | `stripe-gem-webhook`, `_shared/stripeSubscriptionState.ts`, `src/__tests__/stripeSubscriptionState.test.ts` |
+| 2 | Auth required; the `"guest"` sentinel is gone | `create-pro-checkout`, `supabase/config.toml` |
+| 3, 5 | `purchase_shop_item` — one transaction, server-owned `shop_catalog`. `grant_vip_days` revoked from clients, `shop_grant` deleted, `adjust_power_up` debit-only, RLS closed on `user_power_ups` and `user_avatar_frames` | `20261104110000`, `supabase/tests/18-shop-purchase.sql` |
+| 4 | Coins bought at 500/gem, sold back at 750 | same migration; `shopValue.test.ts` asserts the headroom |
+| 6 | `gems_1500` → $10.99 | `pricing.ts` ×2, `gemPacks.ts`, `_shared/gems.ts` |
+| 7 | One lari rate (1.25×); VIP repriced in gems so both routes cost the same in every currency | `pricing.ts`, `rewardConfig.ts`, `20261104100000` |
+| 8 | Reference prices computed from the cheapest purchasable basket; deals declare a discount, not a price | `src/config/shopValue.ts`, `shopDeals.ts` |
+| 9 | Price key from `pack.id`, not the gem count | `create-gem-checkout`, `repo-invariants.test.ts` |
+| 10 | `shop.gemsBlurb`, in all seven languages, naming no currency | `src/locales/*` |
+| 11 | The fourth VIP price ladder deleted | `VipContext.tsx`, `useVipStatus.ts` |
+| 12 | `iap_products` reseeded; the admin tab is a read-only mirror that says so | `20261104120000`, `IAPProductsTab.tsx` |
+| 13 | The Stripe secret-key form removed; the rows deleted | `admin/Settings.tsx`, `20261104120000` |
+| 14 | `[functions.create-pro-checkout]` declared | `supabase/config.toml` |
+
+### Found while fixing, not in the original audit
+
+- **`adjust_power_up` accepted any positive delta**, and `user_power_ups`
+  carried client INSERT/UPDATE policies on top of it. Every power-up was free.
+  `user_avatar_frames` had the same INSERT policy — every frame was free — and
+  `AvatarFrameShop` checked its own React `isVip` before writing the row, which
+  is not a check. Now `purchase_shop_item`, `purchase_power_up`,
+  `grant_reward_power_up` (bounded per call and per day) and `claim_vip_frame`.
+- **`BuyCurrencyModal` had a fourth price ladder** — 5 gems for 250 coins,
+  50–60 coins per gem against an exchange rate of 500 and a shop selling 625.
+  Ten times the price, on the screen a player reaches when they have just run
+  out, with "+10%" and "+20%" bonus flags measured against nothing. It sells
+  the shop's own starter packs now.
+- **`iap_products` held seven rows for products that do not exist** — the
+  50/170/600/1500-gem ladder from before the packs were unified, and a
+  `vip_annual` at $39.99. Deactivated, not deleted.
+- **A `42702` in the new SQL itself.** A `RETURNS TABLE` column named after a
+  table column made an `ON CONFLICT` clause ambiguous. `CREATE FUNCTION`
+  accepts that happily; it fails only when something calls it. Running the SQL
+  is the only thing that finds it, which is the argument for
+  `supabase/tests/`.

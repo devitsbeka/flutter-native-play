@@ -27,6 +27,12 @@ export interface IAPProduct {
   name: string;
   description: string | null;
   price_usd: number;
+  /**
+   * Added by 20260119190510 and absent from this interface ever since, so the
+   * admin screen could not show the lari price at all — which is the column
+   * that was furthest wrong (2.00 against a live charge of 1.24).
+   */
+  price_gel: number | null;
   gems_value: number | null;
   coins_value: number | null;
   is_subscription: boolean;

@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { GEM_PACKS } from "@/config/gemPacks";
 import { readdirSync, readFileSync, existsSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 
@@ -29,6 +30,37 @@ const REPO = resolve(__dirname, "../..");
 const read = (p: string) => readFileSync(resolve(REPO, p), "utf8");
 
 describe("repo invariants", () => {
+  it("gives every gem pack id a row in the price table", () => {
+    // create-gem-checkout looks the price up by `pack.id`, so an id with no
+    // PRICES row is a 500 at checkout for everyone buying that pack.
+    //
+    // It used to look it up by gem COUNT, which is base + bonus — so the first
+    // pack to advertise "1500 +300" would have asked for `gems_1800` and
+    // thrown. Keying on the id is only safe while this holds.
+    const pricing = read("src/config/pricing.ts");
+    const shared = read("supabase/functions/_shared/pricing.ts");
+
+    for (const pack of GEM_PACKS) {
+      expect(pricing, `${pack.id} has no row in src/config/pricing.ts`)
+        .toContain(`${pack.id}: {`);
+      expect(shared, `${pack.id} has no row in _shared/pricing.ts`)
+        .toContain(`${pack.id}: {`);
+    }
+  });
+
+  it("charges every gem pack the price its own catalogue states", () => {
+    // The client card and the Stripe line item read different files. They are
+    // the same number or the app shows one price and takes another.
+    const pricing = read("src/config/pricing.ts");
+    for (const pack of GEM_PACKS) {
+      const row = pricing.match(new RegExp(`${pack.id}: \\{([^}]*)\\}`));
+      expect(row, `${pack.id} row`).not.toBeNull();
+      const usd = row![1].match(/USD:\s*([\d.]+)/);
+      expect(usd, `${pack.id} USD`).not.toBeNull();
+      expect(Number(usd![1]), `${pack.id} priceUsd`).toBe(pack.priceUsd);
+    }
+  });
+
   it("keeps the entitlement RPC types in the generated Supabase types", () => {
     const types = read("src/integrations/supabase/types.ts");
 

@@ -924,6 +924,7 @@ export const en: KaTranslations = {
     coins: "Coins",
     gems: "Gems",
     withBonuses: "With Bonuses",
+    gemsBlurb: "Buy with real money",
     smallPackage: "Tiny",
     mediumPackage: "Medium",
     largePackage: "Large",
