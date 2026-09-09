@@ -515,6 +515,11 @@ export function MobileHeroWidgets({
         {/* Colour and motion say whether there is anything to claim: a grey,
             still gift is the countdown's other half, and animating it would
             say the opposite of what the grey says.
+            Grey, not faded: the claimed gift used to sit at 45% opacity as
+            well, and the card's border read straight through the box
+            (owner: "show gift icon grey colored when it is claimed not
+            transparent, container lines behind the icon is visible now").
+            It is desaturated and a shade darker, fully opaque.
             The idle rock is a wrapper around the frame's own 5.88° lean
             rather than a rotate on the same element — one transform would
             replace the other, and the box would snap upright to animate. */}
@@ -524,7 +529,7 @@ export function MobileHeroWidgets({
           transition={canClaimGift ? GIFT_IDLE.transition : { duration: 0.35, ease: "easeOut" }}
         >
           <span
-            className={`block h-[66px] w-[62px] overflow-hidden ${canClaimGift ? "" : "grayscale opacity-45"}`}
+            className={`block h-[66px] w-[62px] overflow-hidden ${canClaimGift ? "" : "grayscale brightness-[.82]"}`}
             style={{ transform: "rotate(5.88deg)" }}
           >
             <img
