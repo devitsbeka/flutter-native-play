@@ -10,6 +10,7 @@ import iconWordsLounge from "@/assets/play-chooser/icon-words.webp";
 import iconPartyLounge from "@/assets/house-party.png";
 import { roomKind, routeForRoom } from "@/utils/roomRoutes";
 import { isGeneratedRoomName } from "@/utils/roomNameGenerator";
+import { triviaDisplayTitle } from "@/utils/triviaTitle";
 import { roomCardAction } from "@/utils/roomCardAction";
 import { RoomCardPlayButton } from "@/components/team/RoomCardPlayButton";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
@@ -603,7 +604,7 @@ export function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = f
   // rooms").
   const displayName = isPartyRoom
     ? (!room.room_name || isGeneratedRoomName(room.room_name)
-        ? t("extra.triviaUntitled")
+        ? triviaDisplayTitle(room.party_trivia_title, t)
         : room.room_name)
     : room.room_name || lounge?.label || t("extra.gameRoomLabel");
   // How long ago the room was made — the thing that tells two similar rooms
@@ -1090,7 +1091,7 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
   // rooms").
   const displayName = isPartyRoom
     ? (!room.room_name || isGeneratedRoomName(room.room_name)
-        ? t("extra.triviaUntitled")
+        ? triviaDisplayTitle(room.party_trivia_title, t)
         : room.room_name)
     : room.room_name || lounge?.label || t("extra.gameRoomLabel");
   // How long ago the room was made — the thing that tells two similar rooms
