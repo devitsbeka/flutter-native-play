@@ -59,6 +59,8 @@ export interface PublicRoomContext {
   /** Who, of all those people, is in the app right now. */
   onlineIds: ReadonlySet<string>;
   friendIds: ReadonlySet<string>;
+  /** Rooms somebody asked this player into and has not been answered. */
+  invitedIds?: ReadonlySet<string>;
 }
 
 export const PUBLIC_ROOMS_KEY = ["public-rooms"] as const;
@@ -268,9 +270,14 @@ export function sortPublicRooms(
   const staleEmptyOwn = (r: PublicRoom) =>
     r.my_state === "host" && r.player_count <= 1 && !isFreshOwnRoom(r);
   const tier = (r: PublicRoom) =>
-    // Checked before `dead`: my own ask stays the first card even if the
-    // room's couch stepped away while I was waiting on the answer.
-    r.my_state === "pending"
+    // An invitation first: somebody is waiting on this player's answer,
+    // and a card that scrolls away is an answer that never comes (owner:
+    // "show rooms with invitation first to see and don't lose in scroll").
+    ctx?.invitedIds?.has(r.id)
+      ? -1
+      : // Checked before `dead`: my own ask stays the first card even if the
+        // room's couch stepped away while I was waiting on the answer.
+        r.my_state === "pending"
       ? 0
       : dead(r)
         ? 9

@@ -88,9 +88,9 @@ describe("a room you can play in right now sorts first", () => {
     ...over,
   });
 
-  it("beats an invitation, a live TV session and anything newer", () => {
+  it("beats a live TV session and anything newer — but not an invitation, which is somebody waiting on you", () => {
     const live = room({ hasFullRoster: true, created_at: "2020-01-01T00:00:00Z" });
-    expect(compareRooms(live, room({ hasPendingInvite: true }))).toBeLessThan(0);
+    expect(compareRooms(room({ hasPendingInvite: true }), live)).toBeLessThan(0);
     expect(compareRooms(live, room({ hasLiveTV: true }))).toBeLessThan(0);
     expect(compareRooms(live, room({ created_at: "2030-01-01T00:00:00Z" }))).toBeLessThan(0);
   });

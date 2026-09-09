@@ -943,6 +943,7 @@ export function PublicRoomsSection({
     seatedByRoom: seating?.seated ?? new Map<string, string[]>(),
     onlineIds,
     friendIds,
+    invitedIds: new Set(pendingInvites.keys()),
   };
   // A room hosted by a blocked player is not listed. Joining it would put
   // the viewer in a lobby with them, under their name, at their invitation —
