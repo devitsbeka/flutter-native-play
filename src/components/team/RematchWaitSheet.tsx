@@ -111,14 +111,19 @@ export function RematchWaitSheet({ open, seats, stake, starting = false, onCance
               {/* The preview sheet's pair: Cancel is the unfilled pill, and
                   Start is the mint one every button one tap from a game
                   wears, with the play triangle (owner: "show this button
-                  with stroke and green button on this modal too"). */}
+                  with stroke and green button on this modal too").
+                  Not split down the middle, though: Start says "with N
+                  players", four words of Georgian, and at half the row it
+                  wrapped to two lines. Cancel hugs its one word and Start
+                  takes the rest, on one line (owner: "show start with 1
+                  player on one row and reduce cancel button to fit"). */}
               <div className="flex items-center gap-2">
-                <RoomCardPlayButton tone="outline" className={PREVIEW_BUTTON_CLASS} onClick={onCancel} disabled={starting}>
+                <RoomCardPlayButton tone="outline" className={`${PREVIEW_BUTTON_CLASS} flex-none`} onClick={onCancel} disabled={starting}>
                   {t("common.cancel")}
                 </RoomCardPlayButton>
                 <RoomCardPlayButton
                   tone="mint"
-                  className={PREVIEW_BUTTON_CLASS}
+                  className={`${PREVIEW_BUTTON_CLASS} min-w-0 whitespace-nowrap px-3`}
                   onClick={onStart}
                   disabled={starting || ready === 0}
                 >
