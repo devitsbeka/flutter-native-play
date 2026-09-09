@@ -1003,7 +1003,6 @@ export const en: KaTranslations = {
     unlimitedPowerUpsDaily: "Unlimited power-ups daily",
     exclusiveAvatarFrames: "Exclusive avatar frames",
     priorityMatchmaking: "Priority matchmaking",
-    unlockFor: "Unlock for $4.99",
     restorePurchase: "Restore Purchase",
     processing: "Processing...",
     // Gem Shop Modal
@@ -4659,7 +4658,6 @@ export const en: KaTranslations = {
     aiAvatarGenTitle: "AI Avatar Generation",
     aiAvatarGenSubtitle: "PRO feature",
     aiAvatarGenDesc: "Turn your photo into a 3D avatar!\n+ Create an animated avatar ✨",
-    becomeProPrice: "Become PRO - $3.99/mo",
     avatarLoadFailed: "Avatar failed to load, try again",
     animateAvatar: "Animate ✨",
     animateAvatarPro: "Animate (PRO)",
@@ -4735,7 +4733,6 @@ export const en: KaTranslations = {
     avatarAiGenTitle: "AI Avatar Generation",
     avatarProFeature: "PRO Feature",
     avatarAiDesc: "Turn your photo into a 3D avatar!\n+ Create an animated avatar ✨",
-    avatarBecomePro: "Become PRO - $3.99/mo",
     avatarAnimateEmoji: "Animate ✨",
     avatarAnimatePro: "Animate (PRO)",
     // CategoryQuizPage results

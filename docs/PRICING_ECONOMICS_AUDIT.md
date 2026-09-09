@@ -588,6 +588,39 @@ Ordered by money at risk, not by effort. What each one turned into:
 | 13 | The Stripe secret-key form removed; the rows deleted | `admin/Settings.tsx`, `20261104120000` |
 | 14 | `[functions.create-pro-checkout]` declared | `supabase/config.toml` |
 
+### Found on a second sweep, across every page and all seven locales
+
+The first pass followed the code paths. This one went the other way — every
+money-shaped literal in the repo, every locale value, and every component that
+renders a price traced to what resolves it.
+
+- **Three locale keys hardcoded a price, in all seven languages.**
+  `unlockFor: "Unlock for $4.99"` is the LARI price of PRO monthly wearing a
+  dollar sign — the same fault `Discover.tsx` records ("the 9.99 GEL web price
+  wearing a dollar sign"), sitting in the locale files the whole time.
+  `becomeProPrice` and `avatarBecomePro` put `$3.99/mo` into every language
+  including Georgian, which is billed in lari, with an untranslated "/mo".
+  All three were dead — nothing rendered them — which is why nobody noticed.
+  Deleted, and `locale-hygiene.test.ts` now fails on any translation value
+  containing a currency amount.
+- **`time-drain`'s coin price was the one power-up not mirrored.** The other
+  three were asserted against `economy_config`; this one was not, and it is
+  precisely the one whose row is `powerup_price_time_drain` while its type is
+  `time-drain`, so `purchase_power_up` has to map the hyphen. The values agreed
+  by luck. Now derived from `POWER_UP_PRICES` so a fifth power-up cannot be
+  forgotten either — and it matters more than it did, because that row is now
+  what the server CHARGES, not just what the admin screen displays.
+
+Clean on the rest: no price literal in `index.html`, the social/star shots,
+`public/`, or `src/data/documentation/`; `SubscriptionTerms` states no figure
+of its own; and every real-money surface — the paywall, the shop grid, the
+currency shelves, the item cards and detail modals, the PRO carousel and
+sidebar, the Discover cover, the play-limit and not-enough-gems modals —
+resolves through `useStorePrice`, traced component by component rather than
+assumed. The two components that print a bare `price` next to a `$` turned out
+to be template-literal interpolation of COIN amounts (`MyPowersSection`,
+`CreateRoomPage`), not money.
+
 ### Found while fixing, not in the original audit
 
 - **`adjust_power_up` accepted any positive delta**, and `user_power_ups`

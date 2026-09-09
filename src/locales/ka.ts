@@ -997,7 +997,6 @@ export const ka = {
     unlimitedPowerUpsDaily: "ულიმიტო ძალები ყოველდღე",
     exclusiveAvatarFrames: "ექსკლუზიური ავატარის ჩარჩოები",
     priorityMatchmaking: "პრიორიტეტული მატჩინგი",
-    unlockFor: "გახსნა $4.99-ად",
     restorePurchase: "შეძენის აღდგენა",
     processing: "მიმდინარეობს...",
     // Gem Shop Modal
@@ -4691,7 +4690,6 @@ export const ka = {
     aiAvatarGenTitle: "AI ავატარის გენერაცია",
     aiAvatarGenSubtitle: "PRO ფუნქცია",
     aiAvatarGenDesc: "გადააქციე შენი ფოტო 3D ავატარად!\n+ შექმენი ანიმირებული ავატარი ✨",
-    becomeProPrice: "გახდი PRO - $3.99/mo",
     avatarLoadFailed: "ავატარი ვერ ჩაიტვირთა, სცადეთ თავიდან",
     animateAvatar: "გააცოცხლე ✨",
     animateAvatarPro: "გააცოცხლე (PRO)",
@@ -4767,7 +4765,6 @@ export const ka = {
     avatarAiGenTitle: "AI ავატარის გენერაცია",
     avatarProFeature: "PRO ფუნქცია",
     avatarAiDesc: "გადააქციე შენი ფოტო 3D ავატარად!\n+ შექმენი ანიმირებული ავატარი ✨",
-    avatarBecomePro: "გახდი PRO - $3.99/mo",
     avatarAnimateEmoji: "გააცოცხლე ✨",
     avatarAnimatePro: "გააცოცხლე (PRO)",
     // CategoryQuizPage results

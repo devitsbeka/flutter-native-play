@@ -55,6 +55,48 @@ describe("locale hygiene", () => {
  * Georgian keeps it, because there it is the home market and naming it is the
  * whole point. Every other locale is region-neutral.
  */
+/**
+ * No translation may contain a price.
+ *
+ * A price in a locale string is a price in ONE currency, baked into a
+ * language — and the app bills three currencies off the buyer's language, so
+ * the two cannot line up. Georgian is billed in lari and carried
+ * `becomeProPrice: "გახდი PRO - $3.99/mo"`: a dollar figure, in Georgian, with
+ * an untranslated "/mo", for a plan charged at 4.99 ₾.
+ *
+ * `unlockFor: "Unlock for $4.99"` was worse in a subtler way — 4.99 is the
+ * LARI price of PRO monthly, wearing a dollar sign. That is the exact fault
+ * Discover.tsx records ("the 9.99 GEL web price wearing a dollar sign"), and
+ * it had been sitting in seven locale files the whole time.
+ *
+ * All three were dead — no component rendered them — which is why nobody
+ * noticed and why they are deleted rather than corrected. A price nobody reads
+ * is exactly the kind that ends up on a marketing page.
+ *
+ * Prices come from src/config/pricing.ts through `useStorePrice` /
+ * `formatPriceOf`, which resolve the buyer's currency and, on a device, defer
+ * to StoreKit's own localised string. A locale string cannot do any of that.
+ */
+describe("no locale hardcodes a price", () => {
+  // A currency symbol or code next to a decimal amount, either order:
+  // "$3.99", "3,99 €", "4.99 GEL", "US$ 4,99".
+  const PRICE = /(?:US)?[$€₾]\s?\d+[.,]\d{2}|\d+[.,]\d{2}\s?(?:[$€₾]|GEL|USD|EUR)\b/;
+
+  for (const lang of Object.keys(translations)) {
+    it(`${lang} states no price of its own`, () => {
+      const offenders = [...flatten(translations[lang] as unknown as Record<string, unknown>)]
+        .filter(([, v]) => PRICE.test(v))
+        .map(([k, v]) => `${k} = ${v}`);
+
+      expect(
+        offenders,
+        `${lang} hardcodes a price. Prices are per-currency and come from ` +
+          `src/config/pricing.ts; a locale string can only ever be right in one market.`,
+      ).toEqual([]);
+    });
+  }
+});
+
 describe("marketing copy does not hardcode a country", () => {
   // Two regional-indicator letters is how a flag — and with it a country —
   // gets smuggled into a string that is otherwise translated.

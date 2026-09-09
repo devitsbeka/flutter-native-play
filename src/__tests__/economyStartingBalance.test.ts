@@ -220,9 +220,21 @@ describe("economy_config tells the truth about the rest of it too", () => {
     expect(configValue("chest_coins_min")).toBe(REWARDS.CHEST_COINS_MIN);
     expect(configValue("chest_coins_max")).toBe(REWARDS.CHEST_COINS_MAX);
     expect(configValue("chest_cooldown_hours")).toBe(REWARDS.CHEST_COOLDOWN_HOURS);
-    expect(configValue("powerup_price_5050")).toBe(REWARDS.POWER_UP_PRICES["5050"]);
-    expect(configValue("powerup_price_freeze")).toBe(REWARDS.POWER_UP_PRICES.freeze);
-    expect(configValue("powerup_price_replace")).toBe(REWARDS.POWER_UP_PRICES.replace);
+    // Every power-up, derived from the price table rather than typed out —
+    // `time-drain` was the one missing from this list, and it is the one that
+    // matters most: its economy_config row is `powerup_price_time_drain`,
+    // so `purchase_power_up` has to map the hyphen to an underscore to find
+    // it. Get that wrong and the function raises "No price configured", which
+    // is a dead Buy button rather than a free power-up — but nothing here
+    // would have said so.
+    //
+    // These are also no longer display-only. The client shows
+    // POWER_UP_PRICES; the server CHARGES the economy_config row. They are
+    // the same number or the button lies.
+    for (const [type, price] of Object.entries(REWARDS.POWER_UP_PRICES)) {
+      const row = `powerup_price_${type.replace(/-/g, "_")}`;
+      expect(configValue(row), `${type} (${row})`).toBe(price);
+    }
   });
 
   it("the VIP prices and the ad, which the first pass left behind", () => {
