@@ -304,9 +304,22 @@ export interface UniversalLobbyProps {
      * instruction, and instructions should hold still.
      */
     captionPulse?: boolean;
+    /**
+     * Draw the caption ABOVE the button even when the button is live.
+     *
+     * A guest's "Waiting for the host…" is the state of the room; "Invite
+     * the host" is what they can do about it. State first, then the act
+     * (owner: "show waiting for host above invite host button").
+     */
+    captionAbove?: boolean;
   };
-  /** Above the start button — an error the host must read, for instance. */
+  /** An error the host must read, or a guest's way out, beside the button. */
   footerExtra?: ReactNode;
+  /**
+   * Where footerExtra sits: above the button (an error to read before
+   * pressing it) or below (a way out, after the way on). Above by default.
+   */
+  footerExtraPlacement?: "above" | "below";
   initialTab?: LobbyTab;
   /** Modals and sheets, rendered above everything. */
   children?: ReactNode;
@@ -359,6 +372,7 @@ export function UniversalLobby({
   capacity,
   start,
   footerExtra,
+  footerExtraPlacement = "above",
   initialTab = "rules",
   children,
 }: UniversalLobbyProps) {
@@ -749,7 +763,17 @@ export function UniversalLobby({
                 the same colour — weight is what says which one is open, so
                 the closed tab reads as a place to go rather than as text
                 switched off. */}
-            <div className="relative flex items-center gap-[6px] rounded-[28px] border border-[#ceb8e4] bg-[rgba(255,255,255,0.77)] p-[10px] shadow-[0px_8px_0px_0px_#d0bbe3]">
+            {/* Sticky: the body scrolls, the tabs stay. They used to ride up
+                under the category chip's edge and out of reach the moment
+                the rules ran long (owner: "make sure game rules and players
+                tabs are sticky and do not go under select category
+                container"). The chip lives OUTSIDE the scroller, so the
+                scroller's top is already the chip's underside; 10px keeps
+                the bar off it. overflow-clip on the card is not a scroll
+                container, so the bar sticks to the body's scroll, and the
+                blur keeps the rows scrolling under it from showing through
+                the bar's 77% white. */}
+            <div className="sticky top-[10px] z-20 flex items-center gap-[6px] rounded-[28px] border border-[#ceb8e4] bg-[rgba(255,255,255,0.77)] p-[10px] shadow-[0px_8px_0px_0px_#d0bbe3] backdrop-blur-md">
               {(["rules", "players"] as const).map((key) => {
                 const active = tab === key;
                 // The same asymmetric corner the category chip wears (see
@@ -1054,8 +1078,8 @@ export function UniversalLobby({
             the caption and 16 below the button for no one (owner's ask). */}
         <motion.div {...arrive(0.42)} className="relative px-[28px] pb-[14px] pt-1.5">
         <div className="mx-auto w-full max-w-[700px] md:max-w-[520px]">
-          {footerExtra}
-          {start.disabled && captionBlock}
+          {footerExtraPlacement === "above" && footerExtra}
+          {(start.disabled || start.captionAbove) && captionBlock}
           {/* 1123:9998: the violet slab, 63 tall with a hard #6906cd foot
               under it and a white hairline inside its top edge. */}
           {!start.captionOnly && (
@@ -1078,7 +1102,8 @@ export function UniversalLobby({
             </span>
           </motion.button>
           )}
-          {!start.disabled && captionBlock}
+          {!start.disabled && !start.captionAbove && captionBlock}
+          {footerExtraPlacement === "below" && footerExtra}
         </div>
         </motion.div>
       </div>

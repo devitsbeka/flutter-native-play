@@ -40,9 +40,11 @@ describe("a guest can leave from the lobby footer", () => {
     expect(modal).toMatch(/onClick=\{handleLeavePermanently\}/);
   });
 
-  it("the footer renders the extra above the button", () => {
-    const footer = universal.slice(universal.indexOf("{footerExtra}"));
-    expect(footer.indexOf("{footerExtra}")).toBeLessThan(footer.indexOf("onClick={start.onPress}"));
+  it("the footer renders the extra where the caller puts it — the classic lobby's Leave goes below", () => {
+    const footer = universal.slice(universal.indexOf('{footerExtraPlacement === "above" && footerExtra}'));
+    expect(footer.indexOf('{footerExtraPlacement === "above" && footerExtra}')).toBeLessThan(footer.indexOf("onClick={start.onPress}"));
+    expect(footer.indexOf('{footerExtraPlacement === "below" && footerExtra}')).toBeGreaterThan(footer.indexOf("onClick={start.onPress}"));
+    expect(lobby).toMatch(/footerExtraPlacement="below"\s*\n\s*footerExtra=\{/);
   });
 
   it("in every language", () => {

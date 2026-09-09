@@ -136,6 +136,6 @@ describe("the line above the button", () => {
   });
 
   it("and still sits above a disabled Start, where the reason cannot be scrolled off", () => {
-    expect(lobby).toMatch(/\{start\.disabled && captionBlock\}/);
+    expect(lobby).toMatch(/\{\(start\.disabled \|\| start\.captionAbove\) && captionBlock\}/);
   });
 });
