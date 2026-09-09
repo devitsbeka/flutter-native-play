@@ -179,7 +179,14 @@ describe("the private tab and the lobby it opens", () => {
     // their own trivia — who sits out of it — needs two guests, not one.
     expect(lobby).toMatch(/const answeringPlayers = seatedPlayers - \(willBeObserver \? 1 : 0\);/);
     expect(lobby).toMatch(/const enoughPlayers = answeringPlayers >= 2;/);
-    expect(lobby).toMatch(/\(!needsCategorySelection && !enoughPlayers\)/);
+    // Short of a second player the button no longer offers to start at all:
+    // it becomes "Create" and hands the host back to the list (see
+    // createButtonInsteadOfDeadStart.test.ts). So the state is still named
+    // here, and starting is still not one of the things it can do.
+    expect(lobby).toMatch(
+      /const awaitingPlayers = !needsCategorySelection && !enoughPlayers && !isStarting;/,
+    );
+    expect(lobby).toMatch(/onPress: awaitingPlayers \? handleDoneCreating : handleStartOrPick,/);
     expect(lobby).toMatch(/rlNeedsSecondPlayer/);
     // The button's disabled state is not the only guard: the category picker
     // can start a round on its own, and the last guest can leave between the
