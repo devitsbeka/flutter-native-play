@@ -88,7 +88,7 @@ describe("what the card says without being opened", () => {
 
 describe("what opening it says", () => {
   it("every round, numbered, in play order", () => {
-    expect(sheet).toMatch(/\{rounds\.map\(\(round, i\) => \(/);
+    expect(sheet).toMatch(/\{shown\.map\(\(round, i\) => \(/);
     expect(sheet).toMatch(/\{i \+ 1\}/);
   });
 
@@ -112,8 +112,16 @@ describe("what opening it says", () => {
     expect(sheet).toMatch(/action\?: ReactNode;/);
   });
 
-  it("and a room whose host has picked nothing says so", () => {
-    expect(sheet).toMatch(/t\("extra\.roomPreviewNoRounds"\)/);
+  it("and a room whose host has queued nothing plays a mixed round, as its card says", () => {
+    // The card's chip reads "Mixed" for such a room; the sheet said "the
+    // host has not picked a round yet" under Rounds · 0 (owner: "show
+    // mixed category instead"). One row now: the mystery box, "Mixed".
+    expect(sheet).toMatch(/export const MIXED_ROUND: PreviewRound = \{ name: null, icon_slug: null, source_type: "random" \};/);
+    expect(sheet).toMatch(/const shown = rounds\.length > 0 \? rounds : \[MIXED_ROUND\];/);
+    expect(sheet).toMatch(/\{t\("lobby\.summaryRounds"\)\} · \{shown\.length\}/);
+    expect(sheet).toMatch(/\{shown\.map\(\(round, i\) => \(/);
+    expect(sheet).toMatch(/\{round\.name \?\? t\("extra\.cpMixedCategory"\)\}/);
+    expect(sheet).not.toMatch(/roomPreviewNoRounds/);
   });
 });
 
@@ -157,12 +165,11 @@ describe("where the rounds come from", () => {
 });
 
 describe("the sheet is written in every language", () => {
-  it("both strings, all seven", () => {
+  it("the eyebrow, all seven; the empty-queue line went with the empty state", () => {
     for (const lang of ["en", "ka", "de", "es", "fr", "it", "pt"]) {
       const locale = read(`src/locales/${lang}.ts`);
-      for (const key of ["roomPreviewEyebrow", "roomPreviewNoRounds"]) {
-        expect(locale, `${lang}.${key}`).toMatch(new RegExp(`\\n\\s+${key}: "[^"]+",`));
-      }
+      expect(locale, `${lang}.roomPreviewEyebrow`).toMatch(/\n\s+roomPreviewEyebrow: "[^"]+",/);
+      expect(locale, `${lang}.roomPreviewNoRounds`).not.toMatch(/roomPreviewNoRounds/);
     }
   });
 });

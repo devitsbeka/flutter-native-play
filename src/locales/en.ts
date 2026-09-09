@@ -2567,7 +2567,6 @@ export const en: KaTranslations = {
     rematchGateLeave: "Leave room",
     rematchWaitTitle: "Rematch asked",
     roomPreviewEyebrow: "Room preview",
-    roomPreviewNoRounds: "The host has not picked a round yet.",
     rematchWaitHint: "Everyone at the table has been asked. Whoever declines leaves the room — the pot follows the seats.",
     rematchWaitReady: "Ready",
     rematchWaitPending: "Deciding…",
