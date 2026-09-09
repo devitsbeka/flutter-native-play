@@ -84,8 +84,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # The runner image ships psql already; apt is only for when it does
+      # not. And a broken index in a repository the job never uses (Google
+      # Chrome's, once, a hash mismatch mid-update) must not take the whole
+      # job down before a single migration has run.
       - name: Install psql
-        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+        run: |
+          if ! command -v psql >/dev/null; then
+            sudo apt-get update || true
+            sudo apt-get install -y postgresql-client
+          fi
+          psql --version
 
       - name: Apply migrations
         env:
