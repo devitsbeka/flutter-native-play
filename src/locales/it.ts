@@ -4619,4 +4619,20 @@ export const it: KaTranslations = {
     row_educational_subtitle: "Le categorie che ti lasciano un po' più sveglio",
   },
 
+  answerFeedback: {
+    correctTitle: "È giusto",
+    incorrectTitle: "Quasi",
+    correct1: "{answer} — proprio quella.",
+    correct2: "Esatto. È {answer}.",
+    correct3: "Ce l'avevi: {answer}. Continua così.",
+    correct4: "Giusto — {answer}. Vale la pena ricordarla.",
+    wrong1: "La risposta era {answer}. Ora lo sai.",
+    wrong2: "Per poco — era {answer}.",
+    wrong3: "Stavolta no: {answer} era quella giusta. La prossima è tua.",
+    wrong4: "Era {answer}. Capita a tutti — vai avanti.",
+    favorite: "Salva la domanda",
+    favorited: "Salvata",
+    report: "Segnala la domanda",
+    reported: "Segnalata — grazie",
+  },
 };

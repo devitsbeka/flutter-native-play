@@ -5226,6 +5226,25 @@ export const en: KaTranslations = {
     row_educational_subtitle: "The categories that leave you a little smarter",
   },
 
+  // ==========================================
+  // Answer feedback card (Figma 1154:9157)
+  // ==========================================
+  answerFeedback: {
+    correctTitle: "That's right",
+    incorrectTitle: "Not quite",
+    correct1: "{answer} — that is exactly it.",
+    correct2: "Correct. It is {answer}.",
+    correct3: "You had it: {answer}. Keep it going.",
+    correct4: "Right — {answer}. Worth remembering.",
+    wrong1: "The answer was {answer}. Now you know it.",
+    wrong2: "Close one — it was {answer}.",
+    wrong3: "Not this time: {answer} was the answer. The next one is yours.",
+    wrong4: "It was {answer}. Everyone misses a few — keep going.",
+    favorite: "Save this question",
+    favorited: "Saved",
+    report: "Report this question",
+    reported: "Reported — thank you",
+  },
 };
 
 export default en;

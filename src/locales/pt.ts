@@ -4638,4 +4638,20 @@ export const pt: KaTranslations = {
     row_educational_subtitle: "As categorias que te deixam um pouco mais esperto",
   },
 
+  answerFeedback: {
+    correctTitle: "Está certo",
+    incorrectTitle: "Quase",
+    correct1: "{answer} — é essa mesma.",
+    correct2: "Certo. É {answer}.",
+    correct3: "Você tinha: {answer}. Continue assim.",
+    correct4: "Certo — {answer}. Vale a pena guardar.",
+    wrong1: "A resposta era {answer}. Agora você sabe.",
+    wrong2: "Por pouco — era {answer}.",
+    wrong3: "Desta vez não: {answer} era a certa. A próxima é sua.",
+    wrong4: "Era {answer}. Todo mundo erra uma — siga em frente.",
+    favorite: "Salvar pergunta",
+    favorited: "Salva",
+    report: "Denunciar pergunta",
+    reported: "Enviado — obrigado",
+  },
 };

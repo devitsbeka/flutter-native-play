@@ -5261,6 +5261,25 @@ export const ka = {
     row_educational_subtitle: "კატეგორიები, რომლებიც ცოტათი უფრო ჭკვიანს გხდიან",
   },
 
+  // ==========================================
+  // Answer feedback card (Figma 1154:9157)
+  // ==========================================
+  answerFeedback: {
+    correctTitle: "სწორია",
+    incorrectTitle: "ცოტა დაგცდა",
+    correct1: "{answer} — ზუსტად ეს არის.",
+    correct2: "სწორი პასუხი: {answer}. კარგად გახსოვდა.",
+    correct3: "{answer} — მართალი ხარ. ასე გააგრძელე.",
+    correct4: "სწორია — {answer}. ეს დასამახსოვრებელია.",
+    wrong1: "სწორი პასუხი იყო {answer}. ახლა უკვე იცი.",
+    wrong2: "ცოტა დაგცდა — პასუხი იყო {answer}.",
+    wrong3: "ამჯერად არა: სწორი იყო {answer}. შემდეგი შენია.",
+    wrong4: "პასუხი იყო {answer}. ყველას გვცდება — გააგრძელე.",
+    favorite: "კითხვის შენახვა",
+    favorited: "შენახულია",
+    report: "კითხვის დაფიქსირება",
+    reported: "გაიგზავნა — მადლობა",
+  },
 };
 
 export type KaTranslations = typeof ka;

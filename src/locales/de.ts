@@ -4605,4 +4605,20 @@ export const de: KaTranslations = {
     row_educational_subtitle: "Die Kategorien, die dich ein bisschen klüger machen",
   },
 
+  answerFeedback: {
+    correctTitle: "Es ist richtig",
+    incorrectTitle: "Knapp daneben",
+    correct1: "{answer} — genau das ist es.",
+    correct2: "Richtig. Es ist {answer}.",
+    correct3: "Du hattest es: {answer}. Weiter so.",
+    correct4: "Richtig — {answer}. Das lohnt sich zu merken.",
+    wrong1: "Die Antwort war {answer}. Jetzt weißt du es.",
+    wrong2: "Knapp — es war {answer}.",
+    wrong3: "Diesmal nicht: {answer} war richtig. Die nächste gehört dir.",
+    wrong4: "Es war {answer}. Jeder liegt mal daneben — weiter geht's.",
+    favorite: "Frage merken",
+    favorited: "Gemerkt",
+    report: "Frage melden",
+    reported: "Gemeldet — danke",
+  },
 };

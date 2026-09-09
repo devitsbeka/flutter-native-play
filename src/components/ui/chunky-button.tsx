@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface ChunkyButtonProps {
-  variant?: "primary" | "secondary" | "success" | "danger" | "mint" | "outline" | "outlineGreen" | "white" | "whitePurple" | "gold" | "silver" | "bronze";
+  variant?: "primary" | "secondary" | "success" | "danger" | "mint" | "mintBright" | "outline" | "outlineGreen" | "white" | "whitePurple" | "gold" | "silver" | "bronze";
   size?: "sm" | "md" | "compact" | "lg" | "xl";
   children: React.ReactNode;
   icon?: React.ReactNode;
@@ -68,6 +68,19 @@ const variantStyles = {
     innerBorder: "rgba(255,255,255,0.4)",
     outerStroke: "#3D8A70",
     glow: "rgba(107, 207, 176, 0.5)",
+    shine: "from-white/40 via-white/15 to-transparent",
+    particle: "bg-white/50",
+  },
+  // The quick-game "Start Game" CTA (Figma 1149:9025): a lighter mint than
+  // `mint`, over a much darker depth, with the frame's own inner highlight.
+  mintBright: {
+    face: "bg-gradient-to-b from-[#88E2CA] via-[#4ACCAD] via-[58%] to-[#31C3A1]",
+    textColor: "text-white",
+    depth: "#1E8E74",
+    border: "#50D8B8",
+    innerBorder: "rgba(255,255,255,0.45)",
+    outerStroke: "#1E8E74",
+    glow: "rgba(102, 51, 153, 0.3)",
     shine: "from-white/40 via-white/15 to-transparent",
     particle: "bg-white/50",
   },
