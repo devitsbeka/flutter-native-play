@@ -2,7 +2,7 @@ import { memo, useState, useMemo, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion, useMotionValue, useTransform, useAnimationControls, PanInfo } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
-import { Trash2, Home, Tag } from 'lucide-react';
+import { Trash2, Play, Check, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ResolvedAvatarImage } from '@/components/ui/resolved-avatar-image';
@@ -20,6 +20,9 @@ import iconKingLounge from "@/assets/play-chooser/icon-king.webp";
 import iconBattleLounge from "@/assets/play-chooser/icon-crate.png";
 import iconWordsLounge from "@/assets/play-chooser/icon-words.webp";
 import { roomKind } from "@/utils/roomRoutes";
+import { RoomCardPlayButton } from "@/components/team/RoomCardPlayButton";
+import { useRoomIconPool } from "@/hooks/useRoomIconPool";
+import { dealtRoomIcon } from "@/utils/roomCrests";
 
 // The two lounges wear their own face on an invite — the King mascot, the
 // Battle crate — and name their game where an ordinary room names its
@@ -153,7 +156,18 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
     gcTime: 60 * 60 * 1000,
   });
   const lounge = liveRoom ? LOUNGE_META[roomKind(liveRoom)] : undefined;
-  const roomIcon = (lounge ? lounge.icon : undefined) || liveRoom?.room_icon || storedRoomIcon || undefined;
+  // The room's face: its own icon, else the one every card deals it from
+  // the shared pool by room id — so a room with no icon of its own wears
+  // the same face here as on the rooms list, rather than a line-art house
+  // (owner: "show per notification more largely to fit room icons ... now
+  // it shows some mini lined icons we don't need them").
+  const roomIconPool = useRoomIconPool();
+  const roomIcon =
+    (lounge ? lounge.icon : undefined)
+    || liveRoom?.room_icon
+    || storedRoomIcon
+    || (roomId ? dealtRoomIcon(roomId, roomIconPool) : null)
+    || undefined;
   const roomName = liveRoom?.room_name || storedRoomName || undefined;
   // A rematch card says the category the ASKER wants, which is not the
   // room's until the host says yes — so the stored pick, never the live row.
@@ -176,14 +190,18 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
       }
     }
     
+    // A room notification leads with the PERSON — who started, who asked,
+    // who answered — and the room wears its own face in the chip below,
+    // at a size that reads. The room's face takes this slot only when
+    // nobody sent it.
     if (isRoomInvite || isGameStarted || isGameInvite || isRoomPing || isJoinAnswer || isRematch) {
-      if (roomIcon) {
+      if (roomIcon && !senderName && !avatarUrl) {
         return { type: 'image' as const, src: roomIcon };
       }
     }
 
     return { type: 'avatar' as const, src: avatarUrl };
-  }, [notification.type, triviaCover, triviaIconSlug, roomIcon, avatarUrl, isTriviaLikedOrSaved, isTriviaPlayed, isRoomInvite, isGameStarted, isGameInvite, isRoomPing, isJoinAnswer, isRematch]);
+  }, [notification.type, triviaCover, triviaIconSlug, roomIcon, avatarUrl, senderName, isTriviaLikedOrSaved, isTriviaPlayed, isRoomInvite, isGameStarted, isGameInvite, isRoomPing, isJoinAnswer, isRematch]);
   
   // Build subtitle based on notification type
   const getSubtitle = () => {
@@ -416,7 +434,7 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
         style={{ x }}
         animate={controls}
         className={cn(
-          "relative flex items-start gap-3 px-4 py-3 transition-colors backdrop-blur-sm border border-border/40 rounded-2xl",
+          "relative flex items-start gap-3.5 px-4 py-4 transition-colors backdrop-blur-sm border border-border/40 rounded-[24px]",
           isUnread ? "bg-purple-500/10" : "bg-card/80",
           !hasDualActions && "cursor-pointer active:bg-foreground/5"
         )}
@@ -425,14 +443,14 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
         {/* Avatar with type indicator badge */}
         <div className="relative flex-shrink-0">
           {avatarContent.type === 'icon_slug' ? (
-            <div className="w-11 h-11 rounded-xl overflow-hidden bg-muted flex items-center justify-center">
+            <div className="w-12 h-12 rounded-xl overflow-hidden bg-muted flex items-center justify-center">
               <QuizCategoryIcon 
                 iconSlug={avatarContent.slug} 
-                size={36} 
+                size={40} 
               />
             </div>
           ) : avatarContent.type === 'image' && avatarContent.src ? (
-            <div className="w-11 h-11 rounded-xl overflow-hidden bg-muted">
+            <div className="w-12 h-12 rounded-xl overflow-hidden bg-muted">
               <img 
                 src={avatarContent.src} 
                 alt="" 
@@ -440,7 +458,7 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
               />
             </div>
           ) : senderName || avatarUrl ? (
-            <Avatar className="w-11 h-11">
+            <Avatar className="w-12 h-12">
               <ResolvedAvatarImage src={avatarUrl} />
               <AvatarFallback 
                 className="text-sm font-bold text-primary-foreground"
@@ -455,7 +473,7 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
             /* Nobody sent it — a reward, a level, a system note — so the
                notification's own artwork takes the slot instead of an
                initial-less avatar. */
-            <NotificationIcon type={notification.type} size={44} />
+            <NotificationIcon type={notification.type} size={48} />
           )}
           
           {/* The type badge, on the corner of whatever the slot is showing.
@@ -476,7 +494,7 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
             <div className="min-w-0 flex-1">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm">
+                  <p className="text-[15px] leading-5">
                     <span
                       className={cn(
                         "font-bold",
@@ -491,7 +509,7 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
                     </span>
                   </p>
                   {subtitle && (
-                    <p className="text-xs text-muted-foreground/70 mt-0.5">
+                    <p className="text-[13px] text-muted-foreground/70 mt-0.5">
                       {subtitle}
                     </p>
                   )}
@@ -505,22 +523,32 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
                     </p>
                   )}
                   
+                  {/* The room, as a card wears it: its face at a size that
+                      reads, its name, and which GAME it is for — the lounge's
+                      brand name, or an ordinary room's category — as words
+                      alone. The line-art house and tag that used to stand in
+                      for those are gone (owner: "show category - as just
+                      text - category title - no icon needed"). */}
                   {hasRoomContext && (roomName || categoryName || lounge) && (
-                    <div className="mt-2 p-2.5 rounded-xl bg-muted/50 border border-border/30 space-y-1.5">
-                      {roomName && (
-                        <div className="flex items-center gap-2 text-xs">
-                          <Home className="w-3.5 h-3.5 text-primary/70" />
-                          <span className="font-medium text-foreground">{roomName}</span>
-                        </div>
+                    <div className="mt-2.5 flex items-center gap-3 rounded-2xl border border-border/30 bg-muted/50 p-2.5">
+                      {roomIcon && (
+                        <img
+                          src={roomIcon}
+                          alt=""
+                          draggable={false}
+                          className="h-12 w-12 shrink-0 rounded-xl object-cover"
+                        />
                       )}
-                      {/* which GAME the invite is for: the lounge's brand name,
-                          or an ordinary room's category */}
-                      {(lounge || categoryName) && (
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <Tag className="w-3.5 h-3.5" />
-                          <span>{lounge ? t(lounge.labelKey) : categoryName}</span>
-                        </div>
-                      )}
+                      <div className="min-w-0 flex-1">
+                        {roomName && (
+                          <p className="truncate text-[15px] font-semibold leading-5 text-foreground">{roomName}</p>
+                        )}
+                        {(lounge || categoryName) && (
+                          <p className="truncate text-[13px] leading-[18px] text-muted-foreground">
+                            {lounge ? t(lounge.labelKey) : categoryName}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -537,42 +565,57 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
             )}
           </div>
 
+          {/* The buttons are the room cards' own (RoomCardPlayButton): yes
+              in the mint every button one tap from a game wears, no as the
+              unfilled pill beside it — the pair the preview and rematch
+              sheets use (owner: "use same play button what we use on
+              cards"). */}
           {hasDualActions && (
-            <div className="flex gap-2 mt-2">
-              <button
-                type="button"
+            <div className="mt-3 flex items-center gap-2">
+              <RoomCardPlayButton
+                tone="mint"
                 onClick={handleAcceptClick}
                 onTouchEnd={handleAcceptTouch}
                 disabled={isLoading}
-                className="px-4 py-2 min-h-[40px] rounded-full border border-emerald-500/50 text-emerald-500 hover:bg-emerald-500/10 transition-colors text-xs font-semibold disabled:opacity-50 active:scale-95"
+                className="min-h-[40px] px-5"
                 style={{ touchAction: 'manipulation' }}
               >
                 {isLoading && pressedAction === "accept" ? (
                   <span className="flex items-center gap-1">
                     <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
                   </span>
-                ) : isFriendRequest || isJoinRequest || isRematch ? t("extra.notifAccept") : t("extra.notifJoin")}
-              </button>
-              <button
-                type="button"
+                ) : (
+                  <>
+                    <Check className="w-3.5 h-3.5" strokeWidth={3} />
+                    {isFriendRequest || isJoinRequest || isRematch ? t("extra.notifAccept") : t("extra.notifJoin")}
+                  </>
+                )}
+              </RoomCardPlayButton>
+              <RoomCardPlayButton
+                tone="outline"
                 onClick={handleDeclineClick}
                 onTouchEnd={handleDeclineTouch}
                 disabled={isLoading}
-                className="px-4 py-2 min-h-[40px] rounded-full border border-destructive/50 text-destructive hover:bg-destructive/10 transition-colors text-xs font-semibold disabled:opacity-50 active:scale-95"
+                className="min-h-[40px] px-5"
                 style={{ touchAction: 'manipulation' }}
               >
                 {isLoading && pressedAction === "decline" ? (
                   <span className="flex items-center gap-1">
                     <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
                   </span>
-                ) : t("extra.notifDecline")}
-              </button>
+                ) : (
+                  <>
+                    <X className="w-3.5 h-3.5" strokeWidth={3} />
+                    {t("extra.notifDecline")}
+                  </>
+                )}
+              </RoomCardPlayButton>
             </div>
           )}
 
           {hasActionTaken && (isFriendRequest || isJoinRequest || isRematch) && (
             <div className={cn(
-              "mt-2 px-4 py-2 rounded-full text-xs font-semibold inline-flex items-center gap-1.5",
+              "mt-3 px-4 py-2 rounded-full text-[13px] font-semibold inline-flex items-center gap-1.5",
               actionTaken === 'accepted' 
                 ? "bg-emerald-500/20 text-emerald-600" 
                 : "bg-muted text-muted-foreground"
@@ -592,18 +635,14 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
           )}
 
           {hasSingleAction && (
-            <motion.button
+            <RoomCardPlayButton
+              tone={isPlayButton ? "mint" : "outline"}
               onClick={handleSingleAction}
-              className={cn(
-                "mt-2 px-4 py-1.5 rounded-full transition-colors text-xs font-semibold",
-                isPlayButton 
-                  ? "bg-emerald-500 text-white hover:bg-emerald-600"
-                  : "border border-foreground/30 text-foreground hover:bg-foreground/5"
-              )}
-              whileTap={{ scale: 0.95 }}
+              className="mt-3 min-h-[40px] px-5"
             >
+              {isPlayButton && <Play className="w-3.5 h-3.5 fill-current" />}
               {getActionButtonLabel()}
-            </motion.button>
+            </RoomCardPlayButton>
           )}
         </div>
       </motion.div>
