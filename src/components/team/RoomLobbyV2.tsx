@@ -50,7 +50,7 @@ import { UniversalLobby, type LobbyPlayer, type LobbyRuleRow } from "@/component
 import { RoundOrderModal } from "@/components/team/RoundOrderModal";
 import type { QueueItem } from "@/hooks/useRoomCategoryQueue";
 import { classicLobbyScene } from "@/utils/lobbyScene";
-import { gameRoomsHasApproval, roomVisibilityFields } from "@/utils/roomVisibility";
+import { gameRoomsHasApproval } from "@/utils/roomVisibility";
 import { dealtRoomIcon, fetchCrestPool } from "@/utils/roomCrests";
 import { forgetDraftRoom, hasPressedCreate, isDraftRoom, rememberPressedCreate } from "@/utils/roomCreateOffered";
 import { useParticipantPresence } from "@/hooks/useParticipantPresence";
@@ -1269,8 +1269,7 @@ export function RoomLobbyV2() {
    * The rounds and the question count are what the summary sheet asked the
    * host to confirm; changing them under a round in progress would make the
    * confirmation a lie. The next match can differ - the editors come back
-   * when the round ends - and visibility stays the host's to change at any
-   * time (owner: "they can make the room private if they want").
+   * when the round ends.
    */
   const matchLive = currentRoom.status === "playing";
   /**
@@ -1299,12 +1298,10 @@ export function RoomLobbyV2() {
    * now, not on the seats (see offerCreate), so every public room with
    * something to play can reach this.
    *
-   * What stays is the visibility row itself: a host who wants their room
-   * back can make it private, and everything is editable again the moment
-   * they do (owner: "we let hosts switch public/private, only that option
-   * ... i can modify if i switch to private but not on public"). That is
-   * also how a host changes their mind about a category they have already
-   * put on the list.
+   * There is no way out of the lock through a Visibility switch any more:
+   * a room is public or private by the tab that made it, and the lobby
+   * does not offer to change that (owner: "remove public/private tabs").
+   * The lock lifts on its own once the room has nothing to play.
    */
   // ...and only while there is something to play. A published room whose
   // round has been played and nothing queued has nobody "who joined for"
@@ -1396,22 +1393,15 @@ export function RoomLobbyV2() {
   }));
   // No faces on the invite line: see UniversalLobby's `inviteFaces`. Three
   // friends drawn beside the + read as three friends already in the room.
-  // The rules the host sets: how many questions a round deals, and whether
-  // the room is on the public list. Both are the room row's own columns —
-  // the context reads total_questions when it deals, the public tab reads
-  // is_public — and the realtime row update brings the choice back here.
+  // The rules the host sets: how many questions a round deals, and (on a
+  // public room) who may walk in. Both are the room row's own columns — the
+  // context reads total_questions when it deals — and the realtime row
+  // update brings the choice back here. Whether the room is public is NOT
+  // a rule here: the tab it was made from decided that, for good (owner:
+  // "remove public/private tabs ... room can't be public").
   const setQuestions = async (value: string) => {
     if (!isHost) return;
     await supabase.from("game_rooms").update({ total_questions: Number(value) }).eq("id", currentRoom.id);
-  };
-  // How many players the host wants — 2 through 10, always starting at 2
-  // (owner's ask). It caps the room and the seats the players tab draws.
-  const setVisibility = async (value: string) => {
-    if (!isHost) return;
-    await supabase
-      .from("game_rooms")
-      .update({ ...(await roomVisibilityFields(value === "public")) })
-      .eq("id", currentRoom.id);
   };
   /**
    * Who may walk in.
@@ -1458,30 +1448,19 @@ export function RoomLobbyV2() {
    * Then it is not a room for strangers: it is for the friends the host
    * invites, or for nobody (owner: "trivias created by me or my trivia
    * parties are private ... host invites friends to join or plays solo").
-   * Both the Visibility and the Joining rows stand down — a public list and
-   * a door policy are questions a private room does not have.
+   * The Joining row stands down — a door policy is a question a private
+   * room does not have.
    *
    * A room CREATED from a trivia is private by construction — `canPublish`
-   * has never included My Trivia, so `publishRoom` is false on that path —
-   * which is why its own round hides the rows outright.
-   *
-   * A trivia merely QUEUED into a room only hides them while the room is
-   * private. Hiding them on a public room would stand the host on the
-   * public list with the switch taken away, which is worse than the row.
+   * has never included My Trivia, so `publishRoom` is false on that path.
+   * A trivia merely QUEUED into a room only counts while the room is
+   * private: on a public one the door still needs answering.
    */
   const playsOwnTrivia = roomPlaysOwnTrivia(currentRoom, isPublicRoom, queue);
 
   /**
-   * A room that has played keeps its visibility.
-   *
-   * A public room is made for one play and is wound down once that play is
-   * over (public_room_is_over, #675). It stays on the host's own list in
-   * the meantime - which is where the switch let them make it private
-   * again, keeping for ever a room the server was about to close (owner:
-   * "i shouldn't do that"). The other way round is no better: a private
-   * room published after its play is listed as already played out. So the
-   * switch is for a room that has not played yet, and the roster's round
-   * counts say whether it has.
+   * Whether this table has played: the roster's round counts say so. It is
+   * what makes the next Start a rematch ask rather than a start (below).
    */
   const roomHasPlayed = participants.some((p) => (p.total_rounds_played ?? 0) > 0);
 
@@ -1502,16 +1481,11 @@ export function RoomLobbyV2() {
       value: String(questionsPerRound(currentRoom.total_questions)),
       onChange: isHost && !rulesLocked ? (v: string) => void setQuestions(v) : undefined,
     } satisfies LobbyRuleRow]),
-    ...(playsOwnTrivia || roomHasPlayed ? [] : [{
-      key: "visibility",
-      label: t("lobby.uVisibility"),
-      options: [
-        { value: "public", label: t("extra.roomPublic") },
-        { value: "private", label: t("extra.roomPrivate") },
-      ],
-      value: isPublicRoom ? "public" : "private",
-      onChange: isHost ? (v: string) => void setVisibility(v) : undefined,
-    } satisfies LobbyRuleRow]),
+    // No Visibility row: the tab the room was made from decided that, and
+    // the lobby does not offer to change it (owner: "remove public/private
+    // tabs"). A public room's rules are the question count and this door;
+    // a private room's the question count and Play on TV (the `tv` prop).
+    //
     // Only a PUBLIC room has a door worth guarding. A private one is joined
     // with its code, and whoever handed that over has already said yes — so
     // the row would be a switch with nothing on the other side of it.

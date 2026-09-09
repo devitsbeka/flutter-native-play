@@ -173,7 +173,6 @@ export default function LobbyShot() {
           value: "10",
           onChange: noop,
         },
-        visibility("private"),
       ]}
       rulesText={[
         { key: "rules", heading: t("lobby.rulesHeading"), body: t("lobby.rulesKing") },

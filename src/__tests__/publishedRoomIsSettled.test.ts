@@ -56,11 +56,11 @@ describe("what settles a room", () => {
     expect(lobby).toMatch(/const rulesLocked = matchLive \|\| publishedRoom;/);
   });
 
-  it("switching to private unlocks everything again, by construction", () => {
-    // `isPublicRoom` reads the room's own column, which the visibility row
-    // writes — so the unlock needs no separate path to keep in step.
+  it("reads the room's own column — and nothing in the lobby writes it any more", () => {
+    // The tab the room was made from decided (roomVisibilityFromTheTab
+    // .test.ts); the lock lifts when there is nothing left to play.
     expect(lobby).toMatch(/const isPublicRoom = Boolean\(\(currentRoom as \{ is_public\?: boolean \}\)\.is_public\);/);
-    expect(lobby).toMatch(/roomVisibilityFields\(value === "public"\)/);
+    expect(lobby).not.toMatch(/roomVisibilityFields/);
   });
 });
 
@@ -112,18 +112,19 @@ describe("what a settled public room will not let the host do", () => {
     // picker is mounted but nothing opens it.
     expect(lobby).not.toMatch(/setShowGradientPicker\(true\)/);
     const writes = (lobby.match(/\.from\("game_rooms"\)\s*\n\s*\.update\(/g) ?? []).length;
-    expect(writes, "a new game_rooms write needs a lock decision").toBe(9);
+    expect(writes, "a new game_rooms write needs a lock decision").toBe(8);
   });
 });
 
 describe("what it still lets the host do", () => {
-  it("make the room private — the one control that survives", () => {
-    expect(lobby).toMatch(/onChange: isHost \? \(v: string\) => void setVisibility\(v\) : undefined,/);
-    // Not gated on the lock, unlike every row above.
-    expect(lobby).not.toMatch(/rulesLocked \? \(v: string\) => void setVisibility/);
+  it("not make the room private — that switch is gone; the lock lifts when there is nothing to play", () => {
+    // roomVisibilityFromTheTab.test.ts: the tab the room was made from
+    // decided, and the lobby does not offer to change it.
+    expect(lobby).not.toMatch(/setVisibility/);
+    expect(lobby).toMatch(/const publishedRoom = isPublicRoom && roomCreated && !needsCategorySelection;/);
   });
 
-  it("and answer the door, on a room that asks", () => {
+  it("answer the door, on a room that asks", () => {
     expect(lobby).toMatch(/onChange: isHost \? \(v: string\) => void setApproval\(v\) : undefined,/);
   });
 });

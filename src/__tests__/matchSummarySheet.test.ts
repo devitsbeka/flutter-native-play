@@ -96,8 +96,9 @@ describe("a started match is played as confirmed", () => {
     expect(lobby).toMatch(/canEdit=\{isHost && !rulesLocked\}/);
   });
 
-  it("but visibility stays the host's to change", () => {
-    expect(lobby).toMatch(/onChange: isHost \? \(v: string\) => void setVisibility\(v\) : undefined,/);
+  it("but the door stays the host's to answer", () => {
+    // Visibility is no longer a row at all (roomVisibilityFromTheTab.test.ts).
+    expect(lobby).toMatch(/onChange: isHost \? \(v: string\) => void setApproval\(v\) : undefined,/);
   });
 });
 

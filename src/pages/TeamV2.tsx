@@ -139,11 +139,11 @@ function TeamContentV2() {
   // home Play button's destination, where the solo games ARE the question;
   // it arrives here via location.state, not this handler.
   //
-  // The same room the Private tab's Create → Game Room makes, so the two
-  // doors on this page cannot make two different kinds of room.
+  // The same path the Private tab's Create → Game Room takes; the tab the
+  // host is standing on is what decides the room's visibility.
   const openCreateRoom = () => {
     if (roomsLocked) return setShowRoomsWall(true);
-    void createRoomAndOpen();
+    void createRoomAndOpen(activeTab === "public");
   };
   /**
    * The Private tab's create button, behind the same door.
@@ -318,17 +318,17 @@ function TeamContentV2() {
    * is where the host is going anyway. Two screens to reach the one they
    * wanted.
    *
-   * Public, with the door on the latch. The room used to be made private,
-   * so the lobby's Visibility row opened on "Private" and a host who wanted
-   * to be found had to notice a rule row and switch it — on the page whose
-   * whole point is rooms other people can find. Published is the useful
-   * default and "Ask me" is what keeps that safe: the room is listed, and
-   * the host still says who comes in (owner: "we should show public always
-   * selected when user clicks + room ... show always public and ask me - as
-   * selected"). Both are rows in the lobby, so switching either is one tap
-   * from here.
+   * The tab decides whether the room is public. "+ Room" on the Public tab
+   * makes a public room, with the door on the latch — listed, and the host
+   * still says who comes in; Create on the Private tab makes a private one,
+   * joined by code and never listed. There is no Visibility row in the
+   * lobby any more to say otherwise: the rules a public room shows are the
+   * question count and Open/Ask, a private room's the question count and
+   * Play on TV (owner: "when i'm on public tab and click + room remove
+   * public/private tabs, it will be public ... when i'm on private tab and
+   * click create room can't be public").
    */
-  const createRoomAndOpen = async () => {
+  const createRoomAndOpen = async (isPublic: boolean) => {
     const identity = generateRoomIdentity(readAppLanguage());
     const room = await createRoom(
       undefined,
@@ -337,8 +337,9 @@ function TeamContentV2() {
       identity.name,
       null,
       undefined,
-      true,
-      true,
+      isPublic,
+      // Ask-me on a public room; a private room has no door to guard.
+      isPublic,
     );
     if (room) {
       // A draft until the host presses Create or Start in the lobby: backing
@@ -1688,7 +1689,7 @@ function TeamContentV2() {
           if (draftId) setPersonalTriviaDraftId(draftId);
           setShowPersonalTriviaModal(true);
         }}
-        onSelectGameRoom={() => void createRoomAndOpen()}
+        onSelectGameRoom={() => void createRoomAndOpen(activeTab === "public")}
         hideGameRoom={createChooserForTrivias}
       />
       <GameStylePersonalTrivia

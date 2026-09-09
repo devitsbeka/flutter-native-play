@@ -89,12 +89,11 @@ describe("the icon is both written and resolved", () => {
 });
 
 describe("the rows a private room does not have", () => {
-  it("visibility stands down for an own-trivia room", () => {
-    // ...and for a room that has played (playedRoomKeepsVisibility.test).
-    expect(lobby).toMatch(/\.\.\.\(playsOwnTrivia \|\| roomHasPlayed \? \[\] : \[\{\s*\n\s*key: "visibility",/);
+  it("there is no visibility row for any room now (roomVisibilityFromTheTab.test.ts)", () => {
+    expect(lobby).not.toMatch(/key: "visibility"/);
   });
 
-  it("and so does joining", () => {
+  it("and joining stands down for an own-trivia room", () => {
     expect(lobby).toMatch(/isPublicRoom && hasApprovalColumn && !playsOwnTrivia/);
   });
 

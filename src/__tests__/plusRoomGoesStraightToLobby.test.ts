@@ -26,19 +26,20 @@ const hub = read("src/pages/TeamV2.tsx");
 describe("the Public tab's + Room", () => {
   it("makes the room and opens its lobby, without the chooser", () => {
     expect(hub).toMatch(
-      /const openCreateRoom = \(\) => \{\s*\n\s*if \(roomsLocked\) return setShowRoomsWall\(true\);\s*\n\s*void createRoomAndOpen\(\);\s*\n\s*\};/,
+      /const openCreateRoom = \(\) => \{\s*\n\s*if \(roomsLocked\) return setShowRoomsWall\(true\);\s*\n\s*void createRoomAndOpen\(activeTab === "public"\);\s*\n\s*\};/,
     );
   });
 
   it("still meets the PRO wall first — the padlock on the button is the wall on the tap", () => {
-    const fn = hub.slice(hub.indexOf("const openCreateRoom"), hub.indexOf("void createRoomAndOpen();"));
+    const fn = hub.slice(hub.indexOf("const openCreateRoom"), hub.indexOf('void createRoomAndOpen(activeTab === "public");'));
     expect(fn).toMatch(/if \(roomsLocked\) return setShowRoomsWall\(true\);/);
   });
 
-  it("is the same room the Private tab's Create → Game Room makes", () => {
-    // One path, pinned on the create-type modal too (publicRooms.test): a
-    // Room from either tab cannot be a different kind of room.
-    expect(hub).toMatch(/onSelectGameRoom=\{\(\) => void createRoomAndOpen\(\)\}/);
+  it("is the same path the Private tab's Create → Game Room takes — the tab says which room", () => {
+    // One path, pinned on the create-type modal too (publicRooms.test);
+    // public from the Public tab, private from the Private tab
+    // (roomVisibilityFromTheTab.test.ts).
+    expect(hub).toMatch(/onSelectGameRoom=\{\(\) => void createRoomAndOpen\(activeTab === "public"\)\}/);
   });
 });
 

@@ -117,17 +117,15 @@ describe("a room is private unless somebody published it", () => {
     expect(create).toMatch(/isPublic: publishRoom/);
   });
 
-  it("the switch lives in the lobby, on every room that can publish", () => {
-    // Wherever a room can be listed, the host finds the same segmented row
-    // on the rules tab. This is the only place the question is asked.
-    for (const file of [
-      "src/components/team/RoomLobbyV2.tsx",
-      "src/pages/TeamBattlePage.tsx",
-    ]) {
-      const src = read(file);
-      expect(src, file).toMatch(/roomVisibilityFields\(value === "public"\)/);
-      expect(src, file).toMatch(/value: "public", label: t\("extra\.roomPublic"\)/);
-    }
+  it("the switch lives in the battle arena's lobby; the classic room's tab decides instead", () => {
+    // The arena is made from its own screen, so its rules tab asks. A
+    // classic room is made from the Public or the Private tab, and that is
+    // its answer (roomVisibilityFromTheTab.test.ts).
+    const battle = read("src/pages/TeamBattlePage.tsx");
+    expect(battle).toMatch(/roomVisibilityFields\(value === "public"\)/);
+    expect(battle).toMatch(/value: "public", label: t\("extra\.roomPublic"\)/);
+    const room = read("src/components/team/RoomLobbyV2.tsx");
+    expect(room).not.toMatch(/key: "visibility"/);
   });
 });
 
@@ -163,14 +161,13 @@ describe("the private tab and the lobby it opens", () => {
     // Not the create screen: that screen is for deciding what to publish,
     // and every one of those questions is either answered or answered
     // better in the lobby the host is going to anyway.
-    expect(page).toMatch(/const createRoomAndOpen = async \(\) => \{/);
-    expect(page).toMatch(/onSelectGameRoom=\{\(\) => void createRoomAndOpen\(\)\}/);
-    // Named so the lobby has a title, published so the rooms page can find
-    // it, and on the latch so the host still says who comes in — the
-    // Visibility and Joining rows open on Public / Ask me (owner's ask; see
-    // roomDefaultsPublicAskMe.test.ts).
+    expect(page).toMatch(/const createRoomAndOpen = async \(isPublic: boolean\) => \{/);
+    expect(page).toMatch(/onSelectGameRoom=\{\(\) => void createRoomAndOpen\(activeTab === "public"\)\}/);
+    // Named so the lobby has a title; published, and on the latch so the
+    // host still says who comes in, exactly when it was made from the
+    // Public tab (roomVisibilityFromTheTab.test.ts).
     expect(page).toMatch(/generateRoomIdentity\(readAppLanguage\(\)\)/);
-    expect(page).toMatch(/undefined,\s*\n\s*true,\s*\n\s*true,\s*\n\s*\);/);
+    expect(page).toMatch(/undefined,\s*\n\s*isPublic,\s*\n(\s*\/\/[^\n]*\n)*\s*isPublic,\s*\n\s*\);/);
   });
 
   it("a room is two people — a lone host cannot start one", () => {
