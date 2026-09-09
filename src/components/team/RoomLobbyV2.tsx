@@ -56,7 +56,7 @@ import { hasPressedCreate, rememberPressedCreate } from "@/utils/roomCreateOffer
 import { useParticipantPresence } from "@/hooks/useParticipantPresence";
 import coinIconAsset from "@/assets/tb-lobby/coin.png";
 import { NotEnoughStakeModal } from "@/components/home/NotEnoughStakeModal";
-import { useGameStake } from "@/hooks/useGameStake";
+import { useCurrency } from "@/hooks/useCurrency";
 import { REWARDS } from "@/config/rewardConfig";
 import { triviaDisplayTitle } from "@/utils/triviaTitle";
 import { useFriends } from "@/hooks/useFriends";
@@ -156,7 +156,19 @@ export function RoomLobbyV2() {
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   // Can this player cover a seat at the table? The pot is collected when the
   // round ends, but being told then is being told too late.
-  const { hasEnoughCoins } = useGameStake();
+  /**
+   * Can this player cover a seat at the table?
+   *
+   * The BALANCE, not useGameStake's `hasEnoughCoins`, which is
+   * `isVipFreePlay || canAfford` — PRO is exempt from a quick game's loss,
+   * because nobody is on the other side of one. A room pot is other
+   * players' money and PRO stakes into it like everyone else
+   * (settle_room_round: "Everyone stakes, PRO included"), so a PRO player
+   * with nothing waved through here reached the settlement and paid what
+   * they had, leaving the pot short and the table funding them.
+   */
+  const { coins } = useCurrency();
+  const canCoverStake = coins >= REWARDS.GAME_STAKE;
   const [showNoStake, setShowNoStake] = useState(false);
   const [showMatchSummary, setShowMatchSummary] = useState(false);
   const [showRematchWait, setShowRematchWait] = useState(false);
@@ -1183,7 +1195,7 @@ export function RoomLobbyV2() {
       // answer is a balance that already moved (owner: "when user enters room
       // to play they should have 500 coins to participate"). A solo room is
       // practice and costs nothing, so it is never blocked.
-      if (seatedPlayers >= 2 && !hasEnoughCoins) {
+      if (seatedPlayers >= 2 && !canCoverStake) {
         setShowNoStake(true);
         return;
       }

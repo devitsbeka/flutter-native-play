@@ -79,6 +79,27 @@ const CATALOG: Record<string, CatalogEntry> = {
   [PRODUCTS.GEMS_5000]: { kind: "consumable", gems: 5000 },
 };
 
+/**
+ * What a subscription opens with, once per person per tier.
+ *
+ * PRO's benefit is unlimited plays — real, and invisible on the balance the
+ * day somebody pays for it; a room stake is not waived by it either, because
+ * a pot is the other players' money (see the room pot migration). So a
+ * subscription arrives with coins and gems in hand (owner: "pro solo -25 000
+ * coins + 10 gems, friends pro 50 000 coins + 20 gems").
+ *
+ * Kept in step with REWARDS.PRO_WELCOME in src/config/rewardConfig.ts and
+ * with the economy_config rows in
+ * supabase/migrations/20261102100000_starting_balance_and_pro_welcome.sql;
+ * src/__tests__/economyStartingBalance.test.ts fails if the three disagree.
+ *
+ * `ad_free` is not a subscription tier and gets nothing.
+ */
+export const SUBSCRIPTION_WELCOME: Record<string, { coins: number; gems: number }> = {
+  pro: { coins: 25000, gems: 10 },
+  pro_plus: { coins: 50000, gems: 20 },
+};
+
 export function lookupProduct(productId: string): CatalogEntry | null {
   // RevenueCat reports iOS subscription products with the base id, but Google
   // appends the base plan (`product:base-plan`). Strip it before matching so
@@ -247,7 +268,75 @@ export async function syncSubscription(
 
   if (error) throw error;
 
+  await creditSubscriptionWelcome(supabase, userId, best.tier, best);
+
   return { tier: best.tier, expiresAt: best.expiresAt };
+}
+
+/**
+ * Pay the welcome bundle for a tier, at most once per person per tier.
+ *
+ * Claimed in `iap_events` before a coin moves, exactly as the gem packs are:
+ * this runs on every sync — the webhook's renewals included, and every
+ * "restore purchases" the player taps — and the unique event_id is the only
+ * thing between that and paying the bundle out monthly. Keyed on the USER
+ * and the TIER rather than on a transaction id, because a renewal brings a
+ * new transaction id for a subscription that is not new.
+ *
+ * A failure to credit releases the claim, so the next sync tries again
+ * rather than leaving somebody paid-up and empty-handed with the ledger
+ * saying it was done.
+ */
+async function creditSubscriptionWelcome(
+  supabase: SupabaseClient,
+  userId: string,
+  tier: string,
+  entitlement: { productId: string; store: string; transactionId: string },
+): Promise<void> {
+  const bundle = SUBSCRIPTION_WELCOME[tier];
+  if (!bundle) return;
+
+  const eventId = `welcome:${userId}:${tier}`;
+
+  const { error: claimError } = await supabase.from("iap_events").insert({
+    event_id: eventId,
+    event_type: "SUBSCRIPTION_WELCOME",
+    user_id: userId,
+    product_id: entitlement.productId,
+    store: entitlement.store,
+    transaction_id: entitlement.transactionId,
+    event_at: new Date().toISOString(),
+    payload: { tier, ...bundle },
+  });
+
+  if (claimError) {
+    // 23505 = unique_violation: this person already has this tier's bundle,
+    // which is the happy path on every sync after the first.
+    if (claimError.code !== "23505") {
+      console.error("Failed to claim subscription welcome:", claimError);
+    }
+    return;
+  }
+
+  const { error: creditError } = await supabase.rpc("update_user_currency", {
+    p_user_id: userId,
+    p_coins_delta: bundle.coins,
+    p_gems_delta: bundle.gems,
+  });
+
+  if (creditError) {
+    await supabase.from("iap_events").delete().eq("event_id", eventId);
+    console.error("Failed to credit subscription welcome, claim released:", creditError);
+    return;
+  }
+
+  await supabase.from("purchase_transactions").insert({
+    user_id: userId,
+    product_id: entitlement.productId,
+    product_type: "subscription_welcome",
+    value_received: bundle,
+    platform: entitlement.store === "play_store" ? "android" : "ios",
+  });
 }
 
 /**

@@ -63,7 +63,7 @@ describe("Create opens the summary; Start opens the match", () => {
 
   it("Start no longer detours through it on the first match — the stake check still stands", () => {
     const gate = lobby.slice(lobby.indexOf("const handleStartOrPick = () => {"), lobby.indexOf("const summaryRounds = ["));
-    expect(gate).toMatch(/if \(seatedPlayers >= 2 && !hasEnoughCoins\) \{\s*setShowNoStake\(true\);\s*return;\s*\}/);
+    expect(gate).toMatch(/if \(seatedPlayers >= 2 && !canCoverStake\) \{\s*setShowNoStake\(true\);\s*return;\s*\}/);
     expect(gate).toMatch(/void handleStartGame\(\);/);
     // The one detour left is a later match with people at the table, which
     // asks them before it starts (rematchAskedAtStart.test) - never the

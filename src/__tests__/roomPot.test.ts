@@ -92,7 +92,9 @@ describe("a player is told before the round, not after", () => {
   });
 
   it("and Start refuses a seat the player cannot pay for", () => {
-    expect(lobby).toMatch(/if \(seatedPlayers >= 2 && !hasEnoughCoins\) \{\s*\n\s*setShowNoStake\(true\);\s*\n\s*return;\s*\n\s*\}/);
+    // On the balance, not on useGameStake's `hasEnoughCoins`, which forgives
+    // PRO a quick game's loss — see roomSeatCostsTheStake.test.ts.
+    expect(lobby).toMatch(/if \(seatedPlayers >= 2 && !canCoverStake\) \{\s*\n\s*setShowNoStake\(true\);\s*\n\s*return;\s*\n\s*\}/);
     expect(lobby).toMatch(/<NotEnoughStakeModal\s*\n\s*isOpen=\{showNoStake\}/);
   });
 });

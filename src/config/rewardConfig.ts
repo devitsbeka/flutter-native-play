@@ -71,8 +71,24 @@ export const REWARDS = {
   GEM_TO_COINS_RATE: 500,    // 1 gem = 500 coins
 
   // ===== NEW PLAYER STARTING BALANCE =====
-  NEW_PLAYER_COINS: 3000,    // 6 free games to learn
+  // Mirrored by the DEFAULT on profiles.coins/gems, which is what actually
+  // grants it, and by economy_config's new_player_* rows, which the admin
+  // economy screen reads. All three are set together — see
+  // supabase/migrations/20261102100000_starting_balance_and_pro_welcome.sql.
+  NEW_PLAYER_COINS: 5000,    // 10 free games to learn
   NEW_PLAYER_GEMS: 3,        // 1500 coins value (3 more games)
+
+  // ===== WHAT A SUBSCRIPTION OPENS WITH =====
+  //
+  // A welcome bundle, once per tier per person, credited by the store sync
+  // when the subscription first lands (supabase/functions/_shared/iap.ts).
+  // PRO's benefit is unlimited plays; it does not waive a room stake — the
+  // pot is other players' money — so the bundle is what makes the first
+  // weeks of a subscription feel paid for.
+  PRO_WELCOME: {
+    pro: { coins: 25000, gems: 10 },       // PRO, one seat
+    pro_plus: { coins: 50000, gems: 20 },  // Friends PRO, six seats
+  } as Record<"pro" | "pro_plus", { coins: number; gems: number }>,
 
   // ===== POWER-UP PRICES (coins) =====
   // Priced relative to 500 coin game stake
