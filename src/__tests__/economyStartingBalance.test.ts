@@ -116,6 +116,60 @@ describe("a subscription", () => {
   });
 });
 
+describe("and the database grants it too, without waiting on a deploy", () => {
+  const trigger = read("supabase/migrations/20261102110000_pro_welcome_in_the_database.sql");
+
+  it("the same bundle, from a trigger on the subscription row", () => {
+    // Edge functions reach this project through Lovable (CLAUDE.md 4a), so
+    // an iap.ts change is live whenever that happens. A trigger is live as
+    // soon as the SQL is applied, and it also catches subscriptions the
+    // store never wrote — an admin grant, grant_vip_days, a referral.
+    expect(trigger).toMatch(/CREATE TRIGGER vip_subscriptions_welcome\s*\n\s*AFTER INSERT OR UPDATE OF vip_tier, expires_at ON public\.vip_subscriptions/);
+    expect(trigger).toMatch(/IF NEW\.vip_tier NOT IN \('pro', 'pro_plus'\) THEN\s*\n\s*RETURN NEW;/);
+    expect(trigger).toMatch(/IF NEW\.expires_at <= now\(\) THEN\s*\n\s*RETURN NEW;/);
+  });
+
+  it("and cannot pay twice with the edge function, because they share one claim", () => {
+    // The key is the whole safety argument: whichever path runs first takes
+    // the iap_events row and the other reads a conflict and stops.
+    expect(trigger).toMatch(/'welcome:' \|\| NEW\.user_id::text \|\| ':' \|\| NEW\.vip_tier,/);
+    expect(iap).toMatch(/const eventId = `welcome:\$\{userId\}:\$\{tier\}`;/);
+    expect(trigger).toMatch(/ON CONFLICT \(event_id\) DO NOTHING;/);
+    expect(trigger).toMatch(/GET DIAGNOSTICS v_claimed = ROW_COUNT;\s*\n\s*IF v_claimed = 0 THEN\s*\n\s*RETURN NEW;/);
+  });
+
+  it("reads the amounts from economy_config, so the admin screen decides them", () => {
+    expect(trigger).toMatch(/FROM public\.economy_config\s*\n\s*WHERE id = CASE NEW\.vip_tier WHEN 'pro' THEN 'pro_welcome_coins'/);
+    // With the seeded numbers as the fallback, for a database missing a row.
+    expect(trigger).toMatch(
+      new RegExp(`CASE NEW\\.vip_tier WHEN 'pro' THEN ${REWARDS.PRO_WELCOME.pro.coins} ELSE ${REWARDS.PRO_WELCOME.pro_plus.coins} END\\)`),
+    );
+  });
+
+  it("and registers its ledger kind at zero, so no client can mint through it", () => {
+    // credit_gameplay_reward refuses an unknown kind, so registering it is
+    // what would open it; at 0/0 it stays shut. The trigger writes the
+    // ledger row itself.
+    expect(trigger).toMatch(/\('pro_welcome',\s*0,\s*0,\s*0,\s*0\)/);
+    expect(trigger).toMatch(/INSERT INTO public\.currency_grants \(user_id, kind, coins, gems, reference\)/);
+  });
+
+  it("proved against a real Postgres, where money rules have to be", () => {
+    const suite = read("supabase/tests/16-pro-welcome.sql");
+    for (const claim of [
+      "PRO opens with 25,000 coins",
+      "Friends PRO opens with 50,000 coins",
+      "a renewal grants nothing",
+      "an expired subscription grants nothing",
+      "ad-free is not a subscription tier and grants nothing",
+    ]) {
+      expect(suite, claim).toContain(claim);
+    }
+    // And CI runs it, which the room pot file spent a while not being.
+    expect(read(".github/workflows/pr-checks.yml")).toContain("supabase/tests/16-pro-welcome.sql");
+  });
+});
+
 describe("economy_config tells the truth about the rest of it too", () => {
   it("the stake, the win and the draw", () => {
     expect(configValue("game_stake")).toBe(REWARDS.GAME_STAKE);
