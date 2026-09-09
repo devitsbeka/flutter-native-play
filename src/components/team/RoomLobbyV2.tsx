@@ -561,6 +561,19 @@ export function RoomLobbyV2() {
     navigate(`/team?tab=${currentRoom?.is_public ? "public" : "private"}`, { replace: true });
   };
 
+  /**
+   * Create shows what it is about to commit to, and then commits.
+   *
+   * The summary — the rounds, the question count, the stake — used to stand
+   * in front of Start. It belongs here: this is the tap that settles a
+   * public room, and afterwards the rounds and the count cannot be changed
+   * from the lobby at all, so it is the last honest moment to show the host
+   * what they made (owner: "we need it after 'create' so host can be sure
+   * what kind of room was created by them"). "Change" closes it and leaves
+   * them in the lobby with everything still editable.
+   */
+  const handleCreatePress = () => setShowMatchSummary(true);
+
   const handleLeaveConfirm = () => {
     setShowLeaveConfirm(true);
   };
@@ -1113,10 +1126,13 @@ export function RoomLobbyV2() {
         setShowNoStake(true);
         return;
       }
-      // Not the match yet: the summary first, with the rounds, the question
-      // count and the stake on one card and a way back to change them. The
-      // tap that starts the match is the sheet's own Start.
-      setShowMatchSummary(true);
+      // Straight into it. The summary used to stand here, and by then it was
+      // asking the wrong question: a host pressing Start has people waiting
+      // on them and nothing left to decide — the room was settled when it
+      // was created. It moved to Create, which is the moment that summary
+      // is actually about (owner: "we don't need to show this modal after i
+      // click start game, we need it after 'create'").
+      void handleStartGame();
     }
   };
 
@@ -1561,7 +1577,7 @@ export function RoomLobbyV2() {
                   : offerCreate
                     ? t("extra.createBtn")
                     : t("lobby.uStartGame"),
-              onPress: offerCreate ? handleDoneCreating : handleStartOrPick,
+              onPress: offerCreate ? handleCreatePress : handleStartOrPick,
               // Short of a second player, the button is either the one-time
               // way out (enabled, above) or the plain truth: Start, dead
               // until somebody else is here.
@@ -1604,7 +1620,7 @@ export function RoomLobbyV2() {
         roomCode={currentRoom.room_code}
       />
 
-      {/* What Create commits to, before it does. */}
+      {/* What Create commits to, shown before it does it. */}
       <MatchSummarySheet
         open={showMatchSummary}
         rounds={summaryRounds}
@@ -1614,7 +1630,7 @@ export function RoomLobbyV2() {
         onChange={() => setShowMatchSummary(false)}
         onConfirm={() => {
           setShowMatchSummary(false);
-          void handleStartGame();
+          handleDoneCreating();
         }}
       />
 

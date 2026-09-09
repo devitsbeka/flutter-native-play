@@ -1,17 +1,24 @@
 /**
- * The host's last look before a match starts.
+ * The host's look at the room they are about to make.
  *
- * Create used to start the match on the spot. Everything the tap commits to
- * - which rounds, how many questions, what every seat pays in - was spread
- * over the rules tab, the category chip and the pot line, and the moment
- * they were locked was the moment nobody was looking at them (owner: "show
- * hosts when they click create a mini resume, with a last chance to modify
- * room rules and categories, what they gonna play, how many questions per
- * round, and the cost").
+ * Everything Create commits to — which rounds, how many questions, what
+ * every seat pays in — is spread over the rules tab, the category chip and
+ * the pot line, and the moment it is all settled would otherwise be the
+ * moment nobody is looking at any of it (owner: "show hosts when they click
+ * create a mini resume, with a last chance to modify room rules and
+ * categories, what they gonna play, how many questions per round, and the
+ * cost").
+ *
+ * It stood in front of Start for a while and asked the wrong question
+ * there: a host pressing Start has people waiting on them and nothing left
+ * to decide, because a public room is settled once it is listed. Back at
+ * Create it is the last honest moment to show what was made (owner: "we
+ * need it after 'create' so host can be sure what kind of room was created
+ * by them").
  *
  * One sheet, the same one the Play-on-TV pairing wears over the lobby, so
- * it reads as the lobby's own. Change closes it back onto the rules; Start
- * is the tap that was Create.
+ * it reads as the lobby's own. Change closes it back onto the rules, with
+ * everything still editable; Create is the tap that settles it.
  */
 
 import { motion, AnimatePresence } from "framer-motion";
@@ -126,7 +133,7 @@ export function MatchSummarySheet({
                   {t("lobby.summaryChange")}
                 </ChunkyButton>
                 <ChunkyButton variant="primary" size="md" className="flex-1" onClick={onConfirm} disabled={starting}>
-                  {starting ? <Loader2 className="h-4 w-4 animate-spin" /> : t("lobby.uStartGame")}
+                  {starting ? <Loader2 className="h-4 w-4 animate-spin" /> : t("extra.createBtn")}
                 </ChunkyButton>
               </div>
             </div>

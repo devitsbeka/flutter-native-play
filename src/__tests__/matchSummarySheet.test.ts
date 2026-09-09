@@ -1,11 +1,18 @@
 /**
  * Create shows the host what it commits to before it does.
  *
- * The tap used to start the match outright. What it locked in - the rounds,
- * the question count, the stake every seat pays - was spread over the rules
- * tab, the category chip and the pot line, and none of it could be changed
- * once the round was under way. So the tap opens a summary first, with a way
- * back, and the sheet's own Start is what was Create (owner's ask).
+ * What the tap locks in — the rounds, the question count, the stake every
+ * seat pays — is spread over the rules tab, the category chip and the pot
+ * line, and the moment it is all settled would otherwise be the moment
+ * nobody is looking at any of it. So Create opens a summary first, with a
+ * way back, and the sheet's own button is what finishes the job.
+ *
+ * It spent a while in front of Start instead, where it asked the wrong
+ * question: a host pressing Start has people waiting on them and nothing
+ * left to decide, because a public room is settled once it is listed
+ * (owner: "we don't need to show this modal after i click start game, we
+ * need it after 'create' so host can be sure what kind of room was created
+ * by them"). Start goes straight into the match now.
  *
  * And a match that has started is played as it was confirmed: the round and
  * question editors close while a round is live, and come back for the next
@@ -20,17 +27,25 @@ const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 const lobby = read("src/components/team/RoomLobbyV2.tsx");
 const sheet = read("src/components/team/MatchSummarySheet.tsx");
 
-describe("Create opens the summary, not the match", () => {
-  it("the start gate ends in the sheet, after the stake check", () => {
-    const gate = lobby.slice(lobby.indexOf("const handleStartOrPick = () => {"), lobby.indexOf("const summaryRounds = ["));
-    expect(gate).toMatch(/if \(seatedPlayers >= 2 && !hasEnoughCoins\) \{\s*setShowNoStake\(true\);\s*return;\s*\}/);
-    expect(gate).toMatch(/setShowMatchSummary\(true\);/);
-    expect(gate).not.toMatch(/handleStartGame\(\)/);
+describe("Create opens the summary; Start opens the match", () => {
+  it("Create is the tap that raises the sheet", () => {
+    expect(lobby).toMatch(/const handleCreatePress = \(\) => setShowMatchSummary\(true\);/);
+    expect(lobby).toMatch(/onPress: offerCreate \? handleCreatePress : handleStartOrPick,/);
   });
 
-  it("the sheet's Start is the old Create", () => {
-    expect(lobby).toMatch(/onConfirm=\{\(\) => \{\s*setShowMatchSummary\(false\);\s*void handleStartGame\(\);\s*\}\}/);
+  it("and the sheet's own button finishes what Create began", () => {
+    expect(lobby).toMatch(
+      /onConfirm=\{\(\) => \{\s*setShowMatchSummary\(false\);\s*handleDoneCreating\(\);\s*\}\}/,
+    );
+    // Change closes it and leaves the host in the lobby, still editable.
     expect(lobby).toMatch(/onChange=\{\(\) => setShowMatchSummary\(false\)\}/);
+  });
+
+  it("Start no longer detours through it — the stake check still stands", () => {
+    const gate = lobby.slice(lobby.indexOf("const handleStartOrPick = () => {"), lobby.indexOf("const summaryRounds = ["));
+    expect(gate).toMatch(/if \(seatedPlayers >= 2 && !hasEnoughCoins\) \{\s*setShowNoStake\(true\);\s*return;\s*\}/);
+    expect(gate).toMatch(/void handleStartGame\(\);/);
+    expect(gate).not.toMatch(/setShowMatchSummary\(true\)/);
   });
 
   it("lists the rounds in play order, the held round first", () => {
@@ -77,8 +92,9 @@ describe("the sheet is the lobby's own", () => {
     expect(sheet).toMatch(/\{stake\.toLocaleString\(\)\}/);
   });
 
-  it("its Start says what the lobby's button says", () => {
-    expect(sheet).toMatch(/t\("lobby\.uStartGame"\)/);
+  it("its confirm says Create, which is the tap that opened it", () => {
+    expect(sheet).toMatch(/t\("extra\.createBtn"\)/);
+    expect(sheet).not.toMatch(/t\("lobby\.uStartGame"\)/);
   });
 });
 
