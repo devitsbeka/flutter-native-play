@@ -4,7 +4,7 @@ import crownDecorIcon from "@/assets/playlimit/crown-decor.png";
 import { usePlayLimitClock } from "@/hooks/usePlayLimitClock";
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Trophy, Lock, ArrowLeft } from "lucide-react";
+import { Ban, Sparkles, Trophy, Lock, ArrowLeft } from "lucide-react";
 import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
 import { getGuestProgress } from "@/hooks/useGuestProgress";
 import { ExtraPlaysOffer } from "@/components/home/ExtraPlaysOffer";
@@ -152,8 +152,14 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.1 }}
               >
-                <Sparkles className="h-5 w-5 text-primary shrink-0" />
-                <p className="text-sm font-medium text-foreground">{t("modals.createAnimatedAvatar")}</p>
+                {/* No ads, not "create an animated avatar". Signing up does
+                    not grant an animated avatar — that is a PRO benefit — so
+                    the first thing this modal promised was something the
+                    account does not give you. Reuses
+                    extra.proBenefitNoAdsShort, which every locale already
+                    carries, rather than a second string of the same words. */}
+                <Ban className="h-5 w-5 text-primary shrink-0" />
+                <p className="text-sm font-medium text-foreground">{t("extra.proBenefitNoAdsShort")}</p>
               </motion.div>
               
               <motion.div 

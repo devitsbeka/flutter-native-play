@@ -278,7 +278,7 @@ export default function Index() {
   const isDevV2 = location.pathname === "/dev/v2";
   const { profile, user, fetchProfile, signUp, signUpWithUsername, signIn, signInWithUsername, signInWithGoogle, signInWithApple } = useAuth();
   const { t } = useLanguage();
-  const { step, startOnboarding, setStep, hasCompletedOnboarding } = useOnboarding();
+  const { step, setStep, hasCompletedOnboarding } = useOnboarding();
   const { openAvatarModal } = useAvatarModal();
   const goHomeOrRefresh = useGoHomeOrRefresh();
   const { coins, gems, addCoins } = useCurrency();
@@ -919,7 +919,12 @@ export default function Index() {
         onClose={() => setShowGuestMaxPlaysModal(false)}
         onRegister={() => {
           setShowGuestMaxPlaysModal(false);
-          startOnboarding();
+          // Sign-in, not startOnboarding(). That sets the onboarding step to
+          // "age_gate", so Let's Go on a "create an account" modal opened the
+          // how-old-are-you screen — a flow meant to run AFTER signup, shown
+          // to somebody who has not signed up yet and has nothing to attach
+          // an age to.
+          navigate("/auth");
         }}
         isGuest={!user}
         regenPlayAvailable={regenPlayAvailable}
