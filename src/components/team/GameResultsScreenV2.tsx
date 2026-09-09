@@ -972,7 +972,7 @@ export function GameResultsScreenV2() {
               <ChunkyButton
                 variant="primary"
                 size="lg"
-                className="w-full"
+                className="w-full font-bold"
                 onClick={handlePlayAgain}
                 disabled={isStartingRematch}
                 icon={isStartingRematch ? <Loader2 className="w-5 h-5 animate-spin" /> : <ChevronRight className="w-5 h-5" />}
@@ -985,7 +985,7 @@ export function GameResultsScreenV2() {
             <ChunkyButton
               variant="mint"
               size="lg"
-              className="w-full"
+              className="w-full font-bold"
               onClick={() => setShowCategoryPicker(true)}
               disabled={isStartingRematch}
               icon={<ChevronRight className="w-5 h-5" />}
@@ -1036,7 +1036,7 @@ export function GameResultsScreenV2() {
             <ChunkyButton
               variant="mint"
               size="lg"
-              className="w-full"
+              className="w-full font-bold"
               onClick={() => (isVip ? setShowAskPicker(true) : setShowAskWall(true))}
               disabled={isAsking}
               icon={isAsking ? <Loader2 className="w-5 h-5 animate-spin" /> : isVip ? <ChevronRight className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
