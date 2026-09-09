@@ -1652,7 +1652,7 @@ export function RoomCardGrid({ room, index, onJoin, onPreview, onDelete, onLeave
                       );
                     })}
                     {guests.length > avatarLimit && (
-                      <div className="w-[34px] h-[34px] rounded-full border-2 border-white bg-white/60 backdrop-blur-sm flex items-center justify-center flex-shrink-0 shadow-md">
+                      <div className="w-10 h-10 rounded-full border-2 border-white bg-white/60 backdrop-blur-sm flex items-center justify-center flex-shrink-0 shadow-md">
                         <span className="text-[#2b1a4a] text-[10px] font-bold">
                           +{guests.length - avatarLimit}
                         </span>
@@ -1667,7 +1667,13 @@ export function RoomCardGrid({ room, index, onJoin, onPreview, onDelete, onLeave
                         onInvite?.(room);
                       }}
                       aria-label={t("extra.inviteFriendsTitle")}
-                      className="w-[34px] h-[34px] rounded-full border-2 border-dashed border-[#2b1a4a]/30 bg-white/70 flex items-center justify-center flex-shrink-0 transition-colors hover:bg-white active:scale-95"
+                      /* 40px, not the faces' 34: a face here wears its ring
+                         OUTSIDE its box (ring-2 + 1px offset), so it reads
+                         as 40 wide, and a 34px dashed circle beside it read
+                         as the small one (owner: "increase + button, match
+                         with avatars sizes"). The +N overflow circle is
+                         sized the same for the same reason. */
+                      className="w-10 h-10 rounded-full border-2 border-dashed border-[#2b1a4a]/30 bg-white/70 flex items-center justify-center flex-shrink-0 transition-colors hover:bg-white active:scale-95"
                     >
                       <Plus className="w-4 h-4 text-[#2b1a4a]" />
                     </button>

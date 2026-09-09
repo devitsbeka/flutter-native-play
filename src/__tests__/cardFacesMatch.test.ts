@@ -40,8 +40,15 @@ for (const [name, src, ring] of [
       expect(src).not.toMatch(/<img src=\{crownIcon\} alt="" className="w-4 h-4 object-contain shrink-0" \/>/);
     });
 
-    it("the guests and the + are the same 34px", () => {
-      expect(src).toMatch(/w-\[34px\] h-\[34px\] rounded-full border-2 border-dashed/);
+    it("the guests and the + read as the same size", () => {
+      // The public card draws its ring INSIDE the 34px box (border-2), so
+      // its + is 34 too. The private grid draws it OUTSIDE (ring-2 plus a
+      // 1px offset), so a face there reads as 40 wide and the + and the
+      // +N circle are 40 to match (owner: "increase + button, match with
+      // avatars sizes, now it is small").
+      const plus = ring.source.startsWith("ring-2") ? "w-10 h-10" : "w-\\[34px\\] h-\\[34px\\]";
+      expect(src).toMatch(new RegExp(`${plus} rounded-full border-2 border-dashed`));
+      expect(src).not.toMatch(/w-\[34px\] h-\[34px\] rounded-full border-2 border-dashed border-\[#2b1a4a\]\/30 bg-white\/70 flex/);
       expect(src).not.toMatch(/w-8 h-8 rounded-full border-2 border-dashed/);
       expect(src).not.toMatch(/w-8 h-8 rounded-full overflow-hidden/);
     });
