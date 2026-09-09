@@ -50,19 +50,23 @@ describe("the footer floats over the list", () => {
   });
 
   it("with a blur that ramps, so it has no edge of its own", () => {
+    // The haze is shared with the results screen now (FooterHaze); the
+    // lobby draws it, and the layers live there.
+    expect(lobby).toMatch(/<FooterHaze \/>/);
+    const haze = readFileSync(join(process.cwd(), "src/components/shared/FooterHaze.tsx"), "utf8");
     // Every layer spans the whole ramp and fades ITSELF in over a different
     // stretch of it, so the radius climbs continuously from 2px to 26 and
     // no layer contributes an edge. Panes that merely START at different
     // heights turn one hard line into several, which is what this replaced.
-    expect(lobby).toMatch(/\{ blur: 2, from: 0, to: 25 \}/);
-    expect(lobby).toMatch(/\{ blur: 26, from: 70, to: 100 \}/);
-    expect(lobby).toMatch(/backdropFilter: `blur\(\$\{step\.blur\}px\)`/);
-    expect(lobby).toMatch(
+    expect(haze).toMatch(/\{ blur: 2, from: 0, to: 25 \}/);
+    expect(haze).toMatch(/\{ blur: 26, from: 70, to: 100 \}/);
+    expect(haze).toMatch(/backdropFilter: `blur\(\$\{step\.blur\}px\)`/);
+    expect(haze).toMatch(
       /WebkitMaskImage: `linear-gradient\(180deg, transparent \$\{step\.from\}%, #000 \$\{step\.to\}%\)`/,
     );
     // Masks are the mechanism, so every layer must carry one: an unmasked
     // layer is a uniform pane and brings its own edge back.
-    const ramp = lobby.slice(lobby.indexOf("{ blur: 2, from: 0, to: 25 }"), lobby.indexOf("The tint rides the same ramp"));
+    const ramp = haze.slice(haze.indexOf("{ blur: 2, from: 0, to: 25 }"), haze.indexOf("The tint rides the same ramp"));
     expect((ramp.match(/blur: \d+/g) ?? []).length).toBe(4);
     // All four start at the same height — the mask does the ramping, not
     // the geometry.
