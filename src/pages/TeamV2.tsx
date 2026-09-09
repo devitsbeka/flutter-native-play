@@ -142,7 +142,7 @@ function TeamContentV2() {
   // doors on this page cannot make two different kinds of room.
   const openCreateRoom = () => {
     if (roomsLocked) return setShowRoomsWall(true);
-    void createPrivateRoomAndOpen();
+    void createRoomAndOpen();
   };
   /**
    * The Private tab's create button, behind the same door.
@@ -309,16 +309,25 @@ function TeamContentV2() {
   };
 
   /**
-   * The Private tab's + makes the room and opens its lobby.
+   * Both tabs' + makes the room and opens its lobby.
    *
    * It used to open the create screen, which is the screen for deciding
-   * WHAT to publish — a game type, a category, public or private. On the
-   * Private tab all of that is already answered: it is a private room, and
-   * the category, the players and the rounds are chosen in the lobby, which
+   * WHAT to publish — a game type, a category, public or private. All of
+   * that is either already answered or answered better in the lobby, which
    * is where the host is going anyway. Two screens to reach the one they
    * wanted.
+   *
+   * Public, with the door on the latch. The room used to be made private,
+   * so the lobby's Visibility row opened on "Private" and a host who wanted
+   * to be found had to notice a rule row and switch it — on the page whose
+   * whole point is rooms other people can find. Published is the useful
+   * default and "Ask me" is what keeps that safe: the room is listed, and
+   * the host still says who comes in (owner: "we should show public always
+   * selected when user clicks + room ... show always public and ask me - as
+   * selected"). Both are rows in the lobby, so switching either is one tap
+   * from here.
    */
-  const createPrivateRoomAndOpen = async () => {
+  const createRoomAndOpen = async () => {
     const identity = generateRoomIdentity(readAppLanguage());
     const room = await createRoom(
       undefined,
@@ -327,7 +336,8 @@ function TeamContentV2() {
       identity.name,
       null,
       undefined,
-      false,
+      true,
+      true,
     );
     if (room) navigate(`/team?room=${room.room_code}`);
   };
@@ -1672,7 +1682,7 @@ function TeamContentV2() {
           if (draftId) setPersonalTriviaDraftId(draftId);
           setShowPersonalTriviaModal(true);
         }}
-        onSelectGameRoom={() => void createPrivateRoomAndOpen()}
+        onSelectGameRoom={() => void createRoomAndOpen()}
         hideGameRoom={createChooserForTrivias}
       />
       <GameStylePersonalTrivia

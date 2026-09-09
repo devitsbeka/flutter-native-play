@@ -48,6 +48,7 @@ import type { QueueItem } from "@/hooks/useRoomCategoryQueue";
 import { classicLobbyScene } from "@/utils/lobbyScene";
 import { gameRoomsHasApproval, roomVisibilityFields } from "@/utils/roomVisibility";
 import { dealtRoomIcon, fetchCrestPool } from "@/utils/roomCrests";
+import { hasPressedCreate, rememberPressedCreate } from "@/utils/roomCreateOffered";
 import coinIconAsset from "@/assets/tb-lobby/coin.png";
 import { NotEnoughStakeModal } from "@/components/home/NotEnoughStakeModal";
 import { useGameStake } from "@/hooks/useGameStake";
@@ -108,6 +109,16 @@ export function RoomLobbyV2() {
   useEffect(() => {
     void fetchCrestPool().then(setIconPool);
   }, []);
+  /**
+   * Is the "Create" way-out still on offer for this room?
+   *
+   * Read per room rather than once: the lobby survives the host moving
+   * between rooms, and the answer is about the room, not the mount.
+   */
+  const [createOffered, setCreateOffered] = useState(false);
+  useEffect(() => {
+    setCreateOffered(!hasPressedCreate(currentRoom?.id));
+  }, [currentRoom?.id]);
   /**
    * Whether the room can start, for the handler rather than the button.
    *
@@ -516,8 +527,14 @@ export function RoomLobbyV2() {
    * room shown on the Private tab looks like it was not published. Both
    * lists already lead with the room just made and ring it for three seconds
    * (isFreshOwnRoom / .fresh-room-ring), so the room is where the eye lands.
+   *
+   * Offered once per room (see roomCreateOffered): pressing it and coming
+   * back finds the same finished room, so a second offer of the same trip
+   * would be a loop rather than a way on.
    */
   const handleDoneCreating = () => {
+    rememberPressedCreate(currentRoom?.id);
+    setCreateOffered(false);
     exitRoom();
     navigate(`/team?tab=${currentRoom?.is_public ? "public" : "private"}`, { replace: true });
   };
@@ -994,12 +1011,24 @@ export function RoomLobbyV2() {
   /**
    * Set up, and waiting on a person rather than on the host.
    *
-   * The one state where Start had nothing to offer: what it plays is
+   * The one state where Start has nothing to offer: what it plays is
    * decided, so there is no category to pick, and it cannot begin, so there
-   * is nothing to press. That is where the button becomes "Create" and
-   * hands the host back to the list their room is on.
+   * is nothing to press.
    */
   const awaitingPlayers = !needsCategorySelection && !enoughPlayers && !isStarting;
+  /**
+   * ...and the first time, the button is a way out of it rather than a dead
+   * Start: "Create", which hands the host back to the list their room leads,
+   * because the second player has to come from there.
+   *
+   * Once. Pressing it and coming back finds the same finished room, so
+   * offering the same trip again is a loop; from then on the footer says the
+   * true thing — Start, dead until somebody else is here — and arms itself
+   * the moment they are (owner: "when i click create once we should show
+   * disable start game button again and when there are minimum 2 online
+   * players in the room - we show start game as clickable").
+   */
+  const offerCreate = awaitingPlayers && createOffered;
 
   const heldRound = (currentRoom.category_id || currentRoom.user_trivia_id)
     ? {
@@ -1382,13 +1411,15 @@ export function RoomLobbyV2() {
                 ? t("extra.rlStarting")
                 : needsCategorySelection
                   ? t("extra.rlChooseCategory")
-                  : awaitingPlayers
+                  : offerCreate
                     ? t("extra.createBtn")
                     : t("lobby.uStartGame"),
-              onPress: awaitingPlayers ? handleDoneCreating : handleStartOrPick,
-              // Short of a second player is no longer a dead button: that
-              // case is "Create" above, and it goes somewhere.
-              disabled: !canStartGame || isStarting || loading,
+              onPress: offerCreate ? handleDoneCreating : handleStartOrPick,
+              // Short of a second player, the button is either the one-time
+              // way out (enabled, above) or the plain truth: Start, dead
+              // until somebody else is here.
+              disabled:
+                !canStartGame || isStarting || loading || (awaitingPlayers && !offerCreate),
               loading: isStarting,
               icon: needsCategorySelection ? <Plus className="h-5 w-5" /> : undefined,
               // Still says why the game has not begun; it just sits under a

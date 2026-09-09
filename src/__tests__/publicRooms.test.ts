@@ -156,15 +156,19 @@ describe("the arena is sized before it is opened", () => {
 });
 
 describe("the private tab and the lobby it opens", () => {
-  it("the + makes a private room and lands in its lobby", () => {
+  it("the + makes a listed room and lands in its lobby", () => {
     const page = read("src/pages/TeamV2.tsx");
     // Not the create screen: that screen is for deciding what to publish,
-    // and on the Private tab every one of those questions is answered.
-    expect(page).toMatch(/const createPrivateRoomAndOpen = async \(\) => \{/);
-    expect(page).toMatch(/onSelectGameRoom=\{\(\) => void createPrivateRoomAndOpen\(\)\}/);
-    // Explicitly private, and named so the lobby has a title.
+    // and every one of those questions is either answered or answered
+    // better in the lobby the host is going to anyway.
+    expect(page).toMatch(/const createRoomAndOpen = async \(\) => \{/);
+    expect(page).toMatch(/onSelectGameRoom=\{\(\) => void createRoomAndOpen\(\)\}/);
+    // Named so the lobby has a title, published so the rooms page can find
+    // it, and on the latch so the host still says who comes in — the
+    // Visibility and Joining rows open on Public / Ask me (owner's ask; see
+    // roomDefaultsPublicAskMe.test.ts).
     expect(page).toMatch(/generateRoomIdentity\(readAppLanguage\(\)\)/);
-    expect(page).toMatch(/undefined,\s*\n\s*false,\s*\n\s*\);/);
+    expect(page).toMatch(/undefined,\s*\n\s*true,\s*\n\s*true,\s*\n\s*\);/);
   });
 
   it("a room is two people — a lone host cannot start one", () => {
@@ -186,7 +190,7 @@ describe("the private tab and the lobby it opens", () => {
     expect(lobby).toMatch(
       /const awaitingPlayers = !needsCategorySelection && !enoughPlayers && !isStarting;/,
     );
-    expect(lobby).toMatch(/onPress: awaitingPlayers \? handleDoneCreating : handleStartOrPick,/);
+    expect(lobby).toMatch(/onPress: offerCreate \? handleDoneCreating : handleStartOrPick,/);
     expect(lobby).toMatch(/rlNeedsSecondPlayer/);
     // The button's disabled state is not the only guard: the category picker
     // can start a round on its own, and the last guest can leave between the
