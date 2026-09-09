@@ -24,6 +24,19 @@ export interface MyRoom {
    * MyTrivia Party rooms among them. Lets a card tell that apart from an
    * ordinary category room without a second query. */
   user_trivia_id: string | null;
+  /**
+   * The party trivia's own saved title — "" when it was never named,
+   * null when this isn't a party room at all (or the trivia is somebody
+   * else's, not a MyTrivia Party).
+   *
+   * A party room's `room_name` is deliberately left blank rather than
+   * stamped with a dealt name (see isGeneratedRoomName), so the card's
+   * displayed title has to fall back to this — the same fallback
+   * RoomLobbyV2's own heading uses via triviaDisplayTitle. Without it the
+   * card had nothing left to show but a flat "Untitled", which disagreed
+   * with the lobby the moment you opened the room.
+   */
+  party_trivia_title: string | null;
   status: string;
   created_at: string;
   is_host: boolean;
@@ -272,6 +285,28 @@ async function fetchRoomsForUser(userId: string, options?: FetchRoomsOptions): P
     });
   }
 
+  // 6.5. Fetch party-trivia titles — the same source RoomLobbyV2's own
+  // heading reads, via triviaDisplayTitle (see MyRoom.party_trivia_title).
+  // A room's own name is deliberately left blank for these, so the card
+  // has nothing else to show without this.
+  const partyTriviaIds = [
+    ...new Set((roomsData || []).map((r) => r.user_trivia_id).filter((id): id is string => !!id)),
+  ];
+  const partyTriviaTitleMap = new Map<string, string>();
+  if (partyTriviaIds.length > 0) {
+    const { data: partyTrivias } = await supabase
+      .from("user_quiz_posts")
+      .select("id, title, subject")
+      .in("id", partyTriviaIds);
+
+    // Only "personal" trivias are MyTrivia Party rounds; a user_trivia_id
+    // pointing anywhere else (not expected, but not this hook's call) is
+    // left unmapped rather than shown as if it were one.
+    partyTrivias?.forEach((tv) => {
+      if (tv.subject === "personal") partyTriviaTitleMap.set(tv.id, tv.title ?? "");
+    });
+  }
+
   // 7. Build MyRoom[]
   const participantsByRoom = new Map<string, typeof allParticipants>();
   allParticipants?.forEach((p) => {
@@ -316,6 +351,7 @@ async function fetchRoomsForUser(userId: string, options?: FetchRoomsOptions): P
       category_name: room.category_name,
       category_id: room.category_id,
       user_trivia_id: room.user_trivia_id ?? null,
+      party_trivia_title: room.user_trivia_id ? (partyTriviaTitleMap.get(room.user_trivia_id) ?? null) : null,
       status: room.status || "waiting",
       created_at: room.created_at || "",
       is_host: hostMap.get(room.id) || false,
