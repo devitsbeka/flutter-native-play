@@ -352,3 +352,12 @@ jobs:
           psql -h localhost -p 5432 -U postgres \
             -v ON_ERROR_STOP=1 -f supabase/tests/17-public-rooms-end.sql
 
+      # A public room is public once: the first claimed round turns it
+      # private, on whichever device claims it, and nothing turns it back.
+      - name: Assert a public room is public once
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -p 5432 -U postgres \
+            -v ON_ERROR_STOP=1 -f supabase/tests/18-public-once.sql
+

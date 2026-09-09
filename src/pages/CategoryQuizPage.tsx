@@ -7,6 +7,8 @@ import { ArrowLeft, ChevronRight, TrendingUp } from "lucide-react";
 import { TimerBadge } from "@/components/game/TimerBadge";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { AnswerFeedbackCard } from "@/components/game/AnswerFeedbackCard";
+import { QuizBottomBlur } from "@/components/game/QuizBottomBlur";
+import { useFooterHeight } from "@/hooks/useFooterHeight";
 import { getCategoryById } from "@/data/categories";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast";
@@ -898,6 +900,10 @@ export default function CategoryQuizPage() {
     return badges;
   }, [timerFrozen, freezeTimeRemaining, showTimeDrainBadge, activePowerUpEffect, t]);
 
+  // The floating foot is out of flow, so the answer list is padded by
+  // exactly its height and every answer stays scrollable into view.
+  const [footerRef, footerHeight] = useFooterHeight<HTMLDivElement>();
+
   const currentQuestion = questions[currentQuestionIndex];
   const starPercentage = (score / Math.max(questions.length, 1)) * 100;
   const stars = starPercentage >= 80 ? 3 : starPercentage >= 60 ? 2 : starPercentage >= 40 ? 1 : 0;
@@ -1329,7 +1335,7 @@ export default function CategoryQuizPage() {
     // Full-width purple background on desktop/tablet (prevents white gutters)
     <div className="w-full h-[100dvh] bg-[#7E7ADB] overflow-hidden" style={{ marginTop: "calc(-1 * var(--safe-top))", paddingTop: "var(--safe-top)" }}>
       {/* Content wrapper with max-width for desktop/tablet, centered */}
-      <div className="w-full h-full flex flex-col max-w-[700px] md:max-w-[520px] mx-auto">
+      <div className="w-full h-full flex flex-col max-w-[700px] md:max-w-[520px] mx-auto relative">
 
       {/* Header - Solo mode with category name and timer */}
       <div className="flex items-center justify-between px-4 pt-3 pb-2 flex-shrink-0 [@media(max-height:700px)]:py-1 [@media(max-height:600px)]:pt-1 [@media(max-height:600px)]:pb-0.5">
@@ -1404,7 +1410,10 @@ export default function CategoryQuizPage() {
 
       {/* Answer Buttons */}
       {isTrueFalseQuestion ? (
-        <div className="flex-1 min-h-0 px-4 pt-2 flex gap-3 items-center justify-center">
+        <div
+          className="flex-1 min-h-0 px-4 pt-2 flex gap-3 items-center justify-center"
+          style={{ paddingBottom: footerHeight }}
+        >
           {/* popLayout, or the question change stalls: in the default mode an
               exiting element keeps its layout slot until its exit animation
               ends, so the OLD answers held their places — with a staggered
@@ -1441,7 +1450,10 @@ export default function CategoryQuizPage() {
           </AnimatePresence>
         </div>
       ) : (
-        <div className="flex-1 px-4 pt-2 flex flex-col gap-2 overflow-y-auto min-h-0">
+        <div
+          className="flex-1 px-4 pt-2 flex flex-col gap-2 overflow-y-auto min-h-0"
+          style={{ paddingBottom: footerHeight }}
+        >
           {/* popLayout — see the true/false block above. */}
           <AnimatePresence mode="popLayout">
             {currentQuestion?.allAnswers?.map((answer, index) => {
@@ -1471,12 +1483,19 @@ export default function CategoryQuizPage() {
         </div>
       )}
 
+      {/* The floating foot: the feedback card and the next button, on the
+          frosted ramp. Out of flow on purpose — the answers run underneath
+          it and blur out as they go, instead of being clipped short of it
+          with a hard edge. */}
+      <div ref={footerRef} className="absolute inset-x-0 bottom-0 z-20">
+      <QuizBottomBlur />
+
       {/* Answer feedback — Figma 1154:9157. Lands over the next button once
           an answer is in: the verdict, somewhere to keep the question or
           flag it, and a few words about the answer. */}
       <AnimatePresence>
         {isAnswered && currentQuestion && (
-          <motion.div key={`feedback-${currentQuestionIndex}`} className="px-4 pt-2 pb-6 flex-shrink-0">
+          <motion.div key={`feedback-${currentQuestionIndex}`} className="relative px-4 pt-2 pb-5 flex-shrink-0">
             <AnswerFeedbackCard
               isCorrect={selectedAnswer === currentQuestion.correct_answer}
               questionId={currentQuestion.id}
@@ -1490,7 +1509,7 @@ export default function CategoryQuizPage() {
       </AnimatePresence>
 
       {/* Bottom Area - Power-ups OR Next Button (same as QuizGameScreenProd) */}
-      <div className="px-4 pb-4 pt-2 flex-shrink-0">
+      <div className="relative px-4 pb-4 pt-2 flex-shrink-0">
         <div className="pb-[env(safe-area-inset-bottom)]">
           <AnimatePresence mode="wait">
             {isAnswered ? (
@@ -1526,6 +1545,7 @@ export default function CategoryQuizPage() {
             )}
           </AnimatePresence>
         </div>
+      </div>
       </div>
       {/* Exit Confirmation Dialog */}
       <AlertDialog open={showExitDialog} onOpenChange={setShowExitDialog}>

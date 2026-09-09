@@ -23,14 +23,35 @@ import { motion, AnimatePresence } from "framer-motion";
 import { RoomCardPlayButton } from "@/components/team/RoomCardPlayButton";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { roundIconSlug } from "@/utils/ownTriviaRound";
+import { undecidedRoundKind } from "@/utils/undecidedRound";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { REWARDS } from "@/config/rewardConfig";
 import coinIcon from "@/assets/tb-lobby/coin.png";
+import questionIcon from "@/assets/lobby/chip-question.webp";
 
 export interface PreviewRound {
   name: string | null;
   icon_slug: string | null;
   source_type: string;
+}
+
+/**
+ * The round a room plays when its host has queued none: mixed, out of every
+ * category, with the mystery box for a face. The card already says so —
+ * its category chip reads "Mixed" for such a room — and the sheet said
+ * "the host has not picked a round yet" under a count of 0, which called
+ * the same room two different things (owner: "show mixed category instead
+ * 'the host has not picked a round yet'"). One row, "Mixed", Round 1.
+ */
+export const MIXED_ROUND: PreviewRound = { name: null, icon_slug: null, source_type: "mixed" };
+
+/**
+ * Is this row a mixed round? The stand-in above, or a queued one — which
+ * the pickers store as a "category" named "Mixed" in the picker's own
+ * language, with no slug, so the name is what there is to go on.
+ */
+export function isMixedRound(round: PreviewRound): boolean {
+  return round.source_type === "mixed" || undecidedRoundKind(null, round.name) === "mixed";
 }
 
 /**
@@ -79,6 +100,8 @@ export function RoomPreviewSheet({
   // players there is no pot at all: settle_room_round calls that practice.
   const stake = REWARDS.GAME_STAKE;
   const pot = players >= 2 ? players * stake : null;
+  // No queue is a mixed round, not no round (MIXED_ROUND).
+  const shown = rounds.length > 0 ? rounds : [MIXED_ROUND];
 
   return (
     <AnimatePresence>
@@ -109,19 +132,21 @@ export function RoomPreviewSheet({
               </div>
 
               <p className="mb-2 text-[12px] font-bold uppercase tracking-[0.08em] text-[#402666]/50">
-                {t("lobby.summaryRounds")} · {rounds.length}
+                {t("lobby.summaryRounds")} · {shown.length}
               </p>
-              {rounds.length > 0 ? (
-                /* The lobby's own round rows (RoundOrderModal): the number,
-                   the icon in a tile, the name over "Round N". The rows
-                   used to hand the icon a CSS size the icon ignores — it
-                   defaults to 128px — and a random round carried no slug,
-                   so each row swelled around a giant faint placeholder
-                   (owner: "show more narrow containers for each category
-                   with icons"). roundIconSlug gives a random or mixed round
-                   the mystery box the rest of the app draws for it. */
-                <ol className="mb-5 max-h-[240px] space-y-2 overflow-y-auto">
-                  {rounds.map((round, i) => (
+              {/* The lobby's own round rows (RoundOrderModal): the number,
+                  the icon in a tile, the name over "Round N". The rows
+                  used to hand the icon a CSS size the icon ignores — it
+                  defaults to 128px — and a random round carried no slug,
+                  so each row swelled around a giant faint placeholder
+                  (owner: "show more narrow containers for each category
+                  with icons"). A random round wears the mystery box the
+                  rest of the app draws for it; a MIXED round wears the
+                  question mark — it carried no slug and the tile came up
+                  empty (owner: "as a mixed category icon use this
+                  question mark icon, it is empty now"). */}
+              <ol className="mb-5 max-h-[240px] space-y-2 overflow-y-auto">
+                  {shown.map((round, i) => (
                     <li
                       key={`${round.name ?? "round"}-${i}`}
                       className="flex min-h-[58px] items-center gap-2 rounded-xl border border-[#e8e0f5] bg-white/70 py-2 pl-2 pr-3"
@@ -130,7 +155,11 @@ export function RoomPreviewSheet({
                         {i + 1}
                       </span>
                       <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#7126d5]/10">
-                        <DynamicIcon slug={roundIconSlug(round)} size={22} shadow={false} />
+                        {isMixedRound(round) ? (
+                          <img src={questionIcon} alt="" className="h-7 w-7 object-contain" />
+                        ) : (
+                          <DynamicIcon slug={roundIconSlug({ ...round, category_name: round.name })} size={22} shadow={false} />
+                        )}
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-[15px] font-semibold text-[#402666]">
@@ -142,14 +171,7 @@ export function RoomPreviewSheet({
                       </span>
                     </li>
                   ))}
-                </ol>
-              ) : (
-                // A room whose host has not picked yet. Saying so beats an
-                // empty box, and beats inventing a round that is not there.
-                <p className="mb-5 rounded-xl border border-dashed border-[#e8e0f5] bg-white/50 px-3 py-4 text-center text-[14px] leading-5 text-[#402666]/60">
-                  {t("extra.roomPreviewNoRounds")}
-                </p>
-              )}
+              </ol>
 
               <div className={`mb-5 grid gap-2 ${questionsPerRound === null ? "grid-cols-1" : "grid-cols-2"}`}>
                 {questionsPerRound !== null && (
@@ -183,11 +205,14 @@ export function RoomPreviewSheet({
               {/* Close, and beside it the card's own button — the same
                   pill the card draws, same tone and same word, so the way
                   in reads the same here as on the list. Both wear the
-                  card's style (owner: "make sure buttons have same
-                  styles"). A card with no button (nothing to offer yet)
-                  leaves Close on its own. */}
+                  card's shape (owner: "make sure buttons have same
+                  styles"); Close is the unfilled one, a stroke and no
+                  white face, so the way in is the one that reads as a
+                  button (owner: "close button do not need white color,
+                  show with just stroke"). A card with no button (nothing
+                  to offer yet) leaves Close on its own. */}
               <div className="flex items-center gap-2">
-                <RoomCardPlayButton tone="white" className={PREVIEW_BUTTON_CLASS} onClick={onClose}>
+                <RoomCardPlayButton tone="outline" className={PREVIEW_BUTTON_CLASS} onClick={onClose}>
                   {t("common.close")}
                 </RoomCardPlayButton>
                 {action}

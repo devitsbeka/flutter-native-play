@@ -95,8 +95,11 @@ describe("the place numbers are quieter than the medals", () => {
     // row it matters least on. The medals live on the podium now — the
     // winner's a size up from the two beside it — and the place numbers in
     // the list under it stay at body size.
-    expect(results).toMatch(/first \? "text-3xl" : "text-2xl"/);
-    expect(results).toMatch(/font-display font-bold text-white text-base min-w-\[2ch\] text-center/);
+    // The design's sizes now (Figma 1157:10036, resultsScreenFigma.test.ts):
+    // the winner's medal at 46px hanging off the ring, the two beside it
+    // at 32, and "#4" at 20px in the tile's violet.
+    expect(results).toMatch(/first \? "-bottom-\[32px\] text-\[46px\]" : "-bottom-\[22px\] text-\[32px\]"/);
+    expect(results).toMatch(/w-\[44px\] shrink-0 text-center font-display text-\[20px\] font-bold uppercase text-\[#6350c9\]/);
     expect(results).not.toMatch(/className="text-2xl font-display font-bold text-white min-w-\[2ch\]/);
   });
 });

@@ -25,8 +25,9 @@
  */
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, Loader2, X } from "lucide-react";
-import { ChunkyButton } from "@/components/ui/chunky-button";
+import { Check, Loader2, Play, X } from "lucide-react";
+import { RoomCardPlayButton } from "@/components/team/RoomCardPlayButton";
+import { PREVIEW_BUTTON_CLASS } from "@/components/team/RoomPreviewSheet";
 import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
@@ -77,8 +78,14 @@ export function RematchWaitSheet({ open, seats, stake, starting = false, onCance
             onClick={(e) => e.stopPropagation()}
           >
             <div className="rounded-2xl border border-[#e8e0f5] bg-white/50 p-6">
-              {/* The table, first: the faces are what the host is waiting on. */}
-              <ul className="mb-4 flex max-h-[224px] flex-wrap items-start justify-center gap-x-3 gap-y-4 overflow-y-auto">
+              {/* The table, first: the faces are what the host is waiting on.
+                  The list scrolls when the table is long, and a scroller
+                  clips to its padding box - the ring around each face is a
+                  2px shadow OUTSIDE the face's box, so with no padding the
+                  top of every ring was cut flat (owner: "make sure avatar
+                  is not cropped, top is not visible, needs space above").
+                  The padding is the ring's room. */}
+              <ul className="mb-4 flex max-h-[232px] flex-wrap items-start justify-center gap-x-3 gap-y-4 overflow-y-auto px-2 pt-2 pb-1">
                 {seats.map((seat) => (
                   <RematchFace key={seat.user_id} seat={seat} />
                 ))}
@@ -101,19 +108,29 @@ export function RematchWaitSheet({ open, seats, stake, starting = false, onCance
                 </span>
               </div>
 
-              <div className="flex gap-3">
-                <ChunkyButton variant="outline" size="md" className="flex-1" onClick={onCancel} disabled={starting}>
+              {/* The preview sheet's pair: Cancel is the unfilled pill, and
+                  Start is the mint one every button one tap from a game
+                  wears, with the play triangle (owner: "show this button
+                  with stroke and green button on this modal too"). */}
+              <div className="flex items-center gap-2">
+                <RoomCardPlayButton tone="outline" className={PREVIEW_BUTTON_CLASS} onClick={onCancel} disabled={starting}>
                   {t("common.cancel")}
-                </ChunkyButton>
-                <ChunkyButton
-                  variant="primary"
-                  size="md"
-                  className="flex-1"
+                </RoomCardPlayButton>
+                <RoomCardPlayButton
+                  tone="mint"
+                  className={PREVIEW_BUTTON_CLASS}
                   onClick={onStart}
                   disabled={starting || ready === 0}
                 >
-                  {starting ? <Loader2 className="h-4 w-4 animate-spin" /> : t("extra.rematchWaitStart", { count: playing })}
-                </ChunkyButton>
+                  {starting ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Play className="h-3.5 w-3.5 fill-current" />
+                      {t("extra.rematchWaitStart", { count: playing })}
+                    </>
+                  )}
+                </RoomCardPlayButton>
               </div>
               {undecided > 0 && ready > 0 && (
                 <p className="mt-3 text-center text-[12px] leading-4 text-[#402666]/60">

@@ -22,6 +22,7 @@ import { RoomTitle } from "@/components/lobby/UniversalLobby";
 import { TriviaBeingMadeCard } from "@/components/team/TriviaBeingMadeCard";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { RoomCardPlayButton } from "@/components/team/RoomCardPlayButton";
+import { PREVIEW_BUTTON_CLASS, RoomPreviewSheet } from "@/components/team/RoomPreviewSheet";
 import { GreenPlayButton } from "@/components/shared/GreenPlayButton";
 import type { QueueItem } from "@/hooks/useRoomCategoryQueue";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
@@ -165,6 +166,7 @@ export default function HomeShot() {
         <RoomCardPlayButton tone="mint"><span>▶ Play (mint)</span></RoomCardPlayButton>
         <RoomCardPlayButton tone="white"><span>▶ Play (white)</span></RoomCardPlayButton>
         <RoomCardPlayButton tone="purple"><span>▶ Play (purple)</span></RoomCardPlayButton>
+        <RoomCardPlayButton tone="outline"><span>Close (outline)</span></RoomCardPlayButton>
       </div>
     );
   }
@@ -263,6 +265,33 @@ export default function HomeShot() {
       </div>
     );
   }
+  if (params.get("view") === "preview") {
+    // The card's preview sheet: a random round (mystery box), a real one,
+    // and a mixed one (the question mark), beside the stake and the card's
+    // own Join. Close is the unfilled pill.
+    return (
+      <div className="h-[100dvh] w-full bg-[#e9dcf7]">
+        <RoomPreviewSheet
+          open
+          roomName="Noisy Vampires"
+          rounds={[
+            { name: "Random", icon_slug: null, source_type: "random" },
+            { name: "Guess the Logo", icon_slug: "magnifying-glass", source_type: "category" },
+            { name: "Mixed", icon_slug: null, source_type: "category" },
+          ]}
+          questionsPerRound={5}
+          players={1}
+          action={
+            <RoomCardPlayButton tone="white" className={PREVIEW_BUTTON_CLASS} onClick={noop}>
+              Join
+            </RoomCardPlayButton>
+          }
+          onClose={noop}
+        />
+      </div>
+    );
+  }
+
   if (params.get("view") === "knock") {
     // The host's doorstep: somebody asking into a room, with the room named.
     return (

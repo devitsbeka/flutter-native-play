@@ -6,13 +6,12 @@
  * rooms could miss the one somebody was waiting on them in ("show rooms
  * with invitation first to see and don't lose in scroll").
  *
- * And a public room is made for one play. Its match ends on the results
- * screen; the only way it goes on is a rematch, asked there. So the host's
- * back arrow closes it — cancelled and archived, which every listing hides
- * and which sends the guests out — and a guest's back gives up their seat.
- * A private room keeps its old back: the lobby, with the room waiting
- * ("hosts are creating public rooms for one play ... several matches until
- * players in room are accepting re-matches").
+ * And a public room is public once. It was read first as "made for one
+ * play": the host's back arrow off the results screen closed it, a
+ * guest's gave up the seat. The rule is finer now (publicRoomIsPublicOnce
+ * .test.ts): the first round turns the room private, and from then on it
+ * is the players' own — they keep playing in it, nothing lists it again,
+ * and back is the lobby for everyone, as it always was for a private room.
  */
 
 import { describe, expect, it } from "vitest";
@@ -80,23 +79,16 @@ describe("an invitation is the first card", () => {
   });
 });
 
-describe("a public room ends with its match", () => {
+describe("a played public room is the players' own", () => {
   const back = results.slice(results.indexOf("const handleBackToRoom"), results.indexOf("// Get next queue item for display"));
 
-  it("a private room's back is still the lobby", () => {
-    expect(back).toMatch(/if \(!isPublicRoom \|\| !currentRoom\) \{\s*\n\s*continueInRoom\(\);\s*\n\s*return;/);
+  it("back is the lobby for everyone — the room is a private one by then", () => {
+    expect(back).toMatch(/const handleBackToRoom = \(\) => \{\s*\n\s*continueInRoom\(\);\s*\n\s*\};/);
+    expect(back).not.toMatch(/status: "cancelled"/);
+    expect(back).not.toMatch(/leaveRoomPermanently/);
   });
 
-  it("the host's back closes a public room — cancelled and archived — and leaves", () => {
-    expect(back).toMatch(/\.update\(\{ status: "cancelled", is_archived: true \}\)/);
-    expect(back).toMatch(/exitRoom\(\);\s*\n\s*navigate\("\/team\?tab=public", \{ replace: true \}\);/);
-  });
-
-  it("a guest's back gives up the seat", () => {
-    expect(back).toMatch(/void leaveRoomPermanently\(\);\s*\n\s*navigate\("\/team\?tab=public", \{ replace: true \}\);/);
-  });
-
-  it("every listing already hides a cancelled or archived room", () => {
+  it("every listing hides a cancelled or archived room, for the rooms the sweep closes", () => {
     expect(read("src/hooks/useMyRooms.ts")).toMatch(/\.neq\("status", "cancelled"\)/);
     expect(read("src/hooks/useMyRooms.ts")).toMatch(/is_archived\.is\.null,is_archived\.eq\.false/);
     const sql = read("supabase/migrations/20261013100000_retire_untouched_rooms.sql");

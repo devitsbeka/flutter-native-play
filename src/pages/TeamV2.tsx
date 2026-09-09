@@ -1377,7 +1377,10 @@ function TeamContentV2() {
                         {tab.id === "private" && pendingInviteCount > 0 && (
                           <span
                             aria-label={t("extra.roomInvitedYou")}
-                            className="relative z-10 flex h-[18px] min-w-[18px] shrink-0 items-center justify-center rounded-full bg-[#7126d5] px-1 text-[11px] font-bold leading-none text-white shadow-[0_2px_6px_rgba(113,38,213,0.35)]"
+                            // White, with the count in the tab's own purple — a
+                            // purple dot on the grey closed tab read as a button
+                            // (owner: "white container with dark (purple) number").
+                            className="relative z-10 flex h-[18px] min-w-[18px] shrink-0 items-center justify-center rounded-full bg-white px-1 text-[11px] font-bold leading-none text-[#7126d5] shadow-[0_2px_6px_rgba(113,38,213,0.25)]"
                           >
                             {pendingInviteCount}
                           </span>

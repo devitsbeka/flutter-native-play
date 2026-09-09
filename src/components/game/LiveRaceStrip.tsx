@@ -179,8 +179,13 @@ export function LiveRaceStrip({ players, currentUserId, className }: LiveRaceStr
               transition={{ type: "spring", stiffness: 400, damping: 34 }}
               className={cn(
                 "flex shrink-0",
+                // gap-3, not 1.5: the rings are box-shadows painted
+                // outside the avatar's box — 2px for a place and 4px more
+                // for your own — so a 6px gap left the score touching the
+                // ring (owner: "increase space between avatar and points,
+                // they are touching each other").
                 sideways
-                  ? "items-center gap-1.5"
+                  ? "items-center gap-3"
                   : cn(
                       "flex-col items-center gap-0.5",
                       // 72px here used to be a name's slot. Without one the

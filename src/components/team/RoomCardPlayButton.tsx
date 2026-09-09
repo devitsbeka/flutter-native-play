@@ -18,7 +18,8 @@
  * belongs to it alone (owner: "play buttons other color... just like we
  * have on join button on public rooms"). The `purple` tone stays defined —
  * the dev showcase still swatches it — for whichever card reaches for it
- * next.
+ * next. `outline` is white's stroke with no fill, for a Close that sits
+ * beside the card's own filled button in the preview sheet.
  *
  * The states a card still distinguishes (a live round pulsing, a join
  * request waiting on its host) do it through motion and their own label,
@@ -29,12 +30,17 @@ import { forwardRef } from "react";
 import { motion, type HTMLMotionProps } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-export type RoomCardTone = "mint" | "white" | "purple";
+export type RoomCardTone = "mint" | "white" | "purple" | "outline";
 
 const TONES: Record<RoomCardTone, string> = {
   mint: "bg-[#81f0c3] border-[#2bc889] text-[#320c69]",
   white: "bg-white border-[#d5c9e8] text-[#320c69]",
   purple: "bg-[#7126d5] border-[#4e1a94] text-white",
+  // White's stroke with no face: the same pill, unfilled, for the button
+  // that steps back beside a filled one (the preview sheet's Close). The
+  // sides and top are drawn per side — a plain `border-2` here would be
+  // merged over the base `border-b-4` and flatten the edge.
+  outline: "bg-transparent border-x-2 border-t-2 border-[#d5c9e8] text-[#320c69]",
 };
 
 export const RoomCardPlayButton = forwardRef<

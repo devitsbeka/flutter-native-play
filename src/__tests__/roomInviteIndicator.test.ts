@@ -66,7 +66,11 @@ describe("the Private tab says so while Public is on screen", () => {
   it("and draws a count badge on the private tab only", () => {
     expect(page).toMatch(/\{tab\.id === "private" && pendingInviteCount > 0 && \(/);
     const badge = page.slice(page.indexOf('{tab.id === "private" && pendingInviteCount > 0 && ('));
-    expect(badge).toMatch(/bg-\[#7126d5\][^"]*text-white/);
+    // White, with the count in the tab's purple: a purple dot on the grey
+    // closed tab read as a button (owner: "white container with dark
+    // (purple) number").
+    expect(badge).toMatch(/bg-white[^"]*text-\[#7126d5\]/);
+    expect(badge).not.toMatch(/bg-\[#7126d5\][^"]*text-white/);
     expect(badge).toMatch(/\{pendingInviteCount\}/);
   });
 });
