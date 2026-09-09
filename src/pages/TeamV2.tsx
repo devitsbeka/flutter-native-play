@@ -407,19 +407,7 @@ function TeamContentV2() {
       if (frame) cancelAnimationFrame(frame);
     };
   }, [headerHeight]);
-  // How much of the header stack stays put when the rest retracts.
-  //
-  // It used to slide out by its whole height, page name and all. The page
-  // name's row is also where the balances live now — the same corner on
-  // every screen in the app, which is only true if it is on screen — so the
-  // retraction stops one PageHeader row short: the friends reel goes, the
-  // title and the balances stay, and the tabs land flush under them.
-  //
-  // PAGE_HEADER_H is PageHeader's own row, which is a fixed 76px there.
-  const PAGE_HEADER_H = 76;
-  const chromeShift = headerCollapsed
-    ? `translateY(-${Math.max(0, headerHeight - PAGE_HEADER_H)}px)`
-    : "translateY(0)";
+  const chromeShift = headerCollapsed ? `translateY(-${headerHeight}px)` : "translateY(0)";
   const CHROME_EASE = "transform 320ms cubic-bezier(0.22, 0.61, 0.36, 1)";
   useEffect(() => {
     const el = headerRef.current;

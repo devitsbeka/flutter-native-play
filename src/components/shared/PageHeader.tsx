@@ -1,14 +1,8 @@
-import { useState } from "react";
-import { ArrowLeft, Menu } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import { createPortal } from "react-dom";
 import { useLocation, useNavigate } from "react-router-dom";
 import { HeaderActions } from "@/components/shared/HeaderActions";
-import { BalancePills } from "@/components/shared/BalanceStrip";
-import { SideMenuDrawer } from "@/components/home/SideMenuDrawer";
-import { useAuth } from "@/hooks/useAuth";
-import { useCurrency } from "@/hooks/useCurrency";
-import { t } from "@/lib/i18n";
 
 interface PageHeaderProps {
   title: string;
@@ -19,16 +13,18 @@ interface PageHeaderProps {
       to come from is a second, inconsistent way to move between screens the
       nav already switches. Everywhere else it is the only way out. */
   showBack?: boolean;
-  /** Tablet and desktop only. On the phone the right of the row is the coin
-      and gem balances on every page, so that whatever the screen, they are
-      in the same corner — see the header row below. Defaults to the search
-      and bell; pass something else only when the page has controls of its
-      own. */
+  /** Defaults to the search and bell every top-level page carries. Pass
+      something else only when the page has controls of its own. */
   rightElements?: React.ReactNode;
   /** Sits immediately after the title, inside the left group. The shop puts
       its coin and gem pills here on tablet and desktop, where the row is
       already on screen and half empty. */
   titleAccessory?: React.ReactNode;
+  /** A second row inside the header, under the 76px title row — the balance
+      strip, on the main screens that carry one (BalanceStripRow). Inside the
+      <header> rather than after it so it shares the header's surface and its
+      sticky/overlay behaviour instead of needing its own of each. */
+  belowRow?: React.ReactNode;
   /** Draws the header on artwork rather than on the page wash: no surface,
       no rule under it, and a white title with a shadow so it stays legible
       over whatever is moving behind it. Explore uses it over its video. */
@@ -48,24 +44,13 @@ export function PageHeader({
   showBack = true,
   rightElements,
   titleAccessory,
+  belowRow,
   overlay = false,
   docked = false,
   className = "",
 }: PageHeaderProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
-  const { coins, gems } = useCurrency();
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  // The phone's header row: burger on the left, balances on the right, on
-  // every top-level screen. A page with a back arrow is a sub-screen — it
-  // keeps the arrow, and the balances stay off it.
-  //
-  // The burger is the way to search and to notifications now; both used to
-  // be glyphs on the right of this row, which is where the balances went.
-  const topLevel = !showBack;
-  const showBalances = topLevel && !!user;
 
   const handleBack = () => {
     if (onBack) {
@@ -146,19 +131,8 @@ export function PageHeader({
             overlay ? "px-[26px]" : "px-4"
           }`}
         >
-        {/* Left: Back button (sub-screens) or burger (top-level), + title */}
-        <div className="flex min-w-0 items-center gap-3">
-          {topLevel && (
-            <motion.button
-              type="button"
-              onClick={() => setMenuOpen(true)}
-              aria-label={t("menu.menuTitle")}
-              whileTap={{ scale: 0.9 }}
-              className="md:hidden -ml-2 flex size-10 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-white/30"
-            >
-              <Menu className={`h-6 w-6 ${overlay && !docked ? "text-white" : "text-gray-600"}`} />
-            </motion.button>
-          )}
+        {/* Left: Back button + Title */}
+        <div className="flex items-center gap-3">
           {showBack && (
             <motion.button
               initial={{ opacity: 0, x: -10 }}
@@ -173,7 +147,7 @@ export function PageHeader({
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.05 }}
-            className={`min-w-0 truncate text-xl font-display font-bold uppercase tracking-wide transition-colors duration-200 ${
+            className={`text-xl font-display font-bold uppercase tracking-wide transition-colors duration-200 ${
               overlay
                 ? docked
                   ? "text-[#6D28D9]"
@@ -186,34 +160,20 @@ export function PageHeader({
           {titleAccessory}
         </div>
 
-        {/* Right: the balances on the phone, so a player can see what they
-            have from any screen without going home for it; search and bell
-            (or whatever the page passes) from md up, where the row is wide
-            enough for both and the burger that holds them does not exist. */}
+        {/* Right: search and bell by default, so every page carries the same
+            pair in the same place as Explore. A page passes its own only when
+            it has controls of its own to put there. */}
         <motion.div
           initial={{ opacity: 0, x: 10 }}
           animate={{ opacity: 1, x: 0 }}
-          className="flex shrink-0 items-center gap-2"
+          className="flex items-center gap-2"
         >
-          {showBalances && (
-            <div className="flex items-center gap-[8px] md:hidden">
-              <BalancePills
-                size="compact"
-                coins={coins}
-                gems={gems}
-                onCoinsClick={() => navigate("/power-ups?section=coins")}
-                onGemsClick={() => navigate("/power-ups?section=gems-lari")}
-              />
-            </div>
-          )}
-          <span className={showBalances ? "hidden md:flex md:items-center md:gap-2" : "flex items-center gap-2"}>
-            {rightElements ?? <HeaderActions />}
-          </span>
+          {rightElements ?? <HeaderActions />}
         </motion.div>
         </div>
-      </header>
 
-      {topLevel && <SideMenuDrawer isOpen={menuOpen} onClose={() => setMenuOpen(false)} />}
+        {belowRow}
+      </header>
     </>
   );
 }

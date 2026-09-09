@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { t } from "@/lib/i18n";
 
 import { FriendsStoriesBar } from "@/components/team/FriendsStoriesBar";
-import { MobileProfileCard, NAV_CHROME } from "@/components/home/MobileHome";
+import { MobileHeroWidgets, MobileProfileCard, NAV_CHROME } from "@/components/home/MobileHome";
 import { MobileHomeFeed } from "@/components/home/MobileHomeFeed";
 import { useWaveStrip } from "@/components/home/wave";
 import { scrollTapGuard } from "@/utils/scrollTapGuard";
@@ -13,11 +13,13 @@ import { useScrollMemory } from "@/hooks/useScrollMemory";
  * The phone home as a scroll-reveal (owner's ask).
  *
  * At rest it IS the home (Figma 1076:1881): the mascot scene fills the first
- * screen, the friends reel rides the top, and the profile card sits above
- * the nav with the gift and streak buttons on it. Scrolling lifts that whole
- * hero — scene included — up and out of view, revealing a light, chunky feed
- * of feature rails beneath it. The balances are not in here at all: they are
- * in the app header, which floats above this scroller and never moves.
+ * screen, the friends reel rides the top, the reward tabs float on the scene
+ * and the profile card sits above the nav. Scrolling lifts that whole hero —
+ * scene included — up and out of view, revealing a light, chunky feed of
+ * feature rails beneath it. The identity and the balances stay where they
+ * always were, on the profile card; there is deliberately no second
+ * name/balances bar. The other main screens carry a balance strip under
+ * their header, because they have no profile card to put one on.
  *
  * The scene lives INSIDE the hero, in the scroll flow, on purpose. It used to
  * be a page-level fixed backdrop that the feed panel had to paint over, and
@@ -55,11 +57,17 @@ export interface MobileHomeScrollProps {
   nickname: string;
   avatarUrl?: string | null;
   animatedAvatarUrl?: string | null;
-  /** Is there a daily reward waiting? Colours the gift button on the card. */
+  coins: number;
+  gems: number;
+  /** Under the gift tab: time left to claim today's reward, or the call to claim it. */
+  giftLabel: string;
+  /** Is there a reward waiting? With nothing to claim the gift goes grey. */
   canClaimGift: boolean;
   // Handlers
   onAvatarClick: () => void;
   onNameClick: () => void;
+  onCoinsClick: () => void;
+  onGemsClick: () => void;
   onGiftClick: () => void;
   onStreakClick: () => void;
   onAddFriend: () => void;
@@ -72,9 +80,14 @@ export function MobileHomeScroll({
   nickname,
   avatarUrl,
   animatedAvatarUrl,
+  coins,
+  gems,
+  giftLabel,
   canClaimGift,
   onAvatarClick,
   onNameClick,
+  onCoinsClick,
+  onGemsClick,
   onGiftClick,
   onStreakClick,
   onAddFriend,
@@ -131,15 +144,27 @@ export function MobileHomeScroll({
           </div>
 
           {/* The profile card, anchored above the nav (its own absolute pos). */}
+          {/* The reward tabs on the scene: the gift and its countdown on
+              the left, the streak on the right, hung off the header's
+              measured height. */}
+          <MobileHeroWidgets
+            giftLabel={giftLabel}
+            canClaimGift={canClaimGift}
+            onGiftClick={onGiftClick}
+            onStreakClick={onStreakClick}
+          />
+
+          {/* The profile card, anchored above the nav (its own absolute pos). */}
           <MobileProfileCard
             nickname={nickname}
             avatarUrl={avatarUrl}
             animatedAvatarUrl={animatedAvatarUrl}
-            canClaimGift={canClaimGift}
+            coins={coins}
+            gems={gems}
             onAvatarClick={onAvatarClick}
             onNameClick={onNameClick}
-            onGiftClick={onGiftClick}
-            onStreakClick={onStreakClick}
+            onCoinsClick={onCoinsClick}
+            onGemsClick={onGemsClick}
           />
         </section>
 

@@ -13,7 +13,6 @@ import chestBoxIcon from "@/assets/icons/icon-chest-box.png";
 import powersIcon from "@/assets/icons/icon-powers.png";
 import { ChestRewardModal } from "@/components/home/ChestRewardModal";
 import { SideMenuDrawer } from "@/components/home/SideMenuDrawer";
-import { BalancePills } from "@/components/shared/BalanceStrip";
 import { DailyRewardsModal } from "@/components/home/DailyRewardsModal";
 import { MissionsModal } from "@/components/home/MissionsModal";
 import { LevelInfoModal } from "@/components/home/LevelInfoModal";
@@ -285,7 +284,7 @@ export default function Index() {
   const { coins, gems, addCoins } = useCurrency();
   const { powerUps } = useUserPowerUps();
   const { totalStars } = useTotalStars();
-  const { canClaimDaily, canClaimChest } = useRewardTimers();
+  const { canClaimDaily, canClaimChest, dailySecondsLeft } = useRewardTimers();
   const { missions, completedCount, totalCount } = useMissions();
   const { playsRemaining, maxPlays, canPlay, isVip, loading: vipLoading, regenPlayAvailable, timeUntilNextPlay, resetsAt, useRegenPlay, freeGamesExhausted } = usePlayLimit();
   const { subscription } = useVipStatus();
@@ -782,6 +781,12 @@ export default function Index() {
     setIsDailyRewardsOpen(true);
   }, [canClaimDaily, claimDailyNow]);
 
+  // Under the gift tab on the phone home: how long today's reward can still
+  // be claimed ("3h 21m", Figma 1076:3591), or the call to claim it.
+  const giftLabel = canClaimDaily
+    ? t("dailyRewards.claim")
+    : `${Math.floor(dailySecondsLeft / 3600)}h ${Math.floor((dailySecondsLeft % 3600) / 60)}m`;
+
   // /dev/v2 previews the 3D world-map homepage for logged-in users; the
   // regular responsive homepage below serves the main route.
   if (user && isDevV2 && LoggedInHomeV2) {
@@ -1103,51 +1108,40 @@ export default function Index() {
               )}
             </div>
             
-            {/* Right side: the balances on the phone — the same corner they
-                occupy on every other screen (see PageHeader) — and the search
-                and bell from md up, where there is no burger to hold them.
-                Guests have neither. */}
+            {/* Right side: Search/Notification for users, Sign In for guests.
+                The home keeps its balances on the profile card, so this
+                corner stays the pair of glyphs it has always been — the
+                other main screens, which have no card, carry a balance strip
+                under their header instead. */}
             {user ? (
               <div className="flex shrink-0 items-center gap-1">
-                <div className="flex items-center gap-[8px] md:hidden">
-                  <BalancePills
-                    size="compact"
-                    coins={coins}
-                    gems={gems}
-                    onCoinsClick={() => navigate("/power-ups?section=coins")}
-                    onGemsClick={() => navigate("/power-ups?section=gems-lari")}
-                  />
-                </div>
+                {/* Search button - visible on all screens */}
+                <SpotlightSearch variant="button" />
 
-                <div className="hidden md:flex md:items-center md:gap-1">
-                  {/* Search button */}
-                  <SpotlightSearch variant="button" />
-
-                  {/* Bell icon with unread badge */}
-                  <motion.button
-                    className="relative w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/30 transition-colors"
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => navigate('/notifications')}
-                  >
-                    <Bell className="w-5 h-5 text-gray-600" />
-                    {unreadCount > 0 && (
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        className="absolute top-0.5 right-0.5 min-w-[16px] h-[16px] px-1 rounded-full flex items-center justify-center"
-                        style={{
-                          background: "linear-gradient(180deg, #EF4444 0%, #DC2626 100%)",
-                          boxShadow: "0 2px 4px rgba(239, 68, 68, 0.5)",
-                        }}
-                      >
-                        <span className="text-[9px] font-bold text-white">
-                          {unreadCount > 9 ? "9+" : unreadCount}
-                        </span>
-                      </motion.div>
-                    )}
-                  </motion.button>
-                </div>
+                {/* Bell icon with unread badge */}
+                <motion.button
+                  className="relative w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/30 transition-colors"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => navigate('/notifications')}
+                >
+                  <Bell className="w-5 h-5 text-gray-600" />
+                  {unreadCount > 0 && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="absolute top-0.5 right-0.5 min-w-[16px] h-[16px] px-1 rounded-full flex items-center justify-center"
+                      style={{
+                        background: "linear-gradient(180deg, #EF4444 0%, #DC2626 100%)",
+                        boxShadow: "0 2px 4px rgba(239, 68, 68, 0.5)",
+                      }}
+                    >
+                      <span className="text-[9px] font-bold text-white">
+                        {unreadCount > 9 ? "9+" : unreadCount}
+                      </span>
+                    </motion.div>
+                  )}
+                </motion.button>
               </div>
             ) : null}
           </div>
@@ -1244,9 +1238,14 @@ export default function Index() {
             nickname={profile?.nickname || t("game.guest")}
             avatarUrl={profile?.avatar_url}
             animatedAvatarUrl={profile?.animated_avatar_url}
+            coins={coins}
+            gems={gems}
+            giftLabel={giftLabel}
             canClaimGift={canClaimDaily}
             onAvatarClick={() => openAvatarModal()}
             onNameClick={() => setShowChangeNameModal(true)}
+            onCoinsClick={() => navigate("/power-ups?section=coins")}
+            onGemsClick={() => navigate("/power-ups?section=gems-lari")}
             onGiftClick={handleGiftClick}
             // The flame opens the streak page (Figma 1069:18), not a sheet over the home screen.
             onStreakClick={() => navigate("/streak")}

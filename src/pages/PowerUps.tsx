@@ -27,6 +27,7 @@ import { AuthRequiredModal } from "@/components/shared/AuthRequiredModal";
 import { PowerUpTutorialModal } from "@/components/game/PowerUpTutorialModal";
 import { PowerUpShopModal } from "@/components/map/PowerUpShopModal";
 import { WalletPills } from "@/components/shop/ShopHeader";
+import { BalanceStripRow } from "@/components/shared/BalanceStrip";
 import { PageHeader } from "@/components/shared/PageHeader";
 // Served from public/ - not bundled, streams straight from the CDN
 const SHOP_SCENE_VIDEO = "/videos/shop-scene.mp4";
@@ -282,15 +283,14 @@ export default function PowerUps() {
           title={t("menu.shop")}
           showBack={false}
           titleAccessory={<WalletPills className="ml-3 hidden md:flex" />}
+          belowRow={<BalanceStripRow />}
         />
 
-        {/* The shop's own phone wallet band used to sit here, under the
-            header: a 56px lilac strip with the balances and a piggy bank.
-            The balances are in the header row itself now, on this page and
-            every other one, so the band was the same two numbers twice —
-            and the piggy was decorative. Gone; the desktop pills above are
-            unaffected, since the header's phone-only pills do not reach
-            that width. */}
+        {/* The shop's own phone wallet band used to sit here: a 56px lilac
+            strip with the balances and a piggy bank. The balances are the
+            shared strip in the header above now — the same row, the same
+            pills, on explore and the rating board too — so the band was a
+            second design for one job, and the piggy was decorative. */}
 
         <div className="flex flex-1 min-h-0">
           {/* Main content. No percentage cap: the scene beside it is capped
