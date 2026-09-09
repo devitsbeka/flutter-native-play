@@ -1,4 +1,5 @@
 import { Check } from "lucide-react";
+import { CircleFlag } from "@/components/shared/CircleFlag";
 import { LANGUAGES } from "@/locales";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
@@ -36,12 +37,9 @@ export function GuestLanguagePicker() {
         <button
           type="button"
           aria-label={`${t("settings.language")}: ${currentLanguage.nativeName}`}
-          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white/95 text-[20px] leading-none shadow-[0_3px_0_0_#e2d6f2,0_6px_14px_rgba(60,30,90,0.14)] transition-[transform,box-shadow] duration-100 active:translate-y-[3px] active:shadow-[0_0_0_0_#e2d6f2,0_2px_6px_rgba(60,30,90,0.14)]"
+          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white/95 shadow-[0_3px_0_0_#e2d6f2,0_6px_14px_rgba(60,30,90,0.14)] transition-[transform,box-shadow] duration-100 active:translate-y-[3px] active:shadow-[0_0_0_0_#e2d6f2,0_2px_6px_rgba(60,30,90,0.14)]"
         >
-          {/* The flag is decoration — the button is already labelled, and a
-              screen reader announcing "flag of the United States" for the
-              English option is noise at best and wrong at worst. */}
-          <span aria-hidden>{currentLanguage.flag}</span>
+          <CircleFlag code={currentLanguage.code} className="size-[26px]" />
         </button>
       </DropdownMenuTrigger>
 
@@ -63,9 +61,7 @@ export function GuestLanguagePicker() {
                 active ? "bg-[#f4eefc] font-semibold text-[#402666]" : "text-[#002b63]"
               }`}
             >
-              <span aria-hidden className="text-[19px] leading-none">
-                {lang.flag}
-              </span>
+              <CircleFlag code={lang.code} className="size-[22px] shrink-0" />
               <span className="flex-1">{lang.nativeName}</span>
               {active && <Check className="size-4 shrink-0 text-[#7126d5]" />}
             </DropdownMenuItem>
