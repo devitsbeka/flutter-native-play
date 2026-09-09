@@ -22,6 +22,7 @@ import type { ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { RoomCardPlayButton } from "@/components/team/RoomCardPlayButton";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
+import { roundIconSlug } from "@/utils/ownTriviaRound";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { REWARDS } from "@/config/rewardConfig";
 import coinIcon from "@/assets/tb-lobby/coin.png";
@@ -111,18 +112,33 @@ export function RoomPreviewSheet({
                 {t("lobby.summaryRounds")} · {rounds.length}
               </p>
               {rounds.length > 0 ? (
+                /* The lobby's own round rows (RoundOrderModal): the number,
+                   the icon in a tile, the name over "Round N". The rows
+                   used to hand the icon a CSS size the icon ignores — it
+                   defaults to 128px — and a random round carried no slug,
+                   so each row swelled around a giant faint placeholder
+                   (owner: "show more narrow containers for each category
+                   with icons"). roundIconSlug gives a random or mixed round
+                   the mystery box the rest of the app draws for it. */
                 <ol className="mb-5 max-h-[240px] space-y-2 overflow-y-auto">
                   {rounds.map((round, i) => (
                     <li
                       key={`${round.name ?? "round"}-${i}`}
-                      className="flex items-center gap-3 rounded-xl border border-[#e8e0f5] bg-white/70 px-3 py-2"
+                      className="flex min-h-[58px] items-center gap-2 rounded-xl border border-[#e8e0f5] bg-white/70 py-2 pl-2 pr-3"
                     >
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#f1e9ff] font-display text-[13px] font-bold text-[#7126d5]">
+                      <span className="w-5 shrink-0 text-center font-[Nunito] text-[13px] font-bold text-[#402666]/50">
                         {i + 1}
                       </span>
-                      <DynamicIcon slug={round.icon_slug ?? undefined} className="h-6 w-6 shrink-0" />
-                      <span className="min-w-0 flex-1 truncate font-display text-[15px] font-bold text-[#402666]">
-                        {round.name ?? t("extra.cpMixedCategory")}
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#7126d5]/10">
+                        <DynamicIcon slug={roundIconSlug(round)} size={22} shadow={false} />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[15px] font-semibold text-[#402666]">
+                          {round.name ?? t("extra.cpMixedCategory")}
+                        </span>
+                        <span className="block text-xs text-[#402666]/60">
+                          {t("lobby.uRoundLabel", { count: i + 1 })}
+                        </span>
                       </span>
                     </li>
                   ))}
