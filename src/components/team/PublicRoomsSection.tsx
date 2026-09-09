@@ -506,12 +506,12 @@ function PublicRoomCard({
                 e.stopPropagation();
                 openProfile(room.host_user_id);
               }}
-              className={`mr-1 flex items-center gap-2 min-w-0 rounded-full pl-2 pr-2.5 py-1 ${ink.pill}`}
+              className={`mr-1 flex items-center gap-2 min-w-0 rounded-full pl-1.5 pr-2.5 py-1 ${ink.pill}`}
             >
-              {/* Crown, face, name - the private card's pill exactly: the
-                  crown leads, a size up, and the face is the row's own 34px
-                  with a gold ring (owner's ask). */}
-              <img src={crownIcon} alt="" className="w-4 h-4 object-contain shrink-0" />
+              {/* Face, name - the private card's pill exactly: the face is
+                  the row's own 34px with a gold ring, and the crown sits ON
+                  the ring, centred over the top of the face (owner: "put
+                  crown icon on stroke, above the avatar"). */}
               <span className="relative shrink-0">
                 <span className="block w-[34px] h-[34px] rounded-full overflow-hidden border-2 border-amber-400">
                   <SafeAvatarImage
@@ -521,6 +521,7 @@ function PublicRoomCard({
                     containerClassName="w-full h-full"
                   />
                 </span>
+                <img src={crownIcon} alt="" className="pointer-events-none absolute -top-2 left-1/2 z-10 w-[18px] h-[18px] -translate-x-1/2 object-contain drop-shadow-sm" />
                 {online.has(room.host_user_id) && (
                   <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-white" />
                 )}
