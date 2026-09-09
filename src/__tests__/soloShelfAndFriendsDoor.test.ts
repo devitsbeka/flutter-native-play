@@ -25,6 +25,7 @@ import { GAME_CHOICES } from "@/components/team/CreateRoomPage";
 
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 const create = read("src/components/team/CreateRoomPage.tsx");
+const meta = read("src/config/gameModeMeta.ts");
 
 const crewOf = (mode: string) => {
   const m = create.match(new RegExp(`\\{ key: "${mode}", crew: "(solo|friends|both)"`));
@@ -57,31 +58,44 @@ describe("which half each mode sits on", () => {
   });
 });
 
-describe("no card carries a head count any more", () => {
-  // Superseded. Every card used to wear a peach "how many play" pill in its
-  // top-right corner, and My Trivias was given one because a blank corner
-  // beside neighbours that answered "how many?" read as an answer of none.
+describe("what a card says it costs and who it seats", () => {
+  // The head count came back. It was dropped when the shelf split into the
+  // games you play alone and the games you play in a room — the halves were
+  // held to answer "how many?" on the card's behalf — and the owner asked
+  // for the number itself, beside a price, on every card.
   //
-  // The redesigned card has no such layer (Figma 1102:3113, and its My Trivia
-  // sibling 1102:3123): the shelf now splits into the games you play alone
-  // and the games you play in a room, and which half you are looking at
-  // answers the question the pill was answering. The count survives on the
-  // home rail, where there are no halves to read it off.
-  it.each(["quick", "guess", "words", "mytrivias", "library"])(
-    "%s draws no pill on the chooser",
-    (mode) => {
-      const card = create.match(new RegExp(`\\{ key: "${mode}",[^}]*\\}`))?.[0] ?? "";
-      expect(card, mode).not.toMatch(/players:/);
-    },
-  );
-
-  it("and the pill itself is gone, not merely unfed", () => {
-    expect(create).not.toMatch(/playersIcon/);
+  // Both numbers are read from one table so this shelf and the home rail
+  // cannot drift apart again, which is exactly what happened last time:
+  // the rail kept its counts while the chooser had none.
+  it.each(GAME_CHOICES)("%s has a head count and a price in the table", (mode) => {
+    const row = meta.match(new RegExp(`${mode}: \\{ players: "([^"]+)", price: ([^}]+) \\}`));
+    expect(row, mode).not.toBeNull();
+    // 0-10 players, as a single number or a range.
+    expect(row![1], mode).toMatch(/^(10|[0-9])(-(10|[0-9]))?$/);
   });
 
-  it("the home rail keeps its own count", () => {
+  it("prices every mode but My Trivias, which is your own questions", () => {
+    expect(meta).toMatch(/mytrivias: \{ players: "1-10", price: null \}/);
+    for (const mode of GAME_CHOICES.filter((m) => m !== "mytrivias")) {
+      expect(meta, mode).toMatch(new RegExp(`${mode}: \\{ players: "[^"]+", price: REWARDS\\.GAME_STAKE \\}`));
+    }
+  });
+
+  it("draws both badges on the chooser's card, price left and count right", () => {
+    expect(create).toMatch(/const \{ price, players \} = GAME_MODE_META\[card\.key\];/);
+    // The coin badge is skipped for a free mode rather than printing a zero.
+    expect(create).toMatch(/\{price !== null && !busy && \(/);
+    expect(create).toMatch(/absolute left-\[calc\(16\*var\(--u\)\)\] top-\[calc\(16\*var\(--u\)\)\]/);
+    expect(create).toMatch(/absolute right-\[calc\(16\*var\(--u\)\)\] top-\[calc\(16\*var\(--u\)\)\]/);
+    expect(create).toMatch(/playersIcon/);
+    expect(create).toMatch(/coinIcon/);
+  });
+
+  it("the home rail reads its count off the same table", () => {
     const feed = read("src/components/home/MobileHomeFeed.tsx");
-    expect(feed).toMatch(/\{ key: "mytrivias", art: featuredMyTrivias, players: "1-10",/);
+    expect(feed).toMatch(/GAME_MODE_META\[card\.key\]\.players/);
+    // ...and no longer carries a hand-written copy of it.
+    expect(feed).not.toMatch(/players: "1-10"/);
   });
 });
 

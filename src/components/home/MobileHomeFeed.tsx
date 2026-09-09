@@ -11,6 +11,7 @@ import { seededShuffle } from "@/utils/seededShuffle";
 import type { GameChoice } from "@/components/team/CreateRoomPage";
 
 import playersIcon from "@/assets/play-chooser/players.svg";
+import { GAME_MODE_META } from "@/config/gameModeMeta";
 import featuredQuick from "@/assets/play-chooser/featured-quick.webp";
 import featuredLibrary from "@/assets/play-chooser/featured-library.webp";
 import featuredGuess from "@/assets/play-chooser/featured-random.webp";
@@ -141,19 +142,22 @@ export function MobileHomeFeed() {
   // and Battle are developer-only until promoted) — at a compact size. A tap
   // opens the chooser with that mode already started, as tapping the card
   // there would.
-  const playCards: { key: GameChoice; art: string; players: string | null; title: string }[] = [
-    { key: "quick", art: featuredQuick, players: "1", title: t("extra.modeQuickTitle") },
-    { key: "library", art: featuredLibrary, players: "2-10", title: t("extra.modeLibraryTitle") },
+  // The head count each card wears comes from GAME_MODE_META, the same table
+  // the chooser's cards read: this rail and that shelf print the same numbers,
+  // and two hand-written lists is how they stopped doing so once already.
+  const playCards: { key: GameChoice; art: string; title: string }[] = [
+    { key: "quick", art: featuredQuick, title: t("extra.modeQuickTitle") },
+    { key: "library", art: featuredLibrary, title: t("extra.modeLibraryTitle") },
     // Guess is played alone (owner) — one picture game, one player.
-    { key: "guess", art: featuredGuess, players: "1", title: t("extra.modeGuessTitle") },
+    { key: "guess", art: featuredGuess, title: t("extra.modeGuessTitle") },
     ...(developerMode
       ? [
-          { key: "king" as const, art: featuredKing, players: "1-10", title: t("extra.modeKingTitle") },
-          { key: "battle" as const, art: featuredBattle, players: "4-10", title: t("extra.modeBattleTitle") },
+          { key: "king" as const, art: featuredKing, title: t("extra.modeKingTitle") },
+          { key: "battle" as const, art: featuredBattle, title: t("extra.modeBattleTitle") },
         ]
       : []),
-    { key: "words", art: featuredWords, players: "1-2", title: t("gameTypes.wordsTitle") },
-    { key: "mytrivias", art: featuredMyTrivias, players: "1-10", title: t("extra.myTriviaOption") },
+    { key: "words", art: featuredWords, title: t("gameTypes.wordsTitle") },
+    { key: "mytrivias", art: featuredMyTrivias, title: t("extra.myTriviaOption") },
   ];
   const { categories } = useCategories();
   const { isVip } = useVipStatus();
@@ -218,11 +222,11 @@ export function MobileHomeFeed() {
               {/* The lavender wash over the lower 41.5%, solid for its lower half. */}
               <div className="absolute inset-x-0 bottom-0 z-10 h-[41.5%] bg-[linear-gradient(to_top,#f3e6ff_0%,#f3e6ff_50%,rgba(243,230,255,0)_100%)]" />
               {/* How many play: the peach pill, top right. */}
-              {card.players && (
+              {GAME_MODE_META[card.key].players && (
                 <div className="absolute right-[8px] top-[8px] z-20 flex items-center gap-[4.5px] rounded-[15.8px] border-[2.26px] border-solid border-white/65 bg-gradient-to-b from-[#fff3ed] to-[#f5cdcd] px-[10.2px] py-[1.1px] shadow-[0px_2.26px_6.78px_0px_rgba(151,64,64,0.06),0px_2.26px_0px_0px_#d6c7c4]">
                   <img alt="" src={playersIcon} className="h-[14.7px] w-[11.3px]" />
                   <span className="whitespace-nowrap bg-gradient-to-b from-[#522b28] to-[#99665f] bg-clip-text font-hero text-[14.7px] capitalize leading-[22.6px] tracking-[-0.18px] text-transparent">
-                    {card.players}
+                    {GAME_MODE_META[card.key].players}
                   </span>
                 </div>
               )}
