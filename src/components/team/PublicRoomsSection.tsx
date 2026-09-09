@@ -351,30 +351,12 @@ function PublicRoomCard({
         {/* Top: who runs it, who already joined, and how full it is */}
         <div className="relative z-10 flex items-start justify-between gap-2">
           <div className="flex items-center gap-1.5 min-w-0">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                openProfile(room.host_user_id);
-              }}
-              className={`flex items-center gap-2 min-w-0 rounded-full pl-1 pr-2.5 py-1 ${ink.pill}`}
-            >
-              <div className="relative w-6 h-6 rounded-full overflow-hidden shrink-0">
-                <SafeAvatarImage
-                  avatarUrl={room.host_avatar_url}
-                  fallback={room.host_nickname || "?"}
-                  className="w-full h-full object-cover"
-                  containerClassName="w-full h-full"
-                />
-              </div>
-              <img src={crownIcon} alt="" className="w-3 h-3 object-contain shrink-0" />
-              <span className={`text-xs font-semibold truncate max-w-[104px] ${ink.text}`}>
-                {room.host_nickname || t("extra.friendFallback")}
-              </span>
-            </button>
-
-            {/* New, for an hour, next to who made it — and then no time label
-                at all (owner's ask). */}
+            {/* The host used to be named here, and then drawn again as the
+                first face on the seats row below — the same person twice on
+                one card. The label moved down to lead the seats (owner:
+                "show host label ... as first on room cards with username
+                (same label) and then invited/joined friends avatars, don't
+                show host avatar twice"). Up here: "New", for an hour. */}
             {isNew && (
               <span className={`shrink-0 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-bold ${ink.pill} ${ink.text}`}>
                 {t("extra.roomStatusNew")}
@@ -512,7 +494,38 @@ function PublicRoomCard({
             dashed outlines waiting to be filled. */}
         {(seatsToDraw > 0 || canInvite) && (
           <div className="relative z-10 flex items-center gap-1 pb-2 flex-wrap">
+            {/* The host leads the row as a label — face, crown, name — the
+                same pill that sat in the top-left. It says who runs the room
+                AND that they are in it, so their face is not drawn twice. */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                openProfile(room.host_user_id);
+              }}
+              className={`mr-1 flex items-center gap-2 min-w-0 rounded-full pl-1 pr-2.5 py-1 ${ink.pill}`}
+            >
+              <span className="relative shrink-0">
+                <span className="block w-6 h-6 rounded-full overflow-hidden">
+                  <SafeAvatarImage
+                    avatarUrl={room.host_avatar_url}
+                    fallback={room.host_nickname || "?"}
+                    className="w-full h-full object-cover"
+                    containerClassName="w-full h-full"
+                  />
+                </span>
+                {online.has(room.host_user_id) && (
+                  <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-white" />
+                )}
+              </span>
+              <img src={crownIcon} alt="" className="w-3 h-3 object-contain shrink-0" />
+              <span className={`text-xs font-semibold truncate max-w-[104px] ${ink.text}`}>
+                {room.host_nickname || t("extra.friendFallback")}
+              </span>
+            </button>
             {Array.from({ length: seatsToDraw }, (_, i) => {
+              // Seat 0 is the host's, drawn as the label above.
+              if (i === 0) return null;
               // The seat reserved for the viewer, when they were asked and
               // have not said yes: their own face, in black and white,
               // right after the people who are really in (owner: "show
@@ -520,14 +533,7 @@ function PublicRoomCard({
               // avatar"). The faces list carries seated players only, so
               // the reserved seat is drawn from the viewer's own profile.
               const reservedForMe = invited && !!me && i === players.length + 1;
-              const person: CardPlayer | undefined =
-                i === 0
-                  ? {
-                      user_id: room.host_user_id,
-                      nickname: room.host_nickname,
-                      avatar_url: room.host_avatar_url,
-                    }
-                  : players[i - 1] ?? (reservedForMe ? me : undefined);
+              const person: CardPlayer | undefined = players[i - 1] ?? (reservedForMe ? me : undefined);
               return person ? (
                 <span key={person.user_id} className="relative shrink-0">
                   <span className={`block w-8 h-8 rounded-full overflow-hidden border-2 ${ink.ring} ${reservedForMe ? "grayscale opacity-70" : ""}`}>

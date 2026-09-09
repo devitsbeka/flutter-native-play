@@ -1211,6 +1211,11 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
   // this group allowed to give way (overflow-hidden, above), so a card too
   // narrow for all of it clips a face rather than sliding under the button.
   const avatarLimit = ROOM_CARD_FACES;
+  // The host leads the faces as a label — face, crown, name — so their
+  // face is not drawn twice and the label says they are in the room as
+  // its host (owner's ask). Everyone else stays a face in the cluster.
+  const cardHost = displayPlayers.find((p) => p.is_host) ?? null;
+  const guests = displayPlayers.filter((p) => !p.is_host);
 
   const gradientPreset = ROOM_GRADIENT_PRESETS[index % ROOM_GRADIENT_PRESETS.length];
 
@@ -1449,8 +1454,36 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
                       overflow clips to the padding box, so the padding buys
                       the ring room and the negative margin gives back the
                       space it would have cost. */}
+                  {cardHost && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (cardHost.user_id) openProfile(cardHost.user_id);
+                      }}
+                      className="flex items-center gap-1.5 min-w-0 shrink-0 rounded-full bg-white/60 backdrop-blur-sm pl-1 pr-2.5 py-1"
+                    >
+                      <span className="relative shrink-0">
+                        <span className="block w-6 h-6 rounded-full overflow-hidden">
+                          <SafeAvatarImage
+                            avatarUrl={cardHost.avatar_url}
+                            fallback={cardHost.nickname || "?"}
+                            className="w-full h-full object-cover"
+                            containerClassName="w-full h-full"
+                          />
+                        </span>
+                        {room.online_participants.some((op) => op.user_id === cardHost.user_id) && (
+                          <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-white" />
+                        )}
+                      </span>
+                      <img src={crownIcon} alt="" className="w-3 h-3 object-contain shrink-0" />
+                      <span className="text-xs font-semibold truncate max-w-[104px] text-[#2b1a4a]">
+                        {cardHost.nickname || t("extra.friendFallback")}
+                      </span>
+                    </button>
+                  )}
                   <div className="flex -space-x-2 min-w-0 overflow-hidden p-1 -m-1">
-                    {displayPlayers.slice(0, avatarLimit).map((p, idx) => {
+                    {guests.slice(0, avatarLimit).map((p, idx) => {
                       // Check if this participant is online
                       const isOnline = room.online_participants.some(op => op.user_id === p.user_id);
                       // The seat reserved for the viewer, not yet taken: their
@@ -1468,7 +1501,7 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
                         <div
                           key={p.user_id || idx}
                           className="relative flex-shrink-0"
-                          style={{ zIndex: displayPlayers.length - idx }}
+                          style={{ zIndex: guests.length - idx }}
                         >
                           <div
                             className={`w-8 h-8 rounded-full overflow-hidden bg-white/20 cursor-pointer hover:scale-110 transition-transform active:scale-95 shadow-md ${
@@ -1490,20 +1523,13 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
                               containerClassName="w-full h-full"
                             />
                           </div>
-                          {p.is_host && (
-                            <img
-                              src={crownIcon}
-                              alt=""
-                              className="pointer-events-none absolute -top-2 -left-1 w-3.5 h-3.5 object-contain drop-shadow"
-                            />
-                          )}
                         </div>
                       );
                     })}
-                    {displayPlayers.length > avatarLimit && (
+                    {guests.length > avatarLimit && (
                       <div className="w-8 h-8 rounded-full border-2 border-white bg-white/60 backdrop-blur-sm flex items-center justify-center flex-shrink-0 shadow-md">
                         <span className="text-[#2b1a4a] text-[10px] font-bold">
-                          +{displayPlayers.length - avatarLimit}
+                          +{guests.length - avatarLimit}
                         </span>
                       </div>
                     )}
