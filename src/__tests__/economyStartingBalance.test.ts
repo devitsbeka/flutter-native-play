@@ -182,10 +182,24 @@ describe("economy_config tells the truth about the rest of it too", () => {
     expect(REWARDS.GEM_TO_COINS_RATE).toBe(REWARDS.GAME_STAKE);
   });
 
-  it("the daily ladder, day by day", () => {
-    REWARDS.DAILY_REWARDS.forEach((day) => {
-      expect(configValue(`daily_reward_day_${day.day}`), `day ${day.day}`).toBe(day.coins);
-    });
+  it("the daily ladder — the DATABASE's, which is the one that pays", () => {
+    // The exception to "write it from REWARDS". The client decides the
+    // chest, the level-up and the spin and lets credit_gameplay_reward
+    // bound them; it does not decide this one at all — claim_daily_reward
+    // carries the ladder and returns a receipt. Copying REWARDS here put a
+    // ladder in the admin screen that nothing has ever paid.
+    const ladder = read("supabase/migrations/20261102130000_daily_ladder_is_the_database_s.sql");
+    const value = (id: string): number => {
+      const m = ladder.match(new RegExp(`\\('${id}',\\s*(-?\\d+),`));
+      if (!m) throw new Error(`row '${id}' is not in the migration`);
+      return Number(m[1]);
+    };
+    for (const day of REWARDS.DAILY_REWARDS) {
+      expect(value(`daily_reward_day_${day.day}`), `day ${day.day} coins`).toBe(day.coins);
+      if (day.gems > 0) {
+        expect(value(`daily_reward_gems_day_${day.day}`), `day ${day.day} gems`).toBe(day.gems);
+      }
+    }
   });
 
   it("the chest and the power-ups", () => {

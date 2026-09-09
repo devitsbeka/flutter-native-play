@@ -1,4 +1,6 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { REWARDS, getChestGems, getRandomChestCoins, isSpecialDay } from "@/config/rewardConfig";
 
 // The economy is balanced around 1 gem = 500 coins = one game stake. These
@@ -77,24 +79,52 @@ describe("daily rewards", () => {
     });
   });
 
-  it("never decreases as the streak grows", () => {
+  it("climbs in coins across the week", () => {
+    // Coins, not coins-plus-gems. This asserted total value and passed
+    // against a ladder nobody paid: the real one is claim_daily_reward's
+    // (20260913100000), where the gems land on days 3, 5 and 7 — so day 4
+    // is worth less than day 3 in coin terms and always has been. The
+    // gems are the reason to come back on those days; the coin line is
+    // what has to keep climbing.
     for (let i = 1; i < REWARDS.DAILY_REWARDS.length; i++) {
-      const value = (r: (typeof REWARDS.DAILY_REWARDS)[number]) =>
-        r.coins + r.gems * REWARDS.GEM_TO_COINS_RATE;
       expect(
-        value(REWARDS.DAILY_REWARDS[i]),
-        `day ${i + 1} pays less than day ${i}`
-      ).toBeGreaterThan(value(REWARDS.DAILY_REWARDS[i - 1]));
+        REWARDS.DAILY_REWARDS[i].coins,
+        `day ${i + 1} pays fewer coins than day ${i}`
+      ).toBeGreaterThan(REWARDS.DAILY_REWARDS[i - 1].coins);
     }
   });
 
-  it("keeps a full week below the advertised ~6,750 coin value", () => {
+  it("and the gems only ever grow, on the days that carry them", () => {
+    const withGems = REWARDS.DAILY_REWARDS.filter((r) => r.gems > 0);
+    expect(withGems.map((r) => r.day)).toEqual([3, 5, 7]);
+    for (let i = 1; i < withGems.length; i++) {
+      expect(withGems[i].gems).toBeGreaterThan(withGems[i - 1].gems);
+    }
+  });
+
+  it("keeps a full week worth less than a handful of games", () => {
     const weekValue = REWARDS.DAILY_REWARDS.reduce(
       (sum, r) => sum + r.coins + r.gems * REWARDS.GEM_TO_COINS_RATE,
       0
     );
-    expect(weekValue).toBe(5150);
+    // 1,000 coins and 8 gems: ten games' worth for seven days of showing
+    // up, before the surprise the function rolls on top.
+    expect(weekValue).toBe(5000);
     expect(weekValue).toBeLessThan(REWARDS.GAME_STAKE * 15);
+  });
+
+  it("and says what the database pays, since the database pays it", () => {
+    // The one entry in REWARDS that is not the source of truth. Pinned
+    // against the migration that carries the real ladder so the two cannot
+    // drift again — which is exactly what happened while nothing read it.
+    const ladder = readFileSync(
+      join(process.cwd(), "supabase/migrations/20260913100000_daily_reward_ladder.sql"),
+      "utf8",
+    );
+    const rows = ladder.slice(ladder.indexOf("SELECT c INTO v_coins FROM (VALUES"));
+    for (const { day, coins } of REWARDS.DAILY_REWARDS) {
+      expect(rows, `day ${day}`).toMatch(new RegExp(`\\(${day},\\s*${coins}\\)`));
+    }
   });
 });
 

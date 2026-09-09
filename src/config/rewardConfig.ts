@@ -31,15 +31,30 @@ export const REWARDS = {
   LEVEL_UP_GEMS_THRESHOLD: 5,
 
   // ===== DAILY REWARDS - 7-day cycle =====
-  // Total week value: ~6,750 coins worth (13.5 games)
+  //
+  // NOT the source of truth, and the only entry here that is not: the
+  // database pays this one. claim_daily_reward carries the ladder itself
+  // (supabase/migrations/20260913100000_daily_reward_ladder.sql) and returns
+  // a receipt, which is what the modal shows — so no screen ever reads these
+  // numbers, and they had drifted to 200/300/400/500/750/1000/1500 without
+  // anything noticing.
+  //
+  // Kept, and corrected to the ladder that actually pays, because the admin
+  // economy screen states it and a number nobody reads is exactly the kind
+  // that ends up on a marketing page. Change it HERE and it changes nothing;
+  // change the migration.
+  //
+  // The gems land on days 3, 5 and 7. On top of all of it the function rolls
+  // a surprise — doubled coins, gems, or a power-up, weighted further towards
+  // power-ups as the streak grows.
   DAILY_REWARDS: [
-    { day: 1, coins: 200, gems: 0 },   // 200 coins (40% of stake)
-    { day: 2, coins: 300, gems: 0 },   // 300 coins (60% of stake)
-    { day: 3, coins: 400, gems: 0 },   // 400 coins (80% of stake)
-    { day: 4, coins: 500, gems: 0 },   // 500 coins (1 free game!)
-    { day: 5, coins: 750, gems: 0 },   // 750 coins (1.5 games)
-    { day: 6, coins: 1000, gems: 0 },  // 1000 coins (2 games)
-    { day: 7, coins: 1500, gems: 1 },  // 1500 + 500 = 2000 value (4 games)
+    { day: 1, coins: 50, gems: 0 },
+    { day: 2, coins: 75, gems: 0 },
+    { day: 3, coins: 100, gems: 1 },
+    { day: 4, coins: 125, gems: 0 },
+    { day: 5, coins: 150, gems: 2 },
+    { day: 6, coins: 200, gems: 0 },
+    { day: 7, coins: 300, gems: 5 },
   ],
 
   // ===== CHEST REWARDS (every 6 hours) =====
