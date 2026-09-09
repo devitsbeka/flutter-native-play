@@ -75,8 +75,6 @@ export function MobileHomeScroll({
   canClaimGift,
   onAvatarClick,
   onNameClick,
-  onCoinsClick,
-  onGemsClick,
   onGiftClick,
   onStreakClick,
   onAddFriend,
