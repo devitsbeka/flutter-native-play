@@ -972,7 +972,7 @@ export function GameResultsScreenV2() {
                 <div
                   className={cn(
                     "relative",
-                    first ? "mb-[26px]" : "mb-[20px]",
+                    first ? "mb-[34px]" : "mb-[24px]",
                     !p.isMe && "cursor-pointer active:scale-95 transition-transform",
                   )}
                   onClick={!p.isMe ? () => openProfile(p.user_id) : undefined}
@@ -993,7 +993,11 @@ export function GameResultsScreenV2() {
                   <span
                     className={cn(
                       "absolute left-1/2 -translate-x-1/2 leading-none",
-                      first ? "-bottom-[23px] text-[46px]" : "-bottom-[16px] text-[32px]",
+                      // Lower than the design's half-and-half: the emoji's
+                      // ribbon rides above its disc, so a medal hung by its
+                      // middle covered half the face (owner: "move down the
+                      // medals a little"). About a third of it over the ring.
+                      first ? "-bottom-[32px] text-[46px]" : "-bottom-[22px] text-[32px]",
                     )}
                   >
                     {placeMark(idx, p.rank)}
