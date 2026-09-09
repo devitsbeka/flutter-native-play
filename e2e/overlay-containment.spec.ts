@@ -64,28 +64,31 @@ test.describe("full-screen overlays are not trapped by a containing block", () =
 		});
 	}
 
-	test("header search covers the screen on mobile", async ({ page }) => {
+	test("a guest's sign-in prompt covers the screen on mobile", async ({ page }) => {
 		await page.setViewportSize({ width: 430, height: 900 });
 		await gotoApp(page, "/power-ups");
 		await page.waitForTimeout(1500);
 
-		// The header's magnifier: first button holding an svg with the lucide
-		// search class, so this survives header markup changes.
-		const searchButton = page.locator("header button, [class*='header'] button").filter({ has: page.locator("svg.lucide-search") }).first();
-		const fallback = page.locator("button").filter({ has: page.locator("svg.lucide-search") }).first();
-		const trigger = (await searchButton.count()) ? searchButton : fallback;
-		await trigger.click();
+		// This used to open the header's search panel. Signed out there is no
+		// search to open any more — the header carries the language picker, and
+		// SpotlightSearch is mounted only for a signed-in user — while this
+		// suite never signs in. The property under test was never about search:
+		// it is that a full-screen overlay escapes any transformed ancestor
+		// rather than being trapped inside one. The sign-in prompt a guest gets
+		// from a buy control is the full-screen overlay this page now offers,
+		// so it is the vehicle.
+		await page.locator('[data-testid="power-buy"]').first().click();
 		await page.waitForTimeout(800);
 
-		const panel = page.locator("div.fixed.inset-0").filter({ has: page.locator("input") }).first();
-		await expect(panel).toBeVisible();
+		const overlay = page.locator("div.fixed.inset-0").filter({ hasNot: page.locator("#root") }).last();
+		await expect(overlay).toBeVisible();
 
-		const box = await panel.boundingBox();
-		expect(box, "search panel has no box").not.toBeNull();
-		// A panel trapped in the header bar is a couple of hundred pixels tall
-		expect(box!.height, "search panel does not cover the viewport height").toBeGreaterThan(880);
-		expect(box!.width, "search panel does not cover the viewport width").toBeGreaterThan(420);
+		const box = await overlay.boundingBox();
+		expect(box, "overlay has no box").not.toBeNull();
+		// An overlay trapped in a card or a header bar is a few hundred px tall
+		expect(box!.height, "overlay does not cover the viewport height").toBeGreaterThan(880);
+		expect(box!.width, "overlay does not cover the viewport width").toBeGreaterThan(420);
 
-		expect(await trappedOverlays(page), "search panel is inside a containing block").toEqual([]);
+		expect(await trappedOverlays(page), "prompt is inside a containing block").toEqual([]);
 	});
 });

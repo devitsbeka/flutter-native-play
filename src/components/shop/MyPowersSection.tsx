@@ -94,6 +94,11 @@ export function MyPowersSection({ onPurchaseSingle, isPurchasing, canAffordCoins
                 onClick={(e) => { e.stopPropagation(); onCardClick?.(type); }}
                 disabled={isLoading}
                 aria-label={`${t(POWER_UP_NAME_KEYS[type])} — ${price}`}
+                // The overlay-containment smoke test opens the guest sign-in
+                // prompt through this button. Every other hook on it is
+                // translated, and the suite runs in whatever locale the app
+                // defaults to, so the id is the one locale-proof handle.
+                data-testid="power-buy"
                 // The same white chunky pill the coin, gem and pack shelves
                 // buy through, at the same size. It was an amber tinted
                 // button here, which made this one shelf look like a
