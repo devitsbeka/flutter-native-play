@@ -21,7 +21,7 @@ export function SectionHeader({ title, subtitle, onSeeAll }: SectionHeaderProps)
         {/* 34px of line, matching the home rails. At the frame's 22.5 the
             line box is shorter than the type, and Georgian descenders — the
             tails in "კლასიკური ტრივია" — were sliced along the bottom. */}
-        <h2 className="min-w-0 truncate font-display text-[26px] leading-[34px] tracking-[-0.16px] text-[#552d7a]">
+        <h2 className="min-w-0 truncate font-display font-bold text-[26px] leading-[34px] tracking-[-0.16px] text-[#552d7a]">
           {title}
         </h2>
         {subtitle && (

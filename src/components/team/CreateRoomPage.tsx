@@ -2044,7 +2044,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
               (see chooserHeadingFace.test): the two chooser headings and the
               paywall's title wear the app's display face. Spacing from the
               mock, typography from the ask. */}
-          <h2 className="shrink-0 pb-[9px] pl-[11px] pt-[22px] font-display text-[24px] leading-[28px] text-[#3a2260]">{t("extra.whatToPlay")}</h2>
+          <h2 className="shrink-0 pb-[9px] pl-[11px] pt-[22px] font-display font-bold text-[24px] leading-[28px] text-[#3a2260]">{t("extra.whatToPlay")}</h2>
 
           {/* The cards are the row's own items so they stretch to its
               height: a percentage height would not resolve through the
@@ -2190,7 +2190,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                   >
                     {/* The title runs to the card's edge: a Georgian or German
                         title is longer than the English the frame was set in. */}
-                    <p className="font-hero overflow-hidden text-ellipsis whitespace-nowrap text-[calc(32*var(--u))] capitalize leading-[calc(48*var(--u))] tracking-[-0.16px] text-[#402666]">
+                    <p className="font-hero font-bold overflow-hidden text-ellipsis whitespace-nowrap text-[calc(32*var(--u))] capitalize leading-[calc(48*var(--u))] tracking-[-0.16px] text-[#402666]">
                       {card.title}
                     </p>
                     <p
@@ -2241,7 +2241,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
             >
               <span
                 className={cn(
-                  "font-hero truncate text-[22px] capitalize leading-[48px] tracking-[-0.16px] text-[#402666] [text-shadow:0px_2px_0px_white]",
+                  "font-hero font-bold truncate text-[22px] capitalize leading-[48px] tracking-[-0.16px] text-[#402666] [text-shadow:0px_2px_0px_white]",
                   friendsLocked ? "pl-[36px]" : "pl-[31px]",
                 )}
               >

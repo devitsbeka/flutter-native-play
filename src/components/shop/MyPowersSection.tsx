@@ -39,7 +39,7 @@ export function MyPowersSection({ powerUps, onPurchaseSingle, isPurchasing, canA
   
   return (
     <div className="px-4 pt-1.5 pb-4 relative z-10">
-      <h2 className="text-lg font-display text-foreground mb-4">{t("extra.myPowers")}</h2>
+      <h2 className="text-lg font-display font-bold text-foreground mb-4">{t("extra.myPowers")}</h2>
       
       <div className="grid grid-cols-4 gap-3 mt-6">
         {POWER_UP_ORDER.map((type) => {

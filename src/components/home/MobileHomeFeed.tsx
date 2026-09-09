@@ -97,7 +97,7 @@ function RailHeader({
           Latin survives that; Georgian does not, because ჟ, ე, ი and friends
           hang below the baseline, and "ოთახები" came out sliced along the
           bottom. The row grows instead of being pinned to 29px. */}
-      <h2 className="min-w-0 truncate font-display text-[26px] leading-[34px] tracking-[-0.16px] text-[#552d7a]">
+      <h2 className="min-w-0 truncate font-display font-bold text-[26px] leading-[34px] tracking-[-0.16px] text-[#552d7a]">
         {title}
       </h2>
       {action && (action.kind === "add" ? (
@@ -227,7 +227,7 @@ export function MobileHomeFeed() {
                 </div>
               )}
               {/* The mode's name, one line at the foot (Figma 1076:3714). */}
-              <p className="absolute left-[23px] right-[18px] top-[248px] z-20 truncate font-display text-[16px] leading-[22.5px] tracking-[-0.16px] text-[#552d7a]">
+              <p className="absolute left-[23px] right-[18px] top-[248px] z-20 truncate font-display font-bold text-[16px] leading-[22.5px] tracking-[-0.16px] text-[#552d7a]">
                 {card.title}
               </p>
             </button>

@@ -440,7 +440,7 @@ function PublicRoomCard({
             ) : (
               <span className="w-[53px] h-[53px] rounded-full bg-white/10 border border-white/20 shrink-0" />
             )}
-            <h3 className={`min-w-0 max-w-[58%] text-center font-display text-lg leading-tight line-clamp-2 ${ink.text}`}>
+            <h3 className={`min-w-0 max-w-[58%] text-center font-display font-bold text-lg leading-tight line-clamp-2 ${ink.text}`}>
               {lounge ? t(lounge.labelKey) : room.room_name || t("extra.gameRoomDefault")}
             </h3>
             {crests?.b ? (
@@ -470,7 +470,7 @@ function PublicRoomCard({
                 nobody chose over the one thing a player is scanning for. The
                 classic rooms keep their own name, which somebody did choose. */}
             <div className="min-w-0 flex-1">
-              <h3 className={`font-display text-lg leading-tight line-clamp-2 ${ink.text}`}>
+              <h3 className={`font-display font-bold text-lg leading-tight line-clamp-2 ${ink.text}`}>
                 {lounge ? t(lounge.labelKey) : room.room_name || t("extra.gameRoomDefault")}
               </h3>
               {!lounge && (

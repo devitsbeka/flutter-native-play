@@ -38,7 +38,7 @@ describe("the two surfaces share one heading", () => {
 
   it("which is the frame's display face at 26px in its deep aubergine", () => {
     expect(headingClass(header)).toBe(
-      "font-display text-[26px] leading-[34px] tracking-[-0.16px] text-[#552d7a]",
+      "font-display font-bold text-[26px] leading-[34px] tracking-[-0.16px] text-[#552d7a]",
     );
   });
 

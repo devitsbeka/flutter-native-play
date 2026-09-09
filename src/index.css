@@ -502,6 +502,14 @@
     font-family: var(--font-display);
   }
 
+  /* Slackey is Latin-only and ships one weight. A hero title set bold
+     must not have that weight faked onto Slackey's Latin; the bold is for
+     the Georgian that falls through to Google Sans, whose 700 is the
+     self-hosted display face. */
+  .font-hero {
+    font-synthesis: none;
+  }
+
   /* Shop card surface — the same soft lavender-white card recipe the main
      page widgets use (SceneHero profile card), so the shop and homepage read
      as one system when switching between them. */

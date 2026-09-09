@@ -17,7 +17,7 @@ describe("the chooser headings wear the display face", () => {
   // each screen's own: Figma 1102:4978 sets the chooser's heading 27px in and
   // 151px down, which is spacing, not typography — and the mock's Nunito is
   // exactly what the owner asked to be rid of, so it stays gone.
-  const heading = /font-display text-\[24px\] leading-\[28px\] text-\[#3a2260\]"/;
+  const heading = /font-display font-bold text-\[24px\] leading-\[28px\] text-\[#3a2260\]"/;
 
   it("what will you play", () => {
     const create = read("src/components/team/CreateRoomPage.tsx");
@@ -27,7 +27,7 @@ describe("the chooser headings wear the display face", () => {
 
   it("what will you guess", () => {
     const screen = read("src/components/team/GuessPickerScreen.tsx");
-    expect(screen).toMatch(/className="shrink-0 pb-\[13px\] pt-\[7px\] font-display text-\[24px\] leading-\[28px\] text-\[#3a2260\]"/);
+    expect(screen).toMatch(/className="shrink-0 pb-\[13px\] pt-\[7px\] font-display font-bold text-\[24px\] leading-\[28px\] text-\[#3a2260\]"/);
     // The card labels below the heading keep Nunito; only the heading moved.
     expect(screen).not.toMatch(/<h2[^>]*font-\[Nunito\]/);
   });

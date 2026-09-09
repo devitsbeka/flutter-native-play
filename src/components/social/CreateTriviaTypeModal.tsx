@@ -140,7 +140,7 @@ export function CreateTriviaTypeModal({
           {/* The page scrolls itself (CLAUDE.md rule 4b). */}
           <div className="relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[calc(24px_+_var(--safe-bottom))]">
             <div className="mx-auto w-full max-w-[700px] md:max-w-[520px]">
-              <h1 className="pb-[18px] pt-[14px] font-hero text-[28px] leading-[34px] tracking-[-0.2px] text-[#402666]">
+              <h1 className="pb-[18px] pt-[14px] font-hero font-bold text-[28px] leading-[34px] tracking-[-0.2px] text-[#402666]">
                 {t("extra.whatToCreate")}
               </h1>
 
@@ -161,7 +161,7 @@ export function CreateTriviaTypeModal({
                   >
                     <img src={danceFloor} alt="" draggable={false} className="h-[72px] w-[72px] shrink-0 object-contain drop-shadow-[0_6px_10px_rgba(88,50,160,0.18)]" />
                     <div className="min-w-0">
-                      <h3 className="font-hero text-[20px] leading-[26px] tracking-[-0.16px] text-[#402666]">{t("extra.gameRoomLabel")}</h3>
+                      <h3 className="font-hero font-bold text-[20px] leading-[26px] tracking-[-0.16px] text-[#402666]">{t("extra.gameRoomLabel")}</h3>
                       <p className="mt-0.5 font-[Nunito] text-[13px] leading-[17px] text-[#6b5b86]">{t("extra.playWithFriends")}</p>
                     </div>
                   </motion.button>
@@ -190,7 +190,7 @@ export function CreateTriviaTypeModal({
                     }`}
                   >
                     <img src={card.icon} alt="" draggable={false} className="h-[92px] w-[92px] object-contain drop-shadow-[0_6px_10px_rgba(88,50,160,0.18)]" />
-                    <span className="font-hero text-[18px] leading-[28px] tracking-[-0.16px] text-[#402666]">{card.title}</span>
+                    <span className="font-hero font-bold text-[18px] leading-[28px] tracking-[-0.16px] text-[#402666]">{card.title}</span>
                   </motion.button>
                 ))}
               </div>

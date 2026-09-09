@@ -868,7 +868,7 @@ export function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = f
                   className="absolute left-1/2 top-[62px] h-10 w-10 -translate-x-1/2 object-contain drop-shadow-lg"
                 />
               )}
-              <h3 className="absolute inset-x-[18px] top-[117px] truncate text-center font-display text-[18px] leading-[22.5px] tracking-[-0.16px] text-white">
+              <h3 className="absolute inset-x-[18px] top-[117px] truncate text-center font-display font-bold text-[18px] leading-[22.5px] tracking-[-0.16px] text-white">
                 {displayName}
               </h3>
               <span aria-hidden className="absolute left-[18px] right-[17px] top-[160px] h-px bg-white/30" />
@@ -974,7 +974,7 @@ export function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = f
                   />
                 )}
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-display text-white text-lg leading-tight truncate drop-shadow-md">
+                  <h3 className="font-display font-bold text-white text-lg leading-tight truncate drop-shadow-md">
                     {displayName}
                   </h3>
                   {(isPartyRoom || room.category_name || (lounge && room.room_name)) && (
@@ -1330,7 +1330,7 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
                   />
                 )}
                 <div className="min-w-0 flex-1">
-                  <h3 className="font-display text-[#2b1a4a] text-lg leading-tight line-clamp-2">
+                  <h3 className="font-display font-bold text-[#2b1a4a] text-lg leading-tight line-clamp-2">
                     {displayName}
                   </h3>
                   {(isPartyRoom || room.category_name || (lounge && room.room_name)) && (

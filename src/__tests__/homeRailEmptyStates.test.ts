@@ -93,7 +93,7 @@ describe("the panel itself", () => {
 
 describe("the rail headers", () => {
   it("are the frame's display face at 26px, with no line under them (Figma 1076:2116)", () => {
-    expect(feed).toMatch(/font-display text-\[26px\] leading-\[34px\] tracking-\[-0\.16px\] text-\[#552d7a\]/);
+    expect(feed).toMatch(/font-display font-bold text-\[26px\] leading-\[34px\] tracking-\[-0\.16px\] text-\[#552d7a\]/);
     expect(feed).not.toMatch(/font-hero text-\[19px\]/);
     expect(feed).not.toMatch(/desc=\{/);
   });
