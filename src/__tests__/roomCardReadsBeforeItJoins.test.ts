@@ -32,12 +32,14 @@ const migration = read("supabase/migrations/20261102150000_public_rooms_carry_th
 
 describe("the tap that reads", () => {
   it("the public card opens the preview instead of knocking", () => {
-    expect(publicRooms).toMatch(/onClick=\{\(\) => \(lounge \? \(inside \? enter\(\) : onAsk\(room\)\) : onPreview\(room\)\)\}/);
+    // ...handing the sheet the card's own button along (roomPreviewCarriesTheCardsButton.test.ts).
+    expect(publicRooms).toMatch(/onClick=\{\(\) => \(lounge \? \(inside \? enter\(\) : onAsk\(room\)\) : onPreview\(room, playButton\)\)\}/);
     expect(publicRooms).not.toMatch(/onClick=\{\(\) => \(inside \? enter\(\) : onAsk\(room\)\)\}/);
   });
 
   it("and the private cards do the same", () => {
-    const taps = myRooms.match(/if \(roomKind\(room\) === "classic"\) onPreview\(\);\s*\n\s*else onJoin\(\);/g) ?? [];
+    // The grid card hands its button along; the rail card has none to hand.
+    const taps = myRooms.match(/if \(roomKind\(room\) === "classic"\) onPreview\((action \? playButton : undefined)?\);\s*\n\s*else onJoin\(\);/g) ?? [];
     expect(taps, "both the grid card and the rail card").toHaveLength(2);
   });
 
@@ -51,8 +53,10 @@ describe("the tap that reads", () => {
 
 describe("the tap that acts", () => {
   it("the public card's button still joins, and still stops the card's tap", () => {
+    // ...and then does whatever the place it was drawn in asked for after
+    // the tap — the sheet asks to be closed; the card asks nothing.
     expect(publicRooms).toMatch(
-      /onClick=\{\(e\) => \{\s*\n\s*e\.stopPropagation\(\);\s*\n\s*if \(inside\) enter\(\);\s*\n\s*else onAsk\(room\);\s*\n\s*\}\}/,
+      /onClick=\{\(e\) => \{\s*\n\s*e\.stopPropagation\(\);\s*\n\s*if \(inside\) enter\(\);\s*\n\s*else onAsk\(room\);\s*\n\s*opts\.then\?\.\(\);\s*\n\s*\}\}/,
     );
   });
 
@@ -101,8 +105,11 @@ describe("what opening it says", () => {
     expect(sheet).toMatch(/\{pot !== null && \(/);
   });
 
-  it("with nothing in it that joins — that is the card's own button", () => {
+  it("with nothing of its own that joins — the way in is the card's own button, handed to it", () => {
+    // roomPreviewCarriesTheCardsButton.test.ts: the card builds the button,
+    // the sheet only draws it beside Close.
     expect(sheet).not.toMatch(/onJoin|onAsk|navigate\(/);
+    expect(sheet).toMatch(/action\?: ReactNode;/);
   });
 
   it("and a room whose host has picked nothing says so", () => {
@@ -130,11 +137,14 @@ describe("where the rounds come from", () => {
     expect(hook).toMatch(/\.order\("position"\)/);
   });
 
-  it("and a client ahead of the migration reads an empty list, not a crash", () => {
+  it("and a client ahead of the migration reads the one round the old RPC names, not a crash", () => {
     // Migrations land by hand after the merge (CLAUDE.md 4a), so for a while
-    // the app knows this column and the database does not.
+    // the app knows this column and the database does not. The old RPC
+    // still names the first round (first_category_name), and a sheet that
+    // said "nothing picked" under a card saying "Random" was wrong (owner:
+    // "why modal shows host didn't pick anything").
     const hook = read("src/hooks/usePublicRooms.ts");
-    expect(hook).toMatch(/rounds: Array\.isArray\(row\.rounds\) \? \(row\.rounds as RoomRound\[\]\) : \[\],/);
+    expect(hook).toMatch(/rounds: Array\.isArray\(row\.rounds\)\s*\n\s*\? \(row\.rounds as RoomRound\[\]\)\s*\n\s*: row\.first_category_name\s*\n\s*\? \[\{ name: row\.first_category_name as string, icon_slug: \(row\.first_category_icon as string \| null\) \?\? null, source_type: "category" \}\]\s*\n\s*: \[\],/);
   });
 
   it("proved against a real Postgres, from a stranger's seat", () => {

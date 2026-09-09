@@ -446,6 +446,10 @@ function subscribeToRoomChanges(queryClient: ReturnType<typeof useQueryClient>) 
       .channel('my-rooms-shared')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'game_rooms' }, () => realtimeInvalidate?.())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'room_participants' }, () => realtimeInvalidate?.())
+      // The rounds on a card are the queue (fetchRoomsForUser); a host
+      // picking them in the lobby writes nothing else, so without this the
+      // list kept saying "0 rounds" until the next poll.
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'room_category_queue' }, () => realtimeInvalidate?.())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tv_sessions' }, () => realtimeInvalidate?.())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tv_players' }, () => realtimeInvalidate?.())
       .subscribe();

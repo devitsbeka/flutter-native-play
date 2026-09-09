@@ -55,7 +55,9 @@ describe("the room card's own invite", () => {
   });
 
   it("and the right side is Play or nothing — never the invite button", () => {
-    const start = grid.lastIndexOf("</RoomCardPlayButton>");
+    // The button is drawn by playButton(); what follows it on the row is
+    // the right side.
+    const start = grid.lastIndexOf("playButton()");
     const rightSide = grid.slice(start, grid.indexOf("</GradientBackground>", start));
     expect(rightSide).not.toMatch(/onInvite\?\.\(room\)/);
     expect(grid).toMatch(/\{action && \(\s*\n\s*\/\* The public list's button in white/);

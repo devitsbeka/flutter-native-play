@@ -18,8 +18,9 @@
  * it twice would eventually answer it two different ways.
  */
 
+import type { ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChunkyButton } from "@/components/ui/chunky-button";
+import { RoomCardPlayButton } from "@/components/team/RoomCardPlayButton";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { REWARDS } from "@/config/rewardConfig";
@@ -31,6 +32,24 @@ export interface PreviewRound {
   source_type: string;
 }
 
+/**
+ * The card's own button, drawn again inside the sheet.
+ *
+ * The sheet used to close and nothing else: the way in was the card's
+ * button, deliberately not repeated. But a player who has just read what a
+ * room plays and what it costs is exactly the player who wants the way in,
+ * and sending them back out to the card for it is a tap for nothing
+ * (owner: "show same button what we show on card next to the close button
+ * when user taps on card to see categories in round, make sure buttons
+ * have same styles"). So the CARD hands the sheet a factory for the same
+ * button it draws — same tone, same word, same tap — and the sheet gives
+ * it the sheet's size and asks it to close the sheet afterwards.
+ */
+export type PreviewActionFactory = (opts?: { className?: string; then?: () => void }) => ReactNode;
+
+/** Both buttons in the sheet's footer wear this: the card's pill, one size up. */
+export const PREVIEW_BUTTON_CLASS = "flex-1 justify-center py-3 text-[15px]";
+
 interface RoomPreviewSheetProps {
   open: boolean;
   roomName: string;
@@ -39,6 +58,8 @@ interface RoomPreviewSheetProps {
   questionsPerRound: number | null;
   /** How many are seated — the pot is that many stakes. */
   players: number;
+  /** The card's button, already sized for the sheet; nothing when the card has none. */
+  action?: ReactNode;
   onClose: () => void;
 }
 
@@ -48,6 +69,7 @@ export function RoomPreviewSheet({
   rounds,
   questionsPerRound,
   players,
+  action,
   onClose,
 }: RoomPreviewSheetProps) {
   const { t } = useLanguage();
@@ -142,13 +164,18 @@ export function RoomPreviewSheet({
                 </div>
               )}
 
-              {/* One button, and it closes. Joining is the card's own button,
-                  deliberately not repeated here: two ways in from two places
-                  is how a tap ends up meaning something the player did not
-                  intend, which is the whole reason this sheet exists. */}
-              <ChunkyButton variant="outline" size="md" className="w-full" onClick={onClose}>
-                {t("common.close")}
-              </ChunkyButton>
+              {/* Close, and beside it the card's own button — the same
+                  pill the card draws, same tone and same word, so the way
+                  in reads the same here as on the list. Both wear the
+                  card's style (owner: "make sure buttons have same
+                  styles"). A card with no button (nothing to offer yet)
+                  leaves Close on its own. */}
+              <div className="flex items-center gap-2">
+                <RoomCardPlayButton tone="white" className={PREVIEW_BUTTON_CLASS} onClick={onClose}>
+                  {t("common.close")}
+                </RoomCardPlayButton>
+                {action}
+              </div>
             </div>
           </motion.div>
         </motion.div>

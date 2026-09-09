@@ -21,7 +21,7 @@ import { declineRoomInvite, pendingRoomInvites, type PendingInviteFrom } from "@
 import { RoomCardPlayButton } from "@/components/team/RoomCardPlayButton";
 import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
 import { NotEnoughStakeModal } from "@/components/home/NotEnoughStakeModal";
-import { RoomPreviewSheet } from "@/components/team/RoomPreviewSheet";
+import { PREVIEW_BUTTON_CLASS, RoomPreviewSheet, type PreviewActionFactory } from "@/components/team/RoomPreviewSheet";
 import { useCurrency } from "@/hooks/useCurrency";
 import { REWARDS } from "@/config/rewardConfig";
 import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
@@ -168,7 +168,8 @@ function PublicRoomCard({
   onInvite: (room: PublicRoom) => void;
   onAsk: (room: PublicRoom) => void;
   /** Tapping the card anywhere but a control: what does this room play? */
-  onPreview: (room: PublicRoom) => void;
+  /** The card's tap: what the room is, with the card's own button along. */
+  onPreview: (room: PublicRoom, action: PreviewActionFactory) => void;
   /** Take back a pending ask — one game at a time, so waiting is undoable. */
   onWithdraw: (room: PublicRoom) => void;
   /** Delete it (the host) or leave it (a seated guest). */
@@ -263,6 +264,52 @@ function PublicRoomCard({
   const enter = () => navigate(publicRoomPath(room));
 
   /**
+   * The card's button, as a factory: the card draws it, and hands the same
+   * one to the preview sheet to draw beside Close (RoomPreviewSheet). The
+   * sheet passes its own size and a `then` that closes it after the tap.
+   */
+  const playButton: PreviewActionFactory = (opts = {}) => (
+    <RoomCardPlayButton
+      tone={invited || ready ? "mint" : "white"}
+      disabled={busy || waiting || blocked}
+      className={opts.className}
+      onClick={(e) => {
+        e.stopPropagation();
+        if (inside) enter();
+        else onAsk(room);
+        opts.then?.();
+      }}
+    >
+      {busy ? (
+        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+      ) : invited ? (
+        // An invitation is answered, not played: entering takes the
+        // seat and reads the invite. Green, like every button that
+        // is one tap from a game (owner: "show green button -
+        // confirm button and X besides that green button to deny").
+        <>
+          <Check className="w-3.5 h-3.5" strokeWidth={3} />
+          {t("common.confirm")}
+        </>
+      ) : waiting ? (
+        <>
+          <Clock className="w-3.5 h-3.5" />
+          {t("extra.joinWaitingHost")}
+        </>
+      ) : ready ? (
+        <>
+          <Play className="w-3.5 h-3.5 fill-current" />
+          {t("extra.roomPlay")}
+        </>
+      ) : inside ? (
+        t("extra.roomEnter")
+      ) : (
+        t("extra.roomJoinLive")
+      )}
+    </RoomCardPlayButton>
+  );
+
+  /**
    * The room I just made, still waiting on its first arrival.
    *
    * Marked because it is findable: you can reach this page having created a
@@ -314,7 +361,7 @@ function PublicRoomCard({
       // A lounge — the King's couch, the arena — carries its own stake and
       // its own idea of a round, so the sheet would describe it wrongly.
       // Their card keeps the tap it had.
-      onClick={() => (lounge ? (inside ? enter() : onAsk(room)) : onPreview(room))}
+      onClick={() => (lounge ? (inside ? enter() : onAsk(room)) : onPreview(room, playButton))}
       aria-disabled={blocked || undefined}
     >
       {/* Drawn over the card, not around it: the wrapper clips to the same
@@ -652,42 +699,7 @@ function PublicRoomCard({
                 host walks in to invite the people it is still short of. Only
                 a room that can start says Play, and it is the only one that
                 goes mint. */}
-            <RoomCardPlayButton
-              tone={invited || ready ? "mint" : "white"}
-              disabled={busy || waiting || blocked}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (inside) enter();
-                else onAsk(room);
-              }}
-            >
-              {busy ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : invited ? (
-                // An invitation is answered, not played: entering takes the
-                // seat and reads the invite. Green, like every button that
-                // is one tap from a game (owner: "show green button -
-                // confirm button and X besides that green button to deny").
-                <>
-                  <Check className="w-3.5 h-3.5" strokeWidth={3} />
-                  {t("common.confirm")}
-                </>
-              ) : waiting ? (
-                <>
-                  <Clock className="w-3.5 h-3.5" />
-                  {t("extra.joinWaitingHost")}
-                </>
-              ) : ready ? (
-                <>
-                  <Play className="w-3.5 h-3.5 fill-current" />
-                  {t("extra.roomPlay")}
-                </>
-              ) : inside ? (
-                t("extra.roomEnter")
-              ) : (
-                t("extra.roomJoinLive")
-              )}
-            </RoomCardPlayButton>
+            {playButton()}
             {/* No: the reserved seat is given up and the invite answered. */}
             {invited && !busy && (
               <button
@@ -738,8 +750,8 @@ export function PublicRoomsSection({
   const queryClient = useQueryClient();
   const [busyId, setBusyId] = useState<string | null>(null);
   const [showNoStake, setShowNoStake] = useState(false);
-  /** The room whose rounds and cost are being read. */
-  const [previewing, setPreviewing] = useState<PublicRoom | null>(null);
+  /** The room whose rounds and cost are being read, with its card's button. */
+  const [previewing, setPreviewing] = useState<{ room: PublicRoom; action: PreviewActionFactory } | null>(null);
   const { coins } = useCurrency();
   // The room whose delete/leave is being confirmed, if any.
   const [removing, setRemoving] = useState<PublicRoom | null>(null);
@@ -1189,7 +1201,7 @@ export function PublicRoomsSection({
           blocked={!!waitingRoomId && waitingRoomId !== room.id}
           onInvite={setInviting}
           onAsk={(r) => void ask(r)}
-          onPreview={setPreviewing}
+          onPreview={(r, action) => setPreviewing({ room: r, action })}
           onWithdraw={(r) => void withdraw(r)}
           onRemove={setRemoving}
           busy={busyId === room.id}
@@ -1215,10 +1227,11 @@ export function PublicRoomsSection({
       {/* What the card is, opened by tapping it. */}
       <RoomPreviewSheet
         open={previewing !== null}
-        roomName={previewing?.room_name || t("extra.roomDefaultName")}
-        rounds={previewing?.rounds ?? []}
-        questionsPerRound={previewing?.total_questions ?? null}
-        players={previewing?.player_count ?? 0}
+        roomName={previewing?.room.room_name || t("extra.roomDefaultName")}
+        rounds={previewing?.room.rounds ?? []}
+        questionsPerRound={previewing?.room.total_questions ?? null}
+        players={previewing?.room.player_count ?? 0}
+        action={previewing?.action({ className: PREVIEW_BUTTON_CLASS, then: () => setPreviewing(null) })}
         onClose={() => setPreviewing(null)}
       />
 
