@@ -1,16 +1,75 @@
 import { useEffect, useMemo, useState } from "react";
+import { Users } from "lucide-react";
 import { PersonAskModal } from "@/components/shared/PersonAskModal";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import { useNavigate } from "react-router-dom";
 import { routeForRoom } from "@/utils/roomRoutes";
+import { useLocalizedCategoryName } from "@/utils/categoryDisplayName";
+import { dealtRoomIcon } from "@/utils/roomCrests";
+import { useRoomIconPool } from "@/hooks/useRoomIconPool";
 import {
   answerJoinRequest,
   blockJoinRequest,
   useHostJoinRequests,
   useRoomJoinRequests,
+  type PendingJoinRequest,
 } from "@/hooks/useRoomJoinRequests";
 import { useContentModeration } from "@/hooks/useContentModeration";
+
+/**
+ * The room somebody is asking into, on the doorstep card.
+ *
+ * "Britney - Join request - Accept / Decline" said who but not where: a host
+ * with two rooms open, or one answering from the home screen, was deciding
+ * about a door they could not see (owner's ask). The room's own face and
+ * name, what it is playing, and how full it is - the same three things its
+ * card on the Public tab leads with.
+ */
+export function JoinRequestRoomCard({
+  roomId,
+  roomName,
+  roomIcon,
+  categoryName,
+  seated,
+  maxPlayers,
+}: {
+  roomId: string;
+  roomName: string | null;
+  roomIcon: string | null;
+  categoryName: string | null;
+  seated: number;
+  maxPlayers: number | null;
+}) {
+  const { t } = useLanguage();
+  const localizeCategory = useLocalizedCategoryName();
+  const iconPool = useRoomIconPool();
+  const face = roomIcon ?? dealtRoomIcon(roomId, iconPool);
+  const category = localizeCategory(categoryName) ?? categoryName ?? t("extra.cpRandomTitle");
+  return (
+    <div className="mt-3 flex items-center gap-3 rounded-2xl border border-border bg-muted/50 px-3 py-2.5 text-left">
+      {face ? (
+        <img src={face} alt="" className="h-11 w-11 shrink-0 object-contain drop-shadow-md" />
+      ) : (
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10">
+          <Users className="h-5 w-5 text-primary" />
+        </span>
+      )}
+      <div className="min-w-0 flex-1">
+        <p className="truncate font-display text-[15px] font-bold text-foreground">
+          {roomName || t("extra.gameRoomLabel")}
+        </p>
+        <p className="truncate text-xs text-muted-foreground">{category}</p>
+      </div>
+      {maxPlayers !== null && (
+        <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-background px-2 py-1 text-xs font-bold text-foreground">
+          <Users className="h-3.5 w-3.5" />
+          {seated}/{maxPlayers}
+        </span>
+      )}
+    </div>
+  );
+}
 
 /**
  * Drop the knocks that come from a blocked player.
@@ -127,7 +186,7 @@ function JoinRequestModal({
   onDecline,
   onBlock,
 }: {
-  next: { id: string; user_id: string; nickname: string; avatar_url: string | null } | undefined;
+  next: PendingJoinRequest | undefined;
   more: number;
   hostTeam?: "a" | "b";
   onAccept: (team?: "a" | "b") => void;
@@ -162,6 +221,16 @@ function JoinRequestModal({
       onTertiary={onBlock}
       footnote={more > 0 ? t("extra.joinRequestMore", { count: more }) : undefined}
     >
+      {next && (
+        <JoinRequestRoomCard
+          roomId={next.room_id}
+          roomName={next.room_name}
+          roomIcon={next.room_icon}
+          categoryName={next.category_name}
+          seated={next.seated}
+          maxPlayers={next.max_players}
+        />
+      )}
       {/* Which side they land on. Two buttons named by team, each tagged
           with what that team is to the host — "my team" or "opponent" —
           because A and B mean nothing until you know which one you are on. */}

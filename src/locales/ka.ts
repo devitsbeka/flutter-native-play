@@ -2622,7 +2622,7 @@ export const ka = {
     publicEmptyBody: "შექმენი ოთახი და გახადე საჯარო — სხვები შემოგიერთდებიან.",
     joinRequestTitle: "შემოსვლის თხოვნა",
     joinRequestSeeProfile: "პროფილის ნახვა",
-    joinRequestBody: "შემოსვლის მოთხოვნა",
+    joinRequestBody: "სურს შენს ოთახში შემოსვლა",
     joinRequestAccept: "დათანხმება",
     joinRequestDecline: "უარი",
     joinRequestMore: "კიდევ {count} თხოვნა ელოდება",

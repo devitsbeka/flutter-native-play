@@ -2300,7 +2300,7 @@ export const it: KaTranslations = {
     publicEmptyBody: "Crea una stanza e pubblicala: è qui che la trovano.",
     joinRequestTitle: "Vuole entrare",
     joinRequestSeeProfile: "Vedi profilo",
-    joinRequestBody: "Richiesta di ingresso",
+    joinRequestBody: "vuole entrare nella tua stanza",
     joinRequestAccept: "Accetta",
     joinRequestDecline: "Rifiuta",
     joinRequestMore: "Altri {count} in attesa",

@@ -2617,7 +2617,7 @@ export const en: KaTranslations = {
     publicEmptyBody: "Make a room and publish it — this is where people find it.",
     joinRequestTitle: "Wants to join",
     joinRequestSeeProfile: "See profile",
-    joinRequestBody: "Join request",
+    joinRequestBody: "wants to join your room",
     joinRequestAccept: "Accept",
     joinRequestDecline: "Decline",
     joinRequestMore: "{count} more waiting",

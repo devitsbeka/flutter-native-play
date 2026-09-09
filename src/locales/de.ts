@@ -2291,7 +2291,7 @@ export const de: KaTranslations = {
     publicEmptyBody: "Erstelle einen Raum und veröffentliche ihn — hier wird er gefunden.",
     joinRequestTitle: "Möchte beitreten",
     joinRequestSeeProfile: "Profil ansehen",
-    joinRequestBody: "Beitrittsanfrage",
+    joinRequestBody: "möchte deinem Raum beitreten",
     joinRequestAccept: "Annehmen",
     joinRequestDecline: "Ablehnen",
     joinRequestMore: "{count} weitere warten",

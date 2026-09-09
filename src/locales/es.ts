@@ -2308,7 +2308,7 @@ export const es: KaTranslations = {
     publicEmptyBody: "Crea una sala y publícala: aquí es donde la encuentran.",
     joinRequestTitle: "Quiere entrar",
     joinRequestSeeProfile: "Ver perfil",
-    joinRequestBody: "Solicitud de entrada",
+    joinRequestBody: "quiere unirse a tu sala",
     joinRequestAccept: "Aceptar",
     joinRequestDecline: "Rechazar",
     joinRequestMore: "{count} más esperando",

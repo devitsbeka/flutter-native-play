@@ -12,6 +12,8 @@ import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { TVSetupInline } from "@/components/team/TVSetupInline";
 import { MatchSummarySheet } from "@/components/team/MatchSummarySheet";
+import { PersonAskModal } from "@/components/shared/PersonAskModal";
+import { JoinRequestRoomCard } from "@/components/team/JoinRequestGate";
 import { LibraryCard } from "@/components/team/CategoryPickerModal";
 import { RoundOrderModal } from "@/components/team/RoundOrderModal";
 import { RoomTitle } from "@/components/lobby/UniversalLobby";
@@ -207,6 +209,35 @@ export default function HomeShot() {
     return (
       <div className="relative h-[100dvh] w-full overflow-hidden bg-[#faf6ff]">
         <AnimatedMascotScene className="absolute inset-0 z-[4] select-none overflow-hidden" />
+      </div>
+    );
+  }
+  if (params.get("view") === "knock") {
+    // The host's doorstep: somebody asking into a room, with the room named.
+    return (
+      <div className="h-[100dvh] w-full bg-[#e9dcf7]">
+        <PersonAskModal
+          motionKey="knock"
+          person={{ nickname: "Britney", avatar_url: FACE2 }}
+          onOpenProfile={noop}
+          profileLabel="See profile"
+          body="wants to join your room"
+          declineLabel="Decline"
+          onDecline={noop}
+          acceptLabel="Accept"
+          onAccept={noop}
+          tertiaryLabel="Block them"
+          onTertiary={noop}
+        >
+          <JoinRequestRoomCard
+            roomId="room"
+            roomName="Brave Knights"
+            roomIcon={iconBattleLounge}
+            categoryName="Guess the Celebrity"
+            seated={2}
+            maxPlayers={10}
+          />
+        </PersonAskModal>
       </div>
     );
   }
