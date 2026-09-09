@@ -4,7 +4,7 @@ import { Menu, Search } from "lucide-react";
 import { formatCompactNumber } from "@/lib/utils";
 import { t } from "@/lib/i18n";
 import myTriviaLogo from "@/assets/mytrivia-logo.svg";
-import guestGeoMap from "@/assets/figma-home/guest-geo-map.webp";
+import guestCastleDoor from "@/assets/figma-home/guest-castle-door.webp";
 import coinChunky from "@/assets/figma-home/coin-chunky.png";
 import gemChunky from "@/assets/figma-home/gem-chunky.png";
 import giftDaily from "@/assets/figma-home/gift-daily.png";
@@ -635,24 +635,25 @@ export function MobileGuestHero({
         </p>
       </motion.div>
 
-      {/* The island sits on the bottom of this band so its lower edge meets
-          the provider buttons. It is 893 / 500 wide with its left edge at
-          -219 / 500, but max-height caps it to the band and object-contain
-          scales it down to fit: the artwork is never sliced through, which
-          would leave a hard horizontal edge across the page on phones whose
-          band is shorter than the frame's. Positioned with `left` rather
-          than a translate utility because framer's inline transform on a
-          motion element would overwrite the class. */}
+      {/* The castle door stands on the bottom of this band so its base meets
+          the provider buttons. Unlike the panorama that used to sit here it
+          is a portrait cut-out (1101x1718, ~0.64), so it is sized by HEIGHT
+          and centred, not bled past both edges — a vw-based width would blow
+          a 9:14 frame far past the viewport. object-contain against the band
+          means the artwork is never sliced through, which would leave a hard
+          horizontal edge across the page on phones whose band is shorter
+          than the frame's; on those it simply scales down. max-w keeps it
+          off the page gutters on short-and-wide viewports, where fitting by
+          height alone would otherwise run it edge to edge. */}
       <div className="relative mt-[16px] min-h-0 flex-1">
         <motion.img
-          src={guestGeoMap}
+          src={guestCastleDoor}
           alt=""
           draggable={false}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.7, ease: "easeOut" }}
-          className="pointer-events-none absolute bottom-0 max-w-none select-none object-contain object-bottom"
-          style={{ left: "calc(50% - 93.8vw)", width: "178.6vw", maxHeight: "100%" }}
+          className="pointer-events-none absolute inset-x-0 bottom-0 mx-auto h-full max-w-[76%] select-none object-contain object-bottom"
         />
       </div>
 
