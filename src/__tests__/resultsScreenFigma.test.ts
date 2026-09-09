@@ -40,8 +40,11 @@ describe("the podium", () => {
   });
 
   it("the medal hangs off the ring, and the wrapper keeps room for it", () => {
-    expect(results).toMatch(/"absolute left-1\/2 -translate-x-1\/2 leading-none",\s*\n\s*first \? "-bottom-\[23px\] text-\[46px\]" : "-bottom-\[16px\] text-\[32px\]"/);
-    expect(results).toMatch(/first \? "mb-\[26px\]" : "mb-\[20px\]"/);
+    // A third of the medal over the ring, not half: the emoji's ribbon
+    // rides above its disc and covered the face (owner: "move down the
+    // medals a little they are covering half avatars").
+    expect(results).toMatch(/"absolute left-1\/2 -translate-x-1\/2 leading-none",\s*\n(\s*\/\/[^\n]*\n)*\s*first \? "-bottom-\[32px\] text-\[46px\]" : "-bottom-\[22px\] text-\[32px\]"/);
+    expect(results).toMatch(/first \? "mb-\[34px\]" : "mb-\[24px\]"/);
   });
 
   it("the name at 22px display, then the place's coins in its own metal", () => {
