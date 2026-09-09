@@ -18,6 +18,7 @@ import { useInAppPurchases } from "@/hooks/useInAppPurchases";
 import { Capacitor } from "@capacitor/core";
 import { SubscriptionTerms } from "@/components/shared/SubscriptionTerms";
 import { PlayBackdrop } from "@/components/shared/PlayBackdrop";
+import { cn } from "@/lib/utils";
 import { MyTriviaLiveLogo } from "@/components/shared/MyTriviaLiveLogo";
 
 interface PlayLimitModalProps {
@@ -208,12 +209,35 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
     // answers on slabs of their own.
     const card = (
       <div className="mx-auto flex w-full max-w-[500px] flex-col px-[19px] pb-8">
-        {/* 1102:4322 — the whole reason the screen exists, said once. */}
-        <h2 className="mx-auto mt-[43px] max-w-[340px] text-center font-display text-[38px] font-bold uppercase leading-[43px] tracking-[-1.16px] text-[#402666]">
+        {/* 1102:4322 — the whole reason the screen exists, said once.
+            The rooms door says more than the reference's own headline (it
+            names PRO, invites, AND friends where the mock names only the
+            limit) — at the same 38px/340px the mock is cut to, that ran to
+            four lines in Georgian, one word at a time. It gets the width
+            the card actually has, not the mock's narrower cap, and a
+            smaller size — the room this screen has for a headline is fixed
+            regardless of whose sentence is longer (owner: "show title on 2
+            lines not 3, reduce font size if you can't fit on two lines"). */}
+        <h2
+          className={cn(
+            "mx-auto mt-[43px] text-center font-display font-bold uppercase text-[#402666]",
+            reason === "rooms"
+              ? "max-w-[380px] text-[30px] leading-[36px] tracking-[-0.6px]"
+              : "max-w-[340px] text-[38px] leading-[43px] tracking-[-1.16px]",
+          )}
+        >
           {t(reason === "rooms" ? "playLimit.roomsLockedTitle" : "playLimit.limitReached")}
         </h2>
-        {/* 1102:4320 — and that there is something to do about it. */}
-        <p className="mt-[16px] text-center font-[Nunito] text-[22px] font-normal leading-[26px] tracking-[-0.16px] text-[#1c2c59]">
+        {/* 1102:4320 — and that there is something to do about it. Trimmed
+            to match the smaller headline above it — the same ask, applied
+            to the line that sits right under it (owner: "reduce
+            description text a little below too"). */}
+        <p
+          className={cn(
+            "mt-[16px] text-center font-[Nunito] font-normal text-[#1c2c59]",
+            reason === "rooms" ? "text-[19px] leading-[23px] tracking-[-0.16px]" : "text-[22px] leading-[26px] tracking-[-0.16px]",
+          )}
+        >
           {t(reason === "rooms" ? "playLimit.roomsLockedBody" : "playLimit.chooseHow")}
         </p>
 
