@@ -103,7 +103,7 @@ export function UniversalBottomNav({
         onClose={() => setShowGuestModal(false)}
         onRegister={() => {
           setShowGuestModal(false);
-          navigate("/auth?mode=signup");
+          navigate("/auth");
         }}
         onContinuePlaying={() => setShowGuestModal(false)}
       />
@@ -284,7 +284,7 @@ export function UniversalBottomNav({
         onClose={() => setShowGuestModal(false)}
         onRegister={() => {
           setShowGuestModal(false);
-          navigate("/auth?mode=signup");
+          navigate("/auth");
         }}
         onContinuePlaying={() => setShowGuestModal(false)}
       />

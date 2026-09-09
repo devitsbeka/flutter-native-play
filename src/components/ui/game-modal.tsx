@@ -46,7 +46,11 @@ const FloatingStar = React.memo(({ index }: { index: number }) => {
   
   return (
     <motion.div
-      className="absolute text-2xl pointer-events-none"
+      // The glyph carries no colour of its own, so it inherited the modal's
+      // near-black body text and four solid black stars sat on a white sheet
+      // — decoration reading as a rendering fault. Violet, and translucent,
+      // so it stays behind the content it decorates.
+      className="absolute text-2xl pointer-events-none select-none text-[#a78bfa]/70 [text-shadow:0_1px_6px_rgba(167,139,250,0.45)]"
       style={{
         [side]: `${sideOffset}%`,
         top: `${topOffset}%`,

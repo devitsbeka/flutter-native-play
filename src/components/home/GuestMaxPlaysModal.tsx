@@ -1,6 +1,6 @@
 import triviaBuzzer from "@/assets/icons/trivia-buzzer.png";
 import React from "react";
-import { Sparkles, Trophy, Lock } from "lucide-react";
+import { Ban, Sparkles, Trophy, Lock } from "lucide-react";
 import { GameModal } from "@/components/ui/game-modal";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -43,8 +43,14 @@ export const GuestMaxPlaysModal = React.forwardRef<HTMLDivElement, GuestMaxPlays
           {/* Benefits list */}
           <div className="flex flex-col gap-3 mb-5">
             <div className="flex items-center gap-3 px-4 py-3.5 rounded-xl bg-[hsl(270,80%,95%)] border border-[hsl(270,60%,85%)]">
-              <Sparkles className="w-5 h-5 text-[hsl(270,60%,50%)] shrink-0" />
-              <span className="text-sm font-medium text-foreground">{t("guestModal.createAnimatedAvatar")}</span>
+              {/* No ads, not "create an animated avatar". An account does not
+                  grant an animated avatar — that is a PRO benefit — so the
+                  first thing this modal promised was something signing up
+                  does not give you. Reuses extra.proBenefitNoAdsShort, which
+                  every locale already carries, rather than a second string
+                  saying the same words. */}
+              <Ban className="w-5 h-5 text-[hsl(270,60%,50%)] shrink-0" />
+              <span className="text-sm font-medium text-foreground">{t("extra.proBenefitNoAdsShort")}</span>
             </div>
             <div className="flex items-center gap-3 px-4 py-3.5 rounded-xl bg-[hsl(140,60%,93%)] border border-[hsl(140,40%,80%)]">
               <Trophy className="w-5 h-5 text-[hsl(140,50%,40%)] shrink-0" />

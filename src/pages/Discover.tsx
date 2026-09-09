@@ -22,6 +22,8 @@ import { HeaderActions } from "@/components/shared/HeaderActions";
 import { Capacitor } from "@capacitor/core";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ProPaywallModal } from "@/components/pro/ProPaywallModal";
+import { SubscriptionTerms } from "@/components/shared/SubscriptionTerms";
+import { GOLD_BUTTON } from "@/components/shop/ProBannerCard";
 import { useInAppPurchases } from "@/hooks/useInAppPurchases";
 import { useStorePrice } from "@/hooks/useStorePrice";
 import { availablePlans, defaultPlan, periodKeyFor } from "@/config/proPlans";
@@ -155,7 +157,7 @@ export default function Discover() {
     const plan = defaultPlan(
       availablePlans(products.map((p) => p.productId), Capacitor.isNativePlatform()),
     );
-    if (!plan) return { note: "", hasTrial: false };
+    if (!plan) return { note: "", hasTrial: false, priceLine: "", trialDays: 0 };
     const price = resolvePrice(plan.productId, PRICES[plan.priceKey].USD, plan.priceKey).display;
     // The trial is whatever the store product actually carries, not a figure
     // from the bundle — promising free days App Store Connect does not grant
@@ -169,7 +171,12 @@ export default function Discover() {
       // The plan it opens on is the year, so this reads "/ year" — the
       // yearly total was printed as a monthly price here for a while.
       .replace("{period}", t(periodKeyFor(plan)));
-    return { note, hasTrial: Boolean(trialDays) };
+    // The same price and period the note carries, for the button face. A CTA
+    // that names its price converts better than one that says "Get PRO" and
+    // makes the reader hunt for the number underneath — and it is the shape
+    // every other buy button in the app already has.
+    const priceLine = `${price} / ${t(periodKeyFor(plan))}`;
+    return { note, hasTrial: Boolean(trialDays), priceLine, trialDays: trialDays ?? 0 };
   }, [products, resolvePrice, t]);
 
   useEffect(() => {
@@ -550,43 +557,75 @@ export default function Discover() {
            * pointer-events-auto is on the button alone; everything else here
            * stays transparent to touch, so a drag from the middle of the
            * cover still pulls the sheet up. */}
-          <div className="absolute inset-0 text-center text-white [text-shadow:0px_3px_21px_rgba(0,0,0,0.16)]">
+          <div className="absolute inset-0 flex flex-col items-center text-center text-white [text-shadow:0px_3px_21px_rgba(0,0,0,0.16)]">
             {/* The rule under the header: 441 wide at the frame's 500, one
                 pixel, in the lilac the file draws it in — at 70%, a third
                 quieter than the frame has it, which is where it stops
                 competing with the title. */}
-            <div aria-hidden className="absolute left-1/2 -translate-x-1/2 top-[78px] h-px w-[min(441px,88.2vw)] bg-[#b8a6f5]/70" />
+            <div aria-hidden className="mt-[78px] h-px w-[min(441px,88.2vw)] shrink-0 bg-[#b8a6f5]/70" />
 
-            <h2 className="absolute left-1/2 -translate-x-1/2 top-[calc(78px_+_min(50px,10vw,6.4dvh))] w-[min(393px,86vw)] font-display uppercase text-[min(40px,8vw)] leading-[min(43px,8.6vw)] tracking-[0.5px]">
-              {t("discover.promoTitle")}
-            </h2>
+            {/* A centred column rather than the chain of absolute tops this
+                used to be. Every line was pinned to `78px + min(a, b vw, c
+                dvh)`, and the next line's offset was the previous one's plus
+                its own height — so the price note had to restate the
+                button's height and its gap to stay clear of it, and adding
+                anything (the renewal terms below) meant recomputing the lot.
+                Centred in the space under the rule, the block simply grows
+                from the middle and cannot collide with itself.
 
-            <p className="absolute left-1/2 -translate-x-1/2 top-[calc(78px_+_min(148px,29.6vw,19dvh))] w-full px-6 text-[min(18px,3.6vw)] leading-[min(20.7px,4.14vw)] tracking-[-0.16px]">
-              {t("discover.promoSubtitle")}
-            </p>
+                pointer-events stay off everywhere but the button, so a drag
+                from the middle of the cover still pulls the sheet up. */}
+            <div className="flex min-h-0 w-full flex-1 flex-col items-center justify-center gap-[min(14px,2.8vw,1.8dvh)] px-6 pb-[min(30px,6vw,4dvh)]">
+              <h2 className="max-w-[min(393px,86vw)] font-display text-[min(38px,7.6vw)] font-bold uppercase leading-[1.08] tracking-[0.5px]">
+                {t("discover.promoTitle")}
+              </h2>
 
-            <button
-              type="button"
-              onClick={() => setPaywallOpen(true)}
-              className="pointer-events-auto absolute left-1/2 -translate-x-1/2 top-[calc(78px_+_min(192px,38.4vw,24dvh))] h-[min(53px,10.6vw,6.8dvh)] w-[min(192px,38.4vw)] rounded-[min(18.386px,3.68vw)] border-[1.532px] border-solid border-[#e8e0f5] bg-white/80 text-[#5d247f] text-[min(16px,3.2vw)] font-bold uppercase tracking-[-0.16px] [text-shadow:none] shadow-[0px_3.698px_0px_0px_#d8d0e8,0px_5.546px_14.79px_0px_rgba(0,0,0,0.1)] active:translate-y-[2px] active:shadow-[0px_1.5px_0px_0px_#d8d0e8,0px_2px_8px_0px_rgba(0,0,0,0.1)] transition-all"
-            >
-              {t(offer.hasTrial ? "discover.promoCta" : "paywall.ctaSubscribe")}
-            </button>
+              <p className="max-w-[min(360px,82vw)] text-[min(17px,3.4vw)] leading-[1.3] tracking-[-0.16px] text-white/90">
+                {t("discover.promoSubtitle")}
+              </p>
 
-            {/* Hangs off the BUTTON, not off either edge of the cover. The
-                frame's flat 363px sank it under the sheet on short phones;
-                pinning it to the cover's bottom then ran it INTO the button
-                on wide ones.
+              {/* The app's own selling button, not a pale pill. Gold is what
+                  PRO wears everywhere it is sold (GOLD_BUTTON is exported
+                  from the banner card precisely so no surface invents a
+                  second one), and the price rides on the face. */}
+              <button
+                type="button"
+                onClick={() => setPaywallOpen(true)}
+                className="pointer-events-auto relative mt-[min(4px,1vw)] flex h-[min(56px,11.2vw,7dvh)] w-[min(300px,80vw)] items-center justify-center overflow-hidden rounded-[16px] border border-solid border-[#e9e5fa] px-4 [text-shadow:none] transition-transform active:translate-y-[3px]"
+                style={{ boxShadow: "0px 4.57px 0px 0px #841a66, 0px 7.617px 18.282px 0px rgba(132,26,102,0.17)" }}
+              >
+                <span aria-hidden className="absolute inset-0 rounded-[inherit]" style={{ backgroundImage: GOLD_BUTTON }} />
+                <span aria-hidden className="absolute inset-0 rounded-[inherit] shadow-[inset_0px_3px_0px_0px_rgba(255,255,255,0.35)]" />
+                <span className="relative truncate text-[min(17px,3.4vw)] font-bold text-white">
+                  {/* Free is spoken ONLY over a product the store actually
+                      grants free days on — the paywall's ctaTrial rule, and
+                      the reason this is not simply the friendlier label
+                      always. Promising days App Store Connect does not
+                      grant is a 2.3.1 rejection on the first screen the
+                      offer appears.
+                
+                      When there IS a trial the button names its length
+                      rather than saying "free" vaguely: the length is the
+                      offer, and the charge that follows is spelled out in
+                      the note directly beneath. Configure the introductory
+                      offer on the product and this branch lights up on its
+                      own — nothing here needs changing. */}
+                  {offer.hasTrial
+                    ? t("discover.promoCtaTrialDays").replace("{days}", String(offer.trialDays))
+                    : t("shop.buyFor").replace("{price}", offer.priceLine)}
+                </span>
+              </button>
 
-                Every offset above carries a dvh cap for the same reason it
-                carries a vw one: the cover is 47dvh, so on a wide-SHORT
-                window (492x772, where this last line went under the sheet
-                again) the vw terms outgrow it. Capped in both, the whole
-                offer shrinks with whichever axis is tighter and this line
-                stays inside the cover. */}
-            <p className="absolute top-[calc(78px_+_min(192px,38.4vw,24dvh)_+_min(53px,10.6vw,6.8dvh)_+_min(8px,1.6vw,1dvh))] left-1/2 -translate-x-1/2 w-full px-6 text-[min(14px,2.8vw)] leading-[min(20.7px,4.14vw)] tracking-[-0.16px]">
-              {offer.note}
-            </p>
+              <p className="max-w-[min(360px,82vw)] text-[min(13.5px,2.7vw)] leading-[1.35] tracking-[-0.16px] text-white/85">
+                {offer.note}
+              </p>
+
+              {/* The auto-renewal disclosure. Native only, by its own design
+                  — the copy names the Apple ID account and the App Store's
+                  subscription settings, and on the web this button opens
+                  Stripe, which states its own terms. See SubscriptionTerms. */}
+              <SubscriptionTerms className="max-w-[min(380px,86vw)] text-white/70 [&_a]:text-white/90" />
+            </div>
           </div>
 
           {/* Last, and over the copy, as the frame stacks it. */}

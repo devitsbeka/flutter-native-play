@@ -365,6 +365,7 @@ export const ka = {
     promoTitle: "მიიღე სრული წვდომა",
     promoSubtitle: "ყველა დონე + ულიმიტო თამაში",
     promoCta: "სცადე უფასოდ",
+    promoCtaTrialDays: "სცადე {days} დღე უფასოდ",
     promoNote: "{price} / {period}, გააუქმე ნებისმიერ დროს",
     promoNoteTrial: "{days} დღე უფასოდ, შემდეგ {price} / {period}",
     free: "უფასო",

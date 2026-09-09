@@ -613,7 +613,7 @@ export function MatchResultScreen() {
         onRegister={() => {
           setShowGuestModal(false);
           resetGame();
-          navigate("/auth?mode=signup");
+          navigate("/auth");
         }}
         onContinuePlaying={() => {
           setShowGuestModal(false);

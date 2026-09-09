@@ -299,6 +299,7 @@ export const pt: KaTranslations = {
     promoTitle: "Tenha acesso total",
     promoSubtitle: "Todos os níveis + jogo ilimitado",
     promoCta: "Testar grátis",
+    promoCtaTrialDays: "Teste {days} dias grátis",
     promoNote: "{price} / {period}, cancele quando quiser",
     promoNoteTrial: "{days} dias grátis, depois {price} / {period}",
     free: "Grátis",
