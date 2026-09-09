@@ -1471,6 +1471,20 @@ export function RoomLobbyV2() {
    */
   const playsOwnTrivia = roomPlaysOwnTrivia(currentRoom, isPublicRoom, queue);
 
+  /**
+   * A room that has played keeps its visibility.
+   *
+   * A public room is made for one play and is wound down once that play is
+   * over (public_room_is_over, #675). It stays on the host's own list in
+   * the meantime - which is where the switch let them make it private
+   * again, keeping for ever a room the server was about to close (owner:
+   * "i shouldn't do that"). The other way round is no better: a private
+   * room published after its play is listed as already played out. So the
+   * switch is for a room that has not played yet, and the roster's round
+   * counts say whether it has.
+   */
+  const roomHasPlayed = participants.some((p) => (p.total_rounds_played ?? 0) > 0);
+
   const lobbyRules: LobbyRuleRow[] = [
     // No player-count picker on a classic room (owner's ask): the cap is 10
     // and the host starts whenever — with one friend or ten. The card no
@@ -1488,7 +1502,7 @@ export function RoomLobbyV2() {
       value: String(questionsPerRound(currentRoom.total_questions)),
       onChange: isHost && !rulesLocked ? (v: string) => void setQuestions(v) : undefined,
     } satisfies LobbyRuleRow]),
-    ...(playsOwnTrivia ? [] : [{
+    ...(playsOwnTrivia || roomHasPlayed ? [] : [{
       key: "visibility",
       label: t("lobby.uVisibility"),
       options: [
@@ -1526,7 +1540,7 @@ export function RoomLobbyV2() {
    * staked and nobody pays for a game they did not agree to (owner's ask).
    * Solo, or with nobody else seated, there is nobody to ask.
    */
-  const isRematch = participants.some((p) => (p.total_rounds_played ?? 0) > 0);
+  const isRematch = roomHasPlayed;
   const tableToAsk = participants.filter(
     (p) => p.user_id !== user?.id && (p.status as string) !== "invited",
   );

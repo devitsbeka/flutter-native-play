@@ -29,7 +29,8 @@ const results = read("src/components/team/GameResultsScreenV2.tsx");
 
 describe("the lobby's Start asks the table on a later match", () => {
   it("a rematch is a table that has played, with somebody else seated", () => {
-    expect(lobby).toMatch(/const isRematch = participants\.some\(\(p\) => \(p\.total_rounds_played \?\? 0\) > 0\);/);
+    expect(lobby).toMatch(/const roomHasPlayed = participants\.some\(\(p\) => \(p\.total_rounds_played \?\? 0\) > 0\);/);
+    expect(lobby).toMatch(/const isRematch = roomHasPlayed;/);
     expect(lobby).toMatch(/const asksTable = isRematch && tableToAsk\.length > 0;/);
     expect(lobby).toMatch(/\(p\) => p\.user_id !== user\?\.id && \(p\.status as string\) !== "invited",/);
   });

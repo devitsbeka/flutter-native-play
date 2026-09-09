@@ -90,7 +90,8 @@ describe("the icon is both written and resolved", () => {
 
 describe("the rows a private room does not have", () => {
   it("visibility stands down for an own-trivia room", () => {
-    expect(lobby).toMatch(/\.\.\.\(playsOwnTrivia \? \[\] : \[\{\s*\n\s*key: "visibility",/);
+    // ...and for a room that has played (playedRoomKeepsVisibility.test).
+    expect(lobby).toMatch(/\.\.\.\(playsOwnTrivia \|\| roomHasPlayed \? \[\] : \[\{\s*\n\s*key: "visibility",/);
   });
 
   it("and so does joining", () => {
