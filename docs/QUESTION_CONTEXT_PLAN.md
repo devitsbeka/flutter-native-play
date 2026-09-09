@@ -8,7 +8,10 @@ answer**, not authored:
 
 Four phrasings per verdict, picked by a hash of the question id so it stays put
 across re-renders (`src/utils/answerContext.ts`). It reads naturally and it is
-not a fact. This plan replaces it with real per-question context.
+not a fact. This plan replaces it with real per-question context, **in all seven
+languages, across the whole bank** — 74,391 active questions in `ka`, `en`,
+`es`, `fr`, `de`, `it` and `pt`. Coverage is measured per language, and the
+number that matters is the lowest one.
 
 Written against `main` at `a2364b7`. Every number below was measured against
 this repo or this project's database, not assumed — the method is in the
@@ -28,18 +31,32 @@ appendix so you can re-run it.
 At 18px on the narrowest common phone, three lines is 130 Latin characters —
 but only **86 Georgian**. Georgian is the content language. Part 1.
 
-**2. The work is ~17k questions, not 74k.**
-There are 74,391 active questions across seven languages, but they are not
-74,391 independent questions: `translated_from` links each translation to its
-source (`20260828120000_question_translations.sql:16-22`). Only the source rows
-need authoring:
+**2. The goal is all seven languages at full coverage — 74,391 rows.**
+That is not 74,391 pieces of authoring. `translated_from` links each
+translation to its source (`20260828120000_question_translations.sql:16-22`),
+so context authored on a source row travels with the text. What matters is
+which rows are sources, and **every language has some**:
 
-| Rows | Count | What they are |
-|---|---|---|
-| `en`, `translated_from IS NULL` | 9,015 | The English source bank |
-| `ka`, `translated_from IS NULL` | 7,944 | Georgian originals (authored, never translated from English) |
-| **Total to author** | **~16,959** | |
-| Everything else | ~57,400 | Translations, which carry the context along with the text |
+| Language | Active rows | Source (`translated_from IS NULL`) | Translated |
+|---|---|---|---|
+| `ka` | 16,806 | **7,944** | 8,862 |
+| `en` | 9,082 | **9,015** | 67 |
+| `es` | 9,666 | **867** | 8,799 |
+| `fr` | 9,687 | **888** | 8,799 |
+| `de` | 9,808 | **893** | 8,915 |
+| `it` | 9,680 | **881** | 8,799 |
+| `pt` | 9,662 | **863** | 8,799 |
+| **Total** | **74,391** | **21,351** | **53,040** |
+
+Two consequences, and the second is easy to miss:
+
+- **Author 21,351 rows, carry 53,040.** Roughly 2,140 batched LLM calls, not
+  7,400.
+- **~4,392 of those sources are not English or Georgian.** Each of es/fr/de/it/pt
+  has 860-900 rows that exist only in that language and are a translation of
+  nothing. No amount of work on the English bank ever reaches them. They need
+  generation **in their own language**, or those five languages top out around
+  91% coverage and the gap is invisible until a player hits it.
 
 **3. Translations will not backfill themselves.**
 `translate-questions/index.ts:264-266` upserts with
@@ -175,11 +192,13 @@ with a status).
       Use the `-pro` tier only if flash fails the quality bar in Part 3's pilot.
 - [ ] `BATCH_SIZE = 10`, matching both shorteners.
 - [ ] Selection: `is_active = true`, `translated_from IS NULL`,
-      `explanation_status IS NULL`, `language IN ('en','ka')`. Order by
-      `category_id` so a category becomes fully covered before the next starts —
-      the same reasoning as `get_untranslated_questions`
-      (`20260828120000:31-50`), and it means partial completion is still
-      shippable for whole categories.
+      `explanation_status IS NULL` — **every language, not just `en` and `ka`**.
+      All seven have source rows (Part 0), and the ~4,392 in es/fr/de/it/pt are
+      reachable no other way. Order by `(language, category_id)` so a language's
+      category becomes fully covered before the next starts — the same reasoning
+      as `get_untranslated_questions` (`20260828120000:31-50`), and it means
+      partial completion is still shippable per language and per category rather
+      than leaving every language 60% done.
 - [ ] `supabase/config.toml`: `verify_jwt = true` if admin-invoked. If you want
       it cron-driven instead, copy the `x-cron-secret` guard from
       `translate-questions/index.ts:187-190` and set `verify_jwt = false`.
@@ -229,15 +248,18 @@ or the next run will pick it up forever.
 
 ### Scale and cost
 
-~16,959 source rows ÷ 10 per batch ≈ **1,700 LLM calls**. Rough token budget:
-~350 in / ~60 out per question, so ~6M input and ~1M output tokens total. What
-that costs depends entirely on which provider `_shared/ai.ts` resolves to —
+21,351 source rows ÷ 10 per batch ≈ **2,140 LLM calls**. Rough token budget:
+~350 in / ~60 out per question, so ~7.5M input and ~1.3M output tokens total.
+What that costs depends entirely on which provider `_shared/ai.ts` resolves to —
 check the configured one; do not price it against a provider this repo does not
 use.
 
-- [ ] **Pilot first: one category, ~200 questions, both languages.** Read all
-      200 by hand. This is a content quality problem, and the only way to know
-      whether the prompt produces facts or filler is to read the output. Tune,
+- [ ] **Pilot first: one category, ~200 questions — and sample every language,
+      not only English.** Read them by hand. This is a content quality problem,
+      and the only way to know whether the prompt produces facts or filler is to
+      read the output. A prompt that writes well in English can produce stilted
+      or subtly wrong Georgian, and nothing downstream will catch that: there is
+      no equivalent of `no-mixed-language.test.ts` for the question bank. Tune,
       then run the rest.
 
 ---
@@ -257,14 +279,22 @@ missing from that list is NULL in every translated row, forever.
       same length validation as Part 3.
 - [ ] Add it to the insert at L246-260.
 - [ ] **Add a backfill mode.** The `ignoreDuplicates: true` upsert at L264-266
-      means the ~57,400 already-translated rows are permanently invisible to
-      this function. Either:
+      means all **53,040** already-translated rows are permanently invisible to
+      this function — that is 71% of the bank, and six of the seven languages
+      are mostly made of them. Either:
       - a `mode: "explanations"` branch that selects translated rows where
         `explanation IS NULL` and their source has one, and `UPDATE`s them; or
       - a separate `backfill-question-context` function that does the same.
 
-      Without this, the feature covers new translations only and looks broken in
-      six of seven languages.
+      Without this, the feature covers new translations only. English would be
+      ~99% covered and every other language in single digits — which reads as a
+      broken feature, not a partial one.
+
+- [ ] Consider a `question_explanation_progress()` SQL function alongside the
+      existing `question_translation_progress()`
+      (`20260828120000:53-69`, granted to `authenticated, service_role`). Same
+      shape, same purpose: per-language coverage you can read without a
+      service-role key. It is how you will know when this is actually done.
 
 - [ ] Also add `explanation` to the explicit insert column lists in
       `Flow.tsx:593-605` and `:633-646`, and `useQuestionStudio.ts:253` / `:313`,
@@ -324,16 +354,22 @@ Approve/reject already exists in three places with three vocabularies
 Each phase is independently shippable and safe to stop after.
 
 1. **Budget constants + UI clamp.** No backend. Ships alone, makes every later
-   phase's limit correct. *(Part 1)*
+   phase's limit correct — including the per-language caps, so nothing authored
+   later has to be redone. *(Part 1)*
 2. **Migration + types regeneration.** No behaviour change. *(Part 2)*
 3. **Read path.** Threads a column that is NULL everywhere; the card keeps
    showing generated lines. Ships alone, zero visible change, de-risks the big
    one. *(Part 5)*
-4. **Generator + pilot on one category.** Read all 200 by hand. Iterate the
-   prompt here, not later. *(Part 3)*
-5. **Full source-row run** (~1,700 calls, `en` + `ka` originals). Real context
-   appears in two languages. *(Part 3)*
-6. **Translation carry + backfill.** The other five languages. *(Part 4)*
+4. **Generator + pilot on one category, sampled across languages.** Read them by
+   hand. Iterate the prompt here, not later. *(Part 3)*
+5. **Translation carry + backfill, wired before the full run.** Out of order on
+   purpose: build the carry path *first* so that when generation lands on a
+   source row it propagates immediately, instead of authoring 21k rows and then
+   discovering the 53k downstream rows need a second mechanism. *(Part 4)*
+6. **Full source-row run — all seven languages** (~2,140 calls over 21,351
+   rows). Coverage climbs in every language at once rather than English first.
+   Ordered by `(language, category_id)`, so at any point the completed
+   categories are complete everywhere. *(Part 3)*
 7. **Studio field.** Human repair path for the ones the model got wrong.
    *(Part 6)*
 
@@ -346,10 +382,33 @@ Each phase is independently shippable and safe to stop after.
   layout.
 - No explanation exceeds its language's cap — assert it in a test over a sample,
   the way `repo-invariants` asserts the things that have actually broken.
+- **Every language reaches the same coverage.** Not "English is done" — the
+  acceptance number is per language, and the five smaller banks each have ~880
+  orphan source rows that only a direct pass reaches:
+
+  ```sql
+  select language,
+         count(*)                                                as rows,
+         count(explanation)                                      as with_context,
+         round(100.0 * count(explanation) / count(*), 1)         as pct
+    from public.questions
+   where is_active
+   group by language
+   order by pct;
+  ```
+
+  Ship when the *lowest* row in that table is acceptable, not the highest.
+- Each language's explanations respect **its own** cap (ka 85, de 105, rest
+  120) — one global number would either overflow Georgian or waste a third of
+  the Latin budget.
 - The seven languages agree: a translated row's explanation says the same thing
   its source does.
-- A category that has been through the generator is 100% covered, not 80% —
-  which is why the generator orders by category.
+- Spot-check that Georgian rows contain Georgian. `fix-mixed-language-questions`
+  and `verify-georgian-grammar` exist because this has gone wrong in the
+  question bank before, and the bank has no automated language guard.
+- A category that has been through the generator is 100% covered in that
+  language, not 80% — which is why the generator orders by
+  `(language, category_id)`.
 - Re-running the generator processes zero rows (every processed row has a
   non-NULL status).
 
@@ -367,10 +426,18 @@ Each phase is independently shippable and safe to stop after.
 3. **Who authors the pilot's quality bar?** The prompt in Part 3 is a starting
    point. Somebody has to read 200 candidate sentences and say "this one is
    filler". That judgement cannot be delegated to the model that wrote them.
-4. **`ka` originals vs the English bank.** The 7,944 Georgian originals have no
-   English counterpart, so they need their own generation pass in Georgian —
-   confirmed in the counts, but worth deciding whether they are in scope for
-   phase 5 or a later one.
+4. **Do the five smaller banks get their own pass, or do they wait?** The
+   ~4,392 orphan source rows in es/fr/de/it/pt are 9% of those languages and
+   unreachable from English. Recommendation: include them in phase 6 — they are
+   a fifth of a percent of the total call budget and excluding them is what
+   makes a feature feel half-built in exactly the languages nobody on the team
+   reads.
+5. **Does authored context translate, or get re-authored per language?** The
+   plan translates, which keeps the seven languages saying the same thing and
+   costs one call per source row. Re-authoring per language would read more
+   idiomatically and costs 3.5× more calls plus seven quality bars instead of
+   one. Recommendation: translate, and re-author only where the pilot shows
+   translation losing the point of the fact.
 
 ---
 
@@ -400,4 +467,16 @@ Sans"')` — or you are measuring the fallback and the numbers will be wrong.
 ```bash
 curl -sI "$URL/rest/v1/questions?select=id&language=eq.en&translated_from=is.null" \
   -H "apikey: $ANON" -H "Prefer: count=exact" -H "Range: 0-0" | grep -i content-range
+```
+
+**Per-language source vs translated split.** The table in Part 0, regenerated:
+
+```bash
+for L in ka en es fr de it pt; do
+  for F in "" "&translated_from=is.null" "&translated_from=not.is.null"; do
+    curl -sI "$URL/rest/v1/questions?select=id&is_active=eq.true&language=eq.$L$F" \
+      -H "apikey: $ANON" -H "Prefer: count=exact" -H "Range: 0-0" \
+      | grep -i content-range
+  done
+done
 ```
