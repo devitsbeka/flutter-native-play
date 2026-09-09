@@ -93,4 +93,59 @@ BEGIN
   PERFORM pg_temp.must_equal(n, 1, 'a signed-in player can still claim their daily reward');
 END $$;
 
-\echo 'ok: money functions are not reachable by anon'
+-- ---------------------------------------------------------------------------
+-- ...and the INTERNAL ones are reachable by neither role.
+--
+-- Everything above checks `anon`, and has been green since it was written.
+-- It was also only half the trap. The same explicit default grant Supabase
+-- hands `anon` it also hands `authenticated`, so `REVOKE ... FROM public`
+-- alone leaves a function open to anyone signed in — which is anyone who can
+-- tap "create account".
+--
+-- Five SECURITY DEFINER functions were in that state, each documented as
+-- internal and each revoked FROM public alone. The worst was
+-- `apply_currency_grant`: the UNCAPPED credit primitive that
+-- `credit_gameplay_reward` exists to wrap so a ceiling can be applied first.
+-- One rpc call minted 999 999 coins and 9 999 gems, bypassing every row in
+-- currency_grant_limits — the whole server-authoritative currency system,
+-- undone by the function it was built around.
+--
+-- The rule: a function no migration ever GRANTs is internal, and internal
+-- means neither role. Named explicitly rather than derived, because a derived
+-- list grows silently and this check already failed once by being too narrow.
+DO $$
+DECLARE bad text;
+BEGIN
+  SELECT string_agg(p.proname || ' (' || r.rolname || ')', ', ') INTO bad
+    FROM pg_proc p
+    JOIN pg_namespace n ON n.oid = p.pronamespace
+    CROSS JOIN (VALUES ('anon'), ('authenticated')) AS r(rolname)
+   WHERE n.nspname = 'public'
+     AND p.proname IN (
+       'apply_currency_grant', 'befriend_room_players', 'grant_power_ups',
+       'claim_avatar_generation', 'refund_avatar_generation'
+     )
+     AND has_function_privilege(r.rolname, p.oid, 'EXECUTE');
+  IF bad IS NOT NULL THEN
+    RAISE EXCEPTION
+      'internal functions are callable: % -- revoke FROM PUBLIC, anon, authenticated (not FROM public alone)',
+      bad;
+  END IF;
+END $$;
+
+-- The capped wrappers must still work, or the revoke went too far and took
+-- the legitimate path with it.
+DO $$
+DECLARE n bigint;
+BEGIN
+  SELECT count(*) INTO n
+    FROM pg_proc p JOIN pg_namespace nn ON nn.oid = p.pronamespace
+   WHERE nn.nspname = 'public'
+     AND p.proname IN ('credit_gameplay_reward', 'purchase_shop_item',
+                       'purchase_power_up', 'grant_reward_power_up',
+                       'claim_vip_frame', 'exchange_currency')
+     AND has_function_privilege('authenticated', p.oid, 'EXECUTE');
+  PERFORM pg_temp.must_equal(n, 6, 'the capped wrappers a signed-in player needs still work');
+END $$;
+
+\echo 'ok: money functions are not reachable by anon, and internal ones by nobody'

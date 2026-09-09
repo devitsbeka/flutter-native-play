@@ -207,7 +207,7 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
   const finishAndClose = onComplete || onClose;
   const { user, profile, updateProfile } = useAuth();
   const { isVip } = useVipStatus();
-  const { gems, spendGems } = useCurrency();
+  const { gems } = useCurrency();
   const { t } = useLanguage();
   const navigate = useNavigate();
   // Which mascot backs the home screen — the mascots grid below sets it.
@@ -575,18 +575,18 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
       toast.error(message);
       return;
     }
+    // The charge is the SERVER's now — generate-avatar claims it before it
+    // spends anything on the model, and refunds if the generation fails.
+    //
+    // This used to be `spendGems()` right here, with the quota counted in the
+    // browser from rows the browser can write and the function itself checking
+    // nothing at all. Deleting this one line was unlimited AI generation at
+    // our expense, which is the same fault as the shop's and a more expensive
+    // one: a free gem is inventory we invented, a free image is a bill.
+    //
+    // `decision` still runs, because the UI has to say what the tap will cost
+    // before it happens. It just no longer does anything about it.
     if (decision.action === "charge") {
-      const paid = await spendGems(decision.gems, {
-        productType: "avatar_generation",
-        productId: "avatar",
-        valueReceived: { kind: "avatar", generations: 1 },
-      });
-      if (!paid) {
-        const message = t("avatar.needGemsForExtra", { cost: decision.gems });
-        setFailure({ message });
-        toast.error(message);
-        return;
-      }
       toast.success(t("avatar.paidWithGems", { cost: decision.gems }));
     }
 

@@ -20,7 +20,17 @@ export async function generatePublicPortrait(
 ): Promise<string | null> {
   try {
     const { data, error } = await supabase.functions.invoke("generate-avatar", {
-      body: { imageUrl: photoUrl, mode: "portrait", prompt: PORTRAIT_AVATAR_PROMPT },
+      body: {
+        imageUrl: photoUrl,
+        mode: "portrait",
+        prompt: PORTRAIT_AVATAR_PROMPT,
+        // Only a portrait the PERSON asked for is chargeable. `avatar_` is
+        // derived from a scene and `heal_` repairs a broken one — neither was
+        // requested, and neither has ever cost a gem. The server charges from
+        // this and caps every generation regardless of it, so a caller lying
+        // here buys a daily allowance, not an unlimited one.
+        billable: prefix === "portrait",
+      },
     });
     if (error || !data?.success || !data.avatarUrl) return null;
 

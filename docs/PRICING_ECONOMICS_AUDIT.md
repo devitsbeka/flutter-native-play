@@ -588,6 +588,67 @@ Ordered by money at risk, not by effort. What each one turned into:
 | 13 | The Stripe secret-key form removed; the rows deleted | `admin/Settings.tsx`, `20261104120000` |
 | 14 | `[functions.create-pro-checkout]` declared | `supabase/config.toml` |
 
+### Found on a third pass — and the largest hole in the whole audit
+
+Checking the remaining `spendGems` call sites led to two things that were not
+in the original audit at all. The second is worse than anything in it.
+
+**§15. AI avatar generation was free to anyone who skipped the payment.**
+`AvatarModal.generateAvatar()` counted the quota in the browser, decided in
+the browser whether to charge, and called `spendGems` in the browser — and
+`generate-avatar` checked *nothing*: no quota, no balance, no ceiling. Deleting
+one line, or calling the endpoint with a JWT, was unlimited generation. Same
+fault as the shop's, with the cost being real: a free gem is inventory we
+invented, a free image is a bill from the model provider.
+
+Now `claim_avatar_generation` charges server-side before a token is spent, and
+`generate-avatar` refunds if the generation then fails. Whether a generation is
+*billable* still comes from the caller — only the caller knows whether a person
+asked for a portrait or the app derived one — so a hard **daily ceiling**
+applies to every claim regardless. Lying about `billable` buys a day's
+allowance, not an unlimited one, which is what actually bounds the bill.
+
+**§16. `apply_currency_grant` was callable by any signed-in user.** This is the
+one to read twice. It is the uncapped credit primitive introduced in
+`20260813150000` under the comment *"Not granted to anyone. Everything below
+calls it"* — the thing `credit_gameplay_reward` wraps precisely so a ceiling
+can be applied first. One call:
+
+```js
+await supabase.rpc('apply_currency_grant', {
+  p_user_id: me, p_kind: 'x', p_coins: 999999, p_gems: 9999 })
+```
+
+returns the new balance. Every row in `currency_grant_limits` bypassed — the
+entire server-authoritative currency system, undone by the function it was
+built around. **Live in production today**, and older than any change on this
+branch.
+
+The cause is the trap `supabase/tests/08-money-not-anon.sql` already documents
+in full: Supabase's bootstrap grants new functions to `anon` and
+`authenticated` *explicitly*, so `REVOKE ALL ... FROM public` — which revokes
+the PUBLIC pseudo-role — leaves the explicit grant untouched. That test caught
+it for `anon` and has been green ever since. It never checked `authenticated`.
+
+Five functions were in that state: `apply_currency_grant`,
+`befriend_room_players`, and three I had just added on this branch —
+`grant_power_ups`, `claim_avatar_generation`, `refund_avatar_generation`.
+`20261104140000` revokes all five from `PUBLIC, anon, authenticated`, and
+`08-money-not-anon.sql` now asserts both roles, verified by re-granting one and
+watching it fail.
+
+Two process notes, since they are the reason this was found at all:
+
+- **It was found by asking Postgres, not by reading the migrations.**
+  `has_function_privilege('authenticated', p.oid, 'EXECUTE')` across
+  `pg_proc`, cross-checked against the functions no migration ever GRANTs.
+  Reading the SQL would never have shown it — the SQL *looks* right.
+- **My first unit test for it asserted the bug.** It checked the migration
+  contained `REVOKE ... FROM PUBLIC` and passed, while the function was
+  callable. Naming PUBLIC alone *is* the mistake, so a test that accepts it
+  guarantees nothing. It now requires `anon` and `authenticated` by name — and
+  the real check remains the one that asks the database.
+
 ### Found on a second sweep, across every page and all seven locales
 
 The first pass followed the code paths. This one went the other way — every

@@ -250,3 +250,57 @@ SELECT set_config('test.uid','aaaaaaaa-0000-0000-0000-000000000001', false);
 UPDATE public.shop_catalog SET price_gems = 1 WHERE id = 'vip_month';
 SELECT id, price_gems FROM public.shop_catalog WHERE id = 'vip_month';
 RESET ROLE;
+
+\echo ''
+\echo '######## Avatar generation: charged by the server, capped by it too ########'
+
+RESET ROLE;
+UPDATE public.profiles SET gems = 3 WHERE user_id = 'aaaaaaaa-0000-0000-0000-000000000002';
+DELETE FROM public.avatar_generation_claims WHERE user_id = 'aaaaaaaa-0000-0000-0000-000000000002';
+
+\echo ''
+\echo '=== 33. claim_avatar_generation is NOT callable by a signed-in client (must FAIL) ==='
+SET ROLE authenticated;
+SELECT set_config('test.uid','aaaaaaaa-0000-0000-0000-000000000002', false);
+SELECT public.claim_avatar_generation('aaaaaaaa-0000-0000-0000-000000000002', true);
+RESET ROLE;
+
+\echo ''
+\echo '=== 34. First generation is inside the included allowance (must return free) ==='
+SELECT public.claim_avatar_generation('aaaaaaaa-0000-0000-0000-000000000002', true) AS outcome;
+
+\echo ''
+\echo '=== 35. The second costs a gem (must return charged, 3 -> 2 gems) ==='
+SELECT public.claim_avatar_generation('aaaaaaaa-0000-0000-0000-000000000002', true) AS outcome;
+SELECT gems FROM public.profiles WHERE user_id = 'aaaaaaaa-0000-0000-0000-000000000002';
+
+\echo ''
+\echo '=== 36. A derived portrait is never charged (must return free, gems unchanged) ==='
+SELECT public.claim_avatar_generation('aaaaaaaa-0000-0000-0000-000000000002', false) AS outcome;
+SELECT gems FROM public.profiles WHERE user_id = 'aaaaaaaa-0000-0000-0000-000000000002';
+
+\echo ''
+\echo '=== 37. Refund puts the gem back (2 -> 3) ==='
+SELECT public.refund_avatar_generation('aaaaaaaa-0000-0000-0000-000000000002');
+SELECT gems FROM public.profiles WHERE user_id = 'aaaaaaaa-0000-0000-0000-000000000002';
+
+\echo ''
+\echo '=== 38. Out of gems, over the allowance (must FAIL: insufficient gems) ==='
+UPDATE public.profiles SET gems = 0 WHERE user_id = 'aaaaaaaa-0000-0000-0000-000000000002';
+SELECT public.claim_avatar_generation('aaaaaaaa-0000-0000-0000-000000000002', true);
+
+\echo ''
+\echo '=== 39. The daily ceiling applies to NON-billable claims too (must FAIL at 20) ==='
+-- The whole point: a caller that lies about `billable` to dodge the gem gets a
+-- day''s allowance, not an unlimited one.
+DELETE FROM public.avatar_generation_claims WHERE user_id = 'aaaaaaaa-0000-0000-0000-000000000002';
+INSERT INTO public.avatar_generation_claims (user_id, charged, billable)
+SELECT 'aaaaaaaa-0000-0000-0000-000000000002', false, false FROM generate_series(1, 20);
+SELECT public.claim_avatar_generation('aaaaaaaa-0000-0000-0000-000000000002', false);
+
+\echo ''
+\echo '=== 40. Nobody can claim on another account (must FAIL) ==='
+SET ROLE authenticated;
+SELECT set_config('test.uid','aaaaaaaa-0000-0000-0000-000000000001', false);
+SELECT public.claim_avatar_generation('aaaaaaaa-0000-0000-0000-000000000002', true);
+RESET ROLE;

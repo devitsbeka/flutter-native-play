@@ -18,6 +18,11 @@ interface AvatarRequest {
   // Optional prompt override for testing/admin flows; the synced
   // ai_generation_settings prompt remains the default.
   prompt?: string;
+  // Whether the PERSON asked for this generation, as opposed to the app
+  // deriving or repairing one. Decides the gem charge only; the daily
+  // ceiling applies either way. Defaults false so an older client, which
+  // sends nothing, is never charged twice for what it already paid for.
+  billable?: boolean;
 }
 
 // The public circle avatar. This text is kept BYTE-IDENTICAL to the
@@ -129,18 +134,78 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Declared out here so the catch can undo the charge. A generation that
+  // took a gem and then failed is the state the released `iap_events` claim
+  // in _shared/iap.ts exists to avoid, one subsystem over.
+  let charged = false;
+  let claimUserId: string | null = null;
+
   try {
     if (!AI_API_KEY && !FAL_KEY) {
       throw new Error("AI_API_KEY is not configured");
     }
 
-    const { imageUrl, mode = "scene", prompt: promptOverride }: AvatarRequest = await req.json();
+    const {
+      imageUrl,
+      mode = "scene",
+      prompt: promptOverride,
+      billable = false,
+    }: AvatarRequest = await req.json();
 
     if (!imageUrl) {
       throw new Error("imageUrl is required");
     }
 
-    console.log(`Starting avatar generation (${mode}) for:`, imageUrl.substring(0, 100));
+    // Charge, and cap, BEFORE spending anything on the model.
+    //
+    // This function used to check nothing: not a quota, not a balance, not a
+    // ceiling. The whole payment lived in AvatarModal — it counted the quota
+    // in the browser, decided in the browser whether to charge, and called
+    // spendGems in the browser. Deleting that one line, or calling this
+    // endpoint directly with a JWT, was unlimited generation at our expense.
+    //
+    // `billable` says whether the person ASKED for this one; the app derives
+    // and repairs portraits on its own and those are not chargeable, and only
+    // the caller knows which this is. So the gem charge trusts it — and the
+    // daily ceiling inside claim_avatar_generation does not, which is what
+    // actually bounds the bill.
+    if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+      const jwt = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
+      const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+      const { data: userData } = await admin.auth.getUser(jwt);
+
+      if (!userData?.user) {
+        return new Response(
+          JSON.stringify({ success: false, error: "UNAUTHORIZED" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
+      claimUserId = userData.user.id;
+      const { data: claim, error: claimError } = await admin.rpc("claim_avatar_generation", {
+        p_user_id: claimUserId,
+        p_billable: billable === true,
+      });
+
+      if (claimError) {
+        // Insufficient gems and the daily ceiling are both refusals, not
+        // faults — say which, and generate nothing.
+        const reason = claimError.message?.includes("Insufficient")
+          ? "INSUFFICIENT_GEMS"
+          : claimError.message?.includes("Daily")
+            ? "DAILY_LIMIT_REACHED"
+            : "CLAIM_FAILED";
+        console.warn(`[GENERATE-AVATAR] Refused for ${claimUserId}: ${reason}`);
+        return new Response(
+          JSON.stringify({ success: false, error: reason }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
+      charged = claim === "charged";
+    }
+
+    console.log(`Starting avatar generation (${mode}, billable=${billable}, charged=${charged}) for:`, imageUrl.substring(0, 100));
 
     // Fetch settings from database
     let prompt = DEFAULT_PROMPT;
@@ -308,7 +373,20 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error generating avatar:', error);
-    
+
+    // Give the gem back. The person paid for an image and did not get one.
+    if (charged && claimUserId && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+      try {
+        await createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+          .rpc("refund_avatar_generation", { p_user_id: claimUserId });
+        console.log(`[GENERATE-AVATAR] Refunded ${claimUserId} after a failed generation`);
+      } catch (refundError) {
+        // Worth a loud log and nothing more: failing the refund must not
+        // replace the real error with a second one.
+        console.error("[GENERATE-AVATAR] Refund failed:", refundError);
+      }
+    }
+
     let errorMessage = 'Unknown error';
     if (error instanceof Error) {
       errorMessage = error.message;

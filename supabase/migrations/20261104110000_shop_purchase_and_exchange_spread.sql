@@ -278,7 +278,13 @@ BEGIN
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public.grant_power_ups(uuid, text, integer) FROM PUBLIC;
+-- FROM PUBLIC, anon, authenticated — not just PUBLIC. Supabase's default
+-- privileges grant new functions to anon and authenticated EXPLICITLY, and
+-- revoking the PUBLIC pseudo-role does not touch an explicit grant. See
+-- supabase/tests/08-money-not-anon.sql, and 20261104140000 for the five
+-- functions this had already been got wrong on.
+REVOKE ALL ON FUNCTION public.grant_power_ups(uuid, text, integer)
+  FROM PUBLIC, anon, authenticated;
 
 -- Power-ups bought with COINS, which is a different shop from the gem one.
 --
