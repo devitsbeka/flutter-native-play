@@ -5228,20 +5228,27 @@ export const en: KaTranslations = {
   // ==========================================
   // Answer feedback card (Figma 1154:9157)
   // ==========================================
+  //
+  // Plain statements of the fact, in every language, built from wording the
+  // locale already uses. The encouraging phrasing this started with could
+  // not be verified in five of the seven languages and was wrong in
+  // Georgian; a fallback that is merely flat beats one that is wrong, and
+  // the interesting line is the authored explanation
+  // (docs/QUESTION_CONTEXT_PLAN.md), not this.
   answerFeedback: {
     correctTitle: "That's right",
     incorrectTitle: "Not quite",
-    correct1: "{answer} — that is exactly it.",
-    correct2: "Correct. It is {answer}.",
-    correct3: "You had it: {answer}. Keep it going.",
-    correct4: "Right — {answer}. Worth remembering.",
-    wrong1: "The answer was {answer}. Now you know it.",
-    wrong2: "Close one — it was {answer}.",
-    wrong3: "Not this time: {answer} was the answer. The next one is yours.",
-    wrong4: "It was {answer}. Everyone misses a few — keep going.",
+    correct1: "Correct answer: {answer}.",
+    correct2: "Right — {answer}.",
+    correct3: "{answer} is the correct answer.",
+    correct4: "The correct answer is {answer}.",
+    wrong1: "The correct answer was {answer}.",
+    wrong2: "Wrong answer. The correct one is {answer}.",
+    wrong3: "{answer} is the correct answer.",
+    wrong4: "Correct answer: {answer}.",
     favorite: "Save this question",
     favorited: "Saved",
-    report: "Report this question",
+    report: "Report",
     reported: "Reported — thank you",
   },
 };

@@ -23,9 +23,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { RoomCardPlayButton } from "@/components/team/RoomCardPlayButton";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { roundIconSlug } from "@/utils/ownTriviaRound";
+import { undecidedRoundKind } from "@/utils/undecidedRound";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { REWARDS } from "@/config/rewardConfig";
 import coinIcon from "@/assets/tb-lobby/coin.png";
+import questionIcon from "@/assets/lobby/chip-question.webp";
 
 export interface PreviewRound {
   name: string | null;
@@ -41,7 +43,16 @@ export interface PreviewRound {
  * the same room two different things (owner: "show mixed category instead
  * 'the host has not picked a round yet'"). One row, "Mixed", Round 1.
  */
-export const MIXED_ROUND: PreviewRound = { name: null, icon_slug: null, source_type: "random" };
+export const MIXED_ROUND: PreviewRound = { name: null, icon_slug: null, source_type: "mixed" };
+
+/**
+ * Is this row a mixed round? The stand-in above, or a queued one — which
+ * the pickers store as a "category" named "Mixed" in the picker's own
+ * language, with no slug, so the name is what there is to go on.
+ */
+export function isMixedRound(round: PreviewRound): boolean {
+  return round.source_type === "mixed" || undecidedRoundKind(null, round.name) === "mixed";
+}
 
 /**
  * The card's own button, drawn again inside the sheet.
@@ -129,8 +140,11 @@ export function RoomPreviewSheet({
                   defaults to 128px — and a random round carried no slug,
                   so each row swelled around a giant faint placeholder
                   (owner: "show more narrow containers for each category
-                  with icons"). roundIconSlug gives a random or mixed round
-                  the mystery box the rest of the app draws for it. */}
+                  with icons"). A random round wears the mystery box the
+                  rest of the app draws for it; a MIXED round wears the
+                  question mark — it carried no slug and the tile came up
+                  empty (owner: "as a mixed category icon use this
+                  question mark icon, it is empty now"). */}
               <ol className="mb-5 max-h-[240px] space-y-2 overflow-y-auto">
                   {shown.map((round, i) => (
                     <li
@@ -141,7 +155,11 @@ export function RoomPreviewSheet({
                         {i + 1}
                       </span>
                       <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#7126d5]/10">
-                        <DynamicIcon slug={roundIconSlug(round)} size={22} shadow={false} />
+                        {isMixedRound(round) ? (
+                          <img src={questionIcon} alt="" className="h-7 w-7 object-contain" />
+                        ) : (
+                          <DynamicIcon slug={roundIconSlug({ ...round, category_name: round.name })} size={22} shadow={false} />
+                        )}
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-[15px] font-semibold text-[#402666]">

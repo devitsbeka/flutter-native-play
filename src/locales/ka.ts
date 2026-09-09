@@ -5263,21 +5263,29 @@ export const ka = {
   // ==========================================
   // Answer feedback card (Figma 1154:9157)
   // ==========================================
+  //
+  // Built only from wording this file already uses — `სწორი პასუხი`
+  // (correctAnswerLabel), `არასწორია` (incorrect), `შენახვა` (save),
+  // `დარეპორტება` (moderation.report). The first version of this block
+  // invented encouraging phrases and two of them were not Georgian:
+  // `ყველას გვცდება` put a dative subject on a first-person-plural verb.
+  // A fallback states the fact; the interesting part is the authored
+  // explanation (docs/QUESTION_CONTEXT_PLAN.md), not this.
   answerFeedback: {
     correctTitle: "სწორია",
-    incorrectTitle: "ცოტა დაგცდა",
-    correct1: "{answer} — ზუსტად ეს არის.",
-    correct2: "სწორი პასუხი: {answer}. კარგად გახსოვდა.",
-    correct3: "{answer} — მართალი ხარ. ასე გააგრძელე.",
-    correct4: "სწორია — {answer}. ეს დასამახსოვრებელია.",
-    wrong1: "სწორი პასუხი იყო {answer}. ახლა უკვე იცი.",
-    wrong2: "ცოტა დაგცდა — პასუხი იყო {answer}.",
-    wrong3: "ამჯერად არა: სწორი იყო {answer}. შემდეგი შენია.",
-    wrong4: "პასუხი იყო {answer}. ყველას გვცდება — გააგრძელე.",
+    incorrectTitle: "არასწორია",
+    correct1: "სწორი პასუხი: {answer}.",
+    correct2: "სწორია — {answer}.",
+    correct3: "{answer} — სწორი პასუხია.",
+    correct4: "სწორი პასუხი — {answer}.",
+    wrong1: "სწორი პასუხი იყო {answer}.",
+    wrong2: "პასუხი არასწორია. სწორი პასუხი — {answer}.",
+    wrong3: "{answer} — სწორი პასუხია.",
+    wrong4: "სწორი პასუხი: {answer}.",
     favorite: "კითხვის შენახვა",
     favorited: "შენახულია",
-    report: "კითხვის დაფიქსირება",
-    reported: "გაიგზავნა — მადლობა",
+    report: "დარეპორტება",
+    reported: "მადლობა, გადავხედავთ",
   },
 };
 
