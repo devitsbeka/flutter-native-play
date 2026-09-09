@@ -2257,6 +2257,8 @@ export const es: KaTranslations = {
     rematchGatePlay: "Jugar",
     rematchGateLeave: "Salir de la sala",
     rematchWaitTitle: "Revancha propuesta",
+    roomPreviewEyebrow: "Vista de la sala",
+    roomPreviewNoRounds: "El anfitrión aún no ha elegido una ronda.",
     rematchWaitHint: "Se ha preguntado a todos en la mesa. Quien rechace sale de la sala; el bote sigue a los asientos.",
     rematchWaitReady: "Listo",
     rematchWaitPending: "Decidiendo…",

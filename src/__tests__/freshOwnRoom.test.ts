@@ -53,6 +53,8 @@ function room(over: Partial<PublicRoom> = {}): PublicRoom {
     player_count: 0, max_players: 10,
     first_category_name: null, first_category_icon: null,
     my_state: "none",
+    rounds: [],
+    total_questions: 10,
     ...over,
   };
 }

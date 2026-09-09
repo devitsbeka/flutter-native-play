@@ -13,6 +13,13 @@ import { useDeveloperMode } from "@/contexts/DeveloperModeContext";
 
 export type RoomFilter = "all" | "my_rooms" | "friends_rooms" | "king" | "team_battle";
 
+/** One round on a room card: what it plays and the face it wears. */
+export interface RoomRound {
+  name: string | null;
+  icon_slug: string | null;
+  source_type: string;
+}
+
 export interface MyRoom {
   id: string;
   room_code: string;
@@ -74,6 +81,15 @@ export interface MyRoom {
     avatar_url: string | null;
   }[];
   has_players_in_room: boolean;
+  /**
+   * Every round the room plays, in order — what the card's "+2" counts and
+   * what tapping it lists. Read straight from room_category_queue, which a
+   * participant may do; the Public tab has to go through the public_rooms
+   * RPC for the same thing (see usePublicRooms).
+   */
+  rounds: RoomRound[];
+  /** Questions in each of them. */
+  total_questions: number | null;
   // Has at least one participant (excluding self) active in last 10 minutes
   has_recent_activity: boolean;
   // Somebody asked this player into this room and they have not been yet.
@@ -202,6 +218,27 @@ async function fetchRoomsForUser(userId: string, options?: FetchRoomsOptions): P
 
   const activeRoomIds = roomsData.map((r) => r.id);
   if (activeRoomIds.length === 0) return [];
+
+  // 3a. Every round each room plays, in order.
+  //
+  // A participant may read this table ("Participants can view queue"), and
+  // every room on this list is one the viewer sits in — so unlike the Public
+  // tab, which has to be answered by a SECURITY DEFINER function, the query
+  // is just a query. Failing it is not worth failing the list for: the cards
+  // fall back to the room's own category, which is what they showed before
+  // rounds were on them at all.
+  const { data: queueRows } = await supabase
+    .from("room_category_queue")
+    .select("room_id, position, category_name, icon_slug, source_type")
+    .in("room_id", activeRoomIds)
+    .order("position");
+
+  const roundsByRoom = new Map<string, RoomRound[]>();
+  for (const q of queueRows ?? []) {
+    const list = roundsByRoom.get(q.room_id) ?? [];
+    list.push({ name: q.category_name, icon_slug: q.icon_slug, source_type: q.source_type });
+    roundsByRoom.set(q.room_id, list);
+  }
 
   // 3. Get all participants for active rooms
   const { data: allParticipants, error: allPartError } = await supabase
@@ -363,6 +400,15 @@ async function fetchRoomsForUser(userId: string, options?: FetchRoomsOptions): P
       in_room_participants: inRoomParticipants,
       has_players_in_room: inRoomParticipants.length > 0,
       has_recent_activity: hasRecentActivity,
+      // The queue is the room's rounds; a room without one plays its own
+      // category as its single round, which is what the card has always
+      // shown as round one. Both cards read this the same way.
+      rounds:
+        roundsByRoom.get(room.id) ??
+        (room.category_name || room.category_id
+          ? [{ name: room.category_name, icon_slug: null, source_type: "category" }]
+          : []),
+      total_questions: room.total_questions ?? null,
       // Filled in by the hook, which is where the notifications live.
       has_pending_invite: false,
       pending_invite_from: null,

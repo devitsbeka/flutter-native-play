@@ -2568,6 +2568,8 @@ export const ka = {
     rematchGatePlay: "თამაში",
     rematchGateLeave: "ოთახის დატოვება",
     rematchWaitTitle: "რევანში შეთავაზებულია",
+    roomPreviewEyebrow: "ოთახის დათვალიერება",
+    roomPreviewNoRounds: "ჰოსტს ჯერ რაუნდი არ აურჩევია.",
     rematchWaitHint: "ყველას ვკითხეთ მაგიდასთან. ვინც უარს იტყვის, ოთახს ტოვებს — ფონდი ადგილების მიხედვით იცვლება.",
     rematchWaitReady: "მზადაა",
     rematchWaitPending: "ფიქრობს…",

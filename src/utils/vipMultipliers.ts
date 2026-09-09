@@ -31,13 +31,6 @@ export function getMaxDailySpins(isVip: boolean): number {
 }
 
 /**
- * Check if VIP should skip game stake
- */
-export function shouldSkipStake(isVip: boolean): boolean {
-  return isVip;
-}
-
-/**
  * Get VIP daily power-ups grant
  */
 export function getVipDailyPowerUps(): typeof VIP_DAILY_POWERUPS {
