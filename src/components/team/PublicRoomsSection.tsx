@@ -506,10 +506,14 @@ function PublicRoomCard({
                 e.stopPropagation();
                 openProfile(room.host_user_id);
               }}
-              className={`mr-1 flex items-center gap-2 min-w-0 rounded-full pl-1 pr-2.5 py-1 ${ink.pill}`}
+              className={`mr-1 flex items-center gap-2 min-w-0 rounded-full pl-2 pr-2.5 py-1 ${ink.pill}`}
             >
+              {/* Crown, face, name - the private card's pill exactly: the
+                  crown leads, a size up, and the face is the row's own 34px
+                  with a gold ring (owner's ask). */}
+              <img src={crownIcon} alt="" className="w-4 h-4 object-contain shrink-0" />
               <span className="relative shrink-0">
-                <span className="block w-6 h-6 rounded-full overflow-hidden">
+                <span className="block w-[34px] h-[34px] rounded-full overflow-hidden border-2 border-amber-400">
                   <SafeAvatarImage
                     avatarUrl={room.host_avatar_url}
                     fallback={room.host_nickname || "?"}
@@ -521,7 +525,6 @@ function PublicRoomCard({
                   <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-white" />
                 )}
               </span>
-              <img src={crownIcon} alt="" className="w-3 h-3 object-contain shrink-0" />
               <span className={`text-xs font-semibold truncate max-w-[104px] ${ink.text}`}>
                 {room.host_nickname || t("extra.friendFallback")}
               </span>
@@ -539,7 +542,7 @@ function PublicRoomCard({
               const person: CardPlayer | undefined = players[i - 1] ?? (reservedForMe ? me : undefined);
               return person ? (
                 <span key={person.user_id} className="relative shrink-0">
-                  <span className={`block w-8 h-8 rounded-full overflow-hidden border-2 ${ink.ring} ${reservedForMe ? "grayscale opacity-70" : ""}`}>
+                  <span className={`block w-[34px] h-[34px] rounded-full overflow-hidden border-2 ${ink.ring} ${reservedForMe ? "grayscale opacity-70" : ""}`}>
                     <SafeAvatarImage
                       avatarUrl={person.avatar_url}
                       fallback={person.nickname || "?"}
@@ -554,7 +557,7 @@ function PublicRoomCard({
               ) : (
                 <span
                   key={`open-${i}`}
-                  className="w-8 h-8 rounded-full border-2 border-dashed border-[#2b1a4a]/30 bg-white/30 shrink-0"
+                  className="w-[34px] h-[34px] rounded-full border-2 border-dashed border-[#2b1a4a]/30 bg-white/30 shrink-0"
                 />
               );
             })}
@@ -577,7 +580,7 @@ function PublicRoomCard({
                   onInvite(room);
                 }}
                 aria-label={t("extra.inviteFriendsTitle")}
-                className={`w-8 h-8 rounded-full border-2 border-dashed shrink-0 flex items-center justify-center transition-colors ${ink.ring} bg-white/70 hover:bg-white active:scale-95`}
+                className={`w-[34px] h-[34px] rounded-full border-2 border-dashed shrink-0 flex items-center justify-center transition-colors ${ink.ring} bg-white/70 hover:bg-white active:scale-95`}
               >
                 <Plus className="w-4 h-4 text-[#2b1a4a]" />
               </button>

@@ -39,7 +39,8 @@ describe("public card", () => {
     const loop = seats.indexOf("Array.from({ length: seatsToDraw }");
     expect(label).toBeGreaterThan(-1);
     expect(label).toBeLessThan(loop);
-    expect(seats).toMatch(/<img src=\{crownIcon\} alt="" className="w-3 h-3 object-contain shrink-0" \/>/);
+    // The crown leads the pill now, a size up (cardFacesMatch.test).
+    expect(seats).toMatch(/<img src=\{crownIcon\} alt="" className="w-4 h-4 object-contain shrink-0" \/>/);
     expect(seats).toMatch(/\{room\.host_nickname \|\| t\("extra\.friendFallback"\)\}/);
     expect(seats).toMatch(/\{online\.has\(room\.host_user_id\) && \(/);
   });

@@ -1482,10 +1482,16 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
                         e.stopPropagation();
                         if (cardHost.user_id) openProfile(cardHost.user_id);
                       }}
-                      className="flex items-center gap-1.5 min-w-0 shrink-0 rounded-full bg-white/60 backdrop-blur-sm pl-1 pr-2.5 py-1"
+                      className="flex items-center gap-1.5 min-w-0 shrink-0 rounded-full bg-white/60 backdrop-blur-sm pl-2 pr-2.5 py-1"
                     >
+                      {/* Crown, face, name: the crown leads, a size up, and the
+                          face is the same 34px as every other face on the row
+                          with a gold ring rather than a white one - at 24px
+                          in a white pill the host read as the smallest person
+                          in their own room (owner's ask). */}
+                      <img src={crownIcon} alt="" className="w-4 h-4 object-contain shrink-0" />
                       <span className="relative shrink-0">
-                        <span className="block w-6 h-6 rounded-full overflow-hidden">
+                        <span className="block w-[34px] h-[34px] rounded-full overflow-hidden ring-2 ring-amber-400 ring-offset-1 ring-offset-transparent">
                           <SafeAvatarImage
                             avatarUrl={cardHost.avatar_url}
                             fallback={cardHost.nickname || "?"}
@@ -1497,7 +1503,6 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
                           <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-white" />
                         )}
                       </span>
-                      <img src={crownIcon} alt="" className="w-3 h-3 object-contain shrink-0" />
                       <span className="text-xs font-semibold truncate max-w-[104px] text-[#2b1a4a]">
                         {cardHost.nickname || t("extra.friendFallback")}
                       </span>
@@ -1525,7 +1530,7 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
                           style={{ zIndex: guests.length - idx }}
                         >
                           <div
-                            className={`w-8 h-8 rounded-full overflow-hidden bg-white/20 cursor-pointer hover:scale-110 transition-transform active:scale-95 shadow-md ${
+                            className={`w-[34px] h-[34px] rounded-full overflow-hidden bg-white/20 cursor-pointer hover:scale-110 transition-transform active:scale-95 shadow-md ${
                               reservedForMe
                                 ? "grayscale opacity-70 ring-2 ring-slate-400/70 ring-offset-1 ring-offset-transparent"
                                 : isOnline
@@ -1548,7 +1553,7 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
                       );
                     })}
                     {guests.length > avatarLimit && (
-                      <div className="w-8 h-8 rounded-full border-2 border-white bg-white/60 backdrop-blur-sm flex items-center justify-center flex-shrink-0 shadow-md">
+                      <div className="w-[34px] h-[34px] rounded-full border-2 border-white bg-white/60 backdrop-blur-sm flex items-center justify-center flex-shrink-0 shadow-md">
                         <span className="text-[#2b1a4a] text-[10px] font-bold">
                           +{guests.length - avatarLimit}
                         </span>
@@ -1563,7 +1568,7 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
                         onInvite?.(room);
                       }}
                       aria-label={t("extra.inviteFriendsTitle")}
-                      className="w-8 h-8 rounded-full border-2 border-dashed border-[#2b1a4a]/30 bg-white/70 flex items-center justify-center flex-shrink-0 transition-colors hover:bg-white active:scale-95"
+                      className="w-[34px] h-[34px] rounded-full border-2 border-dashed border-[#2b1a4a]/30 bg-white/70 flex items-center justify-center flex-shrink-0 transition-colors hover:bg-white active:scale-95"
                     >
                       <Plus className="w-4 h-4 text-[#2b1a4a]" />
                     </button>
