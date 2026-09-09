@@ -159,65 +159,69 @@ describe("what the card does with it", () => {
 });
 
 /**
- * The receipt pill's spacing is optical, and the numbers are measured.
+ * What a claimed day shows, and how it is spaced.
  *
- * A uniform `gap-3 px-3` measured DEAD EVEN in the box model and still looked
- * wrong, because a reader sees ink, not boxes, and every glyph here carries a
- * different amount of its own padding: the lucide check sits ~3px inside its
- * 20px, the coin PNG ~4px inside its 18px, the snowflake almost none, and a
- * digit ends flush. Off a 3x screenshot, uniform 12px gave:
+ * This used to be a pill: the day's takings in white, on a bar filled with
+ * that day's own gradient, hung under the medallion. Seven of those — seven
+ * different gradients — was most of what made the road look like a coupon
+ * app, and white text on a saturated gradient was the least readable thing
+ * on the screen. It is a line of dark ink on the sheet now, under the
+ * weekday, with no bar behind it at all.
  *
- *     left 15.3 | check->coin 17.7 | coin->125 6.0 | 125->power 12.3 | right 13.0
- *
- * — the three that should match spread over 4.7px, and rewards separated by
- * only 2.1x what binds an icon to its own number. After:
- *
- *     left 14.3 | check->coin 13.7 | coin->125 6.0 | 125->power 18.3 | right 14.0
- *
- * — spread 0.7px, separation 3.1x.
+ * The spacing survived the move, because it was never about the pill. It is
+ * optical, and the numbers are measured. A uniform gap measured DEAD EVEN in
+ * the box model and still looked wrong, because a reader sees ink, not boxes,
+ * and every glyph here carries a different amount of its own padding: the
+ * coin PNG sits ~4px inside its 18px, the snowflake almost none, and a digit
+ * ends flush. Off a 3x screenshot, a uniform 12px separated one reward from
+ * the next by only 2.1x what binds an icon to its own number, so "125" and
+ * the snowflake read as a single run. At 18 it is 3.1x, and they read as two
+ * things.
  */
-describe("the receipt pill's spacing", () => {
+describe("what a claimed day shows", () => {
   const modal = readFileSync(
     join(process.cwd(), "src/components/home/DailyRewardsModal.tsx"),
     "utf8"
   );
-  // The receipt pill is the one whose width is a MINIMUM — every other state
-  // of the slot takes PILL_W exactly. Found by that, and by the shape of its
-  // own closing tag, rather than by its height and its indentation: those two
-  // said nothing about the spacing this file measures, and both changed when
-  // the week of cards became a road (a shorter, fully round chip hanging under
-  // a medallion), which failed seven tests that had no quarrel with the code.
-  const pill = modal.match(/<div\s+className=\{`flex h-\[\d+px\] \$\{PILL_W_MIN\}[\s\S]*?\n\s*<\/div>\n/)?.[0] ?? "";
+  // The takings line: the one row that starts with the coin amount.
+  const line =
+    modal.match(/<div className="mt-0\.5 flex items-center justify-center whitespace-nowrap">[\s\S]*?\n {12}<\/div>/)?.[0] ?? "";
 
-  it("has a pill to measure", () => {
-    expect(pill, "expected the receipt pill").not.toBe("");
+  it("has a line to measure", () => {
+    expect(line, "expected the takings line").not.toBe("");
+  });
+
+  it("is ink on the sheet, not white on a gradient", () => {
+    // The whole reason the redesign happened: a number you have to fight a
+    // gradient to read is a number the screen did not really show you.
+    const amount = modal.match(/function ClaimedAmount[\s\S]*?\n\}/)![0];
+    expect(amount).toMatch(/text-\[#402666\]/);
+    expect(amount).not.toMatch(/text-white/);
+    // And no bar behind it — the pill and its width constants are gone.
+    expect(modal).not.toMatch(/const PILL_W/);
+    expect(line).not.toMatch(/background|rounded-full/);
   });
 
   it("no longer spaces everything the same", () => {
     // One gap cannot be right in three places at once when the glyphs on
     // either side of it are differently inset.
-    expect(pill).not.toMatch(/\bgap-3\b/);
-    expect(pill).not.toMatch(/\bpx-3\b/);
-  });
-
-  it("pads the two edges for equal ink, not equal boxes", () => {
-    // Asymmetric by 2px, not 11/13 vs 12/12 any more but 19/21: the check's
-    // ink starts ~1px further in than its box does, and the trailing digit
-    // ends flush. The pair grew together when the pill was widened, so the
-    // asymmetry survives; only the floor moved.
-    expect(pill).toMatch(/pl-\[19px\] pr-\[21px\]/);
-  });
-
-  it("holds the check and the first amount at the same distance as the edges", () => {
-    expect(pill).toMatch(/<ClaimedAmount icon=\{coinIcon\}[^>]*className="ml-2"/);
+    expect(line).not.toMatch(/\bgap-3\b/);
+    expect(line).not.toMatch(/\bpx-3\b/);
   });
 
   it("separates one reward from the next by clearly more than its own parts", () => {
     // 18px of box against the 2px inside a ClaimedAmount — measured as 18.3
-    // of ink against 6.0, a bit over 3x. At 12px it was 2.1x and "125" and
-    // the snowflake read as one run.
-    expect(pill).toMatch(/<ClaimedAmount icon=\{gemIcon\}[^>]*className="ml-\[18px\]"/);
-    expect(pill).toMatch(/<span className="ml-\[18px\] flex shrink-0 items-center gap-\[5px\]/);
+    // of ink against 6.0, a bit over 3x.
+    expect(line).toMatch(/<ClaimedAmount icon=\{gemIcon\}[^>]*className="ml-\[18px\]"/);
+    expect(line).toMatch(/<span className="ml-\[18px\] flex shrink-0 items-center gap-\[5px\]/);
+  });
+
+  it("leads with the coins, with nothing hung off their left", () => {
+    // The check that used to open the pill went with it: the opened gift on
+    // the medallion above already says the day was taken, and saying it twice
+    // is what the redesign was for.
+    expect(line).toMatch(/<ClaimedAmount icon=\{coinIcon\} value=\{String\(receipt\.coins\)\} \/>/);
+    expect(line).not.toMatch(/<Check/);
   });
 
   /**
@@ -239,16 +243,16 @@ describe("the receipt pill's spacing", () => {
     expect(modal).toMatch(/const POWER_ICON_PX = 12;/);
 
     // Both power renderers take the constant — the <img> and TimeIcon.
-    expect(pill).toMatch(/<TimeIcon size=\{POWER_ICON_PX\} \/>/);
-    expect(pill).toMatch(/width=\{POWER_ICON_PX\}\s*\n\s*height=\{POWER_ICON_PX\}/);
+    expect(line).toMatch(/<TimeIcon size=\{POWER_ICON_PX\} \/>/);
+    expect(line).toMatch(/width=\{POWER_ICON_PX\}\s*\n\s*height=\{POWER_ICON_PX\}/);
 
     // freeze is 356x393 and replace 379x405; a square box without
     // object-contain stretches both ~10% wide.
-    expect(pill).toMatch(/className="shrink-0 object-contain"/);
+    expect(line).toMatch(/className="shrink-0 object-contain"/);
 
     // And no hand-written 18 left in the power branch, which is what made
     // the badge oversized to begin with.
-    const powerBranch = pill.slice(pill.indexOf("receipt.powerUp &&"));
+    const powerBranch = line.slice(line.indexOf("receipt.powerUp &&"));
     expect(powerBranch).not.toMatch(/(width|height|size)=\{18\}/);
   });
 
@@ -260,43 +264,14 @@ describe("the receipt pill's spacing", () => {
   });
 
   it("still fits the widest receipt on one line", () => {
-    expect(pill).toMatch(/whitespace-nowrap/);
-    expect(pill).toMatch(/\$\{PILL_W_MIN\} max-w-full/);
-  });
-
-  /**
-   * Every state of the slot — receipt, lock, countdown, "Missed", the plain
-   * check — is the same size, so a stop does not resize as the day is
-   * claimed. They were hand-written copies of the same width; now one
-   * constant feeds them, and this is what stops another from being written
-   * out by hand next to it.
-   *
-   * Five, not six: the Claim button left the slot when the medallion itself
-   * became the tap target, so the only thing under a claimable stop is the
-   * road.
-   */
-  it("gives every state of the slot the same footprint", () => {
-    expect(modal).toMatch(/const PILL_W = "w-\[128px\]"/);
-    expect(modal).toMatch(/const PILL_W_MIN = "min-w-\[128px\]"/);
-
-    // And all five siblings really do read the constant, at one height —
-    // which height is the road's business and may change with it, but a
-    // sixth state written out by hand is what this catches.
-    const heights = [...modal.matchAll(/h-\[(\d+)px\] \$\{PILL_W(_MIN)?\}/g)].map((m) => m[1]);
-    expect(heights.length, "expected the receipt and its four siblings").toBe(5);
-    expect(new Set(heights).size, "one footprint, not five").toBe(1);
-
-    // No literal width left in the slot — checked at the slot's own height,
-    // so the purse in the header keeps its h-[52px] w-[52px] without being
-    // mistaken for a sixth state.
-    expect(modal).not.toMatch(new RegExp(`h-\\[${heights[0]}px\\] w-\\[\\d+px\\]`));
+    expect(line).toMatch(/whitespace-nowrap/);
   });
 
   it("shows a power-up count as a bare number", () => {
     // "3x" read as a multiplier on the reward rather than a quantity of
     // power-ups; the coin and gem amounts next to it carry no suffix either.
-    expect(pill).toMatch(/\{receipt\.powerUpCount\}\s*\n/);
-    expect(pill).not.toMatch(/\{receipt\.powerUpCount\}x/);
+    expect(line).toMatch(/\{receipt\.powerUpCount\}\s*\n/);
+    expect(line).not.toMatch(/\{receipt\.powerUpCount\}x/);
   });
 });
 

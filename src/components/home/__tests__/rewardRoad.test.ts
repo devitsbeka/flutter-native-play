@@ -1,7 +1,9 @@
 import { describe, it, expect } from "vitest";
 import {
   ROAD,
+  STOP_CLEARANCE,
   clampChipX,
+  overlapsStop,
   roadHeight,
   roadNodes,
   roadPath,
@@ -148,40 +150,55 @@ describe("a chip hanging under a stop", () => {
   });
 });
 
-describe("the meadow", () => {
+describe("the planting", () => {
   const nodes = roadNodes(DAYS, 320);
   const height = roadHeight(DAYS);
   const items = scenery(nodes, 320, height);
 
   it("plants something", () => {
-    expect(items.length).toBeGreaterThan(20);
+    // Sparse on purpose — the road and its captions are the middle of a 312px
+    // phone, and what is left is a verge, not a field. Bare would be a bug
+    // all the same.
+    expect(items.length).toBeGreaterThan(6);
   });
 
-  it("is the same meadow every render", () => {
+  it("is the same planting every render", () => {
     // Seeded, not random: this component re-renders on the claim, on every
-    // countdown tick and on every scroll-driven state change, and a meadow
+    // countdown tick and on every scroll-driven state change, and planting
     // that reshuffled on each of those would be a flicker, not scenery.
     expect(scenery(nodes, 320, height)).toEqual(items);
   });
 
   it("never grows on the road", () => {
-    const ground = items.filter((i) => i.kind !== "cloud" && i.kind !== "butterfly");
-    expect(ground.length).toBeGreaterThan(10);
-    for (const item of ground) {
+    for (const item of items) {
       const gap = Math.abs(item.x - roadXAt(nodes, item.y)) - (24 * item.scale) / 2;
       expect(gap, `${item.id} on the road`).toBeGreaterThanOrEqual(ROAD.surface / 2 + ROAD.verge - 0.001);
     }
   });
 
-  it("leaves the ground around a stop clear", () => {
-    // That ground carries the gift, the weekday and the chip.
-    const ground = items.filter((i) => i.kind !== "cloud" && i.kind !== "butterfly");
-    for (const item of ground) {
+  it("never grows over a stop or the caption under it", () => {
+    // The caption is a WIDE, SHORT band below each stop holding the weekday
+    // and what the day paid, and it is the part that was being planted over —
+    // a flower drawn across "50" is not a flower, it is a smudge on a number.
+    // Asserted through the same predicate the placement uses, so the two
+    // cannot drift apart.
+    for (const item of items) {
       for (const node of nodes) {
-        const clash = Math.abs(node.y - item.y) < 74 && Math.abs(node.x - item.x) < 62;
-        expect(clash, `${item.id} over stop ${node.index}`).toBe(false);
+        expect(overlapsStop(node, item.x, item.y), `${item.id} over stop ${node.index}`).toBe(false);
       }
     }
+  });
+
+  it("keeps the caption band clear across its full width", () => {
+    // Spot-check the predicate itself, or the test above passes by agreeing
+    // with a bug.
+    const node = nodes[2];
+    expect(overlapsStop(node, node.x, node.y)).toBe(true);
+    expect(overlapsStop(node, node.x + STOP_CLEARANCE.captionX - 2, node.y + 60)).toBe(true);
+    expect(overlapsStop(node, node.x + STOP_CLEARANCE.captionX + 2, node.y + 60)).toBe(false);
+    // Above a stop only the medallion is in the way — that is where the road
+    // comes in, and there is nothing written there.
+    expect(overlapsStop(node, node.x, node.y - STOP_CLEARANCE.faceY - 2)).toBe(false);
   });
 
   it("stays inside the map", () => {
@@ -194,7 +211,7 @@ describe("the meadow", () => {
   });
 
   it("gives every piece its own timing", () => {
-    // A meadow swaying in unison is a curtain.
+    // Planting that swayed in unison is a curtain.
     const delays = new Set(items.map((i) => i.delay));
     expect(delays.size).toBeGreaterThan(items.length / 2);
   });

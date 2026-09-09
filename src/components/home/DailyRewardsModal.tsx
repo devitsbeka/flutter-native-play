@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Check, Lock, Clock, Crown, Flame } from "lucide-react";
+import { X, Lock, Crown, Flame } from "lucide-react";
 import coinPurseIcon from "@/assets/icons/icon-coin-purse.png";
 import giftClosedIcon from "@/assets/icons/gift-box.png";
 import giftOpenIcon from "@/assets/icons/unboxing-gift.png";
@@ -26,37 +26,42 @@ import { RewardRoadCanvas } from "./RewardRoadCanvas";
 import { ROAD, clampChipX, roadHeight, roadNodes } from "./rewardRoad";
 
 /**
- * The footprint every state of a stop's chip shares: the receipt, the plain
- * check, "Missed", the lock, the countdown.
+ * The palette of a stop, and it is deliberately almost empty.
  *
- * One constant because they occupy the same place in turn, and a stop that
- * changed size as it went from waiting to claimed would shift the road under
- * it. They were separate copies of a width, which is a set of numbers that
- * agree only until someone edits one of them.
+ * Every day used to have its own gradient — seven of them, teal into blue,
+ * violet into fuchsia, amber into orange — and under each one a bar in the
+ * SAME gradient with the day's takings written across it in white. Seven
+ * colour families and fourteen saturated objects on one small screen, with
+ * every number set on a gradient it had to fight to be read against. It
+ * looked like a coupon app.
  *
- * There is no Claim chip among them any more: the medallion IS the button —
- * see the note on the tap target below.
- *
- * The receipt takes this as a MINIMUM and grows past it for a claim with a
- * gem and a power-up on it; everything else takes it exactly. That is also
- * why ROAD.chipWidth exists and is larger — it is the clearance the geometry
- * keeps at both edges so the widest receipt still has both ends on screen.
- *
- * 128 rather than the 184 the cards used. That number was chosen against a
- * 272px card, and on a road drawn 280-420px wide it made every chip a bar
- * across the map: the lock and the countdown were mostly empty pill, and a
- * "Missed" ran under the medallion of the stop beside it. It is a floor for
- * the widest receipt, not the everyday width — the receipt grows past it and
- * everything else is comfortably inside it.
- *
- * Written out in full rather than built from a number: these are read as text
- * by Tailwind's scanner, so `w-[${n}px]` produces no class at all.
+ * One saturated thing now: today. Everything else is white, or the sheet's
+ * own lavender, and every number is dark violet ink on near-white — which is
+ * both quieter and the only version of this screen you can actually read.
+ * The day is told by where it sits on the road, not by a colour that means
+ * nothing.
  */
-const PILL_W = "w-[128px]";
-const PILL_W_MIN = "min-w-[128px]";
+const TODAY_FACE = "linear-gradient(180deg, #9B6BF3 0%, #7126D5 100%)";
+const TODAY_EDGE = "#5A1BA6";
+/** A day already taken, and a day still ahead: white, outlined, quiet. */
+const CLAIMED_FACE = "#FFFFFF";
+/**
+ * Missed: the sheet's own tint, a step away from disappearing.
+ *
+ * Locked days are NOT drawn in this — the first cut painted both of them the
+ * same near-invisible lavender, and the whole bottom half of the road (four
+ * days you have not reached yet) came out as a pale wash with two locks
+ * floating in it. Ahead of you is not the same as gone: the lock is the
+ * difference, on the same white face a claimed day gets.
+ */
+const SPENT_FACE = "#F4F0FB";
+/** The hairline every surface in this app is outlined with. */
+const RING = "#E8E0F5";
+/** The app's ink. Everything written on the map is this colour at some opacity. */
+const INK = "#402666";
 
 /**
- * The box a power-up badge is drawn in on the receipt pill, in px.
+ * The box a power-up badge is drawn in on a claimed day's line, in px.
  *
  * Smaller than the 18px the coin and gem use, and deliberately: those two
  * fill about two thirds of their own square, while every power badge fills
@@ -84,44 +89,14 @@ interface DailyRewardsModalProps {
 }
 
 /**
- * Per-day medallion colours: a bright same-family pair — cross-family blends
- * (teal into rose etc.) muddy out in the middle and read dark — and the
- * darker shade under it.
- *
- * The third colour is not a variation on the second, it is the app's whole
- * idiom: every card, button and badge here is a gradient sitting on a HARD
- * offset edge of its own darker shade, with a hairline of white inset along
- * the top (MissionsModal's cards, game-modal's shell, the shop's buttons).
- * A blurred drop shadow instead of that edge is what made the first cut of
- * these medallions read as somebody else's component library.
- */
-const DAY_GRADIENTS: [string, string, string][] = [
-  ["#34D399", "#2563EB", "#1D4ED8"], // Mon teal → blue
-  ["#A78BFA", "#D946EF", "#A21CAF"], // Tue violet → fuchsia
-  ["#FBBF24", "#F97316", "#C2410C"], // Wed amber → orange
-  ["#FB7185", "#EC4899", "#BE185D"], // Thu coral → pink
-  ["#22D3EE", "#3B82F6", "#1D4ED8"], // Fri cyan → blue
-  ["#818CF8", "#A855F7", "#7126D5"], // Sat indigo → violet
-  ["#FDE047", "#F59E0B", "#B45309"], // Sun gold
-];
-
-const stopGradient = (index: number) => {
-  const [from, to] = DAY_GRADIENTS[index % DAY_GRADIENTS.length];
-  return `linear-gradient(215deg, ${from} 0%, ${to} 100%)`;
-};
-
-/** The hard edge a stop's medallion and its receipt stand on. */
-const stopEdge = (index: number) => DAY_GRADIENTS[index % DAY_GRADIENTS.length][2];
-
-/**
  * The white chip the app draws on a tinted ground: a hairline violet border
  * over a hard edge of the same family. Lifted from MissionsModal's chipStyle
- * so the weekday labels, the lock and the countdown are literally the same
- * object as every other chip in the product.
+ * so the two chips in the footer are literally the same object as every other
+ * chip in the product.
  */
 const CHIP_SURFACE = {
   background: "#FFFFFF",
-  border: "1.5px solid #E8E0F5",
+  border: `1.5px solid ${RING}`,
   boxShadow: "0 2px 0 #EDE6F7",
 } as const;
 
@@ -178,14 +153,20 @@ export const weekOf = (today: Date): Date[] => {
 type DayState = "claimed" | "missed" | "today" | "future";
 type ClaimPhase = "idle" | "opening" | "revealed";
 
-// One compact icon+amount pair for the claimed pill. Everything shrink-0 and
-// nowrap: the pill's contract is a single centered line, whatever the day paid.
-//
-// `className` carries the spacing to whatever sits on its left, because that
-// spacing is not the same everywhere — see the pill below.
+/**
+ * One icon and its number, from a day's takings. Everything shrink-0 and
+ * nowrap: the line's contract is a single centred row, whatever the day paid.
+ *
+ * Dark ink on the sheet, not white on a gradient. The gradient bar these used
+ * to sit on is gone — it was the loudest object on the map and the hardest
+ * thing on it to read.
+ *
+ * `className` carries the spacing to whatever sits on its left, because that
+ * spacing is not the same everywhere — see the render site.
+ */
 function ClaimedAmount({ icon, value, className = "" }: { icon: string; value: string; className?: string }) {
   return (
-    <span className={`flex shrink-0 items-center gap-0.5 text-sm font-black text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)] ${className}`}>
+    <span className={`flex shrink-0 items-center gap-0.5 text-sm font-bold text-[#402666] ${className}`}>
       <img src={icon} alt="" width={18} height={18} className="shrink-0" />
       {value}
     </span>
@@ -193,13 +174,20 @@ function ClaimedAmount({ icon, value, className = "" }: { icon: string; value: s
 }
 
 /**
- * One stop on the road: the medallion, the weekday above it, and the chip
- * hanging under it that says what this day is doing.
+ * One stop on the road: a medallion sitting on the road, and under it a
+ * caption — the weekday, and one line saying what this day did.
  *
- * Absolutely positioned over the canvas at the coordinates the geometry
- * gives, medallion centred on the road. The chip is clamped back inside the
- * map's edges independently of the medallion — see clampChipX — so the
- * widest receipt cannot hang off a narrow phone.
+ * A stop used to carry three objects: a white pill with the weekday above the
+ * medallion, the medallion, and a coloured chip below it holding a receipt, a
+ * lock, the word "Missed" or a countdown. Seven of those is twenty-one pieces
+ * of furniture on a phone screen. The lock and the "Missed" said what the
+ * medallion had already said by being pale, so they are gone; the weekday and
+ * the takings are one caption block now, which is also what stops a stop from
+ * jumping as its state changes.
+ *
+ * The caption is clamped back inside the map's edges independently of the
+ * medallion — see clampChipX — so the widest line cannot hang off a narrow
+ * phone.
  */
 function RoadStop({
   date,
@@ -242,20 +230,25 @@ function RoadStop({
   const isClaimable = isToday && canClaim && phase === "idle";
   /** The last stop of the week is the one worth walking to, so it is treasure. */
   const isFinal = index === 6;
+  const weekday = formatWeekday(date, language);
 
   /**
    * What this day paid. `awarded` is what the server just handed back and is
    * only ever set on today's stop; `claimedReward` is what the tables
    * remember. Preferring the live one matters because it needs no round
-   * trip: the receipt appears with the confetti rather than after a refetch
+   * trip: the takings appear with the confetti rather than after a refetch
    * that may not have happened yet.
    */
   const receipt = awarded ?? claimedReward;
 
-  // Today's stop is the biggest thing on the road and the rest are plainly
-  // smaller, so where you are is legible before a word is read. Bigger than
-  // this and a medallion covers the road it stands on.
-  const size = isToday ? 80 : 62;
+  /**
+   * Today is the biggest stop on the road, and Sunday is the next biggest.
+   *
+   * Sunday pays the most — 300 coins and 5 gems against Monday's 50 — and
+   * once the gift under a locked stop became a lock glyph there was nothing
+   * left to say so. Size says it, and costs no ink.
+   */
+  const size = isToday ? 84 : isFinal ? 72 : 62;
   const art = isFinal
     ? showOpenGift
       ? treasureIcon
@@ -264,91 +257,106 @@ function RoadStop({
       ? giftOpenIcon
       : giftClosedIcon;
 
+  /**
+   * The three surfaces, and only one of them is a colour.
+   *
+   * Today stands on the app's hard edge, because it is the one thing here you
+   * can press. The rest are outlined with the hairline and nothing else — a
+   * claimed day is white so the opened gift carries it, a missed or locked one
+   * is the sheet's own tint, a step away from disappearing.
+   */
+  const face = isToday ? TODAY_FACE : isMissed ? SPENT_FACE : CLAIMED_FACE;
+  const lift = isToday
+    ? `0 0 0 5px #FFFFFF, 0 5px 0 ${TODAY_EDGE}, inset 0 2px 0 rgba(255,255,255,0.22), 0 12px 20px rgba(64,38,102,0.16)`
+    : isMissed
+      ? `0 0 0 1.5px ${RING}`
+      : `0 0 0 1.5px ${RING}, 0 2px 0 #EDE6F7`;
+
+  /**
+   * What a stop is, said in words for anyone who cannot see that it is pale.
+   *
+   * The lock glyph and the greyed gift are the whole visual vocabulary now,
+   * which is exactly the sort of economy that leaves a screen reader with
+   * nothing. The state is on the medallion instead of printed under it.
+   */
+  const spokenState =
+    state === "claimed"
+      ? t("dailyRewards.claimed")
+      : isMissed
+        ? t("dailyRewards.missed")
+        : state === "future"
+          ? t("dailyRewards.locked")
+          : t("dailyRewards.today");
+
   return (
     <>
-      {/* Weekday label — the calendar, not a streak counter. On the meadow
-          rather than on the medallion, so the gift keeps the whole face. */}
-      <div
-        className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-full px-2.5 py-0.5 text-[11px] font-bold capitalize text-[#402666]"
-        style={{ ...CHIP_SURFACE, left: x, top: y - size / 2 - 10, opacity: isMissed ? 0.65 : 1 }}
-      >
-        {formatWeekday(date, language)}
-      </div>
-
-      {/* The medallion: a gift until it is opened. What is inside is the
-          server's decision, so nothing is promised here — the surprise IS
-          the feature. */}
       <motion.div
         initial={{ opacity: 0, scale: 0.7 }}
         animate={{ opacity: 1, scale: 1 }}
         whileTap={isClaimable ? { scale: 0.94 } : undefined}
         transition={{ delay: index * 0.04, type: "spring", stiffness: 320, damping: 22 }}
         className="absolute z-10 flex items-center justify-center rounded-full"
+        role="img"
+        aria-label={`${weekday} — ${spokenState}`}
         // Offset by half itself rather than by a -translate-x-1/2 class:
         // framer-motion writes the element's `transform` outright for the
         // entrance scale, which REPLACES a Tailwind translate instead of
         // composing with it. That put every medallion's top-left corner on
         // the road rather than its centre — the gifts sat half a medallion
-        // down and to the right of the stop they belong to, and the weekday
-        // label above them (a plain div, so its translate survived) was the
-        // only thing in the right place.
-        style={{
-          left: x - size / 2,
-          top: y - size / 2,
-          width: size,
-          height: size,
-          background: stopGradient(index),
-          // ring, hard edge, the app's white inset hairline, and only then a
-          // soft shadow to lift it off the ground.
-          boxShadow: isToday
-            ? `0 0 0 5px #FFFFFF, 0 6px 0 ${stopEdge(index)}, inset 0 2px 0 rgba(255,255,255,0.4), 0 10px 18px rgba(64,38,102,0.18)`
-            : `0 0 0 4px #FFFFFF, 0 4px 0 ${stopEdge(index)}, inset 0 1.5px 0 rgba(255,255,255,0.35), 0 7px 12px rgba(64,38,102,0.12)`,
-          filter: isMissed
-            ? "saturate(0.2) brightness(0.95)"
-            : state === "future"
-              ? "saturate(0.7) brightness(1.06)"
-              : undefined,
-        }}
+        // down and to the right of the stop they belong to.
+        style={{ left: x - size / 2, top: y - size / 2, width: size, height: size, background: face, boxShadow: lift }}
       >
-        {/* Always the gift — closed, then open. What was inside is shown once,
-            on the chip below, where the day's receipt already lives.
+        {state === "future" ? (
+          // Nothing is promised here: what a day pays is decided by
+          // claim_daily_reward when it is opened, so a locked stop shows a
+          // lock and not a figure.
+          <Lock className="h-5 w-5 text-[#B9A8D6]" />
+        ) : (
+          /* Always the gift — closed, then open. What was inside is shown
+             once, in the caption below, where the day's takings already live.
 
-            It used to be shown twice: the prize replaced the gift here AND
-            the receipt appeared below it, so the moment of opening had the
-            answer in two places and the opened box — the thing that says
-            "you opened it" — was never seen at all. */}
-        <motion.img
-          key={showOpenGift ? "open" : "closed"}
-          src={art}
-          alt=""
-          className="object-contain drop-shadow-[0_3px_6px_rgba(0,0,0,0.22)]"
-          style={{ width: size * 0.66, height: size * 0.66, opacity: isMissed ? 0.55 : 1 }}
-          animate={
-            phase === "opening"
-              ? { rotate: [0, -10, 10, -8, 8, -5, 5, 0], scale: [1, 1.08, 1.08, 1.12, 1.12, 1.15, 1.15, 1.2] }
-              : phase === "revealed"
-                // Lands: the lid comes off and it settles, rather than
-                // carrying on bobbing as though still waiting to be opened.
-                ? { scale: [1.2, 0.95, 1], rotate: 0 }
-                : state === "today" && canClaim
-                  ? { y: [0, -5, 0] }
-                  : undefined
-          }
-          transition={
-            phase === "opening"
-              ? { duration: 0.85 }
-              : phase === "revealed"
-                ? { duration: 0.45 }
-                : { repeat: Infinity, duration: 1.8, ease: "easeInOut" }
-          }
-        />
+             It used to be shown twice: the prize replaced the gift here AND
+             the receipt appeared below it, so the moment of opening had the
+             answer in two places and the opened box — the thing that says
+             "you opened it" — was never seen at all. */
+          <motion.img
+            key={showOpenGift ? "open" : "closed"}
+            src={art}
+            alt=""
+            className="object-contain"
+            style={{
+              width: size * 0.62,
+              height: size * 0.62,
+              opacity: isMissed ? 0.32 : 1,
+              filter: isMissed ? "saturate(0.15)" : undefined,
+            }}
+            animate={
+              phase === "opening"
+                ? { rotate: [0, -10, 10, -8, 8, -5, 5, 0], scale: [1, 1.08, 1.08, 1.12, 1.12, 1.15, 1.15, 1.2] }
+                : phase === "revealed"
+                  // Lands: the lid comes off and it settles, rather than
+                  // carrying on bobbing as though still waiting to be opened.
+                  ? { scale: [1.2, 0.95, 1], rotate: 0 }
+                  : isClaimable
+                    ? { y: [0, -4, 0] }
+                    : undefined
+            }
+            transition={
+              phase === "opening"
+                ? { duration: 0.85 }
+                : phase === "revealed"
+                  ? { duration: 0.45 }
+                  : { repeat: Infinity, duration: 1.8, ease: "easeInOut" }
+            }
+          />
+        )}
 
         {/* The ring that says "here, now". Only ever on one stop. */}
         {isClaimable && (
           <motion.span
-            className="pointer-events-none absolute inset-[-10px] rounded-full border-[3px] border-white/80"
-            animate={{ scale: [1, 1.16, 1], opacity: [0.85, 0, 0.85] }}
-            transition={{ repeat: Infinity, duration: 1.9, ease: "easeOut" }}
+            className="pointer-events-none absolute inset-[-9px] rounded-full border-2 border-[#9B6BF3]/60"
+            animate={{ scale: [1, 1.14, 1], opacity: [0.7, 0, 0.7] }}
+            transition={{ repeat: Infinity, duration: 2.1, ease: "easeOut" }}
           />
         )}
 
@@ -358,8 +366,7 @@ function RoadStop({
             the same instruction written twice: the stop pulses, the gift
             bobs, and then a separate purple bar says press me. On a map you
             press the place you are standing on, so the whole medallion takes
-            the tap — a 80px circle, comfortably past the 44pt minimum, where
-            the button was a 128x44 bar that also covered the road.
+            the tap — an 84px circle, comfortably past the 44pt minimum.
 
             A real <button> laid over the face rather than a click handler on
             the medallion: it is focusable, it says what it does to a screen
@@ -371,60 +378,48 @@ function RoadStop({
             type="button"
             onClick={canClaim && phase === "idle" ? onClaim : undefined}
             aria-label={t("dailyRewards.claim")}
-            className="absolute inset-0 rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+            className="absolute inset-0 rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#7126D5]"
           />
         )}
       </motion.div>
 
-      {/* The chip: one slot, one footprint, whatever this day is doing. */}
+      {/* The caption: the weekday, and one line for what the day did. Fixed
+          width and centred, so a stop with takings and a stop without are the
+          same object in the same place. */}
       <div
-        className="absolute z-10 flex -translate-x-1/2 justify-center"
-        style={{ left: clampChipX(x, mapWidth), top: y + size / 2 + 10 }}
+        className="pointer-events-none absolute z-10 w-[176px] -translate-x-1/2 text-center"
+        style={{ left: clampChipX(x, mapWidth), top: y + size / 2 + 9 }}
       >
+        <div
+          className="whitespace-nowrap text-[11px] font-bold capitalize tracking-[0.02em]"
+          style={{ color: isToday ? "#7126D5" : INK, opacity: isMissed || state === "future" ? 0.38 : 0.62 }}
+        >
+          {weekday}
+        </div>
+
         {state === "claimed" || (state === "today" && phase === "revealed") ? (
           receipt ? (
-            // The receipt: check + what the day actually paid, one centered
-            // line always (nowrap, everything shrink-0) — no "Claimed" label,
-            // the check says it. Coins are constant; the bonus is at most one
-            // more kind — see claim_daily_reward's "never a third pill" rule.
+            // What the day actually paid, as one centred line of ink — no
+            // pill, no check, no "Claimed" label. The opened gift above it
+            // has already said it was taken. Coins are constant; the bonus is
+            // at most one more kind — see claim_daily_reward's "never a third
+            // pill" rule.
             //
-            // The spacing is optical, not nominal, and that is the whole point.
-            // A uniform gap-3 with px-3 measured DEAD EVEN in the box model
-            // and still looked wrong, because what a reader sees is the ink,
-            // and every glyph here carries a different amount of its own
-            // padding: the lucide check sits ~3px inside its 20px box, the
-            // coin PNG ~4px inside its 18px, the snowflake almost none, and a
-            // digit ends flush. Measured off a 3x screenshot, uniform 12px
-            // produced:
+            // The spacing is optical, not nominal, and that is the whole
+            // point. A uniform gap measured DEAD EVEN in the box model and
+            // still looked wrong, because what a reader sees is the ink, and
+            // every glyph here carries a different amount of its own padding:
+            // the coin PNG sits ~4px inside its 18px box, the snowflake
+            // almost none, and a digit ends flush. Measured off a 3x
+            // screenshot, a uniform 12px separated two rewards by only twice
+            // what binds an icon to its own number, so "125" and the
+            // snowflake read as a single run instead of two things.
             //
-            //     left 15.3 | check->coin 17.0 | coin->125 6.4
-            //               | 125->power 12.7 | right 13.3
-            //
-            // Two faults in that. The three that should match — the two edges
-            // and the gap after the check — ran 15.3 / 17.0 / 13.3. And the
-            // separation BETWEEN rewards (12.7) was only twice the separation
-            // inside one (6.4), so "125" and the snowflake read as a single
-            // run instead of two things.
-            //
-            // So: rewards are held ~20px apart — a clear 3x the 6px that binds
-            // an icon to its own number — and the edges keep 2px of asymmetry,
-            // because the check's ink starts ~1px further inside its box than
-            // the trailing digit's does. Change an icon and these want
-            // re-measuring; they are chosen against the art that is here.
-            //
-            // Only the pill's shell changed when the week became a road: it is
-            // shorter and fully round to sit under a medallion. Every number
-            // below is horizontal and was measured against these icons at this
-            // size, so all of them are the ones that were measured.
-            <div
-              className={`flex h-[44px] ${PILL_W_MIN} max-w-full items-center justify-center whitespace-nowrap rounded-full pl-[19px] pr-[21px]`}
-              style={{
-                background: stopGradient(index),
-                boxShadow: `0 3px 0 ${stopEdge(index)}, inset 0 1.5px 0 rgba(255,255,255,0.35)`,
-              }}
-            >
-              <Check className="h-4 w-4 shrink-0 text-white" />
-              <ClaimedAmount icon={coinIcon} value={String(receipt.coins)} className="ml-2" />
+            // So: rewards are held ~20px apart, a clear 3x the 6px inside
+            // one. Change an icon and these want re-measuring; they are
+            // chosen against the art that is here.
+            <div className="mt-0.5 flex items-center justify-center whitespace-nowrap">
+              <ClaimedAmount icon={coinIcon} value={String(receipt.coins)} />
               {receipt.gems > 0 && (
                 <ClaimedAmount icon={gemIcon} value={String(receipt.gems)} className="ml-[18px]" />
               )}
@@ -435,24 +430,25 @@ function RoadStop({
                   twice as close to its number.
 
                   The art is why. Measured off the alpha channel, the coin and
-                  gem fill about two thirds of their square — 11.4 and 12.0px of
-                  ink in an 18px box, with 3.4 and 3.1px of clear space on the
-                  right. Every power badge fills its file edge to edge: 17.9px
-                  of ink in that same box, and 0.1px on the right. So the same
-                  18 drew a bigger icon and the same gap-0.5 drew a tighter gap.
+                  gem fill about two thirds of their square — 11.4 and 12.0px
+                  of ink in an 18px box, with 3.4 and 3.1px of clear space on
+                  the right. Every power badge fills its file edge to edge:
+                  17.9px of ink in that same box, and 0.1px on the right. So
+                  the same 18 drew a bigger icon and the same gap-0.5 drew a
+                  tighter gap.
 
                   POWER_ICON_PX is the box that puts a badge's INK at ~12px
                   tall, matching the coin's 12.1 and the gem's 10.4 — it comes
                   out at 12.0/12.4/12.2/12.1 for freeze, 5050, replace and
-                  time-drain, so one number serves all four. gap-[5px] then puts
-                  ~5.5px of clear space before the digit against the currencies'
-                  5.1-5.4.
+                  time-drain, so one number serves all four. gap-[5px] then
+                  puts ~5.5px of clear space before the digit against the
+                  currencies' 5.1-5.4.
 
-                  object-contain is not decoration either: freeze is 356x393 and
-                  replace 379x405, so the old square box without it stretched
+                  object-contain is not decoration either: freeze is 356x393
+                  and replace 379x405, so a square box without it stretches
                   both about 10% wide. */}
               {receipt.powerUp && (
-                <span className="ml-[18px] flex shrink-0 items-center gap-[5px] text-sm font-black text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)]">
+                <span className="ml-[18px] flex shrink-0 items-center gap-[5px] text-sm font-bold text-[#402666]">
                   {receipt.powerUp === "time-drain" ? (
                     <TimeIcon size={POWER_ICON_PX} />
                   ) : (
@@ -468,35 +464,8 @@ function RoadStop({
                 </span>
               )}
             </div>
-          ) : (
-            // Neither the receipt columns nor the ledger has anything for this
-            // day, so there is no honest amount to show and the check alone
-            // marks it taken. Inventing a plausible figure here would be the
-            // screen lying about the player's own ledger, which is worse than
-            // a day that says only "taken".
-            <div
-              className={`flex h-[44px] ${PILL_W} items-center justify-center rounded-full`}
-              style={{
-                background: stopGradient(index),
-                boxShadow: `0 3px 0 ${stopEdge(index)}, inset 0 1.5px 0 rgba(255,255,255,0.35)`,
-              }}
-            >
-              <Check className="h-5 w-5 text-white" />
-            </div>
-          )
-        ) : isMissed ? (
-          <div className={`flex h-[44px] ${PILL_W} items-center justify-center rounded-full`} style={CHIP_SURFACE}>
-            <span className="text-[13px] font-bold text-[#402666]/55">{t("dailyRewards.missed")}</span>
-          </div>
-        ) : state === "future" ? (
-          // Locked, and the road says why: it is further along than today.
-          // The weekday above the medallion is the requirement — come back
-          // then, with the streak intact.
-          <div className={`flex h-[44px] ${PILL_W} items-center justify-center gap-1.5 rounded-full`} style={CHIP_SURFACE}>
-            <Lock className="h-3.5 w-3.5 text-[#402666]/50" />
-            <span className="text-[13px] font-bold text-[#402666]/55">{t("dailyRewards.locked")}</span>
-          </div>
-        ) : !canClaim && phase === "idle" ? (
+          ) : null
+        ) : !canClaim && phase === "idle" && isToday ? (
           // Today, but not yet. The word "Claim" on a button that cannot be
           // pressed is the screen arguing with itself — and with the very
           // countdown underneath it. Say the wait instead.
@@ -505,9 +474,8 @@ function RoadStop({
           // renders as "claimed" above and never reaches here. It still
           // covers the gap while this week's claims are being fetched, when
           // the timer already knows the day is gone and the stop does not.
-          <div className={`flex h-[44px] ${PILL_W} items-center justify-center gap-1.5 rounded-full`} style={CHIP_SURFACE}>
-            <Clock className="h-3.5 w-3.5 text-[#402666]/45" />
-            <span className="font-mono text-[13px] font-bold text-[#402666]/70">{timeLeft}</span>
+          <div className="mt-0.5 whitespace-nowrap font-mono text-[13px] font-bold text-[#402666]/55">
+            {timeLeft}
           </div>
         ) : null}
       </div>
@@ -822,49 +790,39 @@ export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: D
               </div>
 
               {/* The streak, and the VIP bonus when there is one.
-                  
-                  This was three floating pills in three different pastels —
-                  a peach one for the streak, an amber one for the clock, a
-                  purple-pink one for VIP — sitting under the map like
-                  stickers. It is the SAME streak row the missions sheet
-                  draws, to the pixel: the green gradient on its hard edge,
-                  the white square badge, the label, and the count in a white
-                  pill. Two screens, one component's worth of design.
 
-                  The countdown is not here any more. It belongs to today's
-                  stop, where the gift you cannot open yet is, and the modal
-                  opens centred on it — a second clock down here was the
-                  screen saying the same thing twice in two different
-                  colours. */}
-              <div className="flex shrink-0 items-center gap-2 px-4 pb-4 pt-2">
+                  This has now been three things. It started as three pastel
+                  pills floating under the map like stickers; then it was the
+                  missions sheet's streak row, a full-width green gradient bar
+                  — which is a fine component there, and here was the loudest
+                  object on a screen whose whole point had become restraint.
+                  It is two of the app's own white chips, centred, and it is
+                  the last thing you look at rather than the first.
+
+                  The countdown is not here. It belongs to today's stop, where
+                  the gift you cannot open yet is, and the modal opens centred
+                  on it — a second clock down here was the screen saying the
+                  same thing twice. */}
+              <div className="flex shrink-0 items-center justify-center gap-2 px-4 pb-4 pt-1">
                 <div
-                  className="flex flex-1 items-center justify-between rounded-2xl px-3 py-2.5"
-                  style={{
-                    background: "linear-gradient(90deg, #2DD4A0 0%, #10B981 100%)",
-                    boxShadow: "0 3px 0 0 #0EA97C, inset 0 1.5px 0 0 rgba(255,255,255,0.35)",
-                  }}
+                  className="flex items-center gap-1.5 rounded-full px-3 py-1.5"
+                  style={CHIP_SURFACE}
                 >
-                  <div className="flex min-w-0 items-center gap-2">
-                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white">
-                      <Flame className="h-4 w-4 fill-amber-400 text-amber-400" />
-                    </div>
-                    <span className="truncate text-sm font-bold text-white">{t("missions.streak")}</span>
-                  </div>
-                  <div className="ml-2 shrink-0 rounded-full bg-white px-3 py-1 text-xs font-bold text-[#0F766E]">
+                  <Flame className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                  <span className="text-xs font-bold" style={{ color: INK }}>
+                    {t("missions.streak")}
+                  </span>
+                  <span className="text-xs font-bold" style={{ color: INK, opacity: 0.55 }}>
                     {currentStreak} {t("missions.days")}
-                  </div>
+                  </span>
                 </div>
 
                 {isProPlus() && (
-                  <div
-                    className="flex shrink-0 items-center gap-1.5 rounded-2xl px-3 py-2.5"
-                    style={{
-                      background: "linear-gradient(90deg, #A855F7 0%, #EC4899 100%)",
-                      boxShadow: "0 3px 0 0 #BE185D, inset 0 1.5px 0 0 rgba(255,255,255,0.35)",
-                    }}
-                  >
-                    <Crown className="h-4 w-4 text-white" />
-                    <span className="text-xs font-bold text-white">{t("extra.vipBonusPercent")}</span>
+                  <div className="flex items-center gap-1.5 rounded-full px-3 py-1.5" style={CHIP_SURFACE}>
+                    <Crown className="h-3.5 w-3.5 text-[#7126D5]" />
+                    <span className="text-xs font-bold" style={{ color: INK }}>
+                      {t("extra.vipBonusPercent")}
+                    </span>
                   </div>
                 )}
               </div>

@@ -29,13 +29,20 @@ export interface RoadNode {
 export const ROAD = {
   /** Empty road above the first stop, so the map starts as a road and not as a gift. */
   head: 96,
-  /** Distance between stops. Holds a medallion, its weekday and its chip with room to spare. */
-  step: 176,
+  /** Distance between stops. Holds a medallion and its caption with room to spare. */
+  step: 140,
   /** Road below the last stop — it carries on out of the frame rather than stopping dead. */
   tail: 128,
-  /** How far a stop swings from the centre line: a share of the width, capped. */
-  swayRatio: 0.2,
-  swayMax: 56,
+  /**
+   * How far a stop swings from the centre line: a share of the width, capped.
+   *
+   * Gentler than it was. A wide swing looks livelier in isolation and costs
+   * the verge everything: the road plus the caption under each stop is the
+   * middle of the map, and what the swing takes is the only ground left for
+   * anything to grow on.
+   */
+  swayRatio: 0.12,
+  swayMax: 44,
   /** The width of the road surface, and of the dotted band drawn under it. */
   surface: 30,
   band: 38,
@@ -45,7 +52,7 @@ export const ROAD = {
    * width; it is the clearance clampChipX keeps at both edges so that the
    * widest of them still has both ends on screen.
    */
-  chipWidth: 216,
+  chipWidth: 180,
   /** Clear space kept between the scenery and the edge of the road surface. */
   verge: 16,
 } as const;
@@ -177,15 +184,7 @@ export function clampChipX(x: number, width: number): number {
   return Math.max(half, Math.min(width - half, x));
 }
 
-export type SceneryKind =
-  | "tree"
-  | "bush"
-  | "flower"
-  | "grass"
-  | "crystal"
-  | "sparkle"
-  | "cloud"
-  | "butterfly";
+export type SceneryKind = "tree" | "bush" | "flower" | "grass";
 
 export interface SceneryItem {
   id: string;
@@ -220,19 +219,23 @@ function seeded(seed: number): () => number {
   };
 }
 
-/** Ground cover, in the order it is drawn — trees behind, small things in front. */
+/**
+ * Ground cover, in the order it is drawn — trees behind, small things in front.
+ *
+ * Four kinds, down from six. The gem and the sparkle went with the rainbow:
+ * on a screen where the only saturated object is today's stop, a glittering
+ * amber star beside the road is competing with the one thing that matters,
+ * and the clouds and butterflies drifting over it were three more moving
+ * things than the map needed.
+ */
 const GROUND: { kind: SceneryKind; weight: number; scale: [number, number] }[] = [
-  { kind: "tree", weight: 3, scale: [1.5, 2.2] },
-  { kind: "bush", weight: 3, scale: [1.0, 1.5] },
-  { kind: "flower", weight: 4, scale: [0.7, 1.0] },
-  { kind: "grass", weight: 4, scale: [0.7, 1.1] },
-  // A gem and a sparkle rather than a rock and a toadstool: the ground beside
-  // a rewards road should be made of the things the rewards are made of, and
-  // those two were the only objects in the scene that belonged to no part of
-  // this app. Drawn small inside their box, so they take a larger scale than
-  // the plants to read as anything at all.
-  { kind: "crystal", weight: 1, scale: [0.9, 1.3] },
-  { kind: "sparkle", weight: 1, scale: [0.9, 1.3] },
+  // Sized for the verge that is actually left over on a phone — a 50px tree
+  // simply has nowhere to stand beside a 312px map, and asking for one only
+  // means no tree at all.
+  { kind: "tree", weight: 3, scale: [1.1, 1.6] },
+  { kind: "bush", weight: 3, scale: [0.9, 1.3] },
+  { kind: "flower", weight: 2, scale: [0.7, 1.0] },
+  { kind: "grass", weight: 3, scale: [0.7, 1.1] },
 ];
 
 const pickKind = (r: number) => {
@@ -246,7 +249,40 @@ const pickKind = (r: number) => {
 };
 
 /**
- * The meadow either side of the road.
+ * The ground a stop occupies, and therefore where nothing may grow.
+ *
+ * Two boxes, not one. The medallion is a circle around the stop; the caption
+ * is a WIDE, SHORT band under it holding the weekday and, on a claimed day,
+ * what it paid — and that band is the part that was being planted over. A
+ * flower drawn across "50" is not a flower, it is a smudge on a number, which
+ * on the one screen whose job is to be readable is the whole ballgame.
+ *
+ * Exported because the test asserts the property against the same numbers the
+ * placement uses, rather than against a copy of them that can drift.
+ */
+export const STOP_CLEARANCE = {
+  /** Half-width and half-height of the medallion's own box. */
+  faceX: 56,
+  faceY: 56,
+  /** The caption band: half-width, and how far below the stop it runs. */
+  captionX: 84,
+  captionTop: 24,
+  captionBottom: 96,
+} as const;
+
+export function overlapsStop(node: RoadNode, x: number, y: number): boolean {
+  const dx = Math.abs(node.x - x);
+  const dy = node.y - y;
+  const onFace = dx < STOP_CLEARANCE.faceX && Math.abs(dy) < STOP_CLEARANCE.faceY;
+  const onCaption =
+    dx < STOP_CLEARANCE.captionX &&
+    -dy >= STOP_CLEARANCE.captionTop &&
+    -dy <= STOP_CLEARANCE.captionBottom;
+  return onFace || onCaption;
+}
+
+/**
+ * The planting either side of the road.
  *
  * One candidate every ROW pixels down each side, kept only if it clears both
  * the road surface and the stop medallions. Rejecting rather than shuffling
@@ -255,16 +291,16 @@ const pickKind = (r: number) => {
  * the road bends towards that side — which is what a verge does.
  */
 export function scenery(nodes: RoadNode[], width: number, height: number): SceneryItem[] {
-  const ROW = 44;
-  /** Clearance around a stop's medallion and the chip hanging under it. */
-  const NODE_CLEAR_X = 62;
-  const NODE_CLEAR_Y = 74;
+  // One candidate every ROW pixels, and a coin flip to skip. 44 with a 24%
+  // skip planted something almost everywhere there was room, which on a
+  // deliberately quiet sheet reads as clutter rather than as a verge.
+  const ROW = 70;
   const items: SceneryItem[] = [];
   const rand = seeded(Math.round(width));
 
   for (let y = 26, row = 0; y < height - 20; y += ROW, row++) {
     for (const side of [-1, 1] as const) {
-      if (rand() < 0.24) continue; // a gap now and then, or it reads as a hedge
+      if (rand() < 0.3) continue; // a gap now and then: this is a verge, not a hedge
       const edge = roadXAt(nodes, y) + side * (ROAD.surface / 2 + ROAD.verge);
       const room = side < 0 ? edge - 8 : width - 8 - edge;
       if (room < 18) continue;
@@ -275,10 +311,7 @@ export function scenery(nodes: RoadNode[], width: number, height: number): Scene
       if (room < half * 1.4) continue;
 
       const x = edge + side * (half + rand() * Math.max(0, room - half * 1.4));
-      const tooCloseToStop = nodes.some(
-        (n) => Math.abs(n.y - y) < NODE_CLEAR_Y && Math.abs(n.x - x) < NODE_CLEAR_X
-      );
-      if (tooCloseToStop) continue;
+      if (nodes.some((n) => overlapsStop(n, x, y))) continue;
 
       items.push({
         id: `${g.kind}-${row}-${side}`,
@@ -291,34 +324,6 @@ export function scenery(nodes: RoadNode[], width: number, height: number): Scene
         duration: 4.4 + rand() * 3.2,
       });
     }
-  }
-
-  // Air traffic: a few clouds, a couple of butterflies. Placed over the whole
-  // map including the road, because they are above it.
-  const air = Math.max(2, Math.round(height / 420));
-  for (let i = 0; i < air; i++) {
-    items.push({
-      id: `cloud-${i}`,
-      kind: "cloud",
-      x: 18 + rand() * Math.max(1, width - 36),
-      y: 40 + rand() * Math.max(1, height - 80),
-      scale: 2.2 + rand() * 1.3,
-      flip: rand() < 0.5,
-      delay: rand() * 6,
-      duration: 16 + rand() * 10,
-    });
-    items.push({
-      id: `butterfly-${i}`,
-      kind: "butterfly",
-      x: 24 + rand() * Math.max(1, width - 48),
-      y: 60 + rand() * Math.max(1, height - 120),
-      // Same reason as the crystals: below about this size a butterfly is a
-      // coloured dot however carefully it is drawn.
-      scale: 1.05 + rand() * 0.45,
-      flip: rand() < 0.5,
-      delay: rand() * 5,
-      duration: 5 + rand() * 3,
-    });
   }
 
   return items;

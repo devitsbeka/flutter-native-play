@@ -34,11 +34,11 @@ describe("what the face of a stop shows", () => {
     // The prize used to replace the gift here while the receipt appeared on
     // the chip below — the answer in two places, and the opened box, which
     // is the thing that says "you opened it", never seen at all.
-    const medallion = modal.match(/{\/\* Always the gift[\s\S]*?\n {6}<\/motion\.div>/);
+    const medallion = modal.match(/<motion\.div[\s\S]*?<\/motion\.div>/);
     expect(medallion, "expected the stop's medallion").not.toBeNull();
     expect(modal, "open and closed art, chosen once").toMatch(/const art = isFinal/);
     expect(medallion![0]).toMatch(/src=\{art\}/);
-    expect(medallion![0], "the prize belongs on the chip, once").not.toMatch(/RewardPill|awarded\.coins/);
+    expect(medallion![0], "the prize belongs in the caption, once").not.toMatch(/RewardPill|awarded\.coins/);
   });
 
   it("has no leftover prize component", () => {
@@ -53,10 +53,17 @@ describe("what the face of a stop shows", () => {
     // what a day pays — the ladder, the PRO Plus multiplier and the rolled
     // surprise are all its — so a locked stop that named a figure would be
     // this screen guessing at the server's answer in advance.
-    const locked = modal.match(/state === "future" \? \([\s\S]*?\n {8}\) :/);
-    expect(locked, "expected the locked chip").not.toBeNull();
-    expect(locked![0]).toMatch(/dailyRewards\.locked/);
+    // A locked stop is a lock on a white face and a greyed weekday under it —
+    // no figure, and no word either. What a day pays is decided by
+    // claim_daily_reward when it is opened, so a number here would be this
+    // screen guessing at the server's answer in advance.
+    const locked = modal.match(/\{state === "future" \? \([\s\S]*?\n {8}\) : \(/);
+    expect(locked, "expected the locked face").not.toBeNull();
+    expect(locked![0]).toMatch(/<Lock className/);
     expect(locked![0]).not.toMatch(/coinIcon|gemIcon|receipt\./);
+    // The state still reaches a screen reader, which a lock glyph alone does not.
+    expect(modal).toMatch(/dailyRewards\.locked/);
+    expect(modal).toMatch(/aria-label=\{`\$\{weekday\} — \$\{spokenState\}`\}/);
   });
 
   it("opens, then settles", () => {
@@ -77,8 +84,8 @@ describe("today, but not yet", () => {
     // Measured: with the timer knowing the day is spent and the week's claims
     // not yet loaded, the card now reads 00:00:48 where it used to read
     // "Claim" and refuse the press.
-    expect(modal).toMatch(/!canClaim && phase === "idle" \? \(/);
-    expect(modal).toMatch(/\{timeLeft\}<\/span>/);
+    expect(modal).toMatch(/!canClaim && phase === "idle" && isToday \? \(/);
+    expect(modal).toMatch(/\{timeLeft\}\s*\n\s*<\/div>/);
   });
 
   it("is given the same countdown the modal shows underneath", () => {
@@ -109,19 +116,19 @@ describe("today, but not yet", () => {
  * The road has to look like the rest of this app, and that is not a matter of
  * taste that can be left to whoever edits it next.
  *
- * The first cut was a green meadow with flat cartoon trees, toadstools and
- * grey rocks on a white sheet — a competent illustration of a different
- * product. Everything else here is lavender: modals are the #FDFAFF -> #F4EEFB
- * gradient (game-modal.tsx, MissionsModal), cards are a saturated gradient
- * standing on a HARD offset edge of their own darker shade with a white
- * hairline inset along the top, and chips are white with a #E8E0F5 hairline
- * over a 2px edge. A blurred drop shadow and a flat fill are what make a
- * component read as imported from somewhere else.
+ * It has been wrong twice. First a green meadow with cartoon toadstools on a
+ * white sheet — an illustration of a different product. Then the same meadow
+ * repainted in the app's seven brand gradients, with a bar under every stop
+ * in that day's gradient and the takings written across it in white: correct
+ * palette, and worse, because seven colour families and fourteen saturated
+ * objects on a phone screen is a coupon app, and every number on it had to
+ * fight its own background to be read.
  *
- * These assertions are the palette, not the drawing: what a plant is shaped
- * like is free, what it is coloured with is not.
+ * The rule now is one saturated object on the screen — today — and everything
+ * else white, the sheet's lavender, or dark ink. These assertions are that
+ * rule. What a plant is shaped like is free; how loud it is, is not.
  */
-describe("the road is drawn in the app's own language", () => {
+describe("the road keeps to one colour", () => {
   const canvas = readFileSync(
     join(process.cwd(), "src/components/home/RewardRoadCanvas.tsx"),
     "utf8"
@@ -136,41 +143,49 @@ describe("the road is drawn in the app's own language", () => {
     expect(canvas).toMatch(/id="road-ground"[\s\S]{0,200}?stopColor="#FDFAFF"/);
   });
 
-  it("stands every medallion and receipt on a hard edge, with the inset hairline", () => {
-    // Three colours per day, the third being the edge — a gradient pair alone
-    // cannot draw this idiom.
-    expect(modal).toMatch(/const DAY_GRADIENTS: \[string, string, string\]\[\]/);
-    expect(modal).toMatch(/0 6px 0 \$\{stopEdge\(index\)\}, inset 0 2px 0 rgba\(255,255,255/);
-    expect(modal).toMatch(/0 3px 0 \$\{stopEdge\(index\)\}, inset 0 1\.5px 0 rgba\(255,255,255/);
-    // No blurred-shadow chips left where the app draws a hard edge.
-    expect(modal).not.toMatch(/shadow-\[0_2px_6px_rgba\(64,38,102/);
+  it("saturates exactly one thing: today", () => {
+    // The seven-gradient rainbow, gone with the bars it painted.
+    expect(modal).not.toMatch(/DAY_GRADIENTS/);
+    expect(modal).toMatch(/const TODAY_FACE = "linear-gradient\(180deg, #9B6BF3 0%, #7126D5 100%\)"/);
+    // Every other face is white or the sheet's own tint.
+    expect(modal).toMatch(/const CLAIMED_FACE = "#FFFFFF"/);
+    expect(modal).toMatch(/const face = isToday \? TODAY_FACE/);
+  });
+
+  it("stands the one interactive stop on the app's hard edge, and nothing else", () => {
+    // The idiom is for things you press. Seven medallions and seven bars all
+    // standing on their own coloured edge is not an idiom, it is a texture.
+    expect(modal).toMatch(/0 5px 0 \$\{TODAY_EDGE\}/);
+    const edges = modal.match(/0 \d+px 0 \$\{[A-Z_]+\}/g) ?? [];
+    expect(edges.length, "one hard coloured edge on the map").toBe(1);
   });
 
   it("draws its white chips the way every other chip in the app is drawn", () => {
-    expect(modal).toMatch(/border: "1\.5px solid #E8E0F5"/);
+    expect(modal).toMatch(/border: `1\.5px solid \$\{RING\}`/);
     expect(modal).toMatch(/boxShadow: "0 2px 0 #EDE6F7"/);
   });
 
-  it("has no colour in the scenery that the app does not already speak", () => {
-    // Every plant takes one of the medallion gradients by id. A literal fill
-    // outside that set is how the meadow got its sage greens and its brown
-    // toadstools; the trunk and the butterfly's body are the two named
-    // exceptions, both drawn once.
+  it("plants nothing louder than a watermark", () => {
+    // Three tints of the sheet's own lavender and white. A literal fill
+    // outside that set is how this scene got its sage greens, and then its
+    // amber sparkles.
     const fills = [...canvas.matchAll(/fill="(#[0-9A-Fa-f]{6})"/g)].map((m) => m[1].toUpperCase());
-    const allowed = new Set(["#FFFFFF", "#C9A98C", "#5B4B7A", "#FFF7E0", "#E1D6F3"]);
-    expect(fills.filter((f) => !allowed.has(f)), "literal fills in the scenery").toEqual([]);
+    expect(fills.filter((f) => f !== "#FFFFFF"), "literal fills in the planting").toEqual([]);
+    expect(canvas).not.toMatch(/linearGradient id="g-/);
+    // And nothing glitters beside a road whose point is the one stop on it.
+    expect(canvas).not.toMatch(/sparkle|crystal|butterfly|cloud/);
   });
 
-  it("puts the streak in the same row the missions sheet uses", () => {
-    // It was a peach pill with a flame in it, floating under the map with two
-    // other pills in two more pastels. One design, used twice, beats two.
-    expect(modal).toMatch(/linear-gradient\(90deg, #2DD4A0 0%, #10B981 100%\)/);
-    expect(modal).toMatch(/0 3px 0 0 #0EA97C, inset 0 1\.5px 0 0 rgba\(255,255,255,0\.35\)/);
+  it("keeps the streak the quietest thing on the sheet", () => {
+    // Three pastel pills, then a full-width green gradient bar borrowed from
+    // the missions sheet — which is a fine component there and was the
+    // loudest object here, on a screen whose whole point had become restraint.
+    expect(modal).not.toMatch(/linear-gradient\(90deg, #2DD4A0/);
+    expect(modal).toMatch(/style=\{CHIP_SURFACE\}/);
     expect(modal).toMatch(/t\("missions\.streak"\)/);
 
     // And only one clock in the modal: the one under today's stop, where the
-    // gift you cannot open yet is. The amber pill that used to repeat it in
-    // the footer is gone.
+    // gift you cannot open yet is.
     expect(modal.match(/timeLeft=\{dailyTimeLeft\}/g)?.length, "one countdown").toBe(1);
     expect(modal).not.toMatch(/linear-gradient\(135deg, #FEF3C7/);
   });
