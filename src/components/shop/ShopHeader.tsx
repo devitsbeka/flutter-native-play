@@ -2,7 +2,6 @@ import { useCurrency } from "@/hooks/useCurrency";
 import { cn } from "@/lib/utils";
 import gemIcon from "@/assets/icons/icon-gem.png";
 import coinIcon from "@/assets/icons/icon-coin.png";
-import piggyBank from "@/assets/icons/piggy-bank.png";
 
 /**
  * Coins and gems, per Figma node 716:346.
@@ -48,45 +47,6 @@ export function WalletPills({ className }: { className?: string }) {
           <img src={gemIcon} alt="" className="size-[26px] object-contain" />
         </span>
         <span className={count}>{gems.toLocaleString()}</span>
-      </div>
-    </div>
-  );
-}
-
-/**
- * The shop's wallet band — phones only.
- *
- * A full-width strip directly under PageHeader, balances at the left and the
- * piggy bank at the right. Above md the same pills ride in the header beside
- * the title instead, so this band would be a second copy of them and a
- * near-empty row besides.
- *
- * Lilac rather than the white it was: Figma paints the panel #FAF1FC over a
- * #FAD8FF top border, which separates it from the header's own white without
- * a shadow doing the work.
- *
- * 56px rather than 76: it carries two numbers and one button, and at the
- * header's full height it read as a second header rather than a strip
- * belonging to the page.
- *
- * What this deliberately does not carry: a second search button, a second
- * bell, and a help button. PageHeader has search and notifications one row
- * above, so the shop was showing both pairs.
- */
-export function ShopHeader() {
-  return (
-    <div className="w-full border-t border-[#FAD8FF] bg-[#FAF1FC] md:hidden">
-      <div className="mx-auto flex h-[56px] w-full max-w-[700px] items-center gap-4 px-5">
-        <WalletPills />
-
-        {/* Piggy bank — decorative. It used to open a buy/exchange chooser,
-            but the shop page underneath already sells everything the chooser
-            led to, so the tap-through was cut. */}
-        <img
-          src={piggyBank}
-          alt=""
-          className="ml-auto size-[46px] shrink-0 object-contain"
-        />
       </div>
     </div>
   );

@@ -1,10 +1,11 @@
 import { BackgroundVideo } from "@/components/shared/BackgroundVideo";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, User, Play, Compass, Store, Trophy, Headphones, Settings, ChevronRight, LogOut, Pencil, Code2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { ChevronLeft, User, Play, Compass, Store, Trophy, Headphones, Settings, ChevronRight, LogOut, Pencil, Code2, Search, Bell } from "lucide-react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useNotifications } from "@/hooks/useNotifications";
 import { useAvatarModal } from "@/contexts/AvatarModalContext";
 import { Avatar } from "@/components/shared/Avatar";
 import { GreenPlayButton } from "@/components/shared/GreenPlayButton";
@@ -34,7 +35,9 @@ const navItemsConfig = [
 
 export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
   const navigate = useNavigate();
+  const [, setSearchParams] = useSearchParams();
   const { user, profile, signOut, loading } = useAuth();
+  const { unreadCount } = useNotifications();
   const { t } = useLanguage();
   const { openAvatarModal } = useAvatarModal();
   const { guardPlay } = usePlayGuard();
@@ -51,6 +54,26 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
   const handleNavItemClick = (route: string) => {
     onClose();
     navigate(route);
+  };
+
+  // Search and notifications used to be a magnifying glass and a bell in
+  // every page header. The header's right-hand side is the balances now, so
+  // the two of them live in here.
+  //
+  // Search opens through the `?search=open` parameter rather than by
+  // rendering a panel of its own: this drawer unmounts the moment it closes,
+  // and a panel mounted inside it would go with it. MainLayout keeps one
+  // headless SpotlightSearch listening for that parameter on every page.
+  const handleSearchClick = () => {
+    onClose();
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.set("search", "open");
+        return next;
+      },
+      { replace: true },
+    );
   };
 
   const handlePlayClick = () => {
@@ -245,6 +268,50 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
                 >
                   {t("menu.play")}
                 </GreenPlayButton>
+              </div>
+
+              {/* Search and notifications, evicted from the page headers.
+                  Above the destinations and separated from them: they act on
+                  the screen you are already on rather than taking you to
+                  another one. */}
+              <div className="px-3 pb-2">
+                <div className="flex flex-col" style={{ gap: "2px" }}>
+                  <button
+                    onClick={handleSearchClick}
+                    className="flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-muted/50 active:scale-95"
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <Search className="w-5 h-5 text-primary" />
+                    </div>
+                    <span className="text-base font-medium text-foreground">
+                      {t("extra.navSearch")}
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => handleNavItemClick("/notifications")}
+                    className="flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-muted/50 active:scale-95"
+                  >
+                    <div className="relative w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <Bell className="w-5 h-5 text-primary" />
+                      {unreadCount > 0 && (
+                        <span
+                          className="absolute -top-1 -right-1 flex h-[16px] min-w-[16px] items-center justify-center rounded-full px-1"
+                          style={{
+                            background: "linear-gradient(180deg, #EF4444 0%, #DC2626 100%)",
+                            boxShadow: "0 2px 4px rgba(239, 68, 68, 0.5)",
+                          }}
+                        >
+                          <span className="text-[9px] font-bold text-white">
+                            {unreadCount > 9 ? "9+" : unreadCount}
+                          </span>
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-base font-medium text-foreground">
+                      {t("extra.navNotifications")}
+                    </span>
+                  </button>
+                </div>
               </div>
 
               {/* Navigation Items (replacing bottom nav) */}

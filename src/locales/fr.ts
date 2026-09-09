@@ -3385,6 +3385,7 @@ export const fr: KaTranslations = {
     playTriviaTV: "Jouer à Trivia TV",
     shopGifts: "Cadeaux en boutique",
     navSearch: "Recherche",
+    navNotifications: "Notifications",
     navDiscover2: "Découvrir",
     navCreate: "Créer",
     navDashboard: "Tableau de bord",
