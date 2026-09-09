@@ -418,7 +418,7 @@ async function fetchRoomsForUser(userId: string, options?: FetchRoomsOptions): P
 
 // ─── React Query keys ───────────────────────────────────────────────────
 
-const MY_ROOMS_KEY = 'my-rooms' as const;
+export const MY_ROOMS_KEY = 'my-rooms' as const;
 const MY_ROOMS_SEARCH_KEY = 'my-rooms-search' as const;
 const FRIEND_IDS_KEY = 'friend-ids' as const;
 

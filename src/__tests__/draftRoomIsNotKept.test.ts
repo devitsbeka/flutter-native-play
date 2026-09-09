@@ -92,11 +92,31 @@ describe("the back arrow on an abandoned draft", () => {
 
   it("deletes the row — only the host's own unsettled draft, not playing, alone in it", () => {
     expect(exit).toMatch(/isHost &&\s*\n\s*isDraftRoom\(currentRoom\.id\) &&\s*\n\s*!roomCreated &&\s*\n\s*currentRoom\.status !== "playing" &&\s*\n\s*participants\.every\(\(p\) => p\.user_id === user\?\.id\);/);
-    expect(exit).toMatch(/void supabase\.from\("game_rooms"\)\.delete\(\)\.eq\("id", draftId\);/);
+    expect(exit).toMatch(/void deleteDraftRoom\(draftId\);/);
     expect(exit).toMatch(/forgetDraftRoom\(draftId\);/);
   });
 
   it("and still leaves the room the ordinary way first", () => {
-    expect(exit.indexOf("exitRoom();")).toBeLessThan(exit.indexOf("void supabase"));
+    expect(exit.indexOf("exitRoom();")).toBeLessThan(exit.indexOf("void deleteDraftRoom"));
+  });
+
+  it("drops the draft from both lists' caches before deleting, and refetches after", () => {
+    // The lists remount as the lobby closes and ask the server in the same
+    // tick as the delete; the Public list's answer raced it and won, and
+    // showed the draft for the next twenty-five seconds. Cache first (fresh,
+    // so the remount does not ask), then the row, then both lists again.
+    const del = lobby.slice(lobby.indexOf("const deleteDraftRoom = async"), lobby.indexOf("};", lobby.indexOf("const deleteDraftRoom = async")));
+    const drop = del.indexOf("queryClient.setQueryData<PublicRoom[]>(PUBLIC_ROOMS_KEY, (rooms) => rooms?.filter((r) => r.id !== id));");
+    const dropMine = del.indexOf("queryClient.setQueriesData<MyRoom[]>({ queryKey: [MY_ROOMS_KEY] }, (rooms) => rooms?.filter((r) => r.id !== id));");
+    const remove = del.indexOf('await supabase.from("game_rooms").delete().eq("id", id);');
+    const again = del.indexOf("queryClient.invalidateQueries({ queryKey: PUBLIC_ROOMS_KEY })");
+    const againMine = del.indexOf("queryClient.invalidateQueries({ queryKey: [MY_ROOMS_KEY] })");
+    for (const at of [drop, dropMine, remove, again, againMine]) expect(at).toBeGreaterThan(-1);
+    expect(drop).toBeLessThan(remove);
+    expect(dropMine).toBeLessThan(remove);
+    expect(remove).toBeLessThan(again);
+    expect(remove).toBeLessThan(againMine);
+    expect(del).toMatch(/if \(error\) console\.warn\("\[RoomLobbyV2\] draft room was not deleted:", error\.message\);/);
+    expect(read("src/hooks/useMyRooms.ts")).toMatch(/export const MY_ROOMS_KEY = 'my-rooms' as const;/);
   });
 });

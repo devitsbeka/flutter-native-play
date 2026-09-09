@@ -8,7 +8,9 @@ import { Share2, ArrowLeft, Edit2, MessageCircle, Send, X, Trash2, Play, Tv, Ale
 import { createNotification, useNotifications } from "@/hooks/useNotifications";
 import { resolveAvatarUrl } from "@/utils/avatarUtils";
 import { shareOrCopy } from "@/utils/shareLink";
-import { isRoomActive } from "@/hooks/useMyRooms";
+import { isRoomActive, MY_ROOMS_KEY, type MyRoom } from "@/hooks/useMyRooms";
+import { PUBLIC_ROOMS_KEY, type PublicRoom } from "@/hooks/usePublicRooms";
+import { useQueryClient } from "@tanstack/react-query";
 import { RoomIconPickerModal } from "./RoomIconPickerModal";
 import { useMultiplayerV2, getShareLink, QUESTIONS_PER_ROUND, questionsPerRound } from "@/contexts/MultiplayerContextV2";
 import { useAuth } from "@/contexts/AuthContext";
@@ -611,10 +613,41 @@ export function RoomLobbyV2() {
     exitRoom();
     if (draftId) {
       forgetDraftRoom(draftId);
-      void supabase.from("game_rooms").delete().eq("id", draftId);
+      void deleteDraftRoom(draftId);
     }
     // Use replace to avoid going back to a /team?join=... history entry that can auto-rejoin.
     navigate("/team", { replace: true });
+  };
+
+  /**
+   * The draft's row goes, and no list gets to show it on the way out.
+   *
+   * The delete used to be fired and forgotten while the lobby closed - and
+   * closing the lobby mounts the room lists again, which ask the server in
+   * the same tick. The Public list's answer raced the delete and won: it
+   * listed the draft, and asked nothing more for twenty-five seconds. So
+   * the host backed out of a room they never made and found it on the
+   * list, "New", with their name on it (owner: "it creates room when i
+   * clicked back button"). The row WAS deleted; the list was a photograph
+   * taken a moment too early.
+   *
+   * So: first drop the room from both lists' caches - which also marks them
+   * fresh, so the remount does not ask at all - then delete the row, then
+   * have both lists ask again with the row gone. Nothing is left to what
+   * arrives first.
+   */
+  const queryClient = useQueryClient();
+  const deleteDraftRoom = async (id: string) => {
+    void queryClient.cancelQueries({ queryKey: PUBLIC_ROOMS_KEY });
+    void queryClient.cancelQueries({ queryKey: [MY_ROOMS_KEY] });
+    queryClient.setQueryData<PublicRoom[]>(PUBLIC_ROOMS_KEY, (rooms) => rooms?.filter((r) => r.id !== id));
+    queryClient.setQueriesData<MyRoom[]>({ queryKey: [MY_ROOMS_KEY] }, (rooms) => rooms?.filter((r) => r.id !== id));
+    const { error } = await supabase.from("game_rooms").delete().eq("id", id);
+    if (error) console.warn("[RoomLobbyV2] draft room was not deleted:", error.message);
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: PUBLIC_ROOMS_KEY }),
+      queryClient.invalidateQueries({ queryKey: [MY_ROOMS_KEY] }),
+    ]);
   };
 
   /**
