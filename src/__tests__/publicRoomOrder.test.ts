@@ -46,6 +46,8 @@ function room(over: Partial<PublicRoom> = {}): PublicRoom {
     first_category_name: null,
     first_category_icon: null,
     my_state: "none",
+    rounds: [],
+    total_questions: 10,
     ...over,
   };
 }

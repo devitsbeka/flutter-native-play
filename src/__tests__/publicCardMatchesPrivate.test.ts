@@ -35,7 +35,9 @@ describe("the pale card", () => {
     expect(mine).toMatch(/<div className="absolute inset-0 bg-white\/55 pointer-events-none" aria-hidden \/>/);
     expect(mine).toMatch(/rounded-full bg-white\/60 backdrop-blur-sm text-\[#2b1a4a\] font-bold text-xs/);
     expect(mine).toMatch(/<h3 className="font-display font-bold text-\[#2b1a4a\] text-lg leading-tight line-clamp-2">/);
-    expect(mine).toMatch(/<p className="text-\[#2b1a4a\]\/70 text-sm truncate mt-0\.5">/);
+    // The category line gained a row: the name, and a "+N" for the rounds
+    // behind it. Same colour, size and truncation as before.
+    expect(mine).toMatch(/<p className="text-\[#2b1a4a\]\/70 text-sm truncate mt-0\.5 flex items-center gap-1\.5">/);
     expect(mine).toMatch(/bg-white\/60 backdrop-blur-md rounded-2xl px-3 py-2\.5 flex items-center justify-between gap-2/);
     expect(mine).toMatch(/<Trash2 className="w-4 h-4 text-\[#2b1a4a\]" \/>/);
     expect(mine).toMatch(/<LogOut className="w-4 h-4 text-\[#2b1a4a\]" \/>/);

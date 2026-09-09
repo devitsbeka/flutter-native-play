@@ -36,6 +36,25 @@ export interface PublicRoom {
   first_category_icon: string | null;
   /** Where the viewer stands with this room. */
   my_state: "host" | "joined" | "pending" | "approved" | "declined" | "none";
+  /**
+   * Every round the room plays, in order — what the card's "+2" counts and
+   * what tapping it lists.
+   *
+   * Comes from the RPC rather than from room_category_queue, whose only
+   * SELECT policy is "Participants can view queue": a stranger reading the
+   * Public tab cannot see the table, and public_rooms is SECURITY DEFINER so
+   * that it can answer for a room that advertises itself.
+   */
+  rounds: RoomRound[];
+  /** Questions in each of them. Null on a room that brings its own trivia. */
+  total_questions: number | null;
+}
+
+/** One round on a room card: what it plays and the face it wears. */
+export interface RoomRound {
+  name: string | null;
+  icon_slug: string | null;
+  source_type: string;
 }
 
 /**
@@ -120,7 +139,15 @@ export function usePublicRooms(options?: { enabled?: boolean }) {
         }
         throw error;
       }
-      return (data ?? []) as unknown as PublicRoom[];
+      // `rounds` arrives as jsonb and is absent entirely until the
+      // migration that adds it is applied by hand (CLAUDE.md 4a), so it is
+      // normalised here rather than at every card: an empty list reads as
+      // "one round, not yet chosen", which is what the card already draws.
+      return (data ?? []).map((row: Record<string, unknown>) => ({
+        ...row,
+        rounds: Array.isArray(row.rounds) ? (row.rounds as RoomRound[]) : [],
+        total_questions: typeof row.total_questions === "number" ? row.total_questions : null,
+      })) as unknown as PublicRoom[];
     },
   });
 

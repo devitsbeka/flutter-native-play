@@ -21,6 +21,7 @@ import { declineRoomInvite, pendingRoomInvites, type PendingInviteFrom } from "@
 import { RoomCardPlayButton } from "@/components/team/RoomCardPlayButton";
 import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
 import { NotEnoughStakeModal } from "@/components/home/NotEnoughStakeModal";
+import { RoomPreviewSheet } from "@/components/team/RoomPreviewSheet";
 import { useCurrency } from "@/hooks/useCurrency";
 import { REWARDS } from "@/config/rewardConfig";
 import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
@@ -131,6 +132,7 @@ function PublicRoomCard({
   index,
   onInvite,
   onAsk,
+  onPreview,
   onWithdraw,
   onRemove,
   busy,
@@ -165,6 +167,8 @@ function PublicRoomCard({
   /** Open the invite sheet for this room — the host's "+" on the seats row. */
   onInvite: (room: PublicRoom) => void;
   onAsk: (room: PublicRoom) => void;
+  /** Tapping the card anywhere but a control: what does this room play? */
+  onPreview: (room: PublicRoom) => void;
   /** Take back a pending ask — one game at a time, so waiting is undoable. */
   onWithdraw: (room: PublicRoom) => void;
   /** Delete it (the host) or leave it (a seated guest). */
@@ -288,6 +292,10 @@ function PublicRoomCard({
   }, [freshlyMine, room.id]);
   /** The host may invite from here rather than opening the room to do it. */
   const canInvite = room.my_state === "host" && !full;
+  // Rounds beyond the one named on the bar. A room whose queue the RPC has
+  // not been taught to return yet (the migration lands by hand — CLAUDE.md
+  // 4a) reports none, and the card reads as it always did.
+  const extraRounds = Math.max(0, (room.rounds?.length ?? 0) - 1);
 
   return (
     <motion.div
@@ -298,7 +306,15 @@ function PublicRoomCard({
       // The private card's lip: a hard 4px edge under the card and a soft
       // drop beneath it, so the two tabs' cards sit on the page the same way.
       style={{ boxShadow: "0 4px 0 0 hsl(var(--border)), 0 6px 20px -4px rgba(0,0,0,0.1)" }}
-      onClick={() => (inside ? enter() : onAsk(room))}
+      // The card opens what the room IS; the button does what the room
+      // offers. One tap used to do both, so the only way to read a room was
+      // to commit to it (owner: "only button click opens room, sends
+      // request to a host etc.. click on card shows categories list and
+      // cost for participating").
+      // A lounge — the King's couch, the arena — carries its own stake and
+      // its own idea of a round, so the sheet would describe it wrongly.
+      // Their card keeps the tap it had.
+      onClick={() => (lounge ? (inside ? enter() : onAsk(room)) : onPreview(room))}
       aria-disabled={blocked || undefined}
     >
       {/* Drawn over the card, not around it: the wrapper clips to the same
@@ -354,6 +370,18 @@ function PublicRoomCard({
         {/* Top: who runs it, who already joined, and how full it is */}
         <div className="relative z-10 flex items-start justify-between gap-2">
           <div className="flex items-center gap-1.5 min-w-0">
+            {/* Seats, on the left (owner: "show players count on left side
+                of the cards"). It sat in the right-hand cluster with the
+                report and the way out — three controls and a fact, and the
+                fact was the one people were reading. The lounges are what
+                the pair is for: their card is "is there room on that
+                couch"; a classic room without a cap just counts heads. */}
+            <div className={`flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 ${ink.pill}`}>
+              <Users className={`w-3.5 h-3.5 ${ink.text}`} />
+              <span className={`text-xs font-bold ${ink.text}`}>
+                {effectiveSeats ? `${room.player_count}/${effectiveSeats}` : room.player_count}
+              </span>
+            </div>
             {/* The host used to be named here, and then drawn again as the
                 first face on the seats row below — the same person twice on
                 one card. The label moved down to lead the seats (owner:
@@ -367,9 +395,8 @@ function PublicRoomCard({
             )}
           </div>
 
-          {/* Seats. The lounges are what this is for — their card is
-              "is there room on that couch" — so they always show the pair;
-              a classic room without a cap just counts heads. */}
+          {/* The right-hand cluster is controls only now: who is knocking,
+              the report, and the way out. The seats moved to the left. */}
           <div className="flex items-center gap-1.5 shrink-0">
             {/* Somebody is knocking. The host sees it on the card, and a
                 tap opens the room, where the doorstep asks accept / decline
@@ -383,12 +410,6 @@ function PublicRoomCard({
                 <span className="text-xs font-bold text-white">{knocks}</span>
               </span>
             )}
-            <div className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 ${ink.pill}`}>
-              <Users className={`w-3.5 h-3.5 ${ink.text}`} />
-              <span className={`text-xs font-bold ${ink.text}`}>
-                {effectiveSeats ? `${room.player_count}/${effectiveSeats}` : room.player_count}
-              </span>
-            </div>
             {/* Guideline 1.2: a public room is user-generated content — its
                 name, its icon and its host's are all typed or chosen by a
                 stranger — and this list is where a reviewer meets it. There
@@ -600,6 +621,16 @@ function PublicRoomCard({
             <p className={`text-[15px] font-semibold truncate leading-tight ${ink.text}`}>
               {category || t("extra.cpMixedCategory")}
             </p>
+            {/* How much more there is, without saying what (owner: "show +X
+                if there are more rounds in the room selected"). Tapping the
+                card is what names them. */}
+            {extraRounds > 0 && (
+              <span
+                className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-bold ${ink.pill} ${ink.text}`}
+              >
+                +{extraRounds}
+              </span>
+            )}
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0">
@@ -707,6 +738,8 @@ export function PublicRoomsSection({
   const queryClient = useQueryClient();
   const [busyId, setBusyId] = useState<string | null>(null);
   const [showNoStake, setShowNoStake] = useState(false);
+  /** The room whose rounds and cost are being read. */
+  const [previewing, setPreviewing] = useState<PublicRoom | null>(null);
   const { coins } = useCurrency();
   // The room whose delete/leave is being confirmed, if any.
   const [removing, setRemoving] = useState<PublicRoom | null>(null);
@@ -1156,6 +1189,7 @@ export function PublicRoomsSection({
           blocked={!!waitingRoomId && waitingRoomId !== room.id}
           onInvite={setInviting}
           onAsk={(r) => void ask(r)}
+          onPreview={setPreviewing}
           onWithdraw={(r) => void withdraw(r)}
           onRemove={setRemoving}
           busy={busyId === room.id}
@@ -1177,6 +1211,16 @@ export function PublicRoomsSection({
 
       {/* Why the knock did nothing: a seat costs the stake. */}
       <NotEnoughStakeModal isOpen={showNoStake} onClose={() => setShowNoStake(false)} />
+
+      {/* What the card is, opened by tapping it. */}
+      <RoomPreviewSheet
+        open={previewing !== null}
+        roomName={previewing?.room_name || t("extra.roomDefaultName")}
+        rounds={previewing?.rounds ?? []}
+        questionsPerRound={previewing?.total_questions ?? null}
+        players={previewing?.player_count ?? 0}
+        onClose={() => setPreviewing(null)}
+      />
 
       <AlertDialog open={removing !== null} onOpenChange={(open) => !open && setRemoving(null)}>
         <AlertDialogContent className="bg-card border-border rounded-3xl max-w-sm">

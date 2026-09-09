@@ -47,19 +47,28 @@ describe("the age, next to the host", () => {
   });
 });
 
-describe("the report flag, between the seats and the way out", () => {
-  it("is in the right-hand group, after the seats count and before the leave button", () => {
-    const seats = header.indexOf("<Users className={`w-3.5 h-3.5 ${ink.text}`} />");
-    const report = header.indexOf("<ContentReportButton");
-    const leave = header.indexOf("{inside && (");
-    expect(seats).toBeGreaterThan(-1);
-    expect(report).toBeGreaterThan(seats);
+describe("the report flag, in the card's control group", () => {
+  // The seats used to lead this group and moved to the left of the card
+  // (owner: "show players count on left side of the cards"), so the group
+  // is controls only: who is knocking, the report, the way out.
+  const RIGHT = "{/* The right-hand cluster is controls only now";
+
+  it("comes after the knock badge and before the way out", () => {
+    const right = header.slice(header.indexOf(RIGHT));
+    const knock = right.indexOf("knocks > 0 && (");
+    const report = right.indexOf("<ContentReportButton");
+    const leave = right.indexOf("{inside && (");
+    expect(knock).toBeGreaterThan(-1);
+    expect(report).toBeGreaterThan(knock);
     expect(leave).toBeGreaterThan(report);
   });
 
-  it("is no longer beside the host's name", () => {
-    const leftGroupEnd = header.indexOf("{/* Seats.");
-    expect(header.slice(0, leftGroupEnd)).not.toMatch(/ContentReportButton/);
+  it("is not on the left, which carries facts rather than controls", () => {
+    const left = header.slice(0, header.indexOf(RIGHT));
+    expect(left).not.toMatch(/ContentReportButton/);
+    // What is there instead: how full the room is, and how new it is.
+    expect(left).toMatch(/<Users className=\{`w-3\.5 h-3\.5 \$\{ink\.text\}`\} \/>/);
+    expect(left).toMatch(/\{isNew && \(/);
   });
 
   it("wears the same pill as the leave button beside it", () => {

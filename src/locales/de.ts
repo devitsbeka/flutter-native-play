@@ -2240,6 +2240,8 @@ export const de: KaTranslations = {
     rematchGatePlay: "Spielen",
     rematchGateLeave: "Raum verlassen",
     rematchWaitTitle: "Revanche angefragt",
+    roomPreviewEyebrow: "Raum-Vorschau",
+    roomPreviewNoRounds: "Der Host hat noch keine Runde gewählt.",
     rematchWaitHint: "Alle am Tisch wurden gefragt. Wer ablehnt, verlässt den Raum — der Pot richtet sich nach den Plätzen.",
     rematchWaitReady: "Bereit",
     rematchWaitPending: "Überlegt…",
