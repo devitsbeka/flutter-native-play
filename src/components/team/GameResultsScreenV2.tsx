@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -66,19 +66,34 @@ const placeMark = (idx: number, rank: number) =>
  * deltas). Read from the ledger via settle_room_round, never worked out
  * here: the client names no amounts (roomPot.test).
  */
-function PotLine({ net, compact }: { net: number | undefined; compact?: boolean }) {
+type PotTone = "gold" | "silver" | "bronze" | "white";
+
+/**
+ * The coin pills, as the design draws them (Figma 1157:10036): gold, silver
+ * and bronze under the podium's three places, white with amber figures on
+ * every row from fourth down — each standing on a 3px lilac foot.
+ */
+const POT_TONES: Record<PotTone, { className: string; style?: CSSProperties }> = {
+  gold: { className: "text-white", style: { backgroundImage: "linear-gradient(-42deg, #ffbb00 37%, #997000 196%)" } },
+  silver: { className: "text-white", style: { backgroundImage: "linear-gradient(-47deg, #8b8b8b 7%, #424242 337%, #252525 357%)" } },
+  bronze: { className: "bg-[#9a4312] text-white" },
+  white: { className: "bg-white text-[#8c7229]" },
+};
+
+function PotLine({ net, compact, tone }: { net: number | undefined; compact?: boolean; tone?: PotTone }) {
   if (net === undefined) return null;
   const up = net > 0;
+  const look = POT_TONES[tone ?? (up ? "gold" : "white")];
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full font-bold text-white",
+        "inline-flex items-center gap-1 rounded-full font-[Nunito] font-extrabold drop-shadow-[0px_3px_0px_#a691ec]",
         compact ? "px-2 py-0.5 text-xs" : "mt-1.5 px-2.5 py-1 text-sm",
-        up ? "bg-amber-500/90" : net < 0 ? "bg-slate-500/80" : "bg-white/15",
+        look.className,
       )}
-      style={up ? { boxShadow: "0 3px 0 rgba(180,120,0,0.4)" } : undefined}
+      style={look.style}
     >
-      <img src={coinIcon} alt="" className={cn(compact ? "w-3.5 h-3.5" : "w-4 h-4", net < 0 && "grayscale")} />
+      <img src={coinIcon} alt="" className={compact ? "w-3.5 h-3.5" : "w-4 h-4"} />
       {up ? `+${net}` : net}
     </span>
   );
@@ -856,13 +871,10 @@ export function GameResultsScreenV2() {
           transition={{ delay: 0.2 }}
           className="flex flex-col items-center mt-2 px-4 flex-shrink-0"
         >
-          {/* Which round of which game this was, above the category. */}
-          {matchInfo && (
-            <p className="mb-1.5 text-[12px] font-bold uppercase tracking-wide text-white/60">
-              {t("extra.matchRoundLabel", { game: matchInfo.game, round: matchInfo.round })}
-            </p>
-          )}
-          <div className="flex items-center gap-2 px-5 py-2 rounded-full bg-white/15 backdrop-blur-sm">
+          {/* The design's pill (1157:10058): the category's artwork at 64px
+              on the left, its name beside it and, under the name, which
+              round of which game this was. */}
+          <div className="flex h-[78px] w-full max-w-[294px] items-center gap-[25px] px-5 py-2 rounded-full bg-white/15 backdrop-blur-sm">
             {/* CategoryArtwork rather than DynamicIcon: the six picture-guess
                 categories carry generic stand-ins in icon_slug, so the library
                 answers "guess the city" with a globe.
@@ -894,10 +906,19 @@ export function GameResultsScreenV2() {
                   ? UNDECIDED_ICON_SLUG
                   : resultsCategory.iconSlug
               }
-              size={24}
-              className="drop-shadow-none"
+              size={64}
+              className="shrink-0 drop-shadow-none"
             />
-            <span className="text-white font-medium">{localizeCategory(currentRoom.category_name)}</span>
+            <div className="min-w-0 flex flex-col">
+              <span className="truncate font-[Nunito] text-[16px] font-medium leading-6 tracking-[-0.16px] text-white">
+                {localizeCategory(currentRoom.category_name)}
+              </span>
+              {matchInfo && (
+                <span className="text-[12px] font-bold uppercase leading-[18px] tracking-[0.3px] text-white/60">
+                  {t("extra.matchRoundLabel", { game: matchInfo.game, round: matchInfo.round })}
+                </span>
+              )}
+            </div>
           </div>
         </motion.div>
       )}
@@ -933,8 +954,8 @@ export function GameResultsScreenV2() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25 }}
           className={cn(
-            "w-full grid items-end gap-2 flex-shrink-0",
-            rankedParticipants.length === 2 ? "max-w-[240px] grid-cols-2" : "max-w-xs grid-cols-3",
+            "w-full grid items-end flex-shrink-0 pt-2",
+            rankedParticipants.length === 2 ? "max-w-[260px] grid-cols-2 gap-6" : "max-w-[362px] grid-cols-3 gap-2",
           )}
         >
           {(rankedParticipants.length === 2 ? TWO_UP_ORDER : PODIUM_ORDER).map((idx) => {
@@ -943,8 +964,17 @@ export function GameResultsScreenV2() {
             const first = idx === 0;
             return (
               <div key={p.user_id} className="flex flex-col items-center min-w-0">
+                {/* The design's faces (1157:10233..10244): every place in
+                    the gold ring, first at 110px and the two beside it at
+                    76, with the medal hanging off the bottom of the ring
+                    rather than stacked under it. The wrapper reserves the
+                    half of the medal that hangs below. */}
                 <div
-                  className={cn("relative", !p.isMe && "cursor-pointer active:scale-95 transition-transform")}
+                  className={cn(
+                    "relative",
+                    first ? "mb-[26px]" : "mb-[20px]",
+                    !p.isMe && "cursor-pointer active:scale-95 transition-transform",
+                  )}
                   onClick={!p.isMe ? () => openProfile(p.user_id) : undefined}
                   role={!p.isMe ? "button" : undefined}
                 >
@@ -952,21 +982,27 @@ export function GameResultsScreenV2() {
                     avatarUrl={p.avatar_url}
                     fallback={p.nickname || "?"}
                     className={cn(
-                      "border-2",
-                      first ? "w-20 h-20 border-amber-300 shadow-[0_0_0_4px_rgba(251,191,36,0.35)]" : "w-14 h-14 border-white/40",
+                      "border-2 border-[#fcd34d] shadow-[0_0_0_4px_rgba(251,191,36,0.35)]",
+                      first ? "w-[110px] h-[110px]" : "w-[76px] h-[76px]",
                     )}
                     fallbackClassName={cn(
                       "bg-gradient-to-br from-purple-400 to-purple-600 text-white font-bold",
-                      first ? "text-xl" : "text-base",
+                      first ? "text-3xl" : "text-xl",
                     )}
                   />
+                  <span
+                    className={cn(
+                      "absolute left-1/2 -translate-x-1/2 leading-none",
+                      first ? "-bottom-[23px] text-[46px]" : "-bottom-[16px] text-[32px]",
+                    )}
+                  >
+                    {placeMark(idx, p.rank)}
+                  </span>
                 </div>
-                <span className={cn("mt-1.5 w-full text-center text-white font-display truncate", first ? "text-base" : "text-sm")}>
+                <span className="w-full text-center font-display text-[22px] font-bold leading-6 tracking-[-0.16px] text-white truncate">
                   {p.isMe ? t("game.you") : p.nickname}
                 </span>
-                <span className="text-white/70 text-xs font-semibold">{p.score}</span>
-                <span className={cn("leading-none mt-1", first ? "text-3xl" : "text-2xl")}>{placeMark(idx, p.rank)}</span>
-                <PotLine net={netFor(p)} />
+                <PotLine net={netFor(p)} tone={idx === 0 ? "gold" : idx === 1 ? "silver" : "bronze"} />
               </div>
             );
           })}
@@ -980,17 +1016,26 @@ export function GameResultsScreenV2() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="w-full max-w-xs bg-white/10 backdrop-blur-sm rounded-2xl p-3 flex-1 min-h-0 overflow-y-auto"
+            className="w-full max-w-[468px] flex-1 min-h-0 overflow-y-auto pb-3"
           >
-            <div className="space-y-2">
+            {/* The design's tiles (1157:10225): the lobby's chunky shape —
+                24/24/24/54 corners, a rose wash and an 8px rose foot — with
+                the place on the left, the face in the same gold ring the
+                podium wears, the name across the middle and the coins on
+                the right. */}
+            <div className="space-y-[17px]">
             {rankedParticipants.slice(PODIUM_ORDER.length).map((p) => (
               <div
                 key={p.user_id}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-xl",
-                  p.isMe ? "bg-white/20" : ""
+                  "flex h-[71px] items-center gap-3 rounded-tl-[24px] rounded-tr-[24px] rounded-bl-[24px] rounded-br-[54px] border-2 border-[rgba(255,217,217,0.1)] pl-3 pr-5 shadow-[0px_2px_8px_0px_rgba(102,51,153,0.06),0px_8px_0px_0px_rgba(232,185,185,0.4)]",
+                  p.isMe ? "bg-[rgba(255,222,222,0.32)]" : "bg-[rgba(255,222,222,0.2)]",
                 )}
               >
+                {/* The place number, first on the row (1157:10226). */}
+                <span className="w-[44px] shrink-0 text-center font-display text-[20px] font-bold uppercase text-[#6350c9]">
+                  {placeMark(p.rank - 1, p.rank)}
+                </span>
                 {/* Avatar — tap opens the player's profile. No crown: it
                     means HOST everywhere else in the app. */}
                 <div
@@ -1001,24 +1046,16 @@ export function GameResultsScreenV2() {
                   <SafeAvatar
                     avatarUrl={p.avatar_url}
                     fallback={p.nickname || "?"}
-                    className="w-10 h-10 border-2 border-white/30"
-                    fallbackClassName="bg-gradient-to-br from-purple-400 to-purple-600 text-white text-sm font-bold"
+                    className="w-[50px] h-[50px] border-2 border-[#fcd34d] shadow-[0_0_0_4px_rgba(251,191,36,0.35)]"
+                    fallbackClassName="bg-gradient-to-br from-purple-400 to-purple-600 text-white text-base font-bold"
                   />
                 </div>
 
-                {/* The place number. Smaller than the medals on the podium —
-                    the least important part of its row. White, because
-                    text inherits the dark foreground on a dark row. */}
-                <span className="font-display font-bold text-white text-base min-w-[2ch] text-center">
-                  {placeMark(p.rank - 1, p.rank)}
-                </span>
-
-                <span className="flex-1 text-white font-display text-base truncate">
+                <span className="min-w-0 flex-1 truncate text-center font-display text-[22px] font-bold tracking-[-0.16px] text-white">
                   {p.isMe ? t("game.you") : p.nickname}
                 </span>
 
-                <PotLine net={netFor(p)} compact />
-                <span className="text-white font-display text-base">{p.score}</span>
+                <PotLine net={netFor(p)} tone="white" />
               </div>
             ))}
             </div>
