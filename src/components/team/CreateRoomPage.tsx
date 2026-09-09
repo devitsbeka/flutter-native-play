@@ -80,9 +80,7 @@ import { PlayBackdrop } from "@/components/shared/PlayBackdrop";
 import { PlayLimitModal } from "@/components/home/PlayLimitModal";
 import { usePlayLimit } from "@/hooks/usePlayLimit";
 import { useCurrency } from "@/hooks/useCurrency";
-import { formatCompactNumber } from "@/lib/utils";
-import coinIcon from "@/assets/icons/icon-coin.png";
-import gemIcon from "@/assets/icons/icon-gem.png";
+import { BalancePills } from "@/components/shared/BalanceStrip";
 // The padlock over the locked bar's faces (Figma 1112:8157), at the size the
 // mock hangs it: 68px, over the three dimmed avatars rather than beside the
 // label.
@@ -1969,26 +1967,12 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
           the friends bar below. */}
       {ownsRoute && !guessPicking && (
         <div className="relative z-20 flex shrink-0 items-center gap-[11px] pl-[22px] pr-[18px] pt-[5px]">
-          <button
-            type="button"
-            onClick={() => navigate("/power-ups?section=coins")}
-            className="flex h-[43px] shrink-0 items-center gap-[4px] rounded-[18px] border border-solid border-[#e8e0f5] bg-white/60 pl-[7px] pr-[13px] shadow-[0px_2.94px_0px_0px_#d8d0e8,0px_4.409px_11.758px_0px_rgba(0,0,0,0.1)] active:translate-y-[1px]"
-          >
-            <img alt="" src={coinIcon} className="h-[32.3px] w-[32.3px] object-contain" />
-            <span className="font-[Nunito] text-[16.16px] font-black leading-[25.13px] tracking-[-0.146px] text-[#334155]">
-              {formatCompactNumber(coins)}
-            </span>
-          </button>
-          <button
-            type="button"
-            onClick={() => navigate("/power-ups?section=gems-lari")}
-            className="flex h-[43px] shrink-0 items-center gap-[4px] rounded-[18px] border border-solid border-[#e8e0f5] bg-white/60 pl-[7px] pr-[13px] shadow-[0px_2.94px_0px_0px_#d8d0e8,0px_4.409px_11.758px_0px_rgba(0,0,0,0.1)] active:translate-y-[1px]"
-          >
-            <img alt="" src={gemIcon} className="h-[32.3px] w-[32.3px] object-contain" />
-            <span className="font-[Nunito] text-[16.16px] font-black leading-[25.13px] tracking-[-0.146px] text-[#334155]">
-              {formatCompactNumber(gems)}
-            </span>
-          </button>
+          <BalancePills
+            coins={coins}
+            gems={gems}
+            onCoinsClick={() => navigate("/power-ups?section=coins")}
+            onGemsClick={() => navigate("/power-ups?section=gems-lari")}
+          />
           {!isVip && (
             <button
               type="button"
