@@ -23,10 +23,11 @@ import { RoomCardPlayButton } from "@/components/team/RoomCardPlayButton";
 import { GreenPlayButton } from "@/components/shared/GreenPlayButton";
 import type { QueueItem } from "@/hooks/useRoomCategoryQueue";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
-import { MobileProfileCard } from "@/components/home/MobileHome";
+import { MobileHeroWidgets, MobileProfileCard } from "@/components/home/MobileHome";
 import { MyTriviaLiveLogo } from "@/components/shared/MyTriviaLiveLogo";
 import { BalancePills } from "@/components/shared/BalanceStrip";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { BalanceStripRow } from "@/components/shared/BalanceStrip";
 import { Menu } from "lucide-react";
 import { AnimatedMascotScene } from "@/components/home/AnimatedMascotScene";
 import { RoomCard, RoomCardGrid } from "@/components/team/MyRoomsSection";
@@ -76,6 +77,8 @@ export default function HomeShot() {
   const [params] = useSearchParams();
   const scene = params.get("scene") ?? homeScene;
   const noop = () => undefined;
+  // ?claim=0 shows the gift tab in its nothing-to-claim state.
+  const claimable = params.get("claim") !== "0";
   if (params.get("view") === "categories") {
     // The home rail's own width and gap, with the two shapes that used to
     // disagree: a name that wraps and one that does not, and a card whose
@@ -304,6 +307,26 @@ export default function HomeShot() {
   // PageHeader below it draws the sub-page shape — its own balances need a
   // signed-in player, which a screenshot pass is not, so the row above shows
   // them at the size and spacing the header uses.
+  // The balance strip as the main screens carry it: under PageHeader's own
+  // row, on the page wash and (second) on the white Explore docks to.
+  if (params.get("view") === "strip") {
+    return (
+      <div className="min-h-[100dvh] w-full bg-[#faf6ff]">
+        <PageHeader title={params.get("title") ?? "მაღაზია"} showBack={false} belowRow={<BalanceStripRow />} />
+        <div className="h-6" />
+        <div className="bg-white">
+          <PageHeader
+            title="EXPLORE"
+            showBack={false}
+            overlay
+            docked
+            belowRow={<BalanceStripRow />}
+          />
+        </div>
+      </div>
+    );
+  }
+
   if (params.get("view") === "appheader") {
     const noop = () => undefined;
     return (
@@ -363,15 +386,21 @@ export default function HomeShot() {
       style={{ "--home-header-h": "69px" } as React.CSSProperties}
     >
       <img src={scene} alt="" className="absolute inset-x-0 top-0 w-full" draggable={false} />
+      <MobileHeroWidgets
+        giftLabel={claimable ? "Claim" : "3h 21m"}
+        canClaimGift={claimable}
+        onGiftClick={noop}
+        onStreakClick={noop}
+      />
       <MobileProfileCard
         nickname="Beka"
         avatarUrl={FACE}
-        // ?claim=0 shows the gift in its nothing-to-claim state.
-        canClaimGift={params.get("claim") !== "0"}
+        coins={61400}
+        gems={129}
         onAvatarClick={noop}
         onNameClick={noop}
-        onGiftClick={noop}
-        onStreakClick={noop}
+        onCoinsClick={noop}
+        onGemsClick={noop}
       />
     </div>
   );

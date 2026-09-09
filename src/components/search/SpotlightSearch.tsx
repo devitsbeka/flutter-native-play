@@ -53,15 +53,7 @@ import crownIcon from "@/assets/crown-icon.png";
 
 interface SpotlightSearchProps {
   className?: string;
-  /**
-   * "bar" is the inline field, "button" the magnifying glass that used to sit
-   * in every header. "headless" renders no trigger at all: the panel is
-   * opened from somewhere else entirely (the side menu's Search row, via the
-   * `?search=open` parameter this component already syncs with) and this
-   * instance exists only to answer it. One of those is mounted app-wide by
-   * MainLayout, so the panel outlives the menu that asked for it.
-   */
-  variant?: "bar" | "button" | "headless";
+  variant?: "bar" | "button";
 }
 
 // Command definitions - labels/descriptions resolved via t() at render time.
@@ -491,7 +483,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
 
   return (
     <>
-      {variant === "headless" ? null : variant === "button" ? (
+      {variant === "button" ? (
         /* Button mode - just an icon */
         <motion.button
           className={`relative p-2 rounded-full hover:bg-white/30 transition-colors ${className}`}
