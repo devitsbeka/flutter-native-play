@@ -33,7 +33,9 @@ describe("what settles a room", () => {
     // the name away from a host who had not said they were done (owner: "i
     // didn't clicked create yet but can't add categories or change icon or
     // room name, enable it before i click create").
-    expect(lobby).toMatch(/const publishedRoom = isPublicRoom && roomCreated;/);
+    // ...while there is something to play: an emptied, played-out room
+    // unlocks so its host can set the next game (endedPublicRoomsHidden.test).
+    expect(lobby).toMatch(/const publishedRoom = isPublicRoom && roomCreated && !needsCategorySelection;/);
     expect(lobby).not.toMatch(/const publishedRoom = isPublicRoom && !needsCategorySelection;/);
   });
 

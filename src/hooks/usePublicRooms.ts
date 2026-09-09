@@ -343,6 +343,39 @@ export function sortPublicRooms(
   });
 }
 
+/**
+ * A public room whose game is over and nothing is queued to play next.
+ *
+ * Every path that ends a round hands the room back to "waiting" — the way
+ * the lobby is reached again — and a public room in "waiting" is listed.
+ * So a room that had just been played sat on the Public tab looking like
+ * an open game, and whoever walked in found an empty, locked lobby with
+ * nothing to play (owner: "after game ends we show ended public game room
+ * in list and when players re-enter they see empty room with no ability
+ * to be modified ... remove and don't show ended games room on public
+ * list, leave in private though").
+ *
+ * The listing carries no round history, so "played" is read off the two
+ * stamps it does carry: a round's start and its end write last_activity_at
+ * (roomStale), and a room that was never played still has it at creation.
+ * A room with a category, or a queued round, is a room with something to
+ * play and stays — that is what a rematch looks like.
+ */
+export function isEndedPublicRoom(room: {
+  status: string;
+  first_category_name: string | null;
+  created_at: string | null;
+  last_activity_at: string | null;
+}): boolean {
+  if (room.status !== "waiting") return false;
+  if (room.first_category_name) return false;
+  if (!room.created_at || !room.last_activity_at) return false;
+  const born = Date.parse(room.created_at);
+  const touched = Date.parse(room.last_activity_at);
+  if (Number.isNaN(born) || Number.isNaN(touched)) return false;
+  return touched - born > 60_000;
+}
+
 export function filterPublicRooms(
   rooms: PublicRoom[],
   filter: PublicRoomFilter,
@@ -368,6 +401,8 @@ export function filterPublicRooms(
     // not pressed Start are listed; a started room stays on the Private
     // tab for its own players — the replay, the scores.
     if (room.status !== "waiting") return false;
+    // Played, and nothing left to play: over, whatever its status says.
+    if (isEndedPublicRoom(room)) return false;
     // "My rooms" is the ones I created, as on the Private tab — a room I
     // merely sit in is somebody else's.
     if (filter === "my_rooms" && room.my_state !== "host") return false;

@@ -1306,7 +1306,11 @@ export function RoomLobbyV2() {
    * also how a host changes their mind about a category they have already
    * put on the list.
    */
-  const publishedRoom = isPublicRoom && roomCreated;
+  // ...and only while there is something to play. A published room whose
+  // round has been played and nothing queued has nobody "who joined for"
+  // anything; locking it left its host in an empty lobby they could not
+  // change (owner: "they see empty room with no ability to be modified").
+  const publishedRoom = isPublicRoom && roomCreated && !needsCategorySelection;
   const rulesLocked = matchLive || publishedRoom;
   /**
    * The pencil settles with the rest of it.
