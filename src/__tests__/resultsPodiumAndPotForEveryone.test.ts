@@ -61,7 +61,10 @@ describe("every device is told what moved", () => {
 describe("the podium", () => {
   it("second on the left, first in the middle, third on the right", () => {
     expect(results).toMatch(/const PODIUM_ORDER = \[1, 0, 2\] as const;/);
-    expect(results).toMatch(/grid grid-cols-3 items-end/);
+    // Three steps for three or more; a pair sits centred on two
+    // (rematchAskedAtStart.test pins the two-up case).
+    expect(results).toMatch(/"max-w-xs grid-cols-3"/);
+    expect(results).toMatch(/"w-full grid items-end gap-2 flex-shrink-0"/);
   });
 
   it("first place is the bigger face", () => {
@@ -69,7 +72,7 @@ describe("the podium", () => {
   });
 
   it("a medal under each face, and the coins under the medal", () => {
-    const step = results.slice(results.indexOf("{PODIUM_ORDER.map((idx) => {"), results.indexOf("{/* Everyone from fourth down."));
+    const step = results.slice(results.indexOf(": PODIUM_ORDER).map((idx) => {"), results.indexOf("{/* Everyone from fourth down."));
     const avatar = step.indexOf("<SafeAvatar");
     const medal = step.indexOf("{placeMark(idx, p.rank)}");
     const coins = step.indexOf("<PotLine net={netFor(p)} />");
@@ -98,7 +101,7 @@ describe("what left the screen, and what the button says", () => {
   it("the category sits under the room title, before the podium", () => {
     const title = results.indexOf("{currentRoom?.room_name || t(\"extra.gameRoomLabel\")}");
     const category = results.indexOf("{currentRoom?.category_name && (");
-    const podium = results.indexOf("{PODIUM_ORDER.map((idx) => {");
+    const podium = results.indexOf(": PODIUM_ORDER).map((idx) => {");
     expect(title).toBeGreaterThan(-1);
     expect(category).toBeGreaterThan(title);
     expect(podium).toBeGreaterThan(category);

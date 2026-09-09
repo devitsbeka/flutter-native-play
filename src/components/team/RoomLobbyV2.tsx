@@ -20,6 +20,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { OWN_TRIVIA_ICON_SLUG, roomPlaysOwnTrivia, roundIconSlug } from "@/utils/ownTriviaRound";
 import { isUndecidedRound, UNDECIDED_ICON_SLUG } from "@/utils/undecidedRound";
 import { MatchSummarySheet } from "./MatchSummarySheet";
+import { RematchWaitSheet } from "./RematchWaitSheet";
+import { sendRematchRequest, type RematchPick } from "@/utils/rematchRequests";
 import { siteUrl } from "@/config/site";
 import { inviteLinkPath } from "@/utils/inviteLink";
 import { useRoomMatchHistory } from "@/hooks/useRoomMatchHistory";
@@ -157,6 +159,16 @@ export function RoomLobbyV2() {
   const { hasEnoughCoins } = useGameStake();
   const [showNoStake, setShowNoStake] = useState(false);
   const [showMatchSummary, setShowMatchSummary] = useState(false);
+  const [showRematchWait, setShowRematchWait] = useState(false);
+  /**
+   * Why the summary sheet is open: Create (the room, once) or Start on a
+   * later match, which asks the table rather than commits. Set by Start,
+   * cleared whenever the sheet closes, so Create never inherits it.
+   */
+  const [askingTable, setAskingTable] = useState(false);
+  useEffect(() => {
+    if (!showMatchSummary) setAskingTable(false);
+  }, [showMatchSummary]);
   const [isStarting, setIsStarting] = useState(false);
   const [isTVModeEnabled, setIsTVModeEnabled] = useState(() => searchParams.get("tvMode") === "true");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -1149,6 +1161,16 @@ export function RoomLobbyV2() {
       // was created. It moved to Create, which is the moment that summary
       // is actually about (owner: "we don't need to show this modal after i
       // click start game, we need it after 'create'").
+      //
+      // Except on a later match with people at the table: Start then asks
+      // them first, through the same sheet in its rematch dress - the
+      // rounds, the question count and the stake, and "Ask for rematch"
+      // where Create was (owner's ask; see askTableForRematch).
+      if (asksTable) {
+        setAskingTable(true);
+        setShowMatchSummary(true);
+        return;
+      }
       void handleStartGame();
     }
   };
@@ -1415,6 +1437,69 @@ export function RoomLobbyV2() {
       : []),
   ];
 
+  /**
+   * A later match is asked, not sprung.
+   *
+   * The first match starts on the host's Start. Once the table has played,
+   * Start on the next one asks everyone seated first - with the rounds, the
+   * question count and the stake on the card - and the host starts with
+   * whoever said yes. A seat that declines is given up; one still deciding
+   * when the host starts is removed, because every seat that stays is
+   * staked and nobody pays for a game they did not agree to (owner's ask).
+   * Solo, or with nobody else seated, there is nobody to ask.
+   */
+  const isRematch = participants.some((p) => (p.total_rounds_played ?? 0) > 0);
+  const tableToAsk = participants.filter(
+    (p) => p.user_id !== user?.id && (p.status as string) !== "invited",
+  );
+  const asksTable = isRematch && tableToAsk.length > 0;
+
+  const askTableForRematch = async () => {
+    if (!currentRoom || !user) return;
+    const head = queue[0];
+    const pick: RematchPick = currentRoom.user_trivia_id
+      ? { source_type: "user_trivia", user_trivia_id: currentRoom.user_trivia_id, category_name: currentRoom.category_name }
+      : currentRoom.category_id
+        ? { source_type: "category", category_id: currentRoom.category_id, category_name: currentRoom.category_name, icon_slug: heldRound?.iconSlug ?? null }
+        : head
+          ? { source_type: head.source_type, category_id: head.category_id, category_name: head.category_name, user_trivia_id: head.user_trivia_id, icon_slug: head.icon_slug }
+          : { source_type: "random" };
+    try {
+      await sendRematchRequest({
+        room: currentRoom,
+        requester: { id: user.id, nickname: profile?.nickname ?? null, avatar_url: profile?.avatar_url ?? null },
+        pick,
+        kind: "host_new_game",
+        recipientIds: tableToAsk.map((p) => p.user_id),
+        title: t("extra.rematchRequestTitle"),
+        message: t("extra.rematchNewGameBody", { name: profile?.nickname || t("extra.friendFallback") }),
+        match: {
+          rounds: summaryRounds.map((r) => ({ name: r.name, icon_slug: r.iconSlug })),
+          questions_per_round: playsUserTrivia ? null : questionsPerRound(currentRoom.total_questions),
+          stake: REWARDS.GAME_STAKE,
+        },
+      });
+    } catch (e) {
+      console.error("[lobby] rematch ask failed", e);
+      toast.error(t("extra.errorOccurred"));
+      return;
+    }
+    setShowRematchWait(true);
+  };
+
+  const startWithWhoSaidYes = async () => {
+    if (!currentRoom) return;
+    // Whoever has not said yes leaves the table before the stake is taken.
+    // Their row, not their status: the host may delete a seat but not
+    // rewrite it (RLS), and a deleted seat is exactly "not playing".
+    const undecided = tableToAsk.filter((p) => (p.status as string) !== "ready").map((p) => p.id);
+    if (undecided.length > 0) {
+      await supabase.from("room_participants").delete().in("id", undecided);
+    }
+    setShowRematchWait(false);
+    void handleStartGame();
+  };
+
   return (
     <UniversalLobby
       sceneArt={classicLobbyScene(currentRoom)}
@@ -1651,11 +1736,28 @@ export function RoomLobbyV2() {
         questionsPerRound={playsUserTrivia ? null : questionsPerRound(currentRoom.total_questions)}
         stake={seatedPlayers >= 2 ? REWARDS.GAME_STAKE : null}
         starting={isStarting}
+        rematch={askingTable}
         onChange={() => setShowMatchSummary(false)}
         onConfirm={() => {
           setShowMatchSummary(false);
-          handleDoneCreating();
+          if (askingTable) void askTableForRematch();
+          else handleDoneCreating();
         }}
+      />
+
+      {/* The host's side of the ask: who said yes, and Start with them. */}
+      <RematchWaitSheet
+        open={showRematchWait}
+        seats={tableToAsk.map((p) => ({
+          user_id: p.user_id,
+          nickname: p.nickname,
+          avatar_url: p.avatar_url,
+          ready: (p.status as string) === "ready",
+        }))}
+        stake={REWARDS.GAME_STAKE}
+        starting={isStarting}
+        onCancel={() => setShowRematchWait(false)}
+        onStart={() => void startWithWhoSaidYes()}
       />
 
       {/* Not enough for a seat at the table. */}

@@ -43,6 +43,11 @@ interface MatchSummarySheetProps {
   /** Null when nobody else is seated: a solo round is practice and free. */
   stake: number | null;
   starting?: boolean;
+  /**
+   * A later match with people at the table: Start asks them first, so the
+   * sheet says so and its button proposes rather than starts.
+   */
+  rematch?: boolean;
   onChange: () => void;
   onConfirm: () => void;
 }
@@ -53,6 +58,7 @@ export function MatchSummarySheet({
   questionsPerRound,
   stake,
   starting = false,
+  rematch = false,
   onChange,
   onConfirm,
 }: MatchSummarySheetProps) {
@@ -80,10 +86,10 @@ export function MatchSummarySheet({
               <div className="mb-6 flex flex-col items-center text-center">
                 <img src={buzzerIcon} alt="" className="h-20 w-20 shrink-0 object-contain" />
                 <h3 className="mt-3 font-display text-[24px] font-bold leading-[30px] text-[#402666]">
-                  {t("lobby.summaryTitle")}
+                  {rematch ? t("lobby.summaryRematchTitle") : t("lobby.summaryTitle")}
                 </h3>
                 <p className="mt-2 max-w-[300px] text-[14px] leading-[20px] text-[#402666]/70">
-                  {t("lobby.summaryHint")}
+                  {rematch ? t("lobby.summaryRematchHint") : t("lobby.summaryHint")}
                 </p>
               </div>
 
@@ -133,7 +139,13 @@ export function MatchSummarySheet({
                   {t("lobby.summaryChange")}
                 </ChunkyButton>
                 <ChunkyButton variant="primary" size="md" className="flex-1" onClick={onConfirm} disabled={starting}>
-                  {starting ? <Loader2 className="h-4 w-4 animate-spin" /> : t("extra.createBtn")}
+                  {starting ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : rematch ? (
+                    t("lobby.summaryAskTable")
+                  ) : (
+                    t("extra.createBtn")
+                  )}
                 </ChunkyButton>
               </div>
             </div>

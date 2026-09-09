@@ -26,11 +26,14 @@ const panel = read("src/components/home/NotificationsPanel.tsx");
 const page = read("src/pages/Notifications.tsx");
 const ctx = read("src/contexts/NotificationsContext.tsx");
 
-describe("the host's New Game asks", () => {
-  it("sends the room to its lobby with the pick, and startGame is no longer called from here", () => {
+describe("the host's New Game sends the room back to its lobby; the lobby's Start asks", () => {
+  it("New Game applies the pick and starts nothing - and asks nothing yet", () => {
     expect(results).toMatch(/const applied = await applyRematchPick\(currentRoom\.id, pick\);/);
-    expect(results).toMatch(/await askRematch\(pick, "host_new_game"\);/);
+    // The ask moved to the lobby's Start, where the rounds and the rules
+    // are settled and can ride on the card (rematchAskedAtStart.test).
+    expect(results).not.toMatch(/askRematch\(pick, "host_new_game"\)/);
     expect(results).not.toMatch(/await startGame\(\)/);
+    expect(read("src/components/team/RoomLobbyV2.tsx")).toMatch(/kind: "host_new_game",/);
   });
 
   it("every seat at the table is asked, the asker's own excluded", () => {
@@ -42,9 +45,9 @@ describe("the host's New Game asks", () => {
     expect(util).toMatch(/if \(fresh\?\.status === "playing"\) return false;/);
   });
 
-  it("queued rounds ask the same question", () => {
+  it("queued rounds ask nothing from here either", () => {
     const fn = results.slice(results.indexOf("const handleAddToQueue"), results.indexOf("continueInRoom();", results.indexOf("const handleAddToQueue")));
-    expect(fn).toMatch(/"host_new_game"/);
+    expect(fn).not.toMatch(/"host_new_game"/);
   });
 });
 
@@ -85,8 +88,10 @@ describe("the answer", () => {
     }
   });
 
-  it("and the ask is a popup right now, not only a bell badge", () => {
-    expect(ctx).toMatch(/newNotification\.type === 'room_ping' \|\| newNotification\.type === 'rematch_request'/);
+  it("and the ask is a card right now, not only a bell badge", () => {
+    // Its own gate with the match on it, so the generic toast stands down.
+    expect(read("src/App.tsx")).toMatch(/<GlobalRematchGate \/>/);
+    expect(ctx).not.toMatch(/newNotification\.type === 'rematch_request'/);
   });
 });
 

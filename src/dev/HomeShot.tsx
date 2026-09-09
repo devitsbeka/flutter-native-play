@@ -14,6 +14,8 @@ import { TVSetupInline } from "@/components/team/TVSetupInline";
 import { MatchSummarySheet } from "@/components/team/MatchSummarySheet";
 import { PersonAskModal } from "@/components/shared/PersonAskModal";
 import { JoinRequestRoomCard } from "@/components/team/JoinRequestGate";
+import { RematchMatchCard } from "@/components/team/RematchGate";
+import { RematchWaitSheet } from "@/components/team/RematchWaitSheet";
 import { LibraryCard } from "@/components/team/CategoryPickerModal";
 import { RoundOrderModal } from "@/components/team/RoundOrderModal";
 import { RoomTitle } from "@/components/lobby/UniversalLobby";
@@ -209,6 +211,51 @@ export default function HomeShot() {
     return (
       <div className="relative h-[100dvh] w-full overflow-hidden bg-[#faf6ff]">
         <AnimatedMascotScene className="absolute inset-0 z-[4] select-none overflow-hidden" />
+      </div>
+    );
+  }
+  if (params.get("view") === "rematch") {
+    // The table's side of a rematch: the host's ask with the match on it.
+    return (
+      <div className="h-[100dvh] w-full bg-[#e9dcf7]">
+        <PersonAskModal
+          motionKey="rematch"
+          person={{ nickname: "Britney", avatar_url: FACE2 }}
+          onOpenProfile={noop}
+          profileLabel="See profile"
+          body="is starting a rematch"
+          declineLabel="Leave room"
+          onDecline={noop}
+          acceptLabel="Play"
+          onAccept={noop}
+        >
+          <JoinRequestRoomCard roomId="room" roomName="Sneaky Knights" roomIcon={iconBattleLounge} categoryName="Celebrities" seated={0} maxPlayers={null} />
+          <RematchMatchCard
+            rounds={[
+              { name: "Celebrities", icon_slug: "star" },
+              { name: "Architecture", icon_slug: "castle" },
+            ]}
+            questionsPerRound={10}
+            stake={500}
+          />
+        </PersonAskModal>
+      </div>
+    );
+  }
+  if (params.get("view") === "rematch-wait") {
+    // The host's side: who said yes, and Start with them.
+    return (
+      <div className="h-[100dvh] w-full bg-[#e9dcf7]">
+        <RematchWaitSheet
+          open
+          seats={[
+            { user_id: "1", nickname: "TriviaMaste", avatar_url: FACE, ready: true },
+            { user_id: "2", nickname: "Gloria", avatar_url: null, ready: false },
+          ]}
+          stake={500}
+          onCancel={noop}
+          onStart={noop}
+        />
       </div>
     );
   }

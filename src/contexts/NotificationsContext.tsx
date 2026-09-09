@@ -126,9 +126,10 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
           playSound('notification');
           // A room ping is a call to action right now — surface it as a
           // clickable popup that drops the host straight into the room
-          // A rematch asked is the same call to action right now: shown
-          // as a popup with the way into the room, not only a bell badge.
-          if (newNotification.type === 'room_ping' || newNotification.type === 'rematch_request') {
+          // A rematch asked is a bigger call to action still, and gets a
+          // card of its own with the match on it (GlobalRematchGate), so it
+          // is not toasted here as well.
+          if (newNotification.type === 'room_ping') {
             const data = (newNotification.data ?? {}) as Record<string, unknown>;
             const roomCode = data.room_code as string | undefined;
             // The room decides its page: a poke from the arena opens the

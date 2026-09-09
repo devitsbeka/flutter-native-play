@@ -51,6 +51,8 @@ const processedResultsGames = new Set<string>();
  * list — first place in the middle, taller than the two beside it.
  */
 const PODIUM_ORDER = [1, 0, 2] as const;
+/** Two players: side by side, centred - no empty third step (owner's ask). */
+const TWO_UP_ORDER = [0, 1] as const;
 
 /** The medal for the top three, the place number from fourth down. */
 const placeMark = (idx: number, rank: number) =>
@@ -591,13 +593,10 @@ export function GameResultsScreenV2() {
         continueInRoom();
         return;
       }
-      try {
-        await askRematch(pick, "host_new_game");
-      } catch (e) {
-        // The room is already in its lobby with the pick; a notification
-        // that failed to write is not a reason to strand the host here.
-        console.error("[GameResults] rematch notifications failed:", e);
-      }
+      // The table is not asked from here any more: the lobby's Start asks,
+      // once the host has settled the rounds and the rules, with all of it
+      // on the card (owner's ask). From here the room only goes back to its
+      // lobby with the pick.
       continueInRoom();
     } catch (error) {
       console.error("Error starting new game:", error);
@@ -696,16 +695,8 @@ export function GameResultsScreenV2() {
           user_trivia_id: null,   // Clear - no current trivia
         })
         .eq("id", currentRoom.id);
-      // The same question as New Game: the room is back in its lobby with
-      // rounds queued, and the table is asked whether it wants them.
-      try {
-        await askRematch(
-          { source_type: item.source_type, category_id: item.category_id, category_name: item.category_name, user_trivia_id: item.user_trivia_id, icon_slug: item.icon_slug },
-          "host_new_game",
-        );
-      } catch (e) {
-        console.error("[GameResults] rematch notifications failed:", e);
-      }
+      // As with New Game, the table is asked from the lobby's Start, not
+      // from here.
     }
     
     // Navigate to lobby (continueInRoom will see status is already "waiting" and skip redundant DB update)
@@ -822,15 +813,20 @@ export function GameResultsScreenV2() {
             medal, what the place was worth (owner: "show first 3 places
             besides, first place in the middle bigger than 2,3 places
             avatars ... show medals below their avatars - below medals show
-            coins"). A grid, not a flex row, so a two-player round keeps
-            the winner in the middle with an empty step on the right. */}
+            coins"). A grid, not a flex row, so the steps keep their
+            places. Two players get two columns, centred: the three-step
+            grid left the pair huddled on the left with an empty step
+            beside them (owner: "show avatars centered"). */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25 }}
-          className="w-full max-w-xs grid grid-cols-3 items-end gap-2 flex-shrink-0"
+          className={cn(
+            "w-full grid items-end gap-2 flex-shrink-0",
+            rankedParticipants.length === 2 ? "max-w-[240px] grid-cols-2" : "max-w-xs grid-cols-3",
+          )}
         >
-          {PODIUM_ORDER.map((idx) => {
+          {(rankedParticipants.length === 2 ? TWO_UP_ORDER : PODIUM_ORDER).map((idx) => {
             const p = rankedParticipants[idx];
             if (!p) return <div key={idx} />;
             const first = idx === 0;

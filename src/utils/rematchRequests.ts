@@ -54,7 +54,17 @@ export interface RematchRequestData {
   /** True on the host's copy of a player's ask; the host's yes reshapes the room. */
   for_host: boolean;
   action_taken?: "accepted" | "declined";
+  /**
+   * What the table is being asked to play, when the ask comes from the
+   * lobby's Start: the rounds in order, the question count and the stake.
+   * Absent on a player's own ask, which names one pick.
+   */
+  rounds?: { name: string; icon_slug: string | null }[];
+  questions_per_round?: number | null;
+  stake?: number | null;
 }
+
+export type RematchMatch = Pick<RematchRequestData, "rounds" | "questions_per_round" | "stake">;
 
 interface SendArgs {
   room: {
@@ -72,10 +82,12 @@ interface SendArgs {
   /** The stored title and message, in the sender's language (the card retranslates the title). */
   title: string;
   message: string;
+  /** The match on the card, when the host is starting one. */
+  match?: RematchMatch;
 }
 
 /** One notification per seat at the table; how many were written. */
-export async function sendRematchRequest({ room, requester, pick, kind, recipientIds, title, message }: SendArgs): Promise<number> {
+export async function sendRematchRequest({ room, requester, pick, kind, recipientIds, title, message, match }: SendArgs): Promise<number> {
   const recipients = Array.from(new Set(recipientIds.filter((id) => id && id !== requester.id)));
   if (recipients.length === 0) return 0;
 
@@ -95,6 +107,7 @@ export async function sendRematchRequest({ room, requester, pick, kind, recipien
     icon_slug: pick.icon_slug ?? null,
     user_trivia_id: pick.user_trivia_id ?? null,
     for_host: false,
+    ...(match ?? {}),
   };
 
   const rows = recipients.map((userId) => ({
@@ -163,6 +176,16 @@ export async function answerRematchRequest(
       });
     }
     await markNotificationActioned(notification.id, "accepted");
+    if (!isHost) {
+      // The host's table shows a tick against a seat that said yes. "ready"
+      // is written on the player's own row - the one row they may write -
+      // and the game's start overwrites it like every other status.
+      await supabase
+        .from("room_participants")
+        .update({ status: "ready" })
+        .eq("room_id", data.room_id)
+        .eq("user_id", userId);
+    }
     return { roomCode: data.room_code ?? null };
   }
 

@@ -33,9 +33,11 @@ describe("Create opens the summary; Start opens the match", () => {
     expect(lobby).toMatch(/onPress: offerCreate \? handleCreatePress : handleStartOrPick,/);
   });
 
-  it("and the sheet's own button finishes what Create began", () => {
+  it("and the sheet's own button finishes what Create began - or asks the table, on a later match", () => {
+    // Start on a later match opens the same sheet in its rematch dress
+    // (rematchAskedAtStart.test); Create's confirm is unchanged.
     expect(lobby).toMatch(
-      /onConfirm=\{\(\) => \{\s*setShowMatchSummary\(false\);\s*handleDoneCreating\(\);\s*\}\}/,
+      /onConfirm=\{\(\) => \{\s*setShowMatchSummary\(false\);\s*if \(askingTable\) void askTableForRematch\(\);\s*else handleDoneCreating\(\);\s*\}\}/,
     );
     // Change closes it and leaves the host in the lobby, still editable.
     expect(lobby).toMatch(/onChange=\{\(\) => setShowMatchSummary\(false\)\}/);
@@ -59,11 +61,16 @@ describe("Create opens the summary; Start opens the match", () => {
     expect(lobby).toMatch(/if \(enoughPlayersRef\.current\) return;\s*\n\s*exitRoom\(\);/);
   });
 
-  it("Start no longer detours through it — the stake check still stands", () => {
+  it("Start no longer detours through it on the first match — the stake check still stands", () => {
     const gate = lobby.slice(lobby.indexOf("const handleStartOrPick = () => {"), lobby.indexOf("const summaryRounds = ["));
     expect(gate).toMatch(/if \(seatedPlayers >= 2 && !hasEnoughCoins\) \{\s*setShowNoStake\(true\);\s*return;\s*\}/);
     expect(gate).toMatch(/void handleStartGame\(\);/);
-    expect(gate).not.toMatch(/setShowMatchSummary\(true\)/);
+    // The one detour left is a later match with people at the table, which
+    // asks them before it starts (rematchAskedAtStart.test) - never the
+    // create-time summary again.
+    const opens = gate.match(/setShowMatchSummary\(true\)/g) ?? [];
+    expect(opens).toHaveLength(1);
+    expect(gate).toMatch(/if \(asksTable\) \{\s*setAskingTable\(true\);\s*setShowMatchSummary\(true\);\s*return;\s*\}/);
   });
 
   it("lists the rounds in play order, the held round first", () => {
