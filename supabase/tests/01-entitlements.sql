@@ -71,7 +71,7 @@ VALUES ('11111111-1111-1111-1111-111111111111','pro_plus','2099-01-01');
 --
 -- What it still does — the duration mapping, the stacking, the refusal of an
 -- unknown duration — is unchanged and is exercised through the purchase path
--- in supabase/tests/18-shop-purchase.sql, which is where those three cases
+-- in supabase/tests/19-shop-purchase.sql, which is where those three cases
 -- went.
 
 \echo ''
@@ -86,7 +86,7 @@ SELECT * FROM public.grant_vip_days('week');
 SELECT * FROM public.grant_vip_days('decade');
 
 \echo ''
-\echo '=== 11. Stacking now happens through a purchase (see 18-shop-purchase) ==='
+\echo '=== 11. Stacking now happens through a purchase (see 19-shop-purchase) ==='
 SELECT * FROM public.grant_vip_days('week');
 
 \echo ''

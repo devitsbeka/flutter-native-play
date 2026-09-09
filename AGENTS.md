@@ -74,7 +74,7 @@ Subscriptions and currency are deliberately **not** writable by clients:
 Each of these replaced a hole where a signed-in user could grant themselves a
 paid subscription or unlimited currency. Please don't reintroduce a
 client-side write "for convenience". `supabase/tests/` executes these rules
-against a real Postgres — `18-shop-purchase.sql` is the one for this section,
+against a real Postgres — `19-shop-purchase.sql` is the one for this section,
 and it is worth running after touching anything that grants without charging.
 It caught a `42702` in its own migration: a `RETURNS TABLE` column named after
 a table column made an `ON CONFLICT` ambiguous, which `CREATE FUNCTION` accepts

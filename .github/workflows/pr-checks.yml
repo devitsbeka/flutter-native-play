@@ -146,7 +146,7 @@ jobs:
           PGPASSWORD: postgres
         run: |
           psql -h localhost -p 5432 -U postgres \
-            -f supabase/tests/18-shop-purchase.sql
+            -f supabase/tests/19-shop-purchase.sql
 
       # Multi-round rooms: cumulative scoreboard totals must accumulate for
       # every participant (not just the host), exactly once per round —

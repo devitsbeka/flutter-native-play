@@ -33,10 +33,10 @@ whatever was already there).
 
 ```bash
 psql -h /tmp -p 55432 -U postgres -f supabase/tests/05-head-to-head.sql
-psql -h /tmp -p 55432 -U postgres -f supabase/tests/18-shop-purchase.sql
+psql -h /tmp -p 55432 -U postgres -f supabase/tests/19-shop-purchase.sql
 ```
 
-`18-shop-purchase.sql` is the one to run after touching anything that grants
+`19-shop-purchase.sql` is the one to run after touching anything that grants
 without charging. It executes both halves of every purchase path — gems,
 coins, VIP time, frames, power-ups — and the three holes that existed because
 the grant half worked on its own. It is also what caught a `42702` in that

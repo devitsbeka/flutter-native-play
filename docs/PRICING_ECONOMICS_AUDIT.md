@@ -10,7 +10,7 @@ visible.
 >
 > Every section below is implemented, with the tests that would have caught it.
 > The suite is now 268 files / 2844 tests, plus
-> `supabase/tests/18-shop-purchase.sql` — 28 cases executed against a real
+> `supabase/tests/19-shop-purchase.sql` — 28 cases executed against a real
 > Postgres and wired into `pr-checks.yml`, because none of the SQL findings can
 > be asserted from TypeScript.
 >
@@ -576,7 +576,7 @@ Ordered by money at risk, not by effort. What each one turned into:
 |---|---|---|
 | 1 | Subscription events handled; decision logic split into an import-free module so vitest can reach it | `stripe-gem-webhook`, `_shared/stripeSubscriptionState.ts`, `src/__tests__/stripeSubscriptionState.test.ts` |
 | 2 | Auth required; the `"guest"` sentinel is gone | `create-pro-checkout`, `supabase/config.toml` |
-| 3, 5 | `purchase_shop_item` — one transaction, server-owned `shop_catalog`. `grant_vip_days` revoked from clients, `shop_grant` deleted, `adjust_power_up` debit-only, RLS closed on `user_power_ups` and `user_avatar_frames` | `20261104110000`, `supabase/tests/18-shop-purchase.sql` |
+| 3, 5 | `purchase_shop_item` — one transaction, server-owned `shop_catalog`. `grant_vip_days` revoked from clients, `shop_grant` deleted, `adjust_power_up` debit-only, RLS closed on `user_power_ups` and `user_avatar_frames` | `20261104110000`, `supabase/tests/19-shop-purchase.sql` |
 | 4 | Coins bought at 500/gem, sold back at 750 | same migration; `shopValue.test.ts` asserts the headroom |
 | 6 | `gems_1500` → $10.99 | `pricing.ts` ×2, `gemPacks.ts`, `_shared/gems.ts` |
 | 7 | One lari rate (1.25×); VIP repriced in gems so both routes cost the same in every currency | `pricing.ts`, `rewardConfig.ts`, `20261104100000` |

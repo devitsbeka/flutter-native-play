@@ -181,7 +181,7 @@ CREATE OR REPLACE FUNCTION public.ensure_default_power_ups()
 -- ambiguous and the function fails at runtime with 42702 — which a
 -- CREATE FUNCTION does not catch, and neither does anything short of calling
 -- it. It shipped that way for exactly as long as it took to run
--- supabase/tests/18-shop-purchase.sql.
+-- supabase/tests/19-shop-purchase.sql.
 RETURNS TABLE (power_type text, owned integer)
 LANGUAGE plpgsql
 SECURITY DEFINER
