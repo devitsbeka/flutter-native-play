@@ -64,3 +64,53 @@ export function rememberPressedCreate(roomId: string | null | undefined): void {
     // worth a failed navigation on the tap that was meant to leave.
   }
 }
+
+/**
+ * Rooms made by "+ Room" that the host has not yet settled.
+ *
+ * "+ Room" opens the lobby on a room that already exists, because a lobby
+ * needs a row to subscribe to, invite into and rename. But the host has
+ * not said they want it: only Create (or Start) does that. A draft the
+ * host backs out of, still alone in it, should not be left behind on the
+ * list (owner: "if i click + room and didn't choose category and clicked
+ * back button, room shouldn't be created, only after clicking create - we
+ * create rooms"). This remembers which rooms are drafts, per device — the
+ * same device that made them and is the only one that can back out of them.
+ */
+export const DRAFT_ROOMS_KEY = "roomsDraft";
+
+function readDraftIds(): string[] {
+  try {
+    const stored = localStorage.getItem(DRAFT_ROOMS_KEY);
+    if (!stored) return [];
+    const parsed: unknown = JSON.parse(stored);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((id): id is string => typeof id === "string");
+  } catch {
+    return [];
+  }
+}
+
+function writeDraftIds(ids: string[]): void {
+  try {
+    localStorage.setItem(DRAFT_ROOMS_KEY, JSON.stringify(ids.slice(0, CREATE_OFFERED_MAX)));
+  } catch {
+    // Storage refused (private mode, quota): the room simply is not a draft
+    // this device remembers, and backing out keeps it — the safe side.
+  }
+}
+
+export function rememberDraftRoom(roomId: string | null | undefined): void {
+  if (!roomId) return;
+  writeDraftIds([roomId, ...readDraftIds().filter((id) => id !== roomId)]);
+}
+
+export function forgetDraftRoom(roomId: string | null | undefined): void {
+  if (!roomId) return;
+  writeDraftIds(readDraftIds().filter((id) => id !== roomId));
+}
+
+export function isDraftRoom(roomId: string | null | undefined): boolean {
+  if (!roomId) return false;
+  return readDraftIds().includes(roomId);
+}

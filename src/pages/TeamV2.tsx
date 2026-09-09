@@ -1,4 +1,5 @@
 import { roomKind, routeForRoom, ROOM_KIND_COLUMNS } from "@/utils/roomRoutes";
+import { rememberDraftRoom } from "@/utils/roomCreateOffered";
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
@@ -339,7 +340,12 @@ function TeamContentV2() {
       true,
       true,
     );
-    if (room) navigate(`/team?room=${room.room_code}`);
+    if (room) {
+      // A draft until the host presses Create or Start in the lobby: backing
+      // out before that, still alone, deletes it (see the lobby's back arrow).
+      rememberDraftRoom(room.id);
+      navigate(`/team?room=${room.room_code}`);
+    }
   };
 
   // Shared by CreateRoomScreen callbacks: create room -> lobby

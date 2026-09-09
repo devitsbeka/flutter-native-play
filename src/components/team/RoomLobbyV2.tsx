@@ -52,7 +52,7 @@ import type { QueueItem } from "@/hooks/useRoomCategoryQueue";
 import { classicLobbyScene } from "@/utils/lobbyScene";
 import { gameRoomsHasApproval, roomVisibilityFields } from "@/utils/roomVisibility";
 import { dealtRoomIcon, fetchCrestPool } from "@/utils/roomCrests";
-import { hasPressedCreate, rememberPressedCreate } from "@/utils/roomCreateOffered";
+import { forgetDraftRoom, hasPressedCreate, isDraftRoom, rememberPressedCreate } from "@/utils/roomCreateOffered";
 import { useParticipantPresence } from "@/hooks/useParticipantPresence";
 import coinIconAsset from "@/assets/tb-lobby/coin.png";
 import { NotEnoughStakeModal } from "@/components/home/NotEnoughStakeModal";
@@ -574,8 +574,33 @@ export function RoomLobbyV2() {
     setIsTVModeEnabled(false);
   };
 
+  /**
+   * The back arrow.
+   *
+   * A room made by "+ Room" is a draft until Create or Start settles it. A
+   * host backing out of one before that, still alone in it, did not make a
+   * room — they looked at one and left — so the row goes with them rather
+   * than sitting on the list as a room nobody built (owner: "if i click +
+   * room and didn't choose category and clicked back button, room
+   * shouldn't be created, only after clicking create - we create rooms").
+   *
+   * Only ever alone: a seat somebody else holds — joined, or invited and
+   * waiting on their answer — is a room in use, and it stays.
+   */
   const handleExitRoom = () => {
+    const abandonedDraft =
+      !!currentRoom &&
+      isHost &&
+      isDraftRoom(currentRoom.id) &&
+      !roomCreated &&
+      currentRoom.status !== "playing" &&
+      participants.every((p) => p.user_id === user?.id);
+    const draftId = abandonedDraft ? currentRoom.id : null;
     exitRoom();
+    if (draftId) {
+      forgetDraftRoom(draftId);
+      void supabase.from("game_rooms").delete().eq("id", draftId);
+    }
     // Use replace to avoid going back to a /team?join=... history entry that can auto-rejoin.
     navigate("/team", { replace: true });
   };
@@ -602,6 +627,8 @@ export function RoomLobbyV2() {
   const handleDoneCreating = () => {
     rememberPressedCreate(currentRoom?.id);
     setRoomCreated(true);
+    // Created is settled: the draft is a room now, and backing out keeps it.
+    forgetDraftRoom(currentRoom?.id);
     // Only leave when leaving is the point. The trip to the list exists to
     // go and find a second player; with somebody already here it would walk
     // the host out of a room that is ready to start, past the people
@@ -645,6 +672,8 @@ export function RoomLobbyV2() {
 
   const handleStartGame = async () => {
     if (!currentRoom) return;
+    // A round played in it settles a draft as surely as Create does.
+    forgetDraftRoom(currentRoom.id);
     // The button is disabled for this, but the category picker can start a
     // round on its own (startAfterPick) and the last player can leave between
     // the tap and the write.
