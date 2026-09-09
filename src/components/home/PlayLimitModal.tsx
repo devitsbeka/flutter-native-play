@@ -245,11 +245,12 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
             alt=""
             className="pointer-events-none absolute -top-[42px] left-1/2 h-[107px] w-[107px] -translate-x-1/2 object-contain"
           />
+          {/* Title only (owner's ask): the line under it repeated what the
+              button and the fine print below already say, between the
+              crown and the CTA it was the only thing on the card that
+              named nothing new. */}
           <p className="text-center font-display text-[20px] font-extrabold uppercase leading-[26px] text-[#161e46]">
             {t("paywall.title")}
-          </p>
-          <p className="mt-[7px] text-center font-display text-[16px] leading-[20.7px] tracking-[-0.16px] text-[#1c2c59]">
-            {t("playLimit.proHookBody")}
           </p>
 
           <motion.button
