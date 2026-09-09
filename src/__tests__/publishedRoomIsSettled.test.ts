@@ -27,11 +27,24 @@ const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 const lobby = read("src/components/team/RoomLobbyV2.tsx");
 
 describe("what settles a room", () => {
-  it("being published and created — not merely being published", () => {
-    // A room still being built is public from the moment it exists (that is
-    // what "+ Room" makes), so publishing alone cannot be the lock or the
-    // host could never configure it in the first place.
-    expect(lobby).toMatch(/const publishedRoom = isPublicRoom && roomCreated;/);
+  it("being listed with something to play — not the host having pressed Create", () => {
+    // The first cut keyed this on `roomCreated`, and left a hole: Create is
+    // only offered while a room is short of players, so a public room that
+    // filled up and never had it pressed stayed fully editable with two
+    // people in it (owner: "it is a public room but i still see i can
+    // modify room, add categories, switch question count tabs").
+    expect(lobby).toMatch(/const publishedRoom = isPublicRoom && !needsCategorySelection;/);
+    expect(lobby).not.toMatch(/const publishedRoom = isPublicRoom && roomCreated;/);
+  });
+
+  it("and an empty public room stays open, because picking a round is all it can do", () => {
+    // "+ Room" publishes on creation, so the host lands in a public room
+    // with no round yet. Locking on `isPublicRoom` alone would strand them
+    // there. The pick is what settles it.
+    expect(lobby).toMatch(/const needsCategorySelection = !hasContent;/);
+    expect(lobby).toMatch(
+      /const hasContent = queue\.length > 0 \|\| currentRoom\.category_id \|\| currentRoom\.user_trivia_id;/,
+    );
   });
 
   it("and it shares the live match's lock rather than adding a second one", () => {
