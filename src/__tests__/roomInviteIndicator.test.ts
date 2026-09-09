@@ -23,11 +23,13 @@ describe("the hook says who asked, and how many are waiting", () => {
   const hook = read("src/hooks/useMyRooms.ts");
 
   it("carries the sender's snapshot from the notification onto the room", () => {
-    expect(hook).toMatch(/pending_invite_from: \{ nickname: string \| null; avatar_url: string \| null \} \| null;/);
-    expect(hook).toMatch(/nickname: data\.sender_nickname \?\? null,/);
-    expect(hook).toMatch(/avatar_url: data\.sender_avatar \?\? null,/);
+    const reader = read("src/utils/pendingRoomInvites.ts");
+    expect(hook).toMatch(/pending_invite_from: PendingInviteFrom \| null;/);
+    expect(reader).toMatch(/nickname: data\.sender_nickname \?\? null,/);
+    expect(reader).toMatch(/avatar_url: data\.sender_avatar \?\? null,/);
     // Still keyed off the unread notification - no second source of truth.
-    expect(hook).toMatch(/if \(n\.type !== "room_invite" \|\| n\.read_at\) continue;/);
+    expect(reader).toMatch(/if \(n\.type !== "room_invite" \|\| n\.read_at\) continue;/);
+    expect(hook).toMatch(/const pendingInvites = useMemo\(\(\) => pendingRoomInvites\(notifications\), \[notifications\]\);/);
   });
 
   it("counts the invited rooms before the limit cuts the list", () => {
@@ -40,13 +42,15 @@ describe("the card wears the invitation", () => {
   const grid = read("src/components/team/MyRoomsSection.tsx");
   const card = grid.slice(grid.indexOf("export function RoomCardGrid("));
 
-  it("a purple pill beside the room's age, gated on the pending invite", () => {
-    expect(card).toMatch(/\{room\.has_pending_invite && \(\s*<span className="inline-flex min-w-0 items-center gap-1\.5 whitespace-nowrap rounded-full bg-\[#7126d5\]/);
-    expect(card).toMatch(/\{t\("extra\.roomInvitedYou"\)\}/);
+  it("a purple badge beside the room's age, gated on the pending invite", () => {
+    expect(card).toMatch(/\{room\.has_pending_invite && <RoomInviteBadge from=\{room\.pending_invite_from\} \/>\}/);
+    const badge = read("src/components/team/RoomInviteBadge.tsx");
+    expect(badge).toMatch(/rounded-full bg-\[#7126d5\]/);
+    expect(badge).toMatch(/t\("extra\.roomInvitedYou"\)/);
   });
 
   it("with the inviter's face when the notification carried one", () => {
-    expect(card).toMatch(/avatarUrl=\{room\.pending_invite_from\.avatar_url\}/);
+    expect(read("src/components/team/RoomInviteBadge.tsx")).toMatch(/avatarUrl=\{from\.avatar_url\}/);
   });
 });
 

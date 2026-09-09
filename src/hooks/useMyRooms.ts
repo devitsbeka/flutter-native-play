@@ -6,6 +6,7 @@ import { presenceForUsers } from "@/utils/presence";
 import { useAuth } from "@/contexts/AuthContext";
 import { matchesQuery } from "@/utils/searchMatch";
 import { useNotifications } from "@/hooks/useNotifications";
+import { pendingRoomInvites, type PendingInviteFrom } from "@/utils/pendingRoomInvites";
 import { isDeveloperOnlyGameType } from "@/game-types/registry";
 import { useDeveloperMode } from "@/contexts/DeveloperModeContext";
 
@@ -80,7 +81,7 @@ export interface MyRoom {
   // "pending" exactly as long as its notification is unread.
   has_pending_invite: boolean;
   // Who asked, from the invite notification's snapshot of the sender.
-  pending_invite_from: { nickname: string | null; avatar_url: string | null } | null;
+  pending_invite_from: PendingInviteFrom | null;
 }
 
 // Active TV session statuses that indicate a "LIVE" game - paired means TV is connected and waiting for host
@@ -435,32 +436,12 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
   const { notifications } = useNotifications();
 
   /**
-   * The rooms somebody has asked this player into and not been answered yet.
-   *
-   * Read off the notifications already in memory rather than queried: the
-   * context holds every notification this user has, realtime keeps it
-   * current, and "pending" is exactly "its notification is still unread" —
-   * so opening the room, which marks the notification read, retires the
-   * invite without a second source of truth to keep in step.
+   * The rooms somebody has asked this player into and not been answered yet
+   * — read off the notifications already in memory, never queried; see
+   * pendingRoomInvites for why, and for the Public tab, which reads the
+   * same map so a published room you were asked into wears the same badge.
    */
-  const pendingInvites = useMemo(() => {
-    const byRoom = new Map<string, MyRoom["pending_invite_from"]>();
-    for (const n of notifications) {
-      if (n.type !== "room_invite" || n.read_at) continue;
-      const data = n.data as {
-        room_id?: string;
-        sender_nickname?: string | null;
-        sender_avatar?: string | null;
-      } | null;
-      if (data?.room_id && !byRoom.has(data.room_id)) {
-        byRoom.set(data.room_id, {
-          nickname: data.sender_nickname ?? null,
-          avatar_url: data.sender_avatar ?? null,
-        });
-      }
-    }
-    return byRoom;
-  }, [notifications]);
+  const pendingInvites = useMemo(() => pendingRoomInvites(notifications), [notifications]);
 
   const {
     filter = "all",

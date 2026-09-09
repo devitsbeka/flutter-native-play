@@ -2,7 +2,8 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
 import { AnimatePresence, motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
-import { Plus, Users, Tv, Airplay, Cast, UserPlus, Trash2, LogOut, MonitorPlay, Play } from "lucide-react";
+import { Plus, Users, Tv, Airplay, Cast, UserPlus, Trash2, LogOut, MonitorPlay, Play, Check } from "lucide-react";
+import { RoomInviteBadge } from "@/components/team/RoomInviteBadge";
 import { useMyRooms, MyRoom, RoomFilter, isActiveTVSession } from "@/hooks/useMyRooms";
 import iconKingLounge from "@/assets/play-chooser/icon-king.webp";
 import iconBattleLounge from "@/assets/play-chooser/icon-crate.png";
@@ -1327,23 +1328,9 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
                     already sorted the card to the top and sits in the
                     notification centre; on the card itself nothing said so,
                     and a room you were asked into looked like every other
-                    (owner's ask). Their face, so it also says who. */}
-                {room.has_pending_invite && (
-                  <span className="inline-flex min-w-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-[#7126d5] py-0.5 pl-0.5 pr-2.5 text-xs font-bold text-white shadow-[0_2px_6px_rgba(113,38,213,0.35)]">
-                    {room.pending_invite_from?.avatar_url ? (
-                      <SafeAvatarImage
-                        avatarUrl={room.pending_invite_from.avatar_url}
-                        fallback={room.pending_invite_from.nickname ?? "?"}
-                        containerClassName="h-5 w-5 shrink-0 overflow-hidden rounded-full"
-                      />
-                    ) : (
-                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/20">
-                        <UserPlus className="h-3 w-3" />
-                      </span>
-                    )}
-                    <span className="truncate">{t("extra.roomInvitedYou")}</span>
-                  </span>
-                )}
+                    (owner's ask). Who asked, with their face — small — and
+                    the Confirm button on the bottom row answers it. */}
+                {room.has_pending_invite && <RoomInviteBadge from={room.pending_invite_from} />}
               </div>
 
               {/* Right: how many are in the room, then the menu.
@@ -1542,7 +1529,7 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
                      its row with a count and up to two faces, and it pushed
                      the whole group off the card. */
                   <RoomCardPlayButton
-                    tone="white"
+                    tone={room.has_pending_invite ? "purple" : "white"}
                     onClick={(e) => {
                       e.stopPropagation();
                       if (!isJoining) onJoin();
@@ -1555,8 +1542,21 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
                         : undefined
                     }
                   >
-                    <Play className="w-3.5 h-3.5 fill-current" />
-                    {t("extra.roomPlay")}
+                    {/* An invitation is answered, not played: the same tap
+                        (enter the room, which takes the seat and reads the
+                        invite) under the word the asker is waiting for
+                        (owner: "button saying confirm"). */}
+                    {room.has_pending_invite ? (
+                      <>
+                        <Check className="w-3.5 h-3.5" strokeWidth={3} />
+                        {t("common.confirm")}
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-3.5 h-3.5 fill-current" />
+                        {t("extra.roomPlay")}
+                      </>
+                    )}
                   </RoomCardPlayButton>
                 )}
               </div>

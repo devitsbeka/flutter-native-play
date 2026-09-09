@@ -15,7 +15,10 @@ import { useFriends } from "@/contexts/FriendsContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { onlineUserIds } from "@/utils/presence";
 import { AnimatePresence, motion } from "framer-motion";
-import { Globe, Loader2, Users, Clock, Trash2, LogOut, X, UserPlus, Play, Plus } from "lucide-react";
+import { Globe, Loader2, Users, Clock, Trash2, LogOut, X, UserPlus, Play, Plus, Check } from "lucide-react";
+import { RoomInviteBadge } from "@/components/team/RoomInviteBadge";
+import { useNotifications } from "@/hooks/useNotifications";
+import { pendingRoomInvites, type PendingInviteFrom } from "@/utils/pendingRoomInvites";
 import { RoomCardPlayButton } from "@/components/team/RoomCardPlayButton";
 import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
 import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
@@ -129,8 +132,15 @@ function PublicRoomCard({
   onWithdraw,
   onRemove,
   busy,
+  inviteFrom = null,
 }: {
   room: PublicRoom;
+  /**
+   * Somebody asked this player into this room and has not been answered.
+   * A published room you were asked into lists HERE, not under Private, so
+   * the badge and the Confirm button have to be on this card too.
+   */
+  inviteFrom?: PendingInviteFrom | null;
   players: CardPlayer[];
   /** A Battle room's two team crests — its real face on the card. */
   crests?: { a: string | null; b: string | null };
@@ -167,6 +177,9 @@ function PublicRoomCard({
   const gradient = ROOM_GRADIENT_PRESETS[index % ROOM_GRADIENT_PRESETS.length];
   const seats = roomSeats(room);
   const inside = room.my_state === "host" || room.my_state === "joined";
+  // An invited seat reads as "joined" to public_rooms (the participant row
+  // exists); the unread invite is what tells it apart from a seat taken.
+  const invited = inviteFrom !== null && room.my_state !== "host";
   const waiting = room.my_state === "pending";
   // A room's cap can lag behind who is actually in it — the host set 2 and a
   // third walked in — so the seats a card DRAWS are never fewer than the
@@ -361,6 +374,7 @@ function PublicRoomCard({
                 {createdAgo}
               </span>
             )}
+            {invited && <RoomInviteBadge from={inviteFrom} />}
           </div>
 
           {/* Seats. The lounges are what this is for — their card is
@@ -583,7 +597,7 @@ function PublicRoomCard({
                 a room that can start says Play, and it is the only one that
                 goes mint. */}
             <RoomCardPlayButton
-              tone={ready ? "mint" : "white"}
+              tone={invited ? "purple" : ready ? "mint" : "white"}
               disabled={busy || waiting || blocked}
               onClick={(e) => {
                 e.stopPropagation();
@@ -593,6 +607,13 @@ function PublicRoomCard({
             >
               {busy ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : invited ? (
+                // An invitation is answered, not played: entering takes the
+                // seat and reads the invite (owner: "button saying confirm").
+                <>
+                  <Check className="w-3.5 h-3.5" strokeWidth={3} />
+                  {t("common.confirm")}
+                </>
               ) : waiting ? (
                 <>
                   <Clock className="w-3.5 h-3.5" />
@@ -658,6 +679,9 @@ export function PublicRoomsSection({
   const { user } = useAuth();
   const { friends } = useFriends();
   const friendIds = useMemo(() => new Set(friends.map((f) => f.friendId)), [friends]);
+  // Rooms this player was asked into — the same map the Private tab reads.
+  const { notifications } = useNotifications();
+  const pendingInvites = useMemo(() => pendingRoomInvites(notifications), [notifications]);
 
   // Who is on each couch changes the moment somebody sits down or gets up,
   // and the cards used to learn it on the next 25-second poll — join a room,
@@ -1063,6 +1087,7 @@ export function PublicRoomsSection({
           onWithdraw={(r) => void withdraw(r)}
           onRemove={setRemoving}
           busy={busyId === room.id}
+          inviteFrom={pendingInvites.get(room.id) ?? null}
         />
       ))}
 

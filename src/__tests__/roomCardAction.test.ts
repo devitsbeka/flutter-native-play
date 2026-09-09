@@ -111,12 +111,13 @@ describe("the card that draws it", () => {
     // Same component, same shape: only the tone differs. My own rooms are
     // rooms I am already in, so theirs is always white; the public list
     // saves mint for the room that can actually start.
-    expect(source).toMatch(/<RoomCardPlayButton\s*\n\s*tone="white"/);
+    // White at rest; purple only while an invitation waits to be confirmed.
+    expect(source).toMatch(/<RoomCardPlayButton\s*\n\s*tone=\{room\.has_pending_invite \? "purple" : "white"\}/);
     const publicList = readFileSync(
       join(process.cwd(), "src/components/team/PublicRoomsSection.tsx"),
       "utf8",
     );
-    expect(publicList).toMatch(/tone=\{ready \? "mint" : "white"\}/);
+    expect(publicList).toMatch(/tone=\{invited \? "purple" : ready \? "mint" : "white"\}/);
     const button = readFileSync(
       join(process.cwd(), "src/components/team/RoomCardPlayButton.tsx"),
       "utf8",
@@ -195,9 +196,10 @@ describe("where the invite flag comes from", () => {
   const hook = readFileSync(join(process.cwd(), "src/hooks/useMyRooms.ts"), "utf8");
 
   it("reads unread room_invite notifications", () => {
-    const fn = hook.match(/const pendingInvites = useMemo\([\s\S]*?\n {2}\}, \[notifications\]\);/);
-    expect(fn, "expected pendingInvites").not.toBeNull();
-    expect(fn![0]).toMatch(/n\.type !== "room_invite" \|\| n\.read_at/);
+    // Through the shared reader now, so the Public tab reads the same map.
+    expect(hook).toMatch(/const pendingInvites = useMemo\(\(\) => pendingRoomInvites\(notifications\), \[notifications\]\);/);
+    const reader = readFileSync(join(process.cwd(), "src/utils/pendingRoomInvites.ts"), "utf8");
+    expect(reader).toMatch(/n\.type !== "room_invite" \|\| n\.read_at/);
   });
 
   it("does not add a query for it", () => {
