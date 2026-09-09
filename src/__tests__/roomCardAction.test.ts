@@ -90,7 +90,9 @@ describe("the card that draws it", () => {
     // Not a disabled button, not an empty pill: nothing. The host's own
     // invite "+" lives on the LEFT of this row regardless (see
     // roomCardInvite.test.ts) — it does not move over to fill this space.
-    expect(source).toMatch(/\{action && \(\s*\/\*[\s\S]*?<RoomCardPlayButton/);
+    // The button itself is built by playButton, which the preview sheet
+    // draws too (roomPreviewCarriesTheCardsButton.test.ts).
+    expect(source).toMatch(/\{action && \(\s*\/\*[\s\S]*?playButton\(\)\s*\n\s*\)\}/);
   });
 
   it("says Play, in the short form, whichever state the card is in", () => {

@@ -140,12 +140,19 @@ export function usePublicRooms(options?: { enabled?: boolean }) {
         throw error;
       }
       // `rounds` arrives as jsonb and is absent entirely until the
-      // migration that adds it is applied by hand (CLAUDE.md 4a), so it is
-      // normalised here rather than at every card: an empty list reads as
-      // "one round, not yet chosen", which is what the card already draws.
+      // migration that adds it is applied by hand (CLAUDE.md 4a). Until
+      // then the row still names its FIRST round (first_category_name, the
+      // one the card has always shown), so that is the list: one round,
+      // rather than a sheet that says the host picked nothing under a card
+      // that says "Random" (owner: "why modal shows host didn't pick
+      // anything - when host picked 5 random categories").
       return (data ?? []).map((row: Record<string, unknown>) => ({
         ...row,
-        rounds: Array.isArray(row.rounds) ? (row.rounds as RoomRound[]) : [],
+        rounds: Array.isArray(row.rounds)
+          ? (row.rounds as RoomRound[])
+          : row.first_category_name
+            ? [{ name: row.first_category_name as string, icon_slug: (row.first_category_icon as string | null) ?? null, source_type: "category" }]
+            : [],
         total_questions: typeof row.total_questions === "number" ? row.total_questions : null,
       })) as unknown as PublicRoom[];
     },

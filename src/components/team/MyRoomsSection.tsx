@@ -25,7 +25,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { TVMirrorModal } from "@/components/tv/TVMirrorModal";
 import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
 import { NotEnoughStakeModal } from "@/components/home/NotEnoughStakeModal";
-import { RoomPreviewSheet } from "@/components/team/RoomPreviewSheet";
+import { PREVIEW_BUTTON_CLASS, RoomPreviewSheet, type PreviewActionFactory } from "@/components/team/RoomPreviewSheet";
 import { useCurrency } from "@/hooks/useCurrency";
 import { REWARDS } from "@/config/rewardConfig";
 import { Capacitor } from "@capacitor/core";
@@ -248,8 +248,8 @@ export function MyRoomsSection({
   // and every extra tap starts the chain again.
   const [joiningRoomId, setJoiningRoomId] = useState<string | null>(null);
   const [showNoStake, setShowNoStake] = useState(false);
-  /** The room whose rounds and cost are being read. */
-  const [previewing, setPreviewing] = useState<MyRoom | null>(null);
+  /** The room whose rounds and cost are being read, with its card's button when it has one. */
+  const [previewing, setPreviewing] = useState<{ room: MyRoom; action?: PreviewActionFactory } | null>(null);
   const { coins } = useCurrency();
 
   const handleJoin = async (room: MyRoom) => {
@@ -410,10 +410,11 @@ export function MyRoomsSection({
       {/* What the card is, opened by tapping it. */}
       <RoomPreviewSheet
         open={previewing !== null}
-        roomName={previewing?.room_name || t("extra.roomDefaultName")}
-        rounds={previewing?.rounds ?? []}
-        questionsPerRound={previewing?.total_questions ?? null}
-        players={previewing?.participants.length ?? 0}
+        roomName={previewing?.room.room_name || t("extra.roomDefaultName")}
+        rounds={previewing?.room.rounds ?? []}
+        questionsPerRound={previewing?.room.total_questions ?? null}
+        players={previewing?.room.participants.length ?? 0}
+        action={previewing?.action?.({ className: PREVIEW_BUTTON_CLASS, then: () => setPreviewing(null) })}
         onClose={() => setPreviewing(null)}
       />
 
@@ -518,7 +519,7 @@ export function MyRoomsSection({
                     room={room}
                     index={index}
                     onJoin={() => handleJoin(room)}
-                    onPreview={() => setPreviewing(room)}
+                    onPreview={(action) => setPreviewing({ room, action })}
                     onDelete={handleDeleteRoom}
                     onLeave={handleLeaveRoom}
                     onInvite={setInviting}
@@ -561,7 +562,7 @@ export function MyRoomsSection({
                       room={room}
                       index={index}
                       onJoin={() => handleJoin(room)}
-                      onPreview={() => setPreviewing(room)}
+                      onPreview={() => setPreviewing({ room })}
                       onDelete={handleDeleteRoom}
                       onLeave={handleLeaveRoom}
                       isJoining={joiningRoomId === room.id}
@@ -1102,7 +1103,8 @@ interface RoomCardGridProps {
   index: number;
   onJoin: () => void;
   /** Tapping the card anywhere but a control: what does this room play? */
-  onPreview: () => void;
+  /** The card's tap: what the room is, with the card's own button along when it has one. */
+  onPreview: (action?: PreviewActionFactory) => void;
   onDelete: (roomId: string) => void;
   onLeave: (roomId: string) => void;
   /** The host's way to fill this room from the list, without opening it. */
@@ -1238,6 +1240,53 @@ export function RoomCardGrid({ room, index, onJoin, onPreview, onDelete, onLeave
   // What this room is offering right now, or null when it offers nothing.
   // See roomCardAction for why an empty room gets no button at all.
   const action = roomCardAction(room);
+
+  /**
+   * The card's button, as a factory: the card draws it, and hands the same
+   * one to the preview sheet to draw beside Close (RoomPreviewSheet).
+   *
+   * The three states no longer wear three labels: "Play" is what every one
+   * of them does, and a live round says so by pulsing rather than by being
+   * called something else. "ითამაშე", not the lobby's "თამაშის დაწყება" —
+   * the long form is four syllables of Georgian in a pill that shares its
+   * row with a count and up to two faces, and it pushed the whole group
+   * off the card.
+   */
+  const playButton: PreviewActionFactory = (opts = {}) => (
+    <RoomCardPlayButton
+      tone={room.has_pending_invite ? "mint" : "white"}
+      className={opts.className}
+      onClick={(e) => {
+        e.stopPropagation();
+        if (!isJoining) onJoin();
+        opts.then?.();
+      }}
+      disabled={isJoining}
+      animate={action === "live" ? { scale: [1, 1.05, 1] } : undefined}
+      transition={
+        action === "live"
+          ? { duration: 1.6, repeat: Infinity, ease: "easeInOut" }
+          : undefined
+      }
+    >
+      {/* An invitation is answered, not played: the same tap (enter the
+          room, which takes the seat and reads the invite) under the word
+          the asker is waiting for, in green like every button one tap from
+          a game (owner: "show green button - confirm button and X besides
+          that green button to deny"). */}
+      {room.has_pending_invite ? (
+        <>
+          <Check className="w-3.5 h-3.5" strokeWidth={3} />
+          {t("common.confirm")}
+        </>
+      ) : (
+        <>
+          <Play className="w-3.5 h-3.5 fill-current" />
+          {t("extra.roomPlay")}
+        </>
+      )}
+    </RoomCardPlayButton>
+  );
   /**
    * The host's way to fill an open seat, from the list rather than from
    * inside the room.
@@ -1298,7 +1347,7 @@ export function RoomCardGrid({ room, index, onJoin, onPreview, onDelete, onLeave
     // stake and its own idea of a round, so the sheet would describe it
     // wrongly. Their card keeps the tap it had.
     if (!isSwiping.current && !isJoining) {
-      if (roomKind(room) === "classic") onPreview();
+      if (roomKind(room) === "classic") onPreview(action ? playButton : undefined);
       else onJoin();
     }
   };
@@ -1649,47 +1698,9 @@ export function RoomCardGrid({ room, index, onJoin, onPreview, onDelete, onLeave
                 {action && (
                   /* The public list's button in white — same shape, same
                      word, same play triangle. Which list you are on is the
-                     only difference between them.
-
-                     The three states no longer wear three labels: "Play" is
-                     what every one of them does, and a live round says so by
-                     pulsing rather than by being called something else.
-                     "ითამაშე", not the lobby's "თამაშის დაწყება" — the long
-                     form is four syllables of Georgian in a pill that shares
-                     its row with a count and up to two faces, and it pushed
-                     the whole group off the card. */
-                  <RoomCardPlayButton
-                    tone={room.has_pending_invite ? "mint" : "white"}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (!isJoining) onJoin();
-                    }}
-                    disabled={isJoining}
-                    animate={action === "live" ? { scale: [1, 1.05, 1] } : undefined}
-                    transition={
-                      action === "live"
-                        ? { duration: 1.6, repeat: Infinity, ease: "easeInOut" }
-                        : undefined
-                    }
-                  >
-                    {/* An invitation is answered, not played: the same tap
-                        (enter the room, which takes the seat and reads the
-                        invite) under the word the asker is waiting for, in
-                        green like every button one tap from a game (owner:
-                        "show green button - confirm button and X besides
-                        that green button to deny"). */}
-                    {room.has_pending_invite ? (
-                      <>
-                        <Check className="w-3.5 h-3.5" strokeWidth={3} />
-                        {t("common.confirm")}
-                      </>
-                    ) : (
-                      <>
-                        <Play className="w-3.5 h-3.5 fill-current" />
-                        {t("extra.roomPlay")}
-                      </>
-                    )}
-                  </RoomCardPlayButton>
+                     only difference between them. Drawn by playButton, so
+                     the preview sheet can draw the same one. */
+                  playButton()
                 )}
                 {/* No: the reserved seat is given up and the invite answered. */}
                 {room.has_pending_invite && !isJoining && (
