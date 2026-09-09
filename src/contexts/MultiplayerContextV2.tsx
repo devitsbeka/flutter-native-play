@@ -525,6 +525,18 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
 
   // Ref to track expected game_id - prevents stale fetch loops from overwriting state
   const expectedGameIdRef = useRef<string | null>(null);
+  /**
+   * The game this client has FINISHED. A player who answered their last
+   * question sits on the results screen while slower players finish, and
+   * the room stays "playing" the whole time. Every path that pulls a
+   * lobby/results client into a playing room checks this first: a game
+   * already played is never entered again, whatever the room says - only a
+   * new game id can. Without it a resume, a realtime reconnect or a stray
+   * room update re-synced the finished player into the same round from
+   * question one, reset their row, and their second pass rewrote the
+   * results everyone had already seen (owner's report).
+   */
+  const finishedGameIdRef = useRef<string | null>(null);
 
   // Cleanup channels
   const cleanupChannels = useCallback(() => {
@@ -616,9 +628,14 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           const alreadySyncedThisGame =
             !!updated.current_game_id &&
             updated.current_game_id === expectedGameIdRef.current;
+          // A game this client has already played to the end is not entered
+          // twice, whatever else the room row says.
+          const finishedThisGame =
+            !!updated.current_game_id &&
+            updated.current_game_id === finishedGameIdRef.current;
 
           // Handle status changes
-          if (updated.status === "playing" && (currentPhase === "lobby" || currentPhase === "results" || isNewGameWhilePlaying)) {
+          if (updated.status === "playing" && !finishedThisGame && (currentPhase === "lobby" || currentPhase === "results" || isNewGameWhilePlaying)) {
             // Fetch questions when a game someone else started begins - USE shuffled_answers from DB
             if (!alreadySyncedThisGame) {
               // CRITICAL: Clear local questions FIRST to prevent stale data showing
@@ -818,7 +835,13 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             const alreadySyncedThisGame =
               !!freshRoom.current_game_id &&
               freshRoom.current_game_id === expectedGameIdRef.current;
-            if ((currentPhase === "lobby" || currentPhase === "results") && !alreadySyncedThisGame) {
+            // A reconnect (the phone locked, the app backgrounded) fires this
+            // again mid-round: a client that finished this game stays on its
+            // results, it does not play the round a second time.
+            const finishedThisGame =
+              !!freshRoom.current_game_id &&
+              freshRoom.current_game_id === finishedGameIdRef.current;
+            if ((currentPhase === "lobby" || currentPhase === "results") && !alreadySyncedThisGame && !finishedThisGame) {
               console.log(`[MP] Subscription connected, room already playing. Fetching questions...`);
               
               // Clear local state first
@@ -1455,8 +1478,16 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         let newPhase: GamePhase = "lobby";
         if (room.status === "completed") {
           newPhase = "results";
-        } else if (room.status === "playing" && !userFinished) {
-          newPhase = "playing";
+        } else if (room.status === "playing") {
+          // A round in progress: play it - unless this player already has,
+          // in which case they are waiting on the others, which is the
+          // results screen and never the lobby. A lobby-phased client in a
+          // playing room is what the subscription re-syncs into the round,
+          // as if it had never been played.
+          newPhase = userFinished ? "results" : "playing";
+        }
+        if (userFinished && room.current_game_id) {
+          finishedGameIdRef.current = room.current_game_id;
         }
         
         // If game is playing, load the questions
@@ -2266,6 +2297,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       // the room-completion check keys off the realtime event this produces,
       // and no rendered value reads the status.
       if (room && user) {
+        finishedGameIdRef.current = room.current_game_id ?? expectedGameIdRef.current;
         void supabase
           .from("room_participants")
           .update({ status: "finished" })
@@ -2361,6 +2393,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
 
     // Advance own progress; marking "finished" lets the (game-aware)
     // completion check close the round when everyone is done
+    if (finished) {
+      finishedGameIdRef.current = state.currentRoom.current_game_id ?? expectedGameIdRef.current;
+    }
     await supabase
       .from("room_participants")
       .update({
@@ -2405,6 +2440,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     setRoomPresence(null);
     cleanupChannels();
     expectedGameIdRef.current = null;
+    finishedGameIdRef.current = null;
     setState(initialState);
   }, [cleanupChannels, setRoomPresence, state.currentRoom?.id, user]);
 
@@ -3367,6 +3403,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
   const resetMultiplayer = useCallback(() => {
     cleanupChannels();
     expectedGameIdRef.current = null;
+    finishedGameIdRef.current = null;
     setState(initialState);
     setParticipants([]);
   }, [cleanupChannels]);
