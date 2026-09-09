@@ -186,6 +186,17 @@ export function RoomLobbyV2() {
   // The faces of whoever was seated last render, so a departed player's row
   // can still wear their name and picture while it says "left".
   const prevFacesRef = useRef<Map<string, { name: string; avatarUrl: string | null }>>(new Map());
+  // Which room the two refs above describe. The lobby is not remounted when
+  // the host leaves one room and makes another, so without this the last
+  // room's roster was diffed against the new room's: everybody from the old
+  // table read as having "left" a room they were never in (ghost rows on a
+  // brand-new room, owner's screenshot).
+  const prevRoomIdRef = useRef<string | null>(null);
+  // The "left" notes' removal timers. Kept here rather than in the effect's
+  // own cleanup: that cleanup ran on every roster change, which cancelled a
+  // pending removal the moment anyone else moved - and the ghost stayed.
+  const noteTimersRef = useRef<number[]>([]);
+  useEffect(() => () => noteTimersRef.current.forEach((id) => window.clearTimeout(id)), []);
   const { friends, sendFriendRequest } = useFriends();
   // Who this player has asked to be friends from this lobby, this visit:
   // the + on their row becomes a tick until the friends list catches up.
@@ -392,8 +403,20 @@ export function RoomLobbyV2() {
     const seatedIds = participants
       .filter((p) => (p.status as string) !== "invited")
       .map((p) => p.user_id);
+    const faces = new Map(participants.map((p) => [p.user_id, { name: p.nickname, avatarUrl: p.avatar_url }]));
+    const roomId = currentRoom?.id ?? null;
+    if (roomId !== prevRoomIdRef.current) {
+      // A different room: nobody arrived or left, the table is simply a
+      // different table. Start its history here, and drop the old room's
+      // notes and ghosts with it.
+      prevRoomIdRef.current = roomId;
+      prevParticipantsRef.current = seatedIds;
+      prevFacesRef.current = faces;
+      setSeatNotes(new Map());
+      setDeparted([]);
+      return;
+    }
     const prevIds = prevParticipantsRef.current;
-    const timers: number[] = [];
 
     if (prevIds.length > 0) {
       const arrived = seatedIds.filter((id) => !prevIds.includes(id));
@@ -408,12 +431,12 @@ export function RoomLobbyV2() {
           gone.forEach((id) => next.set(id, "left"));
           return next;
         });
-        const faces = prevFacesRef.current;
+        const lastFaces = prevFacesRef.current;
         setDeparted((prev) => [
           ...prev.filter((d) => !gone.includes(d.id)),
-          ...gone.map((id) => ({ id, name: faces.get(id)?.name ?? "", avatarUrl: faces.get(id)?.avatarUrl ?? null })),
+          ...gone.map((id) => ({ id, name: lastFaces.get(id)?.name ?? "", avatarUrl: lastFaces.get(id)?.avatarUrl ?? null })),
         ]);
-        timers.push(
+        noteTimersRef.current.push(
           window.setTimeout(() => {
             setSeatNotes((prev) => {
               const next = new Map(prev);
@@ -430,9 +453,8 @@ export function RoomLobbyV2() {
     // that is later accepted has to read as an arrival at that moment, not
     // at the moment it was sent.
     prevParticipantsRef.current = seatedIds;
-    prevFacesRef.current = new Map(participants.map((p) => [p.user_id, { name: p.nickname, avatarUrl: p.avatar_url }]));
-    return () => timers.forEach((id) => window.clearTimeout(id));
-  }, [participants, user?.id, playSound]);
+    prevFacesRef.current = faces;
+  }, [participants, currentRoom?.id, user?.id, playSound]);
 
   // Pre-calculate if host will be observer for current trivia selection
   // This enables UI indicators before game start
