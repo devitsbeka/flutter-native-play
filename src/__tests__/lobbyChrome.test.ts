@@ -437,7 +437,7 @@ describe("every lobby says which game it is", () => {
     // The arena's sign is fixed — what the SIDES wear is the choosable part
     // — so it passes no onRename and gets no pencil.
     expect(battle).not.toMatch(/onRename=/);
-    expect(room).toMatch(/onRename=\{isHost \? \(\) => setShowIconPicker\(true\) : undefined\}/);
+    expect(room).toMatch(/onRename=\{canRename \? \(\) => setShowIconPicker\(true\) : undefined\}/);
   });
 });
 

@@ -284,7 +284,7 @@ export default function Index() {
   const { coins, gems, addCoins } = useCurrency();
   const { powerUps } = useUserPowerUps();
   const { totalStars } = useTotalStars();
-  const { canClaimDaily, canClaimChest } = useRewardTimers();
+  const { canClaimDaily, canClaimChest, dailySecondsLeft } = useRewardTimers();
   const { missions, completedCount, totalCount } = useMissions();
   const { playsRemaining, maxPlays, canPlay, isVip, loading: vipLoading, regenPlayAvailable, timeUntilNextPlay, resetsAt, useRegenPlay, freeGamesExhausted } = usePlayLimit();
   const { subscription } = useVipStatus();
@@ -781,6 +781,12 @@ export default function Index() {
     setIsDailyRewardsOpen(true);
   }, [canClaimDaily, claimDailyNow]);
 
+  // Under the gift tab on the phone home: how long today's reward can still
+  // be claimed ("3h 21m", Figma 1076:3591), or the call to claim it.
+  const giftLabel = canClaimDaily
+    ? t("dailyRewards.claim")
+    : `${Math.floor(dailySecondsLeft / 3600)}h ${Math.floor((dailySecondsLeft % 3600) / 60)}m`;
+
   // /dev/v2 previews the 3D world-map homepage for logged-in users; the
   // regular responsive homepage below serves the main route.
   if (user && isDevV2 && LoggedInHomeV2) {
@@ -1080,8 +1086,12 @@ export default function Index() {
               )}
             </div>
             
-            {/* Center: Logo + Spotlight */}
-            <div className="flex-1 flex justify-center md:justify-start items-center gap-4 min-w-0">
+            {/* Logo, immediately after the burger rather than centred in the
+                row: the right of the row is the balances now, and a centred
+                wordmark between a burger and two pills has neither side to
+                centre against. Crownless for the same reason — see
+                MyTriviaLiveLogo's `crown`. */}
+            <div className="flex-1 flex justify-start items-center gap-4 min-w-0">
               {/* Logo - responsive sizing: sm on mobile/tablet, md on desktop */}
               {/* lg+ shows the logo in the left sidebar instead, where it is
                   already its own button; this is the phone/tablet twin. */}
@@ -1089,9 +1099,9 @@ export default function Index() {
                 type="button"
                 onClick={goHomeOrRefresh}
                 aria-label="MyTrivia"
-                className="lg:hidden cursor-pointer"
+                className="lg:hidden min-w-0 cursor-pointer"
               >
-                <MyTriviaLiveLogo responsive />
+                <MyTriviaLiveLogo responsive crown={false} />
               </button>
               {/* lg+: an alternating greeting takes the logo's place.
                   Hidden for guests — the Figma 612:1888 logged-out design
@@ -1103,12 +1113,16 @@ export default function Index() {
               )}
             </div>
             
-            {/* Right side: Search/Notification for users, Sign In for guests */}
+            {/* Right side: Search/Notification for users, Sign In for guests.
+                The home keeps its balances on the profile card, so this
+                corner stays the pair of glyphs it has always been — the
+                other main screens, which have no card, carry a balance strip
+                under their header instead. */}
             {user ? (
-              <div className="flex items-center gap-1">
+              <div className="flex shrink-0 items-center gap-1">
                 {/* Search button - visible on all screens */}
                 <SpotlightSearch variant="button" />
-                
+
                 {/* Bell icon with unread badge */}
                 <motion.button
                   className="relative w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/30 transition-colors"
@@ -1230,6 +1244,7 @@ export default function Index() {
             animatedAvatarUrl={profile?.animated_avatar_url}
             coins={coins}
             gems={gems}
+            giftLabel={giftLabel}
             canClaimGift={canClaimDaily}
             onAvatarClick={() => openAvatarModal()}
             onNameClick={() => setShowChangeNameModal(true)}

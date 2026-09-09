@@ -20,6 +20,11 @@ interface PageHeaderProps {
       its coin and gem pills here on tablet and desktop, where the row is
       already on screen and half empty. */
   titleAccessory?: React.ReactNode;
+  /** A second row inside the header, under the 76px title row — the balance
+      strip, on the main screens that carry one (BalanceStripRow). Inside the
+      <header> rather than after it so it shares the header's surface and its
+      sticky/overlay behaviour instead of needing its own of each. */
+  belowRow?: React.ReactNode;
   /** Draws the header on artwork rather than on the page wash: no surface,
       no rule under it, and a white title with a shadow so it stays legible
       over whatever is moving behind it. Explore uses it over its video. */
@@ -39,6 +44,7 @@ export function PageHeader({
   showBack = true,
   rightElements,
   titleAccessory,
+  belowRow,
   overlay = false,
   docked = false,
   className = "",
@@ -165,6 +171,8 @@ export function PageHeader({
           {rightElements ?? <HeaderActions />}
         </motion.div>
         </div>
+
+        {belowRow}
       </header>
     </>
   );

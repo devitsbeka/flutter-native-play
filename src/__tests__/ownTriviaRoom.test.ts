@@ -63,10 +63,12 @@ describe("a round that is the player's own trivia", () => {
   });
 
   it("and a round that is genuinely iconless keeps the caller's placeholder", () => {
-    // Only own-trivia rounds get a face here; a category with no icon is a
-    // different problem and still falls through.
+    // A category with no icon is a different problem and still falls
+    // through. A round with no category yet — random or mixed — is not
+    // iconless: it wears the box, the one face the whole app draws for it.
     expect(roundIconSlug({ source_type: "category" })).toBeUndefined();
-    expect(roundIconSlug({ source_type: "random" })).toBeUndefined();
+    expect(roundIconSlug({ source_type: "random" })).toBe("mystery-box");
+    expect(roundIconSlug({ source_type: "category", category_id: "__mixed__" })).toBe("mystery-box");
   });
 });
 

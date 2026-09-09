@@ -1,9 +1,12 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Menu } from "lucide-react";
+import { formatCompactNumber } from "@/lib/utils";
 import { t } from "@/lib/i18n";
 import myTriviaLogo from "@/assets/mytrivia-logo.svg";
 import guestCastleDoor from "@/assets/figma-home/guest-castle-door.webp";
+import coinChunky from "@/assets/figma-home/coin-chunky.png";
+import gemChunky from "@/assets/figma-home/gem-chunky.png";
 import giftDaily from "@/assets/figma-home/gift-daily.png";
 import streakFire from "@/assets/figma-home/streak-fire.png";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
@@ -19,8 +22,10 @@ import heroScene from "@/assets/figma-landing/hero-scene.png";
 // are expressed as a share of the frame width (vw) so the artwork keeps its
 // designed proportions on any phone.
 
+const STAT_SHADOW = "0px 2.745px 0px 0px #d8d0e8, 0px 4.116px 10.978px 0px rgba(0,0,0,0.1)";
+const STAT_GRADIENT = "linear-gradient(to bottom, rgba(255,255,255,0.5), rgba(254,254,254,0.5))";
 const AUTH_SHADOW = "0px 3.72px 0px 0px #d8d0e8, 0px 5.58px 14.881px 0px rgba(0,0,0,0.1)";
-const AUTH_GRADIENT = "linear-gradient(to bottom, rgba(255,255,255,0.5), rgba(254,254,254,0.5))";
+const AUTH_GRADIENT = STAT_GRADIENT;
 
 // The bottom nav is 88px of chrome (20px padding + 48px items) plus the
 // device inset; scene art is anchored off it exactly as in the frame.
@@ -154,6 +159,51 @@ export function MobileMascotScene({ sceneUrl }: MobileMascotSceneProps) {
  * Profile card (logged-in states)
  * ------------------------------------------------------------------ */
 
+// Chunky coin / gem pill — nodes 1076:2088 (coins, 87×40) and 1076:2095
+// (gems, 75×40). The frame froze each pill at one width for its sample
+// value, which leaves short balances with a hole between the icon and the
+// number; icon and value sit in a flex row instead, and the width steps with
+// how long the value reads so nothing is ever clipped.
+function statPillMinWidth(value: string): number {
+  if (value.length <= 1) return 58;
+  if (value.length === 2) return 66;
+  return 75;
+}
+
+function StatPill({
+  icon,
+  value,
+  label,
+  onClick,
+}: {
+  icon: string;
+  value: string;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      className="relative flex h-[40px] shrink-0 items-center gap-[2px] rounded-[33px] border-[0.934px] border-solid border-[#e8e0f5] pl-[3.6px] pr-[11px]"
+      style={{ boxShadow: STAT_SHADOW, minWidth: statPillMinWidth(value) }}
+    >
+      <span aria-hidden className="absolute inset-0 rounded-[inherit]" style={{ background: STAT_GRADIENT }} />
+      <img
+        src={icon}
+        alt=""
+        draggable={false}
+        className="relative size-[29.876px] shrink-0 object-cover"
+      />
+      <span className="relative flex-1 text-center font-['Nunito'] text-[16.159px] font-black leading-[25.132px] tracking-[-0.1462px] text-[#334155] whitespace-nowrap">
+        {value}
+      </span>
+      <span aria-hidden className="absolute inset-0 rounded-[inherit] shadow-[inset_0px_1.372px_0px_0px_white]" />
+    </button>
+  );
+}
+
 // Figma 1076:2066. The card is 464 wide on the 500 frame — 17px from the left
 // edge, 19 from the right — and 83 tall, with its bottom edge at 789: 49px
 // clear of the nav's 88px of chrome on the 926 frame. Everything inside it is
@@ -227,106 +277,32 @@ function useCardScale() {
   };
 }
 
-/* ------------------------------------------------------------------ *
- * Reward buttons on the profile card
- * ------------------------------------------------------------------ */
-
-// The gift and the streak, as bare icons. They used to be 80px glass tabs
-// on the scene (Figma 1076:3587 / 1076:3577) with a countdown under one and
-// a word under the other; on the card there is room for the artwork and
-// nothing else, so each icon has to say its own state. The flame breathes
-// and the gift rocks — small, slow, never in step with each other, so the
-// card reads as alive rather than as two things blinking.
-interface IdleMotion {
-  animate: Record<string, number[]>;
-  transition: Record<string, unknown>;
-}
-
-// A parcel being shaken, with a rest between shakes — a loop that never
-// pauses reads as a spinner, not as a thing sitting there.
-const GIFT_IDLE: IdleMotion = {
-  animate: { rotate: [0, -6, 5, -3, 0], y: [0, -2, 0, -1, 0] },
-  transition: { duration: 2.6, repeat: Infinity, repeatDelay: 1.4, ease: "easeInOut" },
-};
-
-// A flame guttering: never quite the same size twice, and off the gift's
-// beat so the two never swing together.
-const FLAME_IDLE: IdleMotion = {
-  animate: { scale: [1, 1.08, 0.97, 1.04, 1], rotate: [0, -3, 2, -1.5, 0] },
-  transition: { duration: 2.1, repeat: Infinity, ease: "easeInOut" },
-};
-
-// 54px of tap target (the 44px floor with room to spare) around 48px of art.
-function RewardIconButton({
-  icon,
-  label,
-  onClick,
-  idle,
-  muted = false,
-}: {
-  icon: string;
-  label: string;
-  onClick: () => void;
-  idle: IdleMotion;
-  muted?: boolean;
-}) {
-  return (
-    <motion.button
-      type="button"
-      onClick={onClick}
-      aria-label={label}
-      className="relative flex size-[54px] shrink-0 items-center justify-center"
-      whileTap={{ scale: 0.9 }}
-    >
-      <motion.img
-        src={icon}
-        alt=""
-        draggable={false}
-        className={`size-[48px] object-contain ${
-          muted ? "grayscale opacity-45" : "drop-shadow-[0_3px_6px_rgba(102,51,153,0.28)]"
-        }`}
-        // Muted is a dead thing: grey AND still. Animating it would say the
-        // opposite of what the grey says.
-        animate={muted ? { rotate: 0, y: 0, scale: 1 } : idle.animate}
-        transition={muted ? { duration: 0.35, ease: "easeOut" } : idle.transition}
-      />
-    </motion.button>
-  );
-}
-
 interface MobileProfileCardProps {
   nickname: string;
   avatarUrl?: string | null;
   animatedAvatarUrl?: string | null;
-  /** Is there a daily reward waiting? The gift is colour only when there is. */
-  canClaimGift: boolean;
+  coins: number;
+  gems: number;
   /** The avatar disc: the mascot / avatar picker. */
   onAvatarClick: () => void;
   onNameClick: () => void;
-  onGiftClick: () => void;
-  onStreakClick: () => void;
+  onCoinsClick: () => void;
+  onGemsClick: () => void;
 }
 
 // node 1076:2066. The avatar in its gradient ring, the nickname beside it and
-// the two reward buttons on the right, all on one 83px frosted bar anchored
+// the coin and gem pills on the right, all on one 83px frosted bar anchored
 // above the bottom nav so the scene it floats on is not covered by it.
-//
-// The balances used to sit on the right of this card. They are on the strip
-// under the header now — the place the game-mode selection screen keeps them
-// — and showing them twice on one screen was a second source of truth for
-// the same two numbers. The gift and the streak, which used to be a pair of
-// glass tabs floating on the scene with their own labels, moved into the
-// space that left: icon-only, and the icons carry the state that the labels
-// used to spell out.
 export function MobileProfileCard({
   nickname,
   avatarUrl,
   animatedAvatarUrl,
-  canClaimGift,
+  coins,
+  gems,
   onAvatarClick,
   onNameClick,
-  onGiftClick,
-  onStreakClick,
+  onCoinsClick,
+  onGemsClick,
 }: MobileProfileCardProps) {
   const { ref, scale, designWidth } = useCardScale();
   // The card's edges roll (Figma 1076:3700 / 3697): one closed silhouette,
@@ -409,28 +385,23 @@ export function MobileProfileCard({
           <button
             type="button"
             onClick={onNameClick}
-            className="absolute left-[77px] right-[150px] top-[21px] h-[44.814px] truncate text-left font-slackey text-[26px] capitalize leading-[44.814px] tracking-[-0.1494px] text-[#402666]"
+            className="absolute left-[77px] right-[196px] top-[21px] h-[44.814px] truncate text-left font-slackey text-[26px] capitalize leading-[44.814px] tracking-[-0.1494px] text-[#402666]"
           >
             {nickname}
           </button>
 
-          {/* The two rewards, centred on the card's own middle line as the
-              avatar is (18 + 27 against the box's 45.5). */}
-          <div className="absolute right-[18px] top-[18px] flex items-center gap-[8px]">
-            <RewardIconButton
-              icon={giftDaily}
-              label={t("extra.dailyRewards")}
-              onClick={onGiftClick}
-              idle={GIFT_IDLE}
-              // Nothing to claim: the gift goes grey and stops moving, so the
-              // one that IS claimable is the only colour on the card.
-              muted={!canClaimGift}
+          <div className="absolute right-[20px] top-[21px] flex gap-[6.162px]">
+            <StatPill
+              icon={coinChunky}
+              value={formatCompactNumber(coins)}
+              label={t("common.coins")}
+              onClick={onCoinsClick}
             />
-            <RewardIconButton
-              icon={streakFire}
-              label={t("extra.heroStreak")}
-              onClick={onStreakClick}
-              idle={FLAME_IDLE}
+            <StatPill
+              icon={gemChunky}
+              value={formatCompactNumber(gems)}
+              label={t("common.gems")}
+              onClick={onGemsClick}
             />
           </div>
         </div>
@@ -451,11 +422,162 @@ export function MobileProfileCard({
 }
 
 /* ------------------------------------------------------------------ *
- * (The reward tabs that used to float on the scene here — Figma 1076:3587
- * and 1076:3577, an 80px glass card each for the gift and the streak — are
- * gone. Both are icon buttons on the profile card now; see
- * RewardIconButton above.)
+ * Hero widgets — the reward tabs floating on the scene
  * ------------------------------------------------------------------ */
+
+// Figma 1076:3587 (gift) and 1076:3577 (streak): two frosted tabs on the
+// scene between the friends reel and the profile card — the daily-reward
+// gift with its countdown on the left, the streak flame on the right. Each
+// is an 80px glass card whose outer top corner swells to 62px, with its
+// artwork spilling over the top edge.
+//
+// The frame drew a third, a chest for the daily missions (1076:3581). It is
+// gone: the streak page it sat beside lists those missions itself, so the
+// chest was a second door onto one room.
+const WIDGET_GLASS =
+  "linear-gradient(180deg, rgba(188,223,248,0.5) 0%, rgba(212,201,220,0.5) 15.385%, rgba(255,209,150,0.5) 37.981%, rgba(255,255,255,0.5) 71.056%, rgba(255,255,255,0.5) 100%)";
+const WIDGET_SHADOW =
+  "0px 1.867px 7.469px 0px rgba(102,51,153,0.06), 0px 7.469px 22.407px 0px rgba(102,51,153,0.12)";
+const WIDGET_BORDER = "1.867px solid #ffffff";
+// The big corner is the outer top one: top-right on the left-hand gift,
+// top-left on the right-hand pair.
+const GIFT_RADIUS = "22.41px 62.41px 23px 22.407px";
+const RIGHT_RADIUS = "62.41px 22.41px 23px 22.407px";
+
+// The frame measures every widget from the top of a frame whose header is
+// 69px tall. The header here reports its own height on the home column, so
+// the widgets hang off that instead and keep the frame's gaps under a header
+// that measures differently.
+const FRAME_HEADER_H = 69;
+function belowHeader(frameY: number): string {
+  return `calc(var(--home-header-h, ${FRAME_HEADER_H}px) + ${frameY - FRAME_HEADER_H}px)`;
+}
+
+const WIDGET_LABEL =
+  "pointer-events-none absolute text-center font-['Nunito'] text-[14px] font-extrabold leading-[16px] tracking-[-0.16px] text-[rgba(0,0,0,0.91)]";
+
+// The idle motion on the two rewards. Small, slow, and off each other's
+// beat, so the hero reads as alive rather than as two things blinking.
+interface IdleMotion {
+  animate: Record<string, number[]>;
+  transition: Record<string, unknown>;
+}
+
+// A parcel being shaken, with a rest between shakes — a loop that never
+// pauses reads as a spinner, not as a thing sitting there.
+const GIFT_IDLE: IdleMotion = {
+  animate: { rotate: [0, -6, 5, -3, 0], y: [0, -2, 0, -1, 0] },
+  transition: { duration: 2.6, repeat: Infinity, repeatDelay: 1.4, ease: "easeInOut" },
+};
+
+// A flame guttering: never quite the same size twice.
+const FLAME_IDLE: IdleMotion = {
+  animate: { scale: [1, 1.08, 0.97, 1.04, 1], rotate: [0, -3, 2, -1.5, 0] },
+  transition: { duration: 2.1, repeat: Infinity, ease: "easeInOut" },
+};
+
+interface MobileHeroWidgetsProps {
+  /** Under the gift: the time left to claim today's reward, or the call to claim it. */
+  giftLabel: string;
+  /** Is there a reward waiting? With nothing to claim the gift goes grey. */
+  canClaimGift: boolean;
+  onGiftClick: () => void;
+  onStreakClick: () => void;
+}
+
+export function MobileHeroWidgets({
+  giftLabel,
+  canClaimGift,
+  onGiftClick,
+  onStreakClick,
+}: MobileHeroWidgetsProps) {
+  return (
+    <div className="md:hidden pointer-events-none absolute inset-0 z-20">
+      {/* Gift — card at (18, 223.8) 80×90; the box leans 5.88° over its top edge. */}
+      <button
+        type="button"
+        onClick={onGiftClick}
+        aria-label={t("extra.dailyRewards")}
+        className="pointer-events-auto absolute left-[18px] h-[90px] w-[80px] backdrop-blur-[37px]"
+        style={{
+          top: belowHeader(223.8),
+          background: WIDGET_GLASS,
+          border: WIDGET_BORDER,
+          borderRadius: GIFT_RADIUS,
+          boxShadow: WIDGET_SHADOW,
+        }}
+      />
+      <span
+        aria-hidden
+        className="absolute left-[30.76px] flex h-[72px] w-[68.432px] items-center justify-center"
+        style={{ top: belowHeader(211) }}
+      >
+        {/* Colour and motion say whether there is anything to claim: a grey,
+            still gift is the countdown's other half, and animating it would
+            say the opposite of what the grey says.
+            The idle rock is a wrapper around the frame's own 5.88° lean
+            rather than a rotate on the same element — one transform would
+            replace the other, and the box would snap upright to animate. */}
+        <motion.span
+          className="block"
+          animate={canClaimGift ? GIFT_IDLE.animate : { rotate: 0, y: 0 }}
+          transition={canClaimGift ? GIFT_IDLE.transition : { duration: 0.35, ease: "easeOut" }}
+        >
+          <span
+            className={`block h-[66px] w-[62px] overflow-hidden ${canClaimGift ? "" : "grayscale opacity-45"}`}
+            style={{ transform: "rotate(5.88deg)" }}
+          >
+            <img
+              src={giftDaily}
+              alt=""
+              draggable={false}
+              className="absolute left-[-17.86%] top-[-16.95%] h-[128.81%] w-[135.71%] max-w-none"
+            />
+          </span>
+        </motion.span>
+      </span>
+      <span className={WIDGET_LABEL} style={{ top: belowHeader(223.8 + 63), left: 18, width: 80 }}>
+        {giftLabel}
+      </span>
+
+      {/* Streak — card at (401, 218) 80×96; the flame leans -8.95° over it. */}
+      <button
+        type="button"
+        onClick={onStreakClick}
+        aria-label={t("extra.heroStreak")}
+        className="pointer-events-auto absolute right-[19px] h-[96px] w-[80px] backdrop-blur-[37px]"
+        style={{
+          top: belowHeader(218),
+          background: WIDGET_GLASS,
+          border: WIDGET_BORDER,
+          borderRadius: RIGHT_RADIUS,
+          boxShadow: WIDGET_SHADOW,
+        }}
+      />
+      <span
+        aria-hidden
+        className="absolute right-[8.78px] flex h-[79.416px] w-[103.022px] items-center justify-center"
+        style={{ top: belowHeader(207.53) }}
+      >
+        {/* Same nesting as the gift: the lean is the inner element's, the
+            gutter is the wrapper's. */}
+        <motion.span className="block" animate={FLAME_IDLE.animate} transition={FLAME_IDLE.transition}>
+          <img
+            src={streakFire}
+            alt=""
+            draggable={false}
+            className="block h-[65.595px] w-[93.96px] max-w-none object-cover"
+            style={{ transform: "rotate(-8.95deg)" }}
+          />
+        </motion.span>
+      </span>
+      <span className={WIDGET_LABEL} style={{ top: belowHeader(218 + 70), right: 19, width: 80 }}>
+        {t("extra.heroStreak")}
+      </span>
+
+    </div>
+  );
+}
 
 /* ------------------------------------------------------------------ *
  * Guest (logged out)

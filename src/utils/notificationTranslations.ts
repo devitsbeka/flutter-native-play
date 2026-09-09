@@ -68,6 +68,7 @@ export function translateNotificationTitle(
     // card's room chip carries which room.
     'room_join_approved': 'extra.joinApprovedTitle',
     'room_join_declined': 'extra.joinDeclinedTitle',
+    'rematch_request': 'extra.rematchRequestTitle',
   };
 
   // A completed mission's row carries the title in the language the app was

@@ -92,8 +92,11 @@ describe("the place numbers are quieter than the medals", () => {
   it("smaller from fourth down", () => {
     // An emoji carries padding inside its own glyph, so type set to match a
     // medal optically overshoots: "#4" at 24px was the loudest thing on the
-    // row it matters least on.
-    expect(results).toMatch(/idx < 3 \? "text-2xl" : "text-base",/);
+    // row it matters least on. The medals live on the podium now — the
+    // winner's a size up from the two beside it — and the place numbers in
+    // the list under it stay at body size.
+    expect(results).toMatch(/first \? "text-3xl" : "text-2xl"/);
+    expect(results).toMatch(/font-display font-bold text-white text-base min-w-\[2ch\] text-center/);
     expect(results).not.toMatch(/className="text-2xl font-display font-bold text-white min-w-\[2ch\]/);
   });
 });

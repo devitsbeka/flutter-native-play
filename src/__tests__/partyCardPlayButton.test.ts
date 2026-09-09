@@ -54,6 +54,6 @@ describe("the party card's Play wears the rooms list's own white", () => {
     // state on that same card — Join, Enter, waiting on the host — is white.
     // That white is what the party card now shares, rather than a colour
     // that belongs to it alone.
-    expect(publicRooms).toMatch(/tone=\{ready \? "mint" : "white"\}/);
+    expect(publicRooms).toMatch(/tone=\{invited \|\| ready \? "mint" : "white"\}/);
   });
 });

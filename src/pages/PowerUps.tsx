@@ -26,7 +26,8 @@ import { AuthRequiredModal } from "@/components/shared/AuthRequiredModal";
 
 import { PowerUpTutorialModal } from "@/components/game/PowerUpTutorialModal";
 import { PowerUpShopModal } from "@/components/map/PowerUpShopModal";
-import { ShopHeader, WalletPills } from "@/components/shop/ShopHeader";
+import { WalletPills } from "@/components/shop/ShopHeader";
+import { BalanceStripRow } from "@/components/shared/BalanceStrip";
 import { PageHeader } from "@/components/shared/PageHeader";
 // Served from public/ - not bundled, streams straight from the CDN
 const SHOP_SCENE_VIDEO = "/videos/shop-scene.mp4";
@@ -290,39 +291,18 @@ export default function PowerUps() {
         <PageHeader
           title={t("menu.shop")}
           showBack={false}
+          // Signed out every figure is a zero, so the pills are hidden —
+          // the strip below does the same for phones, from inside
+          // BalanceStripRow itself.
           titleAccessory={user ? <WalletPills className="ml-3 hidden md:flex" /> : undefined}
+          belowRow={<BalanceStripRow />}
         />
 
-        {/* The currency pills are the shop's own, not header furniture, so
-            they sit on their own row underneath. Keeping them in the header
-            would have given this page a different right-hand side from every
-            other one, which is the inconsistency being removed. */}
-        {/* `relative z-10`, or this row is invisible.
-         *
-         * GlobalSplineBackground paints four `fixed inset-0` layers at
-         * z-index 0 through 3. A positioned element with z-index 0 paints
-         * ABOVE an unpositioned in-flow block — that is the CSS painting
-         * order, steps 4 and 8 — so this row was drawn and then covered by
-         * the lavender wash. The coins and gems were on the shop page the
-         * whole time, under the background.
-         *
-         * No side padding: the band is designed full-bleed, attached to the
-         * header above it — its own top stroke and drop shadow are the seam.
-         *
-         * Sticky at top-[76px]: PageHeader's row is exactly 76px and sticks
-         * at 0, so the band parks flush under it and the two scroll as one
-         * fixed header stack. Same z as the header — anything meant to pass
-         * beneath them must stay below 20. */}
-        {/* Signed out every figure in it is a zero — a wallet band that
-            says 0 coins, 0 gems and shows a piggy bank reads as a broken
-            account rather than an invitation. The whole sticky wrapper goes,
-            not just its contents, or an empty 56px band keeps the shop
-            pushed down. */}
-        {user && (
-          <div className="sticky top-[76px] z-20 md:hidden">
-            <ShopHeader />
-          </div>
-        )}
+        {/* The shop's own phone wallet band used to sit here: a 56px lilac
+            strip with the balances and a piggy bank. The balances are the
+            shared strip in the header above now — the same row, the same
+            pills, on explore and the rating board too — so the band was a
+            second design for one job, and the piggy was decorative. */}
 
         <div className="flex flex-1 min-h-0">
           {/* Main content. No percentage cap: the scene beside it is capped

@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { t as tStandalone } from "@/utils/standaloneTranslation";
 import { supabase } from "@/integrations/supabase/client";
-import { roomVisibilityFields } from "@/utils/roomVisibility";
+import { roomApprovalFields, roomVisibilityFields } from "@/utils/roomVisibility";
 import type { Json } from "@/integrations/supabase/types";
 import { useAuth } from "./AuthContext";
 import { TriviaQuestion } from "@/hooks/useTrivia";
@@ -380,7 +380,7 @@ interface MultiplayerContextType extends MultiplayerState {
   isMostLikelyRound: boolean;
 
   // Actions
-  createRoom: (categoryId?: string, categoryName?: string, customQuestions?: any[], roomName?: string | null, roomIcon?: string | null, preferredRoomCode?: string, isPublic?: boolean) => Promise<GameRoom | null>;
+  createRoom: (categoryId?: string, categoryName?: string, customQuestions?: any[], roomName?: string | null, roomIcon?: string | null, preferredRoomCode?: string, isPublic?: boolean, requiresApproval?: boolean) => Promise<GameRoom | null>;
   enterRoom: (roomCode: string) => Promise<boolean>;
   startGame: (hostShouldObserve?: boolean, room?: GameRoom) => Promise<void>;
   startNewRound: () => Promise<void>; // Any player can start a new round
@@ -525,6 +525,18 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
 
   // Ref to track expected game_id - prevents stale fetch loops from overwriting state
   const expectedGameIdRef = useRef<string | null>(null);
+  /**
+   * The game this client has FINISHED. A player who answered their last
+   * question sits on the results screen while slower players finish, and
+   * the room stays "playing" the whole time. Every path that pulls a
+   * lobby/results client into a playing room checks this first: a game
+   * already played is never entered again, whatever the room says - only a
+   * new game id can. Without it a resume, a realtime reconnect or a stray
+   * room update re-synced the finished player into the same round from
+   * question one, reset their row, and their second pass rewrote the
+   * results everyone had already seen (owner's report).
+   */
+  const finishedGameIdRef = useRef<string | null>(null);
 
   // Cleanup channels
   const cleanupChannels = useCallback(() => {
@@ -616,9 +628,14 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           const alreadySyncedThisGame =
             !!updated.current_game_id &&
             updated.current_game_id === expectedGameIdRef.current;
+          // A game this client has already played to the end is not entered
+          // twice, whatever else the room row says.
+          const finishedThisGame =
+            !!updated.current_game_id &&
+            updated.current_game_id === finishedGameIdRef.current;
 
           // Handle status changes
-          if (updated.status === "playing" && (currentPhase === "lobby" || currentPhase === "results" || isNewGameWhilePlaying)) {
+          if (updated.status === "playing" && !finishedThisGame && (currentPhase === "lobby" || currentPhase === "results" || isNewGameWhilePlaying)) {
             // Fetch questions when a game someone else started begins - USE shuffled_answers from DB
             if (!alreadySyncedThisGame) {
               // CRITICAL: Clear local questions FIRST to prevent stale data showing
@@ -818,7 +835,13 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             const alreadySyncedThisGame =
               !!freshRoom.current_game_id &&
               freshRoom.current_game_id === expectedGameIdRef.current;
-            if ((currentPhase === "lobby" || currentPhase === "results") && !alreadySyncedThisGame) {
+            // A reconnect (the phone locked, the app backgrounded) fires this
+            // again mid-round: a client that finished this game stays on its
+            // results, it does not play the round a second time.
+            const finishedThisGame =
+              !!freshRoom.current_game_id &&
+              freshRoom.current_game_id === finishedGameIdRef.current;
+            if ((currentPhase === "lobby" || currentPhase === "results") && !alreadySyncedThisGame && !finishedThisGame) {
               console.log(`[MP] Subscription connected, room already playing. Fetching questions...`);
               
               // Clear local state first
@@ -1237,6 +1260,16 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
      * create screen's switch publishes one.
      */
     isPublic = false,
+    /**
+     * Put the room's door on the latch: strangers ask, the host answers.
+     *
+     * Defaults to false, matching the column — a room nobody chose a policy
+     * for is open, which is what every caller before "+ Room" wanted. "+
+     * Room" asks for it, so the host of a room that lands on the public list
+     * the moment it exists still decides who walks in (owner: "show always
+     * public and ask me - as selected").
+     */
+    requiresApproval = false,
   ): Promise<GameRoom | null> => {
     if (!user || !profile) {
       toast.error(tStandalone("extra.mpAuthRequired"));
@@ -1273,6 +1306,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             room_name: finalRoomName,
             room_icon: finalRoomIcon,
             ...(await roomVisibilityFields(isPublic)),
+            ...(await roomApprovalFields(requiresApproval)),
             last_activity_at: new Date().toISOString(),
           })
           .select()
@@ -1444,8 +1478,16 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         let newPhase: GamePhase = "lobby";
         if (room.status === "completed") {
           newPhase = "results";
-        } else if (room.status === "playing" && !userFinished) {
-          newPhase = "playing";
+        } else if (room.status === "playing") {
+          // A round in progress: play it - unless this player already has,
+          // in which case they are waiting on the others, which is the
+          // results screen and never the lobby. A lobby-phased client in a
+          // playing room is what the subscription re-syncs into the round,
+          // as if it had never been played.
+          newPhase = userFinished ? "results" : "playing";
+        }
+        if (userFinished && room.current_game_id) {
+          finishedGameIdRef.current = room.current_game_id;
         }
         
         // If game is playing, load the questions
@@ -2255,6 +2297,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       // the room-completion check keys off the realtime event this produces,
       // and no rendered value reads the status.
       if (room && user) {
+        finishedGameIdRef.current = room.current_game_id ?? expectedGameIdRef.current;
         void supabase
           .from("room_participants")
           .update({ status: "finished" })
@@ -2350,6 +2393,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
 
     // Advance own progress; marking "finished" lets the (game-aware)
     // completion check close the round when everyone is done
+    if (finished) {
+      finishedGameIdRef.current = state.currentRoom.current_game_id ?? expectedGameIdRef.current;
+    }
     await supabase
       .from("room_participants")
       .update({
@@ -2394,6 +2440,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     setRoomPresence(null);
     cleanupChannels();
     expectedGameIdRef.current = null;
+    finishedGameIdRef.current = null;
     setState(initialState);
   }, [cleanupChannels, setRoomPresence, state.currentRoom?.id, user]);
 
@@ -3088,7 +3135,13 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       // Regular category or random - fetch new questions directly with correct category
       // Handle __mixed__ category - triggers multi-category mode
       const isMixedCategory = nextItem.category_id === "__mixed__";
-      const newCategoryId = nextItem.source_type === "random" ? null : (isMixedCategory ? undefined : nextItem.category_id);
+      // A mixed round WRITES its id. It used to leave the column alone
+      // (undefined), so the room kept the previous round's category_id under
+      // the name "Mixed" — and every screen reading the id first (the
+      // countdown, the results header, the lobby chip on re-entry) drew the
+      // previous round's picture, or nothing, over a round called Mixed.
+      // startGame already treats "__mixed__" on the room as multi-category.
+      const newCategoryId = nextItem.source_type === "random" ? null : (isMixedCategory ? "__mixed__" : nextItem.category_id);
       // Through t(), not hardcoded Georgian — TVGameContext already does
       // this with the same keys. (The name is still a snapshot in this
       // writer's language once persisted; per-viewer resolution is a wider
@@ -3110,7 +3163,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       
       // Fetch questions with the NEW category (not from stale state!)
       let questions: TriviaQuestion[];
-      if (newCategoryId && await isMostLikelyCategoryId(newCategoryId)) {
+      if (newCategoryId && !isMixedCategory && await isMostLikelyCategoryId(newCategoryId)) {
         // "Most Likely To" queued round — see startGame for the shape.
         questions = await buildMostLikelyQuestions(
           newCategoryId,
@@ -3124,7 +3177,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       } else {
         const result = await getQuestions({
           mode: 'vs',
-          categorySlug: newCategoryId || undefined,
+          // "__mixed__" is not a category slug: a mixed round asks for no
+          // category, the same as a random one.
+          categorySlug: isMixedCategory ? undefined : (newCategoryId || undefined),
           count: questionCount,
           excludeIds: usedIds,
         });
@@ -3348,6 +3403,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
   const resetMultiplayer = useCallback(() => {
     cleanupChannels();
     expectedGameIdRef.current = null;
+    finishedGameIdRef.current = null;
     setState(initialState);
     setParticipants([]);
   }, [cleanupChannels]);

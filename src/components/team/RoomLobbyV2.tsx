@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import retroTvIcon from "@/assets/images/retro-tv.png";
 import { motion, AnimatePresence } from "framer-motion";
@@ -18,6 +18,10 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { toast } from "@/lib/toast";
 import { supabase } from "@/integrations/supabase/client";
 import { OWN_TRIVIA_ICON_SLUG, roomPlaysOwnTrivia, roundIconSlug } from "@/utils/ownTriviaRound";
+import { isUndecidedRound, UNDECIDED_ICON_SLUG } from "@/utils/undecidedRound";
+import { MatchSummarySheet } from "./MatchSummarySheet";
+import { RematchWaitSheet, type RematchSeat } from "./RematchWaitSheet";
+import { sendRematchRequest, type RematchPick } from "@/utils/rematchRequests";
 import { siteUrl } from "@/config/site";
 import { inviteLinkPath } from "@/utils/inviteLink";
 import { useRoomMatchHistory } from "@/hooks/useRoomMatchHistory";
@@ -48,9 +52,11 @@ import type { QueueItem } from "@/hooks/useRoomCategoryQueue";
 import { classicLobbyScene } from "@/utils/lobbyScene";
 import { gameRoomsHasApproval, roomVisibilityFields } from "@/utils/roomVisibility";
 import { dealtRoomIcon, fetchCrestPool } from "@/utils/roomCrests";
+import { forgetDraftRoom, hasPressedCreate, isDraftRoom, rememberPressedCreate } from "@/utils/roomCreateOffered";
+import { useParticipantPresence } from "@/hooks/useParticipantPresence";
 import coinIconAsset from "@/assets/tb-lobby/coin.png";
 import { NotEnoughStakeModal } from "@/components/home/NotEnoughStakeModal";
-import { useGameStake } from "@/hooks/useGameStake";
+import { useCurrency } from "@/hooks/useCurrency";
 import { REWARDS } from "@/config/rewardConfig";
 import { triviaDisplayTitle } from "@/utils/triviaTitle";
 import { useFriends } from "@/hooks/useFriends";
@@ -109,6 +115,23 @@ export function RoomLobbyV2() {
     void fetchCrestPool().then(setIconPool);
   }, []);
   /**
+   * Has the host pressed Create on this room?
+   *
+   * It is the moment a room stops being a draft. Before it, the lobby is
+   * where the room is built; after it, a PUBLIC room is a thing other people
+   * are looking at on a list, and what it says it plays has to stay true
+   * (see rulesLocked). It is also why Create is offered once.
+   *
+   * Read per room rather than once — the lobby survives the host moving
+   * between rooms — and seeded on the first render rather than by the effect
+   * alone, so a created room is never briefly editable while the effect
+   * catches up.
+   */
+  const [roomCreated, setRoomCreated] = useState(() => hasPressedCreate(currentRoom?.id));
+  useEffect(() => {
+    setRoomCreated(hasPressedCreate(currentRoom?.id));
+  }, [currentRoom?.id]);
+  /**
    * Whether the room can start, for the handler rather than the button.
    *
    * `enoughPlayers` is worked out far below, after the early returns —
@@ -118,11 +141,56 @@ export function RoomLobbyV2() {
    * or the last guest leaves between the tap and the write.
    */
   const enoughPlayersRef = useRef(false);
+  /**
+   * Who of the people seated here is in the app right now.
+   *
+   * Up here with the other hooks, not down beside the count that reads it:
+   * everything below `if (!currentRoom) return null` runs on some renders
+   * and not others, and a hook may not.
+   */
+  const seatedIdsForPresence = useMemo(
+    () => participants.filter((p) => (p.status as string) !== "invited").map((p) => p.user_id),
+    [participants],
+  );
+  const { online: onlineInRoom, loaded: presenceLoaded } = useParticipantPresence(seatedIdsForPresence);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   // Can this player cover a seat at the table? The pot is collected when the
   // round ends, but being told then is being told too late.
-  const { hasEnoughCoins } = useGameStake();
+  /**
+   * Can this player cover a seat at the table?
+   *
+   * The BALANCE, not useGameStake's `hasEnoughCoins`, which is
+   * `isVipFreePlay || canAfford` — PRO is exempt from a quick game's loss,
+   * because nobody is on the other side of one. A room pot is other
+   * players' money and PRO stakes into it like everyone else
+   * (settle_room_round: "Everyone stakes, PRO included"), so a PRO player
+   * with nothing waved through here reached the settlement and paid what
+   * they had, leaving the pot short and the table funding them.
+   */
+  const { coins } = useCurrency();
+  const canCoverStake = coins >= REWARDS.GAME_STAKE;
   const [showNoStake, setShowNoStake] = useState(false);
+  const [showMatchSummary, setShowMatchSummary] = useState(false);
+  const [showRematchWait, setShowRematchWait] = useState(false);
+  /**
+   * Who was ASKED, taken when the ask goes out.
+   *
+   * Not read off `participants` at render time: saying no gives the seat up
+   * (answerRematchRequest deletes the row), so a declined player is not in
+   * the room any more and a list built from the room would simply lose them
+   * — leaving the host to work out "who did not" from a gap. The snapshot
+   * remembers the table; the room says what each of them has answered since.
+   */
+  const [askedSeats, setAskedSeats] = useState<Omit<RematchSeat, "answer">[]>([]);
+  /**
+   * Why the summary sheet is open: Create (the room, once) or Start on a
+   * later match, which asks the table rather than commits. Set by Start,
+   * cleared whenever the sheet closes, so Create never inherits it.
+   */
+  const [askingTable, setAskingTable] = useState(false);
+  useEffect(() => {
+    if (!showMatchSummary) setAskingTable(false);
+  }, [showMatchSummary]);
   const [isStarting, setIsStarting] = useState(false);
   const [isTVModeEnabled, setIsTVModeEnabled] = useState(() => searchParams.get("tvMode") === "true");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -140,6 +208,17 @@ export function RoomLobbyV2() {
   // The faces of whoever was seated last render, so a departed player's row
   // can still wear their name and picture while it says "left".
   const prevFacesRef = useRef<Map<string, { name: string; avatarUrl: string | null }>>(new Map());
+  // Which room the two refs above describe. The lobby is not remounted when
+  // the host leaves one room and makes another, so without this the last
+  // room's roster was diffed against the new room's: everybody from the old
+  // table read as having "left" a room they were never in (ghost rows on a
+  // brand-new room, owner's screenshot).
+  const prevRoomIdRef = useRef<string | null>(null);
+  // The "left" notes' removal timers. Kept here rather than in the effect's
+  // own cleanup: that cleanup ran on every roster change, which cancelled a
+  // pending removal the moment anyone else moved - and the ghost stayed.
+  const noteTimersRef = useRef<number[]>([]);
+  useEffect(() => () => noteTimersRef.current.forEach((id) => window.clearTimeout(id)), []);
   const { friends, sendFriendRequest } = useFriends();
   // Who this player has asked to be friends from this lobby, this visit:
   // the + on their row becomes a tick until the friends list catches up.
@@ -346,8 +425,20 @@ export function RoomLobbyV2() {
     const seatedIds = participants
       .filter((p) => (p.status as string) !== "invited")
       .map((p) => p.user_id);
+    const faces = new Map(participants.map((p) => [p.user_id, { name: p.nickname, avatarUrl: p.avatar_url }]));
+    const roomId = currentRoom?.id ?? null;
+    if (roomId !== prevRoomIdRef.current) {
+      // A different room: nobody arrived or left, the table is simply a
+      // different table. Start its history here, and drop the old room's
+      // notes and ghosts with it.
+      prevRoomIdRef.current = roomId;
+      prevParticipantsRef.current = seatedIds;
+      prevFacesRef.current = faces;
+      setSeatNotes(new Map());
+      setDeparted([]);
+      return;
+    }
     const prevIds = prevParticipantsRef.current;
-    const timers: number[] = [];
 
     if (prevIds.length > 0) {
       const arrived = seatedIds.filter((id) => !prevIds.includes(id));
@@ -362,12 +453,12 @@ export function RoomLobbyV2() {
           gone.forEach((id) => next.set(id, "left"));
           return next;
         });
-        const faces = prevFacesRef.current;
+        const lastFaces = prevFacesRef.current;
         setDeparted((prev) => [
           ...prev.filter((d) => !gone.includes(d.id)),
-          ...gone.map((id) => ({ id, name: faces.get(id)?.name ?? "", avatarUrl: faces.get(id)?.avatarUrl ?? null })),
+          ...gone.map((id) => ({ id, name: lastFaces.get(id)?.name ?? "", avatarUrl: lastFaces.get(id)?.avatarUrl ?? null })),
         ]);
-        timers.push(
+        noteTimersRef.current.push(
           window.setTimeout(() => {
             setSeatNotes((prev) => {
               const next = new Map(prev);
@@ -384,9 +475,8 @@ export function RoomLobbyV2() {
     // that is later accepted has to read as an arrival at that moment, not
     // at the moment it was sent.
     prevParticipantsRef.current = seatedIds;
-    prevFacesRef.current = new Map(participants.map((p) => [p.user_id, { name: p.nickname, avatarUrl: p.avatar_url }]));
-    return () => timers.forEach((id) => window.clearTimeout(id));
-  }, [participants, user?.id, playSound]);
+    prevFacesRef.current = faces;
+  }, [participants, currentRoom?.id, user?.id, playSound]);
 
   // Pre-calculate if host will be observer for current trivia selection
   // This enables UI indicators before game start
@@ -496,8 +586,33 @@ export function RoomLobbyV2() {
     setIsTVModeEnabled(false);
   };
 
+  /**
+   * The back arrow.
+   *
+   * A room made by "+ Room" is a draft until Create or Start settles it. A
+   * host backing out of one before that, still alone in it, did not make a
+   * room — they looked at one and left — so the row goes with them rather
+   * than sitting on the list as a room nobody built (owner: "if i click +
+   * room and didn't choose category and clicked back button, room
+   * shouldn't be created, only after clicking create - we create rooms").
+   *
+   * Only ever alone: a seat somebody else holds — joined, or invited and
+   * waiting on their answer — is a room in use, and it stays.
+   */
   const handleExitRoom = () => {
+    const abandonedDraft =
+      !!currentRoom &&
+      isHost &&
+      isDraftRoom(currentRoom.id) &&
+      !roomCreated &&
+      currentRoom.status !== "playing" &&
+      participants.every((p) => p.user_id === user?.id);
+    const draftId = abandonedDraft ? currentRoom.id : null;
     exitRoom();
+    if (draftId) {
+      forgetDraftRoom(draftId);
+      void supabase.from("game_rooms").delete().eq("id", draftId);
+    }
     // Use replace to avoid going back to a /team?join=... history entry that can auto-rejoin.
     navigate("/team", { replace: true });
   };
@@ -516,11 +631,37 @@ export function RoomLobbyV2() {
    * room shown on the Private tab looks like it was not published. Both
    * lists already lead with the room just made and ring it for three seconds
    * (isFreshOwnRoom / .fresh-room-ring), so the room is where the eye lands.
+   *
+   * Offered once per room (see roomCreateOffered): pressing it and coming
+   * back finds the same finished room, so a second offer of the same trip
+   * would be a loop rather than a way on.
    */
   const handleDoneCreating = () => {
+    rememberPressedCreate(currentRoom?.id);
+    setRoomCreated(true);
+    // Created is settled: the draft is a room now, and backing out keeps it.
+    forgetDraftRoom(currentRoom?.id);
+    // Only leave when leaving is the point. The trip to the list exists to
+    // go and find a second player; with somebody already here it would walk
+    // the host out of a room that is ready to start, past the people
+    // waiting in it. Then the footer is just Start.
+    if (enoughPlayersRef.current) return;
     exitRoom();
     navigate(`/team?tab=${currentRoom?.is_public ? "public" : "private"}`, { replace: true });
   };
+
+  /**
+   * Create shows what it is about to commit to, and then commits.
+   *
+   * The summary — the rounds, the question count, the stake — used to stand
+   * in front of Start. It belongs here: this is the tap that settles a
+   * public room, and afterwards the rounds and the count cannot be changed
+   * from the lobby at all, so it is the last honest moment to show the host
+   * what they made (owner: "we need it after 'create' so host can be sure
+   * what kind of room was created by them"). "Change" closes it and leaves
+   * them in the lobby with everything still editable.
+   */
+  const handleCreatePress = () => setShowMatchSummary(true);
 
   const handleLeaveConfirm = () => {
     setShowLeaveConfirm(true);
@@ -543,6 +684,8 @@ export function RoomLobbyV2() {
 
   const handleStartGame = async () => {
     if (!currentRoom) return;
+    // A round played in it settles a draft as surely as Create does.
+    forgetDraftRoom(currentRoom.id);
     // The button is disabled for this, but the category picker can start a
     // round on its own (startAfterPick) and the last player can leave between
     // the tap and the write.
@@ -961,7 +1104,34 @@ export function RoomLobbyV2() {
   // answers sits out of it (willBeObserver), so that room needs two guests
   // rather than one.
   const answeringPlayers = seatedPlayers - (willBeObserver ? 1 : 0);
-  const enoughPlayers = answeringPlayers >= 2;
+  // Published to the rooms page, which decides how this room is played:
+  // through, together, now. Read here rather than beside the Visibility row
+  // that writes it, because the Start button below asks the same question.
+  const isPublicRoom = Boolean((currentRoom as { is_public?: boolean }).is_public);
+  /**
+   * A PUBLIC room counts the people who are actually in the app.
+   *
+   * A published room is played through: everyone answers now and the results
+   * screen names a winner and a loser while they are all still looking at
+   * it. Seated-but-gone does not do that — a stranger who joined this
+   * morning and closed the app is a row in the table and nobody at it, and
+   * starting on their behalf produces a "result" against somebody who never
+   * saw a question (owner: "we need literal online players to start game in
+   * public rooms to see results instantly who won who lose").
+   *
+   * A PRIVATE room deliberately keeps counting seats: those are played
+   * across the evening as each invited friend gets to it, so requiring them
+   * all to be awake at once is the opposite of what it is for.
+   *
+   * Presence is only allowed to WITHHOLD the button once it has actually
+   * answered — before `loaded` the set is empty, which is indistinguishable
+   * from everybody having closed the app, and would grey out Start on a room
+   * with a full couch for as long as the first fetch takes.
+   */
+  const onlineAnswerers =
+    seatedIdsForPresence.filter((id) => onlineInRoom.has(id)).length - (willBeObserver ? 1 : 0);
+  const enoughPlayers =
+    isPublicRoom && presenceLoaded ? onlineAnswerers >= 2 : answeringPlayers >= 2;
   enoughPlayersRef.current = enoughPlayers;
   const canStartGame = participants.length >= 1;
   const roomGradient = getGradientById(currentRoom?.background_gradient);
@@ -994,12 +1164,33 @@ export function RoomLobbyV2() {
   /**
    * Set up, and waiting on a person rather than on the host.
    *
-   * The one state where Start had nothing to offer: what it plays is
+   * The one state where Start has nothing to offer: what it plays is
    * decided, so there is no category to pick, and it cannot begin, so there
-   * is nothing to press. That is where the button becomes "Create" and
-   * hands the host back to the list their room is on.
+   * is nothing to press.
    */
   const awaitingPlayers = !needsCategorySelection && !enoughPlayers && !isStarting;
+  /**
+   * A room that has something to play but has not been created yet.
+   *
+   * Create comes before Start, always — it is the tap that raises the
+   * summary and settles the room, and a host who never sees it never got to
+   * check what they made.
+   *
+   * It used to require `awaitingPlayers`, and that lost the summary exactly
+   * where it mattered most: a public room is listed the moment it exists, so
+   * somebody could walk in before the host pressed anything. The room then
+   * had enough players, the button skipped straight to Start — and the room
+   * was already settled by being listed, so the host had lost the right to
+   * change it without ever having been shown it.
+   *
+   * Once per room either way: pressing it and coming back finds the same
+   * room, and from then on the footer says the true thing — Start, dead
+   * until somebody else is here, arming itself the moment they are (owner:
+   * "when i click create once we should show disable start game button
+   * again and when there are minimum 2 online players in the room - we show
+   * start game as clickable").
+   */
+  const offerCreate = !needsCategorySelection && !isStarting && !roomCreated;
 
   const heldRound = (currentRoom.category_id || currentRoom.user_trivia_id)
     ? {
@@ -1015,7 +1206,9 @@ export function RoomLobbyV2() {
           iconForCategoryName(currentRoom.category_name)
           || getCategoryIconSlug(currentRoom.category_id ?? "")
           // A trivia the player wrote has no category to take an icon from.
-          || (currentRoom.user_trivia_id ? OWN_TRIVIA_ICON_SLUG : null),
+          || (currentRoom.user_trivia_id ? OWN_TRIVIA_ICON_SLUG : null)
+          // A mixed round held by the room itself: the box, as everywhere else.
+          || (isUndecidedRound(currentRoom.category_id, currentRoom.category_name) ? UNDECIDED_ICON_SLUG : null),
       }
     : null;
   const totalRounds = (heldRound ? 1 : 0) + queue.length;
@@ -1031,13 +1224,103 @@ export function RoomLobbyV2() {
       // answer is a balance that already moved (owner: "when user enters room
       // to play they should have 500 coins to participate"). A solo room is
       // practice and costs nothing, so it is never blocked.
-      if (seatedPlayers >= 2 && !hasEnoughCoins) {
+      if (seatedPlayers >= 2 && !canCoverStake) {
         setShowNoStake(true);
         return;
       }
-      handleStartGame();
+      // Straight into it. The summary used to stand here, and by then it was
+      // asking the wrong question: a host pressing Start has people waiting
+      // on them and nothing left to decide — the room was settled when it
+      // was created. It moved to Create, which is the moment that summary
+      // is actually about (owner: "we don't need to show this modal after i
+      // click start game, we need it after 'create'").
+      //
+      // Except on a later match with people at the table: Start then asks
+      // them first, through the same sheet in its rematch dress - the
+      // rounds, the question count and the stake, and "Ask for rematch"
+      // where Create was (owner's ask; see askTableForRematch).
+      if (asksTable) {
+        setAskingTable(true);
+        setShowMatchSummary(true);
+        return;
+      }
+      void handleStartGame();
     }
   };
+
+  /**
+   * The rounds as the summary lists them - the same order the game plays
+   * them: the room's held round first, then the queue.
+   */
+  const summaryRounds = [
+    ...(heldRound ? [{ name: heldRound.name, iconSlug: heldRound.iconSlug ?? null }] : []),
+    ...queue.map((item) => ({
+      name:
+        item.source_type === "random"
+          ? t("extra.cpRandomTitle")
+          : localizeQueueCategory(item.category_name) || t("extra.categoryType"),
+      iconSlug: roundIconSlug(item) ?? null,
+    })),
+  ];
+
+  /**
+   * A match that has started is played as it was created.
+   *
+   * The rounds and the question count are what the summary sheet asked the
+   * host to confirm; changing them under a round in progress would make the
+   * confirmation a lie. The next match can differ - the editors come back
+   * when the round ends - and visibility stays the host's to change at any
+   * time (owner: "they can make the room private if they want").
+   */
+  const matchLive = currentRoom.status === "playing";
+  /**
+   * A published room is played as it was listed.
+   *
+   * The Public tab tells a stranger what a room plays before they ask to
+   * come in, and that card is the only thing they have to go on. A host who
+   * could still swap the category and the question count afterwards would be
+   * answering a different question than the one people joined for (owner:
+   * "players entering public room they should have info what they are
+   * playing and if host could modify room after players joined that would be
+   * confusing and unfair").
+   *
+   * Create is what settles it. Until that tap the room is a draft the host
+   * is still building — "+ Room" publishes on creation, so a room is public
+   * long before it is finished, and locking on that alone took the category
+   * and the name away from a host who had not said they were done (owner:
+   * "i didn't clicked create yet but can't add categories or change icon or
+   * room name, enable it before i click create, disable when room is public
+   * already").
+   *
+   * Keying it on the tap failed once before, for a reason that is now
+   * fixed rather than avoided: Create was only offered while the room was
+   * short of players, so a room somebody joined first could never be
+   * created and so never locked. Create depends on the round being decided
+   * now, not on the seats (see offerCreate), so every public room with
+   * something to play can reach this.
+   *
+   * What stays is the visibility row itself: a host who wants their room
+   * back can make it private, and everything is editable again the moment
+   * they do (owner: "we let hosts switch public/private, only that option
+   * ... i can modify if i switch to private but not on public"). That is
+   * also how a host changes their mind about a category they have already
+   * put on the list.
+   */
+  const publishedRoom = isPublicRoom && roomCreated;
+  const rulesLocked = matchLive || publishedRoom;
+  /**
+   * The pencil settles with the rest of it.
+   *
+   * A room people are picking off a list should not rename or re-face
+   * itself under them either — the card they tapped is the room they get
+   * (owner: "we let hosts switch public/private, only that option").
+   *
+   * On `publishedRoom` rather than `rulesLocked`, so a live match can still
+   * be renamed: a name changing mid-round is nothing anyone was shown
+   * before they joined, and taking that away would be a change nobody
+   * asked for.
+   */
+  const canRename = isHost && !publishedRoom;
   // The + that asks to be friends, on everyone in the room who is not one
   // yet and is not you (owner's ask: people become friends in the lobby).
   // If they have already asked YOU, the same tap accepts — sendFriendRequest
@@ -1126,7 +1409,6 @@ export function RoomLobbyV2() {
       .update({ ...(await roomVisibilityFields(value === "public")) })
       .eq("id", currentRoom.id);
   };
-  const isPublicRoom = Boolean((currentRoom as { is_public?: boolean }).is_public);
   /**
    * Who may walk in.
    *
@@ -1189,12 +1471,18 @@ export function RoomLobbyV2() {
     // No player-count picker on a classic room (owner's ask): the cap is 10
     // and the host starts whenever — with one friend or ten. The card no
     // longer draws ten empty chairs to imply otherwise.
-    ...(playsUserTrivia ? [] : [{
+    //
+    // A published room drops the row outright rather than showing it frozen
+    // (owner: "we don't show other 5,10,20 questions tabs"): the length is
+    // settled, and a dead control invites a tap that does nothing. A LIVE
+    // match still shows it — that one comes back when the round ends, so it
+    // is worth leaving where the host can see it.
+    ...(playsUserTrivia || publishedRoom ? [] : [{
       key: "questions",
       label: t("lobby.uQuestionsPerRound"),
       options: QUESTIONS_PER_ROUND.map((n) => ({ value: String(n), label: String(n) })),
       value: String(questionsPerRound(currentRoom.total_questions)),
-      onChange: isHost ? (v: string) => void setQuestions(v) : undefined,
+      onChange: isHost && !rulesLocked ? (v: string) => void setQuestions(v) : undefined,
     } satisfies LobbyRuleRow]),
     ...(playsOwnTrivia ? [] : [{
       key: "visibility",
@@ -1223,12 +1511,94 @@ export function RoomLobbyV2() {
       : []),
   ];
 
+  /**
+   * A later match is asked, not sprung.
+   *
+   * The first match starts on the host's Start. Once the table has played,
+   * Start on the next one asks everyone seated first - with the rounds, the
+   * question count and the stake on the card - and the host starts with
+   * whoever said yes. A seat that declines is given up; one still deciding
+   * when the host starts is removed, because every seat that stays is
+   * staked and nobody pays for a game they did not agree to (owner's ask).
+   * Solo, or with nobody else seated, there is nobody to ask.
+   */
+  const isRematch = participants.some((p) => (p.total_rounds_played ?? 0) > 0);
+  const tableToAsk = participants.filter(
+    (p) => p.user_id !== user?.id && (p.status as string) !== "invited",
+  );
+  const asksTable = isRematch && tableToAsk.length > 0;
+
+  const askTableForRematch = async () => {
+    if (!currentRoom || !user) return;
+    const head = queue[0];
+    const pick: RematchPick = currentRoom.user_trivia_id
+      ? { source_type: "user_trivia", user_trivia_id: currentRoom.user_trivia_id, category_name: currentRoom.category_name }
+      : currentRoom.category_id
+        ? { source_type: "category", category_id: currentRoom.category_id, category_name: currentRoom.category_name, icon_slug: heldRound?.iconSlug ?? null }
+        : head
+          ? { source_type: head.source_type, category_id: head.category_id, category_name: head.category_name, user_trivia_id: head.user_trivia_id, icon_slug: head.icon_slug }
+          : { source_type: "random" };
+    try {
+      await sendRematchRequest({
+        room: currentRoom,
+        requester: { id: user.id, nickname: profile?.nickname ?? null, avatar_url: profile?.avatar_url ?? null },
+        pick,
+        kind: "host_new_game",
+        recipientIds: tableToAsk.map((p) => p.user_id),
+        title: t("extra.rematchRequestTitle"),
+        message: t("extra.rematchNewGameBody", { name: profile?.nickname || t("extra.friendFallback") }),
+        match: {
+          rounds: summaryRounds.map((r) => ({ name: r.name, icon_slug: r.iconSlug })),
+          questions_per_round: playsUserTrivia ? null : questionsPerRound(currentRoom.total_questions),
+          stake: REWARDS.GAME_STAKE,
+        },
+      });
+    } catch (e) {
+      console.error("[lobby] rematch ask failed", e);
+      toast.error(t("extra.errorOccurred"));
+      return;
+    }
+    setAskedSeats(
+      tableToAsk.map((p) => ({ user_id: p.user_id, nickname: p.nickname, avatar_url: p.avatar_url })),
+    );
+    setShowRematchWait(true);
+  };
+
+  /**
+   * The asked table, as it stands right now.
+   *
+   * `participants` is kept live by the room's own realtime channel, so a yes
+   * (the player's row goes "ready") and a no (the row is deleted) both land
+   * here without the host touching anything — which is what makes the sheet
+   * answer live.
+   */
+  const rematchSeats: RematchSeat[] = askedSeats.map((seat) => {
+    const seated = participants.find((p) => p.user_id === seat.user_id);
+    return {
+      ...seat,
+      answer: !seated ? "declined" : (seated.status as string) === "ready" ? "ready" : "waiting",
+    };
+  });
+
+  const startWithWhoSaidYes = async () => {
+    if (!currentRoom) return;
+    // Whoever has not said yes leaves the table before the stake is taken.
+    // Their row, not their status: the host may delete a seat but not
+    // rewrite it (RLS), and a deleted seat is exactly "not playing".
+    const undecided = tableToAsk.filter((p) => (p.status as string) !== "ready").map((p) => p.id);
+    if (undecided.length > 0) {
+      await supabase.from("room_participants").delete().in("id", undecided);
+    }
+    setShowRematchWait(false);
+    void handleStartGame();
+  };
+
   return (
     <UniversalLobby
       sceneArt={classicLobbyScene(currentRoom)}
       roomName={roomName}
       icon={roomFace}
-      onRename={isHost ? () => setShowIconPicker(true) : undefined}
+      onRename={canRename ? () => setShowIconPicker(true) : undefined}
       onBack={handleExitRoom}
       unreadCount={unreadCount}
       onBell={() => navigate("/notifications")}
@@ -1274,10 +1644,10 @@ export function RoomLobbyV2() {
           onPress:
             rounds > 1
               ? () => setShowRoundOrder(true)
-              : isHost
+              : isHost && !rulesLocked
                 ? () => { setStartAfterPick(false); setShowCategoryPicker(true); }
                 : undefined,
-          onAdd: isHost ? () => { setStartAfterPick(false); setShowCategoryPicker(true); } : undefined,
+          onAdd: isHost && !rulesLocked ? () => { setStartAfterPick(false); setShowCategoryPicker(true); } : undefined,
           // The host's chip and + wear the travelling ring only until a
           // category is picked — a pointer to the thing to do, not a
           // permanent decoration. Nobody else's chip wears it; they see
@@ -1296,7 +1666,7 @@ export function RoomLobbyV2() {
             // The same round the chip names — so the list's "1" and the chip
             // cannot disagree about which category opens the game.
             current={heldRound}
-            canEdit={isHost}
+            canEdit={isHost && !rulesLocked}
             onReorder={reorderQueue}
             onPromote={handlePromoteToFirst}
             onRemove={removeFromQueue}
@@ -1375,6 +1745,30 @@ export function RoomLobbyV2() {
       onInvite={() => setShowInviteModal(true)}
       playersExtra={<ChallengeResultsSection roomId={currentRoom.id} />}
       initialTab={needsCategorySelection ? "players" : "rules"}
+      /* A guest's way out, above the ping. The only leave was behind their
+         own row on the Players tab and the back arrow, neither of which
+         reads as "leave this room" (owner's ask). The host keeps the
+         delete in the menu; this is for the people who were invited in.
+
+         A line, not a slab. It wore a white chunky button first, and two
+         stacked slabs made the way out as loud as the way in (owner: "leave
+         room do not need white button, show as icon + text, without white
+         button but make sure it is visible"). So: the icon and the words in
+         the footer's own dark ink, bold, on a 44px tap target — the same
+         weight as the caption under the button, and nothing to compete
+         with the violet slab below it. */
+      footerExtra={
+        !isHost ? (
+          <button
+            type="button"
+            onClick={() => setShowLeaveConfirm(true)}
+            className="mx-auto mb-1 flex min-h-[44px] items-center justify-center gap-2 px-4 font-display text-[17px] font-bold leading-[22px] text-[#402666] transition-opacity active:opacity-60"
+          >
+            <LogOut className="h-[18px] w-[18px] shrink-0" strokeWidth={2.4} />
+            {t("team.leaveRoom")}
+          </button>
+        ) : null
+      }
       start={
         isHost
           ? {
@@ -1382,13 +1776,15 @@ export function RoomLobbyV2() {
                 ? t("extra.rlStarting")
                 : needsCategorySelection
                   ? t("extra.rlChooseCategory")
-                  : awaitingPlayers
+                  : offerCreate
                     ? t("extra.createBtn")
                     : t("lobby.uStartGame"),
-              onPress: awaitingPlayers ? handleDoneCreating : handleStartOrPick,
-              // Short of a second player is no longer a dead button: that
-              // case is "Create" above, and it goes somewhere.
-              disabled: !canStartGame || isStarting || loading,
+              onPress: offerCreate ? handleCreatePress : handleStartOrPick,
+              // Short of a second player, the button is either the one-time
+              // way out (enabled, above) or the plain truth: Start, dead
+              // until somebody else is here.
+              disabled:
+                !canStartGame || isStarting || loading || (awaitingPlayers && !offerCreate),
               loading: isStarting,
               icon: needsCategorySelection ? <Plus className="h-5 w-5" /> : undefined,
               // Still says why the game has not begun; it just sits under a
@@ -1424,6 +1820,33 @@ export function RoomLobbyV2() {
         inviteLink={getShareLink(currentRoom.room_code)}
         roomId={currentRoom.id}
         roomCode={currentRoom.room_code}
+      />
+
+      {/* What Create commits to, shown before it does it. */}
+      <MatchSummarySheet
+        open={showMatchSummary}
+        rounds={summaryRounds}
+        questionsPerRound={playsUserTrivia ? null : questionsPerRound(currentRoom.total_questions)}
+        stake={REWARDS.GAME_STAKE}
+        soloFree={seatedPlayers < 2}
+        starting={isStarting}
+        rematch={askingTable}
+        onChange={() => setShowMatchSummary(false)}
+        onConfirm={() => {
+          setShowMatchSummary(false);
+          if (askingTable) void askTableForRematch();
+          else handleDoneCreating();
+        }}
+      />
+
+      {/* The host's side of the ask: who said yes, and Start with them. */}
+      <RematchWaitSheet
+        open={showRematchWait}
+        seats={rematchSeats}
+        stake={REWARDS.GAME_STAKE}
+        starting={isStarting}
+        onCancel={() => setShowRematchWait(false)}
+        onStart={() => void startWithWhoSaidYes()}
       />
 
       {/* Not enough for a seat at the table. */}

@@ -34,7 +34,10 @@ export type NotificationType =
   // Public rooms: somebody asked to come in, and the host's answer.
   | 'room_join_request'
   | 'room_join_approved'
-  | 'room_join_declined';
+  | 'room_join_declined'
+  // A rematch asked — by the host starting over, or a PRO player with a
+  // pick of their own — to accept or decline.
+  | 'rematch_request';
 
 export interface Notification {
   id: string;
@@ -123,6 +126,9 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
           playSound('notification');
           // A room ping is a call to action right now — surface it as a
           // clickable popup that drops the host straight into the room
+          // A rematch asked is a bigger call to action still, and gets a
+          // card of its own with the match on it (GlobalRematchGate), so it
+          // is not toasted here as well.
           if (newNotification.type === 'room_ping') {
             const data = (newNotification.data ?? {}) as Record<string, unknown>;
             const roomCode = data.room_code as string | undefined;
@@ -135,7 +141,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
                 )
               : null;
             toast(
-              translateNotificationTitle('room_ping', newNotification.title, newNotification.data),
+              translateNotificationTitle(newNotification.type, newNotification.title, newNotification.data),
               {
                 duration: 10000,
                 action: target

@@ -28,7 +28,18 @@ describe("economy invariants", () => {
 
   it("gives new players a whole number of free games", () => {
     expect(REWARDS.NEW_PLAYER_COINS % REWARDS.GAME_STAKE).toBe(0);
-    expect(REWARDS.NEW_PLAYER_COINS / REWARDS.GAME_STAKE).toBe(6);
+    expect(REWARDS.NEW_PLAYER_COINS / REWARDS.GAME_STAKE).toBe(10);
+  });
+
+  it("and a subscriber a bundle in whole games too, the bigger tier the bigger one", () => {
+    for (const [tier, bundle] of Object.entries(REWARDS.PRO_WELCOME)) {
+      expect(bundle.coins % REWARDS.GAME_STAKE, `${tier} coins`).toBe(0);
+      expect(bundle.gems, `${tier} gems`).toBeGreaterThan(0);
+    }
+    expect(REWARDS.PRO_WELCOME.pro_plus.coins).toBe(REWARDS.PRO_WELCOME.pro.coins * 2);
+    expect(REWARDS.PRO_WELCOME.pro_plus.gems).toBe(REWARDS.PRO_WELCOME.pro.gems * 2);
+    // And more than a new account gets, which is the point of paying.
+    expect(REWARDS.PRO_WELCOME.pro.coins).toBeGreaterThan(REWARDS.NEW_PLAYER_COINS);
   });
 
   it("prices every power-up below a full game stake", () => {

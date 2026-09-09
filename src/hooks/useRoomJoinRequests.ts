@@ -47,21 +47,26 @@ export function useHostJoinRequests() {
       return;
     }
     const roomIds = [...new Set(data.map((r) => r.room_id))];
-    const [{ data: profiles }, { data: rooms }, { data: mySeats }] = await Promise.all([
+    const [{ data: profiles }, { data: rooms }, { data: mySeats }, { data: seats }] = await Promise.all([
       supabase
         .from("profiles")
         .select("user_id, nickname, avatar_url")
         .in("user_id", data.map((r) => r.user_id)),
       supabase
         .from("game_rooms")
-        .select("id, room_code, game_type_key, game_mode, host_user_id")
+        .select(`id, room_code, game_type_key, game_mode, host_user_id, ${ROOM_CONTEXT_COLUMNS}`)
         .in("id", roomIds),
       supabase
         .from("room_participants")
         .select("room_id, team")
         .eq("user_id", user.id)
         .in("room_id", roomIds),
+      supabase
+        .from("room_participants")
+        .select("room_id")
+        .in("room_id", roomIds),
     ]);
+    const seated = seatedByRoom(seats);
     // Belt for the policy's braces: only rooms this player actually hosts.
     const roomById = new Map((rooms ?? []).filter((r) => r.host_user_id === user.id).map((r) => [r.id, r]));
     const byId = new Map((profiles ?? []).map((p) => [p.user_id, p]));
@@ -79,6 +84,11 @@ export function useHostJoinRequests() {
             created_at: r.created_at,
             nickname: byId.get(r.user_id)?.nickname ?? "Player",
             avatar_url: byId.get(r.user_id)?.avatar_url ?? null,
+            room_name: room.room_name,
+            room_icon: room.room_icon,
+            category_name: room.category_name,
+            seated: seated.get(r.room_id) ?? 0,
+            max_players: room.max_players,
             room_code: room.room_code,
             game_type_key: room.game_type_key,
             game_mode: room.game_mode,
@@ -121,6 +131,26 @@ export interface PendingJoinRequest {
   created_at: string;
   nickname: string;
   avatar_url: string | null;
+  /**
+   * The room being asked into, as the host's doorstep names it: a host with
+   * several rooms, or one answering from the home screen, is deciding about
+   * a place as much as a person (owner: "room name, with what category").
+   */
+  room_name: string | null;
+  room_icon: string | null;
+  category_name: string | null;
+  seated: number;
+  max_players: number | null;
+}
+
+/** Everything the doorstep says about a room, off its game_rooms row. */
+const ROOM_CONTEXT_COLUMNS = "room_name, room_icon, category_name, max_players";
+
+/** How many seats each room has filled, by room id. */
+function seatedByRoom(seats: Array<{ room_id: string }> | null): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const s of seats ?? []) counts.set(s.room_id, (counts.get(s.room_id) ?? 0) + 1);
+  return counts;
 }
 
 /**
@@ -184,11 +214,18 @@ export function useRoomJoinRequests(roomId: string | null | undefined, amHost: b
     }
     // The request carries a user id and nothing else — a host deciding
     // whether to let someone in needs at least their face and their name.
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("user_id, nickname, avatar_url")
-      .in("user_id", data.map((r) => r.user_id));
+    // And the room itself: the lobby knows it, but the doorstep card is the
+    // same one the app-wide gate draws, and it names the room either way.
+    const [{ data: profiles }, { data: room }, { data: seats }] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("user_id, nickname, avatar_url")
+        .in("user_id", data.map((r) => r.user_id)),
+      supabase.from("game_rooms").select(ROOM_CONTEXT_COLUMNS).eq("id", roomId).maybeSingle(),
+      supabase.from("room_participants").select("room_id").eq("room_id", roomId),
+    ]);
     const byId = new Map((profiles ?? []).map((p) => [p.user_id, p]));
+    const seated = seatedByRoom(seats).get(roomId) ?? 0;
     setPending(
       data.map((r) => ({
         id: r.id,
@@ -197,6 +234,11 @@ export function useRoomJoinRequests(roomId: string | null | undefined, amHost: b
         created_at: r.created_at,
         nickname: byId.get(r.user_id)?.nickname ?? "Player",
         avatar_url: byId.get(r.user_id)?.avatar_url ?? null,
+        room_name: room?.room_name ?? null,
+        room_icon: room?.room_icon ?? null,
+        category_name: room?.category_name ?? null,
+        seated,
+        max_players: room?.max_players ?? null,
       })),
     );
   }, [roomId]);

@@ -41,6 +41,9 @@ interface CompactNotificationCardProps {
   /** Somebody asking into a room you host: let them in, or not. */
   onAcceptJoin?: (roomId: string, requesterId: string, notificationId: string) => void;
   onDeclineJoin?: (roomId: string, requesterId: string, notificationId: string) => void;
+  /** A rematch asked of you: play it, or give up your seat. */
+  onAcceptRematch?: (notification: Notification) => void;
+  onDeclineRematch?: (notification: Notification) => void;
   onDismiss?: (id: string) => void;
   actionLoading?: string | null;
   timeAgo: string;
@@ -58,6 +61,8 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
   onDeclineInvite,
   onAcceptJoin,
   onDeclineJoin,
+  onAcceptRematch,
+  onDeclineRematch,
   onDismiss,
   actionLoading,
   timeAgo,
@@ -83,6 +88,9 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
   // A knock on a room you host. The same yes/no the lobby's doorstep
   // asks, here for a host who was not looking at the lobby.
   const isJoinRequest = notification.type === 'room_join_request';
+  // A rematch asked — by the host starting over, or a player with a pick of
+  // their own. Yes goes to the room; no gives up the seat.
+  const isRematch = notification.type === 'rematch_request';
   // The host's answer to an ask — tapping it enters the room (approved) or
   // just reads (declined).
   const isJoinAnswer =
@@ -95,7 +103,7 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
   const actionTaken = notification.data?.action_taken as 'accepted' | 'declined' | undefined;
   const hasActionTaken = !!actionTaken;
 
-  const hasDualActions = (isFriendRequest || isGameInvite || isJoinRequest) && !hasActionTaken;
+  const hasDualActions = (isFriendRequest || isGameInvite || isJoinRequest || isRematch) && !hasActionTaken;
   const hasSingleAction = (isRoomInvite || isGameStarted || isGameResult || isTriviaLikedOrSaved) && !hasDualActions;
 
   const isLoading = actionLoading === notification.id;
@@ -147,11 +155,15 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
   const lounge = liveRoom ? LOUNGE_META[roomKind(liveRoom)] : undefined;
   const roomIcon = (lounge ? lounge.icon : undefined) || liveRoom?.room_icon || storedRoomIcon || undefined;
   const roomName = liveRoom?.room_name || storedRoomName || undefined;
-  const categoryName = localizeCategory(liveRoom ? liveRoom.category_name ?? undefined : storedCategoryName);
+  // A rematch card says the category the ASKER wants, which is not the
+  // room's until the host says yes — so the stored pick, never the live row.
+  const categoryName = localizeCategory(
+    isRematch ? storedCategoryName : liveRoom ? liveRoom.category_name ?? undefined : storedCategoryName,
+  );
   const triviaCover = notification.data?.trivia_cover as string | undefined;
   const triviaIconSlug = notification.data?.trivia_icon_slug as string | undefined;
   
-  const hasRoomContext = isRoomInvite || isGameStarted || isGameInvite || isJoinRequest || isJoinAnswer;
+  const hasRoomContext = isRoomInvite || isGameStarted || isGameInvite || isJoinRequest || isJoinAnswer || isRematch;
 
   // Determine avatar content based on notification type
   const avatarContent = useMemo(() => {
@@ -164,14 +176,14 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
       }
     }
     
-    if (isRoomInvite || isGameStarted || isGameInvite || isRoomPing || isJoinAnswer) {
+    if (isRoomInvite || isGameStarted || isGameInvite || isRoomPing || isJoinAnswer || isRematch) {
       if (roomIcon) {
         return { type: 'image' as const, src: roomIcon };
       }
     }
 
     return { type: 'avatar' as const, src: avatarUrl };
-  }, [notification.type, triviaCover, triviaIconSlug, roomIcon, avatarUrl, isTriviaLikedOrSaved, isTriviaPlayed, isRoomInvite, isGameStarted, isGameInvite]);
+  }, [notification.type, triviaCover, triviaIconSlug, roomIcon, avatarUrl, isTriviaLikedOrSaved, isTriviaPlayed, isRoomInvite, isGameStarted, isGameInvite, isRoomPing, isJoinAnswer, isRematch]);
   
   // Build subtitle based on notification type
   const getSubtitle = () => {
@@ -187,6 +199,13 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
     // The title is the asker's name; this says what they want. The room
     // (and which game it is) follows in the context chip.
     if (isJoinRequest) return t("extra.joinRequestBody");
+    // Who is asking, and whether they are starting over or asking to.
+    if (isRematch) {
+      const name = senderName || t("extra.someoneLabel");
+      return notification.data?.kind === 'host_new_game'
+        ? t("extra.rematchNewGameBody", { name })
+        : t("extra.rematchRequestBody", { name });
+    }
     // The answer to your ask: the title says which way it went, this says
     // what to do about it. (The stored title/message is a bare room code.)
     if (notification.type === 'room_join_approved') return t("extra.joinApprovedBody");
@@ -257,6 +276,8 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
         return;
       }
       onAcceptJoin?.(roomId, requesterId, notification.id);
+    } else if (isRematch) {
+      onAcceptRematch?.(notification);
     }
   };
 
@@ -307,6 +328,8 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
         return;
       }
       onDeclineJoin?.(roomId, requesterId, notification.id);
+    } else if (isRematch) {
+      onDeclineRematch?.(notification);
     }
   };
 
@@ -528,7 +551,7 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
                   <span className="flex items-center gap-1">
                     <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
                   </span>
-                ) : isFriendRequest || isJoinRequest ? t("extra.notifAccept") : t("extra.notifJoin")}
+                ) : isFriendRequest || isJoinRequest || isRematch ? t("extra.notifAccept") : t("extra.notifJoin")}
               </button>
               <button
                 type="button"
@@ -547,7 +570,7 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
             </div>
           )}
 
-          {hasActionTaken && (isFriendRequest || isJoinRequest) && (
+          {hasActionTaken && (isFriendRequest || isJoinRequest || isRematch) && (
             <div className={cn(
               "mt-2 px-4 py-2 rounded-full text-xs font-semibold inline-flex items-center gap-1.5",
               actionTaken === 'accepted' 

@@ -3,8 +3,7 @@ import type { ReactNode } from "react";
 import { t } from "@/lib/i18n";
 
 import { FriendsStoriesBar } from "@/components/team/FriendsStoriesBar";
-import { BalancePills } from "@/components/shared/BalanceStrip";
-import { MobileProfileCard, NAV_CHROME } from "@/components/home/MobileHome";
+import { MobileHeroWidgets, MobileProfileCard, NAV_CHROME } from "@/components/home/MobileHome";
 import { MobileHomeFeed } from "@/components/home/MobileHomeFeed";
 import { useWaveStrip } from "@/components/home/wave";
 import { scrollTapGuard } from "@/utils/scrollTapGuard";
@@ -14,12 +13,13 @@ import { useScrollMemory } from "@/hooks/useScrollMemory";
  * The phone home as a scroll-reveal (owner's ask).
  *
  * At rest it IS the home (Figma 1076:1881): the mascot scene fills the first
- * screen, the balances and the friends reel ride the top, and the profile
- * card sits above the nav with the gift and streak buttons on it. Scrolling
- * lifts that whole hero — scene included — up and out of view, revealing a
- * light, chunky feed of feature rails beneath it. Each of those three things
- * appears exactly once: the balances on the top strip, the identity on the
- * card, the rewards beside it.
+ * screen, the friends reel rides the top, the reward tabs float on the scene
+ * and the profile card sits above the nav. Scrolling lifts that whole hero —
+ * scene included — up and out of view, revealing a light, chunky feed of
+ * feature rails beneath it. The identity and the balances stay where they
+ * always were, on the profile card; there is deliberately no second
+ * name/balances bar. The other main screens carry a balance strip under
+ * their header, because they have no profile card to put one on.
  *
  * The scene lives INSIDE the hero, in the scroll flow, on purpose. It used to
  * be a page-level fixed backdrop that the feed panel had to paint over, and
@@ -59,7 +59,9 @@ export interface MobileHomeScrollProps {
   animatedAvatarUrl?: string | null;
   coins: number;
   gems: number;
-  /** Is there a daily reward waiting? Colours the gift button on the card. */
+  /** Under the gift tab: time left to claim today's reward, or the call to claim it. */
+  giftLabel: string;
+  /** Is there a reward waiting? With nothing to claim the gift goes grey. */
   canClaimGift: boolean;
   // Handlers
   onAvatarClick: () => void;
@@ -80,6 +82,7 @@ export function MobileHomeScroll({
   animatedAvatarUrl,
   coins,
   gems,
+  giftLabel,
   canClaimGift,
   onAvatarClick,
   onNameClick,
@@ -131,36 +134,37 @@ export function MobileHomeScroll({
             className="absolute inset-0 z-[5] cursor-pointer"
           />
 
-          {/* What you have, in the place the game-mode selection screen puts
-              it (CreateRoomPage, Figma 1102:4980 / 1102:4983): the first row
-              under the header, on the same 22/18 insets and 11px gap, so the
-              two screens read as one app. It is hung off the floating
-              header's measured height, and the friends reel — which used to
-              be this row — now follows it. */}
-          <div className="relative z-20 flex items-center gap-[11px] pl-[22px] pr-[18px] pt-[calc(var(--home-header-h,64px)_+_5px)]">
-            <BalancePills
-              coins={coins}
-              gems={gems}
-              onCoinsClick={onCoinsClick}
-              onGemsClick={onGemsClick}
-            />
-          </div>
-
-          {/* Friends reel, directly under the balances. */}
-          <div className="relative z-20 px-4 pt-[10px] lg:pl-[26px]">
+          {/* Friends reel, riding the top of the hero as it always did —
+              padded down by the floating header's measured height so it sits
+              below it rather than underneath it. The balances briefly sat on
+              a row of their own here; they are in the header itself now, on
+              this screen and every other one. */}
+          <div className="relative z-20 px-4 pt-[var(--home-header-h,64px)] lg:pl-[26px]">
             <FriendsStoriesBar onAddFriendClick={onAddFriend} />
           </div>
+
+          {/* The profile card, anchored above the nav (its own absolute pos). */}
+          {/* The reward tabs on the scene: the gift and its countdown on
+              the left, the streak on the right, hung off the header's
+              measured height. */}
+          <MobileHeroWidgets
+            giftLabel={giftLabel}
+            canClaimGift={canClaimGift}
+            onGiftClick={onGiftClick}
+            onStreakClick={onStreakClick}
+          />
 
           {/* The profile card, anchored above the nav (its own absolute pos). */}
           <MobileProfileCard
             nickname={nickname}
             avatarUrl={avatarUrl}
             animatedAvatarUrl={animatedAvatarUrl}
-            canClaimGift={canClaimGift}
+            coins={coins}
+            gems={gems}
             onAvatarClick={onAvatarClick}
             onNameClick={onNameClick}
-            onGiftClick={onGiftClick}
-            onStreakClick={onStreakClick}
+            onCoinsClick={onCoinsClick}
+            onGemsClick={onGemsClick}
           />
         </section>
 

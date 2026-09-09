@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useMultiplayerV2, settleMostLikelyVotes } from "@/contexts/MultiplayerContextV2";
 import { activeRoundPlayers } from "@/utils/roundPlayers";
+import { playersStillOut, roundSettleTiming } from "@/utils/roundSettlement";
 import { useMissions } from "@/hooks/useMissions";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -14,9 +15,8 @@ import { useRoomCategoryQueue } from "@/hooks/useRoomCategoryQueue";
 import { supabase } from "@/integrations/supabase/client";
 import { filterCategoriesForLanguage } from "@/utils/languageCategoryFilter";
 import { useChallengeShare } from "@/hooks/useChallengeShare";
-import { ArrowLeft, Star, Crown, Shuffle, Library, ChevronRight, Loader2, Gift, Share2 } from "lucide-react";
+import { ArrowLeft, Crown, Shuffle, Library, ChevronRight, Loader2, Gift, Share2 } from "lucide-react";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
-import trophyWinIcon from "@/assets/icons/trophy-win.png";
 import { cn } from "@/lib/utils";
 import confetti from "canvas-confetti";
 import { REWARDS } from "@/config/rewardConfig";
@@ -29,18 +29,60 @@ import { isUndecidedRound, UNDECIDED_ICON_SLUG } from "@/utils/undecidedRound";
 import { useCategoryIdentity } from "@/hooks/useCategoryIdentity";
 import { RoomQueueSheet } from "./RoomQueueSheet";
 import { calculateMultiplayerPayout } from "@/utils/multiplayerPayout";
-import { useRoomPot } from "@/hooks/useRoomPot";
+import { useRoomPot, type RoomPotLine } from "@/hooks/useRoomPot";
 import { isGuestAccount } from "@/utils/guestAccount";
 import { AuthRequiredModal } from "@/components/shared/AuthRequiredModal";
 import { useLocalizedCategoryName } from "@/utils/categoryDisplayName";
 import { useRoomIconPool } from "@/hooks/useRoomIconPool";
 import { dealtRoomIcon } from "@/utils/roomCrests";
+import { useVipStatus } from "@/contexts/VipContext";
+import { PlayLimitModal } from "@/components/home/PlayLimitModal";
+import { applyRematchPick, sendRematchRequest, type RematchPick } from "@/utils/rematchRequests";
+import { Lock } from "lucide-react";
 
 // Games whose results were already counted on this device. Module-level (not a
 // ref) because the results screen can remount for the SAME game (results ->
 // lobby -> results bounce while a slow player finishes) and a per-mount ref
 // would re-grant coins/stats and re-touch participant rows mid-next-round.
 const processedResultsGames = new Set<string>();
+
+/**
+ * The podium, left to right: second, first, third. Indexes into the ranked
+ * list — first place in the middle, taller than the two beside it.
+ */
+const PODIUM_ORDER = [1, 0, 2] as const;
+/** Two players: side by side, centred - no empty third step (owner's ask). */
+const TWO_UP_ORDER = [0, 1] as const;
+
+/** The medal for the top three, the place number from fourth down. */
+const placeMark = (idx: number, rank: number) =>
+  idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `#${rank}`;
+
+/**
+ * What a seat's place was worth, under its medal: the prize less the stake,
+ * signed — "+840" in amber for a place that paid, "-500" in grey for one
+ * that did not, and nothing at all while the round is still settling or
+ * when it settled nothing (practice, or a function that predates the
+ * deltas). Read from the ledger via settle_room_round, never worked out
+ * here: the client names no amounts (roomPot.test).
+ */
+function PotLine({ net, compact }: { net: number | undefined; compact?: boolean }) {
+  if (net === undefined) return null;
+  const up = net > 0;
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 rounded-full font-bold text-white",
+        compact ? "px-2 py-0.5 text-xs" : "mt-1.5 px-2.5 py-1 text-sm",
+        up ? "bg-amber-500/90" : net < 0 ? "bg-slate-500/80" : "bg-white/15",
+      )}
+      style={up ? { boxShadow: "0 3px 0 rgba(180,120,0,0.4)" } : undefined}
+    >
+      <img src={coinIcon} alt="" className={cn(compact ? "w-3.5 h-3.5" : "w-4 h-4", net < 0 && "grayscale")} />
+      {up ? `+${net}` : net}
+    </span>
+  );
+}
 
 interface RankedParticipant {
   user_id: string;
@@ -66,6 +108,9 @@ export function GameResultsScreenV2() {
   // What the stake cost when the pot went elsewhere — said out loud rather
   // than left as a balance that quietly dropped.
   const [coinsLost, setCoinsLost] = useState(0);
+  // Every seat's line in the pot — what each place won or paid — so the
+  // podium can say it under the medals, not only this player's own.
+  const [potLines, setPotLines] = useState<Record<string, RoomPotLine>>({});
   const [showGuestSignUp, setShowGuestSignUp] = useState(false);
   const [showQueueSheet, setShowQueueSheet] = useState(false);
 
@@ -86,7 +131,6 @@ export function GameResultsScreenV2() {
     startNewRound,
     startNextFromQueue,
     isHost,
-    startGame,
     isMostLikelyRound,
     hostIsObserver,
   } = useMultiplayerV2();
@@ -114,6 +158,35 @@ export function GameResultsScreenV2() {
         (p.current_question ?? 0) >= (currentRoom?.total_questions ?? Infinity)
     );
 
+  /**
+   * A private round pays out when everybody has played it.
+   *
+   * Private rooms are invited friends playing at different times, so the
+   * first player to finish arrives here with a scoreboard of one. Settling
+   * then would rank a full room against that and pay out on it. The whole
+   * chain — the round snapshot, the stats and the pot — waits until every
+   * seat that can still answer has, or until the round's own deadline ends
+   * the wait with whoever played (owner: "private rooms can be played in
+   * different times and when all invited players play the round we give
+   * rewards after that").
+   *
+   * A public room is unaffected: it settles the moment the round ends,
+   * which is what "results instantly" means over there.
+   */
+  const isPublicRoom = Boolean((currentRoom as { is_public?: boolean } | null)?.is_public);
+  const roundCtx = { hostIsObserver, hostUserId: currentRoom?.host_user_id };
+  const settleHold = roundSettleTiming({
+    isPublic: isPublicRoom,
+    participants,
+    ctx: roundCtx,
+    totalQuestions: currentRoom?.total_questions,
+    startedAt: currentRoom?.started_at,
+  });
+  const waitingForPlayers = settleHold === "waiting_for_players";
+  const stillOut = waitingForPlayers
+    ? playersStillOut(participants, roundCtx, currentRoom?.total_questions).length
+    : 0;
+
   const { queue, addToQueue } = useRoomCategoryQueue(currentRoom?.id || null);
   // The category this game was played in, resolved to its own slug and
   // icon_slug. See where it is drawn below for why both are needed.
@@ -126,6 +199,13 @@ export function GameResultsScreenV2() {
 
   const [isStartingRematch, setIsStartingRematch] = useState(false);
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
+  // A player who is not the host asking for a rematch — PRO only, with a
+  // pick of their own. The picker is the host's; what happens on a pick is
+  // not, so the two are told apart here.
+  const { isVip } = useVipStatus();
+  const [showAskPicker, setShowAskPicker] = useState(false);
+  const [showAskWall, setShowAskWall] = useState(false);
+  const [isAsking, setIsAsking] = useState(false);
   const [challengeQuestions, setChallengeQuestions] = useState<any[]>([]);
   const hasFetchedChallengeQuestions = useRef(false);
 
@@ -205,6 +285,19 @@ export function GameResultsScreenV2() {
    */
   const myRankForPayout = myRank ?? rankedParticipants.length;
 
+  /**
+   * A seat's line in the pot, for the podium. The server's per-seat lines
+   * first; failing those, this player's own result — which the settlement
+   * reports even when the function predates per-seat reporting — and
+   * nothing for anyone else.
+   */
+  const netFor = (p: RankedParticipant): number | undefined => {
+    const line = potLines[p.user_id];
+    if (line) return line.net;
+    if (p.isMe && (coinsEarned > 0 || coinsLost > 0)) return coinsEarned - coinsLost;
+    return undefined;
+  };
+
   const hasUpdatedStats = useRef(false);
 
   // Victory/loss sound and confetti
@@ -256,6 +349,11 @@ export function GameResultsScreenV2() {
     // (or the wait expired): claiming complete_room_round earlier would
     // snapshot cumulative totals before the majority points exist.
     if (!mltAllVotersDone) return;
+    // A private round holds the whole chain until everyone has played (or
+    // the deadline ends the wait). Nothing is charged meanwhile: the stakes
+    // are collected by the settlement itself, so an unsettled round has
+    // taken nothing from anyone.
+    if (waitingForPlayers) return;
     if (user && profile && currentRoom && !hasUpdatedStats.current && !(statsKey && processedResultsGames.has(statsKey))) {
       hasUpdatedStats.current = true;
       if (statsKey) processedResultsGames.add(statsKey);
@@ -323,6 +421,31 @@ export function GameResultsScreenV2() {
         } else {
           setCoinsEarned(Math.max(0, settlement.applied));
           setCoinsLost(Math.max(0, -settlement.applied));
+          setPotLines(settlement.lines);
+        }
+
+        // Tell the players who are not here.
+        //
+        // A private round settles when the LAST person plays it, and by then
+        // the ones who played this morning are gone — without this they
+        // would find out they had won by noticing their balance had changed.
+        // Only for a room that waits: a public round is settled in front of
+        // everyone who was in it (owner's choice of push for this).
+        //
+        // Fire-and-forget, and the server decides everything: it re-reads
+        // the round, refuses one that has not actually settled, and claims
+        // one push per player per round so several devices arriving at once
+        // cannot ring the same phone twice.
+        if (!isPublicRoom && currentRoom.current_game_id) {
+          supabase.functions
+            .invoke("send-social-push", {
+              body: {
+                kind: "room_round_settled",
+                roomId: currentRoom.id,
+                gameId: currentRoom.current_game_id,
+              },
+            })
+            .catch(() => {});
         }
 
         // Missions: every room game counts as played; a real (non-practice)
@@ -377,7 +500,7 @@ export function GameResultsScreenV2() {
         if (statsKey) processedResultsGames.delete(statsKey);
       });
     }
-  }, [user, profile, myScore, myRankForPayout, isWin, isHost, currentRoom, setProfileLocal, rankedParticipants, addCoins, settleRoomRound, participants, mltAllVotersDone, isMostLikelyRound]);
+  }, [user, profile, myScore, myRankForPayout, isWin, isHost, currentRoom, setProfileLocal, rankedParticipants, addCoins, settleRoomRound, participants, mltAllVotersDone, isMostLikelyRound, waitingForPlayers, isPublicRoom]);
 
   // Prefetch the questions a challenge link carries, so sharing is one tap
   // and not a wait.
@@ -426,84 +549,115 @@ export function GameResultsScreenV2() {
     }
   };
 
-  // Category picker handlers - directly from results screen
-  const handleSelectCategory = async (category: { id: string; name: string; iconSlug?: string | null }) => {
+  /**
+   * The host's New Game.
+   *
+   * It used to start the round on the spot: category written, startGame(),
+   * and every other player pulled into it by the room's realtime status
+   * whether they were still looking or not — and, since a room is played
+   * for a pot, staked for it. A new game is asked now (owner: "host starts
+   * new match with new pot and we should notify players in that room - do
+   * you want rematch showing host"): the room takes the pick and goes back
+   * to its lobby, everyone at the table gets "Rematch?" with the host's
+   * name on it, and the host presses Start in the lobby — where the stake
+   * is shown and a seat that cannot pay is refused — with whoever said yes.
+   */
+  const everyoneElse = () =>
+    participants.filter((p) => p.user_id !== user?.id && (p.status as string) !== "invited").map((p) => p.user_id);
+
+  const askRematch = async (pick: RematchPick, kind: "host_new_game" | "player_ask") => {
+    if (!currentRoom || !user) return 0;
+    return sendRematchRequest({
+      room: currentRoom,
+      requester: { id: user.id, nickname: profile?.nickname ?? null, avatar_url: profile?.avatar_url ?? null },
+      pick,
+      kind,
+      recipientIds: everyoneElse(),
+      title: t("extra.rematchRequestTitle"),
+      message:
+        kind === "host_new_game"
+          ? t("extra.rematchNewGameBody", { name: profile?.nickname || t("extra.friendFallback") })
+          : t("extra.rematchRequestBody", { name: profile?.nickname || t("extra.friendFallback") }),
+    });
+  };
+
+  const beginNewGame = async (pick: RematchPick) => {
     setShowCategoryPicker(false);
+    if (!currentRoom) return;
     setIsStartingRematch(true);
     try {
-      // Update room with selected category
-      await supabase
-        .from("game_rooms")
-        .update({
-          category_id: category.id,
-          category_name: category.name,
-          user_trivia_id: null, // Clear any previous trivia selection
-        })
-        .eq("id", currentRoom?.id);
-      
-      await startGame();
+      const applied = await applyRematchPick(currentRoom.id, pick);
+      if (!applied) {
+        // Somebody already started the next round; the lobby is not where
+        // this room is any more. Follow the room rather than fight it.
+        continueInRoom();
+        return;
+      }
+      // The table is not asked from here any more: the lobby's Start asks,
+      // once the host has settled the rounds and the rules, with all of it
+      // on the card (owner's ask). From here the room only goes back to its
+      // lobby with the pick.
+      continueInRoom();
     } catch (error) {
-      console.error("Error starting game with category:", error);
+      console.error("Error starting new game:", error);
       toast.error(t("game.couldNotStartRound"));
     } finally {
       setIsStartingRematch(false);
     }
+  };
+
+  // Category picker handlers - directly from results screen
+  const handleSelectCategory = (category: { id: string; name: string; iconSlug?: string | null }) =>
+    beginNewGame({ source_type: "category", category_id: category.id, category_name: category.name, icon_slug: category.iconSlug ?? null });
+
+  /** A random pick is dealt HERE, once, so everyone is asked the same question. */
+  const dealRandomPick = async (): Promise<RematchPick | null> => {
+    const { data: categories } = await supabase
+      .from("categories")
+      .select("id, name, icon_slug, is_language_specific, language")
+      .eq("is_active", true);
+    const pool = filterCategoriesForLanguage(categories || []);
+    if (pool.length === 0) return null;
+    const randomCat = pool[Math.floor(Math.random() * pool.length)];
+    return { source_type: "random", category_id: randomCat.id, category_name: randomCat.name, icon_slug: randomCat.icon_slug ?? null };
   };
 
   const handleSelectRandom = async () => {
-    setShowCategoryPicker(false);
-    setIsStartingRematch(true);
-    try {
-      // Fetch a random category
-      const { data: categories } = await supabase
-        .from("categories")
-        .select("id, name, icon_slug, is_language_specific, language")
-        .eq("is_active", true);
+    const pick = await dealRandomPick();
+    if (pick) await beginNewGame(pick);
+    else setShowCategoryPicker(false);
+  };
 
-      const pool = filterCategoriesForLanguage(categories || []);
-      if (pool.length > 0) {
-        const randomCat = pool[Math.floor(Math.random() * pool.length)];
-        // Update room with random category
-        await supabase
-          .from("game_rooms")
-          .update({
-            category_id: randomCat.id,
-            category_name: randomCat.name,
-            user_trivia_id: null,
-          })
-          .eq("id", currentRoom?.id);
-        
-        await startGame();
-      }
+  const handleSelectTrivia = (trivia: { id: string; title: string }) =>
+    beginNewGame({ source_type: "user_trivia", user_trivia_id: trivia.id, category_name: trivia.title, category_id: null });
+
+  /**
+   * A player asking the host for a rematch, with their own pick.
+   *
+   * PRO only (owner: "other PRO players can play rematch ... with their
+   * rules like chose categories what they want not the host this time").
+   * Nothing is written to the room: the ask is a notification to the host
+   * and to every other seat, and the host's yes is what reshapes the room.
+   */
+  const handleAskPick = async (pick: RematchPick) => {
+    setShowAskPicker(false);
+    if (!currentRoom || !user) return;
+    setIsAsking(true);
+    try {
+      const sent = await askRematch(pick, "player_ask");
+      if (sent > 0) toast.success(t("extra.rematchAskSent"));
     } catch (error) {
-      console.error("Error starting random game:", error);
-      toast.error(t("game.couldNotStartRound"));
+      console.error("[GameResults] rematch ask failed:", error);
+      toast.error(t("extra.errorOccurred"));
     } finally {
-      setIsStartingRematch(false);
+      setIsAsking(false);
     }
   };
 
-  const handleSelectTrivia = async (trivia: { id: string; title: string }) => {
-    setShowCategoryPicker(false);
-    setIsStartingRematch(true);
-    try {
-      // Update room with user trivia
-      await supabase
-        .from("game_rooms")
-        .update({
-          user_trivia_id: trivia.id,
-          category_name: trivia.title,
-          category_id: null,
-        })
-        .eq("id", currentRoom?.id);
-      
-      await startGame();
-    } catch (error) {
-      console.error("Error starting trivia game:", error);
-      toast.error(t("game.couldNotStartRound"));
-    } finally {
-      setIsStartingRematch(false);
-    }
+  const handleAskRandom = async () => {
+    const pick = await dealRandomPick();
+    if (pick) await handleAskPick(pick);
+    else setShowAskPicker(false);
   };
 
   const handleAddToQueue = async (item: {
@@ -541,6 +695,8 @@ export function GameResultsScreenV2() {
           user_trivia_id: null,   // Clear - no current trivia
         })
         .eq("id", currentRoom.id);
+      // As with New Game, the table is asked from the lobby's Start, not
+      // from here.
     }
     
     // Navigate to lobby (continueInRoom will see status is already "waiting" and skip redundant DB update)
@@ -585,106 +741,17 @@ export function GameResultsScreenV2() {
         </div>
       </div>
 
-      {/* Top Section: Icon + Result */}
-      <div className="pt-0 text-center">
-        <motion.img 
-          src={trophyWinIcon} 
-          alt="Trophy" 
-          className="w-[54px] h-[54px] object-contain mx-auto mb-1"
-          initial={{ scale: 0.5, y: -20 }}
-          animate={{ 
-            scale: 1, 
-            y: 0,
-            rotate: [0, -8, 8, -8, 0] 
-          }}
-          transition={{ 
-            scale: { type: "spring", stiffness: 200 },
-            y: { type: "spring", stiffness: 200 },
-            rotate: { 
-              duration: 2,
-              repeat: Infinity,
-              repeatDelay: 1,
-              ease: "easeInOut"
-            }
-          }}
-        />
-
-        {/* Stars for win */}
-        {isWin && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="flex justify-center gap-1 mt-2"
-          >
-            {[1, 2, 3].map((star) => (
-              <motion.div
-                key={star}
-                initial={{ scale: 0, rotate: -180 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ delay: 0.3 + star * 0.1, type: "spring" }}
-              >
-                <Star className="w-6 h-6 text-amber-400 fill-amber-400" />
-              </motion.div>
-            ))}
-          </motion.div>
-        )}
-
-        {/* Coins won, under the stars.
-            No XP badge beside it any more: that number is the player's score,
-            which the card below already shows — "470" there and "+470 XP" here
-            read as two separate rewards for the same round.
-            The row is conditional rather than the badge inside it, so a round
-            that paid no coins leaves no empty gap under the stars. */}
-        {coinsEarned > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="flex items-center justify-center gap-4 mt-2"
-          >
-            <div
-              className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-amber-500/90"
-              style={{ boxShadow: "0 4px 0 rgba(180,120,0,0.4)" }}
-            >
-              <img src={coinIcon} alt="Coins" className="w-5 h-5" />
-              <span className="text-white font-bold text-lg">+{coinsEarned}</span>
-            </div>
-          </motion.div>
-        )}
-
-        {/* And what the stake cost when the pot went elsewhere. A room is
-            played for a pot now, so a round can end with the balance DOWN —
-            which has to be said here rather than discovered later on the
-            coin counter. */}
-        {coinsLost > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="flex items-center justify-center gap-4 mt-2"
-          >
-            <div
-              className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-slate-500/80"
-              style={{ boxShadow: "0 4px 0 rgba(51,65,85,0.4)" }}
-            >
-              <img src={coinIcon} alt="Coins" className="w-5 h-5 grayscale" />
-              <span className="text-white font-bold text-lg">-{coinsLost}</span>
-            </div>
-          </motion.div>
-        )}
-      </div>
-
-      {/* Middle Section: Category + Scorecard (with 40px top spacing) */}
-      <div className="flex-1 min-h-0 flex flex-col items-center gap-4 px-4 overflow-hidden" style={{ paddingTop: '20px' }}>
-        {/* Category */}
-        {currentRoom?.category_name && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="flex items-center gap-2 px-5 py-2 rounded-full bg-white/15 backdrop-blur-sm"
-          >
+      {/* The category, under the room's name (owner: "show category below
+          the room title"). The trophy and the stars that used to sit here
+          are gone — the podium below says who won, and how well. */}
+      {currentRoom?.category_name && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="flex justify-center mt-2 px-4 flex-shrink-0"
+        >
+          <div className="flex items-center gap-2 px-5 py-2 rounded-full bg-white/15 backdrop-blur-sm">
             {/* CategoryArtwork rather than DynamicIcon: the six picture-guess
                 categories carry generic stand-ins in icon_slug, so the library
                 answers "guess the city" with a globe.
@@ -702,9 +769,17 @@ export function GameResultsScreenV2() {
                 a grey question mark — stood in for the one category the rest
                 of the app draws as the mystery box. */}
             <CategoryArtwork
-              categoryId={resultsCategory.categoryId ?? currentRoom.category_id}
+              // Never a stale id's picture on a mixed round, and never a
+              // question mark on a round that has no category at all — the
+              // same two rules the countdown applies.
+              categoryId={
+                isUndecidedRound(currentRoom.category_id, currentRoom.category_name)
+                  ? null
+                  : resultsCategory.categoryId ?? currentRoom.category_id
+              }
               iconSlug={
                 isUndecidedRound(currentRoom.category_id, currentRoom.category_name)
+                || (!currentRoom.category_id && !resultsCategory.iconSlug)
                   ? UNDECIDED_ICON_SLUG
                   : resultsCategory.iconSlug
               }
@@ -712,78 +787,132 @@ export function GameResultsScreenV2() {
               className="drop-shadow-none"
             />
             <span className="text-white font-medium">{localizeCategory(currentRoom.category_name)}</span>
-          </motion.div>
-        )}
+          </div>
+        </motion.div>
+      )}
 
-        {/* Compact Scorecard with scroll */}
+      {/* Middle Section: the podium, then everyone from fourth down */}
+      <div className="flex-1 min-h-0 flex flex-col items-center gap-3 px-4 pt-4 overflow-hidden">
+        {/* A private round still out with somebody. The scores so far are
+            right there under this line — they are real, they are just not
+            everyone's yet — and the medals carry no coin pills, because
+            nothing has been staked or paid while the round is open. Said
+            here rather than as a toast: it is the answer to "where are my
+            coins", and it has to be on screen when that is asked. */}
+        {waitingForPlayers && (
+          <motion.p
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="shrink-0 rounded-full bg-white/15 px-4 py-2 text-center font-[Nunito] text-sm font-bold text-white/90"
+          >
+            {t("extra.roundWaitingForPlayers", { count: stillOut })}
+          </motion.p>
+        )}
+        {/* The podium: second on the left, first in the middle and taller,
+            third on the right — a medal under each face and, under the
+            medal, what the place was worth (owner: "show first 3 places
+            besides, first place in the middle bigger than 2,3 places
+            avatars ... show medals below their avatars - below medals show
+            coins"). A grid, not a flex row, so the steps keep their
+            places. Two players get two columns, centred: the three-step
+            grid left the pair huddled on the left with an empty step
+            beside them (owner: "show avatars centered"). */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25 }}
-          className="w-full max-w-xs bg-white/10 backdrop-blur-sm rounded-2xl p-3 flex-1 min-h-0 overflow-y-auto"
+          className={cn(
+            "w-full grid items-end gap-2 flex-shrink-0",
+            rankedParticipants.length === 2 ? "max-w-[240px] grid-cols-2" : "max-w-xs grid-cols-3",
+          )}
         >
-          <div className="space-y-2">
-          {rankedParticipants.map((p, idx) => (
-              <div
-                key={p.user_id}
-                className={cn(
-                  "flex items-center gap-4 px-4 py-3 rounded-xl",
-                  p.isMe ? "bg-white/20" : ""
-                )}
-              >
-                {/* Avatar with crown for winner — tap opens the player's profile */}
+          {(rankedParticipants.length === 2 ? TWO_UP_ORDER : PODIUM_ORDER).map((idx) => {
+            const p = rankedParticipants[idx];
+            if (!p) return <div key={idx} />;
+            const first = idx === 0;
+            return (
+              <div key={p.user_id} className="flex flex-col items-center min-w-0">
                 <div
                   className={cn("relative", !p.isMe && "cursor-pointer active:scale-95 transition-transform")}
                   onClick={!p.isMe ? () => openProfile(p.user_id) : undefined}
                   role={!p.isMe ? "button" : undefined}
                 >
-                  <SafeAvatar 
+                  <SafeAvatar
                     avatarUrl={p.avatar_url}
                     fallback={p.nickname || "?"}
-                    className="w-12 h-12 border-2 border-white/30"
-                    fallbackClassName="bg-gradient-to-br from-purple-400 to-purple-600 text-white text-base font-bold"
+                    className={cn(
+                      "border-2",
+                      first ? "w-20 h-20 border-amber-300 shadow-[0_0_0_4px_rgba(251,191,36,0.35)]" : "w-14 h-14 border-white/40",
+                    )}
+                    fallbackClassName={cn(
+                      "bg-gradient-to-br from-purple-400 to-purple-600 text-white font-bold",
+                      first ? "text-xl" : "text-base",
+                    )}
                   />
-                  {/* No crown. It sat on idx === 0 — the WINNER — while the
-                      same crown means HOST everywhere else in the app: the
-                      lobby scoreboard draws it on `is_host`, so does every
-                      room card. So the player who won this round read as the
-                      person who owns the room, and the owner reported exactly
-                      that ("Beka is not a host and i see him as a host").
-                      The 🥇 beside the name already says who won, and says it
-                      without borrowing another badge's meaning. */}
                 </div>
-                
-                {/* Medal, or the place number from fourth down.
-                    The colour is not optional: the top three are emoji and
-                    paint themselves, but "#4" is text, and with nothing set
-                    it inherited the default dark foreground and came out
-                    black on a dark row.
-                    
-                    The number is smaller than the medals it sits among
-                    (owner's ask). At the medals' 24px it was the loudest
-                    thing on a row it is the least important part of — an
-                    emoji carries padding inside its own glyph, so type set
-                    to match it optically overshoots. */}
-                <span
-                  className={cn(
-                    "font-display font-bold text-white min-w-[2ch] text-center",
-                    idx < 3 ? "text-2xl" : "text-base",
-                  )}
-                >
-                  {idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `#${p.rank}`}
-                </span>
-                
-                {/* Name */}
-                <span className="flex-1 text-white font-display text-lg truncate">
+                <span className={cn("mt-1.5 w-full text-center text-white font-display truncate", first ? "text-base" : "text-sm")}>
                   {p.isMe ? t("game.you") : p.nickname}
                 </span>
-                
-                {/* Score */}
-                <span className="text-white font-display text-lg">{p.score}</span>
+                <span className="text-white/70 text-xs font-semibold">{p.score}</span>
+                <span className={cn("leading-none mt-1", first ? "text-3xl" : "text-2xl")}>{placeMark(idx, p.rank)}</span>
+                <PotLine net={netFor(p)} />
+              </div>
+            );
+          })}
+        </motion.div>
+
+        {/* Everyone from fourth down. Not the top three again — they are on
+            the podium — and nothing at all when the room has three or
+            fewer, so the podium is not followed by an empty card. */}
+        {rankedParticipants.length > PODIUM_ORDER.length && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="w-full max-w-xs bg-white/10 backdrop-blur-sm rounded-2xl p-3 flex-1 min-h-0 overflow-y-auto"
+          >
+            <div className="space-y-2">
+            {rankedParticipants.slice(PODIUM_ORDER.length).map((p) => (
+              <div
+                key={p.user_id}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-xl",
+                  p.isMe ? "bg-white/20" : ""
+                )}
+              >
+                {/* Avatar — tap opens the player's profile. No crown: it
+                    means HOST everywhere else in the app. */}
+                <div
+                  className={cn("relative", !p.isMe && "cursor-pointer active:scale-95 transition-transform")}
+                  onClick={!p.isMe ? () => openProfile(p.user_id) : undefined}
+                  role={!p.isMe ? "button" : undefined}
+                >
+                  <SafeAvatar
+                    avatarUrl={p.avatar_url}
+                    fallback={p.nickname || "?"}
+                    className="w-10 h-10 border-2 border-white/30"
+                    fallbackClassName="bg-gradient-to-br from-purple-400 to-purple-600 text-white text-sm font-bold"
+                  />
+                </div>
+
+                {/* The place number. Smaller than the medals on the podium —
+                    the least important part of its row. White, because
+                    text inherits the dark foreground on a dark row. */}
+                <span className="font-display font-bold text-white text-base min-w-[2ch] text-center">
+                  {placeMark(p.rank - 1, p.rank)}
+                </span>
+
+                <span className="flex-1 text-white font-display text-base truncate">
+                  {p.isMe ? t("game.you") : p.nickname}
+                </span>
+
+                <PotLine net={netFor(p)} compact />
+                <span className="text-white font-display text-base">{p.score}</span>
               </div>
             ))}
-          </div>
-        </motion.div>
+            </div>
+          </motion.div>
+        )}
       </div>
 
       {/* Bottom Section: Next Round Preview + Buttons. The home-indicator
@@ -847,7 +976,7 @@ export function GameResultsScreenV2() {
               <ChunkyButton
                 variant="primary"
                 size="lg"
-                className="w-full"
+                className="w-full font-bold"
                 onClick={handlePlayAgain}
                 disabled={isStartingRematch}
                 icon={isStartingRematch ? <Loader2 className="w-5 h-5 animate-spin" /> : <ChevronRight className="w-5 h-5" />}
@@ -860,12 +989,12 @@ export function GameResultsScreenV2() {
             <ChunkyButton
               variant="mint"
               size="lg"
-              className="w-full"
+              className="w-full font-bold"
               onClick={() => setShowCategoryPicker(true)}
               disabled={isStartingRematch}
               icon={<ChevronRight className="w-5 h-5" />}
             >
-              {t("extra.addCategory")}
+              {t("extra.newGame")}
             </ChunkyButton>
 
             {/* Challenge a friend.
@@ -904,6 +1033,21 @@ export function GameResultsScreenV2() {
           </>
         ) : (
           <>
+            {/* A player who is not the host can ask for a rematch on their
+                own terms — PRO's door; anyone else meets the PRO wall on the
+                tap, the same one the rooms hub shows (owner: "we need CTA
+                saying that player can ask rematch (if player is PRO user)"). */}
+            <ChunkyButton
+              variant="mint"
+              size="lg"
+              className="w-full font-bold"
+              onClick={() => (isVip ? setShowAskPicker(true) : setShowAskWall(true))}
+              disabled={isAsking}
+              icon={isAsking ? <Loader2 className="w-5 h-5 animate-spin" /> : isVip ? <ChevronRight className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
+            >
+              {t("extra.rematchAskCta")}
+            </ChunkyButton>
+
             {/* Non-host: nothing to do but wait, so say so like something is
                 still happening. A static line in the same slot the host's
                 button occupies reads as a button that has stopped working. */}
@@ -925,6 +1069,22 @@ export function GameResultsScreenV2() {
         onClose={() => setShowQueueSheet(false)}
         queue={queue}
       />
+
+      {/* The asker's picker: one pick, no queue — a request is one game. */}
+      <CategoryPickerModal
+        isOpen={showAskPicker}
+        onClose={() => setShowAskPicker(false)}
+        onSelectCategory={(c) => void handleAskPick({ source_type: "category", category_id: c.id, category_name: c.name, icon_slug: c.iconSlug ?? null })}
+        onSelectRandom={() => void handleAskRandom()}
+        onSelectTrivia={(tr) => void handleAskPick({ source_type: "user_trivia", user_trivia_id: tr.id, category_name: tr.title, category_id: null })}
+        showQueueOption={false}
+        allowParty={!currentRoom?.is_public}
+        allowMyTrivias={!currentRoom?.is_public}
+        roomGradient={currentRoom?.background_gradient || undefined}
+        excludeTriviaId={currentRoom?.user_trivia_id}
+      />
+
+      <PlayLimitModal reason="rooms" isOpen={showAskWall} onClose={() => setShowAskWall(false)} />
 
       <CategoryPickerModal
         isOpen={showCategoryPicker}

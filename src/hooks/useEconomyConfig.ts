@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { REWARDS } from "@/config/rewardConfig";
 
 export interface EconomyConfigItem {
   id: string;
@@ -66,25 +67,34 @@ export interface EconomyConfig {
   gemsPlaysAmount: number;
 }
 
-// Default values (fallback if database is unavailable)
+/**
+ * Default values, used when the database is unreachable.
+ *
+ * Taken from REWARDS rather than typed out again. They were typed out again
+ * once and drifted: a win paying 1000 against a 500 stake, a gem worth 50
+ * coins instead of 500, and a starting balance three settings disagreed
+ * about — numbers that would have been served to the admin economy screen
+ * as the truth on any request that failed (owner: "check and fix
+ * economy_config values").
+ */
 const DEFAULT_CONFIG: EconomyConfig = {
-  gameStake: 500,
-  gameWinReward: 1000,
-  gameDrawRefund: 250,
-  levelUpCoinsPerLevel: 75,
-  dailyRewards: [100, 150, 200, 250, 350, 450, 500],
-  chestCoinsMin: 100,
-  chestCoinsMax: 150,
-  chestCooldownHours: 6,
-  spinRewards: [50, 100, 200, 300, 75],
-  adWatchPlays: 1,
-  gemToCoinsRate: 50,
-  newPlayerCoins: 1500,
-  newPlayerGems: 5,
+  gameStake: REWARDS.GAME_STAKE,
+  gameWinReward: REWARDS.GAME_WIN_REWARD,
+  gameDrawRefund: REWARDS.GAME_DRAW_REFUND,
+  levelUpCoinsPerLevel: REWARDS.LEVEL_UP_COINS,
+  dailyRewards: REWARDS.DAILY_REWARDS.map((d) => d.coins),
+  chestCoinsMin: REWARDS.CHEST_COINS_MIN,
+  chestCoinsMax: REWARDS.CHEST_COINS_MAX,
+  chestCooldownHours: REWARDS.CHEST_COOLDOWN_HOURS,
+  spinRewards: REWARDS.SPIN_REWARDS.filter((r) => r.type === "coins").map((r) => r.value),
+  adWatchPlays: REWARDS.AD_WATCH_PLAYS,
+  gemToCoinsRate: REWARDS.GEM_TO_COINS_RATE,
+  newPlayerCoins: REWARDS.NEW_PLAYER_COINS,
+  newPlayerGems: REWARDS.NEW_PLAYER_GEMS,
   powerupPrices: {
-    "5050": 100,
-    freeze: 120,
-    replace: 80,
+    "5050": REWARDS.POWER_UP_PRICES["5050"],
+    freeze: REWARDS.POWER_UP_PRICES.freeze,
+    replace: REWARDS.POWER_UP_PRICES.replace,
   },
   vipPrices: {
     day: 5,
@@ -93,12 +103,12 @@ const DEFAULT_CONFIG: EconomyConfig = {
   },
   feedTriviaXpPerCorrect: 5,
   // Play Regeneration
-  playRegenHours: 4,
-  playRegenMax: 3,
-  playsPerAd: 1,
-  maxAdsPerDay: 5,
-  gemsForPlays: 3,
-  gemsPlaysAmount: 2,
+  playRegenHours: REWARDS.PLAY_REGEN_HOURS,
+  playRegenMax: REWARDS.PLAY_REGEN_MAX,
+  playsPerAd: REWARDS.PLAYS_PER_AD,
+  maxAdsPerDay: REWARDS.MAX_ADS_PER_DAY,
+  gemsForPlays: REWARDS.GEMS_FOR_PLAYS,
+  gemsPlaysAmount: REWARDS.GEMS_PLAYS_AMOUNT,
 };
 
 function parseConfigItems(items: EconomyConfigItem[]): EconomyConfig {
@@ -112,25 +122,16 @@ function parseConfigItems(items: EconomyConfigItem[]): EconomyConfig {
     gameWinReward: getVal("game_win_reward", DEFAULT_CONFIG.gameWinReward),
     gameDrawRefund: getVal("game_draw_refund", DEFAULT_CONFIG.gameDrawRefund),
     levelUpCoinsPerLevel: getVal("level_up_coins_per_level", DEFAULT_CONFIG.levelUpCoinsPerLevel),
-    dailyRewards: [
-      getVal("daily_reward_day_1", 100),
-      getVal("daily_reward_day_2", 150),
-      getVal("daily_reward_day_3", 200),
-      getVal("daily_reward_day_4", 250),
-      getVal("daily_reward_day_5", 350),
-      getVal("daily_reward_day_6", 450),
-      getVal("daily_reward_day_7", 500),
-    ],
+    // Per-day fallbacks off the same defaults as everything else: they were
+    // a second, older copy of the ladder, so a database missing one row
+    // answered with a number from a different economy.
+    dailyRewards: DEFAULT_CONFIG.dailyRewards.map((coins, i) =>
+      getVal(`daily_reward_day_${i + 1}`, coins),
+    ),
     chestCoinsMin: getVal("chest_coins_min", DEFAULT_CONFIG.chestCoinsMin),
     chestCoinsMax: getVal("chest_coins_max", DEFAULT_CONFIG.chestCoinsMax),
     chestCooldownHours: getVal("chest_cooldown_hours", DEFAULT_CONFIG.chestCooldownHours),
-    spinRewards: [
-      getVal("spin_reward_1", 50),
-      getVal("spin_reward_2", 100),
-      getVal("spin_reward_3", 200),
-      getVal("spin_reward_4", 300),
-      getVal("spin_reward_5", 75),
-    ],
+    spinRewards: DEFAULT_CONFIG.spinRewards.map((coins, i) => getVal(`spin_reward_${i + 1}`, coins)),
     adWatchPlays: getVal("plays_per_ad", DEFAULT_CONFIG.adWatchPlays),
     gemToCoinsRate: getVal("gem_to_coins_rate", DEFAULT_CONFIG.gemToCoinsRate),
     newPlayerCoins: getVal("new_player_coins", DEFAULT_CONFIG.newPlayerCoins),

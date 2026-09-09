@@ -25,12 +25,12 @@ describe("the scene catcher", () => {
   });
 
   it("sits above the scene and below everything drawn on it", () => {
-    // The scene is z-[4]; the balances, the reel and the profile card (which
-    // now carries the gift and streak buttons) are z-20 and come later, so
-    // they keep their own taps.
+    // The scene is z-[4]; the reel and the profile card (which carries the
+    // gift and streak buttons) are z-20 and come later, so they keep their
+    // own taps. The balances are not in the hero at all — they are in the
+    // app header, above this scroller.
     expect(scroll).toMatch(/className="absolute inset-0 z-\[5\] cursor-pointer"/);
     const hero = scroll.slice(scroll.indexOf("{scene}"));
-    expect(hero.indexOf("onClick={onSceneClick}")).toBeLessThan(hero.indexOf("<BalancePills"));
     expect(hero.indexOf("onClick={onSceneClick}")).toBeLessThan(hero.indexOf("<FriendsStoriesBar"));
     expect(hero.indexOf("onClick={onSceneClick}")).toBeLessThan(hero.indexOf("<MobileProfileCard"));
   });

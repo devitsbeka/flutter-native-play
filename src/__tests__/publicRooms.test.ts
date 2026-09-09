@@ -156,15 +156,19 @@ describe("the arena is sized before it is opened", () => {
 });
 
 describe("the private tab and the lobby it opens", () => {
-  it("the + makes a private room and lands in its lobby", () => {
+  it("the + makes a listed room and lands in its lobby", () => {
     const page = read("src/pages/TeamV2.tsx");
     // Not the create screen: that screen is for deciding what to publish,
-    // and on the Private tab every one of those questions is answered.
-    expect(page).toMatch(/const createPrivateRoomAndOpen = async \(\) => \{/);
-    expect(page).toMatch(/onSelectGameRoom=\{\(\) => void createPrivateRoomAndOpen\(\)\}/);
-    // Explicitly private, and named so the lobby has a title.
+    // and every one of those questions is either answered or answered
+    // better in the lobby the host is going to anyway.
+    expect(page).toMatch(/const createRoomAndOpen = async \(\) => \{/);
+    expect(page).toMatch(/onSelectGameRoom=\{\(\) => void createRoomAndOpen\(\)\}/);
+    // Named so the lobby has a title, published so the rooms page can find
+    // it, and on the latch so the host still says who comes in — the
+    // Visibility and Joining rows open on Public / Ask me (owner's ask; see
+    // roomDefaultsPublicAskMe.test.ts).
     expect(page).toMatch(/generateRoomIdentity\(readAppLanguage\(\)\)/);
-    expect(page).toMatch(/undefined,\s*\n\s*false,\s*\n\s*\);/);
+    expect(page).toMatch(/undefined,\s*\n\s*true,\s*\n\s*true,\s*\n\s*\);/);
   });
 
   it("a room is two people — a lone host cannot start one", () => {
@@ -178,7 +182,9 @@ describe("the private tab and the lobby it opens", () => {
     // you asked into it (owner's ask). Counted in ANSWERERS, so the host of
     // their own trivia — who sits out of it — needs two guests, not one.
     expect(lobby).toMatch(/const answeringPlayers = seatedPlayers - \(willBeObserver \? 1 : 0\);/);
-    expect(lobby).toMatch(/const enoughPlayers = answeringPlayers >= 2;/);
+    expect(lobby).toMatch(
+      /const enoughPlayers =\s*\n\s*isPublicRoom && presenceLoaded \? onlineAnswerers >= 2 : answeringPlayers >= 2;/,
+    );
     // Short of a second player the button no longer offers to start at all:
     // it becomes "Create" and hands the host back to the list (see
     // createButtonInsteadOfDeadStart.test.ts). So the state is still named
@@ -186,7 +192,7 @@ describe("the private tab and the lobby it opens", () => {
     expect(lobby).toMatch(
       /const awaitingPlayers = !needsCategorySelection && !enoughPlayers && !isStarting;/,
     );
-    expect(lobby).toMatch(/onPress: awaitingPlayers \? handleDoneCreating : handleStartOrPick,/);
+    expect(lobby).toMatch(/onPress: offerCreate \? handleCreatePress : handleStartOrPick,/);
     expect(lobby).toMatch(/rlNeedsSecondPlayer/);
     // The button's disabled state is not the only guard: the category picker
     // can start a round on its own, and the last guest can leave between the
@@ -354,7 +360,7 @@ describe("the public list", () => {
     // wears the same shape in white. One shape, two answers.
     const button = read("src/components/team/RoomCardPlayButton.tsx");
     expect(button).toMatch(/mint: "bg-\[#81f0c3\] border-\[#2bc889\] text-\[#320c69\]"/);
-    expect(section).toMatch(/tone=\{ready \? "mint" : "white"\}/);
+    expect(section).toMatch(/tone=\{invited \|\| ready \? "mint" : "white"\}/);
     expect(section).not.toMatch(/from-\[#34d399\]/);
     // Open seats on the pale ground: a dark dashed ring, not a white one.
     expect(section).toMatch(/border-dashed border-\[#2b1a4a\]\/30/);
@@ -574,7 +580,7 @@ describe("a knock answered from the activity list", () => {
   it("the join-request notification offers accept and decline and answers through the RPC", () => {
     const card = read("src/components/notifications/CompactNotificationCard.tsx");
     expect(card).toMatch(/const isJoinRequest = notification\.type === 'room_join_request';/);
-    expect(card).toMatch(/hasDualActions = \(isFriendRequest \|\| isGameInvite \|\| isJoinRequest\)/);
+    expect(card).toMatch(/hasDualActions = \(isFriendRequest \|\| isGameInvite \|\| isJoinRequest \|\| isRematch\)/);
     expect(card).toMatch(/onAcceptJoin\?\.\(roomId, requesterId, notification\.id\)/);
     expect(card).toMatch(/onDeclineJoin\?\.\(roomId, requesterId, notification\.id\)/);
     const hook = read("src/hooks/useRoomJoinRequests.ts");

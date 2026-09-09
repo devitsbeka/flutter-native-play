@@ -42,8 +42,14 @@ describe("the count on screen is the count the button judges", () => {
     );
   });
 
-  it("and the gate itself is unchanged: two answerers", () => {
-    expect(room).toMatch(/const enoughPlayers = answeringPlayers >= 2;/);
+  it("and the gate is two answerers — the ones in the app, on a public room", () => {
+    // A published room is played through, together, now, so it counts the
+    // people actually here; a private one is played across the evening and
+    // keeps counting seats. Either way it is two (see
+    // publicRoomNeedsOnlinePlayers.test.ts).
+    expect(room).toMatch(
+      /const enoughPlayers =\s*\n\s*isPublicRoom && presenceLoaded \? onlineAnswerers >= 2 : answeringPlayers >= 2;/,
+    );
     expect(room).toMatch(/rlNeedsSecondPlayer/);
   });
 });

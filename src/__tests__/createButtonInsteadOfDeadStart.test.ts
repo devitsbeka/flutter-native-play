@@ -39,14 +39,17 @@ describe("the state the button changes for", () => {
   });
 
   it("says Create, and only there — choosing a category is still its own label", () => {
-    expect(lobby).toMatch(/awaitingPlayers\s*\n\s*\? t\("extra\.createBtn"\)\s*\n\s*: t\("lobby\.uStartGame"\)/);
+    expect(lobby).toMatch(/offerCreate\s*\n\s*\? t\("extra\.createBtn"\)\s*\n\s*: t\("lobby\.uStartGame"\)/);
     expect(lobby).toMatch(/needsCategorySelection\s*\n\s*\? t\("extra\.rlChooseCategory"\)/);
   });
 
-  it("and is no longer a reason to disable the button", () => {
-    expect(lobby).toMatch(/disabled: !canStartGame \|\| isStarting \|\| loading,/);
-    // The old fourth clause is gone from the disabled test entirely.
-    expect(lobby).not.toMatch(/\|\| \(!needsCategorySelection && !enoughPlayers\)/);
+  it("disables Start only once the way out has been taken", () => {
+    // Superseded: the state stopped disabling the button outright when
+    // "Create" first took its place. It disables again after that offer is
+    // spent — see the one-time block below.
+    expect(lobby).toMatch(
+      /disabled:\s*\n\s*!canStartGame \|\| isStarting \|\| loading \|\| \(awaitingPlayers && !offerCreate\),/,
+    );
   });
 
   it("but a lone host still cannot actually start — the runtime guard stands", () => {
@@ -66,8 +69,13 @@ describe("where Create goes", () => {
   });
 
   it("leaving the room the way the back arrow does, so nothing is half-exited", () => {
-    expect(lobby).toMatch(/const handleDoneCreating = \(\) => \{\s*\n\s*exitRoom\(\);/);
-    expect(lobby).toMatch(/onPress: awaitingPlayers \? handleDoneCreating : handleStartOrPick,/);
+    expect(lobby).toMatch(/const handleDoneCreating = \(\) => \{[\s\S]*?exitRoom\(\);/);
+    // Create raises the summary first; the sheet's own button is what
+    // leaves (see matchSummarySheet.test.ts).
+    expect(lobby).toMatch(/onPress: offerCreate \? handleCreatePress : handleStartOrPick,/);
+    // Create's confirm still ends in handleDoneCreating; the same sheet in
+    // its rematch dress ends in the ask instead (rematchAskedAtStart.test).
+    expect(lobby).toMatch(/setShowMatchSummary\(false\);\s*\n\s*if \(askingTable\) void askTableForRematch\(\);\s*\n\s*else handleDoneCreating\(\);/);
   });
 
   it("and the hub reads that tab off the URL, which is why a param is enough", () => {

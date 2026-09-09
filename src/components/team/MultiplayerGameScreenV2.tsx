@@ -4,7 +4,6 @@ import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { ChunkyButton } from "@/components/ui/chunky-button";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/lib/toast";
@@ -21,6 +20,18 @@ import { AnswerChoiceAvatars, type AnswerChooser } from "@/components/game/Answe
 import { LiveRaceStrip } from "@/components/game/LiveRaceStrip";
 import { useCategoryIdentity } from "@/hooks/useCategoryIdentity";
 import { imageTreatmentFor } from "@/utils/questionImageTreatment";
+
+/**
+ * How long a revealed answer stays up before the round moves on.
+ *
+ * Long enough to read the verdict — which colour your pick went, and which
+ * one was right if it was not yours — and short enough that a round of ten
+ * does not become a sit. The TV's own reveal (TVGameContext) holds 1.4s on
+ * a screen across the room; a phone in the hand is read closer and holds a
+ * beat longer, because on it the reveal is also where the avatars of who
+ * picked what land.
+ */
+const REVEAL_HOLD_MS = 2200;
 
 export function MultiplayerGameScreenV2() {
   const navigate = useNavigate();
@@ -260,6 +271,37 @@ export function MultiplayerGameScreenV2() {
     advancedFromRef.current = currentQuestionIndex;
     void nextQuestion();
   }, [nextQuestion, currentQuestionIndex]);
+
+  /**
+   * A room round runs itself — nobody presses "Next question".
+   *
+   * A room is people playing together, and a button between every question
+   * made that a race of taps: the fast one sat on the next question while
+   * the slow one was still reading a result, and a phone put down mid-round
+   * held nothing but its own screen. TV rounds have always advanced on a
+   * timer for exactly this reason (TVGameContext's REVEAL_DURATION_MS); a
+   * room is the same game with the screens in people's hands (owner: "in
+   * public / private rooms matches we need to have auto next question,
+   * without 'next question' button").
+   *
+   * Solo play keeps its button: CategoryQuizPage is a separate screen, and
+   * one person reading at their own pace is what that button is for (owner:
+   * "we have next question button when user plays from discover page").
+   *
+   * Keyed to the question it was armed on, so an advance that has already
+   * happened cannot fire a second one; handleNext's own ref is the belt to
+   * this pair of braces.
+   */
+  useEffect(() => {
+    if (!answerRevealed) return;
+    // A vote round reveals before the tally lands — "waiting for votes" is
+    // on screen at that moment. Moving on then would take the answer away
+    // before it arrived, so those wait for the result and read it for the
+    // same beat as everyone else.
+    if (isMostLikelyRound && !voteResult) return;
+    const timer = setTimeout(handleNext, REVEAL_HOLD_MS);
+    return () => clearTimeout(timer);
+  }, [answerRevealed, isMostLikelyRound, voteResult, currentQuestionIndex, handleNext]);
 
   const handleExit = () => {
     exitRoom();
@@ -570,24 +612,24 @@ export function MultiplayerGameScreenV2() {
               : t("extra.mltWaitingVotes")}
           </p>
         )}
-        <div className="pb-[env(safe-area-inset-bottom)]">
+        {/* Where the "Next question" button was. The round advances itself
+            now (see REVEAL_HOLD_MS above), so what stands here is a word
+            about what is about to happen rather than a control: a button
+            that does what would have happened anyway is furniture, and one
+            that races a timer is worse. The box keeps its height either way,
+            so the answers do not jump when the reveal lands. */}
+        <div className="min-h-[64px] pb-[env(safe-area-inset-bottom)]">
           <AnimatePresence mode="wait">
             {answerRevealed && (
-              <motion.div
-                key="next-button"
+              <motion.p
+                key="next-note"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
+                className="text-center text-white/70 font-[Nunito] text-sm font-bold py-4"
               >
-                <ChunkyButton
-                  variant="secondary"
-                  size="xl"
-                  onClick={handleNext}
-                  className="w-full"
-                >
-                  {isLastQuestion ? t("game.viewResults") : t("game.nextQuestion")}
-                </ChunkyButton>
-              </motion.div>
+                {isLastQuestion ? t("game.viewResults") : t("extra.nextQuestionSoon")}
+              </motion.p>
             )}
           </AnimatePresence>
         </div>

@@ -64,7 +64,14 @@ export function RoundCountdown({ number, categoryId, categoryName, iconSlug }: R
   // question mark — was the picture the whole app otherwise draws as the
   // mystery box.
   const mapSlug = categoryId ? getCategoryIconSlug(categoryId) : null;
-  const slug = isUndecidedRound(categoryId, categoryName)
+  // Undecided by name or id — or by having nothing at all: a round with no
+  // category id and no icon of any kind is not a real category, whatever
+  // its stored name says (a picker's word this list does not know, or a
+  // writer that stored something else). Both used to fall through to the
+  // grey question mark here, and did (owner: "shown as question mark when
+  // game starts on 3,2,1 screen").
+  const mystery = isUndecidedRound(categoryId, categoryName) || (!categoryId && !iconSlug && !mapSlug);
+  const slug = mystery
     ? UNDECIDED_ICON_SLUG
     : [iconSlug, mapSlug].filter(Boolean).join(",") || null;
 
@@ -81,7 +88,7 @@ export function RoundCountdown({ number, categoryId, categoryName, iconSlug }: R
             place — a uuid, which some rooms store — its last resort is a
             random icon hashed from that id, which is how this screen came to
             show a banana for "guess the city". */}
-        <CategoryArtwork categoryId={categoryId} iconSlug={slug} size={120} />
+        <CategoryArtwork categoryId={mystery ? null : categoryId} iconSlug={slug} size={120} />
         <h2 className="max-w-[18rem] break-words font-display text-2xl font-bold leading-tight text-white">
           {title}
         </h2>

@@ -1453,11 +1453,18 @@ function Chip({
         onClick={onPress}
         disabled={!onPress}
         className={cn(
-          "flex h-full min-w-0 flex-1 items-center gap-2 rounded-bl-[22px] rounded-tl-[22px] pr-[8px] text-left",
+          "flex h-full min-w-0 flex-1 items-center gap-2 rounded-bl-[22px] rounded-tl-[22px] text-left",
           // The picked category wears its own face; with nothing picked yet
           // the mock shows the words alone, so the label takes the icon's
           // place rather than standing beside a placeholder for it.
           iconSlug ? "pl-[13px]" : "pl-[31px]",
+          // 8px is the gap before the + , which carries the real inset in
+          // its own mr-[20px]. With no + there is nothing to carry it, and
+          // the "+N" pill ended up 8px from the pill's edge — reading as
+          // touching it (owner: "make sure + button in category picker raw
+          // is not touching edge, check padding"). Without the action the
+          // content ends where the + would have: same inset either way.
+          action ? "pr-[8px]" : "pr-[20px]",
         )}
       >
         {iconSlug && (
@@ -1479,7 +1486,11 @@ function Chip({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.6, y: 8 }}
               transition={{ type: "spring", stiffness: 520, damping: 22 }}
-              className="ml-2 shrink-0 font-display text-[16px] font-bold leading-[26px] text-[#402666]/60"
+              // A pill, not a faded number: "+1" hanging loose at the far end
+              // of the chip read as a stray glyph (owner: "looks weird").
+              // Tinted like the rest of the lobby's counts so it says
+              // "one more round" at a glance.
+              className="ml-2 inline-flex h-[24px] shrink-0 items-center rounded-full bg-[#7126d5]/10 px-2.5 font-[Nunito] text-[13px] font-bold leading-none text-[#7126d5]"
             >
               {trailing}
             </motion.span>

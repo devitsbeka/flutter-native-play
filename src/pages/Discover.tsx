@@ -18,6 +18,7 @@ import { CategoryCarousel } from "@/components/discover/CategoryCarousel";
 import { CategoryGrid } from "@/components/discover/CategoryGrid";
 
 import { PageHeader } from "@/components/shared/PageHeader";
+import { BalanceStripRow } from "@/components/shared/BalanceStrip";
 import { HeaderActions } from "@/components/shared/HeaderActions";
 import { Capacitor } from "@capacitor/core";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -477,6 +478,7 @@ export default function Discover() {
       overlay={isMobile}
       docked={headerDocked}
       rightElements={headerActions}
+      belowRow={<BalanceStripRow />}
     />
   );
 

@@ -93,11 +93,14 @@ export async function teamNameFields(
  * open or has a doorman, and until 20260930100000_open_rooms.sql is pasted
  * the column does not exist.
  *
- * This one is read by the lobby rather than written on create — the column
- * defaults to false, so a room made before the migration is already open —
- * and the row is HIDDEN while the column is missing. Offering a switch that
+ * The row is HIDDEN while the column is missing. Offering a switch that
  * silently writes nothing is worse than not offering it: the host would set
  * it, watch it snap back, and conclude the room is broken.
+ *
+ * It is written on create as well as read by the lobby now — "+ Room" makes
+ * a room whose door is on the latch (see roomApprovalFields). Before the
+ * migration that write is simply dropped and the room is open, which is the
+ * column's own default and the mild half of the failure.
  */
 let approvalProbe: Promise<boolean> | null = null;
 
@@ -113,6 +116,17 @@ export function gameRoomsHasApproval(): Promise<boolean> {
     })();
   }
   return approvalProbe;
+}
+
+/**
+ * The `requires_approval` half of a game_rooms insert, or nothing at all when
+ * the column is not there yet. Spread it in exactly like
+ * `roomVisibilityFields`.
+ */
+export async function roomApprovalFields(
+  requiresApproval: boolean,
+): Promise<{ requires_approval?: boolean }> {
+  return (await gameRoomsHasApproval()) ? { requires_approval: requiresApproval } : {};
 }
 
 /** Test seam: forget what was probed. */

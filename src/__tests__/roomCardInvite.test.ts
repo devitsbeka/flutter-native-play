@@ -42,7 +42,7 @@ describe("the room card's own invite", () => {
     // The avatars' own -space-x-2 group closes, THEN the "+" — both still
     // inside the row's left-hand flex container, not on the Play side.
     const afterFaces = grid.slice(
-      grid.indexOf("+{displayPlayers.length - avatarLimit}"),
+      grid.indexOf("+{guests.length - avatarLimit}"),
       grid.indexOf('{action && ('),
     );
     expect(afterFaces).toMatch(/canInvite && \(/);
