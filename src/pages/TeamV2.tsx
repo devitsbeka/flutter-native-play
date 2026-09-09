@@ -370,7 +370,17 @@ function TeamContentV2() {
   // The page header hosts the friends reel, so its height varies by
   // breakpoint/content — measure it so the sticky tab bar and the right
   // sidebar can sit exactly below it.
-  const headerRef = useRef<HTMLDivElement | null>(null);
+  //
+  // The header is held as STATE, not a ref, because the page does not
+  // always mount with one: on a cold start it renders a spinner while auth
+  // resolves, and the header (and MainLayout's scroller) only appear on a
+  // later render. Mount-only effects reading a ref ran once, against
+  // nothing, and never again — so the height stayed at its 64px default
+  // and the tabs stuck 64px down, hidden behind the ~190px header, while
+  // the header itself never retracted (owner: "sometimes ... sticky header
+  // with header + friends rail and sometimes public/private tabs and
+  // filter"). A callback ref re-runs both effects when the header arrives.
+  const [headerEl, setHeaderEl] = useState<HTMLDivElement | null>(null);
   const [headerHeight, setHeaderHeight] = useState(64);
   /**
    * The title and the friends reel ride the scroll; the tabs and filter stay.
@@ -389,6 +399,9 @@ function TeamContentV2() {
    */
   const [headerCollapsed, setHeaderCollapsed] = useState(false);
   useEffect(() => {
+    // The scroller is MainLayout's, rendered on the same pass as the
+    // header — so it exists exactly when headerEl does.
+    if (!headerEl) return;
     const scroller = document.getElementById("main-scroll-container");
     if (!scroller) return;
     let last = scroller.scrollTop;
@@ -414,18 +427,18 @@ function TeamContentV2() {
       scroller.removeEventListener("scroll", onScroll);
       if (frame) cancelAnimationFrame(frame);
     };
-  }, [headerHeight]);
+  }, [headerEl, headerHeight]);
   const chromeShift = headerCollapsed ? `translateY(-${headerHeight}px)` : "translateY(0)";
   const CHROME_EASE = "transform 320ms cubic-bezier(0.22, 0.61, 0.36, 1)";
   useEffect(() => {
-    const el = headerRef.current;
+    const el = headerEl;
     if (!el) return;
     const update = () => setHeaderHeight(el.offsetHeight);
     update();
     const observer = new ResizeObserver(update);
     observer.observe(el);
     return () => observer.disconnect();
-  }, []);
+  }, [headerEl]);
   /**
    * Two tabs: what everyone can find, and what is mine.
    *
@@ -1306,7 +1319,7 @@ function TeamContentV2() {
           right like every other page header; the friends reel rides the same
           row on md+ so it sits as high as possible */}
       <div
-        ref={headerRef}
+        ref={setHeaderEl}
         className="sticky top-0 z-30 bg-background/95 backdrop-blur-md border-b border-border/30 will-change-transform"
         style={{ transform: chromeShift, transition: CHROME_EASE }}
       >
