@@ -35,21 +35,25 @@ describe("the shop", () => {
     expect(shop.slice(first, first + 200)).toMatch(/slides="pro"/);
   });
 
-  it("sells the packages at the foot, under the powers and the grids", () => {
-    const deals = shop.indexOf('slides="deals"');
-    const powers = shop.indexOf("<MyPowersSection");
-    const grids = shop.indexOf("<ShopProductGrid");
-    expect(deals).toBeGreaterThan(-1);
-    expect(deals).toBeGreaterThan(powers);
-    expect(deals).toBeGreaterThan(grids);
+  // The "Daily offers" reel of timed packages used to close the shop, under
+  // the powers and the grids, with a heading of its own. It was switched off
+  // (owner's ask). These two now guard the absence instead of the order: the
+  // reel component still supports slides="deals" for whoever turns it back
+  // on, so nothing stops it reappearing by accident except this.
+  it("no longer closes on the timed-deals reel", () => {
+    expect(shop).not.toMatch(/<ProBannerReel[^>]*\n?\s*slides="deals"/);
   });
 
-  it("gives that one a heading, where the PRO reel above needs none", () => {
-    expect(shop).toMatch(/\{t\("extra\.railOffers"\)\}/);
+  it("and carries no heading left stranded above it", () => {
+    expect(shop).not.toMatch(/\{t\("extra\.railOffers"\)\}/);
   });
 
-  it("still shows exactly two reels — the packages moved, they did not multiply", () => {
-    expect((shop.match(/<ProBannerReel/g) ?? []).length).toBe(2);
+  it("is left with exactly one reel — the PRO tiers it opens on", () => {
+    // Was two: the PRO tiers at the top and the timed deals at the foot.
+    // With the deals switched off one remains, and one is the number to
+    // guard — a second appearing again means the deals came back, or that
+    // the PRO reel was duplicated the way it once was.
+    expect((shop.match(/<ProBannerReel/g) ?? []).length).toBe(1);
   });
 });
 

@@ -1,9 +1,10 @@
 import { useRef, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ShopSection, ShopItem } from "@/hooks/useShopData";
-import { useLanguage } from "@/contexts/LanguageContext";
 import { ShopProductGrid } from "./ShopProductGrid";
 import { ProBannerReel } from "./MobileProCarousel";
+import { ShopCurrencySection } from "./ShopCurrencySection";
+import { isCurrencySection } from "./currencySections";
 import { MyPowersSection } from "./MyPowersSection";
 import { PowerUpType } from "@/hooks/useUserPowerUps";
 
@@ -33,7 +34,6 @@ export function ShopStandardLayout({
   canAffordCoins,
   onPowerCardClick,
 }: ShopStandardLayoutProps) {
-  const { t } = useLanguage();
   const sectionRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const hasScrolled = useRef(false);
   // The section arrived at, nudged once so it is obvious which one the tap
@@ -220,34 +220,39 @@ export function ShopStandardLayout({
             if (arrivedAt === section.id) setArrivedAt(null);
           }}
         >
-          <ShopProductGrid
-            sectionId={section.id}
-            title={section.title}
-            items={section.items}
-            gems={gems}
-            purchasedItems={purchasedItems}
-            isPurchasing={isPurchasing}
-            isFrameUnlocked={isFrameUnlocked}
-            onItemClick={handleItemClick}
-          />
+          {/* Coins and gems are one product in four sizes, not four
+              products, and get the compact shelf. Everything else — VIP,
+              packs, frames — is genuinely a set of different things and
+              keeps the full cards. */}
+          {isCurrencySection(section.id) ? (
+            <ShopCurrencySection
+              sectionId={section.id}
+              title={section.title}
+              items={section.items}
+              gems={gems}
+              isPurchasing={isPurchasing}
+              onItemClick={handleItemClick}
+            />
+          ) : (
+            <ShopProductGrid
+              sectionId={section.id}
+              title={section.title}
+              items={section.items}
+              gems={gems}
+              purchasedItems={purchasedItems}
+              isPurchasing={isPurchasing}
+              isFrameUnlocked={isFrameUnlocked}
+              onItemClick={handleItemClick}
+            />
+          )}
         </motion.div>
       ))}
 
-      {/* The timed packages, at the foot of the page (owner's ask). They
-          have a heading here where the PRO reel above does not: on a page
-          that ends in product grids, an unlabelled reel of countdowns reads
-          as one more grid that lost its title. */}
-      <section className="px-4 pt-2">
-        <h2 className="text-lg font-display font-bold text-foreground md:text-xl">
-          {t("extra.railOffers")}
-        </h2>
-      </section>
-      <ProBannerReel
-        slides="deals"
-        purchasedItems={purchasedItems}
-        isPurchasing={isPurchasing}
-        onItemClick={handleItemClick}
-      />
+      {/* The "Daily offers" reel of timed packages used to close the page.
+          It is off (owner's ask). The PRO reel at the top still runs; only
+          the countdown deals at the foot are gone. Kept as a note rather
+          than deleted outright so the next person knows the slot existed and
+          why it is empty — ProBannerReel still supports slides="deals". */}
     </div>
   );
 }

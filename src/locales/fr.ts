@@ -743,6 +743,8 @@ export const fr: KaTranslations = {
     starterPack: "Pack débutant",
     forBeginners: "Pour les débutants",
     megaPowers: "Packs spéciaux",
+    coinsWhat: "À dépenser en pouvoirs",
+    gemsWhat: "Achète pièces et packs",
     winMoreGames: "Gagnez plus de jeux",
     vipStatus: "Statut VIP",
     vipBenefits: "2x XP + bonus",

@@ -911,6 +911,8 @@ export const en: KaTranslations = {
     starterPack: "Boost Powers",
     forBeginners: "For Beginners",
     megaPowers: "Special Packs",
+    coinsWhat: "Spend on power-ups",
+    gemsWhat: "Buys coins and packs",
     winMoreGames: "Win More Games",
     vipStatus: "VIP Status",
     vipBenefits: "2xp / unlimited play",

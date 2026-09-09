@@ -1,5 +1,6 @@
 import { PowerUpType } from "@/hooks/useUserPowerUps";
 import { REWARDS } from "@/config/rewardConfig";
+import { motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 import icon5050 from "@/assets/powers/5050.png";
@@ -81,33 +82,42 @@ export function MyPowersSection({ onPurchaseSingle, isPurchasing, canAffordCoins
               {/* min-w-0 so a long translation wraps inside the row instead
                   of pushing the price button off the end. */}
               <div className="min-w-0 flex-1">
-                <div className="font-bold text-[15px] leading-tight text-foreground">
+                <div className="font-bold text-[17px] leading-tight text-gray-900">
                   {t(POWER_UP_NAME_KEYS[type])}
                 </div>
-                <div className="mt-0.5 text-[13px] leading-snug text-muted-foreground">
+                <div className="mt-1 text-[15px] leading-snug text-gray-600">
                   {t(POWER_UP_SHORT_KEYS[type])}
                 </div>
               </div>
 
-              <button
+              <motion.button
                 onClick={(e) => { e.stopPropagation(); onCardClick?.(type); }}
                 disabled={isLoading}
                 aria-label={`${t(POWER_UP_NAME_KEYS[type])} — ${price}`}
-                className={`flex shrink-0 items-center justify-center gap-1.5 rounded-full border px-3.5 py-2 whitespace-nowrap transition-colors disabled:opacity-50 ${
-                  canAfford
-                    ? "bg-warning/20 border-warning/30 text-warning-foreground hover:bg-warning/30"
-                    : "bg-muted/40 border-border text-muted-foreground"
-                }`}
+                // The same white chunky pill the coin, gem and pack shelves
+                // buy through, at the same size. It was an amber tinted
+                // button here, which made this one shelf look like a
+                // different shop; a buy control should be the same object
+                // everywhere it appears. Affordability shows as the pill
+                // dimming rather than as a colour of its own.
+                className={`flex min-w-[100px] shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-6 py-3 font-bold text-[#402666] disabled:opacity-50 ${canAfford ? "" : "opacity-55"}`}
+                style={{
+                  background: "linear-gradient(180deg, #FFFFFF 0%, #FEFEFE 100%)",
+                  boxShadow: "0 3px 0 #D8D0E8, 0 4px 12px rgba(0,0,0,0.08), inset 0 1px 0 #FFFFFF",
+                  border: "2px solid #E8E0F5",
+                }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95, y: 2 }}
               >
                 {isLoading ? (
-                  <div className="w-3.5 h-3.5 border-2 border-warning border-t-transparent rounded-full animate-spin" />
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#402666] border-t-transparent" />
                 ) : (
                   <>
-                    <img src={coinIcon} alt="" className="w-4 h-4 shrink-0" />
-                    <span className="text-sm font-semibold">{price}</span>
+                    <img src={coinIcon} alt="" className="h-5 w-5 shrink-0" />
+                    <span className="text-[15px]">{price}</span>
                   </>
                 )}
-              </button>
+              </motion.button>
             </div>
           );
         })}

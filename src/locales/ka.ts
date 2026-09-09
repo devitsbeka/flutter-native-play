@@ -905,6 +905,8 @@ export const ka = {
     starterPack: "მოიმატე ძალები",
     forBeginners: "დამწყებთათვის",
     megaPowers: "სპეციალური პაკეტები",
+    coinsWhat: "დახარჯე ძალებზე",
+    gemsWhat: "ყიდულობს მონეტებს და პაკეტებს",
     winMoreGames: "მოიგე მეტი თამაში",
     vipStatus: "VIP სტატუსი",
     vipBenefits: "2xp / ულიმიტო თამაში",

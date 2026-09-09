@@ -105,34 +105,38 @@ export function ShopItemCard({
       {t("extra.iapItemUnavailable")}
     </p>
   ) : (
-    <>
+    // The price rides INSIDE the button rather than on a line above it. Two
+    // separate things — a figure, then a button reading "Buy" — asked the
+    // reader to join them up, and on a two-across grid the pair ate the
+    // height that the pack name and its line needed. One control now says
+    // what it costs and does the buying, at roughly twice the old footprint
+    // so it is the obvious target on the card.
+    <motion.button
+      onClick={onClick}
+      // storeUnavailable is already handled above, where the whole block is
+      // replaced — repeated here so the one condition that must never let a
+      // purchase start is stated on the control that starts it.
+      disabled={isPurchased || isLoading || storeUnavailable}
+      aria-label={`${t('shop.buy')} ${name}`}
+      className="flex min-w-[100px] items-center justify-center gap-1.5 rounded-full px-6 py-3 font-bold text-[#402666]"
+      // White chunky pill, same recipe as the main page stat pills
+      style={{
+        background: "linear-gradient(180deg, #FFFFFF 0%, #FEFEFE 100%)",
+        boxShadow: "0 3px 0 #D8D0E8, 0 4px 12px rgba(0,0,0,0.08), inset 0 1px 0 #FFFFFF",
+        border: "2px solid #E8E0F5",
+      }}
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95, y: 2 }}
+    >
       {isLari ? (
-        <span className="font-bold text-base sm:text-lg text-pink-600 dark:text-pink-400">{lariPrice!.display}</span>
+        <span className="text-[15px] sm:text-base">{lariPrice!.display}</span>
       ) : (
-        <div className="flex items-center justify-center gap-1">
-          <img src={currencyIcon!} alt="" width={24} height={24} loading="lazy" decoding="async" className="w-4 h-4 sm:w-5 sm:h-5" />
-          <span className={`font-bold text-sm sm:text-base ${gradientActive ? "text-white drop-shadow-sm" : "text-gray-800"}`}>{price}</span>
-        </div>
+        <>
+          <img src={currencyIcon!} alt="" width={24} height={24} loading="lazy" decoding="async" className="h-5 w-5 shrink-0" />
+          <span className="text-[15px] sm:text-base">{price}</span>
+        </>
       )}
-      <motion.button
-        onClick={onClick}
-        // storeUnavailable is already handled above, where the whole block is
-        // replaced — repeated here so the one condition that must never let a
-        // purchase start is stated on the control that starts it.
-        disabled={isPurchased || isLoading || storeUnavailable}
-        className="px-4 py-1.5 rounded-full font-bold text-xs text-[#402666]"
-        // White chunky pill, same recipe as the main page stat pills
-        style={{
-          background: "linear-gradient(180deg, #FFFFFF 0%, #FEFEFE 100%)",
-          boxShadow: "0 3px 0 #D8D0E8, 0 4px 12px rgba(0,0,0,0.08), inset 0 1px 0 #FFFFFF",
-          border: "2px solid #E8E0F5",
-        }}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95, y: 2 }}
-      >
-        {t('shop.buy')}
-      </motion.button>
-    </>
+    </motion.button>
   );
 
   if (featured) {
@@ -186,9 +190,9 @@ export function ShopItemCard({
             </div>
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className={cn("font-bold leading-tight mb-0.5", gradientActive ? "text-white drop-shadow-sm text-base sm:text-lg" : "text-gray-900 text-sm sm:text-base")}>{name}</h3>
+            <h3 className={cn("font-bold leading-tight mb-0.5", gradientActive ? "text-white drop-shadow-sm text-[17px] sm:text-[19px]" : "text-gray-900 text-[16px] sm:text-[18px]")}>{name}</h3>
             {showDescription && description && (
-              <p className={cn("text-[13px] sm:text-[14px] leading-snug line-clamp-2", gradientActive ? "text-white/85" : "text-gray-500")}>{description}</p>
+              <p className={cn("text-[15px] sm:text-[16px] leading-snug line-clamp-2", gradientActive ? "text-white/90" : "text-gray-600")}>{description}</p>
             )}
           </div>
           <div className="shrink-0 flex flex-col items-center gap-1.5">{actionBlock}</div>
@@ -220,7 +224,7 @@ export function ShopItemCard({
         className={cn(
           "w-full rounded-[24px] transition-all relative overflow-hidden flex flex-col items-center text-center",
           "px-2.5 sm:px-3 p-3",
-          "h-[210px] sm:h-[222px]",
+          "h-[232px] sm:h-[246px]",
           !isPurchased && purchasable && !hasGradient && "liquid-glass"
         )}
         style={{
@@ -253,12 +257,12 @@ export function ShopItemCard({
         </div>
 
         {/* Name */}
-        <h3 className={cn("font-bold text-base sm:text-lg leading-tight mb-0.5", gradientActive ? "text-white drop-shadow-sm" : "text-gray-900")}>{name}</h3>
+        <h3 className={cn("font-bold text-[17px] sm:text-[19px] leading-tight mb-0.5", gradientActive ? "text-white drop-shadow-sm" : "text-gray-900")}>{name}</h3>
 
         {/* Description - flex-1 to push price section to bottom */}
         {showDescription && description && (
           <div className="flex-1 flex items-start">
-            <p className={cn("text-[13px] sm:text-[14px] leading-snug line-clamp-2 w-full", gradientActive ? "text-white/85" : "text-gray-500")}>{description}</p>
+            <p className={cn("text-[15px] sm:text-[16px] leading-snug line-clamp-2 w-full", gradientActive ? "text-white/90" : "text-gray-600")}>{description}</p>
           </div>
         )}
 
