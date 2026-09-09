@@ -83,19 +83,20 @@ describe("what the lobby does with it", () => {
     );
   });
 
-  it("takes the party's name only while the room still wears a dealt one, or none at all", () => {
-    // A brand new party room reads user_trivia_id before any name — dealt or
-    // typed — has landed on the row at all; `!currentRoom.room_name` is what
-    // keeps that first instant showing the trivia's title too, rather than
-    // "Game Room" for the moment before a name exists to judge.
-    expect(room).toMatch(
-      /isPartyRoom && \(!currentRoom\.room_name \|\| isGeneratedRoomName\(currentRoom\.room_name\)\)\s*\n\s*\? triviaDisplayTitle\(partyTitle, t\)\s*\n\s*: currentRoom\.room_name \|\| t\("extra\.gameRoomDefault"\)/,
-    );
+  it("the room's own name carries no party-only branch — room.room_name, like any other room", () => {
+    // Tried the other way round too (party name only while the room still
+    // wore a dealt one, else Untitled) and walked back (owner: "we don't
+    // need 'untitled', use random names for my trivia party rooms as we do
+    // on other rooms") — a party room's heading is exactly what every other
+    // room's is.
+    expect(room).toMatch(/const roomName = currentRoom\.room_name \|\| t\("extra\.gameRoomDefault"\);/);
   });
 
-  it("and an unnamed party is Untitled, not the brand", () => {
-    // The save stores `title || "MyTrivia Party"`, so the room would
-    // otherwise be called the product.
+  it("the chip still names the trivia, Untitled included for one that was never named", () => {
+    // The heading above is just the room's name now; what the chip names —
+    // the round being played — is still the trivia's own title, the same
+    // triviaDisplayTitle fallback everywhere else a trivia's own name is
+    // shown.
     expect(room).toMatch(/triviaDisplayTitle\(partyTitle, t\)/);
   });
 });

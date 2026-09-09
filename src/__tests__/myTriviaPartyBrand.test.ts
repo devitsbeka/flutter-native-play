@@ -215,17 +215,19 @@ describe("a party has no lobby, and delete deletes", () => {
  * said nothing about THIS party (owner: "show my trivia party name in
  * category picker raw instead 'my trivia party'").
  *
- * The heading half is settled next door in partyRoomIsItsParty: `roomName`
- * resolves to the party's own title while the room still wears a dealt name,
- * and to Untitled when the party was never named. The chip now reads
- * through the exact same `triviaDisplayTitle(partyTitle, t)` — the two can
- * no longer disagree about what to call an unnamed party either.
+ * The heading is a different thing, settled next door in
+ * partyRoomIsItsParty: `roomName` is just `currentRoom.room_name` now, the
+ * same as every other room's — no party-only branch, no Untitled stand-in.
+ * The chip's job is different from the heading's (what's being played, not
+ * what the room is called), so it keeps its own `triviaDisplayTitle`
+ * reading — Untitled here means "this trivia was never named", not
+ * anything about the room.
  */
 describe("the lobby names the trivia on the chip, not the product", () => {
   const roomLobby = read("src/components/team/RoomLobbyV2.tsx");
   const universal = read("src/components/lobby/UniversalLobby.tsx");
 
-  it("the chip reads the party's own title, the same way the heading does", () => {
+  it("the chip reads the party's own trivia title", () => {
     expect(roomLobby).toMatch(/label: isPartyRoom\s*\n\s*\? triviaDisplayTitle\(partyTitle, t\)/);
     expect(roomLobby).not.toMatch(/label: isPartyRoom\s*\n\s*\? t\("extra\.myTriviaPartyLabel"\)/);
     expect(roomLobby).not.toMatch(/heroKicker|roomKicker/);

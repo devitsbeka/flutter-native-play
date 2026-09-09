@@ -53,7 +53,6 @@ import { NotEnoughStakeModal } from "@/components/home/NotEnoughStakeModal";
 import { useGameStake } from "@/hooks/useGameStake";
 import { REWARDS } from "@/config/rewardConfig";
 import { partyRoomIconUrl } from "@/utils/partyCoverIcon";
-import { isGeneratedRoomName } from "@/utils/roomNameGenerator";
 import { triviaDisplayTitle } from "@/utils/triviaTitle";
 import { useFriends } from "@/hooks/useFriends";
 import {
@@ -947,22 +946,13 @@ export function RoomLobbyV2() {
   enoughPlayersRef.current = enoughPlayers;
   const canStartGame = participants.length >= 1;
   const roomGradient = getGradientById(currentRoom?.background_gradient);
-  /**
-   * A party room is called what the party is called.
-   *
-   * Only while the room still wears the name it was dealt: a host who has
-   * renamed it keeps their name, which `isGeneratedRoomName` is what tells
-   * apart — every room is created with a generated name, so "is it named?"
-   * cannot be answered by asking whether a name exists.
-   *
-   * `triviaDisplayTitle` handles the party that was never named: the save
-   * stores the brand rather than a blank, so an unnamed party arrives here
-   * already looking titled, and titled the same as every other one.
-   */
-  const roomName =
-    isPartyRoom && (!currentRoom.room_name || isGeneratedRoomName(currentRoom.room_name))
-      ? triviaDisplayTitle(partyTitle, t)
-      : currentRoom.room_name || t("extra.gameRoomDefault");
+  // A party room's own name is a room name, full stop — dealt at creation
+  // and renamed through the same sheet every other room uses, with no
+  // "Untitled"/trivia-title stand-in for it (owner: "we don't need
+  // 'untitled', use random names for my trivia party rooms as we do on
+  // other rooms"). The trivia's own title still names the CHIP below —
+  // what the room plays, not what it's called.
+  const roomName = currentRoom.room_name || t("extra.gameRoomDefault");
 
   // What the universal lobby shows for this room.
   const hasContent = queue.length > 0 || currentRoom.category_id || currentRoom.user_trivia_id;
