@@ -80,8 +80,11 @@ describe("the Public tab", () => {
     expect(ids).toEqual(["fresh", "rematch"]);
   });
 
-  it("the Private tab is not touched — it lists by participation", () => {
+  it("the Private tab does not use this rule — it hides only what is OVER (publicRoomsEnd.test.ts)", () => {
+    // Ended is "nothing to play right now"; the host's own list keeps such
+    // a room until an hour has passed with nobody back for a rematch.
     expect(read("src/hooks/useMyRooms.ts")).not.toMatch(/isEndedPublicRoom/);
+    expect(read("src/hooks/useMyRooms.ts")).toMatch(/isPublicRoomOver/);
   });
 });
 

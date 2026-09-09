@@ -302,3 +302,15 @@ jobs:
           psql -h localhost -p 5432 -U postgres \
             -v ON_ERROR_STOP=1 -f supabase/tests/16-pro-welcome.sql
 
+      # A public room ends with its play. One rule for when it is over —
+      # quiet an hour, and mid-round, finished, or played out with nothing
+      # to play — the Public tab refuses to list such a room, and the sweep
+      # the app runs before reading that tab closes it, cancelled and
+      # archived. Private rooms are never touched.
+      - name: Assert public rooms end
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -p 5432 -U postgres \
+            -v ON_ERROR_STOP=1 -f supabase/tests/17-public-rooms-end.sql
+
