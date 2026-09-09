@@ -3613,6 +3613,7 @@ export const ka = {
     tvOpenOnTV: "გახსენი ტელევიზორზე:",
     tvEnterCode: "შეიყვანე 4-ციფრიანი კოდი:",
     tvSheetPitch: "ითამაშეთ ერთად — თითო საკუთარი ტელეფონით.",
+    roomInvitedYou: "მოგიწვიეს",
     tvConnectBtn: "დაკავშირება",
     tvConnectingBtn: "დაკავშირება...",
     tvConnected: "დაკავშირებულია!",

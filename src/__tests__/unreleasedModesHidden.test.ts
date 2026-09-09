@@ -78,7 +78,7 @@ describe("the room lists", () => {
     expect(hook).toMatch(/const \{ developerMode \} = useDeveloperMode\(\);/);
     expect(hook).toMatch(/if \(!developerMode\) \{\s*\n\s*result = result\.filter\(\(room\) => !isDeveloperOnlyGameType\(room\.game_type_key\)\);/);
     // And the memo recomputes when the switch is flipped.
-    expect(hook).toMatch(/\}, \[activeRooms, filter, friendIds, searchQuery, invitedRoomIds, visibility, developerMode\]\);/);
+    expect(hook).toMatch(/\}, \[activeRooms, filter, friendIds, searchQuery, pendingInvites, visibility, developerMode\]\);/);
   });
 
   it("the public tab passes the viewer's mode in", () => {

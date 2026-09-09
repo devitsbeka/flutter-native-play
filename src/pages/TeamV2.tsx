@@ -570,6 +570,10 @@ function TeamContentV2() {
 
   // Check if rooms/trivias are empty to conditionally hide filter bar
   const { rooms: checkRooms } = useMyRooms({ limit: 1 });
+  // Invitations waiting on the Private tab, so the tab itself can say so
+  // while the player is scrolling Public (owner's ask): the notification
+  // centre has it too, but nothing on this screen pointed at the tab.
+  const { pendingInviteCount } = useMyRooms({ visibility: "private", limit: 1 });
   const { data: myPosts } = useMyQuizPosts();
   const { data: myCollections } = useMyCollections();
   const hasRooms = checkRooms.length > 0;
@@ -1353,6 +1357,14 @@ function TeamContentV2() {
                           />
                         )}
                         <span className="relative z-10 truncate">{tab.label}</span>
+                        {tab.id === "private" && pendingInviteCount > 0 && (
+                          <span
+                            aria-label={t("extra.roomInvitedYou")}
+                            className="relative z-10 flex h-[18px] min-w-[18px] shrink-0 items-center justify-center rounded-full bg-[#7126d5] px-1 text-[11px] font-bold leading-none text-white shadow-[0_2px_6px_rgba(113,38,213,0.35)]"
+                          >
+                            {pendingInviteCount}
+                          </span>
+                        )}
                       </button>
                     ))}
                   </div>

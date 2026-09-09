@@ -186,9 +186,35 @@ export const JUST_CREATED_MS = 10 * 60 * 1000;
  * "Touched" is somebody other than me being in it. Not the category: a host
  * who picked one and then left is exactly the case this is for.
  */
-export const isFreshOwnRoom = (room: PublicRoom, now = Date.now()): boolean => {
-  if (room.my_state !== "host") return false;
-  const stamp = room.last_activity_at ?? room.created_at;
+export const isFreshOwnRoom = (room: PublicRoom, now = Date.now()): boolean =>
+  room.my_state === "host" && isRoomStampFresh(room.last_activity_at ?? room.created_at, now);
+
+/**
+ * How long the ring on a room you just made stays up.
+ *
+ * It is a greeting, not a status. Long enough to catch the eye of somebody
+ * who has just pressed back and is looking for their room; short enough that
+ * it never becomes part of how the card looks (owner's ask). The card keeps
+ * its place at the top of the list for the full ten minutes either way — the
+ * ring answers "which one", the position answers "what should I do next",
+ * and they are different questions with different lifespans.
+ *
+ * Here rather than in either section because both tabs ring the same room:
+ * a host sent back from the lobby lands on whichever tab their room is
+ * listed under, and a ring that outlasted the other one on the tab next
+ * door would just be a bug nobody could see twice.
+ */
+export const FRESH_RING_MS = 3000;
+
+/**
+ * The clock half of the rule above, on its own.
+ *
+ * The Private tab tells "mine" apart by `is_host` rather than `my_state`, so
+ * it cannot call isFreshOwnRoom — but the room it rings is the same room, and
+ * a second copy of this arithmetic would be a second answer to "how new is
+ * new" waiting to drift from this one.
+ */
+export const isRoomStampFresh = (stamp: string | null | undefined, now = Date.now()): boolean => {
   const at = stamp ? Date.parse(stamp) : NaN;
   if (!Number.isFinite(at)) return false;
   // Absolute, so a device clock ahead of the server's cannot keep a

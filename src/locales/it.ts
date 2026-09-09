@@ -3183,6 +3183,7 @@ export const it: KaTranslations = {
     tvOpenOnTV: "Apri sulla TV:",
     tvEnterCode: "Inserisci codice a 4 cifre:",
     tvSheetPitch: "Giocate insieme — ognuno risponde dal proprio telefono.",
+    roomInvitedYou: "Sei invitato",
     tvConnectBtn: "Connetti",
     tvConnectingBtn: "Connessione...",
     tvConnected: "Connesso!",

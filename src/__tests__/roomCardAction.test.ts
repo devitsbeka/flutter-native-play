@@ -195,8 +195,8 @@ describe("where the invite flag comes from", () => {
   const hook = readFileSync(join(process.cwd(), "src/hooks/useMyRooms.ts"), "utf8");
 
   it("reads unread room_invite notifications", () => {
-    const fn = hook.match(/const invitedRoomIds = useMemo\([\s\S]*?\n {2}\}, \[notifications\]\);/);
-    expect(fn, "expected invitedRoomIds").not.toBeNull();
+    const fn = hook.match(/const pendingInvites = useMemo\([\s\S]*?\n {2}\}, \[notifications\]\);/);
+    expect(fn, "expected pendingInvites").not.toBeNull();
     expect(fn![0]).toMatch(/n\.type !== "room_invite" \|\| n\.read_at/);
   });
 

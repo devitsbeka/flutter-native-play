@@ -11,6 +11,7 @@ import iconPartyLounge from "@/assets/house-party.png";
 import { roomKind, routeForRoom } from "@/utils/roomRoutes";
 import { dealtRoomIcon } from "@/utils/roomCrests";
 import { useRoomIconPool } from "@/hooks/useRoomIconPool";
+import { FRESH_RING_MS, isRoomStampFresh } from "@/hooks/usePublicRooms";
 import { roomCardAction } from "@/utils/roomCardAction";
 import { RoomCardPlayButton } from "@/components/team/RoomCardPlayButton";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
@@ -1106,6 +1107,29 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
   // apart in a list of them.
   const createdAgo = useRoomAge(room.created_at);
 
+  /**
+   * The room I just made, marked the way the Public tab marks it.
+   *
+   * A host who leaves the lobby with "Create" lands on whichever tab their
+   * room is listed under, and a private room got no greeting at all: the
+   * list already put it first (see compareRooms — the newest thing that
+   * happened leads), but nothing said WHICH card was theirs. Same condition
+   * and same three seconds as the public card, so the two tabs cannot
+   * disagree about the room they are both describing.
+   */
+  const freshlyMine =
+    room.is_host && room.participants.length <= 1 && isRoomStampFresh(room.last_activity_at ?? room.created_at);
+  const [ringUp, setRingUp] = useState(freshlyMine);
+  useEffect(() => {
+    if (!freshlyMine) {
+      setRingUp(false);
+      return;
+    }
+    setRingUp(true);
+    const t = setTimeout(() => setRingUp(false), FRESH_RING_MS);
+    return () => clearTimeout(t);
+  }, [freshlyMine, room.id]);
+
   // NEW LOGIC: has_players_in_room = someone is actually INSIDE this room
   const hasPlayersInRoom = room.has_players_in_room;
   const hasTVSession = isActiveTVSession(room.tv_status);
@@ -1242,10 +1266,25 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
             boxShadow: "0 4px 0 0 hsl(var(--border)), 0 6px 20px -4px rgba(0,0,0,0.1)",
             ...(isMobile ? { x, opacity: cardOpacity } : {}),
           }}
-          className={`aspect-[1.45/1] md:aspect-[1.15/1] rounded-2xl overflow-hidden cursor-pointer ${!isMobile ? "transition-transform duration-200 hover:scale-[1.02]" : ""} active:scale-[0.98] ${
+          className={`relative aspect-[1.45/1] md:aspect-[1.15/1] rounded-2xl overflow-hidden cursor-pointer ${!isMobile ? "transition-transform duration-200 hover:scale-[1.02]" : ""} active:scale-[0.98] ${
             room.has_unread_activity ? "ring-2 ring-primary ring-offset-2" : ""
           }`}
         >
+          {/* Drawn over the card, inside the same clip, so it sits exactly on
+              the card's edge — the Public tab's card does it this way too. It
+              fades out and unmounts rather than turning invisibly forever. */}
+          <AnimatePresence>
+            {ringUp && (
+              <motion.span
+                aria-hidden
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.45 }}
+                className="fresh-room-ring pointer-events-none absolute inset-0 z-30 rounded-2xl"
+              />
+            )}
+          </AnimatePresence>
           <GradientBackground
             colors={gradientPreset.colors}
             gradientSize="125% 125%"
@@ -1284,6 +1323,27 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
                   />
                   {createdAgo || t("extra.roomStatusWaiting")}
                 </span>
+                {/* Somebody is waiting for this player in here. The invite
+                    already sorted the card to the top and sits in the
+                    notification centre; on the card itself nothing said so,
+                    and a room you were asked into looked like every other
+                    (owner's ask). Their face, so it also says who. */}
+                {room.has_pending_invite && (
+                  <span className="inline-flex min-w-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-[#7126d5] py-0.5 pl-0.5 pr-2.5 text-xs font-bold text-white shadow-[0_2px_6px_rgba(113,38,213,0.35)]">
+                    {room.pending_invite_from?.avatar_url ? (
+                      <SafeAvatarImage
+                        avatarUrl={room.pending_invite_from.avatar_url}
+                        fallback={room.pending_invite_from.nickname ?? "?"}
+                        containerClassName="h-5 w-5 shrink-0 overflow-hidden rounded-full"
+                      />
+                    ) : (
+                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/20">
+                        <UserPlus className="h-3 w-3" />
+                      </span>
+                    )}
+                    <span className="truncate">{t("extra.roomInvitedYou")}</span>
+                  </span>
+                )}
               </div>
 
               {/* Right: how many are in the room, then the menu.

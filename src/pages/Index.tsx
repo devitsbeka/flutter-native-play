@@ -284,7 +284,7 @@ export default function Index() {
   const { coins, gems, addCoins } = useCurrency();
   const { powerUps } = useUserPowerUps();
   const { totalStars } = useTotalStars();
-  const { canClaimDaily, canClaimChest, dailySecondsLeft } = useRewardTimers();
+  const { canClaimDaily, canClaimChest } = useRewardTimers();
   const { missions, completedCount, totalCount } = useMissions();
   const { playsRemaining, maxPlays, canPlay, isVip, loading: vipLoading, regenPlayAvailable, timeUntilNextPlay, resetsAt, useRegenPlay, freeGamesExhausted } = usePlayLimit();
   const { subscription } = useVipStatus();
@@ -781,12 +781,6 @@ export default function Index() {
     setIsDailyRewardsOpen(true);
   }, [canClaimDaily, claimDailyNow]);
 
-  // Under the gift tab on the phone home: how long today's reward can still
-  // be claimed ("3h 21m", Figma 1076:3591), or the call to claim it.
-  const giftLabel = canClaimDaily
-    ? t("dailyRewards.claim")
-    : `${Math.floor(dailySecondsLeft / 3600)}h ${Math.floor((dailySecondsLeft % 3600) / 60)}m`;
-
   // /dev/v2 previews the 3D world-map homepage for logged-in users; the
   // regular responsive homepage below serves the main route.
   if (user && isDevV2 && LoggedInHomeV2) {
@@ -1232,7 +1226,7 @@ export default function Index() {
             animatedAvatarUrl={profile?.animated_avatar_url}
             coins={coins}
             gems={gems}
-            giftLabel={giftLabel}
+            canClaimGift={canClaimDaily}
             onAvatarClick={() => openAvatarModal()}
             onNameClick={() => setShowChangeNameModal(true)}
             onCoinsClick={() => navigate("/power-ups?section=coins")}

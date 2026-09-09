@@ -20,7 +20,7 @@ import { RoomCardPlayButton } from "@/components/team/RoomCardPlayButton";
 import { GreenPlayButton } from "@/components/shared/GreenPlayButton";
 import type { QueueItem } from "@/hooks/useRoomCategoryQueue";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
-import { MobileHeroWidgets, MobileProfileCard } from "@/components/home/MobileHome";
+import { MobileProfileCard } from "@/components/home/MobileHome";
 import { AnimatedMascotScene } from "@/components/home/AnimatedMascotScene";
 import { RoomCard, RoomCardGrid } from "@/components/team/MyRoomsSection";
 import { AirbnbCategoryCard } from "@/components/discover/AirbnbCategoryCard";
@@ -226,11 +226,19 @@ export default function HomeShot() {
       has_others_online: true,
       has_players_in_room: true,
     };
+    // A room this player was asked into and has not opened yet.
+    const invited = {
+      ...base,
+      is_host: false,
+      has_pending_invite: true,
+      pending_invite_from: { nickname: "Britney", avatar_url: null },
+    };
     return (
       <div className="min-h-[100dvh] w-full space-y-4 bg-[#faf6ff] p-4">
         <div className="grid grid-cols-1 gap-3">
           <RoomCardGrid room={alone} index={0} onJoin={noop} onDelete={noop} onLeave={noop} onInvite={noop} />
           <RoomCardGrid room={withGuest} index={1} onJoin={noop} onDelete={noop} onLeave={noop} onInvite={noop} />
+          <RoomCardGrid room={invited} index={2} onJoin={noop} onDelete={noop} onLeave={noop} onInvite={noop} />
         </div>
       </div>
     );
@@ -259,16 +267,15 @@ export default function HomeShot() {
       style={{ "--home-header-h": "69px" } as React.CSSProperties}
     >
       <img src={scene} alt="" className="absolute inset-x-0 top-0 w-full" draggable={false} />
-      <MobileHeroWidgets giftLabel="3h 21m" onGiftClick={noop} onStreakClick={noop} />
       <MobileProfileCard
         nickname="Beka"
         avatarUrl={FACE}
-        coins={61400}
-        gems={129}
+        // ?claim=0 shows the gift in its nothing-to-claim state.
+        canClaimGift={params.get("claim") !== "0"}
         onAvatarClick={noop}
         onNameClick={noop}
-        onCoinsClick={noop}
-        onGemsClick={noop}
+        onGiftClick={noop}
+        onStreakClick={noop}
       />
     </div>
   );

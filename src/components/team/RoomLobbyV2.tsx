@@ -502,6 +502,26 @@ export function RoomLobbyV2() {
     navigate("/team", { replace: true });
   };
 
+  /**
+   * "Create": the way out of a room that is set up but cannot start yet.
+   *
+   * A host alone in their own room met a dead Start button — the screen's one
+   * big call to action, greyed, in front of the person it was for — and the
+   * only way on was the back arrow, which reads as abandoning what they just
+   * built. The room IS built; what it needs is somebody else, and that is on
+   * the list, not in here (owner: "instead start game disabled show create
+   * button and after clicking it user goes on online game page").
+   *
+   * It lands on the tab the room is actually listed under, because a public
+   * room shown on the Private tab looks like it was not published. Both
+   * lists already lead with the room just made and ring it for three seconds
+   * (isFreshOwnRoom / .fresh-room-ring), so the room is where the eye lands.
+   */
+  const handleDoneCreating = () => {
+    exitRoom();
+    navigate(`/team?tab=${currentRoom?.is_public ? "public" : "private"}`, { replace: true });
+  };
+
   const handleLeaveConfirm = () => {
     setShowLeaveConfirm(true);
   };
@@ -971,6 +991,16 @@ export function RoomLobbyV2() {
    * rule handleStartGame does: a room holding an explicit selection plays it
    * first and the queue follows; otherwise the queue's head opens.
    */
+  /**
+   * Set up, and waiting on a person rather than on the host.
+   *
+   * The one state where Start had nothing to offer: what it plays is
+   * decided, so there is no category to pick, and it cannot begin, so there
+   * is nothing to press. That is where the button becomes "Create" and
+   * hands the host back to the list their room is on.
+   */
+  const awaitingPlayers = !needsCategorySelection && !enoughPlayers && !isStarting;
+
   const heldRound = (currentRoom.category_id || currentRoom.user_trivia_id)
     ? {
         // Through the same resolver the queue rows use. The room's own
@@ -1352,21 +1382,22 @@ export function RoomLobbyV2() {
                 ? t("extra.rlStarting")
                 : needsCategorySelection
                   ? t("extra.rlChooseCategory")
-                  : t("lobby.uStartGame"),
-              onPress: handleStartOrPick,
-              disabled:
-                !canStartGame
-                || isStarting
-                || loading
-                || (!needsCategorySelection && !enoughPlayers),
+                  : awaitingPlayers
+                    ? t("extra.createBtn")
+                    : t("lobby.uStartGame"),
+              onPress: awaitingPlayers ? handleDoneCreating : handleStartOrPick,
+              // Short of a second player is no longer a dead button: that
+              // case is "Create" above, and it goes somewhere.
+              disabled: !canStartGame || isStarting || loading,
               loading: isStarting,
               icon: needsCategorySelection ? <Plus className="h-5 w-5" /> : undefined,
-              caption:
-                !needsCategorySelection && !enoughPlayers && !isStarting
-                  ? invitedPlayers > 0
-                    ? t("extra.rlWaitingOnInvites")
-                    : t("extra.rlNeedsSecondPlayer")
-                  : null,
+              // Still says why the game has not begun; it just sits under a
+              // button that now leads somewhere instead of over a dead one.
+              caption: awaitingPlayers
+                ? invitedPlayers > 0
+                  ? t("extra.rlWaitingOnInvites")
+                  : t("extra.rlNeedsSecondPlayer")
+                : null,
             }
           : {
               label: pingCooldown ? t("extra.pingHostSent") : t("extra.pingHostBtn"),
