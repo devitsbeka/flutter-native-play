@@ -144,6 +144,37 @@ subscriptions, deactivates seven rows for products that no longer exist, and
 deletes the two `app_settings` rows that invited a live Stripe secret key into
 the database. Safe at any point.
 
+### 4. `20261104130000_avatar_generation_is_server_charged.sql`
+
+https://raw.githubusercontent.com/devitsbeka/flutter-native-play/claude/pricing-economics-audit-q29u8m/supabase/migrations/20261104130000_avatar_generation_is_server_charged.sql
+
+Adds `claim_avatar_generation` and `refund_avatar_generation`, so AI avatar
+generation is charged and capped by the server instead of by the browser. Pairs
+with the `generate-avatar` deploy — apply this before that function ships, or
+it calls an RPC that does not exist.
+
+### 5. `20261104140000_internal_functions_are_internal.sql`
+
+https://raw.githubusercontent.com/devitsbeka/flutter-native-play/claude/pricing-economics-audit-q29u8m/supabase/migrations/20261104140000_internal_functions_are_internal.sql
+
+**Run this one first if you run nothing else today.**
+
+It revokes five SECURITY DEFINER functions from `anon` and `authenticated`.
+The important one is `apply_currency_grant` — the uncapped credit primitive
+that `credit_gameplay_reward` wraps so a ceiling can be applied first. It is
+callable by any signed-in user right now:
+
+```js
+await supabase.rpc('apply_currency_grant', {
+  p_user_id: me, p_kind: 'x', p_coins: 999999, p_gems: 9999 })
+```
+
+Every cap in `currency_grant_limits` bypassed, by the function the whole
+server-authoritative currency system was built around. This one is live today,
+predates everything else on this branch, and is **safe to apply on its own, in
+any order, with the old client still deployed** — nothing legitimate calls
+these five from a browser.
+
 ---
 
 ## Verify it applied
@@ -168,7 +199,15 @@ UNION ALL SELECT 'purchase_shop_item granted to authenticated', count(*)::text, 
 UNION ALL SELECT 'client write policies on user_power_ups', count(*)::text, '0'
   FROM pg_policies WHERE tablename='user_power_ups' AND cmd IN ('INSERT','UPDATE')
 UNION ALL SELECT 'client INSERT policy on user_avatar_frames', count(*)::text, '0'
-  FROM pg_policies WHERE tablename='user_avatar_frames' AND cmd='INSERT';
+  FROM pg_policies WHERE tablename='user_avatar_frames' AND cmd='INSERT'
+UNION ALL SELECT 'internal functions still callable', count(*)::text, '0'
+  FROM pg_proc p
+  JOIN pg_namespace n ON n.oid = p.pronamespace
+  CROSS JOIN (VALUES ('anon'), ('authenticated')) AS r(rolname)
+ WHERE n.nspname = 'public'
+   AND p.proname IN ('apply_currency_grant','befriend_room_players','grant_power_ups',
+                     'claim_avatar_generation','refund_avatar_generation')
+   AND has_function_privilege(r.rolname, p.oid, 'EXECUTE');
 ```
 
 Read-only. Run it as often as you like.
@@ -184,6 +223,7 @@ Read-only. Run it as often as you like.
 | `stripe-gem-webhook` | §1 — handles `customer.subscription.*` now. This is the one that matters. |
 | `create-pro-checkout` | §2 — requires auth, and reads the repriced `_shared/pricing.ts` |
 | `create-gem-checkout` | §9 — price key from `pack.id`, and the repriced table |
+| `generate-avatar` | §15 — charges and caps AI generation, which it did not do at all |
 
 `supabase/functions/_shared/` is not deployable on its own — Deno bundles it
 into each function that imports it, so those files ship with the three above
@@ -202,12 +242,13 @@ no harm; leaving them alone does none either.
 
 Copy this as-is:
 
-> Please deploy these three Supabase edge functions from the current `main`,
+> Please deploy these four Supabase edge functions from the current `main`,
 > exactly as the code stands, and nothing else:
 >
 > - `stripe-gem-webhook`
 > - `create-pro-checkout`
 > - `create-gem-checkout`
+> - `generate-avatar`
 >
 > They import shared modules from `supabase/functions/_shared/`, which are
 > bundled automatically — no action needed there.
