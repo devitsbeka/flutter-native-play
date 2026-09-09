@@ -101,19 +101,19 @@ describe("what the lobby does with it", () => {
 });
 
 /**
- * The rename sheet's own auto-namer stays off for a party room.
+ * The rename sheet's own auto-namer is back on for a party room too.
  *
- * RoomIconPickerModal already had an `autoName` prop for exactly this shape
- * of problem — a team's crest picker sets it false so browsing crests does
- * not fight the captain's own typing (see the prop's own docstring). A party
- * room's sheet left it at the default, so tapping through icons kept
- * overwriting "Untitled" (or the trivia's own title) with a fresh AI-dealt
- * name the host never asked for (owner: "if clicks another icon it
- * shouldn't give room random name, remove that random names from my trivia
- * party rooms").
+ * A party room's sheet briefly turned it off (`autoName={!isPartyRoom}`),
+ * on the reasoning that tapping through icons kept overwriting "Untitled"
+ * (or the trivia's own title) with a fresh AI-dealt name. That traded away
+ * the dealt name entirely — a fresh party room now stays untitled forever
+ * unless the host types something — so a party room's rename sheet deals
+ * one exactly like every other room's does (owner: "bring back random
+ * names"). It still never overwrites a name typed in THIS sheet session —
+ * `hasManuallyEditedName` guards that regardless of `autoName`.
  */
-describe("the icon picker's own namer stays off for a party room", () => {
-  it("autoName is false exactly when isPartyRoom is true", () => {
-    expect(room).toMatch(/autoName=\{!isPartyRoom\}/);
+describe("the icon picker's own namer is on for every room, party included", () => {
+  it("carries no party-only override", () => {
+    expect(room).not.toMatch(/autoName=/);
   });
 });

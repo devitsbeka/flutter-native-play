@@ -1233,14 +1233,15 @@ export function RoomLobbyV2() {
           // resolved here too rather than only at the picker.
           : roundIconSlug(firstQueue);
         return {
-          // A party's chip names the PRODUCT, not the party's own title.
-          // The heading under the emblem already carries the title the host
-          // picked, so the chip repeating it said nothing twice and left
-          // nothing on the screen saying this room was a party at all
-          // (owner). Only a real party: a room built on a trivia the player
-          // merely WROTE keeps its round's own name, which is its topic.
+          // The chip names what is actually being played: the trivia's own
+          // title, the same one the round list and the "+" picker show for
+          // every other round. The generic product name ("My Trivia Party")
+          // sat here once and said nothing about THIS party in particular —
+          // triviaDisplayTitle is the same fallback the room's own heading
+          // above it uses, so a still-unnamed trivia reads as "Untitled"
+          // here too rather than repeating the brand.
           label: isPartyRoom
-            ? t("extra.myTriviaPartyLabel")
+            ? triviaDisplayTitle(partyTitle, t)
             : freshStart || !firstName
               ? t("lobby.uSelectCategory")
               : firstName,
@@ -1578,15 +1579,6 @@ export function RoomLobbyV2() {
         currentIconUrl={roomFace}
         roomName={roomName}
         onConfirm={handleUpdateRoomIconAndName}
-        // The sheet's own AI namer rewrites the name field on every icon tap
-        // — right for an ordinary room choosing a face for the first time,
-        // wrong for a party, whose identity is the trivia it plays. Left on,
-        // browsing icons kept overwriting "Untitled" (or the trivia's own
-        // title) with a fresh random name the host never asked for and had
-        // to notice and delete (owner: "if clicks another icon it shouldn't
-        // give room random name, remove that random names from my trivia
-        // party rooms").
-        autoName={!isPartyRoom}
       />
 
       {/* The rounds, in the order they play, drop under the chip: see the
