@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import retroTvIcon from "@/assets/images/retro-tv.png";
 import { motion, AnimatePresence } from "framer-motion";
@@ -49,6 +49,7 @@ import { classicLobbyScene } from "@/utils/lobbyScene";
 import { gameRoomsHasApproval, roomVisibilityFields } from "@/utils/roomVisibility";
 import { dealtRoomIcon, fetchCrestPool } from "@/utils/roomCrests";
 import { hasPressedCreate, rememberPressedCreate } from "@/utils/roomCreateOffered";
+import { useParticipantPresence } from "@/hooks/useParticipantPresence";
 import coinIconAsset from "@/assets/tb-lobby/coin.png";
 import { NotEnoughStakeModal } from "@/components/home/NotEnoughStakeModal";
 import { useGameStake } from "@/hooks/useGameStake";
@@ -129,6 +130,18 @@ export function RoomLobbyV2() {
    * or the last guest leaves between the tap and the write.
    */
   const enoughPlayersRef = useRef(false);
+  /**
+   * Who of the people seated here is in the app right now.
+   *
+   * Up here with the other hooks, not down beside the count that reads it:
+   * everything below `if (!currentRoom) return null` runs on some renders
+   * and not others, and a hook may not.
+   */
+  const seatedIdsForPresence = useMemo(
+    () => participants.filter((p) => (p.status as string) !== "invited").map((p) => p.user_id),
+    [participants],
+  );
+  const { online: onlineInRoom, loaded: presenceLoaded } = useParticipantPresence(seatedIdsForPresence);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   // Can this player cover a seat at the table? The pot is collected when the
   // round ends, but being told then is being told too late.
@@ -978,7 +991,34 @@ export function RoomLobbyV2() {
   // answers sits out of it (willBeObserver), so that room needs two guests
   // rather than one.
   const answeringPlayers = seatedPlayers - (willBeObserver ? 1 : 0);
-  const enoughPlayers = answeringPlayers >= 2;
+  // Published to the rooms page, which decides how this room is played:
+  // through, together, now. Read here rather than beside the Visibility row
+  // that writes it, because the Start button below asks the same question.
+  const isPublicRoom = Boolean((currentRoom as { is_public?: boolean }).is_public);
+  /**
+   * A PUBLIC room counts the people who are actually in the app.
+   *
+   * A published room is played through: everyone answers now and the results
+   * screen names a winner and a loser while they are all still looking at
+   * it. Seated-but-gone does not do that — a stranger who joined this
+   * morning and closed the app is a row in the table and nobody at it, and
+   * starting on their behalf produces a "result" against somebody who never
+   * saw a question (owner: "we need literal online players to start game in
+   * public rooms to see results instantly who won who lose").
+   *
+   * A PRIVATE room deliberately keeps counting seats: those are played
+   * across the evening as each invited friend gets to it, so requiring them
+   * all to be awake at once is the opposite of what it is for.
+   *
+   * Presence is only allowed to WITHHOLD the button once it has actually
+   * answered — before `loaded` the set is empty, which is indistinguishable
+   * from everybody having closed the app, and would grey out Start on a room
+   * with a full couch for as long as the first fetch takes.
+   */
+  const onlineAnswerers =
+    seatedIdsForPresence.filter((id) => onlineInRoom.has(id)).length - (willBeObserver ? 1 : 0);
+  const enoughPlayers =
+    isPublicRoom && presenceLoaded ? onlineAnswerers >= 2 : answeringPlayers >= 2;
   enoughPlayersRef.current = enoughPlayers;
   const canStartGame = participants.length >= 1;
   const roomGradient = getGradientById(currentRoom?.background_gradient);
@@ -1155,7 +1195,6 @@ export function RoomLobbyV2() {
       .update({ ...(await roomVisibilityFields(value === "public")) })
       .eq("id", currentRoom.id);
   };
-  const isPublicRoom = Boolean((currentRoom as { is_public?: boolean }).is_public);
   /**
    * Who may walk in.
    *
