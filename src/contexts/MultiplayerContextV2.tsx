@@ -1,5 +1,6 @@
 // Multiplayer Context V2 - Manages room-based trivia games
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef, useMemo } from "react";
+import { isRoomStale } from "@/utils/roomStale";
 import { t as tStandalone } from "@/utils/standaloneTranslation";
 import { supabase } from "@/integrations/supabase/client";
 import { roomApprovalFields, roomVisibilityFields } from "@/utils/roomVisibility";
@@ -86,12 +87,6 @@ const shouldHostObserve = async (
   return ownsTrivia && knowsAnswers;
 };
 
-// Check if a room is stale (inactive for more than 1 hour)
-const isRoomStale = (lastActivityAt: string | null, createdAt: string): boolean => {
-  const oneHourAgo = Date.now() - 60 * 60 * 1000; // 1 hour in ms
-  const activityTime = new Date(lastActivityAt || createdAt).getTime();
-  return activityTime < oneHourAgo;
-};
 
 // Helper to safely delete room questions with verification (prevents race condition)
 const safeDeleteRoomQuestions = async (roomId: string): Promise<boolean> => {
@@ -1018,7 +1013,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
                   console.log(`[MP] All ${activePlayers.length} players finished - marking room completed`);
                   let completeQuery = supabase
                     .from("game_rooms")
-                    .update({ status: "completed", completed_at: new Date().toISOString() })
+                    .update({ status: "completed", completed_at: new Date().toISOString(), last_activity_at: new Date().toISOString() })
                     .eq("id", roomId)
                     .eq("status", "playing"); // Prevent double-update race
                   // CAS on the game id: if a new round started between our room
@@ -1429,7 +1424,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       }
       
       // Check if room is stale (1+ hour of inactivity) and needs reset
-      const stale = isRoomStale(room.last_activity_at, room.created_at);
+      const stale = isRoomStale(room);
       
       if (stale && (room.status === "playing" || room.status === "completed")) {
         console.log(`[MP] Room ${room.room_code} is stale (${room.status}), resetting to lobby`);
@@ -1854,6 +1849,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             total_questions: questions.length,
             status: "playing",
             started_at: roundStartedAt,
+            last_activity_at: roundStartedAt,
             current_game_id: game?.id,
             host_is_observer: shouldObserve,
           })
@@ -2115,6 +2111,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       .update({
         status: "playing",
         started_at: roundStartedAt,
+        last_activity_at: roundStartedAt,
         current_game_id: game?.id,
         host_is_observer: hostShouldObserve,
         total_questions: questions.length,
@@ -2684,6 +2681,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           .update({
             status: "playing",
             started_at: roundStartedAt,
+            last_activity_at: roundStartedAt,
             current_game_id: game?.id,
             host_is_observer: hostShouldObserve,
             total_questions: questions.length,
@@ -2852,6 +2850,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         .update({
           status: "playing",
           started_at: roundStartedAt,
+          last_activity_at: roundStartedAt,
           current_game_id: game?.id,
           host_is_observer: hostShouldObserve,
           total_questions: questions.length,
@@ -3080,6 +3079,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
               total_questions: questions.length,
               status: "playing",
               started_at: roundStartedAt,
+              last_activity_at: roundStartedAt,
               current_game_id: game?.id,
               host_is_observer: hostShouldObserve,
             })
@@ -3292,6 +3292,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           total_questions: questions.length,
           status: "playing",
           started_at: roundStartedAt,
+          last_activity_at: roundStartedAt,
           current_game_id: game?.id,
           host_is_observer: hostShouldObserve,
         })
