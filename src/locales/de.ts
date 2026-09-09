@@ -2880,7 +2880,6 @@ export const de: KaTranslations = {
     sendingRematch: "Wird gesendet...",
     rematch: "Revanche",
     continueBtn: "Weiter",
-    addCategory: "Kategorie hinzufügen",
     challengeFriend: "Freund herausfordern",
     waitingForHostResult: "Warten auf den Host",
     challengeResults: "Herausforderungs-Ergebnisse",

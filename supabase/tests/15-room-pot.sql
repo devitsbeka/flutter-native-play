@@ -107,6 +107,17 @@ BEGIN
   v_res := public.settle_room_round(v_room, v_game);
   PERFORM pg_temp.must_equal(v_res->>'reason', 'already_settled', 'a second call is a no-op');
   PERFORM pg_temp.must_equal(pg_temp.coins_of(b), 2500, 'and moves no coins');
+  -- ...but still says what moved, so the second device's screen can show
+  -- the winner their prize (20261015100100): one line per player, read
+  -- back from the ledger, and the pot they add up to.
+  PERFORM pg_temp.must_equal(jsonb_array_length(v_res->'deltas'), 2, 'a second call still reports every seat');
+  PERFORM pg_temp.must_equal((v_res->>'pot')::int, 1000, 'and the pot they staked');
+  PERFORM pg_temp.must_equal(
+    (SELECT (line->>'prize')::int FROM jsonb_array_elements(v_res->'deltas') line WHERE line->>'user_id' = b::text),
+    1000, 'the winner is told the prize on any device');
+  PERFORM pg_temp.must_equal(
+    (SELECT (line->>'staked')::int FROM jsonb_array_elements(v_res->'deltas') line WHERE line->>'user_id' = a::text),
+    500, 'and the loser the stake');
 
   -- ── four players: 70 / 20 / 10 ──────────────────────────────────────────
   UPDATE public.profiles SET coins = 2000 WHERE user_id IN (a, b, c, d);

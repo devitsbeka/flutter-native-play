@@ -2903,7 +2903,6 @@ export const es: KaTranslations = {
     sendingRematch: "Enviando...",
     rematch: "Revancha",
     continueBtn: "Continuar",
-    addCategory: "Añadir categoría",
     challengeFriend: "Desafiar a un amigo",
     waitingForHostResult: "Esperando al anfitrión",
     challengeResults: "Resultados del desafío",

@@ -2895,7 +2895,6 @@ export const it: KaTranslations = {
     sendingRematch: "Invio...",
     rematch: "Rivincita",
     continueBtn: "Continua",
-    addCategory: "Aggiungi Categoria",
     challengeFriend: "Sfida Amico",
     waitingForHostResult: "In attesa dell'host",
     challengeResults: "Risultati Sfida",
