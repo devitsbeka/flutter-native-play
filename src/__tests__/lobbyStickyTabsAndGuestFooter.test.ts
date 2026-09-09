@@ -25,12 +25,17 @@ const battle = read("src/pages/TeamBattlePage.tsx");
 
 describe("the tabs are sticky", () => {
   it("inside the body's scroller, a hair under the chip, over the rows, blurred", () => {
-    expect(universal).toMatch(/<div className="sticky top-\[10px\] z-20 flex items-center gap-\[6px\] rounded-\[28px\] border border-\[#ceb8e4\] bg-\[rgba\(255,255,255,0\.77\)\] p-\[10px\] shadow-\[0px_8px_0px_0px_#d0bbe3\] backdrop-blur-md">/);
+    // A hair under the chip's UNDERSIDE: the body runs up under the chip now,
+    // so the offset is the chip's measured clearance plus 10 (lobbyTopHaze.test).
+    expect(universal).toMatch(/<div className="sticky top-\[calc\(var\(--chip-clearance\)\+10px\)\] z-20 flex items-center gap-\[6px\] rounded-\[28px\] border border-\[#ceb8e4\] bg-\[rgba\(255,255,255,0\.77\)\] p-\[10px\] shadow-\[0px_8px_0px_0px_#d0bbe3\] backdrop-blur-md">/);
   });
 
   it("and the chip stays outside the scroller, so there is nothing to slide under", () => {
     const chip = universal.indexOf("ref={categoryRowRef}");
-    const scroller = universal.indexOf('className="relative z-10 min-h-0 flex-1 overflow-y-auto overflow-x-hidden"');
+    // The chip is outside the scroller in the tree; the scroller runs up
+    // under it by a measured clearance and the tabs offset by the same, so
+    // they still never slide under the chip (lobbyTopHaze.test).
+    const scroller = universal.indexOf('className="relative z-10 mt-[calc(var(--chip-clearance)*-1)] min-h-0 flex-1 overflow-y-auto overflow-x-hidden pt-[var(--chip-clearance)]"');
     expect(chip).toBeGreaterThan(-1);
     expect(chip).toBeLessThan(scroller);
   });

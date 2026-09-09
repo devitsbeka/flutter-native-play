@@ -83,7 +83,9 @@ describe("the round list drops under the chip", () => {
 
   it("the chip row is outside the scroller, so it stays put", () => {
     const row = universal.indexOf("The category row, OUTSIDE the scroller");
-    const body = universal.indexOf('className="relative z-10 min-h-0 flex-1 overflow-y-auto overflow-x-hidden"');
+    // The body now runs up under the chip by a measured clearance
+    // (lobbyTopHaze.test); the row is still outside it in the tree.
+    const body = universal.indexOf('className="relative z-10 mt-[calc(var(--chip-clearance)*-1)] min-h-0 flex-1 overflow-y-auto overflow-x-hidden pt-[var(--chip-clearance)]"');
     expect(row).toBeGreaterThan(-1);
     expect(row).toBeLessThan(body);
     expect(universal).toMatch(/className="relative z-40 mx-auto mt-\[13px\] w-full max-w-\[700px\] shrink-0 px-\[28px\] md:max-w-\[520px\]"/);

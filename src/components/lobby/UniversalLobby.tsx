@@ -5,7 +5,8 @@ import SpotlightSearch from "@/components/search/SpotlightSearch";
 import { MyTriviaLiveLogo } from "@/components/shared/MyTriviaLiveLogo";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { cn } from "@/lib/utils";
-import { FooterHaze } from "@/components/shared/FooterHaze";
+import type { CSSProperties } from "react";
+import { FooterHaze, TopHaze } from "@/components/shared/FooterHaze";
 import bgBlob1 from "@/assets/tb-lobby/bg-blob-1.jpg";
 import bgBlob2 from "@/assets/tb-lobby/bg-blob-2.png";
 import chipTv from "@/assets/lobby/chip-tv.webp";
@@ -393,6 +394,33 @@ export function UniversalLobby({
    * indicator's inset — stays in the calc where env() can do it.
    */
   const categoryRowRef = useRef<HTMLDivElement>(null);
+  /**
+   * How far the body has to start below the frame's top to clear the chip.
+   *
+   * The body runs UP under the category chip now, the way it runs under the
+   * footer, so what scrolls past the chip frosts into the haze instead of
+   * being cut off at a line (owner: "use same blur in top while scrolling
+   * what we use in bottom"). The chip row is measured — it is a row of
+   * text, and text wraps — and the body pulls itself up by that much and
+   * pads by the same, so nothing it holds starts under the chip; the sticky
+   * tabs add it to their own offset for the same reason. Zero when there is
+   * no chip: the body then starts where it always did.
+   */
+  const [chipClearance, setChipClearance] = useState(0);
+  const hasChip = !!category;
+  useLayoutEffect(() => {
+    const el = categoryRowRef.current;
+    if (!el) {
+      setChipClearance(0);
+      return;
+    }
+    // + 13 for the row's own mt-[13px].
+    const update = () => setChipClearance(el.offsetHeight + 13);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasChip]);
   const [menuMaxHeight, setMenuMaxHeight] = useState<string | null>(null);
   const menuOpen = !!categoryMenu?.open;
   useLayoutEffect(() => {
@@ -516,7 +544,7 @@ export function UniversalLobby({
   return (
     <div
       className="relative flex h-[100dvh] w-full flex-col overflow-hidden safe-bleed"
-      style={{ background: "#f5d9ff" }}
+      style={{ background: "#f5d9ff", "--chip-clearance": `${chipClearance}px` } as CSSProperties}
     >
       {/* Backdrop (1018:6748): the lilac blobs under a wash, then the scene
           blurred to a haze across the top two thirds. */}
@@ -641,6 +669,12 @@ export function UniversalLobby({
           {...arrive(0.24)}
           className="relative z-40 mx-auto mt-[13px] w-full max-w-[700px] shrink-0 px-[28px] md:max-w-[520px]"
         >
+          {/* The haze under the chip: the footer's ramp, upside down (TopHaze),
+              from the header's underside — the row's mt-[13px] above — to
+              120px below the chip, over the body scrolling up under it. */}
+          <div aria-hidden className="pointer-events-none absolute inset-x-[-100vw] bottom-0 top-[-13px] -z-10">
+            <TopHaze />
+          </div>
           <div>
             <Ring on={!!category.glow} className="min-w-0">
               <Chip
@@ -701,7 +735,10 @@ export function UniversalLobby({
       {/* Body (1018:6818): the name, the card. Scrolls itself — the
           document never does on the device. */}
       <div
-        className="relative z-10 min-h-0 flex-1 overflow-y-auto overflow-x-hidden"
+        // Pulled up under the category chip by the chip's own height and
+        // padded by the same (chipClearance): the rows scroll up into the
+        // haze under the chip rather than ending at its underside.
+        className="relative z-10 mt-[calc(var(--chip-clearance)*-1)] min-h-0 flex-1 overflow-y-auto overflow-x-hidden pt-[var(--chip-clearance)]"
         // The footer floats over this list now, so the list has to end above
         // it — measured rather than guessed, because the footer is one line
         // tall for a guest and three for a host with a caption under a
@@ -774,13 +811,13 @@ export function UniversalLobby({
                 under the category chip's edge and out of reach the moment
                 the rules ran long (owner: "make sure game rules and players
                 tabs are sticky and do not go under select category
-                container"). The chip lives OUTSIDE the scroller, so the
-                scroller's top is already the chip's underside; 10px keeps
-                the bar off it. overflow-clip on the card is not a scroll
-                container, so the bar sticks to the body's scroll, and the
-                blur keeps the rows scrolling under it from showing through
-                the bar's 77% white. */}
-            <div className="sticky top-[10px] z-20 flex items-center gap-[6px] rounded-[28px] border border-[#ceb8e4] bg-[rgba(255,255,255,0.77)] p-[10px] shadow-[0px_8px_0px_0px_#d0bbe3] backdrop-blur-md">
+                container"). The body now runs up under the chip (see
+                chipClearance), so the bar sticks at the chip's underside
+                plus 10px, not at the scroller's own top. overflow-clip on
+                the card is not a scroll container, so the bar sticks to the
+                body's scroll, and the blur keeps the rows scrolling under it
+                from showing through the bar's 77% white. */}
+            <div className="sticky top-[calc(var(--chip-clearance)+10px)] z-20 flex items-center gap-[6px] rounded-[28px] border border-[#ceb8e4] bg-[rgba(255,255,255,0.77)] p-[10px] shadow-[0px_8px_0px_0px_#d0bbe3] backdrop-blur-md">
               {(["rules", "players"] as const).map((key) => {
                 const active = tab === key;
                 // The same asymmetric corner the category chip wears (see

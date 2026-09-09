@@ -65,3 +65,42 @@ export function FooterHaze({ tint = LOBBY_HAZE_TINT }: { tint?: string }) {
     </>
   );
 }
+
+/**
+ * The same ramp, upside down, under a floating header.
+ *
+ * The lobby's category chip sits over its scrolling body the way the footer
+ * does, and the body used to simply start under the chip: a hard edge across
+ * the screen where the tabs card was cut off (owner: "use same blur in top
+ * while scrolling what we use in bottom - behind the purple button"). So the
+ * body runs up under the chip and this hazes it: the same four masked
+ * layers and tint, with every gradient turned to run from strongest at the
+ * top to nothing 120px below the chip. The 120px matches FooterHaze's, and
+ * for the same reason must stay a literal here.
+ */
+export function TopHaze({ tint = LOBBY_HAZE_TINT }: { tint?: string }) {
+  return (
+    <>
+      {FOOTER_HAZE_STEPS.map((step) => (
+        <div
+          key={step.blur}
+          aria-hidden
+          style={{
+            backdropFilter: `blur(${step.blur}px)`,
+            WebkitBackdropFilter: `blur(${step.blur}px)`,
+            WebkitMaskImage: `linear-gradient(0deg, transparent ${step.from}%, #000 ${step.to}%)`,
+            maskImage: `linear-gradient(0deg, transparent ${step.from}%, #000 ${step.to}%)`,
+          }}
+          className="pointer-events-none absolute inset-x-0 top-0 bottom-[-120px]"
+        />
+      ))}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 bottom-[-120px]"
+        style={{
+          background: `linear-gradient(0deg, rgba(${tint},0) 0%, rgba(${tint},0.05) 40%, rgba(${tint},0.2) 72%, rgba(${tint},0.46) 100%)`,
+        }}
+      />
+    </>
+  );
+}
