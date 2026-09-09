@@ -11,6 +11,7 @@
 import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { TVSetupInline } from "@/components/team/TVSetupInline";
+import { MatchSummarySheet } from "@/components/team/MatchSummarySheet";
 import { LibraryCard } from "@/components/team/CategoryPickerModal";
 import { RoundOrderModal } from "@/components/team/RoundOrderModal";
 import { RoomTitle } from "@/components/lobby/UniversalLobby";
@@ -202,6 +203,26 @@ export default function HomeShot() {
     return (
       <div className="relative h-[100dvh] w-full overflow-hidden bg-[#faf6ff]">
         <AnimatedMascotScene className="absolute inset-0 z-[4] select-none overflow-hidden" />
+      </div>
+    );
+  }
+  if (params.get("view") === "summary") {
+    // The host's last look before a match starts: rounds, questions, stake.
+    // `?solo=1` shows the free, one-player version.
+    return (
+      <div className="h-[100dvh] w-full bg-[#e9dcf7]">
+        <MatchSummarySheet
+          open
+          rounds={[
+            { name: "Brave Knights", iconSlug: "boot" },
+            { name: "Guess the Celebrity", iconSlug: "star" },
+            { name: "Random", iconSlug: null },
+          ]}
+          questionsPerRound={Number(params.get("q") ?? 10)}
+          stake={params.get("solo") ? null : 500}
+          onChange={noop}
+          onConfirm={noop}
+        />
       </div>
     );
   }

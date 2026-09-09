@@ -18,6 +18,7 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { toast } from "@/lib/toast";
 import { supabase } from "@/integrations/supabase/client";
 import { OWN_TRIVIA_ICON_SLUG, roomPlaysOwnTrivia, roundIconSlug } from "@/utils/ownTriviaRound";
+import { MatchSummarySheet } from "./MatchSummarySheet";
 import { siteUrl } from "@/config/site";
 import { inviteLinkPath } from "@/utils/inviteLink";
 import { useRoomMatchHistory } from "@/hooks/useRoomMatchHistory";
@@ -134,6 +135,7 @@ export function RoomLobbyV2() {
   // round ends, but being told then is being told too late.
   const { hasEnoughCoins } = useGameStake();
   const [showNoStake, setShowNoStake] = useState(false);
+  const [showMatchSummary, setShowMatchSummary] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
   const [isTVModeEnabled, setIsTVModeEnabled] = useState(() => searchParams.get("tvMode") === "true");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -1064,9 +1066,38 @@ export function RoomLobbyV2() {
         setShowNoStake(true);
         return;
       }
-      handleStartGame();
+      // Not the match yet: the summary first, with the rounds, the question
+      // count and the stake on one card and a way back to change them. The
+      // tap that starts the match is the sheet's own Start.
+      setShowMatchSummary(true);
     }
   };
+
+  /**
+   * The rounds as the summary lists them - the same order the game plays
+   * them: the room's held round first, then the queue.
+   */
+  const summaryRounds = [
+    ...(heldRound ? [{ name: heldRound.name, iconSlug: heldRound.iconSlug ?? null }] : []),
+    ...queue.map((item) => ({
+      name:
+        item.source_type === "random"
+          ? t("extra.cpRandomTitle")
+          : localizeQueueCategory(item.category_name) || t("extra.categoryType"),
+      iconSlug: roundIconSlug(item) ?? null,
+    })),
+  ];
+
+  /**
+   * A match that has started is played as it was created.
+   *
+   * The rounds and the question count are what the summary sheet asked the
+   * host to confirm; changing them under a round in progress would make the
+   * confirmation a lie. The next match can differ - the editors come back
+   * when the round ends - and visibility stays the host's to change at any
+   * time (owner: "they can make the room private if they want").
+   */
+  const matchLive = currentRoom.status === "playing";
   // The + that asks to be friends, on everyone in the room who is not one
   // yet and is not you (owner's ask: people become friends in the lobby).
   // If they have already asked YOU, the same tap accepts — sendFriendRequest
@@ -1223,7 +1254,7 @@ export function RoomLobbyV2() {
       label: t("lobby.uQuestionsPerRound"),
       options: QUESTIONS_PER_ROUND.map((n) => ({ value: String(n), label: String(n) })),
       value: String(questionsPerRound(currentRoom.total_questions)),
-      onChange: isHost ? (v: string) => void setQuestions(v) : undefined,
+      onChange: isHost && !matchLive ? (v: string) => void setQuestions(v) : undefined,
     } satisfies LobbyRuleRow]),
     ...(playsOwnTrivia ? [] : [{
       key: "visibility",
@@ -1303,10 +1334,10 @@ export function RoomLobbyV2() {
           onPress:
             rounds > 1
               ? () => setShowRoundOrder(true)
-              : isHost
+              : isHost && !matchLive
                 ? () => { setStartAfterPick(false); setShowCategoryPicker(true); }
                 : undefined,
-          onAdd: isHost ? () => { setStartAfterPick(false); setShowCategoryPicker(true); } : undefined,
+          onAdd: isHost && !matchLive ? () => { setStartAfterPick(false); setShowCategoryPicker(true); } : undefined,
           // The host's chip and + wear the travelling ring only until a
           // category is picked — a pointer to the thing to do, not a
           // permanent decoration. Nobody else's chip wears it; they see
@@ -1325,7 +1356,7 @@ export function RoomLobbyV2() {
             // The same round the chip names — so the list's "1" and the chip
             // cannot disagree about which category opens the game.
             current={heldRound}
-            canEdit={isHost}
+            canEdit={isHost && !matchLive}
             onReorder={reorderQueue}
             onPromote={handlePromoteToFirst}
             onRemove={removeFromQueue}
@@ -1455,6 +1486,20 @@ export function RoomLobbyV2() {
         inviteLink={getShareLink(currentRoom.room_code)}
         roomId={currentRoom.id}
         roomCode={currentRoom.room_code}
+      />
+
+      {/* What Create commits to, before it does. */}
+      <MatchSummarySheet
+        open={showMatchSummary}
+        rounds={summaryRounds}
+        questionsPerRound={playsUserTrivia ? null : questionsPerRound(currentRoom.total_questions)}
+        stake={seatedPlayers >= 2 ? REWARDS.GAME_STAKE : null}
+        starting={isStarting}
+        onChange={() => setShowMatchSummary(false)}
+        onConfirm={() => {
+          setShowMatchSummary(false);
+          void handleStartGame();
+        }}
       />
 
       {/* Not enough for a seat at the table. */}
