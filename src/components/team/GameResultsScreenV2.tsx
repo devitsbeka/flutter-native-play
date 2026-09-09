@@ -299,6 +299,83 @@ export function GameResultsScreenV2() {
     return undefined;
   };
 
+  /**
+   * Which game this round belongs to, and which round of it this is - off
+   * room_games, where every round of the room is a row and game_number is
+   * the match it was played in (owner: "show which round it was - Game 1,
+   * Round 2"). Null until read, and hidden when the room predates the
+   * numbering.
+   */
+  const [matchInfo, setMatchInfo] = useState<{ game: number; round: number; roundIds: string[] } | null>(null);
+  useEffect(() => {
+    const roomId = currentRoom?.id;
+    const gameId = currentRoom?.current_game_id;
+    if (!roomId || !gameId) {
+      setMatchInfo(null);
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      const { data } = await supabase
+        .from("room_games")
+        .select("id, game_number, created_at")
+        .eq("room_id", roomId)
+        .order("created_at", { ascending: true });
+      if (cancelled || !data) return;
+      const current = data.find((g) => g.id === gameId);
+      if (!current) {
+        setMatchInfo(null);
+        return;
+      }
+      const rounds = data.filter((g) => g.game_number === current.game_number);
+      setMatchInfo({
+        game: current.game_number,
+        round: rounds.findIndex((g) => g.id === gameId) + 1,
+        roundIds: rounds.map((g) => g.id),
+      });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [currentRoom?.id, currentRoom?.current_game_id]);
+
+  /**
+   * The match's standings, once its last round is in: every round's pot
+   * lines, summed per seat, ranked by what each seat won over the whole
+   * match (owner: "who won the most coins in all rounds the match had, who
+   * is first, second"). settle_room_round is idempotent and reports the
+   * ledger back for a round already settled, so earlier rounds are read
+   * through the same call this screen already makes for the current one.
+   * A match of one round is its own round result and needs no second table.
+   */
+  const [matchStandings, setMatchStandings] = useState<{ user_id: string; net: number }[] | null>(null);
+  const matchOver = queue.length === 0 && !waitingForPlayers;
+  const hasPotLines = Object.keys(potLines).length > 0;
+  useEffect(() => {
+    const roomId = currentRoom?.id;
+    if (!roomId || !matchInfo || matchInfo.roundIds.length < 2 || !matchOver || !hasPotLines) {
+      setMatchStandings(null);
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      const totals = new Map<string, number>();
+      for (const id of matchInfo.roundIds) {
+        const { lines } = await settleRoomRound(roomId, id);
+        for (const [uid, line] of Object.entries(lines)) {
+          totals.set(uid, (totals.get(uid) ?? 0) + line.net);
+        }
+      }
+      if (cancelled) return;
+      setMatchStandings(
+        [...totals].map(([user_id, net]) => ({ user_id, net })).sort((a, b) => b.net - a.net),
+      );
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [currentRoom?.id, matchInfo, matchOver, hasPotLines, settleRoomRound]);
+
   const hasUpdatedStats = useRef(false);
 
   // Victory/loss sound and confetti
@@ -777,8 +854,14 @@ export function GameResultsScreenV2() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="flex justify-center mt-2 px-4 flex-shrink-0"
+          className="flex flex-col items-center mt-2 px-4 flex-shrink-0"
         >
+          {/* Which round of which game this was, above the category. */}
+          {matchInfo && (
+            <p className="mb-1.5 text-[12px] font-bold uppercase tracking-wide text-white/60">
+              {t("extra.matchRoundLabel", { game: matchInfo.game, round: matchInfo.round })}
+            </p>
+          )}
           <div className="flex items-center gap-2 px-5 py-2 rounded-full bg-white/15 backdrop-blur-sm">
             {/* CategoryArtwork rather than DynamicIcon: the six picture-guess
                 categories carry generic stand-ins in icon_slug, so the library
@@ -953,6 +1036,41 @@ export function GameResultsScreenV2() {
         transition={{ delay: 0.4 }}
         className="p-4 pb-5 space-y-3"
       >
+        {/* The whole match, once its last round is in: every seat's coins
+            over all of its rounds, first to last. */}
+        {matchStandings && matchInfo && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="w-full rounded-xl border border-white/20 bg-white/10 p-3 backdrop-blur-sm"
+          >
+            <p className="mb-2 text-xs text-white/60">
+              {t("extra.matchStandingsTitle", { game: matchInfo.game, rounds: matchInfo.roundIds.length })}
+            </p>
+            <ol className="space-y-1.5">
+              {matchStandings.map((row, i) => {
+                const seat = participants.find((p) => p.user_id === row.user_id);
+                return (
+                  <li key={row.user_id} className="flex items-center gap-2">
+                    <span className="w-6 text-center text-sm leading-none">{placeMark(i, i + 1)}</span>
+                    <SafeAvatar
+                      avatarUrl={seat?.avatar_url ?? null}
+                      fallback={seat?.nickname || "?"}
+                      className="w-7 h-7 border border-white/40"
+                      fallbackClassName="bg-gradient-to-br from-purple-400 to-purple-600 text-white text-xs font-bold"
+                    />
+                    <span className="min-w-0 flex-1 truncate text-sm font-semibold text-white">
+                      {row.user_id === user?.id ? t("game.you") : seat?.nickname || "?"}
+                    </span>
+                    <PotLine net={row.net} compact />
+                  </li>
+                );
+              })}
+            </ol>
+          </motion.div>
+        )}
+
         {/* Next Round Preview - show if queue has items */}
         {nextQueueItem && (
           // Tappable: it already showed "+3 >" beside the next item, which
@@ -1013,7 +1131,11 @@ export function GameResultsScreenV2() {
               </ChunkyButton>
             )}
 
-            {/* Category picker button */}
+            {/* New Game only once the match is over. While rounds are still
+                queued, Continue is the one way on: offering a new match
+                beside it invited the host to abandon the one the table was
+                in the middle of (owner's ask). */}
+            {queue.length === 0 && (
             <ChunkyButton
               variant="mint"
               size="lg"
@@ -1024,6 +1146,7 @@ export function GameResultsScreenV2() {
             >
               {t("extra.newGame")}
             </ChunkyButton>
+            )}
 
             {/* Challenge a friend.
                 A text button, not a third chunky one: the two above it are

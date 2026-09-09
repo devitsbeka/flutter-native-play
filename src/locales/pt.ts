@@ -4224,6 +4224,8 @@ export const pt: KaTranslations = {
     joinBtn: "Entrar",
     joiningBtn: "Conectando...",
     nextRoundLabel: "Próxima rodada:",
+    matchRoundLabel: "Jogo {game}, ronda {round}",
+    matchStandingsTitle: "Jogo {game} · {rounds} rondas · classificação final",
     categoryFallback: "Categoria",
     moreLabel: "mais",
     playAgainBtn: "Jogar Novamente",

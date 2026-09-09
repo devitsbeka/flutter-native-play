@@ -4153,6 +4153,8 @@ export const fr: KaTranslations = {
     joinBtn: "Rejoindre",
     joiningBtn: "Connexion...",
     nextRoundLabel: "Prochaine manche :",
+    matchRoundLabel: "Partie {game}, manche {round}",
+    matchStandingsTitle: "Partie {game} · {rounds} manches · classement final",
     categoryFallback: "Catégorie",
     moreLabel: "plus",
     playAgainBtn: "Rejouer",

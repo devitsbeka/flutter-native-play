@@ -4800,6 +4800,8 @@ export const ka = {
     joiningBtn: "შესვლა...",
     scoreUnit: "ქულა",
     nextRoundLabel: "შემდეგი რაუნდი:",
+    matchRoundLabel: "თამაში {game}, რაუნდი {round}",
+    matchStandingsTitle: "თამაში {game} · {rounds} რაუნდი · საბოლოო შედეგი",
     categoryFallback: "კატეგორია",
     moreLabel: "მეტი",
     playAgainBtn: "ხელახლა თამაში",

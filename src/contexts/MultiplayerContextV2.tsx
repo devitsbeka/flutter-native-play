@@ -120,6 +120,29 @@ const safeDeleteRoomQuestions = async (roomId: string): Promise<boolean> => {
   return verified;
 };
 
+/**
+ * Which game (match) a round belongs to, for room_games.game_number.
+ *
+ * A match is what the host confirmed at Create: one round or five, played
+ * through the queue. Every round used to be written as game 1, so the
+ * column said nothing. The number is read off the room's last round: a
+ * round started from the RESULTS screen continues the queue and keeps its
+ * match's number; a round started from the lobby opens the next match
+ * (owner: "we count all 5 rounds as 1 game, to know who won the most coins
+ * in all rounds the match had").
+ */
+const nextGameNumber = async (roomId: string, continuesMatch: boolean): Promise<number> => {
+  const { data } = await supabase
+    .from("room_games")
+    .select("game_number")
+    .eq("room_id", roomId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const last = data?.game_number ?? 0;
+  return continuesMatch && last > 0 ? last : last + 1;
+};
+
 // Reset ALL participants' round state at game start.
 // RLS on room_participants only allows updating your own row, so a direct
 // client-side update silently no-ops for other players. The SECURITY DEFINER
@@ -1817,7 +1840,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           .from("room_games")
           .insert([{
             room_id: roomId,
-            game_number: 1,
+            game_number: await nextGameNumber(roomId, phaseRef.current === "results"),
             questions_data: structuredClone(questions) as unknown as Json,
           }])
           .select()
@@ -2062,7 +2085,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       .from("room_games")
       .insert([{
         room_id: roomId,
-        game_number: 1,
+        game_number: await nextGameNumber(roomId, phaseRef.current === "results"),
         questions_data: structuredClone(questions) as unknown as Json,
       }])
       .select()
@@ -2649,7 +2672,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           .from("room_games")
           .insert([{
             room_id: roomId,
-            game_number: 1,
+            game_number: await nextGameNumber(roomId, phaseRef.current === "results"),
             questions_data: structuredClone(questions) as unknown as Json,
           }])
           .select()
@@ -2818,7 +2841,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         .from("room_games")
         .insert([{
           room_id: roomId,
-          game_number: 1,
+          game_number: await nextGameNumber(roomId, phaseRef.current === "results"),
           questions_data: structuredClone(questions) as unknown as Json,
         }])
         .select()
@@ -3041,7 +3064,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             .from("room_games")
             .insert([{
               room_id: roomId,
-              game_number: 1,
+              game_number: await nextGameNumber(roomId, phaseRef.current === "results"),
               questions_data: structuredClone(questions) as unknown as Json,
             }])
             .select()
@@ -3253,7 +3276,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         .from("room_games")
         .insert([{
           room_id: roomId,
-          game_number: 1,
+          game_number: await nextGameNumber(roomId, phaseRef.current === "results"),
           questions_data: structuredClone(questions) as unknown as Json,
         }])
         .select()

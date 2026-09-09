@@ -4193,6 +4193,8 @@ export const de: KaTranslations = {
     joiningBtn: "Verbinde...",
     scoreUnit: "Pkt.",
     nextRoundLabel: "Nächste Runde:",
+    matchRoundLabel: "Spiel {game}, Runde {round}",
+    matchStandingsTitle: "Spiel {game} · {rounds} Runden · Endstand",
     categoryFallback: "Kategorie",
     moreLabel: "mehr",
     playAgainBtn: "Nochmal Spielen",
