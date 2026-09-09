@@ -8,6 +8,7 @@ import { matchesQuery } from "@/utils/searchMatch";
 import { useNotifications } from "@/hooks/useNotifications";
 import { pendingRoomInvites, type PendingInviteFrom } from "@/utils/pendingRoomInvites";
 import { isDeveloperOnlyGameType } from "@/game-types/registry";
+import { isPublicRoomOver } from "@/utils/publicRoomOver";
 import { useDeveloperMode } from "@/contexts/DeveloperModeContext";
 
 export type RoomFilter = "all" | "my_rooms" | "friends_rooms" | "king" | "team_battle";
@@ -189,10 +190,17 @@ async function fetchRoomsForUser(userId: string, options?: FetchRoomsOptions): P
     roomsQuery = roomsQuery.limit(maxLimit);
   }
 
-  const { data: roomsData, error: roomsError } = await roomsQuery;
+  const { data: roomsRows, error: roomsError } = await roomsQuery;
   if (roomsError) throw roomsError;
 
-  const activeRoomIds = (roomsData || []).map((r) => r.id);
+  // A public room that is over — played, and an hour past anyone coming
+  // back for a rematch — is closed by the database when the Public tab is
+  // read (20261102130000). Between reads it is still a row, and it used to
+  // sit on the host's own list for good; the same rule keeps it off here.
+  // Private rooms are the players' own and are never judged this way.
+  const roomsData = (roomsRows || []).filter((r) => !isPublicRoomOver(r));
+
+  const activeRoomIds = roomsData.map((r) => r.id);
   if (activeRoomIds.length === 0) return [];
 
   // 3. Get all participants for active rooms

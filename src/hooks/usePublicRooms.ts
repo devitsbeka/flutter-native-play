@@ -65,6 +65,28 @@ export interface PublicRoomContext {
 
 export const PUBLIC_ROOMS_KEY = ["public-rooms"] as const;
 
+/**
+ * Ask the database to close every public room that is over (the rule is
+ * `public_room_is_over`, 20261102130000). Returns how many it closed.
+ *
+ * Typed by hand rather than through the generated types, as the pot RPC
+ * is: the migration reaches the project by hand after the merge, and until
+ * it does PostgREST answers PGRST202, which is nothing to do — the listing
+ * still filters what it can and the client rules still hold.
+ */
+export async function sweepEndedPublicRooms(): Promise<number> {
+  const client = supabase as unknown as {
+    rpc: (fn: string) => Promise<{ data: number | null; error: { message: string; code?: string } | null }>;
+  };
+  try {
+    const { data, error } = await client.rpc("sweep_ended_public_rooms");
+    if (error) return 0;
+    return data ?? 0;
+  } catch {
+    return 0;
+  }
+}
+
 export function usePublicRooms(options?: { enabled?: boolean }) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -79,6 +101,13 @@ export function usePublicRooms(options?: { enabled?: boolean }) {
     refetchOnWindowFocus: true,
     staleTime: 10_000,
     queryFn: async (): Promise<PublicRoom[]> => {
+      // Close what is over before reading what is open. A public room is
+      // made for one play; an hour after its last round with nobody back
+      // for a rematch it is closed — cancelled and archived — by the
+      // database, and this tab is where that is asked for, so the list is
+      // swept as often as it is read. Fire-and-forget would race the read
+      // below; awaited, the list that follows is already clean.
+      await sweepEndedPublicRooms();
       const { data, error } = await supabase.rpc("public_rooms", { p_limit: 60 });
       if (error) {
         // The migration is applied by hand after the merge, so for a while

@@ -1,6 +1,7 @@
 // Multiplayer Context V2 - Manages room-based trivia games
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { isRoomStale } from "@/utils/roomStale";
+import { isPublicRoomOver } from "@/utils/publicRoomOver";
 import { t as tStandalone } from "@/utils/standaloneTranslation";
 import { supabase } from "@/integrations/supabase/client";
 import { roomApprovalFields, roomVisibilityFields } from "@/utils/roomVisibility";
@@ -1426,18 +1427,31 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       // Check if room is stale (1+ hour of inactivity) and needs reset
       const stale = isRoomStale(room);
       
-      if (stale && (room.status === "playing" || room.status === "completed") && room.is_public) {
+      if (stale && room.is_public) {
         // A public room is made for one play. An hour after its last round
         // with nobody coming back for a rematch, it is over — closing it
         // beats reviving an empty, locked lobby onto the Public tab for the
-        // next person to walk into (owner's ask).
-        console.log(`[MP] Public room ${room.room_code} is stale (${room.status}), closing it`);
+        // next person to walk into (owner's ask). One rule with the
+        // database's sweep (isPublicRoomOver); the queue is the one thing
+        // the row does not say, and only a waiting room with nothing of
+        // its own needs it asked.
+        let over = isPublicRoomOver(room);
+        if (!over && room.status === "waiting" && !room.category_id && !room.user_trivia_id) {
+          const { count } = await supabase
+            .from("room_category_queue")
+            .select("id", { count: "exact", head: true })
+            .eq("room_id", room.id);
+          over = isPublicRoomOver({ ...room, has_queue: (count ?? 0) > 0 });
+        }
+        if (over) {
+        console.log(`[MP] Public room ${room.room_code} is over (${room.status}), closing it`);
         await supabase
           .from("game_rooms")
           .update({ status: "cancelled", is_archived: true })
           .eq("id", room.id);
         toast.error(tStandalone("extra.mpRoomIsClosed"));
         return false;
+        }
       }
 
       if (stale && (room.status === "playing" || room.status === "completed")) {
