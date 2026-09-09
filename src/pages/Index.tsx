@@ -13,6 +13,7 @@ import chestBoxIcon from "@/assets/icons/icon-chest-box.png";
 import powersIcon from "@/assets/icons/icon-powers.png";
 import { ChestRewardModal } from "@/components/home/ChestRewardModal";
 import { SideMenuDrawer } from "@/components/home/SideMenuDrawer";
+import { BalancePills } from "@/components/shared/BalanceStrip";
 import { DailyRewardsModal } from "@/components/home/DailyRewardsModal";
 import { MissionsModal } from "@/components/home/MissionsModal";
 import { LevelInfoModal } from "@/components/home/LevelInfoModal";
@@ -1075,8 +1076,12 @@ export default function Index() {
               )}
             </div>
             
-            {/* Center: Logo + Spotlight */}
-            <div className="flex-1 flex justify-center md:justify-start items-center gap-4 min-w-0">
+            {/* Logo, immediately after the burger rather than centred in the
+                row: the right of the row is the balances now, and a centred
+                wordmark between a burger and two pills has neither side to
+                centre against. Crownless for the same reason — see
+                MyTriviaLiveLogo's `crown`. */}
+            <div className="flex-1 flex justify-start items-center gap-4 min-w-0">
               {/* Logo - responsive sizing: sm on mobile/tablet, md on desktop */}
               {/* lg+ shows the logo in the left sidebar instead, where it is
                   already its own button; this is the phone/tablet twin. */}
@@ -1084,9 +1089,9 @@ export default function Index() {
                 type="button"
                 onClick={goHomeOrRefresh}
                 aria-label="MyTrivia"
-                className="lg:hidden cursor-pointer"
+                className="lg:hidden min-w-0 cursor-pointer"
               >
-                <MyTriviaLiveLogo responsive />
+                <MyTriviaLiveLogo responsive crown={false} />
               </button>
               {/* lg+: an alternating greeting takes the logo's place.
                   Hidden for guests — the Figma 612:1888 logged-out design
@@ -1098,36 +1103,51 @@ export default function Index() {
               )}
             </div>
             
-            {/* Right side: Search/Notification for users, Sign In for guests */}
+            {/* Right side: the balances on the phone — the same corner they
+                occupy on every other screen (see PageHeader) — and the search
+                and bell from md up, where there is no burger to hold them.
+                Guests have neither. */}
             {user ? (
-              <div className="flex items-center gap-1">
-                {/* Search button - visible on all screens */}
-                <SpotlightSearch variant="button" />
-                
-                {/* Bell icon with unread badge */}
-                <motion.button
-                  className="relative w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/30 transition-colors"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => navigate('/notifications')}
-                >
-                  <Bell className="w-5 h-5 text-gray-600" />
-                  {unreadCount > 0 && (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="absolute top-0.5 right-0.5 min-w-[16px] h-[16px] px-1 rounded-full flex items-center justify-center"
-                      style={{
-                        background: "linear-gradient(180deg, #EF4444 0%, #DC2626 100%)",
-                        boxShadow: "0 2px 4px rgba(239, 68, 68, 0.5)",
-                      }}
-                    >
-                      <span className="text-[9px] font-bold text-white">
-                        {unreadCount > 9 ? "9+" : unreadCount}
-                      </span>
-                    </motion.div>
-                  )}
-                </motion.button>
+              <div className="flex shrink-0 items-center gap-1">
+                <div className="flex items-center gap-[8px] md:hidden">
+                  <BalancePills
+                    size="compact"
+                    coins={coins}
+                    gems={gems}
+                    onCoinsClick={() => navigate("/power-ups?section=coins")}
+                    onGemsClick={() => navigate("/power-ups?section=gems-lari")}
+                  />
+                </div>
+
+                <div className="hidden md:flex md:items-center md:gap-1">
+                  {/* Search button */}
+                  <SpotlightSearch variant="button" />
+
+                  {/* Bell icon with unread badge */}
+                  <motion.button
+                    className="relative w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/30 transition-colors"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => navigate('/notifications')}
+                  >
+                    <Bell className="w-5 h-5 text-gray-600" />
+                    {unreadCount > 0 && (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className="absolute top-0.5 right-0.5 min-w-[16px] h-[16px] px-1 rounded-full flex items-center justify-center"
+                        style={{
+                          background: "linear-gradient(180deg, #EF4444 0%, #DC2626 100%)",
+                          boxShadow: "0 2px 4px rgba(239, 68, 68, 0.5)",
+                        }}
+                      >
+                        <span className="text-[9px] font-bold text-white">
+                          {unreadCount > 9 ? "9+" : unreadCount}
+                        </span>
+                      </motion.div>
+                    )}
+                  </motion.button>
+                </div>
               </div>
             ) : null}
           </div>
@@ -1224,13 +1244,9 @@ export default function Index() {
             nickname={profile?.nickname || t("game.guest")}
             avatarUrl={profile?.avatar_url}
             animatedAvatarUrl={profile?.animated_avatar_url}
-            coins={coins}
-            gems={gems}
             canClaimGift={canClaimDaily}
             onAvatarClick={() => openAvatarModal()}
             onNameClick={() => setShowChangeNameModal(true)}
-            onCoinsClick={() => navigate("/power-ups?section=coins")}
-            onGemsClick={() => navigate("/power-ups?section=gems-lari")}
             onGiftClick={handleGiftClick}
             // The flame opens the streak page (Figma 1069:18), not a sheet over the home screen.
             onStreakClick={() => navigate("/streak")}

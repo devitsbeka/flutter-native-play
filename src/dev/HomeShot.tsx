@@ -22,6 +22,10 @@ import { GreenPlayButton } from "@/components/shared/GreenPlayButton";
 import type { QueueItem } from "@/hooks/useRoomCategoryQueue";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { MobileProfileCard } from "@/components/home/MobileHome";
+import { MyTriviaLiveLogo } from "@/components/shared/MyTriviaLiveLogo";
+import { BalancePills } from "@/components/shared/BalanceStrip";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { Menu } from "lucide-react";
 import { AnimatedMascotScene } from "@/components/home/AnimatedMascotScene";
 import { RoomCard, RoomCardGrid } from "@/components/team/MyRoomsSection";
 import { AirbnbCategoryCard } from "@/components/discover/AirbnbCategoryCard";
@@ -264,6 +268,46 @@ export default function HomeShot() {
       </div>
     );
   }
+  // The app header row at phone width: burger, wordmark (crownless) and the
+  // balances, which every screen now carries in the same corner. The real
+  // PageHeader below it draws the sub-page shape — its own balances need a
+  // signed-in player, which a screenshot pass is not, so the row above shows
+  // them at the size and spacing the header uses.
+  if (params.get("view") === "appheader") {
+    const noop = () => undefined;
+    return (
+      <div className="min-h-[100dvh] w-full bg-[#faf6ff]">
+        <div className="flex h-[76px] w-full items-center justify-between gap-3 px-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="-ml-2 flex size-10 shrink-0 items-center justify-center rounded-full">
+              <Menu className="h-6 w-6 text-gray-600" />
+            </span>
+            <span className="min-w-0"><MyTriviaLiveLogo responsive crown={false} /></span>
+          </div>
+          <div className="flex shrink-0 items-center gap-[8px]">
+            <BalancePills size="compact" coins={161500} gems={17800} onCoinsClick={noop} onGemsClick={noop} />
+          </div>
+        </div>
+
+        <PageHeader title={params.get("title") ?? "მაღაზია"} showBack={false} />
+
+        <div className="flex h-[76px] w-full items-center justify-between gap-3 px-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="-ml-2 flex size-10 shrink-0 items-center justify-center rounded-full">
+              <Menu className="h-6 w-6 text-gray-600" />
+            </span>
+            <h1 className="min-w-0 truncate text-xl font-display font-bold uppercase tracking-wide text-slate-800">
+              {params.get("title") ?? "მაღაზია"}
+            </h1>
+          </div>
+          <div className="flex shrink-0 items-center gap-[8px]">
+            <BalancePills size="compact" coins={161500} gems={17800} onCoinsClick={noop} onGemsClick={noop} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (params.get("view") === "rooms") {
     const rooms = [
       sampleRoom({}),

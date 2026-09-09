@@ -26,7 +26,7 @@ import { AuthRequiredModal } from "@/components/shared/AuthRequiredModal";
 
 import { PowerUpTutorialModal } from "@/components/game/PowerUpTutorialModal";
 import { PowerUpShopModal } from "@/components/map/PowerUpShopModal";
-import { ShopHeader, WalletPills } from "@/components/shop/ShopHeader";
+import { WalletPills } from "@/components/shop/ShopHeader";
 import { PageHeader } from "@/components/shared/PageHeader";
 // Served from public/ - not bundled, streams straight from the CDN
 const SHOP_SCENE_VIDEO = "/videos/shop-scene.mp4";
@@ -284,29 +284,13 @@ export default function PowerUps() {
           titleAccessory={<WalletPills className="ml-3 hidden md:flex" />}
         />
 
-        {/* The currency pills are the shop's own, not header furniture, so
-            they sit on their own row underneath. Keeping them in the header
-            would have given this page a different right-hand side from every
-            other one, which is the inconsistency being removed. */}
-        {/* `relative z-10`, or this row is invisible.
-         *
-         * GlobalSplineBackground paints four `fixed inset-0` layers at
-         * z-index 0 through 3. A positioned element with z-index 0 paints
-         * ABOVE an unpositioned in-flow block — that is the CSS painting
-         * order, steps 4 and 8 — so this row was drawn and then covered by
-         * the lavender wash. The coins and gems were on the shop page the
-         * whole time, under the background.
-         *
-         * No side padding: the band is designed full-bleed, attached to the
-         * header above it — its own top stroke and drop shadow are the seam.
-         *
-         * Sticky at top-[76px]: PageHeader's row is exactly 76px and sticks
-         * at 0, so the band parks flush under it and the two scroll as one
-         * fixed header stack. Same z as the header — anything meant to pass
-         * beneath them must stay below 20. */}
-        <div className="sticky top-[76px] z-20 md:hidden">
-          <ShopHeader />
-        </div>
+        {/* The shop's own phone wallet band used to sit here, under the
+            header: a 56px lilac strip with the balances and a piggy bank.
+            The balances are in the header row itself now, on this page and
+            every other one, so the band was the same two numbers twice —
+            and the piggy was decorative. Gone; the desktop pills above are
+            unaffected, since the header's phone-only pills do not reach
+            that width. */}
 
         <div className="flex flex-1 min-h-0">
           {/* Main content. No percentage cap: the scene beside it is capped

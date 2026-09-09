@@ -3,6 +3,8 @@ import { UnifiedDesktopNav } from "./UnifiedDesktopNav";
 import { UniversalBottomNav } from "./UniversalBottomNav";
 import { useInGameShell } from "./GameShellContext";
 import { scrollTapGuard } from "@/utils/scrollTapGuard";
+import SpotlightSearch from "@/components/search/SpotlightSearch";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -34,12 +36,18 @@ export function MainLayout({
   disableScroll = false,
 }: MainLayoutProps) {
   const embedded = useInGameShell();
+  // Phones only: there, the headers carry no magnifying glass at all, so
+  // this is the one instance on the page. From md up the header still has
+  // its own search button, and a second instance answering the same
+  // `?search=open` would open a second panel behind the first.
+  const isPhone = useIsMobile();
 
   // Inside the GameShell the rail, header and world canvas are provided by
   // the shell itself — render only the page content in a local scroller.
   if (embedded) {
     return (
       <div className={`h-full w-full ${className}`}>
+        {isPhone && <SpotlightSearch variant="headless" />}
         <main
           className="h-full w-full overflow-y-auto overflow-x-hidden scrollbar-hide bg-transparent"
           {...scrollTapGuard()}
@@ -65,6 +73,13 @@ export function MainLayout({
     // every page in the app. The height has to be what is left after the
     // padding, which on the web (both insets 0) is still 100dvh.
     <div className={`min-h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] flex w-full ${className}`}>
+      {/* The search panel, with no trigger of its own. The magnifying glass
+          is gone from the page headers — the balances have that corner now —
+          and the side menu's Search row opens this through `?search=open`.
+          It is mounted here rather than in the menu because the menu
+          unmounts as it closes, taking any panel inside it along. */}
+      {isPhone && <SpotlightSearch variant="headless" />}
+
       {/* Desktop/Tablet Left Navigation */}
       <UnifiedDesktopNav
         onPlayClick={onPlayClick}
