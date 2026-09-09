@@ -1156,14 +1156,28 @@ export function RoomLobbyV2() {
    * playing and if host could modify room after players joined that would be
    * confusing and unfair").
    *
-   * So a public room is settled at Create, exactly as a live match is
-   * settled at Start — one lock, two reasons. What stays is the visibility
-   * row itself: a host who wants their room back can make it private, and
-   * everything is editable again the moment they do (owner: "we let hosts
-   * switch public/private, only that option ... i can modify if i switch to
-   * private but not on public").
+   * What settles it is being listed with something to play — not the host
+   * having pressed Create. That was the first cut and it left the hole this
+   * replaces: a room fills up and starts before anyone presses Create (the
+   * button is only offered while the room is short of players), so a public
+   * room with two people in it sat there fully editable (owner: "it is a
+   * public room but i still see i can modify room, add categories, switch
+   * question count tabs").
+   *
+   * An EMPTY public room stays open, because it has to: "+ Room" publishes
+   * on creation, so the host lands in a room with no round yet and picking
+   * one is the only thing they can do. That pick is what settles it — which
+   * is the same rule as "we need at least category for match to create
+   * public room", read from the room instead of from a tap.
+   *
+   * What stays is the visibility row itself: a host who wants their room
+   * back can make it private, and everything is editable again the moment
+   * they do (owner: "we let hosts switch public/private, only that option
+   * ... i can modify if i switch to private but not on public"). That is
+   * also how a host changes their mind about a category they have already
+   * put on the list.
    */
-  const publishedRoom = isPublicRoom && roomCreated;
+  const publishedRoom = isPublicRoom && !needsCategorySelection;
   const rulesLocked = matchLive || publishedRoom;
   /**
    * The pencil settles with the rest of it.
