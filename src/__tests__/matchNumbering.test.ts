@@ -38,13 +38,17 @@ describe("every round knows its game", () => {
 });
 
 describe("the results screen", () => {
-  it("says which round of which game, above the category", () => {
+  it("says which round of which game, inside the category pill under its name", () => {
+    // It stood above the pill; the design (Figma 1157:10058) sets it under
+    // the category's name inside the pill (resultsScreenFigma.test.ts).
     expect(results).toMatch(/\.from\("room_games"\)\s*\.select\("id, game_number, created_at"\)/);
     expect(results).toMatch(/round: rounds\.findIndex\(\(g\) => g\.id === gameId\) \+ 1,/);
-    const label = results.indexOf('t("extra.matchRoundLabel", { game: matchInfo.game, round: matchInfo.round })');
     const chip = results.indexOf("rounded-full bg-white/15 backdrop-blur-sm");
-    expect(label).toBeGreaterThan(-1);
-    expect(label).toBeLessThan(chip);
+    const name = results.indexOf("{localizeCategory(currentRoom.category_name)}");
+    const label = results.indexOf('t("extra.matchRoundLabel", { game: matchInfo.game, round: matchInfo.round })');
+    expect(chip).toBeGreaterThan(-1);
+    expect(name).toBeGreaterThan(chip);
+    expect(label).toBeGreaterThan(name);
   });
 
   it("offers New Game only once the match is over", () => {
