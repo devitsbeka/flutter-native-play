@@ -1,21 +1,21 @@
 /**
- * A party's room is that party — not a parrot called "Cheerful Rabbits".
+ * A party's room wears a dealt face and a dealt name, like any other room.
  *
- * A room built on a MyTrivia Party was dealt a creature off the crest pool
- * and a mood-plus-creature name, like every other room. So the screen you
- * land on after making a party named neither the party nor the kind of thing
- * it was (owner: "we should show one of the my trivia party icons here
- * instead random icons and random name for room, we should show name user
- * provided for their trivia party or untitled").
- *
- * Two things had to be true for that to be fixable:
- *
- *  - The room row says WHICH trivia it plays but not whether that trivia is
- *    a party, and the four icons belong to parties. One row is read for it.
- *  - Every room is created with a generated name, so "has the host named
- *    this room?" cannot be answered by asking whether a name exists. It is
- *    answered by asking whether the name is one the generator could have
- *    dealt — which is what leaves a host's own rename alone.
+ * This went back and forth: a room built on a MyTrivia Party was first dealt
+ * a creature off the crest pool and a mood-plus-creature name, like every
+ * other room, which named neither the party nor the kind of thing it was
+ * (owner: "we should show one of the my trivia party icons here instead
+ * random icons and random name for room, we should show name user provided
+ * for their trivia party or untitled"). That shipped as a fixed set of four
+ * house-party icons for the room's own face and the trivia's own title (or
+ * Untitled) for its own name — and was itself walked back once it was live
+ * (owner: "we had 4 icons for my trivia party room, we don't need them
+ * anymore... we need random icons and room names here... show room's icon
+ * and room's name how we used to show - random icon and name"). What is
+ * left is the room the way it started: a dealt crest, a dealt name, no
+ * party-specific override for either. Only the category CHIP — what the
+ * room plays, not what it's called or what it looks like — still names the
+ * trivia; see the "what the lobby does with it" block below.
  */
 
 import { describe, expect, it } from "vitest";
@@ -23,10 +23,10 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { isGeneratedRoomName, composeRoomName, ROOM_MOODS, ROOM_CREATURES } from "@/utils/roomNameGenerator";
-import { partyRoomIconUrl, PARTY_COVER_ICON_SLUGS } from "@/utils/partyCoverIcon";
 
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 const room = read("src/components/team/RoomLobbyV2.tsx");
+const partyCoverIcon = read("src/utils/partyCoverIcon.ts");
 
 describe("telling a dealt name from a typed one", () => {
   it("knows the names it deals, in every language", () => {
@@ -52,22 +52,22 @@ describe("telling a dealt name from a typed one", () => {
   });
 });
 
-describe("the face a party room wears", () => {
-  it("is one of the four its card wears", () => {
-    const url = partyRoomIconUrl("11111111-2222-3333-4444-555555555555");
-    expect(PARTY_COVER_ICON_SLUGS.some((slug) => url.endsWith(`/${slug}.png`))).toBe(true);
+/**
+ * The room-face function itself is gone — it has no callers left.
+ *
+ * `partyCoverIcons`/`PARTY_COVER_ICON_SLUGS` stay: the TRIVIA CARD's own
+ * banner (in MyTriviaTab, see partyCoverIcon.test.ts) still deals one of
+ * the four house-party icons when the trivia has no cover of its own —
+ * that ask was never walked back, only the ROOM's face was.
+ */
+describe("the room-face function is gone, the trivia-card one is not", () => {
+  it("partyRoomIconUrl no longer exists", () => {
+    expect(partyCoverIcon).not.toMatch(/export function partyRoomIconUrl/);
   });
 
-  it("and is the same one every time, on every screen", () => {
-    const id = "abcdef01-2345-6789-abcd-ef0123456789";
-    expect(partyRoomIconUrl(id)).toBe(partyRoomIconUrl(id));
-  });
-
-  it("with different rooms not all landing on the same icon", () => {
-    const seen = new Set(
-      Array.from({ length: 40 }, (_, i) => partyRoomIconUrl(`room-${i}`)),
-    );
-    expect(seen.size).toBeGreaterThan(1);
+  it("but the trivia card's own four-icon deal is untouched", () => {
+    expect(partyCoverIcon).toMatch(/export function partyCoverIcons/);
+    expect(partyCoverIcon).toMatch(/export const PARTY_COVER_ICON_SLUGS/);
   });
 });
 
@@ -77,10 +77,11 @@ describe("what the lobby does with it", () => {
     expect(room).toMatch(/data\?\.subject === "personal"/);
   });
 
-  it("wears a party icon over the dealt crest, and under the host's own", () => {
+  it("wears the same dealt crest any other room does — no party-only face", () => {
     expect(room).toMatch(
-      /currentRoom\.room_icon\s*\n\s*\?\? \(isPartyRoom \? partyRoomIconUrl\(currentRoom\.id\) : null\)\s*\n\s*\?\? dealtRoomIcon/,
+      /const roomFace = currentRoom\.room_icon \?\? dealtRoomIcon\(currentRoom\.id, iconPool\);/,
     );
+    expect(room).not.toMatch(/partyRoomIconUrl/);
   });
 
   it("the room's own name carries no party-only branch — room.room_name, like any other room", () => {

@@ -52,7 +52,6 @@ import coinIconAsset from "@/assets/tb-lobby/coin.png";
 import { NotEnoughStakeModal } from "@/components/home/NotEnoughStakeModal";
 import { useGameStake } from "@/hooks/useGameStake";
 import { REWARDS } from "@/config/rewardConfig";
-import { partyRoomIconUrl } from "@/utils/partyCoverIcon";
 import { triviaDisplayTitle } from "@/utils/triviaTitle";
 import { useFriends } from "@/hooks/useFriends";
 import {
@@ -1126,13 +1125,14 @@ export function RoomLobbyV2() {
    * different one per screen. Tapping it opens the sheet that sets both the
    * icon and the name. (The pool itself is fetched up with the other hooks;
    * everything from here down runs after an early return.)
+   *
+   * A party room used to wear one of a fixed set of four house-party icons
+   * here instead of a dealt one — walked back with the rest of the party's
+   * special-cased naming (owner: "we don't need [the 4 icons] anymore...
+   * we need random icons and room names here"). A host who picked an icon
+   * still wins over the dealt one, party or not.
    */
-  // A party wears one of its own four; anything else keeps the dealt crest.
-  // A host who picked an icon still wins over both.
-  const roomFace =
-    currentRoom.room_icon
-    ?? (isPartyRoom ? partyRoomIconUrl(currentRoom.id) : null)
-    ?? dealtRoomIcon(currentRoom.id, iconPool);
+  const roomFace = currentRoom.room_icon ?? dealtRoomIcon(currentRoom.id, iconPool);
   // A My Trivia room plays the quiz as written — its own question count —
   // so the questions-per-round choice is a library/random room's alone.
   const playsUserTrivia = !!currentRoom.user_trivia_id && !currentRoom.category_id;

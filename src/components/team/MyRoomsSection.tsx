@@ -9,6 +9,8 @@ import iconBattleLounge from "@/assets/play-chooser/icon-crate.png";
 import iconWordsLounge from "@/assets/play-chooser/icon-words.webp";
 import iconPartyLounge from "@/assets/house-party.png";
 import { roomKind, routeForRoom } from "@/utils/roomRoutes";
+import { dealtRoomIcon } from "@/utils/roomCrests";
+import { useRoomIconPool } from "@/hooks/useRoomIconPool";
 import { roomCardAction } from "@/utils/roomCardAction";
 import { RoomCardPlayButton } from "@/components/team/RoomCardPlayButton";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
@@ -584,9 +586,10 @@ export function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = f
         ? { icon: iconBattleLounge, label: t("teamBattle.title") }
         : kind === "words"
           ? { icon: iconWordsLounge, label: t("words.title") }
-          // The classic party room is a game too: it wears My Trivia Party's
-          // face when the host never picked an icon of their own.
-          : { icon: iconPartyLounge, label: t("extra.myTriviaPartyLabel") };
+          // A classic room — party or not — has no fixed lounge face; it
+          // wears a crest dealt from the shared pool, same as everywhere
+          // else that pool is used (the lobby, the public tab).
+          : undefined;
   // A room built on one of the player's own trivias — a MyTrivia Party among
   // them. The line under the room's own name used to show the trivia's raw
   // title here ("tt"), which is what the room's OWN name is for; this line
@@ -599,6 +602,15 @@ export function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = f
   // (owner: "we don't need 'untitled', use random names for my trivia
   // party rooms as we do on other rooms").
   const displayName = room.room_name || lounge?.label || t("extra.gameRoomLabel");
+  // The card's own face: the host's icon, else the game's lounge icon, else
+  // — for an actual party room — My Trivia Party's icon, else a crest dealt
+  // from the shared pool by room id. A "Mixed"-category room used to
+  // inherit the party icon too, because the fallback was not gated on
+  // isPartyRoom at all (owner: "on default rooms with classic trivia
+  // rounds in it should have random icon on room card").
+  const iconPool = useRoomIconPool();
+  const roomFace =
+    room.room_icon ?? lounge?.icon ?? (isPartyRoom ? iconPartyLounge : dealtRoomIcon(room.id, iconPool));
   // How long ago the room was made — the thing that tells two similar rooms
   // apart in a list of them.
   const createdAgo = useRoomAge(room.created_at);
@@ -849,9 +861,9 @@ export function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = f
                   </div>
                 )}
               </div>
-              {(room.room_icon || lounge) && (
+              {roomFace && (
                 <img
-                  src={room.room_icon ?? lounge?.icon}
+                  src={roomFace}
                   alt=""
                   className="absolute left-1/2 top-[62px] h-10 w-10 -translate-x-1/2 object-contain drop-shadow-lg"
                 />
@@ -954,9 +966,9 @@ export function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = f
               
               {/* Bottom left - Room name with icon and category */}
               <div className="flex items-center gap-2.5 mb-1">
-                {(room.room_icon || lounge) && (
+                {roomFace && (
                   <img
-                    src={room.room_icon ?? lounge?.icon}
+                    src={roomFace}
                     alt=""
                     className="w-10 h-10 object-contain drop-shadow-lg"
                   />
@@ -1065,9 +1077,10 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
         ? { icon: iconBattleLounge, label: t("teamBattle.title") }
         : kind === "words"
           ? { icon: iconWordsLounge, label: t("words.title") }
-          // The classic party room is a game too: it wears My Trivia Party's
-          // face when the host never picked an icon of their own.
-          : { icon: iconPartyLounge, label: t("extra.myTriviaPartyLabel") };
+          // A classic room — party or not — has no fixed lounge face; it
+          // wears a crest dealt from the shared pool, same as everywhere
+          // else that pool is used (the lobby, the public tab).
+          : undefined;
   // A room built on one of the player's own trivias — a MyTrivia Party among
   // them. The line under the room's own name used to show the trivia's raw
   // title here ("tt"), which is what the room's OWN name is for; this line
@@ -1080,6 +1093,15 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
   // (owner: "we don't need 'untitled', use random names for my trivia
   // party rooms as we do on other rooms").
   const displayName = room.room_name || lounge?.label || t("extra.gameRoomLabel");
+  // The card's own face: the host's icon, else the game's lounge icon, else
+  // — for an actual party room — My Trivia Party's icon, else a crest dealt
+  // from the shared pool by room id. A "Mixed"-category room used to
+  // inherit the party icon too, because the fallback was not gated on
+  // isPartyRoom at all (owner: "on default rooms with classic trivia
+  // rounds in it should have random icon on room card").
+  const iconPool = useRoomIconPool();
+  const roomFace =
+    room.room_icon ?? lounge?.icon ?? (isPartyRoom ? iconPartyLounge : dealtRoomIcon(room.id, iconPool));
   // How long ago the room was made — the thing that tells two similar rooms
   // apart in a list of them.
   const createdAgo = useRoomAge(room.created_at);
@@ -1300,9 +1322,9 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
             {/* Middle: Icon + Title + Category + Time */}
             <div className="relative z-10 flex-1 flex flex-col justify-center py-3">
               <div className="flex items-center gap-3">
-                {(room.room_icon || lounge) && (
+                {roomFace && (
                   <img
-                    src={room.room_icon ?? lounge?.icon}
+                    src={roomFace}
                     alt=""
                     className="w-14 h-14 md:w-16 md:h-16 object-contain drop-shadow-lg flex-shrink-0"
                   />

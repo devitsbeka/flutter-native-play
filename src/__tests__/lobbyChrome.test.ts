@@ -417,16 +417,17 @@ describe("every lobby says which game it is", () => {
     expect(battle).toMatch(/icon=\{iconBattleCrate\}/);
   });
 
-  it("an ordinary room wears the same face it wears everywhere else", () => {
+  it("an ordinary room wears the same face it wears everywhere else — party rooms included", () => {
     // Not a second random icon drawn for this screen: the per-room deal the
     // public card and the search strip already use, seeded off the room id,
-    // so a room looks like itself wherever it turns up.
-    // A party room now takes one of its own four in between; everything
-    // else still falls through to the dealt crest, and a host's own icon
-    // still wins over both.
+    // so a room looks like itself wherever it turns up. A party room took
+    // one of its own four house-party icons in between, briefly, and that
+    // was walked back too — every room, party or not, falls through to the
+    // same dealt crest, and a host's own icon still wins over it.
     expect(room).toMatch(
-      /const roomFace =\s*\n\s*currentRoom\.room_icon\s*\n\s*\?\? \(isPartyRoom \? partyRoomIconUrl\(currentRoom\.id\) : null\)\s*\n\s*\?\? dealtRoomIcon\(currentRoom\.id, iconPool\);/,
+      /const roomFace = currentRoom\.room_icon \?\? dealtRoomIcon\(currentRoom\.id, iconPool\);/,
     );
+    expect(room).not.toMatch(/partyRoomIconUrl/);
     expect(room).toMatch(/icon=\{roomFace\}/);
     // And the sheet opens on it, so a rename cannot silently clear the icon.
     expect(room).toMatch(/currentIconUrl=\{roomFace\}/);
