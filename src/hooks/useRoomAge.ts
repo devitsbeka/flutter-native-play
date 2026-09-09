@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { roomAgeLabel } from "@/utils/roomAge";
+import { isNewRoom, roomAgeLabel } from "@/utils/roomAge";
 
 /**
  * A room's age for its card badge, re-rendered as it ages.
@@ -23,4 +23,20 @@ export function useRoomAge(createdAt: string | null | undefined): string {
   return label.count === undefined
     ? t(label.key)
     : t(label.key).replace("{count}", String(label.count));
+}
+
+/**
+ * Whether a room is still new, re-checked as it ages — so a card that said
+ * "New" an hour ago stops saying it without a refetch.
+ */
+export function useRoomIsNew(createdAt: string | null | undefined): boolean {
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (!createdAt || !isNewRoom(createdAt)) return;
+    const id = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(id);
+  }, [createdAt]);
+
+  return isNewRoom(createdAt, now);
 }

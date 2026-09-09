@@ -27,18 +27,21 @@ const header = pub.slice(
 );
 
 describe("the age, next to the host", () => {
-  it("is the same age the private card's badge speaks", () => {
-    expect(pub).toMatch(/import \{ useRoomAge \} from "@\/hooks\/useRoomAge";/);
-    expect(pub).toMatch(/const createdAgo = useRoomAge\(room\.created_at\);/);
+  it("is New for the room's first hour, then nothing — the running age was one pill too many", () => {
+    // It said "20 წუთის წინ" / "გუშინ" at every step at first; the owner
+    // asked for New for an hour and no time label after that.
+    expect(pub).toMatch(/import \{ useRoomIsNew \} from "@\/hooks\/useRoomAge";/);
+    expect(pub).toMatch(/const isNew = useRoomIsNew\(room\.created_at\);/);
+    expect(pub).not.toMatch(/useRoomAge\(/);
   });
 
   it("follows the host pill, in the card's own pill, and stays on one line", () => {
     const hostPill = header.indexOf("openProfile(room.host_user_id)");
-    const age = header.indexOf("{createdAgo && (");
+    const age = header.indexOf("{isNew && (");
     expect(hostPill).toBeGreaterThan(-1);
     expect(age).toBeGreaterThan(hostPill);
     expect(header).toMatch(
-      /\{createdAgo && \(\s*\n\s*<span className=\{`shrink-0 whitespace-nowrap rounded-full px-2\.5 py-1 text-xs font-bold \$\{ink\.pill\} \$\{ink\.text\}`\}>\s*\n\s*\{createdAgo\}/,
+      /\{isNew && \(\s*\n\s*<span className=\{`shrink-0 whitespace-nowrap rounded-full px-2\.5 py-1 text-xs font-bold \$\{ink\.pill\} \$\{ink\.text\}`\}>\s*\n\s*\{t\("extra\.roomStatusNew"\)\}/,
     );
   });
 });

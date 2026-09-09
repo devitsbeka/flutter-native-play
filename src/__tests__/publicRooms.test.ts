@@ -360,7 +360,7 @@ describe("the public list", () => {
     // wears the same shape in white. One shape, two answers.
     const button = read("src/components/team/RoomCardPlayButton.tsx");
     expect(button).toMatch(/mint: "bg-\[#81f0c3\] border-\[#2bc889\] text-\[#320c69\]"/);
-    expect(section).toMatch(/tone=\{invited \? "purple" : ready \? "mint" : "white"\}/);
+    expect(section).toMatch(/tone=\{invited \|\| ready \? "mint" : "white"\}/);
     expect(section).not.toMatch(/from-\[#34d399\]/);
     // Open seats on the pale ground: a dark dashed ring, not a white one.
     expect(section).toMatch(/border-dashed border-\[#2b1a4a\]\/30/);

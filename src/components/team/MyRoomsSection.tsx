@@ -2,8 +2,8 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
 import { AnimatePresence, motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
-import { Plus, Users, Tv, Airplay, Cast, UserPlus, Trash2, LogOut, MonitorPlay, Play, Check } from "lucide-react";
-import { RoomInviteBadge } from "@/components/team/RoomInviteBadge";
+import { Plus, Users, Tv, Airplay, Cast, UserPlus, Trash2, LogOut, MonitorPlay, Play, Check, X } from "lucide-react";
+import { declineRoomInvite } from "@/utils/pendingRoomInvites";
 import { useMyRooms, MyRoom, RoomFilter, isActiveTVSession } from "@/hooks/useMyRooms";
 import iconKingLounge from "@/assets/play-chooser/icon-king.webp";
 import iconBattleLounge from "@/assets/play-chooser/icon-crate.png";
@@ -32,7 +32,7 @@ import crownIcon from "@/assets/crown-icon.png";
 import retroTv3d from "@/assets/retro-tv-3d.png";
 import { GradientBackground, ROOM_GRADIENT_PRESETS } from "@/components/ui/noisy-gradient-backgrounds";
 import { useWavyRect } from "@/components/home/wave";
-import { useRoomAge } from "@/hooks/useRoomAge";
+import { useRoomIsNew } from "@/hooks/useRoomAge";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "@/lib/toast";
 import { FeatureOnboardingCarousel, hasSeenFeatureOnboarding } from "@/components/team/FeatureOnboardingCarousel";
@@ -197,6 +197,18 @@ export function MyRoomsSection({
   // what makes the card disappear from this list. The old menu offered
   // delete to everyone and silently did nothing for guests.
   const { user } = useAuth();
+  /** The X beside Confirm: give the reserved seat up and answer the invite. */
+  const handleDeclineInvite = async (room: MyRoom) => {
+    if (!user || !room.pending_invite_from) return;
+    try {
+      await declineRoomInvite(room.id, user.id, room.pending_invite_from.notificationId);
+      toast.success(t("extra.notifDeclined"));
+    } catch (e) {
+      console.error("[MyRooms] decline invite failed", e);
+      toast.error(t("extra.errorOccurred"));
+    }
+  };
+
   const handleLeaveRoom = async (roomId: string) => {
     if (!user) return;
     setDeletingRoomId(roomId);
@@ -475,6 +487,7 @@ export function MyRoomsSection({
                     onDelete={handleDeleteRoom}
                     onLeave={handleLeaveRoom}
                     onInvite={setInviting}
+                    onDeclineInvite={(r) => void handleDeclineInvite(r)}
                     isJoining={joiningRoomId === room.id}
                   />
                 </motion.div>
@@ -615,7 +628,8 @@ export function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = f
     room.room_icon ?? lounge?.icon ?? (isPartyRoom ? iconPartyLounge : dealtRoomIcon(room.id, iconPool));
   // How long ago the room was made — the thing that tells two similar rooms
   // apart in a list of them.
-  const createdAgo = useRoomAge(room.created_at);
+  // "New" for the room's first hour, then no time label at all (owner's ask).
+  const isNew = useRoomIsNew(room.created_at);
 
   // NEW LOGIC: has_players_in_room = someone is actually INSIDE this room
   const hasPlayersInRoom = room.has_players_in_room;
@@ -849,14 +863,18 @@ export function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = f
                 </div>
               )}
               <div className="absolute left-[18px] right-[18px] top-[20px] z-10 flex items-start justify-between">
-                <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-black/25 px-2.5 py-1 font-[Nunito] text-xs font-bold leading-4 tracking-[-0.16px] text-white backdrop-blur-[4px]">
-                  <span
-                    className={`h-1.5 w-1.5 shrink-0 animate-pulse rounded-full ${
-                      someoneInRoom || allPlayersOnline ? "bg-green-400" : "bg-amber-400"
-                    }`}
-                  />
-                  {createdAgo || t("extra.roomStatusWaiting")}
-                </span>
+                {isNew ? (
+                  <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-black/25 px-2.5 py-1 font-[Nunito] text-xs font-bold leading-4 tracking-[-0.16px] text-white backdrop-blur-[4px]">
+                    <span
+                      className={`h-1.5 w-1.5 shrink-0 animate-pulse rounded-full ${
+                        someoneInRoom || allPlayersOnline ? "bg-green-400" : "bg-amber-400"
+                      }`}
+                    />
+                    {t("extra.roomStatusNew")}
+                  </span>
+                ) : (
+                  <span />
+                )}
                 {showTVBadge && (
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/20 backdrop-blur-sm">
                     <QuizCategoryIcon iconSlug="retro-tv" size={24} className="h-6 w-6" />
@@ -936,14 +954,16 @@ export function RoomCard({ room, index, onJoin, onDelete, onLeave, fullWidth = f
                       "new" read the same on every card; the dot carries that
                       state instead — green when someone is there, amber when
                       the room is empty. */}
-                  <span className="inline-flex items-center gap-1.5 whitespace-nowrap px-2.5 py-1 rounded-full bg-black/25 backdrop-blur-sm text-white font-bold text-xs">
-                    <span
-                      className={`w-1.5 h-1.5 shrink-0 rounded-full animate-pulse ${
-                        someoneInRoom || allPlayersOnline ? "bg-green-400" : "bg-amber-400"
-                      }`}
-                    />
-                    {createdAgo || t("extra.roomStatusWaiting")}
-                  </span>
+                  {isNew && (
+                    <span className="inline-flex items-center gap-1.5 whitespace-nowrap px-2.5 py-1 rounded-full bg-black/25 backdrop-blur-sm text-white font-bold text-xs">
+                      <span
+                        className={`w-1.5 h-1.5 shrink-0 rounded-full animate-pulse ${
+                          someoneInRoom || allPlayersOnline ? "bg-green-400" : "bg-amber-400"
+                        }`}
+                      />
+                      {t("extra.roomStatusNew")}
+                    </span>
+                  )}
                   
                   {/* The way out, in the open on every device — the same
                       trash (host) / log-out (guest) the public tab wears.
@@ -1048,9 +1068,12 @@ interface RoomCardGridProps {
   onInvite?: (room: MyRoom) => void;
   /** Opening this room: the card says so and stops taking taps. */
   isJoining?: boolean;
+  /** Give up the seat somebody reserved for this player. */
+  onDeclineInvite?: (room: MyRoom) => void;
 }
 
-export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite, isJoining = false }: RoomCardGridProps) {
+export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite, isJoining = false, onDeclineInvite }: RoomCardGridProps) {
+  const { user } = useAuth();
   const { openProfile } = usePlayerProfile();
   const { t } = useLanguage();
   const localizeCategory = useLocalizedCategoryName();
@@ -1106,7 +1129,8 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
     room.room_icon ?? lounge?.icon ?? (isPartyRoom ? iconPartyLounge : dealtRoomIcon(room.id, iconPool));
   // How long ago the room was made — the thing that tells two similar rooms
   // apart in a list of them.
-  const createdAgo = useRoomAge(room.created_at);
+  // "New" for the room's first hour, then no time label at all (owner's ask).
+  const isNew = useRoomIsNew(room.created_at);
 
   /**
    * The room I just made, marked the way the Public tab marks it.
@@ -1313,24 +1337,20 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
                     <QuizCategoryIcon iconSlug="retro-tv" size={24} className="w-6 h-6" />
                   </div>
                 )}
-                {/* The badge is always the age. "Waiting", "online" and "new"
-                    read the same on every card; the dot carries that state
-                    instead — green when someone is there, amber when empty. */}
-                <span className="inline-flex items-center gap-1.5 whitespace-nowrap px-2.5 py-1 rounded-full bg-white/60 backdrop-blur-sm text-[#2b1a4a] font-bold text-xs">
-                  <span
-                    className={`w-1.5 h-1.5 shrink-0 rounded-full animate-pulse ${
-                      someoneInRoom || allPlayersOnline ? "bg-green-400" : "bg-amber-400"
-                    }`}
-                  />
-                  {createdAgo || t("extra.roomStatusWaiting")}
-                </span>
-                {/* Somebody is waiting for this player in here. The invite
-                    already sorted the card to the top and sits in the
-                    notification centre; on the card itself nothing said so,
-                    and a room you were asked into looked like every other
-                    (owner's ask). Who asked, with their face — small — and
-                    the Confirm button on the bottom row answers it. */}
-                {room.has_pending_invite && <RoomInviteBadge from={room.pending_invite_from} />}
+                {/* "New" for the room's first hour, then no time label at all:
+                    the running age was one pill too many on a row already
+                    carrying the count and the way out (owner's ask). The dot
+                    still says whether anyone is there. */}
+                {isNew && (
+                  <span className="inline-flex items-center gap-1.5 whitespace-nowrap px-2.5 py-1 rounded-full bg-white/60 backdrop-blur-sm text-[#2b1a4a] font-bold text-xs">
+                    <span
+                      className={`w-1.5 h-1.5 shrink-0 rounded-full animate-pulse ${
+                        someoneInRoom || allPlayersOnline ? "bg-green-400" : "bg-amber-400"
+                      }`}
+                    />
+                    {t("extra.roomStatusNew")}
+                  </span>
+                )}
               </div>
 
               {/* Right: how many are in the room, then the menu.
@@ -1433,6 +1453,13 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
                     {displayPlayers.slice(0, avatarLimit).map((p, idx) => {
                       // Check if this participant is online
                       const isOnline = room.online_participants.some(op => op.user_id === p.user_id);
+                      // The seat reserved for the viewer, not yet taken: their
+                      // own face in black and white beside the host's (owner:
+                      // "show avatar who was invited as black and white
+                      // besides the host avatar"). The private list carries
+                      // every participant row, the invited one included, so
+                      // the face is already here — it is only greyed.
+                      const reservedForMe = room.has_pending_invite && p.user_id === user?.id;
                     
                       return (
                         // Descending z-index so the first avatar sits on top of
@@ -1445,9 +1472,11 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
                         >
                           <div
                             className={`w-8 h-8 rounded-full overflow-hidden bg-white/20 cursor-pointer hover:scale-110 transition-transform active:scale-95 shadow-md ${
-                              isOnline
-                                ? "ring-2 ring-green-500 ring-offset-1 ring-offset-transparent"
-                                : "ring-2 ring-slate-400/70 ring-offset-1 ring-offset-transparent"
+                              reservedForMe
+                                ? "grayscale opacity-70 ring-2 ring-slate-400/70 ring-offset-1 ring-offset-transparent"
+                                : isOnline
+                                  ? "ring-2 ring-green-500 ring-offset-1 ring-offset-transparent"
+                                  : "ring-2 ring-slate-400/70 ring-offset-1 ring-offset-transparent"
                             }`}
                             onClick={(e) => {
                               e.stopPropagation();
@@ -1516,6 +1545,10 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
                     deliberately treats /team as "already there" and never
                     navigates, so a player parked on this very list is the one
                     person a starting round cannot reach. */}
+                {/* The right-hand group: the button, and beside it the X that
+                    answers an invitation with no — one group, so the two sit
+                    together rather than being spread across the bar. */}
+                <div className="flex items-center gap-2 shrink-0">
                 {action && (
                   /* The public list's button in white — same shape, same
                      word, same play triangle. Which list you are on is the
@@ -1529,7 +1562,7 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
                      its row with a count and up to two faces, and it pushed
                      the whole group off the card. */
                   <RoomCardPlayButton
-                    tone={room.has_pending_invite ? "purple" : "white"}
+                    tone={room.has_pending_invite ? "mint" : "white"}
                     onClick={(e) => {
                       e.stopPropagation();
                       if (!isJoining) onJoin();
@@ -1544,8 +1577,10 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
                   >
                     {/* An invitation is answered, not played: the same tap
                         (enter the room, which takes the seat and reads the
-                        invite) under the word the asker is waiting for
-                        (owner: "button saying confirm"). */}
+                        invite) under the word the asker is waiting for, in
+                        green like every button one tap from a game (owner:
+                        "show green button - confirm button and X besides
+                        that green button to deny"). */}
                     {room.has_pending_invite ? (
                       <>
                         <Check className="w-3.5 h-3.5" strokeWidth={3} />
@@ -1559,6 +1594,21 @@ export function RoomCardGrid({ room, index, onJoin, onDelete, onLeave, onInvite,
                     )}
                   </RoomCardPlayButton>
                 )}
+                {/* No: the reserved seat is given up and the invite answered. */}
+                {room.has_pending_invite && !isJoining && (
+                  <button
+                    type="button"
+                    aria-label={t("extra.notifDecline")}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDeclineInvite?.(room);
+                    }}
+                    className="w-9 h-9 rounded-full bg-white/60 backdrop-blur-sm flex items-center justify-center hover:bg-white/80 active:scale-95 transition"
+                  >
+                    <X className="w-4 h-4 text-[#2b1a4a]" strokeWidth={2.5} />
+                  </button>
+                )}
+                </div>
               </div>
             </div>
           </GradientBackground>

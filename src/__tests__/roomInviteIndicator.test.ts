@@ -42,15 +42,17 @@ describe("the card wears the invitation", () => {
   const grid = read("src/components/team/MyRoomsSection.tsx");
   const card = grid.slice(grid.indexOf("export function RoomCardGrid("));
 
-  it("a purple badge beside the room's age, gated on the pending invite", () => {
-    expect(card).toMatch(/\{room\.has_pending_invite && <RoomInviteBadge from=\{room\.pending_invite_from\} \/>\}/);
-    const badge = read("src/components/team/RoomInviteBadge.tsx");
-    expect(badge).toMatch(/rounded-full bg-\[#7126d5\]/);
-    expect(badge).toMatch(/t\("extra\.roomInvitedYou"\)/);
+  it("as the viewer's own face in black and white, and a green Confirm with an X — not a badge", () => {
+    // The purple "Invited by …" pill was one thing too many on the row
+    // (owner: "it is too much on cards"); see roomInviteConfirm.test.
+    expect(card).toMatch(/const reservedForMe = room\.has_pending_invite && p\.user_id === user\?\.id;/);
+    expect(card).toMatch(/tone=\{room\.has_pending_invite \? "mint" : "white"\}/);
+    expect(card).not.toMatch(/RoomInviteBadge/);
   });
 
-  it("with the inviter's face when the notification carried one", () => {
-    expect(read("src/components/team/RoomInviteBadge.tsx")).toMatch(/avatarUrl=\{from\.avatar_url\}/);
+  it("with the inviter's snapshot still on the room, for the answer to find its notification", () => {
+    // The X's handler lives on the section, above the card.
+    expect(grid).toMatch(/room\.pending_invite_from\.notificationId/);
   });
 });
 

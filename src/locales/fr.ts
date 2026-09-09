@@ -3157,7 +3157,6 @@ export const fr: KaTranslations = {
     tvEnterCode: "Entre le code à 4 chiffres :",
     tvSheetPitch: "Jouez ensemble — chacun répond depuis son téléphone.",
     roomInvitedYou: "Tu es invité",
-    roomInvitedBy: "Invité par {name}",
     tvConnectBtn: "Connecter",
     tvConnectingBtn: "Connexion...",
     tvConnected: "Connecté !",

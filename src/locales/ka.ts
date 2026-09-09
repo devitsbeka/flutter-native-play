@@ -3625,7 +3625,6 @@ export const ka = {
     tvEnterCode: "შეიყვანე 4-ციფრიანი კოდი:",
     tvSheetPitch: "ითამაშეთ ერთად — თითო საკუთარი ტელეფონით.",
     roomInvitedYou: "მოგიწვიეს",
-    roomInvitedBy: "{name}-მა მოგიწვია",
     tvConnectBtn: "დაკავშირება",
     tvConnectingBtn: "დაკავშირება...",
     tvConnected: "დაკავშირებულია!",
