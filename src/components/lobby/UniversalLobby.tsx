@@ -1453,11 +1453,18 @@ function Chip({
         onClick={onPress}
         disabled={!onPress}
         className={cn(
-          "flex h-full min-w-0 flex-1 items-center gap-2 rounded-bl-[22px] rounded-tl-[22px] pr-[8px] text-left",
+          "flex h-full min-w-0 flex-1 items-center gap-2 rounded-bl-[22px] rounded-tl-[22px] text-left",
           // The picked category wears its own face; with nothing picked yet
           // the mock shows the words alone, so the label takes the icon's
           // place rather than standing beside a placeholder for it.
           iconSlug ? "pl-[13px]" : "pl-[31px]",
+          // 8px is the gap before the + , which carries the real inset in
+          // its own mr-[20px]. With no + there is nothing to carry it, and
+          // the "+N" pill ended up 8px from the pill's edge — reading as
+          // touching it (owner: "make sure + button in category picker raw
+          // is not touching edge, check padding"). Without the action the
+          // content ends where the + would have: same inset either way.
+          action ? "pr-[8px]" : "pr-[20px]",
         )}
       >
         {iconSlug && (
