@@ -145,7 +145,12 @@ function CategoryPlate({
         )}
       </AnimatePresence>
 
-      {/* Re-roll — Figma 1147:8862. Three free spins, then it is gone. */}
+      {/* Re-roll — Figma 1147:8862. Three free spins, then it is gone.
+          Centred by a plain wrapper rather than `-translate-y-1/2`: the
+          button animates `scale`, and motion writes its own `transform`
+          inline, which wins over the utility class and drops the button
+          half its height down the plate. */}
+      <div className="absolute right-[20px] top-0 bottom-0 flex items-center pointer-events-none">
       <AnimatePresence>
         {canSpin && (
           <motion.button
@@ -153,7 +158,7 @@ function CategoryPlate({
             onClick={onSpin}
             aria-label={spinLabel}
             title={spinLabel}
-            className="absolute right-[20px] top-1/2 -translate-y-1/2 w-[45px] h-[45px] rounded-full flex items-center justify-center"
+            className="pointer-events-auto w-[45px] h-[45px] rounded-full flex items-center justify-center"
             style={{
               backgroundImage: "linear-gradient(42.44deg, #E9EFFF 27.03%, #F0C8FF 100%)",
               border: "2px solid rgba(255,255,255,0.7)",
@@ -172,6 +177,7 @@ function CategoryPlate({
           </motion.button>
         )}
       </AnimatePresence>
+      </div>
     </div>
   );
 }

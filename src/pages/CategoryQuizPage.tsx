@@ -1474,7 +1474,7 @@ export default function CategoryQuizPage() {
           flag it, and a few words about the answer. */}
       <AnimatePresence>
         {isAnswered && currentQuestion && (
-          <motion.div key={`feedback-${currentQuestionIndex}`} className="px-4 pt-2 flex-shrink-0">
+          <motion.div key={`feedback-${currentQuestionIndex}`} className="px-4 pt-2 pb-6 flex-shrink-0">
             <AnswerFeedbackCard
               isCorrect={selectedAnswer === currentQuestion.correct_answer}
               questionId={currentQuestion.id}
