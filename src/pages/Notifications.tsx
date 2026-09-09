@@ -24,6 +24,8 @@ import { MAP_VIDEOS } from '@/config/videoConfig';
 import { routeForRoom, ROOM_KIND_COLUMNS } from "@/utils/roomRoutes";
 import { supabase } from '@/integrations/supabase/client';
 import { answerJoinRequest } from '@/hooks/useRoomJoinRequests';
+import { answerRematchRequest } from '@/utils/rematchRequests';
+import { useAuth } from '@/contexts/AuthContext';
 import { PUBLIC_SHARING_ENABLED } from "@/config/features";
 import { useContentModeration } from '@/hooks/useContentModeration';
 import {
@@ -53,6 +55,7 @@ export default function Notifications() {
   const { acceptFriendRequest, declineFriendRequest } = useFriends();
   const { acceptInvitation, declineInvitation } = useGameInvitations();
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const { user } = useAuth();
   const [displayLimit, setDisplayLimit] = useState(20);
   const [clearingAll, setClearingAll] = useState(false);
   const [activeTab, setActiveTab] = useState<NotificationTab>('games');
@@ -279,6 +282,32 @@ export default function Notifications() {
     }
   };
 
+  // A rematch asked of me, answered from the list. Yes goes to the room —
+  // the host's yes first points the room at the asker's pick; no gives up
+  // the seat, since a seat that stays is staked when the round settles.
+  const handleRematchAnswer = async (notification: Notification, accept: boolean) => {
+    if (!user) return;
+    setActionLoading(notification.id);
+    try {
+      const { roomCode } = await answerRematchRequest(notification, user.id, accept);
+      toast.success(accept ? t("extra.notifAccepted") : t("extra.notifDeclined"));
+      if (accept && roomCode) {
+        
+        const { data: typed } = await supabase
+          .from('game_rooms')
+          .select(ROOM_KIND_COLUMNS)
+          .eq('room_code', roomCode.toUpperCase())
+          .maybeSingle();
+        navigate(routeForRoom(typed, roomCode));
+      }
+    } catch (error) {
+      console.error('[notifications] rematch answer failed', error);
+      toast.error(t("extra.errorOccurred"));
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const handleDeclineInvite = async (invitationId: string, notificationId: string) => {
     setActionLoading(notificationId);
     try {
@@ -301,6 +330,7 @@ export default function Notifications() {
     
     switch (notification.type) {
       case 'game_started':
+      case 'rematch_request':
       case 'room_invite':
         (async () => {
           try {
@@ -525,6 +555,8 @@ export default function Notifications() {
                   onDeclineInvite={handleDeclineInvite}
                   onAcceptJoin={(r, u, n) => void handleJoinAnswer(r, u, n, true)}
                   onDeclineJoin={(r, u, n) => void handleJoinAnswer(r, u, n, false)}
+                  onAcceptRematch={(n) => void handleRematchAnswer(n, true)}
+                  onDeclineRematch={(n) => void handleRematchAnswer(n, false)}
                   onDismiss={deleteNotification}
                   actionLoading={actionLoading}
                   timeAgo={shortTimeAgo(notification.created_at, t)}

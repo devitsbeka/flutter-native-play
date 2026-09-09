@@ -34,7 +34,10 @@ export type NotificationType =
   // Public rooms: somebody asked to come in, and the host's answer.
   | 'room_join_request'
   | 'room_join_approved'
-  | 'room_join_declined';
+  | 'room_join_declined'
+  // A rematch asked — by the host starting over, or a PRO player with a
+  // pick of their own — to accept or decline.
+  | 'rematch_request';
 
 export interface Notification {
   id: string;
@@ -123,7 +126,9 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
           playSound('notification');
           // A room ping is a call to action right now — surface it as a
           // clickable popup that drops the host straight into the room
-          if (newNotification.type === 'room_ping') {
+          // A rematch asked is the same call to action right now: shown
+          // as a popup with the way into the room, not only a bell badge.
+          if (newNotification.type === 'room_ping' || newNotification.type === 'rematch_request') {
             const data = (newNotification.data ?? {}) as Record<string, unknown>;
             const roomCode = data.room_code as string | undefined;
             // The room decides its page: a poke from the arena opens the
@@ -135,7 +140,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
                 )
               : null;
             toast(
-              translateNotificationTitle('room_ping', newNotification.title, newNotification.data),
+              translateNotificationTitle(newNotification.type, newNotification.title, newNotification.data),
               {
                 duration: 10000,
                 action: target

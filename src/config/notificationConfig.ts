@@ -224,6 +224,15 @@ export const NOTIFICATION_TYPE_CONFIG: Record<string, NotificationTypeConfig> = 
   // The 21st type. It is in the NotificationType union and the app sends it
   // from the room lobby, but it had no entry here, so it was the one kind of
   // notification that fell through to the generic bell.
+  // A rematch asked: a question to answer, like a join request, so it
+  // carries the crossed swords of a challenge rather than the info badge.
+  rematch_request: {
+    icon: Swords,
+    color: 'text-violet-400',
+    bgColor: 'bg-violet-500/20',
+    label: 'რევანშის მოთხოვნა',
+    labelEn: 'Rematch Request',
+  },
   room_ping: {
     icon: BellRing,
     color: 'text-amber-400',
