@@ -31,10 +31,11 @@ import { RoomQueueSheet } from "./RoomQueueSheet";
 import { calculateMultiplayerPayout } from "@/utils/multiplayerPayout";
 import { useRoomPot, type RoomPotLine } from "@/hooks/useRoomPot";
 import { useMatchInfo } from "@/hooks/useMatchInfo";
+import { useMatchRounds, matchTotals } from "@/hooks/useMatchRounds";
 import { FooterHaze } from "@/components/shared/FooterHaze";
 import { isGuestAccount } from "@/utils/guestAccount";
 import { AuthRequiredModal } from "@/components/shared/AuthRequiredModal";
-import { useLocalizedCategoryName } from "@/utils/categoryDisplayName";
+import { useCategoryIconByName, useLocalizedCategoryName } from "@/utils/categoryDisplayName";
 import { useRoomIconPool } from "@/hooks/useRoomIconPool";
 import { dealtRoomIcon } from "@/utils/roomCrests";
 import { useVipStatus } from "@/contexts/VipContext";
@@ -348,41 +349,27 @@ export function GameResultsScreenV2() {
   const matchInfo = useMatchInfo(currentRoom?.id, currentRoom?.current_game_id);
 
   /**
-   * The match's standings, once its last round is in: every round's pot
-   * lines, summed per seat, ranked by what each seat won over the whole
-   * match (owner: "who won the most coins in all rounds the match had, who
-   * is first, second"). settle_room_round is idempotent and reports the
-   * ledger back for a round already settled, so earlier rounds are read
-   * through the same call this screen already makes for the current one.
-   * A match of one round is its own round result and needs no second table.
+   * The match, round by round: which category each round was, what its
+   * pot was, and who won and who lost it (useMatchRounds — the ledger read
+   * back through settle_room_round for every round of the match, once the
+   * current round's own lines are in). The podium says what THIS round
+   * paid; this says what every round paid, so a match of three rounds ends
+   * on a screen that can say what happened in round two (owner: "show
+   * what happened in rounds, per match has its pot - we need to show it
+   * clear who won who lose per round").
+   *
+   * And the match's standings, once its last round is in: every round's
+   * pot lines, summed per seat, ranked by what each seat won over the
+   * whole match (owner: "who won the most coins in all rounds the match
+   * had, who is first, second"). A match of one round is its own round
+   * result and needs no total.
    */
-  const [matchStandings, setMatchStandings] = useState<{ user_id: string; net: number }[] | null>(null);
   const matchOver = queue.length === 0 && !waitingForPlayers;
   const hasPotLines = Object.keys(potLines).length > 0;
-  useEffect(() => {
-    const roomId = currentRoom?.id;
-    if (!roomId || !matchInfo || matchInfo.roundIds.length < 2 || !matchOver || !hasPotLines) {
-      setMatchStandings(null);
-      return;
-    }
-    let cancelled = false;
-    void (async () => {
-      const totals = new Map<string, number>();
-      for (const id of matchInfo.roundIds) {
-        const { lines } = await settleRoomRound(roomId, id);
-        for (const [uid, line] of Object.entries(lines)) {
-          totals.set(uid, (totals.get(uid) ?? 0) + line.net);
-        }
-      }
-      if (cancelled) return;
-      setMatchStandings(
-        [...totals].map(([user_id, net]) => ({ user_id, net })).sort((a, b) => b.net - a.net),
-      );
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [currentRoom?.id, matchInfo, matchOver, hasPotLines, settleRoomRound]);
+  const matchRounds = useMatchRounds(currentRoom?.id, matchInfo, hasPotLines, settleRoomRound);
+  const matchStandings = matchRounds && matchRounds.length >= 2 && matchOver ? matchTotals(matchRounds) : null;
+  /** A past round's icon, off its stored name, when its questions carried none. */
+  const iconForCategoryName = useCategoryIconByName();
 
   const hasUpdatedStats = useRef(false);
 
@@ -992,10 +979,11 @@ export function GameResultsScreenV2() {
           })}
         </motion.div>
 
-        {/* Everyone from fourth down. Not the top three again — they are on
-            the podium — and nothing at all when the room has three or
-            fewer, so the podium is not followed by an empty card. */}
-        {rankedParticipants.length > PODIUM_ORDER.length && (
+        {/* Everyone from fourth down, then the match round by round. Not the
+            top three again — they are on the podium — and nothing at all
+            when the room has three or fewer and there are no rounds to
+            tell, so the podium is not followed by an empty card. */}
+        {(rankedParticipants.length > PODIUM_ORDER.length || (matchRounds && matchInfo)) && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1043,6 +1031,108 @@ export function GameResultsScreenV2() {
                 <PotLine net={netFor(p)} tone="white" />
               </div>
             ))}
+
+            {/* The match, round by round (useMatchRounds): each round's
+                category and pot, and under it every seat with what the
+                round paid them — the winner first, wearing the medal, the
+                rest in the grey the podium uses for a place that did not
+                pay. One tile in the list's own shape, so it reads as part
+                of the results rather than a panel over them. Once the
+                last round is in, the match's totals close it. */}
+            {matchRounds && matchInfo && (
+              <motion.section
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.45 }}
+                className="rounded-[24px] border-2 border-[rgba(255,217,217,0.1)] bg-[rgba(255,222,222,0.2)] px-4 py-3 shadow-[0px_2px_8px_0px_rgba(102,51,153,0.06),0px_8px_0px_0px_rgba(232,185,185,0.4)]"
+                aria-label={t("extra.matchRoundsTitle", { game: matchInfo.game })}
+              >
+                <p className="mb-2 text-[12px] font-bold uppercase leading-[18px] tracking-[0.3px] text-white/60">
+                  {t("extra.matchRoundsTitle", { game: matchInfo.game })}
+                </p>
+                <ol className="divide-y divide-white/15">
+                  {matchRounds.map((round) => {
+                    const undecided = isUndecidedRound(null, round.categoryName);
+                    const slug = undecided
+                      ? UNDECIDED_ICON_SLUG
+                      : round.iconSlug ?? iconForCategoryName(round.categoryName) ?? UNDECIDED_ICON_SLUG;
+                    return (
+                      <li key={round.id} className="py-2.5 first:pt-0 last:pb-0">
+                        <div className="flex items-center gap-2">
+                          <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white/15">
+                            <DynamicIcon slug={slug} size={20} shadow={false} />
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-[15px] font-semibold leading-5 text-white">
+                              {localizeCategory(round.categoryName) || t("extra.categoryFallback")}
+                            </span>
+                            <span className="block text-[12px] leading-4 text-white/60">
+                              {t("lobby.uRoundLabel", { count: round.number })}
+                            </span>
+                          </span>
+                          {round.pot > 0 && (
+                            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[12px] font-bold text-white">
+                              <img src={coinIcon} alt="" className="h-3.5 w-3.5 object-contain" />
+                              {t("extra.roundPotLabel", { amount: round.pot.toLocaleString() })}
+                            </span>
+                          )}
+                        </div>
+                        {/* Who won it and who lost it: every seat, the winner first. */}
+                        <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1.5 pl-10">
+                          {round.seats.map((seat, i) => {
+                            const who = participants.find((p) => p.user_id === seat.user_id);
+                            return (
+                              <li key={seat.user_id} className="flex items-center gap-1.5">
+                                <span className="w-5 text-center text-[13px] leading-none">{placeMark(i, i + 1)}</span>
+                                <SafeAvatar
+                                  avatarUrl={who?.avatar_url ?? null}
+                                  fallback={who?.nickname || "?"}
+                                  className="h-6 w-6 border border-white/40"
+                                  fallbackClassName="bg-gradient-to-br from-purple-400 to-purple-600 text-white text-[10px] font-bold"
+                                />
+                                <span className="max-w-[96px] truncate text-[13px] font-semibold text-white">
+                                  {seat.user_id === user?.id ? t("game.you") : who?.nickname || "?"}
+                                </span>
+                                <PotLine net={seat.net} compact tone={seat.net > 0 ? "gold" : "white"} />
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </li>
+                    );
+                  })}
+                </ol>
+                {/* The whole match, once its last round is in: every seat's
+                    coins over all of its rounds, first to last. */}
+                {matchStandings && (
+                  <div className="mt-3 border-t border-white/25 pt-3">
+                    <p className="mb-1.5 text-[12px] font-bold uppercase leading-[18px] tracking-[0.3px] text-white/60">
+                      {t("extra.matchStandingsTitle", { game: matchInfo.game, rounds: matchInfo.roundIds.length })}
+                    </p>
+                    <ol className="space-y-1.5">
+                      {matchStandings.map((row, i) => {
+                        const seat = participants.find((p) => p.user_id === row.user_id);
+                        return (
+                          <li key={row.user_id} className="flex items-center gap-2">
+                            <span className="w-6 text-center text-sm leading-none">{placeMark(i, i + 1)}</span>
+                            <SafeAvatar
+                              avatarUrl={seat?.avatar_url ?? null}
+                              fallback={seat?.nickname || "?"}
+                              className="w-7 h-7 border border-white/40"
+                              fallbackClassName="bg-gradient-to-br from-purple-400 to-purple-600 text-white text-xs font-bold"
+                            />
+                            <span className="min-w-0 flex-1 truncate text-sm font-semibold text-white">
+                              {row.user_id === user?.id ? t("game.you") : seat?.nickname || "?"}
+                            </span>
+                            <PotLine net={row.net} compact tone={row.net > 0 ? "gold" : "white"} />
+                          </li>
+                        );
+                      })}
+                    </ol>
+                  </div>
+                )}
+              </motion.section>
+            )}
             </div>
           </motion.div>
         )}
@@ -1060,41 +1150,6 @@ export function GameResultsScreenV2() {
         transition={{ delay: 0.4 }}
         className="relative p-4 pb-5 space-y-3"
       >
-        {/* The whole match, once its last round is in: every seat's coins
-            over all of its rounds, first to last. */}
-        {matchStandings && matchInfo && (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="w-full rounded-xl border border-white/20 bg-white/10 p-3 backdrop-blur-sm"
-          >
-            <p className="mb-2 text-xs text-white/60">
-              {t("extra.matchStandingsTitle", { game: matchInfo.game, rounds: matchInfo.roundIds.length })}
-            </p>
-            <ol className="space-y-1.5">
-              {matchStandings.map((row, i) => {
-                const seat = participants.find((p) => p.user_id === row.user_id);
-                return (
-                  <li key={row.user_id} className="flex items-center gap-2">
-                    <span className="w-6 text-center text-sm leading-none">{placeMark(i, i + 1)}</span>
-                    <SafeAvatar
-                      avatarUrl={seat?.avatar_url ?? null}
-                      fallback={seat?.nickname || "?"}
-                      className="w-7 h-7 border border-white/40"
-                      fallbackClassName="bg-gradient-to-br from-purple-400 to-purple-600 text-white text-xs font-bold"
-                    />
-                    <span className="min-w-0 flex-1 truncate text-sm font-semibold text-white">
-                      {row.user_id === user?.id ? t("game.you") : seat?.nickname || "?"}
-                    </span>
-                    <PotLine net={row.net} compact />
-                  </li>
-                );
-              })}
-            </ol>
-          </motion.div>
-        )}
-
         {/* Next Round Preview - show if queue has items */}
         {nextQueueItem && (
           // Tappable: it already showed "+3 >" beside the next item, which
