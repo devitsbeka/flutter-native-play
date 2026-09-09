@@ -3099,7 +3099,13 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       // Regular category or random - fetch new questions directly with correct category
       // Handle __mixed__ category - triggers multi-category mode
       const isMixedCategory = nextItem.category_id === "__mixed__";
-      const newCategoryId = nextItem.source_type === "random" ? null : (isMixedCategory ? undefined : nextItem.category_id);
+      // A mixed round WRITES its id. It used to leave the column alone
+      // (undefined), so the room kept the previous round's category_id under
+      // the name "Mixed" — and every screen reading the id first (the
+      // countdown, the results header, the lobby chip on re-entry) drew the
+      // previous round's picture, or nothing, over a round called Mixed.
+      // startGame already treats "__mixed__" on the room as multi-category.
+      const newCategoryId = nextItem.source_type === "random" ? null : (isMixedCategory ? "__mixed__" : nextItem.category_id);
       // Through t(), not hardcoded Georgian — TVGameContext already does
       // this with the same keys. (The name is still a snapshot in this
       // writer's language once persisted; per-viewer resolution is a wider
@@ -3121,7 +3127,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       
       // Fetch questions with the NEW category (not from stale state!)
       let questions: TriviaQuestion[];
-      if (newCategoryId && await isMostLikelyCategoryId(newCategoryId)) {
+      if (newCategoryId && !isMixedCategory && await isMostLikelyCategoryId(newCategoryId)) {
         // "Most Likely To" queued round — see startGame for the shape.
         questions = await buildMostLikelyQuestions(
           newCategoryId,
@@ -3135,7 +3141,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       } else {
         const result = await getQuestions({
           mode: 'vs',
-          categorySlug: newCategoryId || undefined,
+          // "__mixed__" is not a category slug: a mixed round asks for no
+          // category, the same as a random one.
+          categorySlug: isMixedCategory ? undefined : (newCategoryId || undefined),
           count: questionCount,
           excludeIds: usedIds,
         });

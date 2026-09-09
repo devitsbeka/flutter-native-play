@@ -7,6 +7,7 @@ import { isInterruptible } from "@/utils/roundStartRoutes";
 import { isFreshRoundStart } from "@/utils/roundCountdown";
 import { RoundCountdown } from "@/components/team/RoundCountdown";
 import { useRoundCountdown, useRoundStartHold } from "@/hooks/useRoundCountdown";
+import { useCategoryIdentity } from "@/hooks/useCategoryIdentity";
 
 /**
  * Brings a player back to a room the moment its round starts, and counts them
@@ -65,6 +66,10 @@ export function RoundStartWatcher() {
   const [startedRound, setStartedRound] = useState<StartedRound | null>(null);
   const countdownNumber = useRoundCountdown(startedRound?.startedAt);
   const withinRoundStart = useRoundStartHold(startedRound?.startedAt);
+  // The category's own icon, resolved the way the room page resolves it.
+  // Without it a room that stores a uuid had no slug to draw, and a player
+  // brought here from another page counted in under a question mark.
+  const roundCategory = useCategoryIdentity(startedRound?.categoryId);
 
   // Hand the screen back once the count and its grace are spent. By then the
   // room page has had its cold mount and owns whatever comes next.
@@ -198,8 +203,9 @@ export function RoundStartWatcher() {
   return (
     <RoundCountdown
       number={countdownNumber}
-      categoryId={startedRound.categoryId}
+      categoryId={roundCategory.categoryId ?? startedRound.categoryId}
       categoryName={startedRound.categoryName}
+      iconSlug={roundCategory.iconSlug}
     />
   );
 }

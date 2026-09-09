@@ -52,7 +52,7 @@ describe("the two screens that announce a round", () => {
   it("the countdown draws the box instead of falling through to a '?'", () => {
     const countdown = read("src/components/team/RoundCountdown.tsx");
     expect(countdown).toMatch(
-      /const slug = isUndecidedRound\(categoryId, categoryName\)\s*\n\s*\? UNDECIDED_ICON_SLUG/,
+      /const mystery = isUndecidedRound\(categoryId, categoryName\) \|\| \(!categoryId && !iconSlug && !mapSlug\);\s*\n\s*const slug = mystery\s*\n\s*\? UNDECIDED_ICON_SLUG/,
     );
     // The real categories keep both slugs, best first — that is what stops a
     // uuid resolving to a random icon (a banana for "guess the city").
@@ -62,7 +62,7 @@ describe("the two screens that announce a round", () => {
   it("and so does the results header", () => {
     const results = read("src/components/team/GameResultsScreenV2.tsx");
     expect(results).toMatch(
-      /isUndecidedRound\(currentRoom\.category_id, currentRoom\.category_name\)\s*\n\s*\? UNDECIDED_ICON_SLUG\s*\n\s*: resultsCategory\.iconSlug/,
+      /isUndecidedRound\(currentRoom\.category_id, currentRoom\.category_name\)\s*\n\s*\|\| \(!currentRoom\.category_id && !resultsCategory\.iconSlug\)\s*\n\s*\? UNDECIDED_ICON_SLUG\s*\n\s*: resultsCategory\.iconSlug/,
     );
   });
 

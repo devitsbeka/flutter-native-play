@@ -18,6 +18,7 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { toast } from "@/lib/toast";
 import { supabase } from "@/integrations/supabase/client";
 import { OWN_TRIVIA_ICON_SLUG, roomPlaysOwnTrivia, roundIconSlug } from "@/utils/ownTriviaRound";
+import { isUndecidedRound, UNDECIDED_ICON_SLUG } from "@/utils/undecidedRound";
 import { MatchSummarySheet } from "./MatchSummarySheet";
 import { siteUrl } from "@/config/site";
 import { inviteLinkPath } from "@/utils/inviteLink";
@@ -1093,7 +1094,9 @@ export function RoomLobbyV2() {
           iconForCategoryName(currentRoom.category_name)
           || getCategoryIconSlug(currentRoom.category_id ?? "")
           // A trivia the player wrote has no category to take an icon from.
-          || (currentRoom.user_trivia_id ? OWN_TRIVIA_ICON_SLUG : null),
+          || (currentRoom.user_trivia_id ? OWN_TRIVIA_ICON_SLUG : null)
+          // A mixed round held by the room itself: the box, as everywhere else.
+          || (isUndecidedRound(currentRoom.category_id, currentRoom.category_name) ? UNDECIDED_ICON_SLUG : null),
       }
     : null;
   const totalRounds = (heldRound ? 1 : 0) + queue.length;
