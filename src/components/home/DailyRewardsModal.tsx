@@ -26,13 +26,16 @@ import { RewardRoadCanvas } from "./RewardRoadCanvas";
 import { ROAD, clampChipX, roadHeight, roadNodes } from "./rewardRoad";
 
 /**
- * The footprint every state of a stop's chip shares: the Claim button, the
- * receipt, the lock, the countdown.
+ * The footprint every state of a stop's chip shares: the receipt, the plain
+ * check, "Missed", the lock, the countdown.
  *
  * One constant because they occupy the same place in turn, and a stop that
- * changed size as it went from Claim to claimed would shift the road under
- * it. They were five separate copies of a width, which is a set of numbers
- * that agree only until someone edits one of them.
+ * changed size as it went from waiting to claimed would shift the road under
+ * it. They were separate copies of a width, which is a set of numbers that
+ * agree only until someone edits one of them.
+ *
+ * There is no Claim chip among them any more: the medallion IS the button —
+ * see the note on the tap target below.
  *
  * The receipt takes this as a MINIMUM and grows past it for a claim with a
  * gem and a power-up on it; everything else takes it exactly. That is also
@@ -210,6 +213,8 @@ function RoadStop({
   const isMissed = state === "missed";
   const showOpenGift = state === "claimed" || phase === "revealed";
   const isToday = state === "today";
+  /** Today, with the reward still there, and nothing already in flight. */
+  const isClaimable = isToday && canClaim && phase === "idle";
   /** The last stop of the week is the one worth walking to, so it is treasure. */
   const isFinal = index === 6;
 
@@ -251,6 +256,7 @@ function RoadStop({
       <motion.div
         initial={{ opacity: 0, scale: 0.7 }}
         animate={{ opacity: 1, scale: 1 }}
+        whileTap={isClaimable ? { scale: 0.94 } : undefined}
         transition={{ delay: index * 0.04, type: "spring", stiffness: 320, damping: 22 }}
         className="absolute z-10 flex items-center justify-center rounded-full"
         // Offset by half itself rather than by a -translate-x-1/2 class:
@@ -311,11 +317,34 @@ function RoadStop({
         />
 
         {/* The ring that says "here, now". Only ever on one stop. */}
-        {isToday && canClaim && phase === "idle" && (
+        {isClaimable && (
           <motion.span
             className="pointer-events-none absolute inset-[-10px] rounded-full border-[3px] border-white/80"
             animate={{ scale: [1, 1.16, 1], opacity: [0.85, 0, 0.85] }}
             transition={{ repeat: Infinity, duration: 1.9, ease: "easeOut" }}
+          />
+        )}
+
+        {/* The tap target IS the gift.
+
+            There was a Claim button on a chip under it, which on a road is
+            the same instruction written twice: the stop pulses, the gift
+            bobs, and then a separate purple bar says press me. On a map you
+            press the place you are standing on, so the whole medallion takes
+            the tap — a 80px circle, comfortably past the 44pt minimum, where
+            the button was a 128x44 bar that also covered the road.
+
+            A real <button> laid over the face rather than a click handler on
+            the medallion: it is focusable, it says what it does to a screen
+            reader, and it exists ONLY while there is something to claim, so
+            there is no disabled control to tab into on the other six stops.
+            The press is felt on the medallion itself through whileTap. */}
+        {isClaimable && (
+          <button
+            type="button"
+            onClick={canClaim && phase === "idle" ? onClaim : undefined}
+            aria-label={t("dailyRewards.claim")}
+            className="absolute inset-0 rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
           />
         )}
       </motion.div>
@@ -446,22 +475,7 @@ function RoadStop({
           <div className={`flex h-[44px] ${PILL_W} items-center justify-center rounded-full bg-white/85 shadow-[0_1px_3px_rgba(64,38,102,0.16)]`}>
             <span className="font-mono text-[13px] font-bold text-[#402666]/70">{timeLeft}</span>
           </div>
-        ) : (
-          <motion.button
-            onClick={canClaim && phase === "idle" ? onClaim : undefined}
-            disabled={!canClaim || phase !== "idle"}
-            whileTap={canClaim ? { scale: 0.95 } : undefined}
-            animate={canClaim && phase === "idle" ? { scale: [1, 1.05, 1] } : undefined}
-            transition={canClaim && phase === "idle" ? { repeat: Infinity, duration: 1.6 } : undefined}
-            className={`h-[44px] ${PILL_W} rounded-full text-[15px] font-bold text-white disabled:opacity-60`}
-            style={{
-              background: "linear-gradient(180deg, #8B5CF6 0%, #7126D5 100%)",
-              boxShadow: "0 3px 0 #5B1BA8, 0 6px 14px rgba(113,38,213,0.35)",
-            }}
-          >
-            {phase === "opening" ? "…" : t("dailyRewards.claim")}
-          </motion.button>
-        )}
+        ) : null}
       </div>
     </>
   );

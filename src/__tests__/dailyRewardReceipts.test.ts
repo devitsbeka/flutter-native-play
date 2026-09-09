@@ -265,11 +265,15 @@ describe("the receipt pill's spacing", () => {
   });
 
   /**
-   * Every state of the slot — Claim, receipt, lock, countdown, the plain
-   * check — is the same size, so the card does not resize as the day is
-   * claimed. They were five hand-written copies of the same width; now one
-   * constant feeds them, and this is what stops a sixth from being written
+   * Every state of the slot — receipt, lock, countdown, "Missed", the plain
+   * check — is the same size, so a stop does not resize as the day is
+   * claimed. They were hand-written copies of the same width; now one
+   * constant feeds them, and this is what stops another from being written
    * out by hand next to it.
+   *
+   * Five, not six: the Claim button left the slot when the medallion itself
+   * became the tap target, so the only thing under a claimable stop is the
+   * road.
    */
   it("gives every state of the slot the same footprint", () => {
     expect(modal).toMatch(/const PILL_W = "w-\[128px\]"/);
@@ -279,8 +283,8 @@ describe("the receipt pill's spacing", () => {
     // which height is the road's business and may change with it, but a
     // sixth state written out by hand is what this catches.
     const heights = [...modal.matchAll(/h-\[(\d+)px\] \$\{PILL_W(_MIN)?\}/g)].map((m) => m[1]);
-    expect(heights.length, "expected the receipt and its five siblings").toBe(6);
-    expect(new Set(heights).size, "one footprint, not six").toBe(1);
+    expect(heights.length, "expected the receipt and its four siblings").toBe(5);
+    expect(new Set(heights).size, "one footprint, not five").toBe(1);
 
     // No literal width left in the slot — checked at the slot's own height,
     // so the purse in the header keeps its h-[52px] w-[52px] without being

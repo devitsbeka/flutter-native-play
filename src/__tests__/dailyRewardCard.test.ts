@@ -89,4 +89,18 @@ describe("today, but not yet", () => {
   it("keeps the real button for a day that can be claimed", () => {
     expect(modal).toMatch(/onClick=\{canClaim && phase === "idle" \? onClaim : undefined\}/);
   });
+
+  it("puts that button on the gift itself, and only where there is one", () => {
+    // The Claim chip under the medallion was the same instruction written
+    // twice — the stop already pulses and the gift already bobs. The whole
+    // 80px circle takes the tap now.
+    const medallion = modal.match(/{\/\* The tap target IS the gift[\s\S]*?\n {8}\)}/);
+    expect(medallion, "expected the tap target on the medallion").not.toBeNull();
+    expect(medallion![0]).toMatch(/isClaimable && \(/);
+    expect(medallion![0]).toMatch(/aria-label=\{t\("dailyRewards\.claim"\)\}/);
+
+    // And no purple bar left in the slot below it: a claimable stop shows
+    // the road under the gift, nothing else.
+    expect(modal, "the Claim chip is gone").not.toMatch(/\{phase === "opening" \? "…" : t\("dailyRewards\.claim"\)\}/);
+  });
 });
