@@ -1479,7 +1479,11 @@ function Chip({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.6, y: 8 }}
               transition={{ type: "spring", stiffness: 520, damping: 22 }}
-              className="ml-2 shrink-0 font-display text-[16px] font-bold leading-[26px] text-[#402666]/60"
+              // A pill, not a faded number: "+1" hanging loose at the far end
+              // of the chip read as a stray glyph (owner: "looks weird").
+              // Tinted like the rest of the lobby's counts so it says
+              // "one more round" at a glance.
+              className="ml-2 inline-flex h-[24px] shrink-0 items-center rounded-full bg-[#7126d5]/10 px-2.5 font-[Nunito] text-[13px] font-bold leading-none text-[#7126d5]"
             >
               {trailing}
             </motion.span>

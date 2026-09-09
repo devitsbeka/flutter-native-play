@@ -1474,6 +1474,23 @@ export function RoomLobbyV2() {
       onInvite={() => setShowInviteModal(true)}
       playersExtra={<ChallengeResultsSection roomId={currentRoom.id} />}
       initialTab={needsCategorySelection ? "players" : "rules"}
+      /* A guest's way out, above the ping. The only leave was behind their
+         own row on the Players tab and the back arrow, neither of which
+         reads as "leave this room" (owner's ask). The host keeps the
+         delete in the menu; this is for the people who were invited in. */
+      footerExtra={
+        !isHost ? (
+          <ChunkyButton
+            variant="whitePurple"
+            size="md"
+            className="mb-2 w-full"
+            onClick={() => setShowLeaveConfirm(true)}
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            {t("team.leaveRoom")}
+          </ChunkyButton>
+        ) : null
+      }
       start={
         isHost
           ? {
