@@ -58,10 +58,13 @@ describe("a disabled Start says why, where it can be seen", () => {
   it("the reason is drawn above the button, not under it", () => {
     expect(lobby).toMatch(/const captionBlock = start\.caption \? \(/);
     // Above when it is a blocker, below when it is not.
-    const footer = lobby.slice(lobby.indexOf("{footerExtra}"));
-    const above = footer.indexOf("{start.disabled && captionBlock}");
+    // (Or when the caller asks for it above outright — a guest's "waiting
+    // for the host" is the room's state, and sits over the button that
+    // pokes them; see lobbyStickyTabsAndGuestFooter.test.)
+    const footer = lobby.slice(lobby.indexOf('{footerExtraPlacement === "above" && footerExtra}'));
+    const above = footer.indexOf("{(start.disabled || start.captionAbove) && captionBlock}");
     const button = footer.indexOf("<motion.button");
-    const below = footer.indexOf("{!start.disabled && captionBlock}");
+    const below = footer.indexOf("{!start.disabled && !start.captionAbove && captionBlock}");
     expect(above).toBeGreaterThan(-1);
     expect(above).toBeLessThan(button);
     expect(below).toBeGreaterThan(button);

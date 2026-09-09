@@ -1757,6 +1757,7 @@ export function RoomLobbyV2() {
          the footer's own dark ink, bold, on a 44px tap target — the same
          weight as the caption under the button, and nothing to compete
          with the violet slab below it. */
+      footerExtraPlacement="below"
       footerExtra={
         !isHost ? (
           <button
@@ -1802,6 +1803,9 @@ export function RoomLobbyV2() {
               icon: <BellRing className="h-5 w-5" />,
               caption: t("team.waitingForHost"),
               captionPulse: true,
+              // State above the act: the wait, then the button that pokes
+              // the host, then the way out under both (owner's ask).
+              captionAbove: true,
               // The host's face after the "…" — the person being waited on.
               captionAvatarUrl: participants.find((p) => p.is_host)?.avatar_url ?? null,
               captionAvatarName: participants.find((p) => p.is_host)?.nickname ?? null,
