@@ -92,8 +92,11 @@ describe("the host starts with whoever said yes", () => {
 
   it("and the undecided leave the table before the stake is taken", () => {
     const start = lobby.slice(lobby.indexOf("const startWithWhoSaidYes"), lobby.indexOf("return (\n    <UniversalLobby"));
-    expect(start).toMatch(/const undecided = tableToAsk\.filter\(\(p\) => \(p\.status as string\) !== "ready"\)\.map\(\(p\) => p\.id\);/);
-    expect(start).toMatch(/\.from\("room_participants"\)\.delete\(\)\.in\("id", undecided\)/);
+    // Only the seats that were ASKED: somebody who sat down during the ask
+    // never got a card (roundsThatCannotHang.test.ts).
+    expect(start).toMatch(/const asked = new Set\(askedSeats\.map\(\(s\) => s\.user_id\)\);/);
+    expect(start).toMatch(/const undecided = tableToAsk\.filter\(\(p\) => asked\.has\(p\.user_id\) && \(p\.status as string\) !== "ready"\);/);
+    expect(start).toMatch(/\.from\("room_participants"\)\.delete\(\)\.in\("id", undecided\.map\(\(p\) => p\.id\)\)/);
     expect(start).toMatch(/void handleStartGame\(\);/);
   });
 });

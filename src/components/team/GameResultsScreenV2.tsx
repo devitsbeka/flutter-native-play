@@ -10,7 +10,6 @@ import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useCurrency } from "@/hooks/useCurrency";
 import { useRoomCategoryQueue } from "@/hooks/useRoomCategoryQueue";
 import { supabase } from "@/integrations/supabase/client";
 import { filterCategoriesForLanguage } from "@/utils/languageCategoryFilter";
@@ -247,7 +246,6 @@ export function GameResultsScreenV2() {
   const { playSound, vibrate } = useSound();
   const { t } = useLanguage();
   const localizeCategory = useLocalizedCategoryName();
-  const { addCoins } = useCurrency();
   const { settleRoomRound, readRoomRound } = useRoomPot();
   const { trackMissionEvent } = useMissions();
   const { openProfile } = usePlayerProfile();
@@ -403,8 +401,15 @@ export function GameResultsScreenV2() {
   const roundScoreOf = (p: { user_id: string; score?: number | null }) =>
     Math.max(bestSeenScores.current.get(p.user_id) ?? 0, p.score || 0);
 
-  // Sort participants by score and assign ranks
-  const rankedParticipants: RankedParticipant[] = [...participants]
+  // Sort participants by score and assign ranks — the seats the POT ranks,
+  // which are the ones the round was played by. An invitation nobody
+  // accepted and the observing host stood on the list on 0 points ("#4
+  // Friend — 0 points" for someone who never arrived), and the places the
+  // screen showed were not the places the pot paid. A seat that left
+  // mid-round stays: it was staked, and the ledger has a line for it.
+  const rankedParticipants: RankedParticipant[] = participants
+    .filter((p) => (p.status as string) !== "invited")
+    .filter((p) => !(hostIsObserver && p.user_id === currentRoom?.host_user_id))
     .sort((a, b) => roundScoreOf(b) - roundScoreOf(a))
     .map((p, index) => ({
       user_id: p.user_id,
@@ -615,24 +620,16 @@ export function GameResultsScreenV2() {
           isWin,
         });
 
+        // What moved is what the server says moved — and nothing else. There
+        // used to be a fallback here for the window before settle_room_round
+        // was deployed, paying a placement reward the CLIENT worked out; the
+        // function has been live for a long time, and a client that names
+        // its own prize is the hole rule 3 of CLAUDE.md exists to close. A
+        // round the server did not settle pays nobody.
         const settlement = await settleRoomRound(currentRoom.id, currentRoom.current_game_id ?? null);
-        if (settlement.unsettled && settlement.reason === "not_deployed") {
-          // The migration has not reached this project yet. Pay the old
-          // placement reward rather than nobody, so a round is never silently
-          // worthless in the window between shipping this and applying it.
-          const { earnedCoins } = calculateMultiplayerPayout({
-            playerCount: participants.length,
-            myRank: myRankForPayout,
-            myScore,
-            isWin,
-          });
-          if (earnedCoins > 0) await addCoins(earnedCoins, "quiz_reward");
-          setCoinsEarned(earnedCoins);
-        } else {
-          setCoinsEarned(Math.max(0, settlement.applied));
-          setCoinsLost(Math.max(0, -settlement.applied));
-          setPotLines(settlement.lines);
-        }
+        setCoinsEarned(Math.max(0, settlement.applied));
+        setCoinsLost(Math.max(0, -settlement.applied));
+        setPotLines(settlement.lines);
 
         // Tell the players who are not here.
         //

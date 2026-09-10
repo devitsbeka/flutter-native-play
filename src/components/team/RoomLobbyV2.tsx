@@ -1644,12 +1644,33 @@ export function RoomLobbyV2() {
 
   const startWithWhoSaidYes = async () => {
     if (!currentRoom) return;
-    // Whoever has not said yes leaves the table before the stake is taken.
-    // Their row, not their status: the host may delete a seat but not
-    // rewrite it (RLS), and a deleted seat is exactly "not playing".
-    const undecided = tableToAsk.filter((p) => (p.status as string) !== "ready").map((p) => p.id);
+    // Whoever was ASKED and has not said yes leaves the table before the
+    // stake is taken. Their row, not their status: the host may delete a
+    // seat but not rewrite it (RLS), and a deleted seat is exactly "not
+    // playing". Only the asked: somebody who sat down during the ask never
+    // got a card, and was being removed for not answering a question they
+    // were never asked. And the removed are told — a seat that vanished
+    // with no word, followed by "game already started" at the door, read
+    // as a broken room.
+    const asked = new Set(askedSeats.map((s) => s.user_id));
+    const undecided = tableToAsk.filter((p) => asked.has(p.user_id) && (p.status as string) !== "ready");
     if (undecided.length > 0) {
-      await supabase.from("room_participants").delete().in("id", undecided);
+      await supabase.from("room_participants").delete().in("id", undecided.map((p) => p.id));
+      const hostName = profile?.nickname || t("extra.friendFallback");
+      void supabase
+        .from("notifications")
+        .insert(
+          undecided.map((p) => ({
+            user_id: p.user_id,
+            type: "rematch_removed",
+            title: t("extra.rematchRemovedTitle"),
+            message: t("extra.rematchRemovedBody", { name: hostName }),
+            data: { room_id: currentRoom.id, room_code: currentRoom.room_code, room_name: currentRoom.room_name },
+          })),
+        )
+        .then(({ error }) => {
+          if (error) console.error("[lobby] could not tell the removed seats", error);
+        });
     }
     setShowRematchWait(false);
     void handleStartGame();

@@ -20,6 +20,16 @@ import { AnswerChoiceAvatars, type AnswerChooser } from "@/components/game/Answe
 import { LiveRaceStrip } from "@/components/game/LiveRaceStrip";
 import { useCategoryIdentity } from "@/hooks/useCategoryIdentity";
 import { imageTreatmentFor } from "@/utils/questionImageTreatment";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 /**
  * How long a revealed answer stays up before the round moves on.
@@ -303,9 +313,26 @@ export function MultiplayerGameScreenV2() {
     return () => clearTimeout(timer);
   }, [answerRevealed, isMostLikelyRound, voteResult, currentQuestionIndex, handleNext]);
 
-  const handleExit = () => {
+  /**
+   * Leaving a live round is asked first.
+   *
+   * The back arrow used to leave on one tap, and a seat that leaves
+   * mid-round is still staked when the pot settles — a brushed arrow cost
+   * the player 500 coins with no word said. The observing host is not
+   * staked and is not asked.
+   */
+  const [confirmLeave, setConfirmLeave] = useState(false);
+  const leaveRound = () => {
+    setConfirmLeave(false);
     exitRoom();
     navigate("/team");
+  };
+  const handleExit = () => {
+    if (isHost && hostIsObserver) {
+      leaveRound();
+      return;
+    }
+    setConfirmLeave(true);
   };
 
   // Timer - skip for observers (they don't need to submit answers) and stop
@@ -433,6 +460,21 @@ export function MultiplayerGameScreenV2() {
   const answeredCount = Object.keys(currentOpponentAnswers).length;
 
   return (
+    <>
+    <AlertDialog open={confirmLeave} onOpenChange={setConfirmLeave}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{t("extra.leaveRoundTitle")}</AlertDialogTitle>
+          <AlertDialogDescription>{t("extra.leaveRoundBody")}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+          <AlertDialogAction onClick={leaveRound} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            {t("extra.leaveRoundConfirm")}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
     <div className="w-full h-[100dvh] bg-[#7E7BDC] overflow-hidden" style={{ marginTop: "calc(-1 * var(--safe-top))", paddingTop: "var(--safe-top)" }}>
       <div className="w-full h-full flex flex-col max-w-[700px] md:max-w-[520px] mx-auto">
 
@@ -636,5 +678,6 @@ export function MultiplayerGameScreenV2() {
       </div>
       </div>
     </div>
+    </>
   );
 }

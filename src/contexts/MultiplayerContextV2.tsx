@@ -1,6 +1,8 @@
 // Multiplayer Context V2 - Manages room-based trivia games
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { isRoomStale } from "@/utils/roomStale";
+import { PRIVATE_ROUND_DEADLINE_MS, PUBLIC_ROUND_DEADLINE_MS, roundDeadlinePassed } from "@/utils/roundSettlement";
+import { setHeldRoomId } from "@/utils/heldRoom";
 import { isPublicRoomOver } from "@/utils/publicRoomOver";
 import { t as tStandalone } from "@/utils/standaloneTranslation";
 import { supabase } from "@/integrations/supabase/client";
@@ -536,6 +538,12 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     return true;
   }, []);
 
+  // The room this provider holds, for RoundStartWatcher (see utils/heldRoom).
+  useEffect(() => {
+    setHeldRoomId(state.currentRoom?.id ?? null);
+    return () => setHeldRoomId(null);
+  }, [state.currentRoom?.id]);
+
   const stampRoomStarted = useCallback((startedAt: string, gameId: string | null | undefined) => {
     setState(prev => prev.currentRoom
       ? {
@@ -863,21 +871,33 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             toast.info(tStandalone("extra.mpRoomClosed"));
             setState(initialState);
             cleanupChannels();
-          } else if (updated.status === "waiting" && currentPhase === "results") {
-            // Host returned to lobby - non-host should follow
-            console.log(`[MP] Room returned to waiting state, transitioning to lobby`);
-            setState(prev => ({
-              ...prev,
-              phase: "lobby",
-              questions: [],
-              currentQuestionIndex: 0,
-              myScore: 0,
-              lastQuestionResult: null,
-              opponentAnswers: {},
-              voteResults: {},
-              currentRoom: updated,
-            }));
           }
+          // A room going back to "waiting" — the host's back arrow on the
+          // results, or an Add-to-queue — used to move every OTHER client
+          // off its results screen and into the lobby, mid-read, with no
+          // way back to the standings. It moves nobody now: a player keeps
+          // their results until they dismiss them (continueInRoom sees the
+          // room is already waiting and only flips the phase), and follows
+          // the room only when a new round actually starts, above.
+        }
+      )
+      // The row itself going: a host deleting the room from another device,
+      // or the sweep. The UPDATE handler only ever heard "cancelled"; a
+      // deleted room left everyone in it sitting in a lobby for a row that
+      // no longer existed. No filter on this one — Postgres sends a DELETE
+      // with the old row's primary key only, and a filtered DELETE needs
+      // REPLICA IDENTITY FULL, which game_rooms does not have — so the id
+      // is compared here.
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "game_rooms" },
+        (payload) => {
+          const gone = (payload.old as { id?: string } | null)?.id;
+          if (!gone || gone !== roomId) return;
+          console.log(`[MP] Room ${roomId} was deleted`);
+          toast.info(tStandalone("extra.mpRoomClosed"));
+          setState(initialState);
+          cleanupChannels();
         }
       )
       .subscribe(async (status) => {
@@ -1051,14 +1071,26 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           debouncedFetchParticipants(roomId);
 
           // Check if all playing participants have finished → mark room completed.
-          // Each client only reacts to its OWN "finished" transition - every player
-          // reports their own finish, so running the check for every event just
-          // multiplies identical queries and race windows.
-          if (
+          //
+          // Each client used to react to its OWN "finished" transition only.
+          // That is enough while everyone finishes: the last to finish
+          // completes the room. It is not enough when the last player does
+          // not — a killed app, a lost network, a seat given up mid-round.
+          // Their row went "disconnected" (or away) and nobody's own finish
+          // was left to fire, so the room stayed "playing" for good: the
+          // card pulsed "Live", the lobby's rules stayed locked, and a
+          // rematch was refused. So the check also runs, on every device,
+          // when a seat drops out of the round — the CAS below makes the
+          // extra runs land on zero rows.
+          const changedRow = payload.new as { status?: string; user_id?: string } | null;
+          const ownFinish =
             payload.eventType === "UPDATE" &&
-            (payload.new as any).status === "finished" &&
-            (payload.new as any).user_id === user?.id
-          ) {
+            changedRow?.status === "finished" &&
+            changedRow?.user_id === user?.id;
+          const seatDroppedOut =
+            payload.eventType === "DELETE" ||
+            (payload.eventType === "UPDATE" && changedRow?.status === "disconnected");
+          if (ownFinish || seatDroppedOut) {
             const { data: allParticipants } = await supabase
               .from("room_participants")
               .select("status, user_id, current_question")
@@ -1565,7 +1597,29 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         }
       }
 
-      if (stale && (room.status === "playing" || room.status === "completed")) {
+      // A round that is still OPEN is not stale, however old the row's
+      // stamps are. A private room is friends playing at different times,
+      // and its round waits a day for the slow one (roundSettlement); the
+      // hour-old "stale" reset was wiping exactly that round — current
+      // game cleared, every seat zeroed — when the slow friend arrived to
+      // play it, and the round never settled. The reset waits until the
+      // round's own deadline has passed, and until then the arriving
+      // player is synced into the round like any rejoin.
+      //
+      // And only the HOST resets: game_rooms is host-writable, so a guest's
+      // reset silently updated nothing on the server while this code went
+      // on as if it had — a room the client called "waiting" that the
+      // database still called "playing".
+      const roundStillOpen =
+        room.status === "playing" &&
+        !!room.current_game_id &&
+        !roundDeadlinePassed(
+          room.started_at,
+          Date.now(),
+          room.is_public ? PUBLIC_ROUND_DEADLINE_MS : PRIVATE_ROUND_DEADLINE_MS,
+        );
+      const amHost = room.host_user_id === user.id;
+      if (stale && (room.status === "playing" || room.status === "completed") && !roundStillOpen && amHost) {
         console.log(`[MP] Room ${room.room_code} is stale (${room.status}), resetting to lobby`);
         
         // Reset room to waiting state
@@ -3077,9 +3131,13 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     
     try {
       // Queue maintenance (remove the played item + reorder the rest) only
-      // affects queue DISPLAY, not the round being started - run it in the
-      // background and settle it just before the room flips to "playing"
-      const queueMaintenance = (async () => {
+      // affects queue DISPLAY, not the round being started. It runs AFTER
+      // claimRoundStart wins: it used to run alongside the preparation, so
+      // a start that then lost the claim — or failed on its questions —
+      // had already deleted the round from the queue, and the round was
+      // simply gone. The queue's own realtime channel brings the change to
+      // everyone once it lands.
+      const popQueueHead = () => (async () => {
         await supabase
           .from("room_category_queue")
           .delete()
@@ -3215,9 +3273,6 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             return;
           }
 
-          // Queue display must be settled before others sync in
-          await queueMaintenance;
-
           // Update room (after questions are committed)
           const roundStartedAt = new Date().toISOString();
           if (!(await claimRoundStart(roomId, priorGameId, {
@@ -3231,6 +3286,8 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             host_is_observer: hostShouldObserve,
           }))) return;
           stampRoomStarted(roundStartedAt, game?.id);
+          // The round is on; the head of the queue is played.
+          void popQueueHead();
 
           // Track expected game_id so isNewGameWhilePlaying detection works for the caller too
           expectedGameIdRef.current = game?.id ?? null;
@@ -3424,9 +3481,6 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         return;
       }
 
-      // Queue display must be settled before others sync in
-      await queueMaintenance;
-
       // Update room with new category and game info (after questions are committed)
       const roundStartedAt = new Date().toISOString();
       if (!(await claimRoundStart(roomId, priorGameId, {
@@ -3441,6 +3495,8 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         host_is_observer: hostShouldObserve,
       }))) return;
       stampRoomStarted(roundStartedAt, game?.id);
+      // The round is on; the head of the queue is played.
+      void popQueueHead();
 
       // Track expected game_id so isNewGameWhilePlaying detection works for the caller too
       expectedGameIdRef.current = game?.id ?? null;

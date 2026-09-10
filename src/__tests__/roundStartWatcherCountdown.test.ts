@@ -49,7 +49,9 @@ describe("the round-start watcher", () => {
   });
 
   it("still navigates, so the player lands in the game", () => {
-    expect(source).toMatch(/navigate\("\/team"\)/);
+    // To /team from anywhere else; from the /team hub, to the room itself
+    // (roundsThatCannotHang.test.ts).
+    expect(source).toMatch(/navigate\(onHubWithoutRoom && room\.room_code \? routeForRoom\(room\) : "\/team"\);/);
   });
 
   it("hands the screen back when the count is spent", () => {

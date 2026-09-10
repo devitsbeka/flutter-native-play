@@ -1,4 +1,5 @@
-import { isWordsRoom } from "@/utils/roomRoutes";
+import { isWordsRoom, routeForRoom } from "@/utils/roomRoutes";
+import { getHeldRoomId } from "@/utils/heldRoom";
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,8 +31,9 @@ import { useCategoryIdentity } from "@/hooks/useCategoryIdentity";
  * feature exists to prevent. Drawing it here starts it on whatever screen
  * they are on, at the digit the room's clock is actually on.
  *
- * The count is not duplicated: a player already on /team is left alone (see
- * isInterruptible), because TeamV2 is showing it for them.
+ * The count is not duplicated: a player standing in the room's own lobby is
+ * left alone (isInterruptible, and heldRoom for the /team hub), because
+ * TeamV2 is showing it for them.
  */
 
 interface StartedRound {
@@ -101,7 +103,15 @@ export function RoundStartWatcher() {
       const key = `${room.id}:${room.current_game_id ?? ""}`;
       if (handledGameRef.current === key) return;
       handledGameRef.current = key;
-      if (!isInterruptible(pathRef.current)) return;
+      // /team is "already there" only while the provider holds THIS room —
+      // in its lobby, TeamV2 draws the count. /team is also the hub, the
+      // lists of rooms, and a player on the hub whose room started was
+      // left there with a pulsing "Live" card and no count-in while a
+      // player on any other page was brought in (heldRoom.ts).
+      const onHubWithoutRoom =
+        (pathRef.current === "/team" || pathRef.current.startsWith("/team/")) &&
+        getHeldRoomId() !== room.id;
+      if (!isInterruptible(pathRef.current) && !onHubWithoutRoom) return;
 
       // A Team Battle starting is this room's business, not the classic
       // flow's: pull the player into ITS page, with no classic 3-2-1 (the
@@ -128,7 +138,9 @@ export function RoundStartWatcher() {
         categoryId: room.category_id ?? null,
         categoryName: room.category_name ?? null,
       });
-      navigate("/team");
+      // From the hub the room has to be named — /team alone would leave the
+      // player on the lists; /team?join=CODE seats them back in it.
+      navigate(onHubWithoutRoom && room.room_code ? routeForRoom(room) : "/team");
     };
 
     const watchRoom = async () => {

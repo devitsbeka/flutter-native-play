@@ -93,9 +93,10 @@ export function useRoomPot() {
 
         if (error) {
           // PGRST202: the function is not in the schema cache, i.e. the
-          // migration has not reached this project yet. The caller keeps the
-          // old placement payout for that case rather than paying nobody.
-          const missing = error.code === "PGRST202" || /settle_room_round/i.test(error.message);
+          // migration has not reached this project yet. Only that code — a
+          // permission error whose text happens to name the function is an
+          // error, not an absence, and used to be read as one.
+          const missing = error.code === "PGRST202";
           if (!missing) console.error("[useRoomPot] settle_room_round failed:", error);
           return { ...NOTHING, reason: missing ? "not_deployed" : "error" };
         }
@@ -167,7 +168,7 @@ export function useRoomPot() {
       try {
         const { data, error } = await client.rpc("room_round_ledger", { p_game_id: gameId });
         if (error) {
-          const missing = error.code === "PGRST202" || /room_round_ledger/i.test(error.message);
+          const missing = error.code === "PGRST202";
           if (!missing) console.error("[useRoomPot] room_round_ledger failed:", error);
           return { ...NOTHING, reason: missing ? "not_deployed" : "error" };
         }

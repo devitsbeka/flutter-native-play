@@ -72,12 +72,19 @@ describe("the client names no amounts", () => {
     expect(code).not.toMatch(/\b70\b|\b20\b|\b10\b|\b500\b/);
   });
 
-  it("and the results screen no longer credits itself a placement reward", () => {
-    // Except in the one window where the function does not exist yet, so a
-    // round is never silently worthless between shipping and applying.
-    const grants = results.match(/addCoins\(/g) ?? [];
-    expect(grants).toHaveLength(1);
-    expect(results).toMatch(/settlement\.unsettled && settlement\.reason === "not_deployed"/);
+  it("and the results screen never credits itself a placement reward", () => {
+    // There was one window left — "the function is not deployed yet" paid
+    // a client-computed reward. The function has been live for months, and
+    // a client naming its own prize is the hole CLAUDE.md rule 3 closes.
+    expect(results).not.toMatch(/addCoins\(/);
+    expect(results).not.toMatch(/not_deployed/);
+    expect(results).not.toMatch(/useCurrency/);
+  });
+
+  it("and only the schema-cache code means the function is missing", () => {
+    // A permission error whose text names the function is an error.
+    expect(hook).toMatch(/const missing = error\.code === "PGRST202";/);
+    expect(hook).not.toMatch(/\/settle_room_round\/i\.test/);
   });
 
   it("what moved is read back from the server, not assumed", () => {
