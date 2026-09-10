@@ -579,6 +579,12 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
   useEffect(() => {
     currentRoomRef.current = state.currentRoom;
   }, [state.currentRoom]);
+  // The seats this room knows, by row id — what an unfiltered DELETE is
+  // matched against (see the participants channel).
+  const seatIdsRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    seatIdsRef.current = new Set(state.participants.map((p) => p.id));
+  }, [state.participants]);
 
   const isHost = state.currentRoom?.host_user_id === user?.id;
   // NOTE: room-start sync no longer keys off isHost - any player can start a
@@ -1071,13 +1077,23 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         }
       });
     
-    // Subscribe to participants with callback to handle status
-    const participantsChannel = supabase
-      .channel(`participants-${roomId}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "room_participants", filter: `room_id=eq.${roomId}` },
-        async (payload) => {
+    // Subscribe to participants with callback to handle status.
+    //
+    // Two listeners for one table. The filtered "*" hears INSERT and UPDATE.
+    // It never hears DELETE: a DELETE event carries only the old row's
+    // primary key, and a filter on room_id needs REPLICA IDENTITY FULL,
+    // which room_participants does not have — so a seat the host removed
+    // stayed on every device's list until the next full read, the removed
+    // player's own device never noticed its seat was gone, and the
+    // completion check never saw a seat leave (owner: "i removed player and
+    // player was not deleted"). The second listener takes every DELETE on
+    // the table, unfiltered, and keeps the ones whose id is a seat this
+    // room knows.
+    const onParticipantChange = async (payload: {
+      eventType: "INSERT" | "UPDATE" | "DELETE";
+      new: Record<string, unknown>;
+      old: Record<string, unknown>;
+    }) => {
           debouncedFetchParticipants(roomId);
 
           // Check if all playing participants have finished → mark room completed.
@@ -1178,7 +1194,23 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
               }
             }
           }
-        }
+        
+    };
+    const participantsChannel = supabase
+      .channel(`participants-${roomId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "room_participants", filter: `room_id=eq.${roomId}` },
+        (payload) => void onParticipantChange(payload as unknown as Parameters<typeof onParticipantChange>[0]),
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "room_participants" },
+        (payload) => {
+          const gone = (payload.old as { id?: string } | null)?.id;
+          if (!gone || !seatIdsRef.current.has(gone)) return;
+          void onParticipantChange(payload as unknown as Parameters<typeof onParticipantChange>[0]);
+        },
       )
       .subscribe((status) => {
         // When subscription is ready, do an initial fetch to ensure we have latest data
