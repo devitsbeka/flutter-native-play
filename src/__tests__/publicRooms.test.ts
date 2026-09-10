@@ -166,7 +166,9 @@ describe("the private tab and the lobby it opens", () => {
     // Named so the lobby has a title; born private and on the latch exactly
     // when it was made from the Public tab — Create is what publishes it
     // (draftIsPrivateUntilCreate.test.ts).
-    expect(page).toMatch(/generateRoomIdentity\(readAppLanguage\(\)\)/);
+    // Told what is already on the list, so it does not deal a repeat
+    // (roomNamesDoNotRepeat.test.ts).
+    expect(page).toMatch(/generateRoomIdentity\(readAppLanguage\(\), await fetchRoomNamesInUse\(\)\)/);
     expect(page).toMatch(/undefined,\s*\n(\s*\/\/[^\n]*\n)*\s*false,\s*\n(\s*\/\/[^\n]*\n)*\s*isPublic,\s*\n\s*\);/);
   });
 

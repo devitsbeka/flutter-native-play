@@ -84,6 +84,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { instantTouchProps } from "@/utils/instantTouch";
 import { generateRoomIdentity } from "@/utils/roomNameGenerator";
+import { fetchRoomNamesInUse } from "@/utils/roomNamesInUse";
 import { readAppLanguage } from "@/utils/appLanguage";
 import { toast } from "@/lib/toast";
 import { containsBlockedText } from "@/utils/contentFilter";
@@ -344,7 +345,8 @@ function TeamContentV2() {
    * ... until i click create do not create room and show on public list").
    */
   const createRoomAndOpen = async (isPublic: boolean) => {
-    const identity = generateRoomIdentity(readAppLanguage());
+    // Not a name already on the Public list (utils/roomNamesInUse).
+    const identity = generateRoomIdentity(readAppLanguage(), await fetchRoomNamesInUse());
     const room = await createRoom(
       undefined,
       undefined,
