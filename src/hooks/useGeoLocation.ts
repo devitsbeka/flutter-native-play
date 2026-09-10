@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
 
+/** Cloudflare's view of the caller's country, from the site's own worker. */
+const GEO_ENDPOINT = "https://mytrivia.io/geo";
+
 interface GeoLocationResult {
   countryCode: string | null;
   loading: boolean;
@@ -16,8 +19,9 @@ export function useGeoLocation(): GeoLocationResult {
 
     const detectLocation = async () => {
       try {
-        // Use ip-api.com for free IP geolocation
-        const response = await fetch("https://ip-api.com/json/?fields=countryCode", {
+        // Our own edge (worker/index.ts /geo). ip-api.com's free tier has no
+        // HTTPS: every call answered 403 and the region was never set.
+        const response = await fetch(GEO_ENDPOINT, {
           signal: controller.signal
         });
         
@@ -58,7 +62,7 @@ export function useGeoLocation(): GeoLocationResult {
 // Standalone function to get country code (for use outside React components)
 export async function getCountryCodeFromIP(): Promise<string | null> {
   try {
-    const response = await fetch("https://ip-api.com/json/?fields=countryCode");
+    const response = await fetch(GEO_ENDPOINT);
     
     if (!response.ok) {
       return null;

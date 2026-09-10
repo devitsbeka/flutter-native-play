@@ -3,13 +3,14 @@ import { useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import logger from '@/utils/logger';
+import { newId } from "@/utils/compat";
 
 // Generate or get a persistent guest session ID
 const getGuestSessionId = (): string => {
   const storageKey = 'guest_session_id';
   let sessionId = localStorage.getItem(storageKey);
   if (!sessionId) {
-    sessionId = `guest_${crypto.randomUUID()}`;
+    sessionId = `guest_${newId()}`;
     localStorage.setItem(storageKey, sessionId);
   }
   return sessionId;

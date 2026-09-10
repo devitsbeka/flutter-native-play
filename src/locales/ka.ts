@@ -4434,6 +4434,8 @@ export const ka = {
     iKnew: "ვიცოდი",
     didntKnow: "არ ვიცოდი",
     voteUnit: "ხმა",
+    voteThanksKnew: "მადლობა! იცოდი.",
+    voteThanksDidntKnow: "მადლობა! ახლა უკვე იცი.",
     newFactIn: "ახალი ფაქტი {seconds} წამში...",
     loginToVote: "შედით ანგარიშზე ხმის მისაცემად",
     iKnewPercent: "ვიცოდი: {percent}%",

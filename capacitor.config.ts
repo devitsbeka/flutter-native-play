@@ -8,7 +8,7 @@ const config: CapacitorConfig = {
     // Capacitor 8's own podspec sets ios.deployment_target = '15.0'. Declaring
     // 14.0 here doesn't lower that floor, it just makes `pod install` fail on
     // the mismatch.
-    minVersion: '15.0',
+    minVersion: '15.4',
     // 'never': the status bar overlays the webview (nativeShell sets
     // overlay: true) and every screen pads itself with --safe-top, so
     // 'automatic' was a second inset system claiming the same strip —

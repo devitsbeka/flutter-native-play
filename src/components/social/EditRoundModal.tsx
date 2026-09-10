@@ -17,6 +17,7 @@ import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { hasAnswerInQuestion } from "@/utils/questionValidation";
 import { validateIconKeyword } from "@/utils/iconAnswerValidation";
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
+import { cloneJson } from "@/utils/compat";
 
 interface Question {
   question_text: string;
@@ -235,7 +236,7 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
           cover_image: coverImage,
           is_public: isPublic,
           icon_slug: iconSlug,
-          questions: structuredClone(questions) as unknown as Json,
+          questions: cloneJson(questions) as unknown as Json,
           // This screen lists every question beside its correct answer, so
           // whoever saved from here has read the lot. A blind trivia stops
           // being blind at that point — otherwise their own card keeps

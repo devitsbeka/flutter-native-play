@@ -105,7 +105,9 @@ export function NotEnoughGemsModal({
             <motion.button
               key={pkg.id}
               onClick={() => handleBuyPackage(pkg)}
-              disabled={isProcessing}
+              // Not before StoreKit has priced it: a tap then is "unavailable"
+              // against a "—" price (useStorePrice), which is 2.1 and 3.1.1 at once.
+              disabled={isProcessing || !storePrice(pkg.productId, pkg.priceUsd).sellable}
               className={`w-full flex items-center gap-3 p-3 rounded-2xl transition-all relative ${
                 isSuggested 
                   ? "ring-2 ring-purple-400 ring-offset-2"

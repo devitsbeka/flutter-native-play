@@ -15,6 +15,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { anyBlockedText } from "@/utils/contentFilter";
 import confetti from "canvas-confetti";
 import { useQueryClient } from "@tanstack/react-query";
+import { cloneJson } from "@/utils/compat";
 
 interface GeneratedQuestion {
   question_text: string;
@@ -231,7 +232,7 @@ export function AddRoundToCollectionModal({
         cover_gradient: selectedGradient,
         question_count: generatedQuestions.length,
         answer_format: answerFormat,
-        questions: structuredClone(generatedQuestions) as unknown as Json,
+        questions: cloneJson(generatedQuestions) as unknown as Json,
         icon_slug: iconSlug,
         collection_id: collectionId,
         round_number: roundNumber,

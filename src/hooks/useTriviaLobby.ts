@@ -13,50 +13,6 @@ import mascotAvatar7 from "@/assets/avatars/mascot-avatar-7.png";
 import mascotAvatar8 from "@/assets/avatars/mascot-avatar-8.png";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-const FAKE_AVATARS = [
-  mascotAvatar1, mascotAvatar2, mascotAvatar3, mascotAvatar4,
-  mascotAvatar5, mascotAvatar6, mascotAvatar7, mascotAvatar8,
-];
-
-const FAKE_NAMES = [
-  "Giorgi K.", "Mariami G.", "Nika T.", "Ana B.", "Daviti M.",
-  "Elene S.", "Luka Ch.", "Tamari P.", "Nino R.", "Alexandre D.",
-];
-
-function generateFakeTriviaLeaderboard(triviaId: string, questionCount: number): TriviaLeaderboardEntry[] {
-  // Seed based on triviaId for consistency
-  const seed = triviaId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const seededRandom = (i: number) => {
-    const x = Math.sin(seed * 100 + i * 37) * 10000;
-    return x - Math.floor(x);
-  };
-
-  const count = 3 + Math.floor(seededRandom(99) * 5); // 3-7 fake users
-  const now = Date.now();
-
-  const entries: TriviaLeaderboardEntry[] = Array.from({ length: count }, (_, i) => {
-    // Scores: first user gets high score, decreasing
-    const maxScore = questionCount;
-    const score = Math.max(1, Math.round(maxScore * (0.5 + seededRandom(i) * 0.5) - i * 0.5));
-    const hoursAgo = 1 + Math.floor(seededRandom(i + 50) * 72); // 1-72 hours ago
-
-    return {
-      user_id: `fake-trivia-${triviaId.slice(0, 8)}-${i}`,
-      nickname: FAKE_NAMES[i % FAKE_NAMES.length],
-      avatar_url: FAKE_AVATARS[i % FAKE_AVATARS.length],
-      score: Math.min(score, maxScore),
-      played_at: new Date(now - hoursAgo * 3600000).toISOString(),
-      rank: 0,
-    };
-  });
-
-  // Sort by score desc
-  entries.sort((a, b) => b.score - a.score || new Date(a.played_at).getTime() - new Date(b.played_at).getTime());
-  entries.forEach((e, i) => e.rank = i + 1);
-
-  return entries;
-}
-
 export interface TriviaLeaderboardEntry {
   user_id: string;
   nickname: string;
@@ -248,14 +204,12 @@ export function useTriviaLobby(triviaId: string | undefined) {
     ...CACHE_OPTIONS,
   });
 
-  // Merge real leaderboard with fake entries when empty
-  const leaderboard = useMemo(() => {
-    if (realLeaderboard.length > 0) return realLeaderboard;
-    if (!triviaId || !trivia) return [];
-    // Don't show fake entries on the creator's own trivia
-    if (user?.id && trivia.user_id === user.id) return [];
-    return generateFakeTriviaLeaderboard(triviaId, trivia.question_count || 10);
-  }, [realLeaderboard, triviaId, trivia, user?.id]);
+  // The real leaderboard, and nothing else. It used to be padded with three
+  // to seven invented players — "Giorgi K.", "played 2h ago" — whenever
+  // nobody had played a trivia yet, which is the kind of fabricated social
+  // proof App Review reads as misleading (2.3.1). An empty list draws the
+  // page's own "be the first" state.
+  const leaderboard = realLeaderboard;
 
   // Find user's rank in leaderboard
   const userRank = user?.id

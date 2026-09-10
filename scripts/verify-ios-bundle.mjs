@@ -180,6 +180,27 @@ try {
   failures.push("dist/index.html is missing.");
 }
 
+// ── No web checkout in the chunks ──────────────────────────────────────────
+//
+// The Stripe branch is folded out by NATIVE_BUILD (buildTarget.ts) and
+// unreachable on device behind Capacitor.isNativePlatform(); this is the
+// check that the fold actually happened, because 3.1.1 does not grade on
+// intent.
+try {
+  const assetsDir = join(DIST, "assets");
+  const offenders = readdirSync(assetsDir)
+    .filter((f) => f.endsWith(".js"))
+    .filter((f) => /create-pro-checkout|create-gem-checkout/.test(readFileSync(join(assetsDir, f), "utf8")));
+  if (offenders.length) {
+    failures.push(
+      `A Stripe checkout call survived into ${offenders.join(", ")}. The native\n` +
+        "      build must not carry a web checkout (guideline 3.1.1); check NATIVE_BUILD.",
+    );
+  }
+} catch {
+  failures.push("dist/assets is missing.");
+}
+
 // ── Size ceiling ───────────────────────────────────────────────────────────
 //
 // Capacitor copies dist/ into the app, so this is a close proxy for the

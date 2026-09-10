@@ -47,8 +47,14 @@ export const ThemeProvider = ({
 }: ThemeProviderProps) => {
     const [theme, setTheme] = useState<Theme>(() => {
         if (typeof window !== "undefined") {
-            const savedTheme = localStorage.getItem(storageKey) as Theme | null;
-            return savedTheme || defaultTheme;
+            // Storage can throw (blocked, or the origin's quota is spent); a
+            // theme is not worth the whole tree.
+            try {
+                const savedTheme = localStorage.getItem(storageKey) as Theme | null;
+                return savedTheme || defaultTheme;
+            } catch {
+                return defaultTheme;
+            }
         }
         return defaultTheme;
     });
@@ -63,11 +69,11 @@ export const ThemeProvider = ({
                 root.classList.toggle(darkModeClass, systemTheme === "dark");
                 // Also toggle 'dark' class for compatibility with existing styles
                 root.classList.toggle("dark", systemTheme === "dark");
-                localStorage.removeItem(storageKey);
+                try { localStorage.removeItem(storageKey); } catch { /* see above */ }
             } else {
                 root.classList.toggle(darkModeClass, theme === "dark");
                 root.classList.toggle("dark", theme === "dark");
-                localStorage.setItem(storageKey, theme);
+                try { localStorage.setItem(storageKey, theme); } catch { /* see above */ }
             }
         };
 
