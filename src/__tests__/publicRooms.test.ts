@@ -923,9 +923,11 @@ describe("every room wears a face, and the card leads with its category", () => 
     expect(crests).toMatch(/!isCategoryIcon\(r, categoryIcons\)/);
   });
 
-  it("the public card says სათამაშო ოთახი and drops the FIRST ROUND caption", () => {
+  it("the public card says nothing under the name — no სათამაშო ოთახი, no FIRST ROUND caption", () => {
+    // Every card on the list is a game room; the line said nothing the
+    // name did not (owner: "let's remove სათამაშო ოთახი from cards").
     const pub = read("src/components/team/PublicRoomsSection.tsx");
-    expect(pub).toMatch(/t\("extra\.gameRoomLabel"\)/);
+    expect(pub).not.toMatch(/t\("extra\.gameRoomLabel"\)/);
     expect(pub).not.toMatch(/extra\.firstRoundLabel/);
     expect(pub).not.toMatch(/extra\.publicRoomLabel/);
   });

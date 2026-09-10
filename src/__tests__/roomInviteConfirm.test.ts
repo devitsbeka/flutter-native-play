@@ -62,30 +62,30 @@ describe("Confirm is green, and an X beside it says no", () => {
     expect(mine).toMatch(/\{room\.has_pending_invite && !isJoining && \(\s*\n\s*<button\s*\n\s*type="button"\s*\n\s*aria-label=\{t\("extra\.notifDecline"\)\}/);
     expect(mine).toMatch(/onDeclineInvite\?\.\(room\);/);
     expect(mine).toMatch(/onDeclineInvite=\{\(r\) => void handleDeclineInvite\(r\)\}/);
-    expect(mine).toMatch(/await declineRoomInvite\(room\.id, user\.id, room\.pending_invite_from\.notificationId\);/);
+    expect(mine).toMatch(/await declineRoomInvite\(room\.id, user\.id, room\.pending_invite_from\.notificationIds\);/);
   });
 
   it("public card", () => {
     expect(pub).toMatch(/tone=\{opts\.tone \?\? \(invited \|\| ready \? "mint" : "white"\)\}/);
     expect(pub).toMatch(/\{invited && !busy && \(\s*\n\s*<button\s*\n\s*type="button"\s*\n\s*aria-label=\{t\("extra\.notifDecline"\)\}/);
     expect(pub).toMatch(/onDeclineInvite=\{\(r\) => void declineInvite\(r\)\}/);
-    expect(pub).toMatch(/await declineRoomInvite\(room\.id, user\.id, invite\.notificationId\);/);
+    expect(pub).toMatch(/await declineRoomInvite\(room\.id, user\.id, invite\.notificationIds\);/);
   });
 
   it("no gives the seat up — a seat that stays is staked — and answers the invite", () => {
-    expect(reader).toMatch(/export async function declineRoomInvite\(roomId: string, userId: string, notificationId: string\)/);
+    expect(reader).toMatch(/export async function declineRoomInvite\(roomId: string, userId: string, notificationIds: readonly string\[\]\)/);
     expect(reader).toMatch(/from\("room_participants"\)\.delete\(\)\.eq\("room_id", roomId\)\.eq\("user_id", userId\)/);
     // And withdraws the player's own pending ask on that room: a player who
     // knocked and was then invited held both, and the card drew two crosses
     // (owner: "i clicked cancel and it does nothing and i see two cancel
     // icons").
-    expect(reader).toMatch(/from\("room_join_requests"\)\s*\n\s*\.delete\(\)\s*\n\s*\.eq\("room_id", roomId\)\s*\n\s*\.eq\("user_id", userId\)\s*\n\s*\.eq\("status", "pending"\);/);
+    expect(reader).toMatch(/from\("room_join_requests"\)\.delete\(\)\.eq\("room_id", roomId\)\.eq\("user_id", userId\)\.eq\("status", "pending"\),/);
     // One cross on the public card: the withdraw X yields to the invite's.
     expect(pub).toMatch(/\{waiting && !invited && !busy && \(/);
     // Both tabs retire the context's copy of the invite on the spot.
-    expect(pub).toMatch(/void markAsRead\(invite\.notificationId\);/);
-    expect(mine).toMatch(/void markAsRead\(room\.pending_invite_from\.notificationId\);/);
-    expect(reader).toMatch(/markNotificationActioned\(notificationId, "declined"\)/);
+    expect(pub).toMatch(/void markManyAsRead\(invite\.notificationIds\);/);
+    expect(mine).toMatch(/void markManyAsRead\(room\.pending_invite_from\.notificationIds\);/);
+    expect(reader).toMatch(/notificationIds\.map\(\(id\) => markNotificationActioned\(id, "declined"\)\)/);
     expect(reader).toMatch(/notificationId: n\.id,/);
   });
 });

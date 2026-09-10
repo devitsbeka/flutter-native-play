@@ -206,16 +206,21 @@ export function MyRoomsSection({
   // The invite is drawn off the notifications context's copy; retiring
   // that copy on the spot is what takes Confirm and the X off the card
   // without waiting on the realtime echo (see PublicRoomsSection).
-  const { markAsRead } = useNotifications();
+  const { markManyAsRead } = useNotifications();
   const handleDeclineInvite = async (room: MyRoom) => {
     if (!user || !room.pending_invite_from) return;
+    // Busy while it writes: the X goes and Confirm spins, so the tap is
+    // seen to have landed (owner: "i can't click cancel").
+    setJoiningRoomId(room.id);
     try {
-      await declineRoomInvite(room.id, user.id, room.pending_invite_from.notificationId);
-      void markAsRead(room.pending_invite_from.notificationId);
+      await declineRoomInvite(room.id, user.id, room.pending_invite_from.notificationIds);
+      void markManyAsRead(room.pending_invite_from.notificationIds);
       toast.success(t("extra.notifDeclined"));
     } catch (e) {
       console.error("[MyRooms] decline invite failed", e);
       toast.error(t("extra.errorOccurred"));
+    } finally {
+      setJoiningRoomId(null);
     }
   };
 
@@ -276,7 +281,9 @@ export function MyRoomsSection({
     // Confirm answers the invite first, so the card stops asking once the
     // seat is taken (owner: "do not show confirm button again").
     if (room.has_pending_invite && room.pending_invite_from) {
-      acceptRoomInvite(room.pending_invite_from.notificationId);
+      acceptRoomInvite(room.pending_invite_from.notificationIds);
+      // And off the context's list now, not on the realtime echo.
+      void markManyAsRead(room.pending_invite_from.notificationIds);
     }
     setJoiningRoomId(room.id);
     try {

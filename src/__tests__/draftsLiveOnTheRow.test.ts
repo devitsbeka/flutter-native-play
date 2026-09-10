@@ -140,7 +140,8 @@ describe("one room at a time", () => {
 
   it("declining an invite from a card declines the invitation row too", () => {
     const invites = read("src/utils/pendingRoomInvites.ts");
-    expect(invites).toMatch(/\.from\("game_invitations"\)\s*\n\s*\.update\(\{ status: "declined" \}\)\s*\n\s*\.eq\("room_id", roomId\)\s*\n\s*\.eq\("receiver_id", userId\)\s*\n\s*\.eq\("status", "pending"\);/);
+    // Written together with the seat and the ask (inviteAnswersEveryNotice).
+    expect(invites).toMatch(/\.from\("game_invitations"\)\s*\n\s*\.update\(\{ status: "declined" \}\)\s*\n\s*\.eq\("room_id", roomId\)\s*\n\s*\.eq\("receiver_id", userId\)\s*\n\s*\.eq\("status", "pending"\),\s*\n\s*\]\);/);
   });
 });
 

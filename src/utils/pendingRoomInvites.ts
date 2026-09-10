@@ -19,8 +19,18 @@ import { markNotificationActioned } from "@/utils/notificationActions";
 export interface PendingInviteFrom {
   nickname: string | null;
   avatar_url: string | null;
-  /** The invite's own notification — answered when the seat is taken or given up. */
+  /** The newest of the invite's notifications — the one the card names. */
   notificationId: string;
+  /**
+   * EVERY unread invite for this room. A host who taps "invite" twice, or
+   * "invite back" from a player's row, writes a fresh room_invite each
+   * time — and answering one of them left the next still unread, so the
+   * card went on asking however many times it was answered (owner: "i
+   * can't click cancel and when i click confirm sometimes i still see it,
+   * feels like it never disappears"). An answer is to the room, so it is
+   * given to all of them.
+   */
+  notificationIds: string[];
 }
 
 interface InviteNotification {
@@ -39,11 +49,16 @@ export function pendingRoomInvites(notifications: readonly InviteNotification[])
       sender_nickname?: string | null;
       sender_avatar?: string | null;
     } | null;
-    if (data?.room_id && !byRoom.has(data.room_id)) {
+    if (!data?.room_id) continue;
+    const known = byRoom.get(data.room_id);
+    if (known) {
+      known.notificationIds.push(n.id);
+    } else {
       byRoom.set(data.room_id, {
         nickname: data.sender_nickname ?? null,
         avatar_url: data.sender_avatar ?? null,
         notificationId: n.id,
+        notificationIds: [n.id],
       });
     }
   }
@@ -62,10 +77,12 @@ export function pendingRoomInvites(notifications: readonly InviteNotification[])
  * Fire-and-forget: the seat is already the player's, and the tap that
  * takes them into the room must not wait on a bookkeeping write.
  */
-export function acceptRoomInvite(notificationId: string): void {
-  void markNotificationActioned(notificationId, "accepted").catch((error) => {
-    console.error("[pendingRoomInvites] accept failed:", error);
-  });
+export function acceptRoomInvite(notificationIds: readonly string[]): void {
+  for (const id of notificationIds) {
+    void markNotificationActioned(id, "accepted").catch((error) => {
+      console.error("[pendingRoomInvites] accept failed:", error);
+    });
+  }
 }
 
 /**
@@ -75,26 +92,29 @@ export function acceptRoomInvite(notificationId: string): void {
  * is staked when a round settles — and the invite's notification is marked
  * declined, which is what takes the grey face and the buttons off the card.
  */
-export async function declineRoomInvite(roomId: string, userId: string, notificationId: string): Promise<void> {
-  await supabase.from("room_participants").delete().eq("room_id", roomId).eq("user_id", userId);
-  // An ask of the player's own on the same room goes with it. A player who
-  // knocked and was then invited held both, and the card drew a cross for
-  // each; "no" to the invite is "no" to the room, and leaving the ask
-  // pending kept the card waiting on a host who had already answered.
-  await supabase
-    .from("room_join_requests")
-    .delete()
-    .eq("room_id", roomId)
-    .eq("user_id", userId)
-    .eq("status", "pending");
-  // The invitation row as well: it is what lets an invitee past an "Ask me"
-  // door and what the global invite modal lists as pending. Left "pending",
-  // a declined invite still opened the door and could be raised again.
-  await supabase
-    .from("game_invitations")
-    .update({ status: "declined" })
-    .eq("room_id", roomId)
-    .eq("receiver_id", userId)
-    .eq("status", "pending");
-  await markNotificationActioned(notificationId, "declined");
+export async function declineRoomInvite(roomId: string, userId: string, notificationIds: readonly string[]): Promise<void> {
+  // Three rows, none of which depends on another: written together rather
+  // than one round trip after the next. Four in a row was a second or two
+  // of nothing happening after the tap, which read as a button that did
+  // not work (owner: "i can't click cancel").
+  await Promise.all([
+    supabase.from("room_participants").delete().eq("room_id", roomId).eq("user_id", userId),
+    // An ask of the player's own on the same room goes with it. A player
+    // who knocked and was then invited held both, and the card drew a
+    // cross for each; "no" to the invite is "no" to the room, and leaving
+    // the ask pending kept the card waiting on a host who had already
+    // answered.
+    supabase.from("room_join_requests").delete().eq("room_id", roomId).eq("user_id", userId).eq("status", "pending"),
+    // The invitation row as well: it is what lets an invitee past an "Ask
+    // me" door and what the global invite modal lists as pending. Left
+    // "pending", a declined invite still opened the door and could be
+    // raised again.
+    supabase
+      .from("game_invitations")
+      .update({ status: "declined" })
+      .eq("room_id", roomId)
+      .eq("receiver_id", userId)
+      .eq("status", "pending"),
+  ]);
+  await Promise.all(notificationIds.map((id) => markNotificationActioned(id, "declined")));
 }
