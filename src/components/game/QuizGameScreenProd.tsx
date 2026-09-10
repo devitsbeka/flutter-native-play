@@ -13,7 +13,7 @@ import { QuizAnswerButton, QuizAnswerState } from "@/components/ui/quiz-answer-b
 import { QuizTrueFalseButton, type QuizTrueFalseState } from "@/components/ui/quiz-true-false-button";
 import { QuizPowerUpBar } from "@/components/ui/quiz-power-up-bar";
 import { ChunkyButton } from "@/components/ui/chunky-button";
-import { AnswerFeedbackCard } from "./AnswerFeedbackCard";
+import { ANSWER_FEEDBACK_CARD_SHOWN, AnswerFeedbackCard } from "./AnswerFeedbackCard";
 import { QuizBottomBlur } from "./QuizBottomBlur";
 import { useFooterHeight } from "@/hooks/useFooterHeight";
 import { TimerBadge } from "@/components/game/TimerBadge";
@@ -572,9 +572,10 @@ export function QuizGameScreenProd() {
 
       {/* Answer feedback — Figma 1154:9157. Same card the solo rounds get:
           the verdict, somewhere to keep the question or flag it, and a few
-          words about the answer, sitting over the next button. */}
+          words about the answer, sitting over the next button. Hidden for
+          now (ANSWER_FEEDBACK_CARD_SHOWN). */}
       <AnimatePresence>
-        {answerRevealed && currentQuestion && (
+        {ANSWER_FEEDBACK_CARD_SHOWN && answerRevealed && currentQuestion && (
           <motion.div
             key={`feedback-${currentQuestionIndex}`}
             className="relative px-4 pt-2 pb-5 [@media(max-height:700px)]:pb-4 [@media(max-height:600px)]:pb-2 flex-shrink-0"
