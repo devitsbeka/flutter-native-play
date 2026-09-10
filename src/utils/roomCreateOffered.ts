@@ -143,6 +143,30 @@ export function rememberDraftRoom(
   writePublicIds(opts.publishAs === "public" ? [roomId, ...rest] : rest);
 }
 
+/**
+ * The draft half of a createRoom call for a room the host is about to be
+ * offered Create on — every PRIVATE room, whichever door it came through.
+ *
+ * "+ Room" was the only door that made a draft; a private room born from
+ * the play chooser or a My Trivia Party was a room the moment it was
+ * inserted, and the lobby's back arrow — which deletes an abandoned draft
+ * — kept it, so a host who looked at the lobby and changed their mind
+ * found a room on their list they never made (owner: "we need to have
+ * same approach when players creating private rooms. if player clicks
+ * back button room shouldn't be created. room will create only after
+ * player clicks create"). A published room is not a draft: the chooser's
+ * own Create listed it, and the lobby's rule for published rows already
+ * counts it as created.
+ */
+export function privateDraft(publishRoom: boolean): { publishAs: "private" } | undefined {
+  return publishRoom ? undefined : { publishAs: "private" };
+}
+
+/** The device's half of the same fact, for a database the draft columns have not reached. */
+export function rememberPrivateDraft(roomId: string | null | undefined, publishRoom: boolean): void {
+  if (!publishRoom) rememberDraftRoom(roomId, { publishAs: "private" });
+}
+
 export function forgetDraftRoom(roomId: string | null | undefined): void {
   if (!roomId) return;
   writeDraftIds(readDraftIds().filter((id) => id !== roomId));

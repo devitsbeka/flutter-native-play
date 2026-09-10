@@ -7,7 +7,8 @@ import { anyBlockedText, containsBlockedText } from "@/utils/contentFilter";
 import { Loader2, ArrowLeft, Bell, X, RefreshCw, Pencil, Gamepad2, Plus, Check, Globe, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { generateRoomIdentity } from "@/utils/roomNameGenerator";
-import { roomVisibilityFields } from "@/utils/roomVisibility";
+import { roomDraftFields, roomVisibilityFields } from "@/utils/roomVisibility";
+import { privateDraft, rememberPrivateDraft } from "@/utils/roomCreateOffered";
 import { localizeCategoryNames } from "@/utils/localizeCategories";
 import { filterCategoriesForLanguage } from "@/utils/languageCategoryFilter";
 import { readAppLanguage } from "@/utils/appLanguage";
@@ -1317,11 +1318,14 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
             user_trivia_id: challengeTrivia.type === "trivia" ? challengeTrivia.id : null,
             status: "waiting",
             ...(await roomVisibilityFields(publishRoom)),
+            // A private room is a draft until the lobby's Create (privateDraft).
+            ...(publishRoom ? {} : await roomDraftFields(true, false)),
           })
           .select()
           .single();
 
         if (error) throw error;
+        rememberPrivateDraft(createdRoom.id, publishRoom);
 
         // Add host as participant
         await supabase.from("room_participants").insert({
@@ -1382,11 +1386,14 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
               user_trivia_id: createdTriviaId,
               status: "waiting",
               ...(await roomVisibilityFields(publishRoom)),
+              // A private room is a draft until the lobby's Create (privateDraft).
+              ...(publishRoom ? {} : await roomDraftFields(true, false)),
             })
             .select()
             .single();
 
           if (error) throw error;
+          rememberPrivateDraft(createdRoom.id, publishRoom);
 
           // Add host as participant
           await supabase.from("room_participants").insert({
@@ -1415,18 +1422,32 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
             effectiveRoomName,
             null,
             plannedRoomCode,
-            publishRoom
+            publishRoom,
+            undefined,
+            privateDraft(publishRoom),
           );
 
           if (room?.id) {
+            rememberPrivateDraft(room.id, publishRoom);
             await persistQueuedRounds(room.id);
           }
         }
       } else if (selectedCategory) {
         // Create the room with selected category
-        room = await createRoom(selectedCategory.category_id, selectedCategory.name, undefined, effectiveRoomName, null, plannedRoomCode, publishRoom);
+        room = await createRoom(
+          selectedCategory.category_id,
+          selectedCategory.name,
+          undefined,
+          effectiveRoomName,
+          null,
+          plannedRoomCode,
+          publishRoom,
+          undefined,
+          privateDraft(publishRoom),
+        );
 
         if (room?.id) {
+          rememberPrivateDraft(room.id, publishRoom);
           await persistQueuedRounds(room.id);
         }
         // The code the room actually got, not the one that was planned:

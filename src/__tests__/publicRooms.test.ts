@@ -109,7 +109,7 @@ describe("a room is private unless somebody published it", () => {
     expect(create).not.toMatch(/roomVisibilityFields\(isPublic\)/);
     const inserts = (create.match(/roomVisibilityFields\(publishRoom\)/g) ?? []).length;
     expect(inserts).toBe(2);
-    expect(create).toMatch(/plannedRoomCode, publishRoom\)/);
+    expect(create).toMatch(/plannedRoomCode,\s*\n\s*publishRoom,\s*\n\s*undefined,\s*\n\s*privateDraft\(publishRoom\),/);
     // The name is dealt locally now and never shown here — the lobby is
     // where a host renames a room they are looking at.
     expect(create).not.toMatch(/generate-room-name/);
