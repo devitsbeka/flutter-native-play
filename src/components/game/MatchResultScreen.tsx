@@ -14,7 +14,7 @@ import { useMissions } from "@/hooks/useMissions";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { missionTracker } from "@/services/missionTracker";
 import { supabase } from "@/integrations/supabase/client";
-import { Target, ArrowLeft, Crown, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { Target, ArrowLeft, Crown, TrendingUp, TrendingDown, Minus, RotateCcw } from "lucide-react";
 import { calculateLevel } from "@/utils/levelCalculation";
 import { LevelUpModal } from "@/components/home/LevelUpModal";
 import { useGameStake } from "@/hooks/useGameStake";
@@ -27,6 +27,7 @@ import { usePlayLimit, MAX_FREE_PLAYS } from "@/hooks/usePlayLimit";
 import { PlayLimitModal } from "@/components/home/PlayLimitModal";
 
 import { ChunkyButton } from "@/components/ui/chunky-button";
+import { CoinDeltaPill } from "@/components/game/CoinDeltaPill";
 import { resolveAvatarUrl } from "@/utils/avatarUtils";
 import { resolveMatchOutcome } from "@/utils/matchOutcome";
 import { REWARDS } from "@/config/rewardConfig";
@@ -223,30 +224,10 @@ const PlayerCard = ({
     </motion.div>
     
 
-    {/* Coin change badge - moved below */}
+    {/* What the match did to their coins: the one pill every results
+        screen wears (CoinDeltaPill). Nothing on a draw. */}
     <div className="h-8 flex items-center justify-center mt-2">
-      {coinChange !== undefined && coinChange !== 0 && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.6, type: "spring" }}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full ${
-            coinChange > 0 
-              ? "bg-emerald-500" 
-              : "bg-red-500"
-          }`}
-          style={{ 
-            boxShadow: coinChange > 0 
-              ? "0 3px 0 rgba(5,150,105,0.5)" 
-              : "0 3px 0 rgba(180,0,0,0.5)" 
-          }}
-        >
-          <img src={coinIcon} alt="" className="w-4 h-4" />
-          <span className="font-bold text-white text-sm">
-            {coinChange > 0 ? `+${coinChange}` : coinChange}
-          </span>
-        </motion.div>
-      )}
+      {coinChange !== undefined && coinChange !== 0 && <CoinDeltaPill delta={coinChange} delay={0.6} />}
     </div>
   </motion.div>
 );
@@ -738,11 +719,15 @@ export function MatchResultScreen() {
           transition={{ delay: 0.5 }}
           className="px-6 pb-8 relative z-10"
         >
+          {/* The green "Play again" every results screen ends on (owner:
+              "make sure buttons are visible and they are same styled, i
+              like green button saying play again"). */}
           <ChunkyButton
-            variant="white"
+            variant="mint"
             size="lg"
             onClick={handlePlayAgain}
             className="w-full"
+            icon={<RotateCcw className="h-5 w-5" />}
           >
             {t("game.playAgain")}
           </ChunkyButton>

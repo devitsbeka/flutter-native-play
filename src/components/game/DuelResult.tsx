@@ -16,7 +16,7 @@ import { QuizPlayerAvatar } from "@/components/ui/quiz-player-avatar";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { DuelOutcome } from "@/utils/duelOpponent";
 import triviaKingAvatar from "@/assets/trivia-king.png";
-import coinIcon from "@/assets/tb-lobby/coin.png";
+import { CoinDeltaPill } from "@/components/game/CoinDeltaPill";
 
 interface DuelResultProps {
   outcome: DuelOutcome;
@@ -76,25 +76,30 @@ export function DuelResult({ outcome, score, mascotScore, correct, total, delta,
             server has not answered, or when it declined (an empty balance,
             a daily ceiling). */}
         {!saving && delta !== null && delta !== 0 && (
-          <motion.p
-            initial={{ scale: 0, y: 20 }}
-            animate={{ scale: 1, y: 0 }}
-            transition={{ delay: 0.3, type: "spring" }}
-            className={`mt-5 flex items-center justify-center gap-1.5 rounded-full px-4 py-2 font-display text-[22px] font-bold ${delta > 0 ? "bg-[#ffbb00] text-white" : "bg-white text-[#8c7229]"}`}
-          >
-            <img src={coinIcon} alt="" className="h-6 w-6 object-contain" />
-            {delta > 0 ? `+${delta}` : delta}
-          </motion.p>
+          <div className="mt-5">
+            <CoinDeltaPill delta={delta} />
+          </div>
         )}
         {saving && <p className="mt-5 text-sm text-white/70">{t("extra.quizSavingProgress")}</p>}
 
-        <div className="mt-8 w-full space-y-3">
+        {/* The same two ends as every results screen: the green "Play
+            again", and under it a text button for the way out. The way out
+            used to be an outlined purple button on a purple screen, which
+            read as nothing (owner: "make sure buttons are visible and they
+            are same styled"). */}
+        <div className="mt-8 w-full">
           <ChunkyButton variant="mint" size="lg" className="w-full" onClick={onPlayAgain} disabled={saving} icon={<RotateCcw className="h-5 w-5" />}>
-            {t("extra.quizReplay")}
+            {t("game.playAgain")}
           </ChunkyButton>
-          <ChunkyButton variant="outline" size="lg" className="w-full" onClick={onBack} disabled={saving}>
+          <button
+            type="button"
+            onClick={onBack}
+            disabled={saving}
+            className="mx-auto mt-1 flex items-center gap-2 py-3 text-sm font-bold text-white/80 hover:text-white disabled:opacity-60 transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
             {t("extra.duelBackToGuess")}
-          </ChunkyButton>
+          </button>
         </div>
       </motion.div>
     </div>

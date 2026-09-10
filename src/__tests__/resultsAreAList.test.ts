@@ -49,7 +49,7 @@ describe("one row per player, from fourth down", () => {
     const face = row.indexOf("<SafeAvatar");
     const name = row.indexOf("{name}");
     const score = row.indexOf("{detail && <p");
-    const coins = row.indexOf("<PotLine net={net} compact tone={tone} />");
+    const coins = row.indexOf("<PotLine net={net} compact />");
     expect(place).toBeGreaterThan(-1);
     expect(face).toBeGreaterThan(place);
     expect(name).toBeGreaterThan(face);
