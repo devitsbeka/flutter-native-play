@@ -1,8 +1,13 @@
+import { useState } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 
+import { ProPaywallModal } from "@/components/pro/ProPaywallModal";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrency } from "@/hooks/useCurrency";
-import { formatCompactNumber } from "@/lib/utils";
+import { useVipStatus } from "@/hooks/useVipStatus";
+import { formatFullNumber } from "@/lib/utils";
 
 import coinIcon from "@/assets/icons/icon-coin.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
@@ -57,17 +62,50 @@ export function BalancePills({
     <>
       <button type="button" onClick={onCoinsClick} className={`${PILL_BASE} ${s.pill}`}>
         <img alt="" src={coinIcon} className={`${s.icon} object-contain`} />
-        <span className={label}>{formatCompactNumber(coins)}</span>
+        <span className={label}>{formatFullNumber(coins)}</span>
       </button>
       <button type="button" onClick={onGemsClick} className={`${PILL_BASE} ${s.pill}`}>
         <img alt="" src={gemIcon} className={`${s.icon} object-contain`} />
-        <span className={label}>{formatCompactNumber(gems)}</span>
+        <span className={label}>{formatFullNumber(gems)}</span>
       </button>
     </>
   );
 }
 
 export default BalancePills;
+
+/**
+ * The green PRO button at the right end of the balance row — 1102:2121's
+ * pill, the one the game chooser already wears beside these pills.
+ *
+ * What it says is who is looking: a player without PRO is asked to try it,
+ * a solo PRO is offered the step up to PRO+, and a PRO+ player has nothing
+ * left to be sold on this row, so the button is not there (owner: "if user
+ * is non pro sees Try PRO or solo pro sees Upgrade"). Either tap opens the
+ * paywall, which lists the PRO+ plan for the one who already has PRO.
+ */
+export function proCtaLabelKey(isVip: boolean, isProPlus: boolean): "extra.tryProBtn" | "extra.upgradeBtn" | null {
+  if (!isVip) return "extra.tryProBtn";
+  if (!isProPlus) return "extra.upgradeBtn";
+  return null;
+}
+
+export function ProCtaButton({ onClick }: { onClick: () => void }) {
+  const { t } = useLanguage();
+  const { isVip, isProPlus } = useVipStatus();
+  const key = proCtaLabelKey(isVip, isProPlus());
+  if (!key) return null;
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="relative ml-auto flex h-[43px] shrink-0 items-center justify-center overflow-hidden rounded-[18.39px] border-[1.5px] border-solid border-[#50d8b8] bg-[linear-gradient(180deg,#88e2ca_0%,#4accad_58%,#31c3a1_100%)] px-[19px] shadow-[0px_4px_0px_0px_#1e8e74,0px_8px_16px_0px_rgba(102,51,153,0.3)] transition-transform active:translate-y-[2px]"
+    >
+      <span aria-hidden className="pointer-events-none absolute inset-0 rounded-[inherit] shadow-[inset_0px_2px_0px_0px_rgba(255,255,255,0.45)]" />
+      <span className="font-display text-[18px] font-bold leading-[18px] text-white">{t(key)}</span>
+    </button>
+  );
+}
 
 /**
  * The balance strip as a row of its own, for the main screens that have no
@@ -96,6 +134,7 @@ export function BalanceStripRow() {
   const { coins, gems } = useCurrency();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [paywallOpen, setPaywallOpen] = useState(false);
 
   // Signed out there is no balance to show: both figures are zero, and a
   // strip reading 0 coins / 0 gems under the header of every main screen
@@ -117,17 +156,26 @@ export function BalanceStripRow() {
   //
   // Padded to px-4 — the header row's own inset — so the coin pill's left
   // edge lines up with the title above it instead of sitting 6px further in.
+  //
+  // The PRO button sits at the row's right end (ProCtaButton). The paywall it
+  // opens is portalled to <body>: this strip is a backdrop-filter surface
+  // inside a sticky header, and a `fixed` sheet inside one of those is
+  // positioned against the strip rather than the screen.
   return (
-    <div
-      className="flex items-center gap-[11px] border-t border-border/30 bg-background/80 px-4 pb-[10px] pt-[8px]
-                 backdrop-blur-md [-webkit-backdrop-filter:blur(12px)] md:hidden"
-    >
-      <BalancePills
-        coins={coins}
-        gems={gems}
-        onCoinsClick={() => navigate("/power-ups?section=coins")}
-        onGemsClick={() => navigate("/power-ups?section=gems-lari")}
-      />
-    </div>
+    <>
+      <div
+        className="flex items-center gap-[11px] border-t border-border/30 bg-background/80 px-4 pb-[10px] pt-[8px]
+                   backdrop-blur-md [-webkit-backdrop-filter:blur(12px)] md:hidden"
+      >
+        <BalancePills
+          coins={coins}
+          gems={gems}
+          onCoinsClick={() => navigate("/power-ups?section=coins")}
+          onGemsClick={() => navigate("/power-ups?section=gems-lari")}
+        />
+        <ProCtaButton onClick={() => setPaywallOpen(true)} />
+      </div>
+      {createPortal(<ProPaywallModal isOpen={paywallOpen} onClose={() => setPaywallOpen(false)} />, document.body)}
+    </>
   );
 }
