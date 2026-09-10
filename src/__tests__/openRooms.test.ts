@@ -58,7 +58,7 @@ describe("the host's switch", () => {
   });
 
   it("only on a public room — a private one's code is already the yes", () => {
-    expect(lobby).toMatch(/\.\.\.\(isPublicRoom && hasApprovalColumn/);
+    expect(lobby).toMatch(/\.\.\.\(isHost && isPublicRoom && hasApprovalColumn/);
   });
 
   it("and is hidden until the migration lands", () => {

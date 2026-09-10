@@ -130,7 +130,9 @@ describe("what it still lets the host do", () => {
   });
 
   it("answer the door, on a room that asks", () => {
-    expect(lobby).toMatch(/onChange: isHost \? \(v: string\) => void setApproval\(v\) : undefined,/);
+    // The row itself is the host's alone (joiningRowIsTheHosts.test.ts).
+    expect(lobby).toMatch(/\.\.\.\(isHost && isPublicRoom && hasApprovalColumn && !playsOwnTrivia/);
+    expect(lobby).toMatch(/onChange: \(v: string\) => void setApproval\(v\),/);
   });
 });
 

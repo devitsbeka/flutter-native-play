@@ -97,8 +97,10 @@ describe("a started match is played as confirmed", () => {
   });
 
   it("but the door stays the host's to answer", () => {
-    // Visibility is no longer a row at all (roomVisibilityFromTheTab.test.ts).
-    expect(lobby).toMatch(/onChange: isHost \? \(v: string\) => void setApproval\(v\) : undefined,/);
+    // Visibility is no longer a row at all (roomVisibilityFromTheTab.test.ts),
+    // and the door row is drawn for the host alone (joiningRowIsTheHosts).
+    expect(lobby).toMatch(/\.\.\.\(isHost && isPublicRoom && hasApprovalColumn && !playsOwnTrivia/);
+    expect(lobby).toMatch(/onChange: \(v: string\) => void setApproval\(v\),/);
   });
 });
 

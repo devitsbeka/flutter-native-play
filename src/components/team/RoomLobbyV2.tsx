@@ -1696,7 +1696,13 @@ export function RoomLobbyV2() {
     // Only a PUBLIC room has a door worth guarding. A private one is joined
     // with its code, and whoever handed that over has already said yes — so
     // the row would be a switch with nothing on the other side of it.
-    ...(isPublicRoom && hasApprovalColumn && !playsOwnTrivia
+    //
+    // And only the HOST sees it: the door is the host's to set, and a guest
+    // was shown the switch greyed out — a rule they could read but not
+    // touch, on a page whose rules are otherwise theirs to read only
+    // (owner: "in public room lobby only hosts should see: joining -
+    // open/ask me").
+    ...(isHost && isPublicRoom && hasApprovalColumn && !playsOwnTrivia
       ? [{
           key: "joining",
           label: t("lobby.uJoining"),
@@ -1705,7 +1711,7 @@ export function RoomLobbyV2() {
             { value: "ask", label: t("extra.roomJoinAsk") },
           ],
           value: needsApproval ? "ask" : "open",
-          onChange: isHost ? (v: string) => void setApproval(v) : undefined,
+          onChange: (v: string) => void setApproval(v),
         } satisfies LobbyRuleRow]
       : []),
   ];

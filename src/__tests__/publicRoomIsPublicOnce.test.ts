@@ -77,7 +77,7 @@ describe("the client", () => {
   });
 
   it("the lobby's rules follow the flag and offer no way back to public", () => {
-    expect(lobby).toMatch(/\.\.\.\(isPublicRoom && hasApprovalColumn && !playsOwnTrivia\s*\n\s*\? \[\{\s*\n\s*key: "joining",/);
+    expect(lobby).toMatch(/\.\.\.\(isHost && isPublicRoom && hasApprovalColumn && !playsOwnTrivia\s*\n\s*\? \[\{\s*\n\s*key: "joining",/);
     expect(lobby).toMatch(/tv=\{isHost && !isPublicRoom \?/);
     expect(lobby).not.toMatch(/key: "visibility"/);
     expect(lobby).not.toMatch(/roomVisibilityFields\(true\)/);

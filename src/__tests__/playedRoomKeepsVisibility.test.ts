@@ -30,7 +30,7 @@ describe("the visibility switch", () => {
 
   it("but the door stays: a public room between matches can still be knocked on", () => {
     // The Joining row is gated on being public, not on having played.
-    expect(lobby).toMatch(/\.\.\.\(isPublicRoom && hasApprovalColumn && !playsOwnTrivia/);
+    expect(lobby).toMatch(/\.\.\.\(isHost && isPublicRoom && hasApprovalColumn && !playsOwnTrivia/);
     expect(lobby).not.toMatch(/isPublicRoom && hasApprovalColumn && !playsOwnTrivia && !roomHasPlayed/);
   });
 
