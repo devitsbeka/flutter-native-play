@@ -33,10 +33,17 @@ import { undecidedRoundKind } from "@/utils/undecidedRound";
  */
 
 type NameMap = Map<string, string>;
-/** Both lookups off the same two queries: name → viewer-language name, and name → icon slug. */
+/** Three lookups off the same two queries: name → viewer-language name, name → icon slug, name → category_id. */
 interface CategoryMaps {
   names: NameMap;
   icons: Map<string, string>;
+  /**
+   * Any known name → the category's ASCII id ("guess_logo"). Discover draws
+   * the six picture-guess categories from bundled art keyed by that id
+   * (CategoryArtwork), and a room row carries the round's NAME and nothing
+   * else — so the id is found the same way the icon is.
+   */
+  ids: Map<string, string>;
 }
 
 let cached: { lang: string; map: CategoryMaps } | null = null;
@@ -44,7 +51,7 @@ let inflight: { lang: string; promise: Promise<CategoryMaps> } | null = null;
 
 async function buildMap(lang: string): Promise<CategoryMaps> {
   const [catsRes, transRes] = await Promise.all([
-    supabase.from("categories").select("id, name, icon_slug"),
+    supabase.from("categories").select("id, category_id, name, icon_slug"),
     supabase.from("category_translations").select("category_id, language, name"),
   ]);
   const cats = catsRes.data ?? [];
@@ -65,21 +72,30 @@ async function buildMap(lang: string): Promise<CategoryMaps> {
   // is: from whatever language the host stored it in.
   const map: NameMap = new Map();
   const icons = new Map<string, string>();
+  const ids = new Map<string, string>();
   const iconOf = new Map<string, string>();
-  for (const c of cats) if (c.icon_slug) iconOf.set(c.id, c.icon_slug);
+  const idOf = new Map<string, string>();
+  for (const c of cats) {
+    if (c.icon_slug) iconOf.set(c.id, c.icon_slug);
+    if (c.category_id) idOf.set(c.id, c.category_id);
+  }
   for (const c of cats) {
     const out = target.get(c.id);
     if (out) map.set(c.name, out);
     const icon = iconOf.get(c.id);
     if (icon) icons.set(c.name, icon);
+    const id = idOf.get(c.id);
+    if (id) ids.set(c.name, id);
   }
   for (const t of trans) {
     const out = target.get(t.category_id);
     if (out) map.set(t.name, out);
     const icon = iconOf.get(t.category_id);
     if (icon) icons.set(t.name, icon);
+    const id = idOf.get(t.category_id);
+    if (id) ids.set(t.name, id);
   }
-  return { names: map, icons };
+  return { names: map, icons, ids };
 }
 
 function loadMap(lang: string): Promise<CategoryMaps> {
@@ -90,7 +106,7 @@ function loadMap(lang: string): Promise<CategoryMaps> {
       cached = { lang, map };
       return map;
     })
-    .catch(() => ({ names: new Map<string, string>(), icons: new Map<string, string>() }));
+    .catch(() => ({ names: new Map<string, string>(), icons: new Map<string, string>(), ids: new Map<string, string>() }));
   inflight = { lang, promise };
   return promise;
 }
@@ -124,6 +140,44 @@ export function useCategoryIconByName(): (
     (stored: string | null | undefined) => {
       if (!stored) return undefined;
       return maps?.icons.get(stored);
+    },
+    [maps],
+  );
+}
+
+/**
+ * Returns a resolver: `(storedName) => the category's ASCII id`, or
+ * undefined for a name that is not a library category (or before the map
+ * loads). It is what lets a room card, the preview sheet and the lobby
+ * draw a round with the same face Discover gives the category
+ * (CategoryArtwork): the six picture-guess categories have bundled art
+ * keyed by this id, and a magnifying glass where Discover shows the logo
+ * tile was the whole complaint (owner: "this is not 'guess the logo'
+ * icon ... check we show exact same icons what we have in Discover page
+ * on our categories for consistency").
+ */
+export function useCategoryIdByName(): (
+  stored: string | null | undefined,
+) => string | undefined {
+  const lang = readAppLanguage();
+  const [maps, setMaps] = useState<CategoryMaps | null>(
+    cached && cached.lang === lang ? cached.map : null,
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    void loadMap(lang).then((m) => {
+      if (!cancelled) setMaps(m);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [lang]);
+
+  return useCallback(
+    (stored: string | null | undefined) => {
+      if (!stored) return undefined;
+      return maps?.ids.get(stored);
     },
     [maps],
   );

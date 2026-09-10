@@ -24,7 +24,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import { ChunkyButton } from "@/components/ui/chunky-button";
-import { DynamicIcon } from "@/components/shared/DynamicIcon";
+import { CategoryArtwork } from "@/components/shared/CategoryArtwork";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
 import buzzerIcon from "@/assets/trivia-buzzer.png";
@@ -33,6 +33,8 @@ import coinIcon from "@/assets/tb-lobby/coin.png";
 export interface SummaryRound {
   name: string;
   iconSlug: string | null;
+  /** The category's ASCII id, for Discover's own art (CategoryArtwork). */
+  categoryId?: string | null;
 }
 
 interface MatchSummarySheetProps {
@@ -115,7 +117,7 @@ export function MatchSummarySheet({
                     <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#7126d5]/10 font-[Nunito] text-xs font-bold text-[#7126d5]">
                       {i + 1}
                     </span>
-                    <DynamicIcon slug={round.iconSlug ?? "mystery-box"} size={28} shadow={false} />
+                    <CategoryArtwork categoryId={round.categoryId ?? undefined} iconSlug={round.iconSlug ?? "mystery-box"} size={28} flat />
                     <span className="min-w-0 flex-1 truncate font-display text-[15px] font-bold text-[#402666]">
                       {round.name}
                     </span>

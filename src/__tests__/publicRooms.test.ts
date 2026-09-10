@@ -290,10 +290,10 @@ describe("the public list", () => {
     // language the host wrote it; only a mixed round wears the box.
     expect(section).toMatch(/room\.first_category_icon \|\| iconForCategory\(room\.first_category_name\) \|\| "mystery-box"/);
     expect(section).toMatch(/const MIXED_LABELS = new Set\(\[[^]*?"Mixed", "სხვადასხვა"/);
-    expect(section).toMatch(/slug=\{categoryIcon\}/);
+    expect(section).toMatch(/iconSlug=\{categoryIcon\}/);
     const names = read("src/utils/categoryDisplayName.ts");
     expect(names).toMatch(/export function useCategoryIconByName\(/);
-    expect(names).toMatch(/select\("id, name, icon_slug"\)/);
+    expect(names).toMatch(/select\("id, category_id, name, icon_slug"\)/);
     expect(section).not.toContain("roomNoCategoryYet");
     // Refiltering the tab starts the list at the top, not half under the
     // sticky stack.

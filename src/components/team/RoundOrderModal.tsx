@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion, Reorder, useDragControls } from "framer-motion";
 import { GripVertical, Plus, X } from "lucide-react";
-import { DynamicIcon } from "@/components/shared/DynamicIcon";
+import { CategoryArtwork } from "@/components/shared/CategoryArtwork";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useLocalizedCategoryName } from "@/utils/categoryDisplayName";
 import type { QueueItem } from "@/hooks/useRoomCategoryQueue";
@@ -48,6 +48,8 @@ export interface HeldEntry {
   kind: "held";
   name: string;
   iconSlug: string | null;
+  /** The category's ASCII id, for Discover's own art (CategoryArtwork). */
+  categoryId?: string | null;
 }
 export const HELD_ID = "__held__";
 export type RoundEntry = QueueItem | HeldEntry;
@@ -55,11 +57,11 @@ export const isHeld = (e: RoundEntry): e is HeldEntry => e.id === HELD_ID;
 
 /** Queue rows plus the held round at the head, the way the room plays them. */
 export function roundEntries(
-  current: { name: string; iconSlug?: string | null } | null | undefined,
+  current: { name: string; iconSlug?: string | null; categoryId?: string | null } | null | undefined,
   items: QueueItem[],
 ): RoundEntry[] {
   const held: HeldEntry[] = current
-    ? [{ id: HELD_ID, kind: "held", name: current.name, iconSlug: current.iconSlug ?? null }]
+    ? [{ id: HELD_ID, kind: "held", name: current.name, iconSlug: current.iconSlug ?? null, categoryId: current.categoryId ?? null }]
     : [];
   return [...held, ...items];
 }
@@ -99,7 +101,7 @@ interface RoundOrderModalProps {
    * list: numbered with the rest, draggable, but with no X — there is no
    * queue row to delete.
    */
-  current?: { name: string; iconSlug?: string | null } | null;
+  current?: { name: string; iconSlug?: string | null; categoryId?: string | null } | null;
   /** The host orders the rounds; everyone else reads them. */
   canEdit: boolean;
   onReorder: (next: QueueItem[]) => void | Promise<unknown>;
@@ -147,9 +149,10 @@ export function RoundOrderModal({
   // mid-drag would pull the row out from under the finger.
   const currentName = current?.name ?? null;
   const currentIcon = current?.iconSlug ?? null;
+  const currentCategoryId = current?.categoryId ?? null;
   useEffect(() => {
-    if (!dragging) setOrder(roundEntries(currentName ? { name: currentName, iconSlug: currentIcon } : null, items));
-  }, [items, dragging, currentName, currentIcon]);
+    if (!dragging) setOrder(roundEntries(currentName ? { name: currentName, iconSlug: currentIcon, categoryId: currentCategoryId } : null, items));
+  }, [items, dragging, currentName, currentIcon, currentCategoryId]);
 
   const handleDrop = () => {
     setDragging(false);
@@ -292,6 +295,8 @@ function RoundRow({
   const stored = isHeld(entry) ? entry.name : entry.category_name;
   const name = localize(stored) ?? stored;
   const iconSlug = (isHeld(entry) ? entry.iconSlug : entry.icon_slug) || "mystery-box";
+  // Discover's own art for the six picture games (CategoryArtwork).
+  const categoryId = (isHeld(entry) ? entry.categoryId : entry.category_id) ?? undefined;
 
   return (
     <Reorder.Item
@@ -338,7 +343,7 @@ function RoundRow({
       </span>
 
       <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-primary/10">
-        <DynamicIcon slug={iconSlug} size={22} />
+        <CategoryArtwork categoryId={categoryId} iconSlug={iconSlug} size={22} flat />
       </span>
 
       <span className="min-w-0 flex-1">

@@ -29,7 +29,7 @@ import { siteUrl } from "@/config/site";
 import { inviteLinkPath } from "@/utils/inviteLink";
 import { useRoomMatchHistory } from "@/hooks/useRoomMatchHistory";
 import { useRoomCategoryQueue } from "@/hooks/useRoomCategoryQueue";
-import { useCategoryIconByName, useLocalizedCategoryName } from "@/utils/categoryDisplayName";
+import { useCategoryIconByName, useCategoryIdByName, useLocalizedCategoryName } from "@/utils/categoryDisplayName";
 import { Input } from "@/components/ui/input";
 import { RoomScoreboard } from "./RoomScoreboard";
 import { TVSetupInline } from "./TVSetupInline";
@@ -422,6 +422,7 @@ export function RoomLobbyV2() {
   const [showRoundOrder, setShowRoundOrder] = useState(false);
   const localizeQueueCategory = useLocalizedCategoryName();
   const iconForCategoryName = useCategoryIconByName();
+  const idForCategoryName = useCategoryIdByName();
 
   // Who just left: their row kept a moment longer to carry "left" (owner's
   // ask). The first snapshot is the room as found, not arrivals.
@@ -1391,6 +1392,10 @@ export function RoomLobbyV2() {
           localizeQueueCategory(currentRoom.category_name)
           || currentRoom.category_name
           || t("extra.categoryType"),
+        // The ASCII id beside the icon, for Discover's own art on the six
+        // picture games (CategoryArtwork): the row's own, or found from the
+        // name the way the icon is.
+        categoryId: currentRoom.category_id ?? idForCategoryName(currentRoom.category_name) ?? null,
         iconSlug:
           iconForCategoryName(currentRoom.category_name)
           || getCategoryIconSlug(currentRoom.category_id ?? "")
@@ -1448,13 +1453,14 @@ export function RoomLobbyV2() {
    * them: the room's held round first, then the queue.
    */
   const summaryRounds = [
-    ...(heldRound ? [{ name: heldRound.name, iconSlug: heldRound.iconSlug ?? null }] : []),
+    ...(heldRound ? [{ name: heldRound.name, iconSlug: heldRound.iconSlug ?? null, categoryId: heldRound.categoryId }] : []),
     ...queue.map((item) => ({
       name:
         item.source_type === "random"
           ? t("extra.cpRandomTitle")
           : localizeQueueCategory(item.category_name) || t("extra.categoryType"),
       iconSlug: roundIconSlug(item) ?? null,
+      categoryId: item.category_id ?? idForCategoryName(item.category_name) ?? null,
     })),
   ];
 
@@ -1874,6 +1880,9 @@ export function RoomLobbyV2() {
           // Rounds queued before the icon was written carry none, so it is
           // resolved here too rather than only at the picker.
           : roundIconSlug(firstQueue);
+        const firstCategoryId = heldRound
+          ? heldRound.categoryId
+          : (firstQueue?.category_id ?? idForCategoryName(firstQueue?.category_name) ?? null);
         return {
           // The chip names what is actually being played: the trivia's own
           // title, the same one the round list and the "+" picker show for
@@ -1892,6 +1901,7 @@ export function RoomLobbyV2() {
           trailing: !freshStart && firstName && extra > 0 ? `+${extra}` : undefined,
           iconSlug: freshStart ? undefined : (firstIconSlug ?? undefined),
           iconSrc: freshStart ? undefined : (heldRound?.iconSrc ?? undefined),
+          categoryId: freshStart ? undefined : firstCategoryId,
           // Tapping opens the round list when there is more than one; a single
           // round opens the picker to change it. The + always queues another.
           onPress:
