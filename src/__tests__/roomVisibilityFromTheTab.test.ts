@@ -50,7 +50,7 @@ describe("the lobby's rules", () => {
 
   it("a public room: the question count, and Open/Ask", () => {
     expect(lobby).toMatch(/key: "questions",/);
-    expect(lobby).toMatch(/\.\.\.\(isPublicRoom && hasApprovalColumn && !playsOwnTrivia\s*\n\s*\? \[\{\s*\n\s*key: "joining",/);
+    expect(lobby).toMatch(/\.\.\.\(isHost && isPublicRoom && hasApprovalColumn && !playsOwnTrivia\s*\n\s*\? \[\{\s*\n\s*key: "joining",/);
   });
 
   it("a private room: the question count, and Play on TV", () => {

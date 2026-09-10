@@ -86,6 +86,8 @@ describe("the lobby's door row still decides, and still shows the truth", () => 
   });
 
   it("and the host can still switch the door — the default is not a lock", () => {
-    expect(lobby).toMatch(/onChange: isHost \? \(v: string\) => void setApproval\(v\) : undefined,/);
+    // The row is the host's alone now (joiningRowIsTheHosts.test.ts), so
+    // its switch no longer needs to ask who is looking.
+    expect(lobby).toMatch(/onChange: \(v: string\) => void setApproval\(v\),/);
   });
 });

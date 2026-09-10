@@ -463,6 +463,8 @@ describe("a rule with one answer is not a rule", () => {
     // public, one from the Private tab is private, and the lobby does not
     // offer to change it.
     expect(room).not.toMatch(/key: "visibility"/);
-    expect(room).toMatch(/onChange: isHost \?/);
+    // The host still edits the question count; the door row is the host's
+    // alone now, so its switch no longer asks (joiningRowIsTheHosts.test.ts).
+    expect(room).toMatch(/onChange: isHost && !rulesLocked \?/);
   });
 });
