@@ -168,6 +168,39 @@ const shuffleArray = <T,>(array: T[]): T[] => {
   return shuffled;
 };
 
+/**
+ * Consume a played round from the TV queue: delete it and renumber the rest.
+ *
+ * Called only AFTER the session row says the round has started. A round the
+ * session never started must stay in the queue — startGame used to delete
+ * the row before it had fetched a single question, and every early return
+ * after that (no questions in the player's language, an unresolvable
+ * category, a rejected write) left the host one round short of what they
+ * had picked, with the session still in the lobby (owner: "it doesn't start
+ * first round and that round just disappeared"). Never throws: the round is
+ * already running, so a failed tidy-up is a log line, not a reason to report
+ * the round as not started.
+ */
+async function consumeTvQueueItem(sessionId: string, itemId: string): Promise<void> {
+  try {
+    await supabase.from('tv_session_queue').delete().eq('id', itemId);
+    const { data: remaining } = await supabase
+      .from('tv_session_queue')
+      .select('id')
+      .eq('session_id', sessionId)
+      .order('position', { ascending: true });
+    if (remaining?.length) {
+      await Promise.all(
+        remaining.map((item, index) =>
+          supabase.from('tv_session_queue').update({ position: index }).eq('id', item.id)
+        )
+      );
+    }
+  } catch (err) {
+    tvLogError('consumeTvQueueItem', err);
+  }
+}
+
 export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, setState] = useState<TVGameState>({
     code: null,
@@ -704,7 +737,11 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         newIndex < prevIndex &&
         // A new round resets the index to 0 legitimately — only a backward
         // index within the SAME round proves the response is stale.
-        fetchedRound <= prevRound
+        fetchedRound <= prevRound &&
+        // ...and only while the session is inside a question cycle. A row in
+        // 'round-intro' or 'countdown' at question 0 IS the next round, even
+        // when its round number has not caught up (an older write order).
+        ['playing', 'question', 'reveal'].includes(session.status)
       ) {
         console.log('[refetchSessionData] ⏭️ Stale fetch (question', newIndex, '<', prevIndex, 'in round', fetchedRound, ') - discarded');
         return;
@@ -988,8 +1025,10 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // Prevent double-click / concurrent next-round transitions from host
   const nextRoundInFlightRef = useRef(false);
+  // One queued-round advance at a time, whoever asked (see startNextRoundFromQueueIfAny).
+  const queueAdvanceInFlightRef = useRef(false);
 
-  const startNextRoundFromQueueIfAny = useCallback(async () => {
+  const advanceToNextQueuedRound = useCallback(async () => {
     if (!isHost) return false;
     if (!state.sessionId) return false;
 
@@ -1172,7 +1211,31 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       console.log('[startNextRoundFromQueueIfAny] ✅ Verified player count:', expectedCount);
 
-      const { error: updateError } = await supabase
+      // The round number is decided BEFORE the write and written WITH the
+      // status. It used to be a second write after the queue tidy-up, and in
+      // between every device saw "round-intro, question 0" on the OLD round
+      // number — a backward step within the same round, which is exactly
+      // what the staleness filters (shouldApplyPhase, refetchSessionData)
+      // exist to discard. On one row version, the new round is a new round
+      // to everyone at once.
+      const currentRoundNumber2 = stateRef.current.roundNumber;
+      const totalRoundsNow2 = stateRef.current.totalRounds;
+      const newRoundNumber = currentRoundNumber2 + 1;
+      if (totalRoundsNow2 > 0 && newRoundNumber > totalRoundsNow2) {
+        tvLog('Prevented round overflow', { newRoundNumber, totalRoundsNow2 });
+        return false;
+      }
+
+      // CAS on the phase being left. A round is advanced from the last
+      // question's reveal, or from the results screen — never from a round
+      // already in its intro, its countdown or its questions. A late
+      // duplicate (a second host device; a call that lost the in-flight
+      // race) used to write 'round-intro' over a round in play: the TV and
+      // the guests went back to the intro, the host's phone rightly refused
+      // to follow, and nothing could move again (owner: "only host could see
+      // first question, tv show round category and other players see
+      // loading, waiting for host").
+      const { data: advancedRows, error: updateError } = await supabase
         .from('tv_sessions')
         .update({
           status: 'round-intro',
@@ -1182,6 +1245,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           reveal_start_time: null,
           category_name: nextCategoryName,
           category_icon: nextCategoryIcon,
+          round_number: newRoundNumber,
           // Store suggester info in session for quick access
           current_round_suggester_id: suggesterUserId,
           current_round_suggester_nickname: suggesterNickname,
@@ -1189,7 +1253,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           // CRITICAL: Lock the player count at round initialization
           active_player_count: expectedCount,
         })
-        .eq('id', state.sessionId);
+        .eq('id', state.sessionId)
+        .in('status', ['reveal', 'results', 'completed'])
+        .select('id');
 
       if (updateError) {
         tvLogError('startNextRoundFromQueueIfAny update session', updateError);
@@ -1197,101 +1263,78 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         toast.error(t('extra.tvNextRoundFailed'));
         return false;
       }
-
-      // Consume item after successful transition
-      if (consumeFrom === 'tv') {
-        await supabase.from('tv_session_queue').delete().eq('id', nextItem.id);
-
-        // Reorder remaining items
-        const { data: remaining } = await supabase
-          .from('tv_session_queue')
-          .select('id')
-          .eq('session_id', state.sessionId)
-          .order('position', { ascending: true });
-        if (remaining?.length) {
-          await Promise.all(
-            remaining.map((item, index) =>
-              supabase.from('tv_session_queue').update({ position: index }).eq('id', item.id)
-            )
-          );
-        }
-      } else {
-        // Room queue consumption
-        const { data: sessionRow } = await supabase
+      if (!advancedRows?.length) {
+        // Somebody moved the session on already. Say the round started when
+        // it did (so the caller does not end the game over a duplicate);
+        // say it did not only when the session is truly not in a round.
+        const { data: now } = await supabase
           .from('tv_sessions')
-          .select('room_id')
+          .select('status')
           .eq('id', state.sessionId)
           .maybeSingle();
-        const roomId = (sessionRow as any)?.room_id as string | null | undefined;
-        if (roomId) {
-          await supabase.from('room_category_queue').delete().eq('id', nextItem.id);
-
-          const { data: remainingRoom } = await supabase
-            .from('room_category_queue')
-            .select('id')
-            .eq('room_id', roomId)
-            .order('position', { ascending: true });
-          if (remainingRoom?.length) {
-            await Promise.all(
-              remainingRoom.map((item, index) =>
-                supabase.from('room_category_queue').update({ position: index }).eq('id', item.id)
-              )
-            );
-          }
-        }
+        const live = ['round-intro', 'countdown', 'playing', 'question'].includes(now?.status ?? '');
+        tvLog('startNextRoundFromQueueIfAny: session already moved on - write skipped', { status: now?.status, live });
+        return live;
       }
 
-      // Increment round number for the next round (update DB + local state)
-      // IMPORTANT: use latest state from ref to avoid stale-closure bugs (this callback
-      // intentionally doesn't depend on state.roundNumber).
-      const currentRoundNumber2 = stateRef.current.roundNumber;
-      const totalRoundsNow2 = stateRef.current.totalRounds;
-      const newRoundNumber = currentRoundNumber2 + 1;
-
-      // Defensive: don't let round_number exceed total_rounds
-      if (totalRoundsNow2 > 0 && newRoundNumber > totalRoundsNow2) {
-        tvLog('Prevented round overflow', { newRoundNumber, totalRoundsNow2 });
-        return false;
-      }
-      await supabase
-        .from('tv_sessions')
-        .update({ round_number: newRoundNumber })
-        .eq('id', state.sessionId);
-      
-      // CRITICAL: Sync suggester state locally (DB already updated above)
-      // This prevents stale isSuggester checks before realtime handler catches up
-      console.log('[startNextRoundFromQueueIfAny] 🔄 Syncing suggester state locally:', {
-        suggesterId: suggesterUserId?.slice(0, 8) || 'null (library category)',
-        isLibraryCategory,
-      });
-      
+      // The host's own state follows the write at once — before the queue
+      // tidy-up below, so nothing that can fail after this point leaves this
+      // phone on the old round while the TV and the guests are on the new.
       setState(prev => ({
         ...prev,
         roundNumber: newRoundNumber,
-        // ✅ CRITICAL FIX: Sync new questions locally to prevent stale round data
-        // Realtime updates may not include JSONB questions field
+        // Sync new questions locally: realtime updates may not include the
+        // JSONB questions field
         questions: formattedQuestions,
         currentQuestionIndex: 0,
         categoryName: nextCategoryName,
         categoryIcon: nextCategoryIcon,
         phase: 'round-intro',
-        // CRITICAL: Sync suggester state from DB update
         currentRoundSuggesterId: suggesterUserId,
         currentRoundSuggesterNickname: suggesterNickname,
         currentRoundSuggesterAvatarUrl: suggesterAvatarUrl,
       }));
-      
-      // CRITICAL FIX: Reset timer and advance refs for new round
-      // This ensures the next round starts fresh without stale state from previous round
+      // Reset timer and advance refs for the new round
       timerInitializedForQuestionRef.current = null; // Will be set on countdown->playing
       hasAdvancedRef.current = false;
       questionStartedAtRef.current = 0;
       wasInPreQuestionPhaseRef.current = false; // Reset pre-question presence flag for new round
-      console.log('[Next Round] ✅ Reset timing refs for new round');
-      
-      tvLog('Advanced to next round', { newRoundNumber });
 
-      hasAdvancedRef.current = false;
+      // Consume the item now that the session has started its round. A
+      // failure here is logged, not reported: the round IS started.
+      if (consumeFrom === 'tv') {
+        await consumeTvQueueItem(state.sessionId, String(nextItem.id));
+      } else {
+        try {
+          // Room queue consumption
+          const { data: sessionRow } = await supabase
+            .from('tv_sessions')
+            .select('room_id')
+            .eq('id', state.sessionId)
+            .maybeSingle();
+          const roomId = (sessionRow as any)?.room_id as string | null | undefined;
+          if (roomId) {
+            await supabase.from('room_category_queue').delete().eq('id', nextItem.id);
+
+            const { data: remainingRoom } = await supabase
+              .from('room_category_queue')
+              .select('id')
+              .eq('room_id', roomId)
+              .order('position', { ascending: true });
+            if (remainingRoom?.length) {
+              await Promise.all(
+                remainingRoom.map((item, index) =>
+                  supabase.from('room_category_queue').update({ position: index }).eq('id', item.id)
+                )
+              );
+            }
+          }
+        } catch (err) {
+          tvLogError('startNextRoundFromQueueIfAny room queue', err);
+        }
+      }
+
+      tvLog('Advanced to next round', { newRoundNumber });
       return true;
     } catch (err) {
       tvLogError('startNextRoundFromQueueIfAny', err);
@@ -1300,6 +1343,27 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       return false;
     }
   }, [isHost, state.sessionId, confirmActivePlayers]);
+
+  /**
+   * One queued-round advance at a time, whoever asked. The reveal-end effect
+   * and the results screen's "next round" can both call this; the manual
+   * path had a guard (nextRoundInFlightRef) and the automatic one did not,
+   * so the two could overlap and consume two queue items for one round — the
+   * round that was never played. A duplicate is answered "started": a round
+   * IS starting, and answering false would end the game.
+   */
+  const startNextRoundFromQueueIfAny = useCallback(async () => {
+    if (queueAdvanceInFlightRef.current) {
+      tvLog('startNextRoundFromQueueIfAny: already in flight - duplicate ignored');
+      return true;
+    }
+    queueAdvanceInFlightRef.current = true;
+    try {
+      return await advanceToNextQueuedRound();
+    } finally {
+      queueAdvanceInFlightRef.current = false;
+    }
+  }, [advanceToNextQueuedRound]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -1588,6 +1652,23 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // (question -> reveal -> results), so a DB phase further along than the
       // host's is unambiguously the host being behind - never the host
       // leading during its own transition.
+      // HOST, between rounds: the session in 'round-intro' or 'countdown'
+      // while this phone still shows a question or a reveal is never the
+      // host leading — a question is reached only through a countdown the
+      // session has already passed. It is the phone left behind (a missed
+      // realtime event; a late write the staleness filter refused). The rank
+      // table below has no entry for either phase, so this was invisible,
+      // and "I'm ready" lives on a screen the phone was not drawing.
+      if (
+        isHostRef.current &&
+        (dbPhase === 'round-intro' || dbPhase === 'countdown') &&
+        (s.phase === 'question' || s.phase === 'reveal')
+      ) {
+        console.log('[SyncPoll] ⚠️ Host still on a question while the session is between rounds (db', dbPhase, ') - resyncing');
+        refetchSessionData(s.sessionId);
+        return;
+      }
+
       const phaseRank: Record<string, number> = {
         countdown: 1, question: 2, playing: 2, reveal: 3, results: 4, completed: 4,
       };
@@ -3062,6 +3143,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .eq('session_id', state.sessionId);
 
       let queueCount = queueItems?.length || 0;
+      // The queue row this round comes from, removed once the session has
+      // started the round (consumeTvQueueItem) — not before.
+      let queueItemToConsume: string | null = null;
 
       // Extract suggester info from first queue item BEFORE consuming it
       // This ensures host is blocked on first round for trivias they know the answers to
@@ -3094,33 +3178,16 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             });
           }
 
-          tvLog('Consuming initial queue item (it matches current round)', {
+          tvLog('First queue item is the round being started; consumed once the session starts it', {
             queueItemId: String(first.id).slice(0, 8),
             categoryId,
             userTriviaId,
           });
 
-          await supabase
-            .from('tv_session_queue')
-            .delete()
-            .eq('id', first.id);
-
-          // Adjust count locally
+          // Not deleted here — see consumeTvQueueItem. The count is adjusted
+          // now because total rounds counts this round as the current one.
+          queueItemToConsume = String(first.id);
           queueCount = Math.max(0, queueCount - 1);
-
-          // Best-effort reorder so next pick is deterministic
-          const { data: remaining } = await supabase
-            .from('tv_session_queue')
-            .select('id')
-            .eq('session_id', state.sessionId)
-            .order('position', { ascending: true });
-          if (remaining?.length) {
-            await Promise.all(
-              remaining.map((item, index) =>
-                supabase.from('tv_session_queue').update({ position: index }).eq('id', item.id)
-              )
-            );
-          }
         }
       }
 
@@ -3407,6 +3474,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         currentRoundSuggesterNickname: firstRoundSuggesterNickname,
         currentRoundSuggesterAvatarUrl: firstRoundSuggesterAvatarUrl,
       }));
+
+      // The session has started the round: now, and only now, it leaves the queue.
+      if (queueItemToConsume) await consumeTvQueueItem(state.sessionId, queueItemToConsume);
 
       tvLogPhase('lobby', 'countdown', 'startGame');
       tvLog('Round tracking initialized', { roundNumber: 1, totalRounds: totalRoundsCount, lockedPlayerCount: playerCount });

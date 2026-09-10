@@ -518,19 +518,28 @@ const TVHostController: React.FC = () => {
     try {
       // If called from ControllerDirectSelection with fresh queue item, use it directly
       if (firstQueueItem) {
+        let started = false;
         if (firstQueueItem.userTriviaId) {
-          await startGame(undefined, firstQueueItem.userTriviaId);
+          started = await startGame(undefined, firstQueueItem.userTriviaId);
         } else if (firstQueueItem.categoryId) {
-          await startGame(firstQueueItem.categoryId);
+          started = await startGame(firstQueueItem.categoryId);
         } else {
           toast.error(t("extra.tvhInvalidRoundType"));
           return;
         }
-        
-        // Remove from queue after starting (find by matching ID)
-        if (queue.length > 0) {
+
+        // startGame consumes the queue row it started, once the session has
+        // started it. This used to delete queue[0] as well, whatever startGame
+        // had answered — so a Start that failed (no questions in the player's
+        // language, say) still cost the host the round they had picked, and a
+        // queue that had already moved on lost the NEXT round instead. Only
+        // the row that was started is removed here, and only when it was.
+        if (started && queue.length > 0) {
           const firstQueued = queue[0];
-          if (!firstQueued.id.startsWith('initial-')) {
+          const isTheStartedRound =
+            (!!firstQueueItem.userTriviaId && firstQueued.user_trivia_id === firstQueueItem.userTriviaId) ||
+            (!!firstQueueItem.categoryId && firstQueued.category_id === firstQueueItem.categoryId);
+          if (isTheStartedRound && !firstQueued.id.startsWith('initial-')) {
             await removeFromQueue(firstQueued.id);
           }
         }
@@ -542,15 +551,16 @@ const TVHostController: React.FC = () => {
         const firstQueued = queue[0];
         
         // Handle based on available IDs (more resilient than source_type string matching)
+        let started = false;
         if (firstQueued.user_trivia_id) {
-          await startGame(undefined, firstQueued.user_trivia_id);
+          started = await startGame(undefined, firstQueued.user_trivia_id);
         } else if (firstQueued.category_id) {
-          await startGame(firstQueued.category_id);
+          started = await startGame(firstQueued.category_id);
         } else if (firstQueued.source_type === "random") {
           // Random mode - pick a random category and start
           const randomCat = categories[Math.floor(Math.random() * categories.length)];
           if (randomCat) {
-            await startGame(randomCat.id);
+            started = await startGame(randomCat.id);
           } else {
             toast.error(t("extra.tvhCategoriesNotFound"));
             return;
@@ -560,8 +570,9 @@ const TVHostController: React.FC = () => {
           return;
         }
         
-        // Remove from queue (but not if it's the initial category marker from room)
-        if (!firstQueued.id.startsWith('initial-')) {
+        // Remove from queue only when the round actually started (and not if
+        // it's the initial category marker from room)
+        if (started && !firstQueued.id.startsWith('initial-')) {
           await removeFromQueue(firstQueued.id);
         }
         return;
