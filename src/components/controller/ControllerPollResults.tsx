@@ -68,13 +68,21 @@ export const ControllerPollResults: React.FC<ControllerPollResultsProps> = ({
 
     setIsStarting(true);
     try {
-      const success = await finalizePollAndStartGame(selectedRoundCount);
-      
-      if (success) {
+      const result = await finalizePollAndStartGame(selectedRoundCount);
+
+      if (result.started) {
         toast.success(t("extra.tvGameStarting"));
         onGameStart();
       } else {
-        toast.error(t("extra.tvStartGameFailed"));
+        // Why, not just "failed": a winning round with no questions in the
+        // player's language sends everyone back to the lobby, and saying so
+        // is the difference between picking something else and staring at a
+        // screen that will not move.
+        toast.error(
+          result.reason === "no_questions"
+            ? t("extra.noQuestionsInLang")
+            : t("extra.tvStartGameFailed"),
+        );
       }
     } catch (error) {
       console.error('[ControllerPollResults] Error starting game:', error);

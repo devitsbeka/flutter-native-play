@@ -20,6 +20,9 @@ export interface PollSuggestion {
   created_at: string;
 }
 
+/** What finalizePollAndStartGame answers: it started, or why it did not. */
+export type PollStartResult = { started: boolean; reason?: "no_questions" | "failed" };
+
 export interface PollVote {
   id: string;
   session_id: string;
@@ -540,8 +543,17 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
   }, [sessionId]);
 
   // Finalize poll and start game with top N categories (host only)
-  const finalizePollAndStartGame = useCallback(async (topN: number) => {
-    if (!sessionId) return false;
+  /**
+   * The voted rounds become the game.
+   *
+   * Answers what happened rather than just "did it work": a vote that
+   * finalised with nothing to ask used to answer "started" and park the
+   * session in its lobby, so the TV, the host and every player sat looking
+   * at a screen that was never going to move (owner: "after voting it
+   * stuck, can't start voted rounds").
+   */
+  const finalizePollAndStartGame = useCallback(async (topN: number): Promise<PollStartResult> => {
+    if (!sessionId) return { started: false, reason: "failed" };
 
     tvLog('[useTVPoll] Finalizing poll with top', topN);
 
@@ -552,7 +564,7 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
 
     if (topSuggestions.length === 0) {
       tvLogError('[useTVPoll] Finalize poll failed', 'No suggestions to start game with');
-      return false;
+      return { started: false, reason: "failed" };
     }
 
     // CRITICAL FIX: Reset ALL players to is_active = true BEFORE starting new game
@@ -730,8 +742,18 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
       };
     });
     
-    // Single batch insert instead of N sequential inserts
-    await supabase.from('tv_session_queue').insert(queueItems as any);
+    // Single batch insert instead of N sequential inserts. The rows come
+    // back so the one being played can be consumed by its own id, and so a
+    // refused insert is seen: it used to be fired and forgotten, and an
+    // empty queue ends the game after round one with nothing said.
+    const { data: insertedQueue, error: queueInsertError } = await supabase
+      .from('tv_session_queue')
+      .insert(queueItems as any)
+      .select('id, position');
+    if (queueInsertError) {
+      tvLogError('[useTVPoll] Failed to write the voted rounds to the queue', queueInsertError);
+      return { started: false, reason: "failed" };
+    }
 
     // CRITICAL FIX: Fetch questions for first category and start countdown directly
     // This bypasses the lobby phase so game starts with a single click
@@ -741,41 +763,43 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
       question_text: string;
       correct_answer: string;
       options: string[];
-      difficulty: string;
       icon_slug: string | null;
+      image_url?: string | null;
+      video_url?: string | null;
+      audio_url?: string | null;
     }> | null = null;
 
-    // Fetch questions based on source type
+    // Through the same service every other screen asks — NOT a hand-written
+    // query. This was `.eq('language', 'ka')` with no media columns: a
+    // player whose app is in any other language got an empty list, and the
+    // fallback below quietly parked the session in its lobby, which is the
+    // vote that "stuck" (owner: "after voting it stuck, can't start voted
+    // rounds"). It also meant a picture round arrived without its pictures.
+    const { getQuestions } = await import('@/services/questionService');
+    const { markQuestionsAsAsked } = await import('@/services/questionTracker');
+
     if (firstSuggestion.source_type === 'category' && firstSuggestion.category_id) {
-      // CRITICAL FIX: Resolve category slug to UUID before querying questions
       const categoryUuid = await resolveCategoryUuid(firstSuggestion.category_id);
-      
+
       if (!categoryUuid) {
         console.error('[finalizePollAndStartGame] Failed to resolve category UUID for:', firstSuggestion.category_id);
-        // Fall through to fallback logic below - questions will be null
       } else {
-        const { data: questionsData } = await supabase
-          .from('questions')
-          .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug')
-          .eq('category_id', categoryUuid)
-          .eq('is_active', true)
-          .eq('in_production', true)
-          .eq('language', 'ka')
-          .limit(10);
-
-        if (questionsData && questionsData.length > 0) {
-          questions = questionsData.sort(() => Math.random() - 0.5).slice(0, 10).map(q => {
-            const incorrectAnswers = Array.isArray(q.incorrect_answers) ? q.incorrect_answers as string[] : [];
-            const allAnswers = shuffleArray([q.correct_answer, ...incorrectAnswers]);
-            return {
-              ...q,
-              options: allAnswers,
-            };
-          });
+        const result = await getQuestions({ mode: 'tv', categoryUuid, count: 10 });
+        if (result.questions.length > 0) {
+          questions = result.questions.map(q => ({
+            id: q.id,
+            question_text: q.question,
+            correct_answer: q.correctAnswer,
+            options: q.allAnswers,
+            icon_slug: q.iconSlug ?? null,
+            image_url: q.imageUrl ?? null,
+            video_url: q.videoUrl ?? null,
+            audio_url: q.audioUrl ?? null,
+          }));
+          markQuestionsAsAsked(`tv_${categoryUuid}`, questions.map(q => q.id));
         }
       }
     } else if (firstSuggestion.source_type === 'trivia' && firstSuggestion.user_trivia_id) {
-      // Fetch from user_quiz_posts table (questions stored as JSON)
       const { data: postData } = await supabase
         .from('user_quiz_posts')
         .select('questions')
@@ -791,16 +815,19 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
             question_text: q.question_text || q.question || '',
             correct_answer: q.correct_answer || '',
             options: allAnswers,
-            difficulty: 'medium',
             icon_slug: q.icon_slug || null,
+            image_url: q.image_url ?? null,
           };
         });
       }
     }
 
-    // If no questions found, fall back to lobby mode
     if (!questions || questions.length === 0) {
-      tvLog('[useTVPoll] No questions found for first category, falling back to lobby');
+      // The session goes back to its lobby so the host can pick something
+      // else — and the host is TOLD, which is the half that was missing:
+      // this used to answer "started" and leave everyone watching a screen
+      // that would never move.
+      tvLog('[useTVPoll] No questions found for the winning round, back to the lobby');
       const { error } = await supabase
         .from('tv_sessions')
         .update({
@@ -814,11 +841,8 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
         })
         .eq('id', sessionId);
 
-      if (error) {
-        tvLogError('[useTVPoll] Error finalizing poll (fallback)', error);
-        return false;
-      }
-      return true;
+      if (error) tvLogError('[useTVPoll] Error finalizing poll (fallback)', error);
+      return { started: false, reason: "no_questions" };
     }
 
     // Clear any old player answers for this session
@@ -890,7 +914,7 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
     if (error) {
       tvLogError('[useTVPoll] Error finalizing poll', error);
       console.error('[finalizePollAndStartGame] ❌ DB update failed:', error);
-      return false;
+      return { started: false, reason: "failed" };
     }
 
     console.log('[finalizePollAndStartGame] ✅ Successfully set status to countdown with', {
@@ -902,11 +926,13 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
 
     // CRITICAL FIX: Delete position 0 queue item since its category is now playing
     // Without this, startNextRoundFromQueueIfAny would pick position 0 again (same category)
-    const { error: deleteQueueError } = await supabase
-      .from('tv_session_queue')
-      .delete()
-      .eq('session_id', sessionId)
-      .eq('position', 0);
+    // By its own id. Deleting "whatever sits at position 0" is a different
+    // row whenever two rows share a position, which the two writers of this
+    // queue have no shared counter to prevent.
+    const playedRow = (insertedQueue ?? []).find(row => row.position === 0);
+    const { error: deleteQueueError } = playedRow
+      ? await supabase.from('tv_session_queue').delete().eq('id', playedRow.id)
+      : await supabase.from('tv_session_queue').delete().eq('session_id', sessionId).eq('position', 0);
 
     if (deleteQueueError) {
       console.warn('[finalizePollAndStartGame] ⚠️ Failed to delete position 0 queue item:', deleteQueueError);
@@ -915,7 +941,7 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
     }
 
     tvLog('[useTVPoll] ✅ Poll finalized and game started directly in countdown');
-    return true;
+    return { started: true };
   }, [sessionId, suggestions]);
 
   // ORDER IS FROZEN WHILE PEOPLE ARE VOTING.

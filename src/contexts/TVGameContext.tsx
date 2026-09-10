@@ -1969,7 +1969,18 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           action: 'reveal->question',
           cas_won: !!nextCasRows?.length,
         }));
-        
+
+        // The CAS matched nothing: somebody else advanced this reveal, or
+        // the session is no longer on it. Take the row's word rather than
+        // stepping onto a question that may not be live — a phone AHEAD of
+        // the session is the one divergence its own sync poll cannot see
+        // (that poll only catches being behind).
+        if (!nextCasRows?.length) {
+          console.log('[Next Question] ⏭️ Another device advanced this reveal - resyncing instead of stepping');
+          await refetchSessionData(state.sessionId);
+          return;
+        }
+
         // FIX P0: Set timing ref AFTER DB transition (not in prepareForPlaying)
         // This ensures the 2500ms safety window starts after all devices sync
         questionStartedAtRef.current = Date.now();
