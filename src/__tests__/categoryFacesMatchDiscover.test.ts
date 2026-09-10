@@ -61,3 +61,23 @@ describe("every round icon is Discover's face", () => {
     for (const src of [summary, order]) expect(src).not.toMatch(/DynamicIcon/);
   });
 });
+
+describe("and the TV, which showed the glyph after every other screen was fixed", () => {
+  // The round intro on the TV drew "Guess the Logo" under a magnifying
+  // glass (owner: "why i'm still seeing this icon? guess logo icon is
+  // different, why we show this search icon here?"). The TV session
+  // carries the round's name and slug, so the id is found from the name.
+  const intro = read("src/components/tv/TVRoundIntroScreen.tsx");
+  const countdown = read("src/components/tv/TVCountdownScreenV2.tsx");
+
+  it("the round intro", () => {
+    expect(intro).toMatch(/const idForCategory = useCategoryIdByName\(\);/);
+    expect(intro).toMatch(/\{categoryIcon && <CategoryArtwork categoryId=\{idForCategory\(categoryName\)\} iconSlug=\{categoryIcon\} size=\{80\} \/>\}/);
+    expect(intro).not.toMatch(/AppIcon/);
+  });
+
+  it("and the countdown", () => {
+    expect(countdown).toMatch(/\{categoryIcon && <CategoryArtwork categoryId=\{idForCategory\(categoryName\)\} iconSlug=\{categoryIcon\} size=\{40\} flat \/>\}/);
+    expect(countdown).not.toMatch(/AppIcon/);
+  });
+});
