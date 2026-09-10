@@ -43,6 +43,7 @@ import {
 // Import shared quiz UI components
 import { QuizPlayerAvatar } from "@/components/ui/quiz-player-avatar";
 import { QuizQuestionCard } from "@/components/ui/quiz-question-card";
+import { questionImageSrc } from "@/utils/questionImage";
 import { QuizProgressDots } from "@/components/ui/quiz-progress-dots";
 import { QuizAnswerButton, QuizAnswerState } from "@/components/ui/quiz-answer-button";
 import { QuizTrueFalseButton, type QuizTrueFalseState } from "@/components/ui/quiz-true-false-button";
@@ -224,6 +225,27 @@ export default function CategoryQuizPage() {
   // Derived, never stored: an answer counts only for the question it was
   // given to. This is what makes a stale record harmless.
   const { isAnswered, selectedAnswer } = answerStateFor(answerRecord, currentQuestionIndex);
+  /**
+   * Which question's picture is on screen. The clock runs only for that
+   * one (QuizQuestionCard.onMediaReady): a picture game's clock used to
+   * start on mount and count down over a picture still downloading, so
+   * on a slow phone the first question opened already timed out — the
+   * correct answer green, a miss recorded — before the player had seen
+   * it (owner: "guess game started and i see already green answer").
+   * Keyed by index, so moving on un-readies by construction.
+   */
+  const [mediaReadyFor, setMediaReadyFor] = useState(-1);
+  const mediaReady = mediaReadyFor === currentQuestionIndex;
+  const markMediaReady = useCallback(() => setMediaReadyFor(currentQuestionIndex), [currentQuestionIndex]);
+  /**
+   * Where leaving goes. A level reached from the Guess card belongs to the
+   * home's Play rail, not to the library: sending its player to the
+   * category's level map afterwards put them somewhere they had never
+   * been (owner: "after game ends i still see category page"). The next
+   * level keeps the stake and the 3-2-1 it arrived with.
+   */
+  const leaveTo = guessStake ? "/" : `/category/${categoryId}`;
+  const nextLevelState = guessStake ? { state: { countdown: true, guessStake: true } } : undefined;
   const [score, setScore] = useState(0);
   // Per-question outcome, indexed by question position — what the progress
   // dots render. The dots used to be derived from the score alone
@@ -417,6 +439,15 @@ export default function CategoryQuizPage() {
         setQuestionIds(mapped.map(q => q.id));
         setQuestions(mapped);
 
+        // Every picture of the level, asked for now, so the later questions
+        // open from cache rather than from the network mid-clock.
+        for (const q of mapped) {
+          if (q.image_url) {
+            const img = new Image();
+            img.src = questionImageSrc(q.image_url) || q.image_url;
+          }
+        }
+
         trackQuizStarted(categoryId!, parseInt(levelId || "1"), mapped.length);
 
         // Trigger background AI icon analysis
@@ -444,6 +475,8 @@ export default function CategoryQuizPage() {
     // rendered, so without this the first question's clock would be three
     // seconds down before the player ever saw it.
     if (countdown !== null && countdown > 0) return;
+    // Nor before the question's picture is on screen (mediaReady above).
+    if (!mediaReady) return;
 
     const timer = setInterval(() => {
       // Check if timer is frozen
@@ -474,7 +507,7 @@ export default function CategoryQuizPage() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [loading, isAnswered, showResults, currentQuestionIndex, questions.length, timerFrozen, freezeEndTime, countdown]);
+  }, [loading, isAnswered, showResults, currentQuestionIndex, questions.length, timerFrozen, freezeEndTime, countdown, mediaReady]);
 
   // Save results when quiz ends
   useEffect(() => {
@@ -722,9 +755,10 @@ export default function CategoryQuizPage() {
   useEffect(() => {
     if (loading || showResults || isAnswered || questions.length === 0) return;
     if (countdown !== null && countdown > 0) return;
+    if (!mediaReady) return;
     if (timeRemaining > 0) return;
     handleTimeUp();
-  }, [timeRemaining, loading, showResults, isAnswered, questions.length, handleTimeUp, countdown]);
+  }, [timeRemaining, loading, showResults, isAnswered, questions.length, handleTimeUp, countdown, mediaReady]);
 
   const handleAnswerSelect = (answer: string) => {
     if (isAnswered) return;
@@ -1135,7 +1169,7 @@ export default function CategoryQuizPage() {
     return (
       <div className="h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] overflow-y-auto bg-background flex p-6 relative">
         <button
-          onClick={() => navigate(`/category/${categoryId}`)}
+          onClick={() => navigate(leaveTo)}
           className="fixed left-4 z-30 w-11 h-11 rounded-full bg-white/90 backdrop-blur-md shadow-md border border-black/5 flex items-center justify-center"
           style={{ top: "calc(var(--safe-top) + 16px)" }}
         >
@@ -1161,7 +1195,7 @@ export default function CategoryQuizPage() {
             <ChunkyButton
               variant="primary"
               className="w-full"
-              onClick={() => navigate(`/category/${categoryId}`)}
+              onClick={() => navigate(leaveTo)}
             >
               {t("extra.chooseDifferentLevel")}
             </ChunkyButton>
@@ -1201,7 +1235,7 @@ export default function CategoryQuizPage() {
             <ChunkyButton 
               variant="secondary"
               className="w-full"
-              onClick={() => navigate(`/category/${categoryId}`)}
+              onClick={() => navigate(leaveTo)}
             >
               {t("extra.chooseDifferentLevel")}
             </ChunkyButton>
@@ -1275,7 +1309,7 @@ export default function CategoryQuizPage() {
         <div className="h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] overflow-y-auto bg-background flex p-6 relative">
           {/* Back button */}
           <button
-            onClick={() => navigate(`/category/${categoryId}`)}
+            onClick={() => navigate(leaveTo)}
             className="absolute top-4 left-4 z-20 p-2.5 rounded-full bg-foreground/10 backdrop-blur-sm hover:bg-foreground/20 transition-colors"
           >
             <ArrowLeft className="w-5 h-5 text-foreground" />
@@ -1415,7 +1449,7 @@ export default function CategoryQuizPage() {
               {passed && unlockedLevel && !isSaving && (
                 <ChunkyButton 
                   variant="primary"
-                  onClick={() => navigate(`/play/${categoryId}/${unlockedLevel}`)}
+                  onClick={() => navigate(`/play/${categoryId}/${unlockedLevel}`, nextLevelState)}
                   icon={<ChevronRight className="w-5 h-5" />}
                   className="w-full"
                 >
@@ -1521,6 +1555,7 @@ export default function CategoryQuizPage() {
           imageBand={imageTreatmentFor(categoryId).band}
           imageReveal={imageTreatmentFor(categoryId).inset}
           imageRevealAll={isAnswered}
+          onMediaReady={markMediaReady}
           difficultyColor={DIFFICULTY_COLORS[difficultyKey]}
           freezeTimeLeft={freezeTimeRemaining}
           reserveTopSpace={!currentQuestion?.image_url && !currentQuestion?.video_url && !currentQuestion?.audio_url}
@@ -1695,7 +1730,7 @@ export default function CategoryQuizPage() {
               onClick={() => {
                 trackQuizAbandoned(categoryId!, parseInt(levelId || "1"), currentQuestionIndex, questions.length);
                 setShowExitDialog(false);
-                navigate(`/category/${categoryId}`);
+                navigate(leaveTo);
               }}
               className="flex-1 m-0 bg-red-500 hover:bg-red-600 text-white"
             >

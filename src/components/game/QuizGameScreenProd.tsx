@@ -6,6 +6,7 @@ import { useGame, PowerUpType } from "@/contexts/GameContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { QuizPlayerAvatar } from "@/components/ui/quiz-player-avatar";
+import { questionImageSrc } from "@/utils/questionImage";
 import { QuizQuestionCard } from "@/components/ui/quiz-question-card";
 import { QuizProgressDots } from "@/components/ui/quiz-progress-dots";
 import { QuizAnswerButton, QuizAnswerState } from "@/components/ui/quiz-answer-button";
@@ -69,6 +70,25 @@ export function QuizGameScreenProd() {
   const { powerUps: dbPowerUps, usePowerUp: consumeFromDB } = useUserPowerUps();
 
   const [timeRemaining, setTimeRemaining] = useState(timePerQuestion);
+  /**
+   * Which question's picture is on screen — the clock, and the opponent's
+   * move, wait for it (QuizQuestionCard.onMediaReady). See the same note
+   * on CategoryQuizPage: a picture question whose clock ran over a picture
+   * still downloading opened already timed out on a slow phone.
+   */
+  const [mediaReadyFor, setMediaReadyFor] = useState(-1);
+  const mediaReady = mediaReadyFor === currentQuestionIndex;
+  const markMediaReady = useCallback(() => setMediaReadyFor(currentQuestionIndex), [currentQuestionIndex]);
+  // Every picture of the match, asked for now, so later questions open
+  // from cache rather than from the network mid-clock.
+  useEffect(() => {
+    for (const q of questions) {
+      if (q.imageUrl) {
+        const img = new Image();
+        img.src = questionImageSrc(q.imageUrl) || q.imageUrl;
+      }
+    }
+  }, [questions]);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [answerRevealed, setAnswerRevealed] = useState(false);
   const [freezeTimeLeft, setFreezeTimeLeft] = useState(0);
@@ -144,7 +164,7 @@ export function QuizGameScreenProd() {
 
   // Timer countdown - pauses when frozen
   useEffect(() => {
-    if (phase !== "playing" || answerRevealed || !currentQuestion) return;
+    if (phase !== "playing" || answerRevealed || !currentQuestion || !mediaReady) return;
 
     const interval = setInterval(() => {
       // Check if timer is frozen and freeze hasn't expired
@@ -171,16 +191,16 @@ export function QuizGameScreenProd() {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [phase, answerRevealed, currentQuestion, currentQuestionIndex, playerTimerFrozen, playerFreezeEndTime]);
+  }, [phase, answerRevealed, currentQuestion, currentQuestionIndex, playerTimerFrozen, playerFreezeEndTime, mediaReady]);
 
   // Watch the opponent's clock. When it reaches the second they were always
   // going to answer on, they lock in - visibly, while the question is still
   // live. Their choice stays hidden until the reveal; showing it here would
   // be a 70%-accurate hint.
   useEffect(() => {
-    if (!opponent || answerRevealed || opponentAnswered || !opponentTurn) return;
+    if (!opponent || answerRevealed || opponentAnswered || !opponentTurn || !mediaReady) return;
     if (timeRemaining <= opponentTurn.atRemaining) opponentCommits();
-  }, [opponent, answerRevealed, opponentAnswered, opponentTurn, timeRemaining, opponentCommits]);
+  }, [opponent, answerRevealed, opponentAnswered, opponentTurn, timeRemaining, opponentCommits, mediaReady]);
 
   const handleAnswer = useCallback(
     (answer: string | null) => {
@@ -462,6 +482,7 @@ export function QuizGameScreenProd() {
               imageBand={imageTreatmentFor(currentQuestion.categoryId).band}
               imageReveal={imageTreatmentFor(currentQuestion.categoryId).inset}
               imageRevealAll={selectedAnswer !== null}
+              onMediaReady={markMediaReady}
               videoUrl={currentQuestion.videoUrl}
               audioUrl={currentQuestion.audioUrl}
               progressPercent={(timeRemaining / (timePerQuestion + playerTimerBonus)) * 100}
