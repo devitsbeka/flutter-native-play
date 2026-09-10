@@ -11,24 +11,16 @@ interface TriviaPact {
   votes_didnt_know: number;
 }
 
+/**
+ * Only what the player did. The widget used to show "62% knew · 8,341
+ * votes" after a vote — numbers made from the fact's id, not from anyone's
+ * vote, the player's own included. Fabricated statistics are the kind of
+ * thing App Review calls misleading (2.3.1); real ones would need a
+ * server-side aggregate nobody has asked for yet.
+ */
 interface VoteResult {
-  totalVotes: number;
-  knewPercentage: number;
-  didntKnowPercentage: number;
   userVote: "knew" | "didnt_know";
 }
-
-// Generate fake vote counts (4,000 - 15,000 range) with consistent results per fact
-const generateFakeVotes = (factId: string) => {
-  const seed = factId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const total = 4000 + (seed * 137) % 11000;
-  const knewPercentage = 35 + (seed * 17) % 30;
-  return {
-    total: Math.floor(total),
-    knewPercentage,
-    didntKnowPercentage: 100 - knewPercentage,
-  };
-};
 
 // Shuffle array using Fisher-Yates
 const shuffleArray = <T,>(array: T[]): T[] => {
@@ -103,14 +95,9 @@ export function useDidYouKnow() {
     if (!fact) return;
     
     if (votedFactIds.has(fact.id)) {
-      // Already voted - show results immediately
-      const fakeVotes = generateFakeVotes(fact.id);
-      setVoteResult({
-        totalVotes: fakeVotes.total,
-        knewPercentage: fakeVotes.knewPercentage,
-        didntKnowPercentage: fakeVotes.didntKnowPercentage,
-        userVote: "knew", // Default, doesn't matter much visually
-      });
+      // Already voted: acknowledged, and on to the next one. Which way they
+      // voted is not kept, so the neutral line is shown.
+      setVoteResult({ userVote: "knew" });
       setHasVoted(true);
       startAutoAdvance();
     } else {
@@ -178,14 +165,7 @@ export function useDidYouKnow() {
       // Update local voted set
       setVotedFactIds(prev => new Set([...prev, fact.id]));
 
-      // Generate and show results immediately
-      const fakeVotes = generateFakeVotes(fact.id);
-      setVoteResult({
-        totalVotes: fakeVotes.total,
-        knewPercentage: fakeVotes.knewPercentage,
-        didntKnowPercentage: fakeVotes.didntKnowPercentage,
-        userVote: voteType,
-      });
+      setVoteResult({ userVote: voteType });
       setHasVoted(true);
       
       startAutoAdvance();

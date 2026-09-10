@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
+import { newId } from "@/utils/compat";
 
 export interface Achievement {
   id: string;
@@ -219,7 +220,7 @@ export function useMissionAchievements() {
       setAchievements((prev) => [
         ...prev,
         {
-          id: crypto.randomUUID(),
+          id: newId(),
           achievement_id: achievementId,
           unlocked_at: new Date().toISOString(),
         },

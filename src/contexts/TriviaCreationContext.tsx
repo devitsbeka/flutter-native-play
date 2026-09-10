@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import { t } from "@/lib/i18n";
 import type { Json } from "@/integrations/supabase/types";
+import { cloneJson, newId } from "@/utils/compat";
 
 /**
  * Making a trivia is something the app does, not something the player waits
@@ -132,7 +133,7 @@ export function TriviaCreationProvider({ children }: { children: ReactNode }) {
       if (!user || running.current) return false;
       running.current = true;
       const started: TriviaJob = {
-        id: crypto.randomUUID(),
+        id: newId(),
         kind: "trivia",
         subject: request.subject,
         startedAt: Date.now(),
@@ -184,7 +185,7 @@ export function TriviaCreationProvider({ children }: { children: ReactNode }) {
               question_count: generated.length,
               answer_format:
                 generated[0]?.incorrect_answers?.length === 1 ? "true_false" : "4_answers",
-              questions: structuredClone(questionsToSave) as unknown as Json,
+              questions: cloneJson(questionsToSave) as unknown as Json,
               icon_slug: generated[0]?.icon_slug ?? null,
               is_public: request.isPublic,
               is_blind: true,

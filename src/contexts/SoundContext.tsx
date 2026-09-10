@@ -478,7 +478,12 @@ export function SoundProvider({ children }: { children: ReactNode }) {
 
   // Persist settings to localStorage
   useEffect(() => {
-    localStorage.setItem(SOUND_STORAGE_KEY, JSON.stringify(settings));
+    // A full or blocked store must not crash the root on every launch.
+    try {
+      localStorage.setItem(SOUND_STORAGE_KEY, JSON.stringify(settings));
+    } catch {
+      // Settings simply do not persist this session.
+    }
   }, [settings]);
 
   // Stop music when music is disabled

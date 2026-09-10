@@ -3837,6 +3837,8 @@ export const fr: KaTranslations = {
     newFactIn: "Nouveau fait dans {seconds} secondes...",
     loginToVote: "Connectez-vous pour voter",
     iKnewPercent: "Je savais : {percent}%",
+    voteThanksKnew: "Merci ! Tu le savais.",
+    voteThanksDidntKnow: "Merci ! Maintenant tu le sais.",
     didntKnowPercent: "Je ne savais pas : {percent}%",
     mapTitle: "Carte",
     levelLabel2: "Niveau",

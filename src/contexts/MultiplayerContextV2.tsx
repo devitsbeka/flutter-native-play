@@ -24,6 +24,7 @@ import { createNotification } from "@/hooks/useNotifications";
 import { calculatePoints, FIRST_ANSWER_BONUS } from "@/utils/scoring";
 import { activeRoundPlayers } from "@/utils/roundPlayers";
 import { getMostLikelyPrompts } from "@/services/questionService";
+import { cloneJson } from "@/utils/compat";
 import {
   MOST_LIKELY_CATEGORY_ID,
   MOST_LIKELY_QUESTIONS_PER_ROUND,
@@ -2063,7 +2064,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           .insert([{
             room_id: roomId,
             game_number: await nextGameNumber(roomId, phaseRef.current === "results"),
-            questions_data: structuredClone(questions) as unknown as Json,
+            questions_data: cloneJson(questions) as unknown as Json,
           }])
           .select()
           .single();
@@ -2316,7 +2317,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       .insert([{
         room_id: roomId,
         game_number: await nextGameNumber(roomId, phaseRef.current === "results"),
-        questions_data: structuredClone(questions) as unknown as Json,
+        questions_data: cloneJson(questions) as unknown as Json,
       }])
       .select()
       .single();
@@ -2900,7 +2901,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           .insert([{
             room_id: roomId,
             game_number: await nextGameNumber(roomId, phaseRef.current === "results"),
-            questions_data: structuredClone(questions) as unknown as Json,
+            questions_data: cloneJson(questions) as unknown as Json,
           }])
           .select()
           .single();
@@ -3066,7 +3067,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         .insert([{
           room_id: roomId,
           game_number: await nextGameNumber(roomId, phaseRef.current === "results"),
-          questions_data: structuredClone(questions) as unknown as Json,
+          questions_data: cloneJson(questions) as unknown as Json,
         }])
         .select()
         .single();
@@ -3301,7 +3302,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             .insert([{
               room_id: roomId,
               game_number: await nextGameNumber(roomId, phaseRef.current === "results"),
-              questions_data: structuredClone(questions) as unknown as Json,
+              questions_data: cloneJson(questions) as unknown as Json,
             }])
             .select()
             .single();
@@ -3509,7 +3510,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         .insert([{
           room_id: roomId,
           game_number: await nextGameNumber(roomId, phaseRef.current === "results"),
-          questions_data: structuredClone(questions) as unknown as Json,
+          questions_data: cloneJson(questions) as unknown as Json,
         }])
         .select()
         .single();

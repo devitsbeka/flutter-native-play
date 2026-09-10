@@ -363,6 +363,20 @@ export default {
       return proxyImage(request, url, ctx);
     }
 
+    // Which country the request came from, for the client's default region.
+    // The app used ip-api.com, whose free tier refuses HTTPS — every call
+    // answered 403 and no region was ever set. Cloudflare already knows.
+    if (url.pathname === "/geo") {
+      const country = (request as Request & { cf?: { country?: string } }).cf?.country ?? null;
+      return new Response(JSON.stringify({ countryCode: country }), {
+        headers: {
+          "content-type": "application/json",
+          "cache-control": "no-store",
+          "access-control-allow-origin": "*",
+        },
+      });
+    }
+
     if (VIDEO_PATH.test(url.pathname)) {
       if (request.method !== "GET" && request.method !== "HEAD") {
         return new Response("method not allowed", { status: 405 });

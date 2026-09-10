@@ -197,39 +197,12 @@ export function DidYouKnowWidget() {
             transition={{ duration: 0.2, ease: "easeOut" }}
             className="space-y-3"
           >
-            {/* Progress bar */}
-            <div 
-              className="h-2 bg-muted/50 rounded-full overflow-hidden flex"
-              style={{
-                boxShadow: "inset 0 1px 2px rgba(0,0,0,0.06)",
-              }}
-            >
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${voteResult?.knewPercentage}%` }}
-                transition={{ duration: 0.6, ease: [0.32, 0.72, 0, 1] }}
-                className="h-full rounded-full"
-                style={{
-                  background: "linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.85) 100%)",
-                }}
-              />
-            </div>
-
-            {/* Stats row */}
-            <div className="flex justify-between items-center">
-              <span className={`text-xs font-medium ${voteResult?.userVote === "knew" ? "text-primary" : "text-muted-foreground/70"}`}>
-                {t("extra.iKnewPercent", { percent: voteResult?.knewPercentage || 0 })}
-              </span>
-              <span className={`text-xs font-medium ${voteResult?.userVote === "didnt_know" ? "text-primary" : "text-muted-foreground/70"}`}>
-                {t("extra.didntKnowPercent", { percent: voteResult?.didntKnowPercentage || 0 })}
-              </span>
-            </div>
-
-            {/* Total votes */}
+            {/* The player's own answer, acknowledged. No bar, no percentages,
+                no vote count: those were invented (useDidYouKnow). */}
             <p className="text-[13px] font-medium text-center text-muted-foreground">
-              {voteResult?.totalVotes.toLocaleString()} {t("extra.voteUnit")}
+              {voteResult?.userVote === "didnt_know" ? t("extra.voteThanksDidntKnow") : t("extra.voteThanksKnew")}
             </p>
-            
+
             {/* Countdown indicator */}
             {countdown > 0 && (
               <motion.p 

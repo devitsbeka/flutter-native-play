@@ -35,6 +35,7 @@ import { AdminCategory } from "@/hooks/useAdminCategories";
 import { cn } from "@/lib/utils";
 import { AnimatedCounter } from "@/components/shared/AnimatedCounter";
 import { QuestionPreviewMockup } from "./QuestionPreviewMockup";
+import { newId } from "@/utils/compat";
 
 interface GeneratedQuestion {
   id: string;
@@ -163,7 +164,7 @@ export function AiMagicRefillModal({ isOpen, onClose, categories }: AiMagicRefil
   };
 
   const addStep = (text: string, status: ProcessingStep["status"] = "pending", detail?: string): string => {
-    const id = crypto.randomUUID();
+    const id = newId();
     setSteps((prev) => [...prev, { id, text, status, detail }]);
     return id;
   };
@@ -247,7 +248,7 @@ export function AiMagicRefillModal({ isOpen, onClose, categories }: AiMagicRefil
           questionIndex++;
 
           questions.push({
-            id: crypto.randomUUID(),
+            id: newId(),
             question_text: questionText,
             correct_answer: q.correct_answer,
             incorrect_answers: q.incorrect_answers || [],

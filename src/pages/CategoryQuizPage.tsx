@@ -87,6 +87,7 @@ import balloonArchIcon from "@/assets/celebration/balloon-arch.png";
 import windSpinnerIcon from "@/assets/celebration/wind-spinner.png";
 import { POPULAR_IMAGE_CATEGORY_IDS } from "@/config/popularImageCategories";
 import { imageTreatmentFor } from "@/utils/questionImageTreatment";
+import { newId } from "@/utils/compat";
 
 const WORKOUT_ICONS = [
   acroyogaIcon,
@@ -211,8 +212,7 @@ export default function CategoryQuizPage() {
    * re-renders or the request retries.
    */
   const guessStake = duelFromState;
-  const mintRunId = () =>
-    typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `guess-${Date.now()}-${Math.random()}`;
+  const mintRunId = () => newId("guess");
   const guessRunId = useRef<string>(mintRunId());
   const [guessDelta, setGuessDelta] = useState<number | null>(null);
   /**

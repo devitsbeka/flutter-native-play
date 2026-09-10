@@ -3899,6 +3899,8 @@ export const es: KaTranslations = {
     iKnew: "Lo sabía",
     didntKnow: "No lo sabía",
     voteUnit: "votos",
+    voteThanksKnew: "¡Gracias! Lo sabías.",
+    voteThanksDidntKnow: "¡Gracias! Ahora lo sabes.",
     newFactIn: "Nuevo dato en {seconds} segundos...",
     loginToVote: "Inicia sesión para votar",
     iKnewPercent: "Lo sabía: {percent}%",

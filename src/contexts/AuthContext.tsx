@@ -263,12 +263,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (user && profile && user.email) {
       const isRealEmail = !user.email.endsWith('@mytrivia.local');
       const identifier = isRealEmail ? user.email : profile.nickname;
-      localStorage.setItem('mytrivia_last_user', JSON.stringify({
-        nickname: profile.nickname,
-        avatar_url: profile.avatar_url,
-        animated_avatar_url: profile.animated_avatar_url,
-        identifier,
-      }));
+      try {
+        localStorage.setItem('mytrivia_last_user', JSON.stringify({
+          nickname: profile.nickname,
+          avatar_url: profile.avatar_url,
+          animated_avatar_url: profile.animated_avatar_url,
+          identifier,
+        }));
+      } catch {
+        // A full store loses the "welcome back" face, not the session.
+      }
     }
   }, [user, profile]);
 

@@ -97,6 +97,7 @@ import { NotEnoughStakeModal } from "@/components/home/NotEnoughStakeModal";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { markProgrammaticScroll } from "@/utils/scrollTapGuard";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
+import { cloneJson } from "@/utils/compat";
 
 // Inspirational topics for trivia creation
 const INSPIRATIONAL_TOPIC_KEYS = [
@@ -1170,7 +1171,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         cover_gradient: `gradient:${gradientId}`,
         question_count: questions.length,
         answer_format: questions[0]?.incorrect_answers?.length === 1 ? 'true_false' : 'multiple',
-        questions: structuredClone(questionsToSave) as unknown as Json,
+        questions: cloneJson(questionsToSave) as unknown as Json,
         icon_slug: questions[0]?.icon_slug || null,
         is_public: false,
         is_blind: true, // Creator never saw answers (play mode)

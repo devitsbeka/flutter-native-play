@@ -19,6 +19,7 @@ import { hasAnswerInQuestion } from "@/utils/questionValidation";
 import { IconOnboardingTooltip } from "@/components/shared/IconOnboardingTooltip";
 import { validateIconKeyword } from "@/utils/iconAnswerValidation";
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
+import { cloneJson } from "@/utils/compat";
 
 interface Question {
   question_text: string;
@@ -169,7 +170,7 @@ export function EditQuizModal({ quiz, isOpen, onClose, onDeleted }: EditQuizModa
       // Only add icon_slug and questions for quiz posts, not collections
       if (!isCollection) {
         updateData.icon_slug = iconSlug;
-        updateData.questions = structuredClone(questions) as unknown as Json;
+        updateData.questions = cloneJson(questions) as unknown as Json;
       }
 
       const { error } = await supabase

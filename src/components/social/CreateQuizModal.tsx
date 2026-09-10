@@ -20,6 +20,7 @@ import confetti from "canvas-confetti";
 import { removeDuplicatesFromBatch } from "@/utils/duplicateDetection";
 import { GameStyleQuestionEditor, convertToEditorQuestions, convertToGeneratedQuestions, EditorQuestion } from "./GameStyleQuestionEditor";
 import { QuestionIconPicker } from "./QuestionIconPicker";
+import { cloneJson } from "@/utils/compat";
 interface GeneratedQuestion {
   question_text: string;
   correct_answer: string;
@@ -428,7 +429,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onTriviaHan
         cover_gradient: selectedGradient,
         question_count: questionsToSave.length,
         answer_format: answerFormat,
-        questions: structuredClone(questionsToSave) as unknown as Json,
+        questions: cloneJson(questionsToSave) as unknown as Json,
         icon_slug: iconSlug,
         is_public: isPublic,
         is_blind: creatorMode === "play", // Track if creator saw answers
@@ -500,7 +501,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onTriviaHan
         cover_gradient: selectedGradient,
         question_count: questionsToSave.length,
         answer_format: answerFormat,
-        questions: structuredClone(questionsToSave) as unknown as Json,
+        questions: cloneJson(questionsToSave) as unknown as Json,
         icon_slug: iconSlug,
         is_public: false, // Private by default for play mode
         is_blind: true, // Creator never saw answers (play mode)

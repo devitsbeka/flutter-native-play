@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Json } from '@/integrations/supabase/types';
 import { tvLog, tvLogPhase, tvLogPlayer, tvLogError, tvLogPresence, tvLogTimer } from '@/utils/tvDebug';
 import { shouldApplyPhase } from '@/utils/tvPhaseOrder';
+import { newId } from "@/utils/compat";
 import { 
   calculatePoints, 
   calculateTimeRemaining,
@@ -143,7 +144,7 @@ const getOrCreatePlayerId = (userId?: string): string => {
   let guestId = localStorage.getItem(STORAGE_KEY);
   
   if (!guestId) {
-    guestId = crypto.randomUUID();
+    guestId = newId();
     localStorage.setItem(STORAGE_KEY, guestId);
     tvLog('Created new guest player ID', { id: guestId.slice(0, 8) });
   }
@@ -2029,7 +2030,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // Parse questions from session
       const rawQuestions = (session.questions as Json) || [];
       const questions: TVQuestion[] = (Array.isArray(rawQuestions) ? rawQuestions : []).map((q: any) => ({
-        id: q.id || crypto.randomUUID(),
+        id: q.id || newId(),
         question_text: q.question_text || '',
         correct_answer: q.correct_answer || '',
         options: q.options || [],
