@@ -103,7 +103,9 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
   const isTriviaLikedOrSaved = ['trivia_liked', 'trivia_saved'].includes(notification.type);
   const isTriviaPlayed = notification.type === 'trivia_played';
 
-  const actionTaken = notification.data?.action_taken as 'accepted' | 'declined' | undefined;
+  // 'gone': a knock withdrawn before it could be answered — neither answer
+  // is true of it, so the card says that rather than either.
+  const actionTaken = notification.data?.action_taken as 'accepted' | 'declined' | 'gone' | undefined;
   const hasActionTaken = !!actionTaken;
 
   const hasDualActions = (isFriendRequest || isGameInvite || isJoinRequest || isRematch) && !hasActionTaken;
@@ -630,11 +632,13 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
                   <Check className="w-3.5 h-3.5" strokeWidth={3} />
                   {t("extra.notifAccepted")}
                 </>
-              ) : (
+              ) : actionTaken === 'declined' ? (
                 <>
                   <X className="w-3.5 h-3.5" strokeWidth={3} />
                   {t("extra.notifDeclined")}
                 </>
+              ) : (
+                t("extra.notifRequestGone")
               )}
             </RoomCardPlayButton>
           )}
