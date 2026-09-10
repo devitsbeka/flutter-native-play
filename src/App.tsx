@@ -210,6 +210,8 @@ const INCLUDE_DEV_PAGES = import.meta.env.DEV || import.meta.env.VITE_INCLUDE_DE
 // The universal lobby fed mock rooms, for screenshot passes (src/dev/LobbyShot.tsx).
 const LobbyShot = INCLUDE_DEV_PAGES ? lazy(() => import("./dev/LobbyShot")) : null;
 const HomeShot = INCLUDE_DEV_PAGES ? lazy(() => import("./dev/HomeShot")) : null;
+// The category plate's reel, turning over the six picture games (src/dev/PlateShot.tsx).
+const PlateShot = INCLUDE_DEV_PAGES ? lazy(() => import("./dev/PlateShot")) : null;
 
 const Styleguide = INCLUDE_DEV_PAGES ? lazy(() => import("./pages/Styleguide")) : null;
 const AllButtons = INCLUDE_DEV_PAGES ? lazy(() => import("./pages/AllButtons")) : null;
@@ -468,6 +470,7 @@ const App = () => (
                 {INCLUDE_DEV_PAGES && TVScreensShowcase && <Route path="/tv-showcase" element={<TVScreensShowcase />} />}
                 {INCLUDE_DEV_PAGES && LobbyShot && <Route path="/dev/lobby" element={<LobbyShot />} />}
                 {INCLUDE_DEV_PAGES && HomeShot && <Route path="/dev/home" element={<HomeShot />} />}
+                {INCLUDE_DEV_PAGES && PlateShot && <Route path="/dev/plate" element={<PlateShot />} />}
                 {INCLUDE_DEV_PAGES && Docs && <Route path="/docs" element={<Docs />} />}
                 {INCLUDE_DEV_PAGES && OnboardingPreview && <Route path="/onboarding-preview" element={<OnboardingPreview />} />}
                 {INCLUDE_DEV_PAGES && SampleDemoTV && <Route path="/sampledemotv" element={<SampleDemoTV />} />}

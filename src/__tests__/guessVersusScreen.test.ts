@@ -98,11 +98,31 @@ describe("the screen is the quick game's", () => {
     // icon's right edge sat ON the name (owner: "increase category loader in
     // height to fit well … enough space between logo and category title").
     const plate = read("src/components/game/VSScreen.tsx");
-    expect(plate).toMatch(/className="relative h-\[112px\] flex flex-col justify-center gap-\[6px\] pl-\[76px\] pr-\[72px\]/);
-    expect(plate).toMatch(/const ICON_ROW_H = 96;/);
-    expect(plate).toMatch(/const PLATE_ICON_CLASS = "-left-\[30px\] top-\[8px\] w-\[90px\] h-\[96px\]";/);
-    expect(plate).toMatch(/className="absolute -left-\[30px\] top-\[8px\] w-\[90px\] overflow-hidden pointer-events-none" style=\{\{ height: ICON_ROW_H \}\}/);
+    expect(plate).toMatch(/const PLATE_H = 128;/);
+    expect(plate).toMatch(/const NAME_ROW_H = 36;/);
+    expect(plate).toMatch(/const ICON_ROW_H = PLATE_H;/);
+    expect(plate).toMatch(/className="relative flex flex-col justify-center gap-\[6px\] pl-\[76px\] pr-\[72px\] overflow-hidden"/);
+    expect(plate).toMatch(/const PLATE_ICON_CLASS = "-left-\[30px\] top-\[16px\] w-\[90px\] h-\[96px\]";/);
+    expect(plate).toMatch(/className="absolute -left-\[30px\] top-0 w-\[90px\] overflow-hidden pointer-events-none"/);
     expect(plate).toMatch(/className="w-\[90px\] h-\[96px\] object-contain"/);
+  });
+
+  it("the strips fade at their ends and carry no filter, so nothing ghosts while they move", () => {
+    // WebKit drew the moving strip's column as a flat lighter box over the
+    // plate (a backdrop-filter under it, a drop-shadow filter on it), and
+    // the rows above and below were cut off mid-glyph (owner: "ghosted dark
+    // squares behind the icon and behind the categories … while they
+    // rolling they look bad").
+    const plate = read("src/components/game/VSScreen.tsx");
+    expect(plate).not.toMatch(/pr-\[72px\] backdrop-blur/);
+    expect(plate).toMatch(/const REEL_MASK = "linear-gradient\(to bottom, transparent 0%, #000 22%, #000 78%, transparent 100%\)";/);
+    expect(plate.match(/WebkitMaskImage: REEL_MASK, maskImage: REEL_MASK/g) ?? []).toHaveLength(2);
+    // The only drop-shadow left is on the landed icon, which does not move.
+    expect(plate.match(/drop-shadow\(0 4px 16px/g) ?? []).toHaveLength(1);
+    expect(plate).toMatch(/\{src && <img src=\{src\} alt="" className="w-\[90px\] h-\[96px\] object-contain" \/>\}/);
+    // And the name fits its 223px, rolling or landed, at one rule.
+    expect(plate).toMatch(/const nameSizeClass = \(name: string\) => \(name\.length > 16 \? "text-\[16px\]" : "text-\[20px\]"\);/);
+    expect(plate.match(/nameSizeClass\(/g) ?? []).toHaveLength(3);
   });
 
   it("the picture games wear their card art on the plate, not the library stand-in", () => {

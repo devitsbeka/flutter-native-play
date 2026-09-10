@@ -91,15 +91,29 @@ export const REEL_LOOPS = 2;
 export const REEL_EASE = [0.32, 0.08, 0.16, 1] as const;
 /** How long the reel turns, both wheels. */
 export const REEL_SECONDS = 4.4;
-const NAME_ROW_H = 24;
 /**
- * The plate is 112 tall and the icon 96, hanging 30 off the plate's left
- * edge; the name starts at 76, so there is clear water between the two
- * (owner: "increase category loader in height to fit well … enough space
- * between logo and category title"). Change one, change them all.
+ * The reel's geometry. The plate is PLATE_H tall; the icon (90×96) hangs 30
+ * off its left edge and the name starts at 76, so there is clear water
+ * between the two (owner: "increase category loader in height to fit well
+ * … enough space between logo and category title"). Each strip's window is
+ * exactly one row tall and its rows are the window's height, so a row at
+ * rest is centred with room above and below — and the window fades at both
+ * ends (REEL_MASK) so the neighbouring rows slide in and out instead of
+ * being cut off mid-glyph, which read as ghost squares behind the name and
+ * the icon (owner: "i see ghosted dark squares behind the icon and behind
+ * the categories … while they rolling they look bad").
+ *
+ * Nothing on a moving strip carries a `filter` or sits over a
+ * `backdrop-filter`: on WebKit either one turns the strip's column into a
+ * flat lighter box over the plate's gradient for as long as it moves.
  */
-const ICON_ROW_H = 96;
-const PLATE_ICON_CLASS = "-left-[30px] top-[8px] w-[90px] h-[96px]";
+const PLATE_H = 128;
+const NAME_ROW_H = 36;
+const ICON_ROW_H = PLATE_H;
+const REEL_MASK = "linear-gradient(to bottom, transparent 0%, #000 22%, #000 78%, transparent 100%)";
+const PLATE_ICON_CLASS = "-left-[30px] top-[16px] w-[90px] h-[96px]";
+/** The name's size: the plate has 223px for it, and Slackey is wide. */
+const nameSizeClass = (name: string) => (name.length > 16 ? "text-[16px]" : "text-[20px]");
 
 /** The strip: every game REEL_LOOPS times over, then up to the one to land on. */
 function reelRows(reel: PlateReel) {
@@ -141,10 +155,11 @@ export function CategoryPlate({
           and the icon roll through it; when it stops, the plate itself pops
           once so the reveal has a beat of its own. */}
       <motion.div
-        className="relative h-[112px] flex flex-col justify-center gap-[6px] pl-[76px] pr-[72px] backdrop-blur-[24px] overflow-hidden"
+        className="relative flex flex-col justify-center gap-[6px] pl-[76px] pr-[72px] overflow-hidden"
         animate={isLocked ? { scale: [1, 1.06, 0.99, 1] } : { scale: 1 }}
         transition={isLocked ? { duration: 0.45, times: [0, 0.35, 0.7, 1], ease: "easeOut" } : { duration: 0.2 }}
         style={{
+          height: PLATE_H,
           backgroundImage: "linear-gradient(13.44deg, #A9D9EB 27.03%, #CCC8FF 100%)",
           border: "2px solid rgba(255,255,255,0.55)",
           borderRadius: "20px 60px 60px 40px",
@@ -152,7 +167,10 @@ export function CategoryPlate({
         }}
       >
         {turning ? (
-          <div className="relative overflow-hidden" style={{ height: NAME_ROW_H }}>
+          <div
+            className="relative overflow-hidden"
+            style={{ height: NAME_ROW_H, WebkitMaskImage: REEL_MASK, maskImage: REEL_MASK }}
+          >
             <motion.div
               key={reel!.turnKey}
               initial={{ y: 0 }}
@@ -163,7 +181,7 @@ export function CategoryPlate({
               {rows.map((row, i) => (
                 <p
                   key={i}
-                  className={`font-slackey ${row.name.length > 18 ? "text-[17px]" : "text-[22px]"} text-[#454376] tracking-[-0.14px] truncate`}
+                  className={`font-slackey ${nameSizeClass(row.name)} text-[#454376] tracking-[-0.14px] truncate`}
                   style={{ height: NAME_ROW_H, lineHeight: `${NAME_ROW_H}px`, textShadow: "0 2px 0 #E0EAFF" }}
                 >
                   {row.name}
@@ -175,8 +193,8 @@ export function CategoryPlate({
           <AnimatePresence mode="wait">
             <motion.p
               key={name}
-              className={`font-slackey ${name.length > 18 ? "text-[17px] leading-[20px]" : "text-[22px] leading-[24px]"} text-[#454376] tracking-[-0.14px] truncate`}
-              style={{ textShadow: "0 2px 0 #E0EAFF" }}
+              className={`font-slackey ${nameSizeClass(name)} text-[#454376] tracking-[-0.14px] truncate`}
+              style={{ height: NAME_ROW_H, lineHeight: `${NAME_ROW_H}px`, textShadow: "0 2px 0 #E0EAFF" }}
               initial={{ opacity: 0, y: 26 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -26 }}
@@ -214,20 +232,16 @@ export function CategoryPlate({
           While the reel turns, the icons ride a strip of their own, in step
           with the names. */}
       {turning ? (
-        <div className="absolute -left-[30px] top-[8px] w-[90px] overflow-hidden pointer-events-none" style={{ height: ICON_ROW_H }}>
+        <div
+          className="absolute -left-[30px] top-0 w-[90px] overflow-hidden pointer-events-none"
+          style={{ height: ICON_ROW_H, WebkitMaskImage: REEL_MASK, maskImage: REEL_MASK }}
+        >
           <motion.div key={reel!.turnKey} initial={{ y: 0 }} animate={{ y: -travel * ICON_ROW_H }} transition={reelTransition}>
             {rows.map((row, i) => {
               const src = row.iconUrl ?? (row.iconSlug ? `${ICON_STORAGE_URL}/${row.iconSlug}.png` : undefined);
               return (
                 <div key={i} className="flex items-center justify-center" style={{ height: ICON_ROW_H }}>
-                  {src && (
-                    <img
-                      src={src}
-                      alt=""
-                      className="w-[90px] h-[96px] object-contain"
-                      style={{ filter: "drop-shadow(0 4px 16px rgba(0,0,0,0.2))" }}
-                    />
-                  )}
+                  {src && <img src={src} alt="" className="w-[90px] h-[96px] object-contain" />}
                 </div>
               );
             })}
