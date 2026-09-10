@@ -1554,12 +1554,14 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     // All of that also has to happen before the first question, which is
     // why it took so long to load.
     //
-    // Not the versus screen either. Sending it there gave the round an
-    // opponent, a stake and a VS reveal to sit through — a whole second
-    // screen between the pick and the game (owner: "no need to show the
-    // versus game page here"). This is the category's own solo round, which
-    // is what a picture game is: the player's next level, with the 3-2-1
-    // this flow otherwise goes without.
+    // Not the quick game's versus screen, which waits on a stranger. The
+    // level page opens on the duel's own intro instead — the category,
+    // Trivia King's face and the pot, one button — because the round is a
+    // match against the app's mascot now, and the player should see all
+    // three before the first picture (owner: "show category what player is
+    // going to play, show trivia king mascot and pot"). Earlier, "no need
+    // to show the versus game page here" took the stranger's screen away;
+    // this is a different screen for a different game.
     //
     // Playing a picture game WITH friends is still the Library's room,
     // which is where that belongs.

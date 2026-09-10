@@ -49,6 +49,10 @@ import { QuizTrueFalseButton, type QuizTrueFalseState } from "@/components/ui/qu
 import { QuizPowerUpBar } from "@/components/ui/quiz-power-up-bar";
 import { PowerUpType as UIPowerUpType } from "@/components/ui/quiz-power-up-button";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
+import { DuelIntro } from "@/components/game/DuelIntro";
+import { DuelResult } from "@/components/game/DuelResult";
+import { duelOutcome, mascotAnswers } from "@/utils/duelOpponent";
+import crownMascot from "@/assets/crown-mascot.png";
 import { useUserPowerUps, PowerUpType } from "@/hooks/useUserPowerUps";
 import { adService } from "@/services/adService";
 import { PowerUpScreenEffect } from "@/components/game/ActivePowerUpIndicator";
@@ -159,7 +163,11 @@ export default function CategoryQuizPage() {
    */
   const location = useLocation();
   const wantsCountdown = Boolean((location.state as { countdown?: boolean } | null)?.countdown);
-  const [countdown, setCountdown] = useState<number | null>(wantsCountdown ? 3 : null);
+  const duelFromState = Boolean((location.state as { guessStake?: boolean } | null)?.guessStake);
+  // A duel opens on its own screen first — the category, the King, the pot
+  // — and the 3-2-1 starts from its Play, not from arrival.
+  const [countdown, setCountdown] = useState<number | null>(wantsCountdown && !duelFromState ? 3 : null);
+  const [showDuelIntro, setShowDuelIntro] = useState(duelFromState);
   /**
    * The Guess card's stake.
    *
@@ -171,11 +179,20 @@ export default function CategoryQuizPage() {
    * cannot be applied twice for one game, however the results screen
    * re-renders or the request retries.
    */
-  const guessStake = Boolean((location.state as { guessStake?: boolean } | null)?.guessStake);
-  const guessRunId = useRef<string>(
-    typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `guess-${Date.now()}-${Math.random()}`,
-  );
+  const guessStake = duelFromState;
+  const mintRunId = () =>
+    typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `guess-${Date.now()}-${Math.random()}`;
+  const guessRunId = useRef<string>(mintRunId());
   const [guessDelta, setGuessDelta] = useState<number | null>(null);
+  /**
+   * Trivia King's score. The staked game is a match against the app's own
+   * mascot now, not a pass/fail on stars (owner: "we should handle like one
+   * game vs trivia king ... if wins against our mascot named Trivia King
+   * ... +200, if not - loses 200"). The King answers every question the
+   * player does — see duelOpponent — and whoever has more at the end takes
+   * the pot.
+   */
+  const [mascotScore, setMascotScore] = useState(0);
   const { settleGuessGame } = useGameStake();
   const { t } = useLanguage();
   const { user, profile } = useAuth();
@@ -486,7 +503,7 @@ export default function CategoryQuizPage() {
       // A pass is a win at the Guess card's stake, a fail a loss. Settled
       // once per run; what comes back is what actually moved.
       if (guessStake) {
-        const applied = await settleGuessGame(result.stars >= 1 ? "win" : "lose", guessRunId.current);
+        const applied = await settleGuessGame(duelOutcome(score, mascotScore), guessRunId.current);
         setGuessDelta(applied);
       }
 
@@ -675,6 +692,10 @@ export default function CategoryQuizPage() {
   const handleTimeUp = useCallback(() => {
     if (!isAnswered) {
       setAnswerRecord({ questionIndex: currentQuestionIndex, choice: null });
+      // The King still gets its turn on a question the player let go.
+      if (guessStake && mascotAnswers(guessRunId.current, currentQuestionIndex)) {
+        setMascotScore((prev) => prev + 1);
+      }
       // Running out of time is a miss: the dot goes red like a wrong answer.
       setAnswerResults((prev) => {
         const next = [...prev];
@@ -693,7 +714,7 @@ export default function CategoryQuizPage() {
         powerUpType: null,
       });
     }
-  }, [isAnswered, categoryId, levelId, currentQuestionIndex, questions, usedPowerUpsThisQuestion]);
+  }, [isAnswered, categoryId, levelId, currentQuestionIndex, questions, usedPowerUpsThisQuestion, guessStake]);
 
   // Out of time. Reads the live state rather than whatever the interval closed
   // over, so it can only ever fire for the question actually on screen: moving
@@ -714,6 +735,9 @@ export default function CategoryQuizPage() {
     const isCorrect = answer === currentQuestion?.correct_answer;
     if (isCorrect) {
       setScore((prev) => prev + 1);
+    }
+    if (guessStake && mascotAnswers(guessRunId.current, currentQuestionIndex)) {
+      setMascotScore((prev) => prev + 1);
     }
     setAnswerResults((prev) => {
       const next = [...prev];
@@ -1025,6 +1049,10 @@ export default function CategoryQuizPage() {
     setTimerFrozen(false);
     setFreezeEndTime(null);
     setFreezeTimeRemaining(0);
+    // A second duel is a second run: settled under its own id, from nil.
+    guessRunId.current = mintRunId();
+    setMascotScore(0);
+    setGuessDelta(null);
   }, []);
 
 
@@ -1036,6 +1064,23 @@ export default function CategoryQuizPage() {
     const timer = setTimeout(() => setCountdown((n) => (n === null ? null : n - 1)), 700);
     return () => clearTimeout(timer);
   }, [countdown, loading, questions.length]);
+
+  if (guessStake && showDuelIntro && !showResults) {
+    return (
+      <DuelIntro
+        categoryId={categoryId ?? null}
+        categoryName={category?.name ?? dbCategory?.name ?? ""}
+        iconSlug={dbCategory?.icon_slug ?? null}
+        playerAvatarUrl={profile?.avatar_url ?? null}
+        loading={loading || questions.length === 0}
+        onPlay={() => {
+          setShowDuelIntro(false);
+          setCountdown(3);
+        }}
+        onBack={() => navigate("/create-room?mode=guess")}
+      />
+    );
+  }
 
   if (!loading && questions.length > 0 && countdown !== null && countdown > 0) {
     return (
@@ -1170,6 +1215,37 @@ export default function CategoryQuizPage() {
           </div>
         </div>
       </div>
+    );
+  }
+
+  if (showResults && guessStake) {
+    // One match against the King, decided by score. Its exits are another
+    // match or the guess games — never the category's map (owner: "do not
+    // take users in categories after the match").
+    return (
+      <>
+        {showRegisterPrompt && (
+          <RegisterPromptModal
+            isOpen={showRegisterPrompt}
+            onClose={() => setShowRegisterPrompt(false)}
+            onRegister={() => {
+              setShowRegisterPrompt(false);
+              navigate("/auth");
+            }}
+          />
+        )}
+        <DuelResult
+          outcome={duelOutcome(score, mascotScore)}
+          score={score}
+          mascotScore={mascotScore}
+          total={questions.length}
+          delta={guessDelta}
+          saving={isSaving}
+          playerAvatarUrl={profile?.avatar_url ?? null}
+          onPlayAgain={resetQuiz}
+          onBack={() => navigate("/create-room?mode=guess")}
+        />
+      </>
     );
   }
 
@@ -1401,6 +1477,16 @@ export default function CategoryQuizPage() {
           compact
         />
       </div>
+
+      {/* The duel's scoreboard: the player and the King, as the round
+          stands. Only in a duel — a level has nobody to score against. */}
+      {guessStake && (
+        <div className="flex items-center justify-center gap-6 px-4 pt-3 flex-shrink-0">
+          <QuizPlayerAvatar avatarUrl={profile?.avatar_url ?? null} score={score} position="left" state={score > mascotScore ? "active" : "default"} />
+          <span className="font-display text-[14px] font-black italic text-white/60">VS</span>
+          <QuizPlayerAvatar avatarUrl={crownMascot} score={mascotScore} position="right" state={mascotScore > score ? "active" : "default"} />
+        </div>
+      )}
 
       {/* Question Card with Overlapping Icon - Solo mode optimized */}
       <div className="px-4 flex-shrink-0 mt-10 mb-2 [@media(max-height:700px)]:mt-6 [@media(max-height:600px)]:mt-4 [@media(max-height:700px)]:mb-1 relative">

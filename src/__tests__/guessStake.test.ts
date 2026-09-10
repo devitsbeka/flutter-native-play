@@ -63,10 +63,13 @@ describe("the card", () => {
 });
 
 describe("the level", () => {
-  it("settles a staked run once, a pass as a win, and shows what moved", () => {
-    expect(level).toMatch(/const guessStake = Boolean\(\(location\.state as \{ guessStake\?: boolean \} \| null\)\?\.guessStake\);/);
-    expect(level).toMatch(/const guessRunId = useRef<string>\(/);
-    expect(level).toMatch(/if \(guessStake\) \{\s*\n\s*const applied = await settleGuessGame\(result\.stars >= 1 \? "win" : "lose", guessRunId\.current\);\s*\n\s*setGuessDelta\(applied\);/);
+  it("settles a staked run once, by score against the King, and shows what moved", () => {
+    expect(level).toMatch(/const duelFromState = Boolean\(\(location\.state as \{ guessStake\?: boolean \} \| null\)\?\.guessStake\);/);
+    expect(level).toMatch(/const guessStake = duelFromState;/);
+    expect(level).toMatch(/const guessRunId = useRef<string>\(mintRunId\(\)\);/);
+    // Was `result.stars >= 1 ? "win" : "lose"` — a pass. Now the match is
+    // against Trivia King and the score decides it; see guessDuel.
+    expect(level).toMatch(/if \(guessStake\) \{\s*\n\s*const applied = await settleGuessGame\(duelOutcome\(score, mascotScore\), guessRunId\.current\);\s*\n\s*setGuessDelta\(applied\);/);
     expect(level).toMatch(/\{guessStake && !isSaving && guessDelta !== null && guessDelta !== 0 && \(/);
     expect(level).toMatch(/t\("extra\.quizStakeWon"\)/);
     expect(level).toMatch(/t\("extra\.quizStakeLost"\)/);
