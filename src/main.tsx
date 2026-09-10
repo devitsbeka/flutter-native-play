@@ -10,10 +10,17 @@ import App from "./App.tsx";
 import { AppErrorBoundary } from "@/components/shared/AppErrorBoundary";
 import { NativeBridge } from "@/native/NativeBridge";
 import { initNativeShell, hideSplashScreen } from "@/native/nativeShell";
+import { installPreloadErrorReload, markAppHealthy, HEALTHY_AFTER_MS } from "@/utils/crashRecovery";
 import "./index.css";
 
 // Status bar and keyboard behaviour, before React paints. No-ops on web.
 initNativeShell();
+
+// A deploy under a running tab: reload before the missing chunk ever throws
+// into React, and forget the once-only guard once the reloaded app has been
+// up for a while (crashRecovery).
+installPreloadErrorReload();
+setTimeout(markAppHealthy, HEALTHY_AFTER_MS);
 
 // A floor under the launch screen.
 //
