@@ -51,6 +51,7 @@ import { QuizPowerUpBar } from "@/components/ui/quiz-power-up-bar";
 import { PowerUpType as UIPowerUpType } from "@/components/ui/quiz-power-up-button";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { DuelIntro } from "@/components/game/DuelIntro";
+import { CategoryArtwork } from "@/components/shared/CategoryArtwork";
 import { DuelResult } from "@/components/game/DuelResult";
 import { KING_POINTS, answerPoints, duelOutcome } from "@/utils/duelOpponent";
 import triviaKingAvatar from "@/assets/trivia-king.png";
@@ -1540,9 +1541,14 @@ export default function CategoryQuizPage() {
           <ArrowLeft className="w-5 h-5 text-white" />
         </button>
         
-        {/* Center - Category name */}
-        <span className="text-white font-bold text-base truncate max-w-[160px] text-center">
-          {categoryTitle || "Quiz"}
+        {/* Centre — the category's icon, then its name (owner: "show
+            category icon in header, before the category title"). The same
+            art the intro and the Discover cards wear, flat, at text height. */}
+        <span className="flex min-w-0 items-center justify-center gap-2">
+          <CategoryArtwork categoryId={categoryId} iconSlug={dbCategory?.icon_slug ?? null} size={28} flat className="shrink-0" />
+          <span className="text-white font-bold text-base truncate max-w-[160px] text-center">
+            {categoryTitle || "Quiz"}
+          </span>
         </span>
         
         {/* Right - Compact Timer */}
