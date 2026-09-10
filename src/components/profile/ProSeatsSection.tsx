@@ -1,11 +1,13 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Crown, Loader2, UserMinus, UserPlus } from "lucide-react";
+import { Loader2, UserMinus, UserPlus } from "lucide-react";
 import { useVipStatus } from "@/contexts/VipContext";
 import { useFriends } from "@/hooks/useFriends";
 import { useProSeats } from "@/hooks/useProSeats";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { cn } from "@/lib/utils";
 import crownIcon from "@/assets/crown-icon.png";
+import giftIcon from "@/assets/unboxing-gift-3.png";
 import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
 
@@ -21,6 +23,14 @@ import { SafeAvatar } from "@/components/shared/SafeAvatar";
  * anyone else — the paywall is a screen away and this would just be a locked
  * panel taking up room on it.
  */
+
+/**
+ * The chunky pill the friend rows wear — the chooser's Send PRO in
+ * miniature: gradient, a hard foot, the gift (owner: "show send pro-s
+ * buttons like this").
+ */
+const SEAT_PILL =
+  "flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-full border-[1.5px] border-solid px-3.5 text-[13px] font-bold text-white";
 
 const SEATS_BY_TIER: Record<string, number> = {
   pro: 1,
@@ -89,7 +99,9 @@ export function ProSeatsSection() {
           Held to a readable measure rather than the card's full width: at
           358px this ran the whole way across in two long lines, which is
           where centred text stops looking centred. */}
-      <p className="mx-auto max-w-[30ch] text-sm text-muted-foreground text-center">
+      {/* Two lines, not three: a size down and a wider measure (owner:
+          "make sure text description goes on two lines"). */}
+      <p className="mx-auto max-w-[40ch] text-[13px] leading-[18px] text-muted-foreground text-center">
         {t("extra.proSeatsHow")}
       </p>
 
@@ -112,17 +124,27 @@ export function ProSeatsSection() {
                     className="w-9 h-9 shrink-0 border border-purple-200"
                     fallbackClassName="text-xs"
                   />
-                  <span className="font-semibold text-sm truncate">{nameOf(seat.holderId)}</span>
+                  <span className="flex min-w-0 flex-col">
+                    <span className="font-semibold text-sm truncate">{nameOf(seat.holderId)}</span>
+                    {/* Taking it back stays possible, as a small word under the
+                        name; the pill on the right says what the seat is
+                        doing now. */}
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => void revoke(seat.holderId)}
+                      className="flex items-center gap-1 text-[11px] font-bold leading-4 text-red-600 disabled:opacity-50"
+                    >
+                      <UserMinus className="w-3 h-3" />
+                      {t("extra.proSeatsRevoke")}
+                    </button>
+                  </span>
                 </span>
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => void revoke(seat.holderId)}
-                  className="flex items-center gap-1 text-xs font-bold text-red-600 disabled:opacity-50"
-                >
-                  <UserMinus className="w-4 h-4" />
-                  {t("extra.proSeatsRevoke")}
-                </button>
+                {/* Spent: the same pill, gone grey (owner's screenshot). */}
+                <span className={cn(SEAT_PILL, "border-[#9aa39e] bg-[linear-gradient(180deg,#8e978f_0%,#6f7a71_100%)] shadow-[0px_4px_0px_0px_#4f5951]")}>
+                  <img alt="" src={giftIcon} className="h-[18px] w-[18px] object-contain opacity-80" />
+                  {t("extra.proSeatsSentBadge")}
+                </span>
               </motion.li>
             ))}
           </ul>
@@ -184,12 +206,12 @@ export function ProSeatsSection() {
                                 setSending(null);
                               }
                             }}
-                            className="flex shrink-0 items-center gap-1.5 rounded-full bg-purple-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm disabled:opacity-50"
+                            className={cn(SEAT_PILL, "border-[#b78cf2] bg-[linear-gradient(180deg,#b98cf5_0%,#9a5de6_58%,#8447d6_100%)] shadow-[0px_4px_0px_0px_#5f2eaa] transition-transform active:translate-y-[2px] disabled:opacity-50")}
                           >
                             {inFlight ? (
-                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              <Loader2 className="w-[18px] h-[18px] animate-spin" />
                             ) : (
-                              <Crown className="w-3.5 h-3.5" />
+                              <img alt="" src={giftIcon} className="h-[18px] w-[18px] object-contain" />
                             )}
                             {t("extra.proSeatsSend")}
                           </button>

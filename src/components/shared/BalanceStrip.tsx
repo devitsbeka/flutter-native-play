@@ -7,7 +7,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useVipStatus } from "@/hooks/useVipStatus";
-import { proTierOf, type ProTier } from "@/utils/proTier";
+import { proCtaChoice, proSeatsTotal, proTierOf, type ProCta } from "@/utils/proTier";
+import { useProSeats } from "@/hooks/useProSeats";
 import { formatFullNumber } from "@/lib/utils";
 
 import coinIcon from "@/assets/icons/icon-coin.png";
@@ -89,9 +90,9 @@ export default BalancePills;
  * which lists the Friends plan for the one who already has PRO; the third
  * goes to the seats panel on the profile.
  */
-export function proCtaLabelKey(tier: ProTier): "extra.tryProBtn" | "extra.upgradeBtn" | "extra.proSeatsSend" {
-  if (tier === "none") return "extra.tryProBtn";
-  if (tier === "solo") return "extra.upgradeBtn";
+export function proCtaLabelKey(choice: ProCta): "extra.tryProBtn" | "extra.upgradeBtn" | "extra.proSeatsSend" {
+  if (choice === "try") return "extra.tryProBtn";
+  if (choice === "upgrade") return "extra.upgradeBtn";
   return "extra.proSeatsSend";
 }
 
@@ -102,8 +103,12 @@ export function ProCtaButton({ onClick }: { onClick: () => void }) {
   const navigate = useNavigate();
   const { isVip, subscription } = useVipStatus();
   const tier = proTierOf(subscription, isVip);
-  const key = proCtaLabelKey(tier);
-  const sends = tier === "friends";
+  // A solo PRO with their one seat unspent is offered it every other hour
+  // (proCtaChoice); the seats are read so a spent one is not suggested.
+  const { seatsFree, loading: seatsLoading } = useProSeats(proSeatsTotal(subscription, isVip));
+  const choice = proCtaChoice(tier, seatsLoading ? 0 : seatsFree);
+  const key = proCtaLabelKey(choice);
+  const sends = choice === "send";
   return (
     <button
       type="button"

@@ -13,7 +13,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { proTierOf } from "@/utils/proTier";
+import { proCtaChoice, proSeatsTotal, proTierOf } from "@/utils/proTier";
 
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 
@@ -41,5 +41,54 @@ describe("the chooser", () => {
     const chooser = read("src/components/team/CreateRoomPage.tsx");
     expect(chooser).toMatch(/<ProCtaButton onClick=\{\(\) => setShowProModal\(true\)\} \/>/);
     expect(chooser).not.toMatch(/t\(blockedByLimit \? "extra\.tryProBtn" : "extra\.upgradeBtn"\)/);
+  });
+});
+
+describe("what the pill offers this hour", () => {
+  const EVEN = 2 * 3_600_000 + 1000;
+  const ODD = 3 * 3_600_000 + 1000;
+
+  it("the trial without PRO, and Send PRO to a Friends PRO, whatever the hour", () => {
+    expect(proCtaChoice("none", 0, EVEN)).toBe("try");
+    expect(proCtaChoice("none", 5, ODD)).toBe("try");
+    expect(proCtaChoice("friends", 5, EVEN)).toBe("send");
+    expect(proCtaChoice("friends", 0, ODD)).toBe("send");
+  });
+
+  it("a solo PRO with the seat unspent: Send PRO one hour, Upgrade the next", () => {
+    expect(proCtaChoice("solo", 1, EVEN)).toBe("send");
+    expect(proCtaChoice("solo", 1, ODD)).toBe("upgrade");
+  });
+
+  it("a solo PRO whose seat is spent: Upgrade, every hour", () => {
+    expect(proCtaChoice("solo", 0, EVEN)).toBe("upgrade");
+    expect(proCtaChoice("solo", 0, ODD)).toBe("upgrade");
+  });
+
+  it("seats to give: one for PRO, five for Friends PRO, none for a seat somebody gave", () => {
+    expect(proSeatsTotal({ vip_tier: "pro" }, true)).toBe(1);
+    expect(proSeatsTotal({ vip_tier: "pro_plus" }, true)).toBe(5);
+    expect(proSeatsTotal({ vip_tier: "pro_plus", purchase_platform: "seat" }, true)).toBe(0);
+    expect(proSeatsTotal({ vip_tier: "pro" }, false)).toBe(0);
+  });
+});
+
+describe("the seats card", () => {
+  const section = read("src/components/profile/ProSeatsSection.tsx");
+
+  it("explains itself in two lines, not three", () => {
+    expect(section).toMatch(/className="mx-auto max-w-\[40ch\] text-\[13px\] leading-\[18px\] text-muted-foreground text-center"/);
+  });
+
+  it("its rows wear the chunky gift pill: purple to send, grey once sent", () => {
+    expect(section).toMatch(/const SEAT_PILL =/);
+    expect(section).toMatch(/cn\(SEAT_PILL, "border-\[#b78cf2\] bg-\[linear-gradient/);
+    expect(section).toMatch(/cn\(SEAT_PILL, "border-\[#9aa39e\] bg-\[linear-gradient/);
+    expect(section).toMatch(/\{t\("extra\.proSeatsSentBadge"\)\}/);
+    for (const lang of ["en", "ka", "de", "es", "fr", "it", "pt"]) {
+      expect(read(`src/locales/${lang}.ts`), lang).toMatch(/proSeatsSentBadge: "[^"]+",/);
+    }
+    // Taking a seat back is still possible, under the holder's name.
+    expect(section).toMatch(/onClick=\{\(\) => void revoke\(seat\.holderId\)\}/);
   });
 });

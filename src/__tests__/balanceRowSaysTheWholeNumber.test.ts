@@ -41,10 +41,10 @@ describe("the whole number", () => {
 });
 
 describe("the PRO button", () => {
-  it("says Try PRO to a player without PRO, Upgrade to a solo PRO, Send PRO to a Friends PRO", () => {
-    expect(proCtaLabelKey("none")).toBe("extra.tryProBtn");
-    expect(proCtaLabelKey("solo")).toBe("extra.upgradeBtn");
-    expect(proCtaLabelKey("friends")).toBe("extra.proSeatsSend");
+  it("says Try PRO, Upgrade, or Send PRO by what the hour and the tier choose", () => {
+    expect(proCtaLabelKey("try")).toBe("extra.tryProBtn");
+    expect(proCtaLabelKey("upgrade")).toBe("extra.upgradeBtn");
+    expect(proCtaLabelKey("send")).toBe("extra.proSeatsSend");
   });
 
   it("sits at the right end of the strip and opens the paywall", () => {
@@ -58,6 +58,7 @@ describe("the PRO button", () => {
   it("reads the tier from the VIP context, not from a guess", () => {
     expect(strip).toMatch(/const \{ isVip, subscription \} = useVipStatus\(\);/);
     expect(strip).toMatch(/const tier = proTierOf\(subscription, isVip\);/);
+    expect(strip).toMatch(/const choice = proCtaChoice\(tier, seatsLoading \? 0 : seatsFree\);/);
     // Send PRO goes to the seats panel, not the paywall, in purple with the gift.
     expect(strip).toMatch(/onClick=\{sends \? \(\) => navigate\(PRO_SEATS_PATH\) : onClick\}/);
     expect(strip).toMatch(/\{sends && <img alt="" src=\{giftIcon\}/);
