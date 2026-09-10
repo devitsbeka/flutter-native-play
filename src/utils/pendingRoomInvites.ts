@@ -77,6 +77,16 @@ export function acceptRoomInvite(notificationId: string): void {
  */
 export async function declineRoomInvite(roomId: string, userId: string, notificationId: string): Promise<void> {
   await supabase.from("room_participants").delete().eq("room_id", roomId).eq("user_id", userId);
+  // An ask of the player's own on the same room goes with it. A player who
+  // knocked and was then invited held both, and the card drew a cross for
+  // each; "no" to the invite is "no" to the room, and leaving the ask
+  // pending kept the card waiting on a host who had already answered.
+  await supabase
+    .from("room_join_requests")
+    .delete()
+    .eq("room_id", roomId)
+    .eq("user_id", userId)
+    .eq("status", "pending");
   // The invitation row as well: it is what lets an invitee past an "Ask me"
   // door and what the global invite modal lists as pending. Left "pending",
   // a declined invite still opened the door and could be raised again.

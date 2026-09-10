@@ -720,8 +720,14 @@ function PublicRoomCard({
               </button>
             )}
             {/* Waiting is undoable: one game at a time means the ask must
-                be withdrawable to knock on another door. */}
-            {waiting && !busy && (
+                be withdrawable to knock on another door. Not beside the
+                invite's X, though: a player who had asked to join and was
+                then invited had BOTH — two crosses, one of which took back
+                an ask they had forgotten about and left the card as it was
+                (owner: "i clicked cancel and it does nothing and i see two
+                cancel icons"). One X: declining the invite withdraws the
+                ask too (declineRoomInvite). */}
+            {waiting && !invited && !busy && (
               <button
                 type="button"
                 aria-label={t("extra.withdrawJoin")}
@@ -773,7 +779,7 @@ export function PublicRoomsSection({
   const { friends } = useFriends();
   const friendIds = useMemo(() => new Set(friends.map((f) => f.friendId)), [friends]);
   // Rooms this player was asked into — the same map the Private tab reads.
-  const { notifications } = useNotifications();
+  const { notifications, markAsRead } = useNotifications();
   const pendingInvites = useMemo(() => pendingRoomInvites(notifications), [notifications]);
   const me = useMemo<CardPlayer | null>(
     () => (user ? { user_id: user.id, nickname: profile?.nickname ?? null, avatar_url: profile?.avatar_url ?? null } : null),
@@ -784,6 +790,9 @@ export function PublicRoomsSection({
     if (!user || !invite) return;
     try {
       await declineRoomInvite(room.id, user.id, invite.notificationId);
+      // The context's own copy of the notification is what draws Confirm
+      // and the X; retire it here rather than wait on the realtime echo.
+      void markAsRead(invite.notificationId);
       toast.success(t("extra.notifDeclined"));
       void queryClient.invalidateQueries({ queryKey: PUBLIC_ROOMS_KEY });
       void queryClient.invalidateQueries({ queryKey: ["public-room-players"] });

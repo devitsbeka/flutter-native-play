@@ -17,6 +17,7 @@ import { roomCardAction } from "@/utils/roomCardAction";
 import { RoomCardPlayButton } from "@/components/team/RoomCardPlayButton";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNotifications } from "@/hooks/useNotifications";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -202,10 +203,15 @@ export function MyRoomsSection({
   // delete to everyone and silently did nothing for guests.
   const { user } = useAuth();
   /** The X beside Confirm: give the reserved seat up and answer the invite. */
+  // The invite is drawn off the notifications context's copy; retiring
+  // that copy on the spot is what takes Confirm and the X off the card
+  // without waiting on the realtime echo (see PublicRoomsSection).
+  const { markAsRead } = useNotifications();
   const handleDeclineInvite = async (room: MyRoom) => {
     if (!user || !room.pending_invite_from) return;
     try {
       await declineRoomInvite(room.id, user.id, room.pending_invite_from.notificationId);
+      void markAsRead(room.pending_invite_from.notificationId);
       toast.success(t("extra.notifDeclined"));
     } catch (e) {
       console.error("[MyRooms] decline invite failed", e);

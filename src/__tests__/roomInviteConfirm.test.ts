@@ -75,6 +75,16 @@ describe("Confirm is green, and an X beside it says no", () => {
   it("no gives the seat up — a seat that stays is staked — and answers the invite", () => {
     expect(reader).toMatch(/export async function declineRoomInvite\(roomId: string, userId: string, notificationId: string\)/);
     expect(reader).toMatch(/from\("room_participants"\)\.delete\(\)\.eq\("room_id", roomId\)\.eq\("user_id", userId\)/);
+    // And withdraws the player's own pending ask on that room: a player who
+    // knocked and was then invited held both, and the card drew two crosses
+    // (owner: "i clicked cancel and it does nothing and i see two cancel
+    // icons").
+    expect(reader).toMatch(/from\("room_join_requests"\)\s*\n\s*\.delete\(\)\s*\n\s*\.eq\("room_id", roomId\)\s*\n\s*\.eq\("user_id", userId\)\s*\n\s*\.eq\("status", "pending"\);/);
+    // One cross on the public card: the withdraw X yields to the invite's.
+    expect(pub).toMatch(/\{waiting && !invited && !busy && \(/);
+    // Both tabs retire the context's copy of the invite on the spot.
+    expect(pub).toMatch(/void markAsRead\(invite\.notificationId\);/);
+    expect(mine).toMatch(/void markAsRead\(room\.pending_invite_from\.notificationId\);/);
     expect(reader).toMatch(/markNotificationActioned\(notificationId, "declined"\)/);
     expect(reader).toMatch(/notificationId: n\.id,/);
   });
