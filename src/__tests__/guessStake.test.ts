@@ -54,6 +54,16 @@ describe("the card", () => {
     expect(create).toMatch(/\{price === 0 \? t\("discover\.free"\) : formatCompactNumber\(price\)\}/);
   });
 
+  it("sets the word bold, and strokes it in Georgian, where Slackey's weight is not on offer", () => {
+    // (owner: "show 'free' 'უფასო' as bold font on label"). Google Sans'
+    // Georgian is one 700 face, so the bold alone is what the title already
+    // gets; the stroke is what makes it read as heavy as the Slackey "1-2"
+    // beside it — and would over-thicken Slackey, so Latin "Free" is spared.
+    expect(create).toMatch(/bg-clip-text font-hero font-bold text-\[calc\(22\*var\(--u\)\)\]/);
+    expect(create).toMatch(/price === 0 && \/\[\\u10A0-\\u10FF\]\/\.test\(t\("discover\.free"\)\) && "\[-webkit-text-stroke:0\.6px_#6b4a1a\]"/);
+    expect(read("src/locales/ka.ts")).toMatch(/\n\s+free: "უფასო",/);
+  });
+
   it("checks the guess stake at the door and flags the level as staked", () => {
     expect(create).toMatch(/if \(coins < REWARDS\.GUESS_STAKE\) \{\s*\n\s*setShowGuessStake\(true\);\s*\n\s*return;/);
     expect(create).toMatch(/state: \{ countdown: true, guessStake: true \}/);
