@@ -1,6 +1,7 @@
 import React, { Component, type ErrorInfo, type ReactNode } from "react";
 import posthog from "posthog-js";
 import { t } from "@/utils/standaloneTranslation";
+import { isStaleChunkError, markAppHealthy, reloadOnceForStaleBuild } from "@/utils/crashRecovery";
 
 interface Props {
   children: ReactNode;
@@ -27,18 +28,15 @@ export class AppErrorBoundary extends Component<Props, State> {
     return { hasError: true, error };
   }
 
+  /** One silent retry of the render before the screen; see crashRecovery. */
+  private retried = false;
+
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // A stale tab asking for a chunk that no longer exists is not a bug, it is
-    // a deploy. Reload once and it resolves itself; the sessionStorage flag is
-    // what stops that turning into a reload loop when it is NOT a deploy.
-    if (isStaleChunkError(error)) {
-      const key = "mytrivia_chunk_reload";
-      if (!sessionStorage.getItem(key)) {
-        sessionStorage.setItem(key, "1");
-        window.location.reload();
-        return;
-      }
-    }
+    // a deploy. Reload once and it resolves itself (most never get this far:
+    // main.tsx catches vite:preloadError first).
+    const stale = isStaleChunkError(error);
+    if (stale && reloadOnceForStaleBuild()) return;
 
     // Keep this even though console.log is stripped in production - console.error
     // survives, and it is what a developer with the device in hand will look at.
@@ -49,19 +47,28 @@ export class AppErrorBoundary extends Component<Props, State> {
         boundary: "app-root",
         component_stack: errorInfo.componentStack,
         path: window.location.pathname,
+        retried: this.retried,
       });
     } catch {
       // Reporting must never be the thing that breaks the error screen.
     }
+
+    // A real crash gets one more go at rendering before anyone sees a
+    // screen: a transient throw recovers unseen, a deterministic one throws
+    // again at once and lands here with `retried` set.
+    if (!stale && !this.retried) {
+      this.retried = true;
+      this.setState({ hasError: false, error: null });
+    }
   }
 
   handleReload = () => {
-    sessionStorage.removeItem("mytrivia_chunk_reload");
+    markAppHealthy();
     window.location.reload();
   };
 
   handleGoHome = () => {
-    sessionStorage.removeItem("mytrivia_chunk_reload");
+    markAppHealthy();
     window.location.href = "/";
   };
 
@@ -114,15 +121,4 @@ export class AppErrorBoundary extends Component<Props, State> {
       </div>
     );
   }
-}
-
-/** A chunk request that failed because the deployed build moved under us. */
-function isStaleChunkError(error: Error): boolean {
-  const message = `${error?.message ?? ""} ${error?.name ?? ""}`;
-  return (
-    /dynamically imported module/i.test(message) ||
-    /Loading chunk .* failed/i.test(message) ||
-    /Importing a module script failed/i.test(message) ||
-    /ChunkLoadError/i.test(message)
-  );
 }
