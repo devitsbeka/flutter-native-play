@@ -29,10 +29,18 @@ describe("the screen is the quick game's", () => {
     expect(vs).toMatch(/export function CategoryPlate\(/);
     expect(screen).toMatch(/import \{ CategoryPlate, VS_PURPLE \} from "@\/components\/game\/VSScreen";/);
     expect(screen).toMatch(/style=\{\{ background: VS_PURPLE \}\}/);
-    // The same three positions the quick game puts its blocks at.
-    expect(screen).toMatch(/top-\[25\.1%\]/);
+    // The plate where the quick game puts it; the two cards pushed apart
+    // from the quick game's 25.1% / 68.3%, so the plate and its rules line
+    // have room between them (owner: "move mascot avatar and players
+    // avatar little up and down to free space between").
+    expect(screen).toMatch(/top-\[18%\]/);
     expect(screen).toMatch(/top-\[45\.6%\]/);
-    expect(screen).toMatch(/top-\[68\.3%\]/);
+    expect(screen).toMatch(/top-\[74%\]/);
+    // And the same inset from either edge (owner: "check padding from
+    // left and right") — one constant, on both cards.
+    expect(screen).toMatch(/const CARD_INSET = "px-\[4%\]";/);
+    expect((screen.match(/\$\{CARD_INSET\}/g) ?? []).length).toBe(2);
+    expect(screen).not.toMatch(/pl-\[7%\]/);
   });
 
   it("Trivia King is there at once, face and name, nothing under it", () => {
@@ -51,26 +59,33 @@ describe("the screen is the quick game's", () => {
 
   it("the wheel spins the picture games and lands on one, with three re-rolls", () => {
     expect(screen).toMatch(/setWheelIndex\(Math\.floor\(Math\.random\(\) \* categories\.length\)\);/);
-    expect(screen).toMatch(/const WHEEL_CYCLES = 12;/);
     expect(screen).toMatch(/const FREE_SPINS = 3;/);
     expect(screen).toMatch(/canSpin=\{locked && spinsLeft > 0 && !busy\}/);
     expect(screen).toMatch(/stake=\{REWARDS\.GUESS_STAKE\}/);
   });
 
-  it("turns like a wheel — one game to the next, slowing to a stop — and the plate glides with it", () => {
-    // It used to jump to a random game every 60ms, a flicker rather than a
-    // spin (owner: "it rolls very fast, we need more smooth animation").
-    expect(screen).toMatch(/setWheelIndex\(\(i\) => \(i \+ 1\) % categories\.length\);/);
-    expect(screen).toMatch(/const WHEEL_FIRST_MS = 110;/);
-    expect(screen).toMatch(/const WHEEL_LAST_MS = 520;/);
-    expect(screen).toMatch(/return Math\.round\(WHEEL_FIRST_MS \+ \(WHEEL_LAST_MS - WHEEL_FIRST_MS\) \* t \* t\);/);
-    expect(screen).not.toMatch(/return 60;/);
-    // Each swap on the plate gets a share of the step it has to fit in.
-    expect(screen).toMatch(/rollDuration=\{rollDurationFor\(stepMs\)\}/);
-    expect(read("src/components/game/VSScreen.tsx")).toMatch(/duration: isLocked \? 0\.22 : rollDuration/);
-    expect(read("src/components/game/VSScreen.tsx")).toMatch(/duration: isLocked \? 0\.34 : rollDuration/);
-    // And the one line that says how it is scored, once the wheel has stopped.
+  it("is a reel: one continuous motion that lands, not timed swaps", () => {
+    // Twelve swaps at 60ms, then twelve on an ease-out curve — both read as
+    // a flicker (owner, twice: "it rolls very fast, we need smooth
+    // animation"). Now every game is a row on one strip that travels three
+    // full turns and lands in one ease-out motion; nothing is swapped.
+    const plate = read("src/components/game/VSScreen.tsx");
+    expect(plate).toMatch(/export const REEL_LOOPS = 3;/);
+    expect(plate).toMatch(/export const REEL_EASE = \[0\.12, 0\.8, 0\.18, 1\] as const;/);
+    expect(plate).toMatch(/animate=\{\{ y: -travel \* NAME_ROW_H \}\}/);
+    expect(plate).toMatch(/animate=\{\{ y: -travel \* ICON_ROW_H \}\}/);
+    expect(plate).toMatch(/onAnimationComplete=\{reel!\.onLanded\}/);
+    expect(screen).toMatch(/const REEL_SECONDS = 3;/);
+    expect(screen).toMatch(/reel=\{\{ items: categories, target: wheelIndex, turnKey: spinKey, seconds: REEL_SECONDS, onLanded: landed \}\}/);
+    expect(screen).toMatch(/const landed = useCallback\(\(\) => setLocked\(true\), \[\]\);/);
+    expect(screen).not.toMatch(/setTimeout|wheelDelay|WHEEL_CYCLES/);
+    // The quick game's wheel keeps its swaps: the reel is opt-in.
+    expect(plate).toMatch(/const turning = !!reel && !isLocked && reel\.items\.length > 0;/);
+    // And the one line that says how it is scored, once the wheel has
+    // stopped — narrow, so it never runs into the cards (owner: "show text
+    // below in more narrow container").
     expect(screen).toMatch(/\{t\("extra\.duelRulesHint"\)\}/);
+    expect(screen).toMatch(/className="mx-auto mt-3 max-w-\[260px\] text-center/);
   });
 
   it("Play hands the landed game to the caller", () => {

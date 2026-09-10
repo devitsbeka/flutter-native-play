@@ -146,10 +146,14 @@ describe("during", () => {
     expect(level).toMatch(/if \(isCorrect\) \{\s*\n\s*setScore\(\(prev\) => prev \+ 1\);\s*\n\s*\}/);
   });
 
-  it("both scores are on the board, only in a duel", () => {
-    expect(level).toMatch(
-      /\{guessStake && \(\s*\n\s*<div[^>]*>\s*\n\s*<QuizPlayerAvatar avatarUrl=\{profile\?\.avatar_url \?\? null\} score=\{duelPoints\} position="left"[^\n]*\n\s*<span[^>]*>VS<\/span>\s*\n\s*<QuizPlayerAvatar avatarUrl=\{triviaKingAvatar\} score=\{mascotScore\} position="right"/,
-    );
+  it("both scores are on the board, only in a duel — one row, faces at the ends", () => {
+    const board = level.slice(level.indexOf("{guessStake && ("), level.indexOf("Question Card with Overlapping Icon"));
+    expect(board).toMatch(/<DuelFace avatarUrl=\{profile\?\.avatar_url \?\? null\}[^\n]*leading=\{duelPoints > mascotScore\} \/>/);
+    expect(board).toMatch(/<DuelPoints value=\{duelPoints\} tone="player" \/>/);
+    expect(board).toMatch(/<span[^>]*>VS<\/span>/);
+    expect(board).toMatch(/<DuelPoints value=\{mascotScore\} tone="king" \/>/);
+    expect(board).toMatch(/<DuelFace avatarUrl=\{triviaKingAvatar\} fallback="K" leading=\{mascotScore > duelPoints\} \/>/);
+    expect(level).toMatch(/<SmartAvatar avatarUrl=\{avatarUrl\} fallback=\{fallback\} size="sm"/);
   });
 });
 

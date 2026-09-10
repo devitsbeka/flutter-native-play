@@ -39,6 +39,18 @@ const GROUND = "126,122,219";
  */
 export const QUIZ_BLUR_REACH = 88;
 
+/**
+ * The ramp's reach while a question is LIVE.
+ *
+ * In play the foot holds only the power-ups, and 88px of frost above them
+ * on top of the ~100px they stand on took the fourth answer on a short
+ * phone whatever the scroller was padded by (owner: "i still see blur
+ * covers last answer while playing guess game"). A soft edge is all the
+ * foot needs then; the full ramp comes back with the verdict and the next
+ * button, when the answers are done being read.
+ */
+export const QUIZ_PLAY_BLUR_REACH = 24;
+
 interface QuizBottomBlurProps {
   /** How far above the controls the ramp starts, in px. */
   reach?: number;

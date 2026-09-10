@@ -14,7 +14,7 @@ import { QuizTrueFalseButton, type QuizTrueFalseState } from "@/components/ui/qu
 import { QuizPowerUpBar } from "@/components/ui/quiz-power-up-bar";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { ANSWER_FEEDBACK_CARD_SHOWN, AnswerFeedbackCard } from "./AnswerFeedbackCard";
-import { QUIZ_BLUR_REACH, QuizBottomBlur } from "./QuizBottomBlur";
+import { QUIZ_BLUR_REACH, QUIZ_PLAY_BLUR_REACH, QuizBottomBlur } from "./QuizBottomBlur";
 import { useFooterHeight } from "@/hooks/useFooterHeight";
 import { TimerBadge } from "@/components/game/TimerBadge";
 import { PowerUpType as UIPowerUpType } from "@/components/ui/quiz-power-up-button";
@@ -98,6 +98,8 @@ export function QuizGameScreenProd() {
   // The floating foot is out of flow, so the answer list is padded by
   // exactly its height and every answer stays scrollable into view.
   const [footerRef, footerHeight] = useFooterHeight<HTMLDivElement>();
+  // A soft edge in play, the full ramp with the verdict (QUIZ_PLAY_BLUR_REACH).
+  const rampReach = answerRevealed ? QUIZ_BLUR_REACH : QUIZ_PLAY_BLUR_REACH;
   // Scrolled to its end on the reveal, so the last answer is clear of the
   // footer's frosted ramp (see CategoryQuizPage).
   const answersRef = useRef<HTMLDivElement | null>(null);
@@ -521,7 +523,7 @@ export function QuizGameScreenProd() {
       {isTrueFalseQuestion ? (
         <div
           className="flex-1 min-h-0 w-full px-4 mt-0 flex gap-3 [@media(max-height:600px)]:gap-2 items-center"
-          style={{ paddingBottom: footerHeight + QUIZ_BLUR_REACH }}
+          style={{ paddingBottom: footerHeight + rampReach }}
         >
           {currentQuestion.allAnswers.map((answer, index) => {
             const isTrue = answer.toLowerCase() === "მართალია" || answer.toLowerCase() === "true";
@@ -547,7 +549,7 @@ export function QuizGameScreenProd() {
         <div
           ref={answersRef}
           className="flex-1 px-4 mt-0 flex flex-col gap-3 [@media(max-height:700px)]:gap-2 [@media(max-height:600px)]:gap-1.5 overflow-y-auto min-h-0"
-          style={{ paddingBottom: footerHeight + QUIZ_BLUR_REACH }}
+          style={{ paddingBottom: footerHeight + rampReach }}
         >
           {currentQuestion.allAnswers.map((answer, index) => {
             const isHidden = hiddenAnswers.includes(answer);
@@ -578,7 +580,7 @@ export function QuizGameScreenProd() {
           it and blur out as they go, instead of being clipped short of it
           with a hard edge. */}
       <div ref={footerRef} className="absolute inset-x-0 bottom-0 z-20">
-      <QuizBottomBlur />
+      <QuizBottomBlur reach={rampReach} />
 
       {/* Answer feedback — Figma 1154:9157. Same card the solo rounds get:
           the verdict, somewhere to keep the question or flag it, and a few

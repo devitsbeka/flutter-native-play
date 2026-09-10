@@ -262,7 +262,10 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
         {hasImage && !hasVideo && !hasAudio && (
           <div
             className={cn(
-              "w-full h-36 overflow-hidden relative flex items-center justify-center",
+              // Shorter on a short phone: with the duel's row above and four
+              // answers below, 144px of picture was the difference between
+              // the fourth answer clearing the foot and sitting in it.
+              "w-full h-36 [@media(max-height:700px)]:h-28 overflow-hidden relative flex items-center justify-center",
               imageInset ? "bg-white" : "bg-gray-100",
               imageFramed && "px-3",
             )}

@@ -13,7 +13,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { QUIZ_BLUR_REACH } from "@/components/game/QuizBottomBlur";
+import { QUIZ_BLUR_REACH, QUIZ_PLAY_BLUR_REACH } from "@/components/game/QuizBottomBlur";
 
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 const ramp = read("src/components/game/QuizBottomBlur.tsx");
@@ -23,6 +23,14 @@ describe("the ramp's reach is one number", () => {
     expect(QUIZ_BLUR_REACH).toBeLessThanOrEqual(96);
     expect(ramp).toMatch(/export function QuizBottomBlur\(\{ reach = QUIZ_BLUR_REACH \}/);
   });
+
+  it("and in play it is a soft edge, not a ramp", () => {
+    // 88px of frost over the power-ups' ~100px still took the fourth answer
+    // on a short phone (owner: "i still see blur covers last answer while
+    // playing guess game"). The full ramp is for the verdict.
+    expect(QUIZ_PLAY_BLUR_REACH).toBeLessThanOrEqual(32);
+    expect(QUIZ_PLAY_BLUR_REACH).toBeLessThan(QUIZ_BLUR_REACH);
+  });
 });
 
 describe.each([
@@ -31,10 +39,13 @@ describe.each([
 ])("%s", (file, revealFlag) => {
   const src = read(file);
 
-  it("pads every answers scroller by the footer AND the ramp", () => {
-    const pads = src.match(/paddingBottom: footerHeight \+ QUIZ_BLUR_REACH/g) ?? [];
+  it("pads every answers scroller by the footer AND the ramp it is showing", () => {
+    expect(src).toMatch(new RegExp(`const rampReach = ${revealFlag} \\? QUIZ_BLUR_REACH : QUIZ_PLAY_BLUR_REACH;`));
+    expect(src).toMatch(/<QuizBottomBlur reach=\{rampReach\} \/>/);
+    const pads = src.match(/paddingBottom: footerHeight \+ rampReach/g) ?? [];
     expect(pads).toHaveLength(2);
     expect(src).not.toMatch(/paddingBottom: footerHeight \}\}/);
+    expect(src).not.toMatch(/paddingBottom: footerHeight \+ QUIZ_BLUR_REACH/);
   });
 
   it("scrolls the list to its end on the reveal", () => {

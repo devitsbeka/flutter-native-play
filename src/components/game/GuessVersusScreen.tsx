@@ -27,7 +27,7 @@
  * two screens cannot drift apart.
  */
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -48,24 +48,15 @@ export interface GuessCategory {
 }
 
 /**
- * How the wheel turns. It used to jump to a random game every 60ms, which
- * read as a flicker rather than a spin (owner: "it rolls very fast, we need
- * more smooth animation"). Now it starts somewhere random and steps to the
- * NEXT game each time, like a wheel, and each step takes longer than the
- * last on an ease-out curve — from WHEEL_FIRST_MS to WHEEL_LAST_MS over
- * WHEEL_CYCLES steps, about two and a half seconds in all — while the plate
- * is told how long each swap has (CategoryPlate.rollDuration) so the name
- * and the icon glide across rather than blink.
+ * How the wheel turns: it is a reel (CategoryPlate.reel). Every picture
+ * game is a row on one strip; the strip makes REEL_LOOPS full turns and
+ * lands on a random game in one continuous ease-out motion of REEL_SECONDS.
+ * Twelve timed swaps came before this, at two cadences, and both read as a
+ * flicker (owner, twice: "it rolls very fast, we need smooth animation").
  */
-const WHEEL_CYCLES = 12;
-const WHEEL_FIRST_MS = 110;
-const WHEEL_LAST_MS = 520;
-const wheelDelay = (count: number): number => {
-  const t = Math.min(1, count / WHEEL_CYCLES);
-  return Math.round(WHEEL_FIRST_MS + (WHEEL_LAST_MS - WHEEL_FIRST_MS) * t * t);
-};
-/** The plate's swap, as a share of the step it has to fit in. Capped at the reveal's own. */
-const rollDurationFor = (stepMs: number): number => Math.min(0.22, (stepMs * 0.45) / 1000);
+const REEL_SECONDS = 3;
+/** The two cards' inset from their own edge of the screen, the same on both sides. */
+const CARD_INSET = "px-[4%]";
 /** Three free re-rolls, as the quick game gives. */
 const FREE_SPINS = 3;
 
@@ -88,33 +79,15 @@ export function GuessVersusScreen({ categories, onPlay, onBack, busy = false }: 
   const [locked, setLocked] = useState(false);
   const [spinsLeft, setSpinsLeft] = useState(FREE_SPINS);
   const [spinKey, setSpinKey] = useState(0);
-  const [stepMs, setStepMs] = useState(WHEEL_FIRST_MS);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Each turn picks where the reel will land; the reel does the rest and
+  // says when it is there.
   useEffect(() => {
     if (categories.length === 0) return;
     setLocked(false);
-    // A random start, then one game to the next: where it stops is as
-    // random as before, but the way there reads as a wheel.
     setWheelIndex(Math.floor(Math.random() * categories.length));
-    let count = 0;
-    const roll = () => {
-      count += 1;
-      setWheelIndex((i) => (i + 1) % categories.length);
-      if (count < WHEEL_CYCLES) {
-        const next = wheelDelay(count);
-        setStepMs(next);
-        timer.current = setTimeout(roll, next);
-      } else {
-        setLocked(true);
-      }
-    };
-    setStepMs(WHEEL_FIRST_MS);
-    timer.current = setTimeout(roll, 200);
-    return () => {
-      if (timer.current) clearTimeout(timer.current);
-    };
   }, [categories.length, spinKey]);
+  const landed = useCallback(() => setLocked(true), []);
 
   const spin = useCallback(() => {
     if (spinsLeft <= 0 || !locked) return;
@@ -149,14 +122,18 @@ export function GuessVersusScreen({ categories, onPlay, onBack, busy = false }: 
 
         <div className="flex-1 min-h-0 relative z-10 px-5">
           {/* Trivia King — upper left, at once. His face and his name; no
-              level, no coins (owner: "trivia king has no levels or coins"). */}
+              level, no coins (owner: "trivia king has no levels or coins").
+              Higher than the quick game's block, and the player's lower, so
+              the plate and its rules line have room between them (owner:
+              "move mascot avatar and players avatar little up and down to
+              free space between"); both cards CARD_INSET from their edge. */}
           <motion.div
-            className="absolute left-5 right-5 top-[25.1%] flex justify-start"
+            className="absolute left-5 right-5 top-[18%] flex justify-start"
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
           >
-            <div className="flex items-center gap-3 pl-[7%]">
+            <div className={`flex items-center gap-3 ${CARD_INSET}`}>
               <motion.div
                 className="w-[88px] h-[88px] rounded-full bg-white/20 flex items-center justify-center shrink-0"
                 initial={{ scale: 1 }}
@@ -186,12 +163,15 @@ export function GuessVersusScreen({ categories, onPlay, onBack, busy = false }: 
               canSpin={locked && spinsLeft > 0 && !busy}
               onSpin={spin}
               spinLabel={t("extra.spinCategoryBtn", { count: spinsLeft })}
-              rollDuration={rollDurationFor(stepMs)}
+              reel={{ items: categories, target: wheelIndex, turnKey: spinKey, seconds: REEL_SECONDS, onLanded: landed }}
             />
-            {/* How it is scored, in one line: the five seconds, the 100,
-                and the King's 90 a question (duelOpponent). */}
+            {/* How it is scored, in a few short lines under the plate: the
+                five seconds, the 100, and the King's 90 a question
+                (duelOpponent). Narrow on purpose — a line the width of the
+                screen ran into the two cards (owner: "show text below in
+                more narrow container"). */}
             <motion.p
-              className="mt-3 px-2 text-center text-[13px] leading-[18px] text-white/70"
+              className="mx-auto mt-3 max-w-[260px] text-center text-[13px] leading-[18px] text-white/70"
               initial={{ opacity: 0 }}
               animate={{ opacity: locked ? 1 : 0 }}
               transition={{ duration: 0.3 }}
@@ -202,12 +182,12 @@ export function GuessVersusScreen({ categories, onPlay, onBack, busy = false }: 
 
           {/* You — lower right, as on the quick game. */}
           <motion.div
-            className="absolute left-5 right-5 top-[68.3%] flex justify-end"
+            className="absolute left-5 right-5 top-[74%] flex justify-end"
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, ease: "easeOut", delay: 0.2 }}
           >
-            <div className="flex items-center gap-3">
+            <div className={`flex items-center gap-3 ${CARD_INSET}`}>
               <div className="flex flex-col items-end text-right min-w-0">
                 <h3 className="font-slackey text-[28px] leading-[28px] text-white tracking-[-0.16px] truncate">
                   {profile?.nickname || t("game.you")}

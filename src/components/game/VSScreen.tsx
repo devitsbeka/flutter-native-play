@@ -53,12 +53,42 @@ interface CategoryPlateProps {
   spinLabel: string;
   onSpin: () => void;
   /**
-   * How long each swap takes while the wheel is turning, in seconds. The
-   * quick game's wheel steps fast and keeps the default; a wheel that slows
-   * as it stops passes a share of its current step, so the name and the
-   * icon glide from one game to the next instead of blinking.
+   * A reel to turn, instead of a name to swap.
+   *
+   * The Guess versus screen's wheel used to be twelve timed swaps of the
+   * name and the icon, and however the steps were paced it read as a
+   * flicker, not a spin (owner, twice: "it rolls very fast, we need smooth
+   * animation"). With a reel, the plate IS a slot machine: every game is
+   * a row on one strip, the strip travels REEL_LOOPS full turns and lands
+   * on `target` in one continuous ease-out motion of `seconds`, and the
+   * icon rides a strip of its own in step. Nothing blinks, because
+   * nothing is swapped. `turnKey` changing turns it again; `onLanded` is
+   * the moment to lock and pop. The quick game's wheel keeps its swaps.
    */
-  rollDuration?: number;
+  reel?: PlateReel;
+}
+
+export interface PlateReel {
+  items: { name: string; iconSlug?: string | null }[];
+  target: number;
+  turnKey: number;
+  seconds: number;
+  onLanded: () => void;
+}
+
+/** Full turns the reel makes before it lands. */
+export const REEL_LOOPS = 3;
+/** One motion, fast then slow: the reel's ease-out. */
+export const REEL_EASE = [0.12, 0.8, 0.18, 1] as const;
+const NAME_ROW_H = 24;
+const ICON_ROW_H = 84;
+
+/** The strip: every game REEL_LOOPS times over, then up to the one to land on. */
+function reelRows(reel: PlateReel) {
+  const rows: PlateReel["items"] = [];
+  for (let loop = 0; loop < REEL_LOOPS; loop++) rows.push(...reel.items);
+  rows.push(...reel.items.slice(0, reel.target + 1));
+  return rows;
 }
 
 /**
@@ -79,9 +109,13 @@ export function CategoryPlate({
   canSpin,
   spinLabel,
   onSpin,
-  rollDuration = 0.1,
+  reel,
 }: CategoryPlateProps) {
   const resolvedIcon = iconUrl || (iconSlug ? `${ICON_STORAGE_URL}/${iconSlug}.png` : undefined);
+  const turning = !!reel && !isLocked && reel.items.length > 0;
+  const rows = turning ? reelRows(reel) : [];
+  const travel = rows.length - 1;
+  const reelTransition = { duration: reel?.seconds ?? 0, ease: REEL_EASE };
 
   return (
     <div className="relative w-full max-w-[371px] mx-auto">
@@ -99,19 +133,41 @@ export function CategoryPlate({
           boxShadow: "0 6px 0 #759DBD",
         }}
       >
-        <AnimatePresence mode="wait">
-          <motion.p
-            key={name}
-            className={`font-slackey ${name.length > 18 ? "text-[17px] leading-[20px]" : "text-[22px] leading-[24px]"} text-[#454376] tracking-[-0.14px] truncate`}
-            style={{ textShadow: "0 2px 0 #E0EAFF" }}
-            initial={{ opacity: 0, y: 26 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -26 }}
-            transition={{ duration: isLocked ? 0.22 : rollDuration, ease: "easeOut" }}
-          >
-            {name}
-          </motion.p>
-        </AnimatePresence>
+        {turning ? (
+          <div className="relative overflow-hidden" style={{ height: NAME_ROW_H }}>
+            <motion.div
+              key={reel!.turnKey}
+              initial={{ y: 0 }}
+              animate={{ y: -travel * NAME_ROW_H }}
+              transition={reelTransition}
+              onAnimationComplete={reel!.onLanded}
+            >
+              {rows.map((row, i) => (
+                <p
+                  key={i}
+                  className={`font-slackey ${row.name.length > 18 ? "text-[17px]" : "text-[22px]"} text-[#454376] tracking-[-0.14px] truncate`}
+                  style={{ height: NAME_ROW_H, lineHeight: `${NAME_ROW_H}px`, textShadow: "0 2px 0 #E0EAFF" }}
+                >
+                  {row.name}
+                </p>
+              ))}
+            </motion.div>
+          </div>
+        ) : (
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={name}
+              className={`font-slackey ${name.length > 18 ? "text-[17px] leading-[20px]" : "text-[22px] leading-[24px]"} text-[#454376] tracking-[-0.14px] truncate`}
+              style={{ textShadow: "0 2px 0 #E0EAFF" }}
+              initial={{ opacity: 0, y: 26 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -26 }}
+              transition={{ duration: isLocked ? 0.22 : 0.1, ease: "easeOut" }}
+            >
+              {name}
+            </motion.p>
+          </AnimatePresence>
+        )}
 
         {/* Coin stake — Figma 1147:8890 */}
         <motion.div
@@ -136,22 +192,43 @@ export function CategoryPlate({
         </motion.div>
       </motion.div>
 
-      {/* Category icon, overhanging the plate's left edge — Figma 1149:9049 */}
-      <AnimatePresence mode="wait">
-        {resolvedIcon && (
-          <motion.img
-            key={resolvedIcon}
-            src={resolvedIcon}
-            alt=""
-            className="absolute -left-[26px] top-[5px] w-[79px] h-[84px] object-contain pointer-events-none"
-            style={{ filter: "drop-shadow(0 4px 16px rgba(0,0,0,0.2))" }}
-            initial={{ opacity: 0, y: 22, scale: 0.85 }}
-            animate={{ opacity: 1, y: 0, scale: isLocked ? [0.85, 1.12, 1] : 1 }}
-            exit={{ opacity: 0, y: -22, scale: 0.85 }}
-            transition={{ duration: isLocked ? 0.34 : rollDuration, ease: "easeOut" }}
-          />
-        )}
-      </AnimatePresence>
+      {/* Category icon, overhanging the plate's left edge — Figma 1149:9049.
+          While the reel turns, the icons ride a strip of their own, in step
+          with the names. */}
+      {turning ? (
+        <div className="absolute -left-[26px] top-[5px] w-[79px] overflow-hidden pointer-events-none" style={{ height: ICON_ROW_H }}>
+          <motion.div key={reel!.turnKey} initial={{ y: 0 }} animate={{ y: -travel * ICON_ROW_H }} transition={reelTransition}>
+            {rows.map((row, i) => (
+              <div key={i} className="flex items-center justify-center" style={{ height: ICON_ROW_H }}>
+                {row.iconSlug && (
+                  <img
+                    src={`${ICON_STORAGE_URL}/${row.iconSlug}.png`}
+                    alt=""
+                    className="w-[79px] h-[84px] object-contain"
+                    style={{ filter: "drop-shadow(0 4px 16px rgba(0,0,0,0.2))" }}
+                  />
+                )}
+              </div>
+            ))}
+          </motion.div>
+        </div>
+      ) : (
+        <AnimatePresence mode="wait">
+          {resolvedIcon && (
+            <motion.img
+              key={resolvedIcon}
+              src={resolvedIcon}
+              alt=""
+              className="absolute -left-[26px] top-[5px] w-[79px] h-[84px] object-contain pointer-events-none"
+              style={{ filter: "drop-shadow(0 4px 16px rgba(0,0,0,0.2))" }}
+              initial={{ opacity: 0, y: 22, scale: 0.85 }}
+              animate={{ opacity: 1, y: 0, scale: isLocked ? [0.85, 1.12, 1] : 1 }}
+              exit={{ opacity: 0, y: -22, scale: 0.85 }}
+              transition={{ duration: isLocked ? 0.34 : 0.1, ease: "easeOut" }}
+            />
+          )}
+        </AnimatePresence>
+      )}
 
       {/* Re-roll — Figma 1147:8862. Three free spins, then it is gone.
           Centred by a plain wrapper rather than `-translate-y-1/2`: the
