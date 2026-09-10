@@ -78,7 +78,10 @@ const EMPTY_FRIEND_SLOTS = 3;
  * what an online player looks like, and it only works if it is the same
  * circle.
  */
-const ONLINE_RING = "linear-gradient(135deg, #9333EA 0%, #EC4899 50%, #F97316 100%)";
+// Figma 1177:14047: magenta into violet into green, at the frame's own
+// angle — not the purple-pink-orange the reel wore before (owner: "show
+// our online avatars strokes like this"). The offline ring is untouched.
+const ONLINE_RING = "linear-gradient(137deg, #B83CC9 18.76%, #8826D3 55.37%, #46AB1E 85.33%)";
 const OFFLINE_RING = "linear-gradient(135deg, #94A3B8 0%, #CBD5E1 100%)";
 
 function StoryAvatarCircle({
