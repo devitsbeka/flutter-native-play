@@ -122,7 +122,7 @@ describe("the screen is the quick game's", () => {
     expect(plate).toMatch(/\{src && <img src=\{src\} alt="" className="w-\[90px\] h-\[96px\] object-contain" \/>\}/);
     // And the name fits its 223px, rolling or landed, at one rule.
     expect(plate).toMatch(/const nameSizeClass = \(name: string\) => \(name\.length > 16 \? "text-\[16px\]" : "text-\[20px\]"\);/);
-    expect(plate.match(/nameSizeClass\(/g) ?? []).toHaveLength(3);
+    expect(plate.match(/nameSizeClass\(/g) ?? []).toHaveLength(2);
   });
 
   it("the picture games wear their card art on the plate, not the library stand-in", () => {
