@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import { useMemo, type ReactNode, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -31,7 +31,8 @@ import { RoomQueueSheet } from "./RoomQueueSheet";
 import { calculateMultiplayerPayout } from "@/utils/multiplayerPayout";
 import { useRoomPot, type RoomPotLine } from "@/hooks/useRoomPot";
 import { useMatchInfo } from "@/hooks/useMatchInfo";
-import { useMatchRounds, matchTotals } from "@/hooks/useMatchRounds";
+import { matchTotals } from "@/hooks/useMatchRounds";
+import { useRoomRounds, type RoomRound } from "@/hooks/useRoomRounds";
 import { FooterHaze } from "@/components/shared/FooterHaze";
 import { isGuestAccount } from "@/utils/guestAccount";
 import { AuthRequiredModal } from "@/components/shared/AuthRequiredModal";
@@ -49,6 +50,13 @@ import { Lock } from "lucide-react";
 // would re-grant coins/stats and re-touch participant rows mid-next-round.
 const processedResultsGames = new Set<string>();
 
+/**
+ * The podium, left to right: second, first, third. Indexes into the ranked
+ * list — first place in the middle, taller than the two beside it.
+ */
+const PODIUM_ORDER = [1, 0, 2] as const;
+/** Two players: side by side, centred - no empty third step (owner's ask). */
+const TWO_UP_ORDER = [0, 1] as const;
 /** How far above the footer its haze reaches (FooterHaze's top-[-120px]). */
 const FOOTER_HAZE_PX = 120;
 /** The screen's violet ground at the bottom of its gradient, as "r,g,b". */
@@ -481,16 +489,25 @@ export function GameResultsScreenV2() {
    * had, who is first, second"). A match of one round is its own round
    * result and needs no total.
    */
-  const matchOver = queue.length === 0 && !waitingForPlayers;
   const hasPotLines = Object.keys(potLines).length > 0;
-  const matchRounds = useMatchRounds(currentRoom?.id, matchInfo, hasPotLines, settleRoomRound);
-  const matchStandings = matchRounds && matchRounds.length >= 2 && matchOver ? matchTotals(matchRounds) : null;
   /**
-   * The rounds the match has already told: every one but this, which is
-   * the standings above and is not told twice.
+   * Every round the room has played, game by game (useRoomRounds), and every
+   * seat's coins over all of them. The summary used to start at the current
+   * match; a room on its third game could not say what game one paid
+   * (owner: "show all rounds pot not only last game and show all coins
+   * users won or lose, like summery of the all games"). Null until the
+   * current round's own lines are in, so it never reads before the round
+   * that just happened has been settled.
    */
-  const earlierRounds = (matchRounds ?? []).filter((r) => r.id !== currentRoom?.current_game_id);
-  /** Everything staked into this round — the pot the standings were played for. */
+  const roomRounds = useRoomRounds(currentRoom?.id, hasPotLines, settleRoomRound);
+  /** Newest game first, its rounds in play order — the one just played on top. */
+  const roomGames = useMemo(() => {
+    const byGame = new Map<number, RoomRound[]>();
+    for (const round of roomRounds ?? []) byGame.set(round.game, [...(byGame.get(round.game) ?? []), round]);
+    return [...byGame.entries()].sort((a, b) => b[0] - a[0]);
+  }, [roomRounds]);
+  const roomTotals = roomRounds && roomRounds.length >= 2 ? matchTotals(roomRounds) : null;
+  /** Everything staked into this round — the pot the podium was played for. */
   const thisRoundPot = Object.values(potLines).reduce((sum, line) => sum + line.staked, 0);
   /** A past round's icon, off its stored name, when its questions carried none. */
   const iconForCategoryName = useCategoryIconByName();
@@ -1014,18 +1031,18 @@ export function GameResultsScreenV2() {
         </motion.div>
       )}
 
-      {/* Middle Section: the standings, as a list.
+      {/* Middle Section: the podium, then the room's whole story under it.
 
-          Everyone in one ranked list — a medal or a place, the face, the
-          name, the score, and what the round paid — one row per player,
-          however many there are. It replaced a podium of three faces with
-          the rest in tiles under it and, under those, every round's seats
-          wrapped across the width in a row: three shapes for the same
-          people, names cut to "TriviaMas…" by narrow columns, the pair
-          repeated twice on a two-player screen, and a wall of 24px faces
-          at ten (owner: "we need more clear and balanced results page, show
-          players as list not besides, what if there are 10 players"). */}
-      <div className="flex-1 min-h-0 flex flex-col items-center px-4 pt-4 overflow-hidden">
+          The top three as faces side by side — first in the middle and
+          bigger, a medal off each ring, the coins under the medal — and then
+          a column that scrolls: the rest of this round as rows, every game
+          the room has played round by round, and every seat's coins over all
+          of it (owner: "show 1,2,3 places how we had, besides in top, first
+          player with bigger avatar in middle and below show all rounds pot
+          not only last game and show all coins users won or lose, like
+          summery of the all games"). The list is for the many; the podium is
+          for the three the round was about. */}
+      <div className="flex-1 min-h-0 flex flex-col items-center gap-3 px-4 pt-4 overflow-hidden">
         {/* A private round still out with somebody. The scores so far are
             right there under this line — they are real, they are just not
             everyone's yet — and the rows carry no coin pills, because
@@ -1036,63 +1053,138 @@ export function GameResultsScreenV2() {
           <motion.p
             initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-3 shrink-0 rounded-full bg-white/15 px-4 py-2 text-center font-[Nunito] text-sm font-bold text-white/90"
+            className="shrink-0 rounded-full bg-white/15 px-4 py-2 text-center font-[Nunito] text-sm font-bold text-white/90"
           >
             {t("extra.roundWaitingForPlayers", { count: stillOut })}
           </motion.p>
         )}
 
+        {/* The podium: second on the left, first in the middle and taller,
+            third on the right — a medal under each face and, under the
+            medal, what the place was worth (owner: "show first 3 places
+            besides, first place in the middle bigger than 2,3 places
+            avatars ... show medals below their avatars - below medals show
+            coins"). A grid, not a flex row, so the steps keep their
+            places. Two players get two columns, centred: the three-step
+            grid left the pair huddled on the left with an empty step
+            beside them (owner: "show avatars centered"). */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25 }}
+          className={cn(
+            "w-full grid items-end flex-shrink-0 pt-2",
+            rankedParticipants.length === 2 ? "max-w-[260px] grid-cols-2 gap-6" : "max-w-[362px] grid-cols-3 gap-2",
+          )}
+        >
+          {(rankedParticipants.length === 2 ? TWO_UP_ORDER : PODIUM_ORDER).map((idx) => {
+            const p = rankedParticipants[idx];
+            if (!p) return <div key={idx} />;
+            const first = idx === 0;
+            return (
+              <div key={p.user_id} className="flex flex-col items-center min-w-0">
+                {/* The design's faces (1157:10233..10244): every place in
+                    the gold ring, first at 110px and the two beside it at
+                    76, with the medal hanging off the bottom of the ring
+                    rather than stacked under it. The wrapper reserves the
+                    half of the medal that hangs below. */}
+                <div
+                  className={cn(
+                    "relative",
+                    first ? "mb-[34px]" : "mb-[24px]",
+                    !p.isMe && "cursor-pointer active:scale-95 transition-transform",
+                  )}
+                  onClick={!p.isMe ? () => openProfile(p.user_id) : undefined}
+                  role={!p.isMe ? "button" : undefined}
+                >
+                  <SafeAvatar
+                    avatarUrl={p.avatar_url}
+                    fallback={p.nickname || "?"}
+                    className={cn(
+                      "border-2 border-[#fcd34d] shadow-[0_0_0_4px_rgba(251,191,36,0.35)]",
+                      first ? "w-[110px] h-[110px]" : "w-[76px] h-[76px]",
+                    )}
+                    fallbackClassName={cn(
+                      "bg-gradient-to-br from-purple-400 to-purple-600 text-white font-bold",
+                      first ? "text-3xl" : "text-xl",
+                    )}
+                  />
+                  <span
+                    className={cn(
+                      "absolute left-1/2 -translate-x-1/2 leading-none",
+                      // Lower than the design's half-and-half: the emoji's
+                      // ribbon rides above its disc, so a medal hung by its
+                      // middle covered half the face (owner: "move down the
+                      // medals a little"). About a third of it over the ring.
+                      first ? "-bottom-[32px] text-[46px]" : "-bottom-[22px] text-[32px]",
+                    )}
+                  >
+                    {placeMark(idx, p.rank)}
+                  </span>
+                </div>
+                <span className="w-full text-center font-display text-[22px] font-bold leading-6 tracking-[-0.16px] text-white truncate">
+                  {p.isMe ? t("game.you") : p.nickname}
+                </span>
+                <PotLine net={netFor(p)} tone={idx === 0 ? "gold" : idx === 1 ? "silver" : "bronze"} />
+              </div>
+            );
+          })}
+        </motion.div>
+
+        {/* Under the podium, everything else, in one column that scrolls. */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
           className="w-full max-w-[468px] flex-1 min-h-0 overflow-y-auto"
           style={{ paddingBottom: footerHeight + FOOTER_HAZE_PX }}
         >
           <div className="space-y-[17px]">
-            {/* This round. The tile is the lobby's chunky shape — the rose
-                wash and the 8px rose foot — with the list inside it. */}
-            <StandingsCard
-              title={
-                matchInfo
-                  ? t("extra.matchRoundLabel", { game: matchInfo.game, round: matchInfo.round })
-                  : t("extra.resultsStandingsTitle")
-              }
-              pot={thisRoundPot}
-            >
-              {rankedParticipants.map((p, idx) => (
-                <StandingRow
-                  key={p.user_id}
-                  idx={idx}
-                  rank={p.rank}
-                  name={p.isMe ? t("game.you") : p.nickname}
-                  avatarUrl={p.avatar_url}
-                  isMe={p.isMe}
-                  detail={t("extra.resultsPoints", { n: p.score })}
-                  net={netFor(p)}
-                  onTap={!p.isMe ? () => openProfile(p.user_id) : undefined}
-                />
-              ))}
-            </StandingsCard>
+            {/* The rest of this round, from fourth down — the podium has the
+                three above it, and they are not told twice. One row per
+                player, however many: ten seats are seven rows here. */}
+            {rankedParticipants.length > PODIUM_ORDER.length && (
+              <StandingsCard
+                title={
+                  matchInfo
+                    ? t("extra.matchRoundLabel", { game: matchInfo.game, round: matchInfo.round })
+                    : t("extra.resultsStandingsTitle")
+                }
+                pot={thisRoundPot}
+              >
+                {rankedParticipants.slice(PODIUM_ORDER.length).map((p, i) => (
+                  <StandingRow
+                    key={p.user_id}
+                    idx={i + PODIUM_ORDER.length}
+                    rank={p.rank}
+                    name={p.isMe ? t("game.you") : p.nickname}
+                    avatarUrl={p.avatar_url}
+                    isMe={p.isMe}
+                    detail={t("extra.resultsPoints", { n: p.score })}
+                    net={netFor(p)}
+                    onTap={!p.isMe ? () => openProfile(p.user_id) : undefined}
+                  />
+                ))}
+              </StandingsCard>
+            )}
 
-            {/* The match's EARLIER rounds (useMatchRounds): each round's
-                category and pot, and under it every seat in a column with
-                what the round paid them, the winner first. This round is
-                the list above and is not told twice. Nothing at all on a
-                match of one round (owner: "show what happened in rounds,
-                per match has its pot - we need to show it clear who won
-                who lose per round"). */}
-            {matchInfo && earlierRounds.length > 0 && (
+            {/* Every game the room has played, newest first, each round with
+                its category and pot and, under it, every seat in a column
+                with what the round paid them — the winner first. Nothing at
+                all on a room that has played one round: that round is the
+                podium. */}
+            {roomRounds && roomRounds.length >= 2 && roomGames.map(([game, rounds]) => (
               <motion.section
+                key={game}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
                 className={TILE}
-                aria-label={t("extra.matchRoundsTitle", { game: matchInfo.game })}
+                aria-label={t("extra.matchRoundsTitle", { game })}
               >
-                <p className={EYEBROW}>{t("extra.matchRoundsTitle", { game: matchInfo.game })}</p>
+                <p className={EYEBROW}>{t("extra.matchRoundsTitle", { game })}</p>
                 <ol className="mt-2 divide-y divide-white/15">
-                  {earlierRounds.map((round) => {
+                  {rounds.map((round) => {
                     const undecided = isUndecidedRound(null, round.categoryName);
                     const slug = undecided
                       ? UNDECIDED_ICON_SLUG
@@ -1141,17 +1233,14 @@ export function GameResultsScreenV2() {
                   })}
                 </ol>
               </motion.section>
-            )}
+            ))}
 
-            {/* The whole match, once its last round is in: every seat's
-                coins over all of its rounds, first to last — the same list
-                the round wears, so the two read as one thing. */}
-            {matchStandings && matchInfo && (
-              <StandingsCard
-                title={t("extra.matchStandingsTitle", { game: matchInfo.game, rounds: matchInfo.roundIds.length })}
-                delay={0.5}
-              >
-                {matchStandings.map((row, i) => {
+            {/* The whole room, all games: every seat's coins over every
+                round it has played, most first — the same rows the round
+                wears, so the two read as one thing. */}
+            {roomTotals && (
+              <StandingsCard title={t("extra.resultsAllGamesTitle", { rounds: roomRounds!.length })} delay={0.5}>
+                {roomTotals.map((row, i) => {
                   const seat = participants.find((p) => p.user_id === row.user_id);
                   const me = row.user_id === user?.id;
                   return (
@@ -1172,6 +1261,7 @@ export function GameResultsScreenV2() {
           </div>
         </motion.div>
       </div>
+
       {/* Bottom Section: Next Round Preview + Buttons. The home-indicator
           inset is already the root's own padding (safe-bleed), so this
           carries plain spacing — env(safe-area-inset-bottom) here again

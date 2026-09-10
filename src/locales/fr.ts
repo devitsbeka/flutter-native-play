@@ -4160,6 +4160,7 @@ export const fr: KaTranslations = {
     matchStandingsTitle: "Partie {game} · {rounds} manches · classement final",
     matchRoundsTitle: "Partie {game} · manche par manche",
     resultsStandingsTitle: "Classement",
+    resultsAllGamesTitle: "Toutes les parties · {rounds} manches · totaux",
     resultsPoints: "{n} pts",
     roundPotLabel: "Cagnotte {amount}",
     matchTotalsLabel: "Total de la partie",

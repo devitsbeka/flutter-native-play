@@ -89,14 +89,19 @@ describe("your own room is on whichever tab you look at", () => {
 });
 
 describe("the place numbers are quieter than the medals", () => {
-  it("one size for the place column, whatever it holds", () => {
+  it("smaller from fourth down", () => {
     // An emoji carries padding inside its own glyph, so type set to match a
     // medal optically overshoots: "#4" at 24px was the loudest thing on the
-    // row it matters least on. Every row has the same place column now —
-    // a medal for the first three, "#4" onward — at 20px, so the number
-    // never outshouts the medal above it.
+    // row it matters least on. The medals live on the podium now — the
+    // winner's a size up from the two beside it — and the place numbers in
+    // the list under it stay at body size.
+    // The design's sizes now (Figma 1157:10036, resultsScreenFigma.test.ts):
+    // the winner's medal at 46px hanging off the ring, the two beside it
+    // at 32, and "#4" at 20px in the tile's violet.
+    expect(results).toMatch(/first \? "-bottom-\[32px\] text-\[46px\]" : "-bottom-\[22px\] text-\[32px\]"/);
+    // The rows from fourth down keep the place at 20px, in the list's pale
+    // gold rather than the old tile's violet.
     expect(results).toMatch(/w-8 shrink-0 text-center font-display text-\[20px\] font-bold leading-none text-\[#ffe9a8\]/);
     expect(results).not.toMatch(/className="text-2xl font-display font-bold text-white min-w-\[2ch\]/);
-    expect(results).not.toMatch(/text-\[46px\]/);
   });
 });

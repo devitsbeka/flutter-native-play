@@ -58,16 +58,18 @@ describe("the results screen", () => {
     expect(results).toMatch(/\{queue\.length === 0 && \(\s*<ChunkyButton\s*variant="mint"/);
   });
 
-  it("sums every round's settled pot into the match's standings", () => {
-    // Through useMatchRounds now (resultsRoundByRound.test.ts): every round
-    // of the match read back off the ledger, the totals folded from them.
-    expect(results).toMatch(/const matchOver = queue\.length === 0 && !waitingForPlayers;/);
-    expect(results).toMatch(/const matchRounds = useMatchRounds\(currentRoom\?\.id, matchInfo, hasPotLines, settleRoomRound\);/);
-    expect(results).toMatch(/const matchStandings = matchRounds && matchRounds\.length >= 2 && matchOver \? matchTotals\(matchRounds\) : null;/);
+  it("sums every round's settled pot into the room's standings", () => {
+    // Through useRoomRounds now: every round the room has played read back
+    // off the ledger, game by game, the totals folded from all of them
+    // (owner: "show all rounds pot not only last game"). useMatchRounds
+    // keeps the per-match read and the ranking the totals use.
+    expect(results).toMatch(/const roomRounds = useRoomRounds\(currentRoom\?\.id, hasPotLines, settleRoomRound\);/);
+    expect(results).toMatch(/const roomTotals = roomRounds && roomRounds\.length >= 2 \? matchTotals\(roomRounds\) : null;/);
     const hook = read("src/hooks/useMatchRounds.ts");
-    expect(hook).toMatch(/Promise\.all\(ids\.map\(\(id\) => settleRoomRound\(roomId, id\)\)\)/);
     expect(hook).toMatch(/\.sort\(\(a, b\) => b\.net - a\.net\)/);
-    expect(results).toMatch(/t\("extra\.matchStandingsTitle", \{ game: matchInfo\.game, rounds: matchInfo\.roundIds\.length \}\)/);
+    const room = read("src/hooks/useRoomRounds.ts");
+    expect(room).toMatch(/const settlements = await Promise\.all\(rows\.map\(\(r\) => settleRoomRound\(roomId, r\.id\)\)\);/);
+    expect(results).toMatch(/t\("extra\.resultsAllGamesTitle", \{ rounds: roomRounds!\.length \}\)/);
   });
 });
 

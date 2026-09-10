@@ -56,6 +56,13 @@ describe("every way Start can fail now says so", () => {
         // dead end, and it is why this check names the rule rather than
         // just counting bare returns.
         if (/await start[A-Za-z]+\(\);/.test(lines[i - 1] ?? "")) return;
+        // Outrun: another client's start won the compare-and-swap, and ITS
+        // round is what arrives on this screen a moment later — over
+        // realtime, with its own countdown. Saying "failed" here would be a
+        // lie told over a round that is starting (roundStartIsOneWrite).
+        // The claim's field list runs longer than the six lines above the
+        // return, so this one looks further back.
+        if (lines.slice(Math.max(0, i - 14), i + 1).join("\n").includes("claimRoundStart(")) return;
         silent.push(`${i}: ${line.trim()}`);
       });
       expect(silent, `${name} still has silent exits`).toEqual([]);

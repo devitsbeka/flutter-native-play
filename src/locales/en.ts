@@ -4775,6 +4775,7 @@ export const en: KaTranslations = {
     matchStandingsTitle: "Game {game} · {rounds} rounds · final standings",
     matchRoundsTitle: "Game {game} · round by round",
     resultsStandingsTitle: "Standings",
+    resultsAllGamesTitle: "All games · {rounds} rounds · totals",
     resultsPoints: "{n} pts",
     roundPotLabel: "Pot {amount}",
     matchTotalsLabel: "Match total",
