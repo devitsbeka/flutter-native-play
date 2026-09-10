@@ -2237,13 +2237,29 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                       (price 0) says the word where the others say the
                       number, with no coin, so Words reads as free rather
                       than as costing nothing (owner: "say free instead
-                      coins"). A mode priced null draws nothing here. */}
+                      coins"). A mode priced null draws nothing here.
+
+                      The word is set bold, and in Georgian it is also
+                      stroked (owner: "show 'free' 'უფასო' as bold font on
+                      label"). The hero face is Slackey, which is heavy and
+                      Latin-only: "1-2" and "Free" come out of it thick.
+                      Georgian falls through to Google Sans, whose one
+                      Georgian face is a 700 that is already what `font-bold`
+                      asks for — and next to Slackey it still reads light.
+                      A 0.6px stroke in the gradient's own brown is the
+                      difference, measured against the head-count pill; on
+                      Slackey it would be too much, so only Georgian gets it. */}
                   {price !== null && !busy && (
                     <div aria-label={price === 0 ? t("discover.free") : `${price} ${t("common.coins")}`} className="absolute left-[calc(16*var(--u))] top-[calc(16*var(--u))] z-20 flex items-center gap-[calc(5*var(--u))] rounded-[calc(24*var(--u))] border-[length:calc(3*var(--u))] border-solid border-white/65 bg-gradient-to-b from-[#fff8e8] to-[#ffdca6] px-[calc(11*var(--u))] py-[calc(2*var(--u))] shadow-[0px_calc(3*var(--u))_0px_0px_#d8b878,0px_calc(3*var(--u))_calc(9*var(--u))_0px_rgba(151,110,42,0.12)]">
                       {price > 0 && (
                         <img alt="" src={coinIcon} className="h-[calc(26*var(--u))] w-[calc(26*var(--u))] shrink-0 object-contain" />
                       )}
-                      <span className="whitespace-nowrap bg-gradient-to-b from-[#5c3d10] to-[#9a7434] bg-clip-text font-hero text-[calc(22*var(--u))] leading-[calc(32*var(--u))] tracking-[-0.18px] text-transparent">
+                      <span
+                        className={cn(
+                          "whitespace-nowrap bg-gradient-to-b from-[#5c3d10] to-[#9a7434] bg-clip-text font-hero font-bold text-[calc(22*var(--u))] leading-[calc(32*var(--u))] tracking-[-0.18px] text-transparent",
+                          price === 0 && /[\u10A0-\u10FF]/.test(t("discover.free")) && "[-webkit-text-stroke:0.6px_#6b4a1a]",
+                        )}
+                      >
                         {price === 0 ? t("discover.free") : formatCompactNumber(price)}
                       </span>
                     </div>

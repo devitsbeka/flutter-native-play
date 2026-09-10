@@ -162,6 +162,14 @@ describe("the sheet is written in every language", () => {
       for (const key of ["summaryTitle", "summaryHint", "summaryRounds", "summaryStake", "summaryFree", "summaryChange"]) {
         expect(locale, `${lang}.${key}`).toMatch(new RegExp(`\\n\\s+${key}: "[^"]+",`));
       }
+      // The hint is one sentence that fits three lines of the sheet. It was
+      // two, and four lines in Georgian, and its second half — "visibility
+      // can change any time" — was no longer true: the tab a room is made
+      // from decides that, for good (owner: "this Georgian text is so bad,
+      // grammar is incorrect, text is too long, shorten text").
+      const hint = locale.match(/\n\s+summaryHint: "([^"]+)",/)![1];
+      expect(hint.length, `${lang}.summaryHint`).toBeLessThanOrEqual(75);
+      expect(hint, `${lang}.summaryHint`).not.toMatch(/—/);
     }
   });
 });
