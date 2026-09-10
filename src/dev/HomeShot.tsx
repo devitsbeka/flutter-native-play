@@ -368,7 +368,7 @@ export default function HomeShot() {
       ...base,
       is_host: false,
       has_pending_invite: true,
-      pending_invite_from: { nickname: "Britney", avatar_url: null, notificationId: "shot-invite" },
+      pending_invite_from: { nickname: "Britney", avatar_url: null, notificationId: "shot-invite", notificationIds: ["shot-invite"] },
     };
     // A room with a round running: "Live" leads the row and pulses.
     const live = { ...withGuest, status: "playing" };

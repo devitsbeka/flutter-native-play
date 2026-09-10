@@ -139,6 +139,7 @@ function PublicRoomCard({
   inviteFrom = null,
   me = null,
   onDeclineInvite,
+  onInviteAnswered,
 }: {
   room: PublicRoom;
   /**
@@ -151,6 +152,8 @@ function PublicRoomCard({
   me?: CardPlayer | null;
   /** Give the reserved seat up. */
   onDeclineInvite?: (room: PublicRoom) => void;
+  /** The invite's notices are answered: take them off the context's list now. */
+  onInviteAnswered: (notificationIds: readonly string[]) => void;
   players: CardPlayer[];
   /** A Battle room's two team crests — its real face on the card. */
   crests?: { a: string | null; b: string | null };
@@ -262,9 +265,15 @@ function PublicRoomCard({
   const isNew = useRoomIsNew(room.created_at);
 
   const enter = () => {
-    // Confirm answers the invite first, so the card stops asking once the
-    // seat is taken (owner: "do not show confirm button again").
-    if (invited && inviteFrom) acceptRoomInvite(inviteFrom.notificationId);
+    // Confirm answers the invite first — every notice of it — so the card
+    // stops asking once the seat is taken (owner: "do not show confirm
+    // button again"); and retires the context's own copies on the spot
+    // rather than waiting on the realtime echo, which is what "sometimes i
+    // still see it" was.
+    if (invited && inviteFrom) {
+      acceptRoomInvite(inviteFrom.notificationIds);
+      onInviteAnswered(inviteFrom.notificationIds);
+    }
     navigate(publicRoomPath(room));
   };
 
@@ -554,11 +563,9 @@ function PublicRoomCard({
               <h3 className={`font-display font-bold text-lg leading-tight line-clamp-2 ${ink.text}`}>
                 {lounge ? t(lounge.labelKey) : room.room_name || t("extra.gameRoomDefault")}
               </h3>
-              {!lounge && (
-                <p className={`text-sm truncate mt-0.5 ${ink.muted}`}>
-                  {t("extra.gameRoomLabel")}
-                </p>
-              )}
+              {/* No "Game room" under the name: every card on this list is
+                  one, and the line said nothing the name did not (owner:
+                  "let's remove სათამაშო ოთახი from cards"). */}
             </div>
           </div>
         )}
@@ -779,7 +786,7 @@ export function PublicRoomsSection({
   const { friends } = useFriends();
   const friendIds = useMemo(() => new Set(friends.map((f) => f.friendId)), [friends]);
   // Rooms this player was asked into — the same map the Private tab reads.
-  const { notifications, markAsRead } = useNotifications();
+  const { notifications, markManyAsRead } = useNotifications();
   const pendingInvites = useMemo(() => pendingRoomInvites(notifications), [notifications]);
   const me = useMemo<CardPlayer | null>(
     () => (user ? { user_id: user.id, nickname: profile?.nickname ?? null, avatar_url: profile?.avatar_url ?? null } : null),
@@ -788,17 +795,23 @@ export function PublicRoomsSection({
   const declineInvite = async (room: PublicRoom) => {
     const invite = pendingInvites.get(room.id);
     if (!user || !invite) return;
+    // The card shows it is working — the X goes, Confirm spins — for as
+    // long as the writes take; a tap that changed nothing on screen read
+    // as a tap that did nothing (owner: "i can't click cancel").
+    setBusyId(room.id);
     try {
-      await declineRoomInvite(room.id, user.id, invite.notificationId);
-      // The context's own copy of the notification is what draws Confirm
-      // and the X; retire it here rather than wait on the realtime echo.
-      void markAsRead(invite.notificationId);
+      await declineRoomInvite(room.id, user.id, invite.notificationIds);
+      // The context's own copies of the notices are what draw Confirm and
+      // the X; retire them here rather than wait on the realtime echo.
+      void markManyAsRead(invite.notificationIds);
       toast.success(t("extra.notifDeclined"));
       void queryClient.invalidateQueries({ queryKey: PUBLIC_ROOMS_KEY });
       void queryClient.invalidateQueries({ queryKey: ["public-room-players"] });
     } catch (e) {
       console.error("[PublicRooms] decline invite failed", e);
       toast.error(t("extra.errorOccurred"));
+    } finally {
+      setBusyId(null);
     }
   };
 
@@ -1234,6 +1247,7 @@ export function PublicRoomsSection({
           inviteFrom={pendingInvites.get(room.id) ?? null}
           me={me}
           onDeclineInvite={(r) => void declineInvite(r)}
+          onInviteAnswered={(ids) => void markManyAsRead([...ids])}
         />
       ))}
 

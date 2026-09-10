@@ -36,7 +36,7 @@ describe("Confirm answers the invite, then enters", () => {
   const publicRooms = read("src/components/team/PublicRoomsSection.tsx");
 
   it("the answer is the invite's notification marked accepted, which is what retires it", () => {
-    expect(invites).toMatch(/export function acceptRoomInvite\(notificationId: string\): void \{\s*\n\s*void markNotificationActioned\(notificationId, "accepted"\)/);
+    expect(invites).toMatch(/export function acceptRoomInvite\(notificationIds: readonly string\[\]\): void \{\s*\n\s*for \(const id of notificationIds\) \{\s*\n\s*void markNotificationActioned\(id, "accepted"\)/);
     // "Pending" is "its notification is still unread", and marking it
     // actioned writes read_at — one source of truth, on both tabs.
     expect(invites).toMatch(/if \(n\.type !== "room_invite" \|\| n\.read_at\) continue;/);
@@ -45,11 +45,11 @@ describe("Confirm answers the invite, then enters", () => {
 
   it("the private card answers before it opens the room", () => {
     const join = myRooms.slice(myRooms.indexOf("const handleJoin = async (room: MyRoom)"), myRooms.indexOf("const openRoom = async"));
-    expect(join).toMatch(/if \(room\.has_pending_invite && room\.pending_invite_from\) \{\s*\n\s*acceptRoomInvite\(room\.pending_invite_from\.notificationId\);\s*\n\s*\}\s*\n\s*setJoiningRoomId\(room\.id\);/);
+    expect(join).toMatch(/if \(room\.has_pending_invite && room\.pending_invite_from\) \{\s*\n\s*acceptRoomInvite\(room\.pending_invite_from\.notificationIds\);\s*\n(\s*\/\/[^\n]*\n)*\s*void markManyAsRead\(room\.pending_invite_from\.notificationIds\);\s*\n\s*\}\s*\n\s*setJoiningRoomId\(room\.id\);/);
   });
 
   it("the public card answers before it enters", () => {
-    expect(publicRooms).toMatch(/const enter = \(\) => \{\s*\n(\s*\/\/[^\n]*\n)*\s*if \(invited && inviteFrom\) acceptRoomInvite\(inviteFrom\.notificationId\);\s*\n\s*navigate\(publicRoomPath\(room\)\);\s*\n\s*\};/);
+    expect(publicRooms).toMatch(/const enter = \(\) => \{\s*\n(\s*\/\/[^\n]*\n)*\s*if \(invited && inviteFrom\) \{\s*\n\s*acceptRoomInvite\(inviteFrom\.notificationIds\);\s*\n\s*onInviteAnswered\(inviteFrom\.notificationIds\);\s*\n\s*\}\s*\n\s*navigate\(publicRoomPath\(room\)\);\s*\n\s*\};/);
   });
 
   it("and neither waits on the write — the tap goes into the room", () => {
