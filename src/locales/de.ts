@@ -1655,7 +1655,7 @@ export const de: KaTranslations = {
     summaryFree: "Kostenlos, solange du allein bist",
     summaryStake: "Einsatz pro Spieler",
     summaryRounds: "Runden",
-    summaryHint: "Das wird dein Raum spielen. Nach dem Erstellen stehen Runden und Fragen fest — die Sichtbarkeit lässt sich jederzeit ändern.",
+    summaryHint: "Nach dem Erstellen lassen sich Runden und Fragen nicht mehr ändern.",
     summaryTitle: "Diesen Raum erstellen?",
     uVisibility: "Sichtbarkeit",
     uJoining: "Beitritt",

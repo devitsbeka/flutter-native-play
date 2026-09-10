@@ -1665,7 +1665,7 @@ export const es: KaTranslations = {
     summaryFree: "Gratis mientras estés solo",
     summaryStake: "Apuesta por jugador",
     summaryRounds: "Rondas",
-    summaryHint: "Esto es lo que jugará tu sala. Una vez creada, las rondas y las preguntas quedan fijas: la visibilidad se puede cambiar en cualquier momento.",
+    summaryHint: "Una vez creada, no podrás cambiar las rondas ni las preguntas.",
     summaryTitle: "¿Crear esta sala?",
     uVisibility: "Visibilidad",
     uJoining: "Entrada",

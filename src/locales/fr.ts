@@ -1653,7 +1653,7 @@ export const fr: KaTranslations = {
     summaryFree: "Gratuit tant que tu es seul",
     summaryStake: "Mise par joueur",
     summaryRounds: "Manches",
-    summaryHint: "Voilà ce que jouera ton salon. Une fois créé, les manches et les questions sont fixées — la visibilité peut changer à tout moment.",
+    summaryHint: "Une fois créé, les manches et les questions ne changent plus.",
     summaryTitle: "Créer ce salon ?",
     uVisibility: "Visibilité",
     uJoining: "Entrée",

@@ -1658,7 +1658,7 @@ export const it: KaTranslations = {
     summaryFree: "Gratis finché sei da solo",
     summaryStake: "Puntata per giocatore",
     summaryRounds: "Round",
-    summaryHint: "Ecco cosa giocherà la tua stanza. Una volta creata, round e domande restano fissi: la visibilità si può cambiare in qualsiasi momento.",
+    summaryHint: "Una volta creata, round e domande non si possono più cambiare.",
     summaryTitle: "Creare questa stanza?",
     uVisibility: "Visibilità",
     uJoining: "Ingresso",

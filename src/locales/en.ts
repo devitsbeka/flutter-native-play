@@ -1922,7 +1922,7 @@ export const en: KaTranslations = {
     summaryFree: "Free while you're the only player",
     summaryStake: "Stake per player",
     summaryRounds: "Rounds",
-    summaryHint: "This is what your room will play. Once it is created the rounds and questions are set — visibility can change any time.",
+    summaryHint: "Rounds and questions are set once you create it.",
     summaryTitle: "Create this room?",
     uVisibility: "Visibility",
     uJoining: "Joining",
