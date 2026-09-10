@@ -75,8 +75,9 @@ export function FooterHaze({ tint = LOBBY_HAZE_TINT }: { tint?: string }) {
  * while scrolling what we use in bottom - behind the purple button"). So the
  * body runs up under the chip and this hazes it: the same four masked
  * layers and tint, with every gradient turned to run from strongest at the
- * top to nothing 120px below the chip. The 120px matches FooterHaze's, and
- * for the same reason must stay a literal here.
+ * top to nothing at the bottom of whatever box it is given. The caller
+ * sizes that box — the lobby's runs from the header's underside to just
+ * above where its sticky tabs park, so the tabs themselves stay crisp.
  */
 export function TopHaze({ tint = LOBBY_HAZE_TINT }: { tint?: string }) {
   return (
@@ -91,12 +92,12 @@ export function TopHaze({ tint = LOBBY_HAZE_TINT }: { tint?: string }) {
             WebkitMaskImage: `linear-gradient(0deg, transparent ${step.from}%, #000 ${step.to}%)`,
             maskImage: `linear-gradient(0deg, transparent ${step.from}%, #000 ${step.to}%)`,
           }}
-          className="pointer-events-none absolute inset-x-0 top-0 bottom-[-120px]"
+          className="pointer-events-none absolute inset-0"
         />
       ))}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 bottom-[-120px]"
+        className="pointer-events-none absolute inset-0"
         style={{
           background: `linear-gradient(0deg, rgba(${tint},0) 0%, rgba(${tint},0.05) 40%, rgba(${tint},0.2) 72%, rgba(${tint},0.46) 100%)`,
         }}

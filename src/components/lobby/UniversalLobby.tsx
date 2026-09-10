@@ -671,8 +671,10 @@ export function UniversalLobby({
         >
           {/* The haze under the chip: the footer's ramp, upside down (TopHaze),
               from the header's underside — the row's mt-[13px] above — to
-              120px below the chip, over the body scrolling up under it. */}
-          <div aria-hidden className="pointer-events-none absolute inset-x-[-100vw] bottom-0 top-[-13px] -z-10">
+              10px below the chip, which is where the sticky tabs park: the
+              strip the body scrolls up through, and not the tabs themselves,
+              which blur their own backdrop. */}
+          <div aria-hidden className="pointer-events-none absolute inset-x-[-100vw] bottom-[-10px] top-[-13px] -z-10">
             <TopHaze />
           </div>
           <div>
@@ -735,10 +737,14 @@ export function UniversalLobby({
       {/* Body (1018:6818): the name, the card. Scrolls itself — the
           document never does on the device. */}
       <div
-        // Pulled up under the category chip by the chip's own height and
-        // padded by the same (chipClearance): the rows scroll up into the
-        // haze under the chip rather than ending at its underside.
-        className="relative z-10 mt-[calc(var(--chip-clearance)*-1)] min-h-0 flex-1 overflow-y-auto overflow-x-hidden pt-[var(--chip-clearance)]"
+        // Pulled up under the category chip by the chip's own height
+        // (chipClearance): the rows scroll up into the haze under the chip
+        // rather than ending at its underside. The clearance is given back
+        // by a SPACER inside, not by padding: a sticky offset is measured
+        // from inside a scroller's padding in Chromium, and the tabs landed
+        // a whole clearance too low (owner: "we don't need that much space
+        // between category row and game rules / players row").
+        className="relative z-10 mt-[calc(var(--chip-clearance)*-1)] min-h-0 flex-1 overflow-y-auto overflow-x-hidden"
         // The footer floats over this list now, so the list has to end above
         // it — measured rather than guessed, because the footer is one line
         // tall for a guest and three for a host with a caption under a
@@ -752,6 +758,8 @@ export function UniversalLobby({
         style={{ paddingBottom: footerHeight + FOOTER_HAZE_PX }}
       >
         <div className="mx-auto flex min-h-full w-full max-w-[700px] flex-col px-4 md:max-w-[520px]">
+          {/* The chip's clearance, as a spacer (see the scroller's note). */}
+          <div aria-hidden className="shrink-0" style={{ height: "var(--chip-clearance)" }} />
 
           {/* The room, said once and centred: its face, its name, how full
               it is (Figma 1059:532). 39px of air above the emblem and every

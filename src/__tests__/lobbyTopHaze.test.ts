@@ -24,11 +24,13 @@ const lobby = read("src/components/lobby/UniversalLobby.tsx");
 const haze = read("src/components/shared/FooterHaze.tsx");
 
 describe("TopHaze", () => {
-  it("is FooterHaze upside down: the same steps, the gradients at 0deg, reaching 120px down", () => {
+  it("is FooterHaze upside down: the same steps, the gradients at 0deg", () => {
     const top = haze.slice(haze.indexOf("export function TopHaze"));
     expect(top).toMatch(/FOOTER_HAZE_STEPS\.map/);
     expect(top).toMatch(/linear-gradient\(0deg, transparent \$\{step\.from\}%, #000 \$\{step\.to\}%\)/);
-    expect(top).toMatch(/className="pointer-events-none absolute inset-x-0 top-0 bottom-\[-120px\]"/);
+    // It fills the box it is given; the caller sizes the ramp.
+    expect(top).toMatch(/className="pointer-events-none absolute inset-0"/);
+    expect(top).not.toMatch(/bottom-\[-120px\]/);
     expect(top).toMatch(/linear-gradient\(0deg, rgba\(\$\{tint\},0\) 0%, rgba\(\$\{tint\},0\.05\) 40%, rgba\(\$\{tint\},0\.2\) 72%, rgba\(\$\{tint\},0\.46\) 100%\)/);
     expect(top).not.toMatch(/180deg/);
   });
@@ -41,12 +43,20 @@ describe("the lobby", () => {
     expect(lobby).toMatch(/"--chip-clearance": `\$\{chipClearance\}px`/);
   });
 
-  it("draws the haze under the chip, from the header's underside", () => {
-    expect(lobby).toMatch(/<div aria-hidden className="pointer-events-none absolute inset-x-\[-100vw\] bottom-0 top-\[-13px\] -z-10">\s*\n\s*<TopHaze \/>/);
+  it("draws the haze under the chip, from the header's underside to where the tabs park", () => {
+    // Not further: the sticky tabs sit 10px under the chip, and a ramp that
+    // reached past them frosted the tabs themselves.
+    expect(lobby).toMatch(/<div aria-hidden className="pointer-events-none absolute inset-x-\[-100vw\] bottom-\[-10px\] top-\[-13px\] -z-10">\s*\n\s*<TopHaze \/>/);
   });
 
-  it("runs the body up under the chip and pads by the same, keeping the footer padding as it was", () => {
-    expect(lobby).toMatch(/className="relative z-10 mt-\[calc\(var\(--chip-clearance\)\*-1\)\] min-h-0 flex-1 overflow-y-auto overflow-x-hidden pt-\[var\(--chip-clearance\)\]"/);
+  it("runs the body up under the chip and gives the clearance back as a spacer, not padding", () => {
+    // A sticky offset is measured from inside a scroller's padding in
+    // Chromium, so padding put the tabs a whole clearance too low (owner:
+    // "we don't need that much space between category row and game rules /
+    // players row"). A spacer element is the same in every engine.
+    expect(lobby).toMatch(/className="relative z-10 mt-\[calc\(var\(--chip-clearance\)\*-1\)\] min-h-0 flex-1 overflow-y-auto overflow-x-hidden"/);
+    expect(lobby).not.toMatch(/pt-\[var\(--chip-clearance\)\]/);
+    expect(lobby).toMatch(/<div aria-hidden className="shrink-0" style=\{\{ height: "var\(--chip-clearance\)" \}\} \/>/);
     expect(lobby).toMatch(/style=\{\{ paddingBottom: footerHeight \+ FOOTER_HAZE_PX \}\}/);
   });
 

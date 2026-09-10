@@ -35,7 +35,7 @@ describe("the tabs are sticky", () => {
     // The chip is outside the scroller in the tree; the scroller runs up
     // under it by a measured clearance and the tabs offset by the same, so
     // they still never slide under the chip (lobbyTopHaze.test).
-    const scroller = universal.indexOf('className="relative z-10 mt-[calc(var(--chip-clearance)*-1)] min-h-0 flex-1 overflow-y-auto overflow-x-hidden pt-[var(--chip-clearance)]"');
+    const scroller = universal.indexOf('className="relative z-10 mt-[calc(var(--chip-clearance)*-1)] min-h-0 flex-1 overflow-y-auto overflow-x-hidden"');
     expect(chip).toBeGreaterThan(-1);
     expect(chip).toBeLessThan(scroller);
   });
