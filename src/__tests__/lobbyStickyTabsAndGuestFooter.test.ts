@@ -29,7 +29,7 @@ describe("the tabs are sticky", () => {
     // so the offset is the chip's measured clearance plus 10 (lobbyTopHaze.test).
     // The sticky element is a wrapper now: the haze that rides behind the
     // bar, then the bar itself (lobbyTopHaze.test).
-    expect(universal).toMatch(/<div className="sticky top-\[calc\(var\(--chip-clearance\)\+10px\)\] z-20">/);
+    expect(universal).toMatch(/<div ref=\{tabsBarRef\} className="sticky top-\[calc\(var\(--chip-clearance\)\+10px\)\] z-20">/);
     expect(universal).toMatch(/<div className="relative flex items-center gap-\[6px\] rounded-\[28px\] border border-\[#ceb8e4\] bg-\[rgba\(255,255,255,0\.77\)\] p-\[10px\] shadow-\[0px_8px_0px_0px_#d0bbe3\] backdrop-blur-md">/);
   });
 

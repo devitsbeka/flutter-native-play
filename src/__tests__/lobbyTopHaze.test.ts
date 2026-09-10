@@ -70,7 +70,7 @@ describe("the lobby", () => {
     // it, spanning the card's side padding; under the bar, which draws
     // itself over it (owner: "we need blurry background behind the game
     // rules and players container, increase blurry bg height behind").
-    expect(lobby).toMatch(/<div className="sticky top-\[calc\(var\(--chip-clearance\)\+10px\)\] z-20">\s*\n(\s*\{\/\*[\s\S]*?\*\/\}\s*\n)?\s*<div aria-hidden className="pointer-events-none absolute inset-x-\[-9px\] bottom-\[-28px\] top-\[-10px\]">\s*\n\s*<TopHaze \/>\s*\n\s*<\/div>\s*\n\s*<div className="relative flex items-center/);
+    expect(lobby).toMatch(/<div ref=\{tabsBarRef\} className="sticky top-\[calc\(var\(--chip-clearance\)\+10px\)\] z-20">\s*\n(\s*\{\/\*[\s\S]*?\*\/\}\s*\n)?\s*<div aria-hidden className="pointer-events-none absolute inset-x-\[-9px\] bottom-\[-28px\] top-\[-10px\]">\s*\n\s*<TopHaze \/>\s*\n\s*<\/div>\s*\n\s*<div className="relative flex items-center/);
   });
 });
 
@@ -115,7 +115,8 @@ describe("switching tabs moves nothing but the tab", () => {
     // spacer's own size (lobbyScrollDoesNotCreep.test.ts).
     expect(lobby).toMatch(/const switching = keepScrollRef\.current \?\? 0;\s*\n\s*const live = Math\.min\(Math\.ceil\(scroller\.scrollTop - natural\), reachRef\.current\);\s*\n\s*return Math\.max\(0, Math\.ceil\(need - natural\), Math\.ceil\(switching - natural\), live\);/);
     expect(lobby).toMatch(/useLayoutEffect\(\(\) => \{\s*\n\s*if \(keepScrollRef\.current === null \|\| !scrollerRef\.current\) return;\s*\n\s*scrollerRef\.current\.scrollTop = keepScrollRef\.current;\s*\n\s*keepScrollRef\.current = null;\s*\n\s*\}, \[reachSpacer\]\);/);
-    expect(lobby).toMatch(/scroller\.addEventListener\("scroll", measureReach, \{ passive: true \}\);/);
+    // The listener also holds the tabs bar (lobbyTabsNeverUnderTheChip.test.ts).
+    expect(lobby).toMatch(/scroller\.addEventListener\("scroll", onScroll, \{ passive: true \}\);/);
   });
 
   it("and the browser's scroll anchoring is off, which scrolled to the top when the leaving tab was removed", () => {

@@ -609,6 +609,31 @@ export function UniversalLobby({
     scrollerRef.current.scrollTop = keepScrollRef.current;
     keepScrollRef.current = null;
   }, [reachSpacer]);
+  /**
+   * The tabs never go under the chip, whatever the platform makes of the
+   * sticky.
+   *
+   * The bar is `position: sticky` at the chip's underside plus 10px, and
+   * both Chromium and WebKit hold it there on the test bench. On the device
+   * it has still been photographed scrolled up under the chip, frosted by
+   * the chip's own haze (owner: "still does that, we should never hide tabs
+   * here"). So the scroll listener checks where the bar actually IS, and
+   * where it should be, and translates it down by the difference. Where the
+   * sticky holds, the difference is zero and this touches nothing.
+   */
+  const tabsBarRef = useRef<HTMLDivElement>(null);
+  const holdTabsBar = useCallback(() => {
+    const scroller = scrollerRef.current;
+    const bar = tabsBarRef.current;
+    if (!scroller || !bar) return;
+    const line = scroller.getBoundingClientRect().top + chipClearance + 10;
+    const current = parseFloat(bar.dataset.hold ?? "0") || 0;
+    const natural = bar.getBoundingClientRect().top - current;
+    const hold = Math.max(0, Math.round(line - natural));
+    if (hold === current) return;
+    bar.dataset.hold = String(hold);
+    bar.style.transform = hold ? `translateY(${hold}px)` : "";
+  }, [chipClearance]);
   useLayoutEffect(() => {
     const scroller = scrollerRef.current;
     const column = columnRef.current;
@@ -625,17 +650,25 @@ export function UniversalLobby({
       }
       measureReach();
     };
-    scroller.addEventListener("scroll", measureReach, { passive: true });
-    if (typeof ResizeObserver === "undefined") return () => scroller.removeEventListener("scroll", measureReach);
-    const observer = new ResizeObserver(onResize);
+    const onScroll = () => {
+      measureReach();
+      holdTabsBar();
+    };
+    scroller.addEventListener("scroll", onScroll, { passive: true });
+    holdTabsBar();
+    if (typeof ResizeObserver === "undefined") return () => scroller.removeEventListener("scroll", onScroll);
+    const observer = new ResizeObserver(() => {
+      onResize();
+      holdTabsBar();
+    });
     observer.observe(scroller);
     observer.observe(column);
     observer.observe(card);
     return () => {
-      scroller.removeEventListener("scroll", measureReach);
+      scroller.removeEventListener("scroll", onScroll);
       observer.disconnect();
     };
-  }, [measureReach]);
+  }, [measureReach, holdTabsBar]);
 
   // A disabled Start has to say WHY, and say it where the reason cannot be
   // pushed under the fold: above the button rather than below it. The owner
@@ -987,7 +1020,7 @@ export function UniversalLobby({
                 the card is not a scroll container, so the bar sticks to the
                 body's scroll, and the blur keeps the rows scrolling under it
                 from showing through the bar's 77% white. */}
-            <div className="sticky top-[calc(var(--chip-clearance)+10px)] z-20">
+            <div ref={tabsBarRef} className="sticky top-[calc(var(--chip-clearance)+10px)] z-20">
               {/* The haze continues behind the bar: the rows scrolling up
                   under the tabs frost out here, not just in the strip under
                   the chip (owner: "we need blurry background behind the game
