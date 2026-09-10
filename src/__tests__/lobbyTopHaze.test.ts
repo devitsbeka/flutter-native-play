@@ -79,7 +79,7 @@ describe("the card can always reach the chip", () => {
     // A short list stopped mid-screen: sticky holds only once the card has
     // scrolled up to the tabs' line (owner: "when i switch to players
     // scroll stops in the middle, make sure scroll goes all the way up").
-    expect(lobby).toMatch(/const \[reachSpacer, setReachSpacer\] = useState\(0\);/);
+    expect(lobby).toMatch(/const \[reachSpacer, setReachSpacerState\] = useState\(0\);/);
     expect(lobby).toMatch(/const stickyLine = chipClearance \+ 10;\s*\n\s*const natural = column\.offsetHeight \+ footerHeight \+ FOOTER_HAZE_PX - scroller\.clientHeight;\s*\n\s*const need = card\.offsetTop - stickyLine;/);
     expect(lobby).toMatch(/Math\.ceil\(need - natural\)/);
     // Outside the min-h-full column, so the at-rest layout is untouched.
@@ -111,7 +111,9 @@ describe("switching tabs moves nothing but the tab", () => {
 
   it("the reader's scroll position is noted before the switch, held by the spacer, and put back", () => {
     expect(lobby).toMatch(/if \(scrollerRef\.current\) keepScrollRef\.current = scrollerRef\.current\.scrollTop;\s*\n\s*setTab\(next\);/);
-    expect(lobby).toMatch(/const keep = Math\.max\(scroller\.scrollTop, keepScrollRef\.current \?\? 0\);\s*\n\s*return Math\.max\(0, Math\.ceil\(need - natural\), Math\.ceil\(keep - natural\)\);/);
+    // The switch position in full; the live position only up to the
+    // spacer's own size (lobbyScrollDoesNotCreep.test.ts).
+    expect(lobby).toMatch(/const switching = keepScrollRef\.current \?\? 0;\s*\n\s*const live = Math\.min\(Math\.ceil\(scroller\.scrollTop - natural\), reachRef\.current\);\s*\n\s*return Math\.max\(0, Math\.ceil\(need - natural\), Math\.ceil\(switching - natural\), live\);/);
     expect(lobby).toMatch(/useLayoutEffect\(\(\) => \{\s*\n\s*if \(keepScrollRef\.current === null \|\| !scrollerRef\.current\) return;\s*\n\s*scrollerRef\.current\.scrollTop = keepScrollRef\.current;\s*\n\s*keepScrollRef\.current = null;\s*\n\s*\}, \[reachSpacer\]\);/);
     expect(lobby).toMatch(/scroller\.addEventListener\("scroll", measureReach, \{ passive: true \}\);/);
   });

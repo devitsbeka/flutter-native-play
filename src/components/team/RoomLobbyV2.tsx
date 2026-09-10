@@ -142,12 +142,16 @@ export function RoomLobbyV2() {
    * another device — or after clearing the app — was offered Create again
    * over a room that was already on everybody's list, with its rules
    * unlocked (owner: "i can modify already created public room, i clicked
-   * and it shows create button instead start game"). A row that is not a
-   * draft has been settled by Create or Start somewhere; the device's
-   * memory only fills in for rows from before is_draft existed.
+   * and it shows create button instead start game"). A PUBLISHED row that
+   * is not a draft has been settled by Create or Start somewhere. A private
+   * room proves nothing by the row — a My Trivia Party room is born
+   * private and not a draft, and its host still wants Create offered once
+   * (owner: "i invited friend but it doesn't show create button") — so
+   * there the device's memory decides, as it always did.
    */
   const roomCreated =
-    pressedCreate || (typeof currentRoom?.is_draft === "boolean" && !currentRoom.is_draft);
+    pressedCreate ||
+    (Boolean(currentRoom?.is_public) && typeof currentRoom?.is_draft === "boolean" && !currentRoom.is_draft);
   /**
    * Whether the room can start, for the handler rather than the button.
    *

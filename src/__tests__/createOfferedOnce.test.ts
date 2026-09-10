@@ -178,8 +178,10 @@ describe("created is what the row says first", () => {
     // with its rules unlocked (owner: "i can modify already created public
     // room, i clicked and it shows create button instead start game").
     const lobby = readFileSync(join(process.cwd(), "src/components/team/RoomLobbyV2.tsx"), "utf8");
+    // A PUBLISHED, settled row; a private room (a My Trivia Party room is
+    // born private and not a draft) still goes by the device's memory.
     expect(lobby).toMatch(
-      /const roomCreated =\s*\n\s*pressedCreate \|\| \(typeof currentRoom\?\.is_draft === "boolean" && !currentRoom\.is_draft\);/,
+      /const roomCreated =\s*\n\s*pressedCreate \|\|\s*\n\s*\(Boolean\(currentRoom\?\.is_public\) && typeof currentRoom\?\.is_draft === "boolean" && !currentRoom\.is_draft\);/,
     );
     expect(lobby).toMatch(/const publishedRoom = isPublicRoom && roomCreated && !needsCategorySelection;/);
   });

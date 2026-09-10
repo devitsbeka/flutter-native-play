@@ -503,7 +503,14 @@ export function UniversalLobby({
   const scrollerRef = useRef<HTMLDivElement>(null);
   const columnRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLElement>(null);
-  const [reachSpacer, setReachSpacer] = useState(0);
+  const [reachSpacer, setReachSpacerState] = useState(0);
+  // Mirrored in a ref so the measure can read the spacer's CURRENT size
+  // without depending on it (see computeReach).
+  const reachRef = useRef(0);
+  const setReachSpacer = (v: number) => {
+    reachRef.current = v;
+    setReachSpacerState(v);
+  };
   /**
    * Why the tabs bar used to move when a tab was switched.
    *
@@ -565,8 +572,16 @@ export function UniversalLobby({
     const stickyLine = chipClearance + 10;
     const natural = column.offsetHeight + footerHeight + FOOTER_HAZE_PX - scroller.clientHeight;
     const need = card.offsetTop - stickyLine;
-    const keep = Math.max(scroller.scrollTop, keepScrollRef.current ?? 0);
-    return Math.max(0, Math.ceil(need - natural), Math.ceil(keep - natural));
+    // The position noted at a tab switch is held in full. The LIVE position
+    // only keeps what the spacer already holds — capped at its current
+    // size, so scrolling back up shrinks it but scrolling down can never
+    // grow it. Uncapped, every scroll event at the end of the list rounded
+    // the spacer up by a pixel and the list could be scrolled forever, a
+    // pixel at a time, with the rows creeping under the tabs (owner: "i can
+    // scroll very very slowly").
+    const switching = keepScrollRef.current ?? 0;
+    const live = Math.min(Math.ceil(scroller.scrollTop - natural), reachRef.current);
+    return Math.max(0, Math.ceil(need - natural), Math.ceil(switching - natural), live);
   }, [chipClearance, footerHeight]);
   const measureReach = useCallback(() => {
     const v = computeReach();
