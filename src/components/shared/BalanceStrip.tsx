@@ -7,10 +7,12 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useVipStatus } from "@/hooks/useVipStatus";
+import { proTierOf, type ProTier } from "@/utils/proTier";
 import { formatFullNumber } from "@/lib/utils";
 
 import coinIcon from "@/assets/icons/icon-coin.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
+import giftIcon from "@/assets/unboxing-gift-3.png";
 
 /**
  * The coin / gem balance pills (Figma 1102:4980, 1102:4983).
@@ -75,34 +77,46 @@ export function BalancePills({
 export default BalancePills;
 
 /**
- * The green PRO button at the right end of the balance row — 1102:2121's
- * pill, the one the game chooser already wears beside these pills.
+ * The PRO button at the right end of the balance row — 1102:2121's pill,
+ * the one the game chooser wears beside these pills too.
  *
- * What it says is who is looking: a player without PRO is asked to try it,
- * a solo PRO is offered the step up to PRO+, and a PRO+ player has nothing
- * left to be sold on this row, so the button is not there (owner: "if user
- * is non pro sees Try PRO or solo pro sees Upgrade"). Either tap opens the
- * paywall, which lists the PRO+ plan for the one who already has PRO.
+ * What it says is who is looking (proTierOf): a player without PRO is asked
+ * to try it; a solo PRO is offered the step up to Friends PRO; a Friends
+ * PRO holder has seats to give, so the button turns purple, wears the gift
+ * and says "Send PRO" (owner: "if user has no pro we show try pro, upgrade
+ * when user already has pro solo and can upgrade to friends pro, and if
+ * user has friends pro sees send pro"). The first two open the paywall,
+ * which lists the Friends plan for the one who already has PRO; the third
+ * goes to the seats panel on the profile.
  */
-export function proCtaLabelKey(isVip: boolean, isProPlus: boolean): "extra.tryProBtn" | "extra.upgradeBtn" | null {
-  if (!isVip) return "extra.tryProBtn";
-  if (!isProPlus) return "extra.upgradeBtn";
-  return null;
+export function proCtaLabelKey(tier: ProTier): "extra.tryProBtn" | "extra.upgradeBtn" | "extra.proSeatsSend" {
+  if (tier === "none") return "extra.tryProBtn";
+  if (tier === "solo") return "extra.upgradeBtn";
+  return "extra.proSeatsSend";
 }
+
+export const PRO_SEATS_PATH = "/profile?tab=PRO";
 
 export function ProCtaButton({ onClick }: { onClick: () => void }) {
   const { t } = useLanguage();
-  const { isVip, isProPlus } = useVipStatus();
-  const key = proCtaLabelKey(isVip, isProPlus());
-  if (!key) return null;
+  const navigate = useNavigate();
+  const { isVip, subscription } = useVipStatus();
+  const tier = proTierOf(subscription, isVip);
+  const key = proCtaLabelKey(tier);
+  const sends = tier === "friends";
   return (
     <button
       type="button"
-      onClick={onClick}
-      className="relative ml-auto flex h-[43px] shrink-0 items-center justify-center overflow-hidden rounded-[18.39px] border-[1.5px] border-solid border-[#50d8b8] bg-[linear-gradient(180deg,#88e2ca_0%,#4accad_58%,#31c3a1_100%)] px-[19px] shadow-[0px_4px_0px_0px_#1e8e74,0px_8px_16px_0px_rgba(102,51,153,0.3)] transition-transform active:translate-y-[2px]"
+      onClick={sends ? () => navigate(PRO_SEATS_PATH) : onClick}
+      className={
+        sends
+          ? "relative ml-auto flex h-[43px] shrink-0 items-center justify-center gap-1.5 overflow-hidden rounded-[18.39px] border-[1.5px] border-solid border-[#b78cf2] bg-[linear-gradient(180deg,#b98cf5_0%,#9a5de6_58%,#8447d6_100%)] px-[16px] shadow-[0px_4px_0px_0px_#5f2eaa,0px_8px_16px_0px_rgba(102,51,153,0.3)] transition-transform active:translate-y-[2px]"
+          : "relative ml-auto flex h-[43px] shrink-0 items-center justify-center overflow-hidden rounded-[18.39px] border-[1.5px] border-solid border-[#50d8b8] bg-[linear-gradient(180deg,#88e2ca_0%,#4accad_58%,#31c3a1_100%)] px-[19px] shadow-[0px_4px_0px_0px_#1e8e74,0px_8px_16px_0px_rgba(102,51,153,0.3)] transition-transform active:translate-y-[2px]"
+      }
     >
       <span aria-hidden className="pointer-events-none absolute inset-0 rounded-[inherit] shadow-[inset_0px_2px_0px_0px_rgba(255,255,255,0.45)]" />
-      <span className="font-display text-[18px] font-bold leading-[18px] text-white">{t(key)}</span>
+      {sends && <img alt="" src={giftIcon} className="relative h-[22px] w-[22px] object-contain" />}
+      <span className="relative font-display text-[18px] font-bold leading-[18px] text-white">{t(key)}</span>
     </button>
   );
 }

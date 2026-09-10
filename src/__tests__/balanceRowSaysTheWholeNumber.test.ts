@@ -41,22 +41,25 @@ describe("the whole number", () => {
 });
 
 describe("the PRO button", () => {
-  it("says Try PRO to a player without PRO, Upgrade to a solo PRO, nothing to PRO+", () => {
-    expect(proCtaLabelKey(false, false)).toBe("extra.tryProBtn");
-    expect(proCtaLabelKey(true, false)).toBe("extra.upgradeBtn");
-    expect(proCtaLabelKey(true, true)).toBeNull();
+  it("says Try PRO to a player without PRO, Upgrade to a solo PRO, Send PRO to a Friends PRO", () => {
+    expect(proCtaLabelKey("none")).toBe("extra.tryProBtn");
+    expect(proCtaLabelKey("solo")).toBe("extra.upgradeBtn");
+    expect(proCtaLabelKey("friends")).toBe("extra.proSeatsSend");
   });
 
   it("sits at the right end of the strip and opens the paywall", () => {
     expect(strip).toMatch(/<ProCtaButton onClick=\{\(\) => setPaywallOpen\(true\)\} \/>/);
-    expect(strip).toMatch(/className="relative ml-auto flex h-\[43px\]/);
+    expect(strip).toMatch(/className=\{\s*\n\s*sends\s*\n\s*\? "relative ml-auto flex h-\[43px\]/);
     // Portalled: the strip is a backdrop-filter surface in a sticky header,
     // which would pin a `fixed` sheet to itself instead of the screen.
     expect(strip).toMatch(/createPortal\(<ProPaywallModal isOpen=\{paywallOpen\} onClose=\{\(\) => setPaywallOpen\(false\)\} \/>, document\.body\)/);
   });
 
   it("reads the tier from the VIP context, not from a guess", () => {
-    expect(strip).toMatch(/const \{ isVip, isProPlus \} = useVipStatus\(\);/);
-    expect(strip).toMatch(/proCtaLabelKey\(isVip, isProPlus\(\)\)/);
+    expect(strip).toMatch(/const \{ isVip, subscription \} = useVipStatus\(\);/);
+    expect(strip).toMatch(/const tier = proTierOf\(subscription, isVip\);/);
+    // Send PRO goes to the seats panel, not the paywall, in purple with the gift.
+    expect(strip).toMatch(/onClick=\{sends \? \(\) => navigate\(PRO_SEATS_PATH\) : onClick\}/);
+    expect(strip).toMatch(/\{sends && <img alt="" src=\{giftIcon\}/);
   });
 });

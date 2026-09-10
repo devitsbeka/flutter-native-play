@@ -81,7 +81,7 @@ import { PlayBackdrop } from "@/components/shared/PlayBackdrop";
 import { PlayLimitModal } from "@/components/home/PlayLimitModal";
 import { usePlayLimit } from "@/hooks/usePlayLimit";
 import { useCurrency } from "@/hooks/useCurrency";
-import { BalancePills } from "@/components/shared/BalanceStrip";
+import { BalancePills, ProCtaButton } from "@/components/shared/BalanceStrip";
 // The padlock over the locked bar's faces (Figma 1112:8157), at the size the
 // mock hangs it: 68px, over the three dimmed avatars rather than beside the
 // label.
@@ -2063,18 +2063,9 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
             onCoinsClick={() => navigate("/power-ups?section=coins")}
             onGemsClick={() => navigate("/power-ups?section=gems-lari")}
           />
-          {!isVip && (
-            <button
-              type="button"
-              onClick={() => setShowProModal(true)}
-              className="relative ml-auto flex h-[43px] shrink-0 items-center justify-center overflow-hidden rounded-[18.39px] border-[1.5px] border-solid border-[#50d8b8] bg-[linear-gradient(180deg,#88e2ca_0%,#4accad_58%,#31c3a1_100%)] px-[19px] shadow-[0px_4px_0px_0px_#1e8e74,0px_8px_16px_0px_rgba(102,51,153,0.3)] transition-transform active:translate-y-[2px]"
-            >
-              <span aria-hidden className="pointer-events-none absolute inset-0 rounded-[inherit] shadow-[inset_0px_2px_0px_0px_rgba(255,255,255,0.45)]" />
-              <span className="font-display text-[18px] font-bold leading-[18px] text-white">
-                {t(blockedByLimit ? "extra.tryProBtn" : "extra.upgradeBtn")}
-              </span>
-            </button>
-          )}
+          {/* The same button the balance row wears: Try PRO, Upgrade, or
+              Send PRO by tier (BalanceStrip.ProCtaButton). */}
+          <ProCtaButton onClick={() => setShowProModal(true)} />
         </div>
       )}
 
