@@ -28,6 +28,17 @@ interface QuizQuestionCardProps {
    */
   imageUrl?: string | null;
   /**
+   * Called once the question can be read: at once for a question with no
+   * picture, and for a picture question when the picture is on screen — or
+   * has given up (an error, or the five-second wait), at which point the
+   * text is shown instead. The screens start the question's clock on this
+   * rather than on mount: a picture game whose clock ran while the picture
+   * was still downloading opened, on a slow phone, already timed out — the
+   * correct answer green, the miss recorded, before the player had seen a
+   * thing (owner: "guess game started and i see already green answer").
+   */
+  onMediaReady?: () => void;
+  /**
    * Draw the image at 85% of the band (7.5% padding each side). For logo
    * marks: full-bleed bars touched the band's top and bottom edges, and a
    * brand mark needs clear space the way a photograph does not.
@@ -120,6 +131,7 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
       timerMaxSeconds = 20,
       freezeTimeLeft = 0,
       imageUrl,
+      onMediaReady,
       imageInset = false,
       imageFramed = false,
       imageBand = false,
@@ -191,6 +203,14 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
         window.clearTimeout(retryTimer.current);
       };
     }, [imageUrl]);
+
+    // The clock waits for this (see onMediaReady above). Read through a ref
+    // so a caller's fresh closure never re-fires the effect.
+    const onMediaReadyRef = React.useRef(onMediaReady);
+    onMediaReadyRef.current = onMediaReady;
+    React.useEffect(() => {
+      if (!imageUrl || imageStatus === "loaded" || imageStatus === "error") onMediaReadyRef.current?.();
+    }, [imageUrl, imageStatus]);
 
     // Wikimedia rate-limits, so its images are fetched through our own edge
     // cache rather than once per player. See questionImageSrc.

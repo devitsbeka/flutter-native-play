@@ -14,6 +14,8 @@ export interface GameStakeResult {
    * Returns what actually moved, signed.
    */
   settleGame: (outcome: GameOutcome, matchId?: string) => Promise<number>;
+  /** The same settlement, with the server's reason when it moved nothing on purpose. */
+  settleGameDetailed: (outcome: GameOutcome, matchId?: string) => Promise<{ applied: number; reason: string | null }>;
   /**
    * Settle a solo picture game — the Guess card's — at its own stake:
    * REWARDS.GUESS_STAKE in, the same out on a pass, off on a fail.
