@@ -73,3 +73,23 @@ describe("the lobby", () => {
     expect(lobby).toMatch(/<div className="sticky top-\[calc\(var\(--chip-clearance\)\+10px\)\] z-20">\s*\n(\s*\{\/\*[\s\S]*?\*\/\}\s*\n)?\s*<div aria-hidden className="pointer-events-none absolute inset-x-\[-9px\] bottom-\[-28px\] top-\[-10px\]">\s*\n\s*<TopHaze \/>\s*\n\s*<\/div>\s*\n\s*<div className="relative flex items-center/);
   });
 });
+
+describe("the card can always reach the chip", () => {
+  it("a spacer after the column adds exactly the scroll room the card is short by", () => {
+    // A short list stopped mid-screen: sticky holds only once the card has
+    // scrolled up to the tabs' line (owner: "when i switch to players
+    // scroll stops in the middle, make sure scroll goes all the way up").
+    expect(lobby).toMatch(/const \[reachSpacer, setReachSpacer\] = useState\(0\);/);
+    expect(lobby).toMatch(/const stickyLine = chipClearance \+ 10;\s*\n\s*const overflow = column\.offsetHeight \+ footerHeight \+ FOOTER_HAZE_PX - scroller\.clientHeight;\s*\n\s*const need = card\.offsetTop - stickyLine;\s*\n\s*setReachSpacer\(Math\.max\(0, Math\.ceil\(need - overflow\)\)\);/);
+    // Outside the min-h-full column, so the at-rest layout is untouched.
+    expect(lobby).toMatch(/<\/motion\.section>\s*\n\s*<\/div>\s*\n\s*\{\/\*[^*]*\*\/\}\s*\n\s*<div aria-hidden className="shrink-0" style=\{\{ height: reachSpacer \}\} \/>\s*\n\s*<\/div>/);
+    expect(lobby).toMatch(/<div ref=\{columnRef\} className="mx-auto flex min-h-full w-full max-w-\[700px\] flex-col px-4 md:max-w-\[520px\]">/);
+  });
+});
+
+describe("the chip's label", () => {
+  it("is the tabs' 18px", () => {
+    expect(lobby).toMatch(/<span className="min-w-0 flex-1 truncate font-display text-\[18px\] font-bold leading-\[26px\] text-\[#402666\]">\s*\n\s*\{label\}/);
+    expect(lobby).toMatch(/font-display text-\[18px\] leading-\[26px\] text-\[#402666\]/);
+  });
+});

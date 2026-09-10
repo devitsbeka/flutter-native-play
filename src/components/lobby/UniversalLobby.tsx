@@ -474,6 +474,25 @@ export function UniversalLobby({
   // How tall the footer actually is, so the list above can stop clear of
   // it. It changes with the caption (one line, two, or none) and with the
   // keyboard's safe area, so it is observed rather than measured once.
+  /**
+   * Enough scroll room for the card to reach the chip.
+   *
+   * The tabs are sticky, but sticky only holds once the card has scrolled
+   * up to their line, and a short list - two players, a rules tab - did not
+   * reach it: the scroll ran out with the card in the middle of the screen
+   * (owner: "when i switch to players scroll stops in the middle, make
+   * sure scroll goes all the way up and sticks below the select category
+   * row"). So a spacer after the body's column adds exactly the room the
+   * card is short by: the card's offset from the scroller's top, less the
+   * tabs' sticky line, less whatever the column already overflows. It sits
+   * OUTSIDE the min-h-full column, so the at-rest layout - the card at the
+   * foot of the screen - is what it was; the room is only there to scroll
+   * into. Measured, because the card's height changes with the tab.
+   */
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const columnRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLElement>(null);
+  const [reachSpacer, setReachSpacer] = useState(0);
   const footerRef = useRef<HTMLDivElement>(null);
   const [footerHeight, setFooterHeight] = useState(0);
   useLayoutEffect(() => {
@@ -486,6 +505,25 @@ export function UniversalLobby({
     observer.observe(node);
     return () => observer.disconnect();
   }, []);
+  useLayoutEffect(() => {
+    const scroller = scrollerRef.current;
+    const column = columnRef.current;
+    const card = cardRef.current;
+    if (!scroller || !column || !card) return;
+    const read = () => {
+      const stickyLine = chipClearance + 10;
+      const overflow = column.offsetHeight + footerHeight + FOOTER_HAZE_PX - scroller.clientHeight;
+      const need = card.offsetTop - stickyLine;
+      setReachSpacer(Math.max(0, Math.ceil(need - overflow)));
+    };
+    read();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(read);
+    observer.observe(scroller);
+    observer.observe(column);
+    observer.observe(card);
+    return () => observer.disconnect();
+  }, [chipClearance, footerHeight]);
 
   // A disabled Start has to say WHY, and say it where the reason cannot be
   // pushed under the fold: above the button rather than below it. The owner
@@ -737,6 +775,7 @@ export function UniversalLobby({
       {/* Body (1018:6818): the name, the card. Scrolls itself — the
           document never does on the device. */}
       <div
+        ref={scrollerRef}
         // Pulled up under the category chip by the chip's own height
         // (chipClearance): the rows scroll up into the haze under the chip
         // rather than ending at its underside. The clearance is given back
@@ -757,7 +796,7 @@ export function UniversalLobby({
         // covers last raw behind").
         style={{ paddingBottom: footerHeight + FOOTER_HAZE_PX }}
       >
-        <div className="mx-auto flex min-h-full w-full max-w-[700px] flex-col px-4 md:max-w-[520px]">
+        <div ref={columnRef} className="mx-auto flex min-h-full w-full max-w-[700px] flex-col px-4 md:max-w-[520px]">
           {/* The chip's clearance, as a spacer (see the scroller's note). */}
           <div aria-hidden className="shrink-0" style={{ height: "var(--chip-clearance)" }} />
 
@@ -798,6 +837,7 @@ export function UniversalLobby({
 
           {/* The card (1018:6750 / 1018:5549) and its two tabs. */}
           <motion.section
+            ref={cardRef}
             {...arrive(0.36)}
             className={cn(
               "relative mb-[20px] mt-[16px] w-full shrink-0 overflow-clip rounded-[24px] border-2 border-[rgba(255,255,255,0.6)] bg-[rgba(252,247,255,0.6)] px-[9px] pt-[9px]",
@@ -1078,6 +1118,8 @@ export function UniversalLobby({
 
           </motion.section>
         </div>
+        {/* The room the card is short by to reach the chip (reachSpacer). */}
+        <div aria-hidden className="shrink-0" style={{ height: reachSpacer }} />
       </div>
 
       {/* Footer (1059:532): Start Game, and nothing else — no rule above it
@@ -1523,7 +1565,11 @@ function Chip({
             <DynamicIcon slug={iconSlug} size={32} />
           </span>
         )}
-        <span className="min-w-0 flex-1 truncate font-display text-[16px] font-bold leading-[26px] text-[#402666]">
+        {/* The tabs' own 18px: the chip and the bar under it are the two
+            labels on the same column, and they read as one voice at one
+            size (owner: "increase select category font size, same font
+            size what we have on game rules / players"). */}
+        <span className="min-w-0 flex-1 truncate font-display text-[18px] font-bold leading-[26px] text-[#402666]">
           {label}
         </span>
         {/* The "+N" pops as it changes: keyed by its value, so a new count
