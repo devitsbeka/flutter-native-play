@@ -416,6 +416,8 @@ interface MultiplayerContextType extends MultiplayerState {
   exitRoom: () => void;
   continueInRoom: () => void; // Return to lobby after results
   leaveRoomPermanently: () => Promise<void>;
+  /** Re-read the held room's seats now — after a write realtime may not carry. */
+  refreshParticipants: () => Promise<void>;
   deleteRoom: () => Promise<void>;
   resetMultiplayer: () => void;
   awardObserverBonus: (bonusAmount: number) => Promise<void>; // Award pre-calculated bonus to observer host
@@ -691,6 +693,11 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         async (payload) => {
           const updated = payload.new as GameRoom;
           setState(prev => ({ ...prev, currentRoom: updated }));
+          // A write to the room row is also the one signal every device is
+          // sure to hear (UPDATE carries the filter; DELETE on the seats
+          // does not — see the participants channel). The host stamps the
+          // room after removing a seat, so the seats are re-read here.
+          debouncedFetchParticipants(roomId);
           
           // Use refs for stable access (prevents stale closure issues)
           const currentPhase = phaseRef.current;
@@ -3714,6 +3721,15 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     return siteUrl(`/room/${roomCode}`);
   }, []);
 
+  // Re-read the held room's seats on demand. The host removes a seat
+  // through lobby_manage_seat and realtime does not carry the DELETE to a
+  // filtered channel (see the participants channel), so the host's own list
+  // is re-read here rather than left to the next full sync.
+  const refreshParticipants = useCallback(async () => {
+    const id = currentRoomRef.current?.id;
+    if (id) await fetchParticipants(id);
+  }, [fetchParticipants]);
+
   const value = useMemo<MultiplayerContextType>(() => ({
     ...state,
     participants,
@@ -3731,6 +3747,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     exitRoom,
     continueInRoom,
     leaveRoomPermanently,
+    refreshParticipants,
     deleteRoom,
     resetMultiplayer,
     awardObserverBonus,
@@ -3755,6 +3772,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     exitRoom,
     continueInRoom,
     leaveRoomPermanently,
+    refreshParticipants,
     deleteRoom,
     resetMultiplayer,
     awardObserverBonus,

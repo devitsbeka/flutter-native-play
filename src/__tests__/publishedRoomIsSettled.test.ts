@@ -114,8 +114,10 @@ describe("what a settled public room will not let the host do", () => {
     // and approval are the two that stay open on purpose. The gradient
     // picker is mounted but nothing opens it.
     expect(lobby).not.toMatch(/setShowGradientPicker\(true\)/);
+    // The ninth is the stamp after a seat is removed (last_activity_at
+    // only): a lock decision made — it changes nothing the lock guards.
     const writes = (lobby.match(/\.from\("game_rooms"\)\s*\n\s*\.update\(/g) ?? []).length;
-    expect(writes, "a new game_rooms write needs a lock decision").toBe(8);
+    expect(writes, "a new game_rooms write needs a lock decision").toBe(9);
   });
 });
 

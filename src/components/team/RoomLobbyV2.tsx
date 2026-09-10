@@ -93,8 +93,7 @@ export function RoomLobbyV2() {
     startNextFromQueue,
     loading,
     lastPlayedTriviaId,
-    justReturnedFromResults,
-  } = useMultiplayerV2();
+    justReturnedFromResults, refreshParticipants } = useMultiplayerV2();
   
   const [showIconPicker, setShowIconPicker] = useState(false);
   // The ordered icon deck a faceless room is dealt from — see roomFace below.
@@ -896,6 +895,16 @@ export function RoomLobbyV2() {
         p_action: "remove",
       });
       if (error) throw error;
+      // The seat is gone on the server. Realtime does not carry a DELETE on
+      // the seats to a filtered channel, so the host's own list is re-read
+      // here, and the room row is stamped — the one write every device is
+      // sure to hear, and each re-reads its seats on it (owner: "needs
+      // refresh to delete player").
+      await refreshParticipants();
+      void supabase
+        .from("game_rooms")
+        .update({ last_activity_at: new Date().toISOString() })
+        .eq("id", currentRoom.id);
       toast.success(t("extra.playerRemoved"));
     } catch (error) {
       console.error("Remove player error:", error);
@@ -973,6 +982,24 @@ export function RoomLobbyV2() {
       },
     });
     if (error) throw error;
+    // The in-app bell reaches a player with the app open. The push reaches
+    // the one who is not — which is who the paper plane is for. It rides a
+    // game_invitations row, as the invite modal's does: send-game-invite-push
+    // re-reads the invitation server-side and composes its own words, so
+    // nothing typed here reaches a lock screen. Fire-and-forget; the
+    // notification above is already written either way.
+    if (user) {
+      void (async () => {
+        const { data: inv } = await supabase
+          .from("game_invitations")
+          .insert({ sender_id: user.id, receiver_id: userId, room_id: currentRoom.id })
+          .select("id")
+          .maybeSingle();
+        if (inv?.id) {
+          await supabase.functions.invoke("send-game-invite-push", { body: { invitationId: inv.id } });
+        }
+      })().catch((e) => console.warn("[lobby] invite push failed:", e));
+    }
   };
 
   // Handler for resending invitation
