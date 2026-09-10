@@ -52,7 +52,7 @@ describe("when the notifications screen marks things read", () => {
       "utf8",
     );
     expect(strip, "the shared strip must report a change to its caller")
-      .toMatch(/onValueChange=\{\(v\)\s*=>\s*onTabChange\(/);
+      .toMatch(/onClick=\{\(\)\s*=>\s*onTabChange\(key\)\}/);
   });
 
   it("clears whatever is left when the screen closes", () => {

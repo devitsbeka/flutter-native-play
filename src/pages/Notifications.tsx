@@ -505,7 +505,7 @@ export default function Notifications() {
           inset: sticky then pushes the strip 59px BELOW its flow position at
           rest, which read as an empty band between header and content on
           device (and never on web, where --safe-top is 0). */}
-      <div className="sticky top-[76px] z-10 bg-background/95 backdrop-blur-md px-4 pt-3 pb-3 max-w-[700px] md:max-w-[600px] mx-auto">
+      <div className="sticky top-[76px] z-10 bg-background/95 backdrop-blur-md px-4 pt-3 pb-5 max-w-[700px] md:max-w-[600px] mx-auto">
         <NotificationTabs
           activeTab={activeTab}
           onTabChange={(tab) => handleTabChange(tab)}

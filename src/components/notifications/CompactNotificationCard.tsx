@@ -613,25 +613,30 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
             </div>
           )}
 
+          {/* The answer, once given, in the same pill the question wore: the
+              mint one with its check for yes, the unfilled one with its X
+              for no — settled, so it no longer takes a tap (owner:
+              "'accepted' button looks different, make sure we have style
+              consistency here"). */}
           {hasActionTaken && (isFriendRequest || isJoinRequest || isRematch) && (
-            <div className={cn(
-              "mt-3 px-4 py-2 rounded-full text-[13px] font-semibold inline-flex items-center gap-1.5",
-              actionTaken === 'accepted' 
-                ? "bg-emerald-500/20 text-emerald-600" 
-                : "bg-muted text-muted-foreground"
-            )}>
+            <RoomCardPlayButton
+              tone={actionTaken === 'accepted' ? "mint" : "outline"}
+              aria-disabled
+              tabIndex={-1}
+              className="pointer-events-none mt-3 min-h-[40px] px-5"
+            >
               {actionTaken === 'accepted' ? (
                 <>
-                  <span className="text-base">✓</span>
-                  <span>{t("extra.notifAccepted")}</span>
+                  <Check className="w-3.5 h-3.5" strokeWidth={3} />
+                  {t("extra.notifAccepted")}
                 </>
               ) : (
                 <>
-                  <span className="text-base">✗</span>
-                  <span>{t("extra.notifDeclined")}</span>
+                  <X className="w-3.5 h-3.5" strokeWidth={3} />
+                  {t("extra.notifDeclined")}
                 </>
               )}
-            </div>
+            </RoomCardPlayButton>
           )}
 
           {hasSingleAction && (

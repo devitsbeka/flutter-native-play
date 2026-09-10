@@ -483,8 +483,8 @@ export function NotificationsPanel({ isOpen, onClose, defaultTab }: Notification
               </div>
             </div>
 
-            {/* Tabs */}
-            <div className="px-4 pt-3 pb-2">
+            {/* Tabs — the lobby's strip, whose 8px foot needs the room below. */}
+            <div className="px-4 pt-3 pb-5">
               <NotificationTabs
                 activeTab={activeTab}
                 onTabChange={(tab) => setActiveTab(tab)}
