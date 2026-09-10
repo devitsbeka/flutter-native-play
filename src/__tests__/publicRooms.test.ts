@@ -848,17 +848,18 @@ describe("the host's doorstep", () => {
     expect(hook).not.toMatch(/from\("room_join_requests"\)\s*\n?\s*\.(insert|update|delete)/);
   });
 
-  it("shows the asker's record and trophies but not their quizzes", () => {
+  it("shows the asker's profile — no quizzes, and no Info or Trophies tabs either", () => {
     const gate = read("src/components/team/JoinRequestGate.tsx");
     expect(gate).toMatch(/openProfile\(next\.user_id\)/);
     // The profile modal never has a quizzes tab at all now - trivias are
     // private, shown only in a creator's own private tab on the online-game
-    // page, never on anyone's profile.
+    // page, never on anyone's profile. The Info and Trophies tabs went
+    // after it (owner: "remove info and rewards section from players
+    // profiles"; profileHasNoTabs.test.ts).
     const modal = read("src/components/profile/PlayerProfileModal.tsx");
     expect(modal).not.toMatch(/TabsTrigger value="trivias"/);
     expect(modal).not.toMatch(/TabsContent value="trivias"/);
-    // Trophies still show — they are half of what the host is looking at.
-    expect(modal).toMatch(/<TabsTrigger value="trophies"/);
+    expect(modal).not.toMatch(/<TabsTrigger/);
   });
 });
 

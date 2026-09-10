@@ -2,21 +2,17 @@ import { BackgroundVideo } from "@/components/shared/BackgroundVideo";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, UserPlus, Swords, Check, Clock, Send, ArrowRight, Users, Loader2, Camera, Plus, Pencil } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import iconTrophy from "@/assets/icon-trophy.png";
-import iconInfo from "@/assets/icon-info.png";
 
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { usePlayerProfile as usePlayerProfileData, InteractionLogItem } from "@/hooks/usePlayerProfile";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFriends } from "@/contexts/FriendsContext";
 import { toast } from "@/lib/toast";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { PlayerOverflowMenu } from "@/components/social/PlayerOverflowMenu";
-import { VersusPanel, hasVersusContent } from "@/components/profile/VersusPanel";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useResponsiveVideo } from "@/hooks/useResponsiveVideo";
 import { MASCOT_USER_IDS } from "@/lib/excludedUsers";
@@ -59,37 +55,7 @@ interface PlayerProfileModalProps {
   userId: string | null;
 }
 
-const ACHIEVEMENT_ICONS: Record<string, string> = {
-  first_win: "🏆",
-  streak_5: "🔥",
-  streak_10: "⚡",
-  games_10: "🎮",
-  games_50: "🎯",
-  games_100: "👑",
-  perfect_game: "💎",
-  social_butterfly: "🦋",
-  trivia_master: "🧠",
-};
 
-/**
- * The profile's tab buttons.
- *
- * `data-[state=...]` rather than a prop: Radix puts the state on the trigger
- * itself, so the open tab and the closed ones can differ by more than one
- * shade — a raised white card against flat, dimmed, desaturated ones. The
- * shadcn default separated them by a hair of background, which is invisible
- * on a lavender sheet.
- */
-const TAB_TRIGGER_CLASS = [
-  "group flex flex-col items-center gap-0.5 rounded-xl px-2 py-2 transition-all",
-  "data-[state=active]:bg-background data-[state=active]:text-primary",
-  "data-[state=active]:font-semibold data-[state=active]:shadow-md",
-  "data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:bg-background/40",
-].join(" ");
-
-/** Desaturated and faded while its tab is closed, full colour when open. */
-const TAB_ICON_CLASS =
-  "w-9 h-9 transition-all group-data-[state=inactive]:opacity-60";
 
 export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileModalProps) {
   const { user, profile } = useAuth();
@@ -113,40 +79,6 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
   // Non-friends can only see avatar, name, add friend button, and public content
   const canSeePrivateInfo = data?.isFriend || data?.isCurrentUser;
 
-  // The Info tab exists only when it has something in it — which now includes
-  // your own profile. It carries two different things: the record between the
-  // two of you, which only a stranger's profile has, and the three facts —
-  // answered, success rate, strongest category — which every player has,
-  // yourself included. Hiding the tab from you hid your own numbers with it.
-  const showInfoTab = !!data && hasVersusContent(data.headToHead, data.facts);
-
-  /**
-   * Which tab is open, once the reader has picked one.
-   *
-   * The tabs cannot be left uncontrolled. `defaultValue` is read once, at
-   * mount, and at that moment the record and the facts are still in flight —
-   * so it always resolved to "trophies", and Info then appeared beside it
-   * already unselected. Null means "nobody has chosen", which is what lets
-   * the default below land late without overriding a real choice.
-   */
-  const [chosenTab, setChosenTab] = useState<string | null>(null);
-
-  // Opening a different player must not inherit the last one's tab. The modal
-  // renders null while closed rather than unmounting, so this state outlives
-  // both a close and a change of profile.
-  useEffect(() => {
-    setChosenTab(null);
-  }, [userId]);
-
-  // A chosen tab only counts while it still exists. Info can go away under
-  // the reader — a refetch that comes back with nothing to put in it — and a
-  // Tabs whose value names no trigger renders an empty panel with nothing
-  // selected, which is what "switching tabs is broken" looks like.
-  const fallbackTab = showInfoTab ? "info" : "trophies";
-  const activeTab =
-    chosenTab && (chosenTab !== "info" || showInfoTab)
-      ? chosenTab
-      : fallbackTab;
 
   const getFlagEmoji = (countryCode: string) => {
     const codePoints = countryCode
@@ -549,80 +481,12 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                   )}
                 </div>
 
-                {/* Tabs - Trophies (visible to everyone), Info when it has content */}
-                {/* Info leads when there is something in it — the record
-                    between you and what they are best at is what a visitor
-                    came for. It is dropped entirely rather than opened onto
-                    an empty panel: a player who has answered nothing has
-                    nothing to say here yet.
 
-                    The strip is styled here rather than left at the shadcn
-                    default. That default is a white pill on a near-white
-                    track, which on this lavender sheet made the open tab and
-                    the closed one all but the same object — you could not see
-                    which one you were on, or that pressing the other had done
-                    anything. The open one is now a white card with a shadow
-                    and its label in the brand colour; the closed ones sit flat
-                    and dimmed on a tinted track. */}
-                <Tabs value={activeTab} onValueChange={setChosenTab} className="px-4 pb-4">
-                  <TabsList
-                    className={`grid w-full mb-4 h-auto gap-1 rounded-2xl bg-primary/[0.07] p-1.5 ${
-                      showInfoTab ? "grid-cols-2" : "grid-cols-1"
-                    }`}
-                  >
-                    {showInfoTab && (
-                      <TabsTrigger value="info" className={TAB_TRIGGER_CLASS}>
-                        {/* The same 3D art the other tab uses, rather than a
-                            lucide glyph — crossed swords beside a tab labelled
-                            "info" read as a second Challenge button. 128px
-                            like its sibling, which covers w-9 at 3x. */}
-                        <img src={iconInfo} alt="" className={TAB_ICON_CLASS} />
-                        <span className="text-xs">{t("extra.infoTab")}</span>
-                      </TabsTrigger>
-                    )}
-                    <TabsTrigger value="trophies" className={TAB_TRIGGER_CLASS}>
-                      <img src={iconTrophy} alt="" className={TAB_ICON_CLASS} />
-                      <span className="text-xs">{t("extra.trophiesTab")}</span>
-                    </TabsTrigger>
-                  </TabsList>
-
-                  {showInfoTab && (
-                    <TabsContent value="info">
-                      <VersusPanel
-                        headToHead={data.headToHead}
-                        facts={data.facts}
-                        isSelf={data.isCurrentUser}
-                        me={{ nickname: profile?.nickname, avatarUrl: profile?.avatar_url }}
-                        them={{
-                          nickname: data.profile.nickname,
-                          avatarUrl: data.profile.avatar_url,
-                        }}
-                      />
-                    </TabsContent>
-                  )}
-
-                  <TabsContent value="trophies">
-                    {data.achievements.length === 0 ? (
-                      <div className="text-center py-8 text-muted-foreground">
-                        <p>{t("extra.noTrophiesYet")}</p>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-4 gap-3">
-                        {data.achievements.map((achievement) => (
-                          <motion.div
-                            key={achievement.id}
-                            initial={{ scale: 0.8, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            className="aspect-square rounded-xl bg-gradient-to-br from-amber-400/20 to-amber-600/20 border border-amber-500/30 flex items-center justify-center text-2xl"
-                          >
-                            {ACHIEVEMENT_ICONS[achievement.achievement_id] || "🏅"}
-                          </motion.div>
-                        ))}
-                      </div>
-                    )}
-                  </TabsContent>
-                </Tabs>
-
+                {/* The Info and Trophies tabs stood here — the record between
+                    the two of you, the three facts, the trophy grid. Gone
+                    (owner: "remove info and rewards section from players
+                    profiles"): a profile is who someone is and the way to
+                    play them, not a scoreboard. */}
                 {/* Recent Interactions - only for friends */}
                 {canSeePrivateInfo && !data.isCurrentUser && data.interactions.length > 0 && (
                   <div className="px-4 pb-6">
