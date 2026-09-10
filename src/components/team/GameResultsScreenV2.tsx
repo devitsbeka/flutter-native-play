@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import { type ReactNode, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -49,18 +49,10 @@ import { Lock } from "lucide-react";
 // would re-grant coins/stats and re-touch participant rows mid-next-round.
 const processedResultsGames = new Set<string>();
 
-/**
- * The podium, left to right: second, first, third. Indexes into the ranked
- * list — first place in the middle, taller than the two beside it.
- */
-const PODIUM_ORDER = [1, 0, 2] as const;
 /** How far above the footer its haze reaches (FooterHaze's top-[-120px]). */
 const FOOTER_HAZE_PX = 120;
 /** The screen's violet ground at the bottom of its gradient, as "r,g,b". */
 const RESULTS_HAZE_TINT = "155,137,245";
-/** Two players: side by side, centred - no empty third step (owner's ask). */
-const TWO_UP_ORDER = [0, 1] as const;
-
 /** The medal for the top three, the place number from fourth down. */
 const placeMark = (idx: number, rank: number) =>
   idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `#${rank}`;
@@ -103,6 +95,131 @@ function PotLine({ net, compact, tone }: { net: number | undefined; compact?: bo
       <img src={coinIcon} alt="" className={compact ? "w-3.5 h-3.5" : "w-4 h-4"} />
       {up ? `+${net}` : net}
     </span>
+  );
+}
+
+/**
+ * The results tile — the lobby's chunky shape (Figma 1157:10225): 24px
+ * corners, a rose wash and an 8px rose foot — and the eyebrow that titles
+ * what is in it. Shared by the round's standings, the earlier rounds and the
+ * match's final standings, so the three read as one thing.
+ */
+const TILE =
+  "rounded-[24px] border-2 border-[rgba(255,217,217,0.1)] bg-[rgba(255,222,222,0.2)] px-3 py-3 shadow-[0px_2px_8px_0px_rgba(102,51,153,0.06),0px_8px_0px_0px_rgba(232,185,185,0.4)]";
+const EYEBROW = "text-[12px] font-bold uppercase leading-[18px] tracking-[0.3px] text-white/60";
+
+/** A round's pot, on the tile's title row. */
+function PotPill({ amount }: { amount: number }) {
+  const { t } = useLanguage();
+  return (
+    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[12px] font-bold text-white">
+      <img src={coinIcon} alt="" className="h-3.5 w-3.5 object-contain" />
+      {t("extra.roundPotLabel", { amount: amount.toLocaleString() })}
+    </span>
+  );
+}
+
+/** A titled tile holding a list of StandingRows. */
+function StandingsCard({
+  title,
+  pot,
+  delay = 0.3,
+  children,
+}: {
+  title: string;
+  pot?: number;
+  delay?: number;
+  children: ReactNode;
+}) {
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay }}
+      className={TILE}
+      aria-label={title}
+    >
+      <div className="mb-2 flex items-center justify-between gap-2 px-1">
+        <p className={EYEBROW}>{title}</p>
+        {pot !== undefined && pot > 0 && <PotPill amount={pot} />}
+      </div>
+      <ol className="space-y-1">{children}</ol>
+    </motion.section>
+  );
+}
+
+/**
+ * The ring a place wears: gold, silver and bronze for the medals, plain
+ * white from fourth down. The same gold the podium used, so the winner's
+ * face is still the one thing on the screen that glows.
+ */
+const PLACE_RING = [
+  "border-[#fcd34d] shadow-[0_0_0_3px_rgba(251,191,36,0.35)]",
+  "border-[#d4d4d8] shadow-[0_0_0_3px_rgba(212,212,216,0.3)]",
+  "border-[#d9884f] shadow-[0_0_0_3px_rgba(217,136,79,0.3)]",
+] as const;
+
+/**
+ * One player's row: their place, their face, their name, and what the
+ * round did for them — the score under the name, the coins on the right.
+ *
+ * A fixed height and a truncating name: ten of these stack, and none of
+ * them cuts "TriviaMaster" down to "TriviaMas…" the way a third of the
+ * width did. Yours is the row with the wash, so it can be found at a glance
+ * in a list of ten.
+ */
+function StandingRow({
+  idx,
+  rank,
+  name,
+  avatarUrl,
+  isMe,
+  detail,
+  net,
+  onTap,
+}: {
+  idx: number;
+  rank: number;
+  name: string;
+  avatarUrl: string | null;
+  isMe: boolean;
+  /** Under the name: the score, where the row has one. */
+  detail?: string;
+  net: number | undefined;
+  onTap?: () => void;
+}) {
+  const ring = PLACE_RING[idx] ?? "border-white/40";
+  const tone: PotTone = idx === 0 ? "gold" : idx === 1 ? "silver" : idx === 2 ? "bronze" : "white";
+  return (
+    <li
+      className={cn(
+        "flex h-[60px] items-center gap-3 rounded-2xl px-2",
+        isMe && "bg-white/15",
+      )}
+    >
+      <span className="w-8 shrink-0 text-center font-display text-[20px] font-bold leading-none text-[#ffe9a8]">
+        {placeMark(idx, rank)}
+      </span>
+      <div
+        className={cn("shrink-0", onTap && "cursor-pointer active:scale-95 transition-transform")}
+        onClick={onTap}
+        role={onTap ? "button" : undefined}
+      >
+        <SafeAvatar
+          avatarUrl={avatarUrl}
+          fallback={name || "?"}
+          className={cn("h-11 w-11 border-2", ring)}
+          fallbackClassName="bg-gradient-to-br from-purple-400 to-purple-600 text-white text-base font-bold"
+        />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="truncate font-display text-[17px] font-bold leading-5 tracking-[-0.16px] text-white">
+          {name}
+        </p>
+        {detail && <p className="truncate text-[12px] leading-4 text-white/60">{detail}</p>}
+      </div>
+      <PotLine net={net} compact tone={tone} />
+    </li>
   );
 }
 
@@ -368,6 +485,13 @@ export function GameResultsScreenV2() {
   const hasPotLines = Object.keys(potLines).length > 0;
   const matchRounds = useMatchRounds(currentRoom?.id, matchInfo, hasPotLines, settleRoomRound);
   const matchStandings = matchRounds && matchRounds.length >= 2 && matchOver ? matchTotals(matchRounds) : null;
+  /**
+   * The rounds the match has already told: every one but this, which is
+   * the standings above and is not told twice.
+   */
+  const earlierRounds = (matchRounds ?? []).filter((r) => r.id !== currentRoom?.current_game_id);
+  /** Everything staked into this round — the pot the standings were played for. */
+  const thisRoundPot = Object.values(potLines).reduce((sum, line) => sum + line.staked, 0);
   /** A past round's icon, off its stored name, when its questions carried none. */
   const iconForCategoryName = useCategoryIconByName();
 
@@ -890,11 +1014,21 @@ export function GameResultsScreenV2() {
         </motion.div>
       )}
 
-      {/* Middle Section: the podium, then everyone from fourth down */}
-      <div className="flex-1 min-h-0 flex flex-col items-center gap-3 px-4 pt-4 overflow-hidden">
+      {/* Middle Section: the standings, as a list.
+
+          Everyone in one ranked list — a medal or a place, the face, the
+          name, the score, and what the round paid — one row per player,
+          however many there are. It replaced a podium of three faces with
+          the rest in tiles under it and, under those, every round's seats
+          wrapped across the width in a row: three shapes for the same
+          people, names cut to "TriviaMas…" by narrow columns, the pair
+          repeated twice on a two-player screen, and a wall of 24px faces
+          at ten (owner: "we need more clear and balanced results page, show
+          players as list not besides, what if there are 10 players"). */}
+      <div className="flex-1 min-h-0 flex flex-col items-center px-4 pt-4 overflow-hidden">
         {/* A private round still out with somebody. The scores so far are
             right there under this line — they are real, they are just not
-            everyone's yet — and the medals carry no coin pills, because
+            everyone's yet — and the rows carry no coin pills, because
             nothing has been staked or paid while the round is open. Said
             here rather than as a toast: it is the answer to "where are my
             coins", and it has to be on screen when that is asked. */}
@@ -902,162 +1036,69 @@ export function GameResultsScreenV2() {
           <motion.p
             initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
-            className="shrink-0 rounded-full bg-white/15 px-4 py-2 text-center font-[Nunito] text-sm font-bold text-white/90"
+            className="mb-3 shrink-0 rounded-full bg-white/15 px-4 py-2 text-center font-[Nunito] text-sm font-bold text-white/90"
           >
             {t("extra.roundWaitingForPlayers", { count: stillOut })}
           </motion.p>
         )}
-        {/* The podium: second on the left, first in the middle and taller,
-            third on the right — a medal under each face and, under the
-            medal, what the place was worth (owner: "show first 3 places
-            besides, first place in the middle bigger than 2,3 places
-            avatars ... show medals below their avatars - below medals show
-            coins"). A grid, not a flex row, so the steps keep their
-            places. Two players get two columns, centred: the three-step
-            grid left the pair huddled on the left with an empty step
-            beside them (owner: "show avatars centered"). */}
+
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25 }}
-          className={cn(
-            "w-full grid items-end flex-shrink-0 pt-2",
-            rankedParticipants.length === 2 ? "max-w-[260px] grid-cols-2 gap-6" : "max-w-[362px] grid-cols-3 gap-2",
-          )}
+          className="w-full max-w-[468px] flex-1 min-h-0 overflow-y-auto"
+          style={{ paddingBottom: footerHeight + FOOTER_HAZE_PX }}
         >
-          {(rankedParticipants.length === 2 ? TWO_UP_ORDER : PODIUM_ORDER).map((idx) => {
-            const p = rankedParticipants[idx];
-            if (!p) return <div key={idx} />;
-            const first = idx === 0;
-            return (
-              <div key={p.user_id} className="flex flex-col items-center min-w-0">
-                {/* The design's faces (1157:10233..10244): every place in
-                    the gold ring, first at 110px and the two beside it at
-                    76, with the medal hanging off the bottom of the ring
-                    rather than stacked under it. The wrapper reserves the
-                    half of the medal that hangs below. */}
-                <div
-                  className={cn(
-                    "relative",
-                    first ? "mb-[34px]" : "mb-[24px]",
-                    !p.isMe && "cursor-pointer active:scale-95 transition-transform",
-                  )}
-                  onClick={!p.isMe ? () => openProfile(p.user_id) : undefined}
-                  role={!p.isMe ? "button" : undefined}
-                >
-                  <SafeAvatar
-                    avatarUrl={p.avatar_url}
-                    fallback={p.nickname || "?"}
-                    className={cn(
-                      "border-2 border-[#fcd34d] shadow-[0_0_0_4px_rgba(251,191,36,0.35)]",
-                      first ? "w-[110px] h-[110px]" : "w-[76px] h-[76px]",
-                    )}
-                    fallbackClassName={cn(
-                      "bg-gradient-to-br from-purple-400 to-purple-600 text-white font-bold",
-                      first ? "text-3xl" : "text-xl",
-                    )}
-                  />
-                  <span
-                    className={cn(
-                      "absolute left-1/2 -translate-x-1/2 leading-none",
-                      // Lower than the design's half-and-half: the emoji's
-                      // ribbon rides above its disc, so a medal hung by its
-                      // middle covered half the face (owner: "move down the
-                      // medals a little"). About a third of it over the ring.
-                      first ? "-bottom-[32px] text-[46px]" : "-bottom-[22px] text-[32px]",
-                    )}
-                  >
-                    {placeMark(idx, p.rank)}
-                  </span>
-                </div>
-                <span className="w-full text-center font-display text-[22px] font-bold leading-6 tracking-[-0.16px] text-white truncate">
-                  {p.isMe ? t("game.you") : p.nickname}
-                </span>
-                <PotLine net={netFor(p)} tone={idx === 0 ? "gold" : idx === 1 ? "silver" : "bronze"} />
-              </div>
-            );
-          })}
-        </motion.div>
+          <div className="space-y-[17px]">
+            {/* This round. The tile is the lobby's chunky shape — the rose
+                wash and the 8px rose foot — with the list inside it. */}
+            <StandingsCard
+              title={
+                matchInfo
+                  ? t("extra.matchRoundLabel", { game: matchInfo.game, round: matchInfo.round })
+                  : t("extra.resultsStandingsTitle")
+              }
+              pot={thisRoundPot}
+            >
+              {rankedParticipants.map((p, idx) => (
+                <StandingRow
+                  key={p.user_id}
+                  idx={idx}
+                  rank={p.rank}
+                  name={p.isMe ? t("game.you") : p.nickname}
+                  avatarUrl={p.avatar_url}
+                  isMe={p.isMe}
+                  detail={t("extra.resultsPoints", { n: p.score })}
+                  net={netFor(p)}
+                  onTap={!p.isMe ? () => openProfile(p.user_id) : undefined}
+                />
+              ))}
+            </StandingsCard>
 
-        {/* Everyone from fourth down, then the match round by round. Not the
-            top three again — they are on the podium — and nothing at all
-            when the room has three or fewer and there are no rounds to
-            tell, so the podium is not followed by an empty card. */}
-        {(rankedParticipants.length > PODIUM_ORDER.length || (matchRounds && matchInfo)) && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="w-full max-w-[468px] flex-1 min-h-0 overflow-y-auto"
-            style={{ paddingBottom: footerHeight + FOOTER_HAZE_PX }}
-          >
-            {/* The design's tiles (1157:10225): the lobby's chunky shape —
-                24/24/24/54 corners, a rose wash and an 8px rose foot — with
-                the place on the left, the face in the same gold ring the
-                podium wears, the name across the middle and the coins on
-                the right. */}
-            <div className="space-y-[17px]">
-            {rankedParticipants.slice(PODIUM_ORDER.length).map((p) => (
-              <div
-                key={p.user_id}
-                className={cn(
-                  "flex h-[71px] items-center gap-3 rounded-tl-[24px] rounded-tr-[24px] rounded-bl-[24px] rounded-br-[54px] border-2 border-[rgba(255,217,217,0.1)] pl-3 pr-5 shadow-[0px_2px_8px_0px_rgba(102,51,153,0.06),0px_8px_0px_0px_rgba(232,185,185,0.4)]",
-                  p.isMe ? "bg-[rgba(255,222,222,0.32)]" : "bg-[rgba(255,222,222,0.2)]",
-                )}
-              >
-                {/* The place number, first on the row (1157:10226). */}
-                <span className="w-[44px] shrink-0 text-center font-display text-[20px] font-bold uppercase text-[#6350c9]">
-                  {placeMark(p.rank - 1, p.rank)}
-                </span>
-                {/* Avatar — tap opens the player's profile. No crown: it
-                    means HOST everywhere else in the app. */}
-                <div
-                  className={cn("relative", !p.isMe && "cursor-pointer active:scale-95 transition-transform")}
-                  onClick={!p.isMe ? () => openProfile(p.user_id) : undefined}
-                  role={!p.isMe ? "button" : undefined}
-                >
-                  <SafeAvatar
-                    avatarUrl={p.avatar_url}
-                    fallback={p.nickname || "?"}
-                    className="w-[50px] h-[50px] border-2 border-[#fcd34d] shadow-[0_0_0_4px_rgba(251,191,36,0.35)]"
-                    fallbackClassName="bg-gradient-to-br from-purple-400 to-purple-600 text-white text-base font-bold"
-                  />
-                </div>
-
-                <span className="min-w-0 flex-1 truncate text-center font-display text-[22px] font-bold tracking-[-0.16px] text-white">
-                  {p.isMe ? t("game.you") : p.nickname}
-                </span>
-
-                <PotLine net={netFor(p)} tone="white" />
-              </div>
-            ))}
-
-            {/* The match, round by round (useMatchRounds): each round's
-                category and pot, and under it every seat with what the
-                round paid them — the winner first, wearing the medal, the
-                rest in the grey the podium uses for a place that did not
-                pay. One tile in the list's own shape, so it reads as part
-                of the results rather than a panel over them. Once the
-                last round is in, the match's totals close it. */}
-            {matchRounds && matchInfo && (
+            {/* The match's EARLIER rounds (useMatchRounds): each round's
+                category and pot, and under it every seat in a column with
+                what the round paid them, the winner first. This round is
+                the list above and is not told twice. Nothing at all on a
+                match of one round (owner: "show what happened in rounds,
+                per match has its pot - we need to show it clear who won
+                who lose per round"). */}
+            {matchInfo && earlierRounds.length > 0 && (
               <motion.section
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.45 }}
-                className="rounded-[24px] border-2 border-[rgba(255,217,217,0.1)] bg-[rgba(255,222,222,0.2)] px-4 py-3 shadow-[0px_2px_8px_0px_rgba(102,51,153,0.06),0px_8px_0px_0px_rgba(232,185,185,0.4)]"
+                transition={{ delay: 0.4 }}
+                className={TILE}
                 aria-label={t("extra.matchRoundsTitle", { game: matchInfo.game })}
               >
-                <p className="mb-2 text-[12px] font-bold uppercase leading-[18px] tracking-[0.3px] text-white/60">
-                  {t("extra.matchRoundsTitle", { game: matchInfo.game })}
-                </p>
-                <ol className="divide-y divide-white/15">
-                  {matchRounds.map((round) => {
+                <p className={EYEBROW}>{t("extra.matchRoundsTitle", { game: matchInfo.game })}</p>
+                <ol className="mt-2 divide-y divide-white/15">
+                  {earlierRounds.map((round) => {
                     const undecided = isUndecidedRound(null, round.categoryName);
                     const slug = undecided
                       ? UNDECIDED_ICON_SLUG
                       : round.iconSlug ?? iconForCategoryName(round.categoryName) ?? UNDECIDED_ICON_SLUG;
                     return (
-                      <li key={round.id} className="py-2.5 first:pt-0 last:pb-0">
+                      <li key={round.id} className="py-3 first:pt-0 last:pb-0">
                         <div className="flex items-center gap-2">
                           <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white/15">
                             <DynamicIcon slug={slug} size={20} shadow={false} />
@@ -1070,27 +1111,24 @@ export function GameResultsScreenV2() {
                               {t("lobby.uRoundLabel", { count: round.number })}
                             </span>
                           </span>
-                          {round.pot > 0 && (
-                            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[12px] font-bold text-white">
-                              <img src={coinIcon} alt="" className="h-3.5 w-3.5 object-contain" />
-                              {t("extra.roundPotLabel", { amount: round.pot.toLocaleString() })}
-                            </span>
-                          )}
+                          {round.pot > 0 && <PotPill amount={round.pot} />}
                         </div>
-                        {/* Who won it and who lost it: every seat, the winner first. */}
-                        <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1.5 pl-10">
+                        {/* Every seat, one under the other — never wrapped
+                            across the row, which is what put ten faces at
+                            24px in a block nobody could read. */}
+                        <ul className="mt-2 space-y-1">
                           {round.seats.map((seat, i) => {
                             const who = participants.find((p) => p.user_id === seat.user_id);
                             return (
-                              <li key={seat.user_id} className="flex items-center gap-1.5">
-                                <span className="w-5 text-center text-[13px] leading-none">{placeMark(i, i + 1)}</span>
+                              <li key={seat.user_id} className="flex h-9 items-center gap-2 rounded-xl px-2">
+                                <span className="w-7 shrink-0 text-center text-[15px] leading-none">{placeMark(i, i + 1)}</span>
                                 <SafeAvatar
                                   avatarUrl={who?.avatar_url ?? null}
                                   fallback={who?.nickname || "?"}
-                                  className="h-6 w-6 border border-white/40"
+                                  className="h-7 w-7 shrink-0 border border-white/40"
                                   fallbackClassName="bg-gradient-to-br from-purple-400 to-purple-600 text-white text-[10px] font-bold"
                                 />
-                                <span className="max-w-[96px] truncate text-[13px] font-semibold text-white">
+                                <span className="min-w-0 flex-1 truncate text-[14px] font-semibold text-white">
                                   {seat.user_id === user?.id ? t("game.you") : who?.nickname || "?"}
                                 </span>
                                 <PotLine net={seat.net} compact tone={seat.net > 0 ? "gold" : "white"} />
@@ -1102,42 +1140,38 @@ export function GameResultsScreenV2() {
                     );
                   })}
                 </ol>
-                {/* The whole match, once its last round is in: every seat's
-                    coins over all of its rounds, first to last. */}
-                {matchStandings && (
-                  <div className="mt-3 border-t border-white/25 pt-3">
-                    <p className="mb-1.5 text-[12px] font-bold uppercase leading-[18px] tracking-[0.3px] text-white/60">
-                      {t("extra.matchStandingsTitle", { game: matchInfo.game, rounds: matchInfo.roundIds.length })}
-                    </p>
-                    <ol className="space-y-1.5">
-                      {matchStandings.map((row, i) => {
-                        const seat = participants.find((p) => p.user_id === row.user_id);
-                        return (
-                          <li key={row.user_id} className="flex items-center gap-2">
-                            <span className="w-6 text-center text-sm leading-none">{placeMark(i, i + 1)}</span>
-                            <SafeAvatar
-                              avatarUrl={seat?.avatar_url ?? null}
-                              fallback={seat?.nickname || "?"}
-                              className="w-7 h-7 border border-white/40"
-                              fallbackClassName="bg-gradient-to-br from-purple-400 to-purple-600 text-white text-xs font-bold"
-                            />
-                            <span className="min-w-0 flex-1 truncate text-sm font-semibold text-white">
-                              {row.user_id === user?.id ? t("game.you") : seat?.nickname || "?"}
-                            </span>
-                            <PotLine net={row.net} compact tone={row.net > 0 ? "gold" : "white"} />
-                          </li>
-                        );
-                      })}
-                    </ol>
-                  </div>
-                )}
               </motion.section>
             )}
-            </div>
-          </motion.div>
-        )}
-      </div>
 
+            {/* The whole match, once its last round is in: every seat's
+                coins over all of its rounds, first to last — the same list
+                the round wears, so the two read as one thing. */}
+            {matchStandings && matchInfo && (
+              <StandingsCard
+                title={t("extra.matchStandingsTitle", { game: matchInfo.game, rounds: matchInfo.roundIds.length })}
+                delay={0.5}
+              >
+                {matchStandings.map((row, i) => {
+                  const seat = participants.find((p) => p.user_id === row.user_id);
+                  const me = row.user_id === user?.id;
+                  return (
+                    <StandingRow
+                      key={row.user_id}
+                      idx={i}
+                      rank={i + 1}
+                      name={me ? t("game.you") : seat?.nickname || "?"}
+                      avatarUrl={seat?.avatar_url ?? null}
+                      isMe={me}
+                      net={row.net}
+                      onTap={!me ? () => openProfile(row.user_id) : undefined}
+                    />
+                  );
+                })}
+              </StandingsCard>
+            )}
+          </div>
+        </motion.div>
+      </div>
       {/* Bottom Section: Next Round Preview + Buttons. The home-indicator
           inset is already the root's own padding (safe-bleed), so this
           carries plain spacing — env(safe-area-inset-bottom) here again
