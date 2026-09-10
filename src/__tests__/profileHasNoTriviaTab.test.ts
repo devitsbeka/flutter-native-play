@@ -27,9 +27,8 @@ describe("PlayerProfileModal has no quizzes tab", () => {
     expect(modal).not.toMatch(/showTriviasTab/);
   });
 
-  it("keeps its other two tabs", () => {
-    expect(modal).toMatch(/<TabsTrigger value="info"/);
-    expect(modal).toMatch(/<TabsTrigger value="trophies"/);
+  it("and no tabs at all now — Info and Trophies went too (profileHasNoTabs.test.ts)", () => {
+    expect(modal).not.toMatch(/<Tabs\b/);
   });
 
   it("no longer reads trivias or collections off the profile data", () => {
