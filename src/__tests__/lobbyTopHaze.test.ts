@@ -54,7 +54,7 @@ describe("the lobby", () => {
     // Chromium, so padding put the tabs a whole clearance too low (owner:
     // "we don't need that much space between category row and game rules /
     // players row"). A spacer element is the same in every engine.
-    expect(lobby).toMatch(/className="relative z-10 mt-\[calc\(var\(--chip-clearance\)\*-1\)\] min-h-0 flex-1 overflow-y-auto overflow-x-hidden"/);
+    expect(lobby).toMatch(/className="relative z-10 mt-\[calc\(var\(--chip-clearance\)\*-1\)\] min-h-0 flex-1 overflow-y-auto overflow-x-hidden \[overflow-anchor:none\]"/);
     expect(lobby).not.toMatch(/pt-\[var\(--chip-clearance\)\]/);
     expect(lobby).toMatch(/<div aria-hidden className="shrink-0" style=\{\{ height: "var\(--chip-clearance\)" \}\} \/>/);
     expect(lobby).toMatch(/style=\{\{ paddingBottom: footerHeight \+ FOOTER_HAZE_PX \}\}/);
@@ -80,7 +80,8 @@ describe("the card can always reach the chip", () => {
     // scrolled up to the tabs' line (owner: "when i switch to players
     // scroll stops in the middle, make sure scroll goes all the way up").
     expect(lobby).toMatch(/const \[reachSpacer, setReachSpacer\] = useState\(0\);/);
-    expect(lobby).toMatch(/const stickyLine = chipClearance \+ 10;\s*\n\s*const overflow = column\.offsetHeight \+ footerHeight \+ FOOTER_HAZE_PX - scroller\.clientHeight;\s*\n\s*const need = card\.offsetTop - stickyLine;\s*\n\s*setReachSpacer\(Math\.max\(0, Math\.ceil\(need - overflow\)\)\);/);
+    expect(lobby).toMatch(/const stickyLine = chipClearance \+ 10;\s*\n\s*const natural = column\.offsetHeight \+ footerHeight \+ FOOTER_HAZE_PX - scroller\.clientHeight;\s*\n\s*const need = card\.offsetTop - stickyLine;/);
+    expect(lobby).toMatch(/Math\.ceil\(need - natural\)/);
     // Outside the min-h-full column, so the at-rest layout is untouched.
     expect(lobby).toMatch(/<\/motion\.section>\s*\n\s*<\/div>\s*\n\s*\{\/\*[^*]*\*\/\}\s*\n\s*<div aria-hidden className="shrink-0" style=\{\{ height: reachSpacer \}\} \/>\s*\n\s*<\/div>/);
     expect(lobby).toMatch(/<div ref=\{columnRef\} className="mx-auto flex min-h-full w-full max-w-\[700px\] flex-col px-4 md:max-w-\[520px\]">/);
@@ -93,3 +94,30 @@ describe("the chip's label", () => {
     expect(lobby).toMatch(/font-display text-\[18px\] leading-\[26px\] text-\[#402666\]/);
   });
 });
+
+describe("switching tabs moves nothing but the tab", () => {
+  // Four things conspired to make the page jump on a switch (owner: "when
+  // i switch between tabs, page jumps a little"), and each is pinned.
+  it("the leaving tab is lifted out of the flow, so the card changes height once", () => {
+    expect(lobby).toMatch(/<AnimatePresence mode="popLayout" initial=\{false\}>\s*\n\s*\{tab === "rules" \? \(/);
+    expect(lobby).not.toMatch(/<AnimatePresence mode="wait" initial=\{false\}>\s*\n\s*\{tab === "rules"/);
+  });
+
+  it("the title block is held at its height from the first switch, so the card grows at its bottom only", () => {
+    expect(lobby).toMatch(/const switchTab = \(next: LobbyTab\) => \{\s*\n\s*if \(next === tab\) return;\s*\n\s*if \(titleHeight === null && titleRef\.current\) setTitleHeight\(titleRef\.current\.offsetHeight\);/);
+    expect(lobby).toMatch(/className=\{cn\("flex min-h-\[12px\] flex-col items-center pt-\[39px\]", titleHeight === null && "flex-1"\)\}\s*\n\s*style=\{titleHeight === null \? undefined : \{ minHeight: titleHeight \}\}/);
+    expect(lobby).toMatch(/onClick=\{\(\) => switchTab\(key\)\}/);
+  });
+
+  it("the reader's scroll position is noted before the switch, held by the spacer, and put back", () => {
+    expect(lobby).toMatch(/if \(scrollerRef\.current\) keepScrollRef\.current = scrollerRef\.current\.scrollTop;\s*\n\s*setTab\(next\);/);
+    expect(lobby).toMatch(/const keep = Math\.max\(scroller\.scrollTop, keepScrollRef\.current \?\? 0\);\s*\n\s*return Math\.max\(0, Math\.ceil\(need - natural\), Math\.ceil\(keep - natural\)\);/);
+    expect(lobby).toMatch(/useLayoutEffect\(\(\) => \{\s*\n\s*if \(keepScrollRef\.current === null \|\| !scrollerRef\.current\) return;\s*\n\s*scrollerRef\.current\.scrollTop = keepScrollRef\.current;\s*\n\s*keepScrollRef\.current = null;\s*\n\s*\}, \[reachSpacer\]\);/);
+    expect(lobby).toMatch(/scroller\.addEventListener\("scroll", measureReach, \{ passive: true \}\);/);
+  });
+
+  it("and the browser's scroll anchoring is off, which scrolled to the top when the leaving tab was removed", () => {
+    expect(lobby).toMatch(/overflow-y-auto overflow-x-hidden \[overflow-anchor:none\]"/);
+  });
+});
+

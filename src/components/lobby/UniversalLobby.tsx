@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { useLayoutEffect, useRef, useState, type ReactNode, useCallback } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { ArrowLeft, Bell, BellRing, Check, Loader2, Pencil, Plus, UserPlus, X } from "lucide-react";
 import SpotlightSearch from "@/components/search/SpotlightSearch";
@@ -493,6 +493,35 @@ export function UniversalLobby({
   const columnRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLElement>(null);
   const [reachSpacer, setReachSpacer] = useState(0);
+  /**
+   * Why the tabs bar used to move when a tab was switched.
+   *
+   * The title block above the card is flex-1, so the card sits at the foot
+   * of the screen - and a tab with less in it made a shorter card, which
+   * the title block grew to keep at the foot, carrying the tabs bar down
+   * with it. So on the first switch the title block is held at the height
+   * it had, and from then on the card changes height at its BOTTOM only.
+   * Held as min-height, so a longer room name still fits. Let go again when
+   * the scroller itself changes size (a rotation), which re-lays the whole
+   * screen anyway.
+   */
+  const titleRef = useRef<HTMLDivElement>(null);
+  const [titleHeight, setTitleHeight] = useState<number | null>(null);
+  /**
+   * Where the reader was when they switched tabs.
+   *
+   * Reading scrollTop after the switch is too late: laying out the shorter
+   * card clamps it to the new end before any effect can look. So the
+   * handler notes it first; the spacer is sized to hold that position, and
+   * once the spacer is in the DOM the position is put back.
+   */
+  const keepScrollRef = useRef<number | null>(null);
+  const switchTab = (next: LobbyTab) => {
+    if (next === tab) return;
+    if (titleHeight === null && titleRef.current) setTitleHeight(titleRef.current.offsetHeight);
+    if (scrollerRef.current) keepScrollRef.current = scrollerRef.current.scrollTop;
+    setTab(next);
+  };
   const footerRef = useRef<HTMLDivElement>(null);
   const [footerHeight, setFooterHeight] = useState(0);
   useLayoutEffect(() => {
@@ -505,25 +534,82 @@ export function UniversalLobby({
     observer.observe(node);
     return () => observer.disconnect();
   }, []);
+  /**
+   * The spacer is measured synchronously on a tab switch, and it also keeps
+   * the scroll from clamping.
+   *
+   * A ResizeObserver reports after paint - one frame after a shorter tab
+   * has shrunk the card, the browser has already clamped scrollTop to the
+   * new end and the rows under the bar have jumped. Measuring in a layout
+   * effect keyed on the tab happens before that paint. And when the reader
+   * is scrolled past where the new content ends, the spacer holds that
+   * room (scrollTop less the natural end) so nothing moves under the bar;
+   * it gives the room back as they scroll up.
+   */
+  const computeReach = useCallback((): number | null => {
+    const scroller = scrollerRef.current;
+    const column = columnRef.current;
+    const card = cardRef.current;
+    if (!scroller || !column || !card) return null;
+    const stickyLine = chipClearance + 10;
+    const natural = column.offsetHeight + footerHeight + FOOTER_HAZE_PX - scroller.clientHeight;
+    const need = card.offsetTop - stickyLine;
+    const keep = Math.max(scroller.scrollTop, keepScrollRef.current ?? 0);
+    return Math.max(0, Math.ceil(need - natural), Math.ceil(keep - natural));
+  }, [chipClearance, footerHeight]);
+  const measureReach = useCallback(() => {
+    const v = computeReach();
+    if (v !== null) setReachSpacer(v);
+  }, [computeReach]);
+  // On a tab switch, before paint: size the spacer to hold the position the
+  // reader had. If it already does, put the position back right here.
+  useLayoutEffect(() => {
+    const v = computeReach();
+    if (v === null) return;
+    if (v !== reachSpacer) {
+      setReachSpacer(v);
+      return;
+    }
+    if (keepScrollRef.current !== null && scrollerRef.current) {
+      scrollerRef.current.scrollTop = keepScrollRef.current;
+      keepScrollRef.current = null;
+    }
+    // reachSpacer is read, not depended on: the effect is about the switch.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [computeReach, tab]);
+  // ...and once the spacer that holds it is in the DOM, put it back.
+  useLayoutEffect(() => {
+    if (keepScrollRef.current === null || !scrollerRef.current) return;
+    scrollerRef.current.scrollTop = keepScrollRef.current;
+    keepScrollRef.current = null;
+  }, [reachSpacer]);
   useLayoutEffect(() => {
     const scroller = scrollerRef.current;
     const column = columnRef.current;
     const card = cardRef.current;
     if (!scroller || !column || !card) return;
-    const read = () => {
-      const stickyLine = chipClearance + 10;
-      const overflow = column.offsetHeight + footerHeight + FOOTER_HAZE_PX - scroller.clientHeight;
-      const need = card.offsetTop - stickyLine;
-      setReachSpacer(Math.max(0, Math.ceil(need - overflow)));
+    let width = scroller.clientWidth;
+    let height = scroller.clientHeight;
+    const onResize = () => {
+      // The screen itself changed shape: let the title block breathe again.
+      if (scroller.clientWidth !== width || scroller.clientHeight !== height) {
+        width = scroller.clientWidth;
+        height = scroller.clientHeight;
+        setTitleHeight(null);
+      }
+      measureReach();
     };
-    read();
-    if (typeof ResizeObserver === "undefined") return;
-    const observer = new ResizeObserver(read);
+    scroller.addEventListener("scroll", measureReach, { passive: true });
+    if (typeof ResizeObserver === "undefined") return () => scroller.removeEventListener("scroll", measureReach);
+    const observer = new ResizeObserver(onResize);
     observer.observe(scroller);
     observer.observe(column);
     observer.observe(card);
-    return () => observer.disconnect();
-  }, [chipClearance, footerHeight]);
+    return () => {
+      scroller.removeEventListener("scroll", measureReach);
+      observer.disconnect();
+    };
+  }, [measureReach]);
 
   // A disabled Start has to say WHY, and say it where the reason cannot be
   // pushed under the fold: above the button rather than below it. The owner
@@ -783,7 +869,12 @@ export function UniversalLobby({
         // from inside a scroller's padding in Chromium, and the tabs landed
         // a whole clearance too low (owner: "we don't need that much space
         // between category row and game rules / players row").
-        className="relative z-10 mt-[calc(var(--chip-clearance)*-1)] min-h-0 flex-1 overflow-y-auto overflow-x-hidden"
+        // [overflow-anchor:none]: the leaving tab's content is lifted out of
+        // the flow while it fades (popLayout) and then removed, and Chromium's
+        // scroll anchoring, having picked its anchor inside that content,
+        // answered the removal by scrolling to the top. Nothing above the
+        // viewport ever changes height here, so anchoring has nothing to do.
+        className="relative z-10 mt-[calc(var(--chip-clearance)*-1)] min-h-0 flex-1 overflow-y-auto overflow-x-hidden [overflow-anchor:none]"
         // The footer floats over this list now, so the list has to end above
         // it — measured rather than guessed, because the footer is one line
         // tall for a guest and three for a host with a caption under a
@@ -808,8 +899,13 @@ export function UniversalLobby({
               than the frame — there is no free space to claim — and the 12px
               floor keeps the emblem off the category chip in that case. */}
           <motion.div
+            ref={titleRef}
             {...arrive(0.3)}
-            className="flex min-h-[12px] flex-1 flex-col items-center pt-[39px]"
+            // flex-1 until the first tab switch, then held at the height it
+            // had (see switchTab): the card no longer rides up and down the
+            // screen as the tabs change what is in it.
+            className={cn("flex min-h-[12px] flex-col items-center pt-[39px]", titleHeight === null && "flex-1")}
+            style={titleHeight === null ? undefined : { minHeight: titleHeight }}
           >
             {onRename ? (
               <motion.button
@@ -893,7 +989,7 @@ export function UniversalLobby({
                   <button
                     key={key}
                     type="button"
-                    onClick={() => setTab(key)}
+                    onClick={() => switchTab(key)}
                     className={cn(
                       "relative flex h-[52px] flex-1 items-center justify-center px-[10px] text-center font-display text-[18px] leading-[26px] text-[#402666]",
                       tabRadius,
@@ -919,7 +1015,14 @@ export function UniversalLobby({
               </div>
             </div>
 
-            <AnimatePresence mode="wait" initial={false}>
+            {/* popLayout, not wait: the leaving tab is lifted out of the
+                flow at once and the arriving one laid out in the same
+                frame, so the card changes height ONCE. Under "wait" it
+                changed twice - to the bar alone while the old content
+                faded, then to the new content - and the card, pushed to
+                the foot of the screen, bounced the tabs bar with it
+                (owner: "when i switch between tabs, page jumps a little"). */}
+            <AnimatePresence mode="popLayout" initial={false}>
               {tab === "rules" ? (
                 <motion.div
                   key="rules"

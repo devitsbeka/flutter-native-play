@@ -141,7 +141,8 @@ describe("the arena's heading and its VS", () => {
     // now, above the title — and the 12px floor is what keeps the card off
     // the fold when the content is taller than the frame and there is no
     // slack to take.
-    expect(universal).toMatch(/min-h-\[12px\] flex-1/);
+    // flex-1 until the first tab switch; then held (lobbyTopHaze.test).
+    expect(universal).toMatch(/"flex min-h-\[12px\] flex-col items-center pt-\[39px\]", titleHeight === null && "flex-1"/);
     expect(universal).toMatch(/mb-\[20px\] mt-\[16px\]/);
   });
 });
@@ -151,7 +152,7 @@ describe("the lobby's heading carries the count", () => {
     // The one number that says whether this room can start used to be at
     // the foot of the players tab, below every bench and the hint — three
     // scrolls from the room's own name, and not on the rules tab at all.
-    expect(universal).toMatch(/className="flex min-h-\[12px\] flex-1 flex-col items-center pt-\[39px\]"/);
+    expect(universal).toMatch(/className=\{cn\("flex min-h-\[12px\] flex-col items-center pt-\[39px\]", titleHeight === null && "flex-1"\)\}/);
     // Seated, not taken: `taken` counts an invitation nobody has accepted,
     // so a host alone with two out read "3/10 players" over a room that
     // could not start (owner: "I CAN'T start the game, why is that?").
