@@ -4221,6 +4221,7 @@ export const de: KaTranslations = {
     matchRoundLabel: "Spiel {game}, Runde {round}",
     matchStandingsTitle: "Spiel {game} · {rounds} Runden · Endstand",
     matchRoundsTitle: "Spiel {game} · Runde für Runde",
+    resultsRoundByRoundCta: "Ergebnisse Runde für Runde ansehen",
     resultsStandingsTitle: "Rangliste",
     resultsAllGamesTitle: "Alle Spiele · {rounds} Runden · Gesamt",
     resultsPoints: "{n} Pkt.",

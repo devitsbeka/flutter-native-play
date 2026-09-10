@@ -10,8 +10,9 @@
  *  - Every podium face wears the gold ring, first at 110px and the two
  *    beside it at 76, and the medal hangs off the bottom of the ring rather
  *    than stacking under it. The name is 22px display, and under it the
- *    place's coins in a pill of its own metal — gold, silver, bronze —
- *    on a 3px lilac foot.
+ *    place's coins. (The design drew those in the place's own metal; the
+ *    owner later chose the quick game's green-and-red pill for every
+ *    results screen instead — resultsMatch.)
  *  - From fourth down, each seat is one of the lobby's chunky tiles
  *    (24/24/24/54 corners, a rose wash, an 8px rose foot): the place in
  *    violet on the left, the face in the same gold ring, the name across
@@ -47,9 +48,9 @@ describe("the podium", () => {
     expect(results).toMatch(/first \? "mb-\[34px\]" : "mb-\[24px\]"/);
   });
 
-  it("the name at 22px display, then the place's coins in its own metal", () => {
+  it("the name at 22px display, then the place's coins", () => {
     expect(results).toMatch(/w-full text-center font-display text-\[22px\] font-bold leading-6 tracking-\[-0\.16px\] text-white truncate/);
-    expect(results).toMatch(/<PotLine net=\{netFor\(p\)\} tone=\{idx === 0 \? "gold" : idx === 1 \? "silver" : "bronze"\} \/>/);
+    expect(results).toMatch(/<PotLine net=\{netFor\(p\)\} \/>/);
   });
 
   it("no score under the name — the design carries the coins alone", () => {
@@ -58,13 +59,12 @@ describe("the podium", () => {
 });
 
 describe("the coin pills", () => {
-  it("come in the design's four metals, each on a lilac foot", () => {
-    expect(results).toMatch(/type PotTone = "gold" \| "silver" \| "bronze" \| "white";/);
-    expect(results).toMatch(/gold: \{ className: "text-white", style: \{ backgroundImage: "linear-gradient\(-42deg, #ffbb00 37%, #997000 196%\)" \} \}/);
-    expect(results).toMatch(/silver: \{ className: "text-white", style: \{ backgroundImage: "linear-gradient\(-47deg, #8b8b8b 7%, #424242 337%, #252525 357%\)" \} \}/);
-    expect(results).toMatch(/bronze: \{ className: "bg-\[#9a4312\] text-white" \}/);
-    expect(results).toMatch(/white: \{ className: "bg-white text-\[#8c7229\]" \}/);
-    expect(results).toMatch(/drop-shadow-\[0px_3px_0px_#a691ec\]/);
+  it("are the one pill every results screen shares — the metals are gone", () => {
+    // Gold, silver, bronze and white by place were the design's; the owner
+    // chose the quick game's green-and-red for everywhere (resultsMatch).
+    expect(results).not.toMatch(/type PotTone/);
+    expect(results).not.toMatch(/POT_TONES/);
+    expect(results).toMatch(/import \{ CoinDeltaPill \} from "@\/components\/game\/CoinDeltaPill";/);
     // The amber-or-grey pills, and the greyed coin on a loss, are gone.
     expect(results).not.toMatch(/bg-amber-500\/90/);
     expect(results).not.toMatch(/net < 0 && "grayscale"/);
@@ -72,14 +72,14 @@ describe("the coin pills", () => {
 });
 
 describe("fourth down", () => {
-  it("each seat is a row: place, ringed face, name, score, white coins", () => {
+  it("each seat is a row: place, ringed face, name, score, coins", () => {
     // The tiles from fourth down became rows in one tile: a fixed 60px
     // each, the place at 20px, a 44px face, the name truncating, the score
     // under it, and the coins in white (owner: "show players as list").
     expect(results).toMatch(/"flex h-\[60px\] items-center gap-3 rounded-2xl px-2",/);
     expect(results).toMatch(/w-8 shrink-0 text-center font-display text-\[20px\] font-bold leading-none text-\[#ffe9a8\]/);
     expect(results).toMatch(/className=\{cn\("h-11 w-11 border-2", ring\)\}/);
-    expect(results).toMatch(/const tone: PotTone = idx === 0 \? "gold" : idx === 1 \? "silver" : idx === 2 \? "bronze" : "white";/);
+    expect(results).toMatch(/<PotLine net=\{net\} compact \/>/);
     expect(results).toMatch(/detail=\{t\("extra\.resultsPoints", \{ n: p\.score \}\)\}/);
   });
 

@@ -1,7 +1,8 @@
-import { useMemo, type ReactNode, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import { useMemo, type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { ChunkyButton } from "@/components/ui/chunky-button";
+import { CoinDeltaPill } from "@/components/game/CoinDeltaPill";
 import { useMultiplayerV2, settleMostLikelyVotes } from "@/contexts/MultiplayerContextV2";
 import { activeRoundPlayers } from "@/utils/roundPlayers";
 import { playersStillOut, roundSettleTiming } from "@/utils/roundSettlement";
@@ -14,7 +15,7 @@ import { useRoomCategoryQueue } from "@/hooks/useRoomCategoryQueue";
 import { supabase } from "@/integrations/supabase/client";
 import { filterCategoriesForLanguage } from "@/utils/languageCategoryFilter";
 import { useChallengeShare } from "@/hooks/useChallengeShare";
-import { ArrowLeft, Crown, Shuffle, Library, ChevronRight, Loader2, Gift, Share2 } from "lucide-react";
+import { ArrowLeft, Crown, Shuffle, Library, ChevronRight, Loader2, Gift, Share2, ListOrdered, X } from "lucide-react";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { cn } from "@/lib/utils";
 import confetti from "canvas-confetti";
@@ -66,43 +67,21 @@ const placeMark = (idx: number, rank: number) =>
 
 /**
  * What a seat's place was worth, under its medal: the prize less the stake,
- * signed — "+840" in amber for a place that paid, "-500" in grey for one
- * that did not, and nothing at all while the round is still settling or
- * when it settled nothing (practice, or a function that predates the
- * deltas). Read from the ledger via settle_room_round, never worked out
- * here: the client names no amounts (roomPot.test).
+ * signed, and nothing at all while the round is still settling or when it
+ * settled nothing (practice, or a function that predates the deltas). Read
+ * from the ledger via settle_room_round, never worked out here: the client
+ * names no amounts (roomPot.test).
  */
-type PotTone = "gold" | "silver" | "bronze" | "white";
-
 /**
- * The coin pills, as the design draws them (Figma 1157:10036): gold, silver
- * and bronze under the podium's three places, white with amber figures on
- * every row from fourth down — each standing on a 3px lilac foot.
+ * A seat's line, in the pill every results screen shares: green for a
+ * place that paid, red for one that did not, a quiet pill for zero
+ * (owner: "use them everywhere on results pages"). It used to be gold,
+ * silver, bronze and white by place, which said where a seat came, not
+ * what it won — the medal already says where.
  */
-const POT_TONES: Record<PotTone, { className: string; style?: CSSProperties }> = {
-  gold: { className: "text-white", style: { backgroundImage: "linear-gradient(-42deg, #ffbb00 37%, #997000 196%)" } },
-  silver: { className: "text-white", style: { backgroundImage: "linear-gradient(-47deg, #8b8b8b 7%, #424242 337%, #252525 357%)" } },
-  bronze: { className: "bg-[#9a4312] text-white" },
-  white: { className: "bg-white text-[#8c7229]" },
-};
-
-function PotLine({ net, compact, tone }: { net: number | undefined; compact?: boolean; tone?: PotTone }) {
+function PotLine({ net, compact }: { net: number | undefined; compact?: boolean }) {
   if (net === undefined) return null;
-  const up = net > 0;
-  const look = POT_TONES[tone ?? (up ? "gold" : "white")];
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1 rounded-full font-[Nunito] font-extrabold drop-shadow-[0px_3px_0px_#a691ec]",
-        compact ? "px-2 py-0.5 text-xs" : "mt-1.5 px-2.5 py-1 text-sm",
-        look.className,
-      )}
-      style={look.style}
-    >
-      <img src={coinIcon} alt="" className={compact ? "w-3.5 h-3.5" : "w-4 h-4"} />
-      {up ? `+${net}` : net}
-    </span>
-  );
+  return <CoinDeltaPill delta={net} size={compact ? "sm" : "md"} className={compact ? undefined : "mt-1.5"} />;
 }
 
 /**
@@ -196,7 +175,6 @@ function StandingRow({
   onTap?: () => void;
 }) {
   const ring = PLACE_RING[idx] ?? "border-white/40";
-  const tone: PotTone = idx === 0 ? "gold" : idx === 1 ? "silver" : idx === 2 ? "bronze" : "white";
   return (
     <li
       className={cn(
@@ -225,7 +203,7 @@ function StandingRow({
         </p>
         {detail && <p className="truncate text-[12px] leading-4 text-white/60">{detail}</p>}
       </div>
-      <PotLine net={net} compact tone={tone} />
+      <PotLine net={net} compact />
     </li>
   );
 }
@@ -256,6 +234,8 @@ export function GameResultsScreenV2() {
   // Every seat's line in the pot — what each place won or paid — so the
   // podium can say it under the medals, not only this player's own.
   const [potLines, setPotLines] = useState<Record<string, RoomPotLine>>({});
+  /** The round-by-round sheet, open. */
+  const [showRounds, setShowRounds] = useState(false);
   /**
    * The footer floats over the list of seats, behind the lobby's haze, so
    * the tiles keep going under the button — blurred, so you can see there
@@ -1118,7 +1098,7 @@ export function GameResultsScreenV2() {
                 <span className="w-full text-center font-display text-[22px] font-bold leading-6 tracking-[-0.16px] text-white truncate">
                   {p.isMe ? t("game.you") : p.nickname}
                 </span>
-                <PotLine net={netFor(p)} tone={idx === 0 ? "gold" : idx === 1 ? "silver" : "bronze"} />
+                <PotLine net={netFor(p)} />
               </div>
             );
           })}
@@ -1161,99 +1141,151 @@ export function GameResultsScreenV2() {
               </StandingsCard>
             )}
 
-            {/* Every game the room has played, newest first, each round with
-                its category and pot and, under it, every seat in a column
-                with what the round paid them — the winner first. Nothing at
-                all on a room that has played one round: that round is the
-                podium. */}
-            {roomRounds && roomRounds.length >= 2 && roomGames.map(([game, rounds]) => (
-              <motion.section
-                key={game}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className={TILE}
-                aria-label={t("extra.matchRoundsTitle", { game })}
+            {/* Round by round, and the room's totals, behind a text button
+                (owner: "if we have more than 3 players we have 4..10
+                players list below first 3 places so we do not have space
+                to show details on this screen, let's show it as a button").
+                Nothing on a room that has played one round: that round is
+                the podium. */}
+            {roomRounds && roomRounds.length >= 2 && (
+              <button
+                type="button"
+                onClick={() => setShowRounds(true)}
+                className="mx-auto flex items-center gap-2 py-3 text-sm font-bold text-white/80 hover:text-white transition-colors"
               >
-                <p className={EYEBROW}>{t("extra.matchRoundsTitle", { game })}</p>
-                <ol className="mt-2 divide-y divide-white/15">
-                  {rounds.map((round) => {
-                    const undecided = isUndecidedRound(null, round.categoryName);
-                    const slug = undecided
-                      ? UNDECIDED_ICON_SLUG
-                      : round.iconSlug ?? iconForCategoryName(round.categoryName) ?? UNDECIDED_ICON_SLUG;
-                    return (
-                      <li key={round.id} className="py-3 first:pt-0 last:pb-0">
-                        <div className="flex items-center gap-2">
-                          <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white/15">
-                            <DynamicIcon slug={slug} size={20} shadow={false} />
-                          </span>
-                          <span className="min-w-0 flex-1">
-                            <span className="block truncate text-[15px] font-semibold leading-5 text-white">
-                              {localizeCategory(round.categoryName) || t("extra.categoryFallback")}
-                            </span>
-                            <span className="block text-[12px] leading-4 text-white/60">
-                              {t("lobby.uRoundLabel", { count: round.number })}
-                            </span>
-                          </span>
-                          {round.pot > 0 && <PotPill amount={round.pot} />}
-                        </div>
-                        {/* Every seat, one under the other — never wrapped
-                            across the row, which is what put ten faces at
-                            24px in a block nobody could read. */}
-                        <ul className="mt-2 space-y-1">
-                          {round.seats.map((seat, i) => {
-                            const who = participants.find((p) => p.user_id === seat.user_id);
-                            return (
-                              <li key={seat.user_id} className="flex h-9 items-center gap-2 rounded-xl px-2">
-                                <span className="w-7 shrink-0 text-center text-[15px] leading-none">{placeMark(i, i + 1)}</span>
-                                <SafeAvatar
-                                  avatarUrl={who?.avatar_url ?? null}
-                                  fallback={who?.nickname || "?"}
-                                  className="h-7 w-7 shrink-0 border border-white/40"
-                                  fallbackClassName="bg-gradient-to-br from-purple-400 to-purple-600 text-white text-[10px] font-bold"
-                                />
-                                <span className="min-w-0 flex-1 truncate text-[14px] font-semibold text-white">
-                                  {seat.user_id === user?.id ? t("game.you") : who?.nickname || "?"}
-                                </span>
-                                <PotLine net={seat.net} compact tone={seat.net > 0 ? "gold" : "white"} />
-                              </li>
-                            );
-                          })}
-                        </ul>
-                      </li>
-                    );
-                  })}
-                </ol>
-              </motion.section>
-            ))}
-
-            {/* The whole room, all games: every seat's coins over every
-                round it has played, most first — the same rows the round
-                wears, so the two read as one thing. */}
-            {roomTotals && (
-              <StandingsCard title={t("extra.resultsAllGamesTitle", { rounds: roomRounds!.length })} delay={0.5}>
-                {roomTotals.map((row, i) => {
-                  const seat = participants.find((p) => p.user_id === row.user_id);
-                  const me = row.user_id === user?.id;
-                  return (
-                    <StandingRow
-                      key={row.user_id}
-                      idx={i}
-                      rank={i + 1}
-                      name={me ? t("game.you") : seat?.nickname || "?"}
-                      avatarUrl={seat?.avatar_url ?? null}
-                      isMe={me}
-                      net={row.net}
-                      onTap={!me ? () => openProfile(row.user_id) : undefined}
-                    />
-                  );
-                })}
-              </StandingsCard>
+                <ListOrdered className="w-4 h-4" />
+                {t("extra.resultsRoundByRoundCta")}
+              </button>
             )}
           </div>
         </motion.div>
       </div>
+
+      {/* The sheet the text button opens: every earlier round of every
+          game — its category and pot and, under it, every seat with what
+          the round paid them, the winner first — and then the room's
+          totals over all its games. The same tiles the screen used to
+          stack under the podium, on the screen's own purple so they read
+          the same. */}
+      <AnimatePresence>
+        {showRounds && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[120] flex items-end justify-center bg-[rgba(64,38,102,0.45)] backdrop-blur-[6px] p-4 pt-[calc(1rem_+_var(--safe-top))] pb-[calc(1rem_+_var(--safe-bottom))]"
+            onClick={() => setShowRounds(false)}
+          >
+            <motion.div
+              initial={{ y: 40, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 40, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 380, damping: 32 }}
+              className="w-full max-w-[468px] max-h-full overflow-y-auto rounded-[24px] border-2 border-white/30 bg-gradient-to-b from-[#7C6AE5] to-[#9B89F5] p-3 shadow-[0px_8px_24px_0px_rgba(102,51,153,0.3)]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-3 flex items-center justify-between px-1">
+                <p className="font-display text-[18px] font-bold text-white">{t("extra.resultsRoundByRoundCta")}</p>
+                <button
+                  type="button"
+                  onClick={() => setShowRounds(false)}
+                  aria-label={t("common.close")}
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-white"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              <div className="space-y-[17px]">
+                {roomRounds && roomRounds.length >= 2 && roomGames.map(([game, rounds]) => (
+                  <motion.section
+                    key={game}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                    className={TILE}
+                    aria-label={t("extra.matchRoundsTitle", { game })}
+                  >
+                    <p className={EYEBROW}>{t("extra.matchRoundsTitle", { game })}</p>
+                    <ol className="mt-2 divide-y divide-white/15">
+                      {rounds.map((round) => {
+                        const undecided = isUndecidedRound(null, round.categoryName);
+                        const slug = undecided
+                          ? UNDECIDED_ICON_SLUG
+                          : round.iconSlug ?? iconForCategoryName(round.categoryName) ?? UNDECIDED_ICON_SLUG;
+                        return (
+                          <li key={round.id} className="py-3 first:pt-0 last:pb-0">
+                            <div className="flex items-center gap-2">
+                              <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white/15">
+                                <DynamicIcon slug={slug} size={20} shadow={false} />
+                              </span>
+                              <span className="min-w-0 flex-1">
+                                <span className="block truncate text-[15px] font-semibold leading-5 text-white">
+                                  {localizeCategory(round.categoryName) || t("extra.categoryFallback")}
+                                </span>
+                                <span className="block text-[12px] leading-4 text-white/60">
+                                  {t("lobby.uRoundLabel", { count: round.number })}
+                                </span>
+                              </span>
+                              {round.pot > 0 && <PotPill amount={round.pot} />}
+                            </div>
+                            {/* Every seat, one under the other — never wrapped
+                                across the row, which is what put ten faces at
+                                24px in a block nobody could read. */}
+                            <ul className="mt-2 space-y-1">
+                              {round.seats.map((seat, i) => {
+                                const who = participants.find((p) => p.user_id === seat.user_id);
+                                return (
+                                  <li key={seat.user_id} className="flex h-9 items-center gap-2 rounded-xl px-2">
+                                    <span className="w-7 shrink-0 text-center text-[15px] leading-none">{placeMark(i, i + 1)}</span>
+                                    <SafeAvatar
+                                      avatarUrl={who?.avatar_url ?? null}
+                                      fallback={who?.nickname || "?"}
+                                      className="h-7 w-7 shrink-0 border border-white/40"
+                                      fallbackClassName="bg-gradient-to-br from-purple-400 to-purple-600 text-white text-[10px] font-bold"
+                                    />
+                                    <span className="min-w-0 flex-1 truncate text-[14px] font-semibold text-white">
+                                      {seat.user_id === user?.id ? t("game.you") : who?.nickname || "?"}
+                                    </span>
+                                    <PotLine net={seat.net} compact />
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          </li>
+                        );
+                      })}
+                    </ol>
+                  </motion.section>
+                ))}
+
+                {/* The whole room, all games: every seat's coins over every
+                    round it has played, most first — the same rows the round
+                    wears, so the two read as one thing. */}
+                {roomTotals && (
+                  <StandingsCard title={t("extra.resultsAllGamesTitle", { rounds: roomRounds!.length })} delay={0.5}>
+                    {roomTotals.map((row, i) => {
+                      const seat = participants.find((p) => p.user_id === row.user_id);
+                      const me = row.user_id === user?.id;
+                      return (
+                        <StandingRow
+                          key={row.user_id}
+                          idx={i}
+                          rank={i + 1}
+                          name={me ? t("game.you") : seat?.nickname || "?"}
+                          avatarUrl={seat?.avatar_url ?? null}
+                          isMe={me}
+                          net={row.net}
+                          onTap={!me ? () => openProfile(row.user_id) : undefined}
+                        />
+                      );
+                    })}
+                  </StandingsCard>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Bottom Section: Next Round Preview + Buttons. The home-indicator
           inset is already the root's own padding (safe-bleed), so this

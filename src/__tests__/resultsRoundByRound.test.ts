@@ -97,7 +97,7 @@ describe("the card", () => {
   it("says who won and who lost it: every seat, the winner first with the medal", () => {
     expect(results).toMatch(/\{round\.seats\.map\(\(seat, i\) => \{/);
     expect(results).toMatch(/\{placeMark\(i, i \+ 1\)\}/);
-    expect(results).toMatch(/<PotLine net=\{seat\.net\} compact tone=\{seat\.net > 0 \? "gold" : "white"\} \/>/);
+    expect(results).toMatch(/<PotLine net=\{seat\.net\} compact \/>/);
   });
 
   it("a random or mixed round wears the box; a round whose questions carried no icon takes its category's", () => {

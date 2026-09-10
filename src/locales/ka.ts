@@ -4828,6 +4828,7 @@ export const ka = {
     matchRoundLabel: "თამაში {game}, რაუნდი {round}",
     matchStandingsTitle: "თამაში {game} · {rounds} რაუნდი · საბოლოო შედეგი",
     matchRoundsTitle: "თამაში {game} · რაუნდების მიხედვით",
+    resultsRoundByRoundCta: "ნახე შედეგები რაუნდების მიხედვით",
     resultsStandingsTitle: "შედეგები",
     resultsAllGamesTitle: "ყველა თამაში · {rounds} რაუნდი · ჯამი",
     resultsPoints: "{n} ქულა",

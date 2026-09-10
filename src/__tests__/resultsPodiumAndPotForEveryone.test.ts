@@ -76,7 +76,7 @@ describe("the podium", () => {
     const step = results.slice(results.indexOf(": PODIUM_ORDER).map((idx) => {"), results.indexOf("{/* Everyone from fourth down."));
     const avatar = step.indexOf("<SafeAvatar");
     const medal = step.indexOf("{placeMark(idx, p.rank)}");
-    const coins = step.indexOf("<PotLine net={netFor(p)} tone=");
+    const coins = step.indexOf("<PotLine net={netFor(p)} />");
     expect(avatar).toBeGreaterThan(-1);
     expect(medal).toBeGreaterThan(avatar);
     expect(coins).toBeGreaterThan(medal);
