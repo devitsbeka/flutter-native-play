@@ -36,8 +36,8 @@ const baseMascotAvatars = [
   mascotAvatar5, mascotAvatar6, mascotAvatar7, mascotAvatar8
 ];
 
-/** The frame colour of the VS screen (Figma 1147:8822). */
-const VS_PURPLE = "#5651CE";
+/** The frame colour of the VS screen (Figma 1147:8822). Shared with the Guess card's versus screen. */
+export const VS_PURPLE = "#5651CE";
 
 /** The icon-library bucket the category icons are served from. */
 const ICON_STORAGE_URL =
@@ -63,7 +63,7 @@ interface CategoryPlateProps {
  * the name and icon cycle inside it, so nothing moves on the lock-in but the
  * content.
  */
-function CategoryPlate({
+export function CategoryPlate({
   name,
   iconSlug,
   iconUrl,

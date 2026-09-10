@@ -165,10 +165,14 @@ export default function CategoryQuizPage() {
   const location = useLocation();
   const wantsCountdown = Boolean((location.state as { countdown?: boolean } | null)?.countdown);
   const duelFromState = Boolean((location.state as { guessStake?: boolean } | null)?.guessStake);
+  // The Guess card's versus screen already showed the King, the game and
+  // the stake (GuessVersusScreen); a level it sends here needs no second
+  // intro and starts on its 3-2-1.
+  const versusShown = Boolean((location.state as { versus?: boolean } | null)?.versus);
   // A duel opens on its own screen first — the category, the King, the pot
   // — and the 3-2-1 starts from its Play, not from arrival.
-  const [countdown, setCountdown] = useState<number | null>(wantsCountdown && !duelFromState ? 3 : null);
-  const [showDuelIntro, setShowDuelIntro] = useState(duelFromState);
+  const [countdown, setCountdown] = useState<number | null>(wantsCountdown && (!duelFromState || versusShown) ? 3 : null);
+  const [showDuelIntro, setShowDuelIntro] = useState(duelFromState && !versusShown);
   /**
    * The Guess card's stake.
    *

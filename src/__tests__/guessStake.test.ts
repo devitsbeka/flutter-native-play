@@ -56,7 +56,7 @@ describe("the card", () => {
 
   it("checks the guess stake at the door and flags the level as staked", () => {
     expect(create).toMatch(/if \(coins < REWARDS\.GUESS_STAKE\) \{\s*\n\s*setShowGuessStake\(true\);\s*\n\s*return;/);
-    expect(create).toMatch(/state: \{ countdown: true, guessStake: true \}/);
+    expect(create).toMatch(/state: \{ countdown: true, guessStake: true, versus: true \}/);
     expect(create).toMatch(/<NotEnoughStakeModal isOpen=\{showGuessStake\} onClose=\{\(\) => setShowGuessStake\(false\)\} stake=\{REWARDS\.GUESS_STAKE\} \/>/);
     expect(read("src/components/home/NotEnoughStakeModal.tsx")).toMatch(/const stakeAmount = stake \?\? quickStake;/);
   });

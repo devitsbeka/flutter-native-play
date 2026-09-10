@@ -21,7 +21,7 @@ const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 const create = read("src/components/team/CreateRoomPage.tsx");
 const picker = read("src/components/team/RoomIconPickerModal.tsx");
 const battle = read("src/pages/TeamBattlePage.tsx");
-const screen = read("src/components/team/GuessPickerScreen.tsx");
+const screen = read("src/components/game/GuessVersusScreen.tsx");
 
 const LOCALES = ["en", "ka", "de", "es", "fr", "it", "pt"] as const;
 
@@ -45,7 +45,8 @@ describe("Guess replaced Random on the create screen", () => {
     const guessBranch = create.slice(create.indexOf('if (key === "guess") {'));
     const branchBody = guessBranch.slice(0, guessBranch.indexOf("autoStart.current = true;"));
     expect(branchBody).not.toMatch(/autoStart/);
-    expect(create).toMatch(/extra\.guessPickTitle/);
+    // The title the grid wore is gone with it; the versus screen has none.
+    expect(create).not.toMatch(/extra\.guessPickTitle/);
     // And the answer PLAYS it — the category's own solo round, with no room
     // and no versus screen. This has been a pre-lobby, then a room started
     // on the pick, then the versus flow; each put something between the
@@ -54,9 +55,10 @@ describe("Guess replaced Random on the create screen", () => {
     // opponent, a stake and a reveal to sit through (owner: "no need to
     // show the versus game page here").
     // ...and, since the Guess card got its own stake, the level is told it
-    // is a staked run (guessStake.test).
+    // is a staked run (guessStake.test) — and, since the versus screen
+    // took the duel intro's job, that the intro has already been shown.
     expect(create).toMatch(
-      /const level = getCategoryProgress\(cat\.category_id \?\? cat\.id\) \|\| 1;\s*\n\s*handoff\(`\/play\/\$\{cat\.category_id \?\? cat\.id\}\/\$\{level\}`, \{ state: \{ countdown: true, guessStake: true \} \}\);/,
+      /const level = getCategoryProgress\(cat\.category_id \?\? cat\.id\) \|\| 1;\s*\n(\s*\/\/[^\n]*\n)*\s*handoff\(`\/play\/\$\{cat\.category_id \?\? cat\.id\}\/\$\{level\}`, \{ state: \{ countdown: true, guessStake: true, versus: true \} \}\);/,
     );
     expect(create).not.toMatch(/\/game\?category=/);
     expect(create).not.toMatch(/setPreLobby\("guess"\)/);
@@ -64,39 +66,27 @@ describe("Guess replaced Random on the create screen", () => {
 
   it("the question gets a screen, not a strip under the card", () => {
     // It used to unfold as three-to-a-row tiles beneath the picked card,
-    // half of them below the fold and wedged against the Create button.
-    // Figma 1059:8 gives it the page: the carousel AND the Create footer
-    // stand down while it is open.
+    // half of them below the fold and wedged against the Create button;
+    // then a designed grid of its own (Figma 1059:8). It is the quick
+    // game's versus screen now — Trivia King, the wheel of picture games,
+    // and you — drawn over the page (guessVersusScreen.test.ts).
     expect(create).toMatch(/const guessPicking = gameChoice === "guess";/);
     expect(create).toMatch(/\{guessPicking \? \(/);
-    expect(create).toMatch(/<GuessPickerScreen/);
-    // Its own scroller — the document does not scroll on the device.
-    expect(create).toMatch(/guessPicking \? \(\s*\n(?:.*\n)*?\s*<div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">/);
+    expect(create).toMatch(/<GuessVersusScreen/);
+    expect(create).not.toMatch(/GuessPickerScreen/);
+    expect(create).toMatch(/guessPicking \? \(\s*\n(?:.*\n)*?\s*<div className="fixed inset-0 z-50">/);
     // And the back arrow closes the question before it leaves the page.
     // The leaving half moved: it used to be navigate("/") in every case,
     // which threw a player who opened this OVER the online-game page back to
     // the top of the app. See everyGameIsReachable.test.ts.
     expect(create).toMatch(/if \(guessPicking\) return setGameChoice\(null\);/);
+    expect(create).toMatch(/onBack=\{\(\) => setGameChoice\(null\)\}/);
   });
 
-  it("the screen is the designed grid", () => {
-    // Two to a row at 167px, the art at its designed 82x96 box, and the
-    // petal corners: within a complete 2x2 block each card rounds its
-    // inner corner to 54. A block that is not complete stays plain, which
-    // is what the design shows for a fifth, partnerless card.
-    expect(screen).toMatch(/grid-cols-2 gap-x-\[14px\] gap-y-\[20px\]/);
-    expect(screen).toMatch(/h-\[167px\]/);
-    expect(screen).toMatch(/h-\[96px\] w-\[82px\]/);
-    expect(screen).toMatch(/size=\{82\}/);
-    for (const radius of [
-      "rounded-\\[24px_24px_54px_24px\\]",
-      "rounded-\\[24px_24px_24px_54px\\]",
-      "rounded-\\[24px_54px_24px_24px\\]",
-      "rounded-\\[54px_24px_24px_24px\\]",
-    ]) {
-      expect(screen).toMatch(new RegExp(radius));
-    }
-    expect(screen).toMatch(/if \(blockStart \+ 4 > total\) return "rounded-\[24px\]";/);
+  it("the screen is the quick game's, with the King and the wheel", () => {
+    expect(screen).toMatch(/import \{ CategoryPlate, VS_PURPLE \} from "@\/components\/game\/VSScreen";/);
+    expect(screen).toMatch(/import triviaKingAvatar from "@\/assets\/trivia-king\.png";/);
+    expect(screen).toMatch(/<CategoryPlate\s*\n\s*name=\{category\?\.name \?\? ""\}/);
   });
 
   it("a picked tile actually walks into the room it just made", () => {
@@ -169,7 +159,8 @@ describe("Guess replaced Random on the create screen", () => {
     const quiz = read("src/pages/CategoryQuizPage.tsx");
     expect(quiz).toMatch(/const wantsCountdown = Boolean\(\(location\.state as \{ countdown\?: boolean \} \| null\)\?\.countdown\);/);
     // A duel holds its 3-2-1 for the intro screen's Play — see guessDuel.
-    expect(quiz).toMatch(/useState<number \| null>\(wantsCountdown && !duelFromState \? 3 : null\)/);
+    // ...unless the versus screen already ran, in which case the 3-2-1 starts on arrival.
+    expect(quiz).toMatch(/useState<number \| null>\(wantsCountdown && \(!duelFromState \|\| versusShown\) \? 3 : null\)/);
     // Counted only once there are questions to count down to, and the
     // clock held until it is over.
     expect(quiz).toMatch(/if \(countdown === null \|\| loading \|\| questions\.length === 0\) return;/);

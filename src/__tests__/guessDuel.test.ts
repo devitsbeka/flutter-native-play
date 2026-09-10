@@ -72,8 +72,11 @@ describe("the King", () => {
 
 describe("before", () => {
   it("opens on the intro, and the countdown waits for its Play", () => {
-    expect(level).toMatch(/const \[countdown, setCountdown\] = useState<number \| null>\(wantsCountdown && !duelFromState \? 3 : null\);/);
-    expect(level).toMatch(/const \[showDuelIntro, setShowDuelIntro\] = useState\(duelFromState\);/);
+    // A level the Guess card's versus screen sent here (state.versus) has
+    // seen the King, the game and the stake already: no second intro, and
+    // the 3-2-1 from arrival (guessVersusScreen.test.ts).
+    expect(level).toMatch(/const \[countdown, setCountdown\] = useState<number \| null>\(wantsCountdown && \(!duelFromState \|\| versusShown\) \? 3 : null\);/);
+    expect(level).toMatch(/const \[showDuelIntro, setShowDuelIntro\] = useState\(duelFromState && !versusShown\);/);
     expect(level).toMatch(
       /if \(guessStake && showDuelIntro && !showResults\) \{\s*\n\s*return \(\s*\n\s*<DuelIntro[\s\S]*?onPlay=\{\(\) => \{\s*\n\s*setShowDuelIntro\(false\);\s*\n\s*setCountdown\(3\);\s*\n\s*\}\}\s*\n\s*onBack=\{\(\) => navigate\("\/create-room\?mode=guess"\)\}/,
     );
