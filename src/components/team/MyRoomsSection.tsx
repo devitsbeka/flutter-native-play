@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
 import { AnimatePresence, motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
-import { Plus, Users, Tv, Airplay, Cast, UserPlus, Trash2, LogOut, MonitorPlay, Play, Check, X } from "lucide-react";
+import { Plus, Users, Tv, Airplay, Cast, UserPlus, Trash2, LogOut, MonitorPlay, Play, Check, X, Globe } from "lucide-react";
 import { acceptRoomInvite, declineRoomInvite } from "@/utils/pendingRoomInvites";
 import { useMyRooms, MyRoom, RoomFilter, isActiveTVSession, isRoomLive } from "@/hooks/useMyRooms";
 import iconKingLounge from "@/assets/play-chooser/icon-king.webp";
@@ -13,6 +13,7 @@ import { roomKind, routeForRoom } from "@/utils/roomRoutes";
 import { dealtRoomIcon } from "@/utils/roomCrests";
 import { useRoomIconPool } from "@/hooks/useRoomIconPool";
 import { FRESH_RING_MS, isRoomStampFresh } from "@/hooks/usePublicRooms";
+import { roomIsPublicKind } from "@/utils/roomKind";
 import { roomCardAction } from "@/utils/roomCardAction";
 import { RoomCardPlayButton } from "@/components/team/RoomCardPlayButton";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
@@ -1513,6 +1514,19 @@ export function RoomCardGrid({ room, index, onJoin, onPreview, onDelete, onLeave
                   <Users className="w-3.5 h-3.5 text-[#2b1a4a]" />
                   <span className="text-[#2b1a4a] font-bold text-xs">{displayPlayerCount}</span>
                 </div>
+                {/* A room this host published is listed here as well as on
+                    the Public tab — deliberately, so a room they played in
+                    is where they look for it. Said on the card, because a
+                    public room among private ones is otherwise only told
+                    apart by opening it and reading its rules (owner: "we
+                    need strict rules for rooms which are public and which
+                    are private"). */}
+                {roomIsPublicKind(room) && (
+                  <span className="inline-flex flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-white/60 backdrop-blur-sm px-2.5 py-1 text-[#2b1a4a] font-bold text-xs">
+                    <Globe className="w-3.5 h-3.5" />
+                    {t("extra.roomPublic")}
+                  </span>
+                )}
                 {isNew && (
                   <span className="inline-flex items-center gap-1.5 whitespace-nowrap px-2.5 py-1 rounded-full bg-white/60 backdrop-blur-sm text-[#2b1a4a] font-bold text-xs">
                     <span

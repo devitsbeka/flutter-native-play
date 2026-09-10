@@ -28,8 +28,13 @@ describe("the room a tab makes", () => {
   it("is public from the Public tab, private from the Private tab, on both doors", () => {
     expect(hub).toMatch(/const createRoomAndOpen = async \(isPublic: boolean\) => \{/);
     // The + on the tab row and the chooser's Game Room card both read the tab.
-    expect(hub).toMatch(/void createRoomAndOpen\(activeTab === "public"\);/);
-    expect(hub).toMatch(/onSelectGameRoom=\{\(\) => void createRoomAndOpen\(activeTab === "public"\)\}/);
+    // Stated by the caller, not read off the selected tab: `activeTab`
+    // starts at "public" whenever the page is opened without ?tab=, so an
+    // unrelated screen's create made a public room (roomKindIsStrict.test).
+    expect(hub).toMatch(/void createRoomAndOpen\(kind === "public"\);/);
+    expect(hub).toMatch(/onAddClick=\{\(\) => openCreateRoom\("public"\)\}/);
+    expect(hub).toMatch(/onCreateRoom=\{\(\) => openCreateRoom\("private"\)\}/);
+    expect(hub).toMatch(/onSelectGameRoom=\{\(\) => \{[\s\S]*?void createRoomAndOpen\(false\);/);
     expect(hub).not.toMatch(/createRoomAndOpen\(\)/);
   });
 

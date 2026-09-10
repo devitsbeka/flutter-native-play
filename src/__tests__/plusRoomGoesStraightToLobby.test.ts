@@ -26,12 +26,12 @@ const hub = read("src/pages/TeamV2.tsx");
 describe("the Public tab's + Room", () => {
   it("makes the room and opens its lobby, without the chooser", () => {
     expect(hub).toMatch(
-      /const openCreateRoom = \(\) => \{\s*\n\s*if \(roomsLocked\) return setShowRoomsWall\(true\);\s*\n\s*void createRoomAndOpen\(activeTab === "public"\);\s*\n\s*\};/,
+      /const openCreateRoom = \(kind: "public" \| "private"\) => \{\s*\n\s*if \(roomsLocked\) return setShowRoomsWall\(true\);\s*\n\s*void createRoomAndOpen\(kind === "public"\);\s*\n\s*\};/,
     );
   });
 
   it("still meets the PRO wall first — the padlock on the button is the wall on the tap", () => {
-    const fn = hub.slice(hub.indexOf("const openCreateRoom"), hub.indexOf('void createRoomAndOpen(activeTab === "public");'));
+    const fn = hub.slice(hub.indexOf("const openCreateRoom"), hub.indexOf('void createRoomAndOpen(kind === "public");'));
     expect(fn).toMatch(/if \(roomsLocked\) return setShowRoomsWall\(true\);/);
   });
 
@@ -39,13 +39,14 @@ describe("the Public tab's + Room", () => {
     // One path, pinned on the create-type modal too (publicRooms.test);
     // public from the Public tab, private from the Private tab
     // (roomVisibilityFromTheTab.test.ts).
-    expect(hub).toMatch(/onSelectGameRoom=\{\(\) => void createRoomAndOpen\(activeTab === "public"\)\}/);
+    // Private, always: this modal is the Private tab's own Create.
+    expect(hub).toMatch(/onSelectGameRoom=\{\(\) => \{[\s\S]*?void createRoomAndOpen\(false\);/);
   });
 });
 
 describe("the Private tab's empty-state + Room", () => {
   it("takes the same door, not the chooser", () => {
-    expect(hub).toMatch(/onCreateRoom=\{openCreateRoom\}/);
+    expect(hub).toMatch(/onCreateRoom=\{\(\) => openCreateRoom\("private"\)\}/);
     expect(hub).not.toMatch(/onCreateRoom=\{\(\) => setShowCreateModal\(true\)\}/);
   });
 });

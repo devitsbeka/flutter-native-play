@@ -57,6 +57,7 @@ import { classicLobbyScene } from "@/utils/lobbyScene";
 import { gameRoomsHasApproval } from "@/utils/roomVisibility";
 import { dealtRoomIcon, fetchCrestPool } from "@/utils/roomCrests";
 import { forgetDraftRoom, hasPressedCreate, rememberPressedCreate, roomIsDraft, roomWantsPublic } from "@/utils/roomCreateOffered";
+import { roomIsPublicKind } from "@/utils/roomKind";
 import { roomDraftFields } from "@/utils/roomVisibility";
 import { useParticipantPresence } from "@/hooks/useParticipantPresence";
 import coinIconAsset from "@/assets/tb-lobby/coin.png";
@@ -1308,10 +1309,7 @@ export function RoomLobbyV2() {
   // ...or a draft the Public tab made, which is born private and published
   // by Create (draftWantsPublic); or one published a moment ago, before the
   // row's own column has caught up (publishedNow).
-  const isPublicRoom =
-    Boolean(currentRoom.is_public) ||
-    publishedNow ||
-    roomWantsPublic(currentRoom);
+  const isPublicRoom = roomIsPublicKind(currentRoom) || publishedNow;
   /**
    * A PUBLIC room counts the people who are actually in the app.
    *

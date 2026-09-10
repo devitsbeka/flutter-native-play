@@ -27,7 +27,7 @@ describe("the lobby's Play on TV row", () => {
     // ...and the draft store's intent for a public draft, so the TV row is
     // not offered on a room about to be published (draftIsPrivateUntilCreate.test).
     expect(lobby).toMatch(
-      /const isPublicRoom =\s*\n\s*Boolean\(currentRoom\.is_public\) \|\|\s*\n\s*publishedNow \|\|\s*\n\s*roomWantsPublic\(currentRoom\);/,
+      /const isPublicRoom = roomIsPublicKind\(currentRoom\) \|\| publishedNow;/,
     );
   });
 });

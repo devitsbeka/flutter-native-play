@@ -42,7 +42,10 @@ describe("what + Room writes", () => {
 
   it("both doors on the page take that one path, and the tab says which room", () => {
     // The + on the tab row, and the chooser's Game Room card.
-    expect((hub.match(/void createRoomAndOpen\(activeTab === "public"\)/g) ?? []).length).toBe(2);
+    // The kind is stated by the caller rather than read off whatever tab
+    // happens to be selected — see roomKindIsStrict.test.ts.
+    expect(hub).toMatch(/activeTab === "public" \? openCreateRoom\("public"\) : openCreateType\(\)/);
+    expect(hub).toMatch(/onAddClick=\{\(\) => openCreateRoom\("public"\)\}/);
     expect(hub).not.toMatch(/void createRoomAndOpen\(\)/);
   });
 });
@@ -77,7 +80,10 @@ describe("the lobby's door row still decides, and still shows the truth", () => 
   it("the lobby reads the room's own column for what it is", () => {
     // ...or the draft store's intent for a draft the Public tab made, or a
     // publish that has just happened (draftIsPrivateUntilCreate.test).
-    expect(lobby).toMatch(/const isPublicRoom =\s*\n\s*Boolean\(currentRoom\.is_public\) \|\|\s*\n\s*publishedNow \|\|\s*\n\s*roomWantsPublic\(currentRoom\);/);
+    // One predicate for the kind now, shared with the private list and the
+    // door (roomKindIsStrict.test.ts): a public draft is public here too.
+    expect(lobby).toMatch(/const isPublicRoom = roomIsPublicKind\(currentRoom\) \|\| publishedNow;/);
+    expect(read("src/utils/roomKind.ts")).toMatch(/return room\.is_public === true \|\| roomWantsPublic\(room\);/);
   });
 
   it("Joining reads the room's column, and only on a room that has a door worth guarding", () => {

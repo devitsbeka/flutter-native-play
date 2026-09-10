@@ -149,9 +149,16 @@ function TeamContentV2() {
   //
   // The same path the Private tab's Create → Game Room takes; the tab the
   // host is standing on is what decides the room's visibility.
-  const openCreateRoom = () => {
+  // The kind is the CALLER's to state. It used to be read off `activeTab`
+  // in here, and `activeTab` starts at "public" whenever the page is
+  // reached without ?tab= — so a room created from anywhere else (the home
+  // Play button, a mission, the drawer) was born public, listed to
+  // strangers, and its lobby offered the public rules on a room its host
+  // had made to play with a friend (owner: "why private room shows
+  // open/ask me ... we need strict rules"). See roomKind.ts.
+  const openCreateRoom = (kind: "public" | "private") => {
     if (roomsLocked) return setShowRoomsWall(true);
-    void createRoomAndOpen(activeTab === "public");
+    void createRoomAndOpen(kind === "public");
   };
   /**
    * The Private tab's create button, behind the same door.
@@ -1459,7 +1466,7 @@ function TeamContentV2() {
                     {...(triviaBusy
                       ? { disabled: true }
                       : instantTouchProps(() =>
-                          activeTab === "public" ? openCreateRoom() : openCreateType(),
+                          activeTab === "public" ? openCreateRoom("public") : openCreateType(),
                         ))}
                     aria-busy={triviaBusy || undefined}
                     className={`hidden md:flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-primary text-primary-foreground shadow-sm shrink-0 text-sm font-bold${
@@ -1490,7 +1497,7 @@ function TeamContentV2() {
                     filterOptions={publicFilterOptionsShown}
                     searchQuery={publicSearchQuery}
                     onSearchQueryChange={setPublicSearchQuery}
-                    onAddClick={openCreateRoom}
+                    onAddClick={() => openCreateRoom("public")}
                     addButtonText={t("extra.addRoom")}
                     addLocked={roomsLocked}
                   />
@@ -1535,7 +1542,7 @@ function TeamContentV2() {
                   {showsPrivateRooms && (privateFilterApplied !== "all" || hasRooms || !hasTrivias) && (
                     <MyRoomsSection
                       hideTV
-                      onCreateRoom={openCreateRoom}
+                      onCreateRoom={() => openCreateRoom("private")}
                       onShowAllRooms={() => setShowAllGamesModal(true)}
                       vertical
                       visibility="private"
@@ -1667,6 +1674,7 @@ function TeamContentV2() {
               setPendingRandomPlay(false);
               setPreSelectedCategory(null);
             }}
+            createsPublicRooms={activeTab === "public"}
             challengeUserId={challengeContext?.targetUserId}
             defaultChallengeType={pendingRandomPlay ? "random" : challengeContext?.challengeType}
             autoOpenPersonalTrivia={autoOpenPersonalTrivia}
@@ -1732,7 +1740,11 @@ function TeamContentV2() {
           if (draftId) setPersonalTriviaDraftId(draftId);
           setShowPersonalTriviaModal(true);
         }}
-        onSelectGameRoom={() => void createRoomAndOpen(activeTab === "public")}
+        onSelectGameRoom={() => {
+          // The Private tab's Create -> Game Room. Private, always: this
+          // modal is only opened from there (openCreateType).
+          void createRoomAndOpen(false);
+        }}
         hideGameRoom={createChooserForTrivias}
       />
       <GameStylePersonalTrivia

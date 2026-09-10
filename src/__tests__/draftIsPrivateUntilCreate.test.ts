@@ -93,7 +93,10 @@ describe("+ Room", () => {
 
 describe("the lobby", () => {
   it("treats a public draft as public: rules, counting, the door", () => {
-    expect(lobby).toMatch(/const isPublicRoom =\s*\n\s*Boolean\(currentRoom\.is_public\) \|\|\s*\n\s*publishedNow \|\|\s*\n\s*roomWantsPublic\(currentRoom\);/);
+    // One predicate for the kind now, shared with the private list and the
+    // door (roomKindIsStrict.test.ts): a public draft is public here too.
+    expect(lobby).toMatch(/const isPublicRoom = roomIsPublicKind\(currentRoom\) \|\| publishedNow;/);
+    expect(read("src/utils/roomKind.ts")).toMatch(/return room\.is_public === true \|\| roomWantsPublic\(room\);/);
   });
 
   it("publishes the draft on Create and on Start, and lands Create on the list it published to", () => {

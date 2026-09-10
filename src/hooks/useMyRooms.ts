@@ -2,6 +2,7 @@ import { useMemo, useEffect, useRef } from "react";
 import { compareRooms } from "@/utils/roomOrder";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { roomIsPublicKind } from "@/utils/roomKind";
 import { presenceForUsers } from "@/utils/presence";
 import { useAuth } from "@/contexts/AuthContext";
 import { matchesQuery } from "@/utils/searchMatch";
@@ -45,6 +46,10 @@ export interface MyRoom {
   has_unread_activity: boolean;
   /** Published to the Public tab. Private rooms are the default. */
   is_public: boolean;
+  /** A public room made from the Public tab is a draft until its Create is
+   *  pressed: not listed to anybody yet, but public already (roomKind.ts). */
+  is_draft: boolean | null;
+  draft_public: boolean | null;
   cover_image: string | null;
   background_gradient: string | null;
   host_user_id: string;
@@ -372,6 +377,8 @@ async function fetchRoomsForUser(userId: string, options?: FetchRoomsOptions): P
       game_mode: room.game_mode ?? null,
       has_unread_activity: room.has_unread_activity || false,
       is_public: room.is_public === true,
+      is_draft: (room as { is_draft?: boolean | null }).is_draft ?? null,
+      draft_public: (room as { draft_public?: boolean | null }).draft_public ?? null,
       cover_image: room.cover_image || null,
       background_gradient: room.background_gradient || null,
       host_user_id: room.host_user_id,
@@ -583,7 +590,11 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
      * hides, it still hides.
      */
     if (visibility === "private") {
-      result = result.filter((room) => !room.is_public || room.is_host);
+      // By the room's KIND, not by is_public alone: a public room from the
+      // Public tab is a draft until its Create is pressed, and a draft that
+      // counted as private here put the public rules on the Private tab
+      // (owner: "why private room shows open/ask me").
+      result = result.filter((room) => !roomIsPublicKind(room) || room.is_host);
     }
 
     // An unreleased mode's rooms are the admin's alone, the same rule the

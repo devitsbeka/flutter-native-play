@@ -29,7 +29,7 @@ describe("the Private tab's create button is gated like the Public one", () => {
   });
 
   it("and every door to the chooser goes through it — no raw opener left on a button", () => {
-    expect(hub).toMatch(/activeTab === "public" \? openCreateRoom\(\) : openCreateType\(\)/);
+    expect(hub).toMatch(/activeTab === "public" \? openCreateRoom\("public"\) : openCreateType\(\)/);
     expect(hub).toMatch(/onAddClick=\{openCreateType\}/);
   });
 

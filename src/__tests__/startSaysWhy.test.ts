@@ -93,8 +93,14 @@ describe("every way Start can fail now says so", () => {
 });
 
 describe("a new room is public, and asks", () => {
-  it("public was already the default and stays it", () => {
-    expect(create).toMatch(/const isPublic = true;/);
+  it("is public only when the Public tab made it", () => {
+    // This was `const isPublic = true` — the chooser published every
+    // library, Guess and Battle room it made, wherever it had been opened
+    // from, and their lobbies then offered the public rules to a host who
+    // had made a room for one friend (owner: "we need strict rules for
+    // rooms which are public and which are private"). See roomKind.ts.
+    expect(create).toMatch(/const isPublic = createsPublicRooms;/);
+    expect(create).toMatch(/createsPublicRooms = false \}: CreateRoomPageProps\)/);
   });
 
   it("ask-me comes from the column, so no create path can miss it", () => {

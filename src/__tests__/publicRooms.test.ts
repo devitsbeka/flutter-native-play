@@ -94,7 +94,10 @@ describe("a room is private unless somebody published it", () => {
     // question the lobby asks, one screen earlier, before there was a room
     // to be public about — so it is asked once now, where the room exists
     // and the answer can still be changed.
-    expect(create).toContain("const isPublic = true;");
+    // Public only when the Public tab opened the chooser. It used to be
+    // hard-wired true, so a room made from anywhere else was published
+    // without being asked for (roomKindIsStrict.test.ts).
+    expect(create).toContain("const isPublic = createsPublicRooms;");
     expect(create).not.toMatch(/setIsPublic/);
     expect(create).not.toMatch(/extra\.roomPublicHint/);
     // Three of the six can go on the Public tab. The quick game has no room
@@ -162,7 +165,7 @@ describe("the private tab and the lobby it opens", () => {
     // and every one of those questions is either answered or answered
     // better in the lobby the host is going to anyway.
     expect(page).toMatch(/const createRoomAndOpen = async \(isPublic: boolean\) => \{/);
-    expect(page).toMatch(/onSelectGameRoom=\{\(\) => void createRoomAndOpen\(activeTab === "public"\)\}/);
+    expect(page).toMatch(/onSelectGameRoom=\{\(\) => \{[\s\S]*?void createRoomAndOpen\(false\);/);
     // Named so the lobby has a title; born private and on the latch exactly
     // when it was made from the Public tab — Create is what publishes it
     // (draftIsPrivateUntilCreate.test.ts).
@@ -211,7 +214,7 @@ describe("the two tabs do not show the same room twice — except your own", () 
     expect(page).toMatch(/visibility="private"/);
     const rooms = read("src/hooks/useMyRooms.ts");
     expect(rooms).toMatch(
-      /if \(visibility === "private"\) \{\s*\n\s*result = result\.filter\(\(room\) => !room\.is_public \|\| room\.is_host\)/,
+      /if \(visibility === "private"\) \{[\s\S]*?result = result\.filter\(\(room\) => !roomIsPublicKind\(room\) \|\| room\.is_host\)/,
     );
   });
 

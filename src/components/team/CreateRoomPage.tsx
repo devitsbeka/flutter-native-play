@@ -221,9 +221,23 @@ interface CreateRoomPageProps {
    * reads as the app landing somewhere else first and then correcting itself.
    */
   enterInstantly?: boolean;
+  /**
+   * Whether the rooms this screen creates are PUBLIC ones.
+   *
+   * False by default, and that default is the rule: a room is public only
+   * when it was created as public, from the Public tab. This used to be
+   * `const isPublic = true` here — every library, Guess or Battle room the
+   * chooser made was published, wherever the chooser had been opened from,
+   * and the lobby then offered the public rules on a room its host had made
+   * to play with one friend. The comment that hard-wiring carried said the
+   * choice had "moved to the lobby"; the lobby's visibility switch was
+   * removed after that (owner: "remove public/private tabs"), so it had
+   * moved nowhere. See utils/roomKind.ts for the rule in full.
+   */
+  createsPublicRooms?: boolean;
 }
 
-export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType, initialMode, ownsRoute = false, autoOpenPersonalTrivia, preSelectedCategory, enterInstantly = false }: CreateRoomPageProps) {
+export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType, initialMode, ownsRoute = false, autoOpenPersonalTrivia, preSelectedCategory, enterInstantly = false, createsPublicRooms = false }: CreateRoomPageProps) {
   const { user, profile, loading: authLoading } = useAuth();
   const { t } = useLanguage();
   // Which level of a picture game the player is up to.
@@ -375,16 +389,12 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
    * Private is the old behaviour exactly, a room only reachable through its
    * code, its link or an invitation.
    *
-   * It starts published because a room nobody can find is the thing this
-   * screen was worst at: the only way to fill one was to already know who
-   * you wanted in it.
-   *
-   * Not a switch any more, and not because the choice went away — it moved.
-   * The lobby has the same control, on the screen where the room exists;
-   * asking on the way in as well meant answering the same question twice
-   * before there was anything to be public ABOUT.
+   * Not a switch on this screen, and not one in the lobby either: the kind
+   * is decided by the door the host came through, and `createsPublicRooms`
+   * is that door speaking. Private unless the Public tab opened this — the
+   * rule in full is in utils/roomKind.ts.
    */
-  const isPublic = true;
+  const isPublic = createsPublicRooms;
 
   /**
    * Which of the six can go on the Public tab at all.

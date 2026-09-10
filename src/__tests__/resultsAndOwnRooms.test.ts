@@ -78,7 +78,9 @@ describe("the Players tab is a scoreboard, so it is ordered like one", () => {
 
 describe("your own room is on whichever tab you look at", () => {
   it("the Private tab keeps the rooms you host, published or not", () => {
-    expect(myRooms).toMatch(/result = result\.filter\(\(room\) => !room\.is_public \|\| room\.is_host\)/);
+    // By the room's kind, so a public room still in draft is judged public
+    // here too (roomKindIsStrict.test.ts) — and the card says which it is.
+    expect(myRooms).toMatch(/result = result\.filter\(\(room\) => !roomIsPublicKind\(room\) \|\| room\.is_host\)/);
   });
 
   it("and still hides everyone else's published rooms", () => {
