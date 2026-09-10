@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
 import { useTVGame } from '@/contexts/TVGameContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Crown, Users, Play, Shuffle, Check, X, UserPlus } from 'lucide-react';
+import { Users, Play, Shuffle, Check, X, UserPlus } from 'lucide-react';
+import crownIcon from '@/assets/lobby/crown.png';
 import { SmartAvatar } from '@/components/shared/SmartAvatar';
 import { supabase } from '@/integrations/supabase/client';
 import { filterCategoriesForLanguage } from '@/utils/languageCategoryFilter';
@@ -684,13 +685,13 @@ export const TVLobbyScreenV2: React.FC = () => {
                     <>
                       {/* Host Crown */}
                       {(player as typeof players[0]).isHost && (
-                        <motion.div
+                        <motion.img
+                          src={crownIcon}
+                          alt=""
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
-                          className="absolute top-1 right-1 w-5 h-5 rounded-full bg-yellow-500 flex items-center justify-center shadow-lg z-10"
-                        >
-                          <Crown className="w-3 h-3 text-yellow-900" />
-                        </motion.div>
+                          className="absolute top-0 right-0 w-7 h-7 object-contain drop-shadow-lg z-10"
+                        />
                       )}
 
                       {/* Avatar - 40% larger */}

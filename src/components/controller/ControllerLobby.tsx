@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTVGame } from '@/contexts/TVGameContext';
 import { ChunkyButton } from '@/components/ui/chunky-button';
-import { Users, Crown, Play, ChevronDown, Loader2 } from 'lucide-react';
+import { Users, Play, ChevronDown, Loader2 } from 'lucide-react';
+import crownIcon from '@/assets/lobby/crown.png';
 import { SafeAvatar } from '@/components/shared/SafeAvatar';
 import { DynamicIcon } from '@/components/shared/DynamicIcon';
 import { supabase } from '@/integrations/supabase/client';
@@ -85,7 +86,8 @@ export const ControllerLobby: React.FC = () => {
                 fallbackClassName="bg-purple-600 text-white"
               />
               <span className="text-white flex-1">{player.nickname}</span>
-              {player.isHost && <Crown className="w-5 h-5 text-yellow-400" />}
+              {/* The host wears the app's own crown, as on every other lobby (UniversalLobby). */}
+              {player.isHost && <img src={crownIcon} alt="" className="h-5 w-5 object-contain" />}
             </div>
           ))}
         </div>
