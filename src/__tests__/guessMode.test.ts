@@ -168,7 +168,8 @@ describe("Guess replaced Random on the create screen", () => {
     // question, which is right there.
     const quiz = read("src/pages/CategoryQuizPage.tsx");
     expect(quiz).toMatch(/const wantsCountdown = Boolean\(\(location\.state as \{ countdown\?: boolean \} \| null\)\?\.countdown\);/);
-    expect(quiz).toMatch(/useState<number \| null>\(wantsCountdown \? 3 : null\)/);
+    // A duel holds its 3-2-1 for the intro screen's Play — see guessDuel.
+    expect(quiz).toMatch(/useState<number \| null>\(wantsCountdown && !duelFromState \? 3 : null\)/);
     // Counted only once there are questions to count down to, and the
     // clock held until it is over.
     expect(quiz).toMatch(/if \(countdown === null \|\| loading \|\| questions\.length === 0\) return;/);
