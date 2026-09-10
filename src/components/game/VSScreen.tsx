@@ -16,6 +16,7 @@ import { useCategories } from "@/hooks/useCategories";
 import { excludePartyCategories } from "@/config/partyCategories";
 import confetti from "canvas-confetti";
 import { REWARDS } from "@/config/rewardConfig";
+import { popularCategoryIcon } from "@/config/popularImageCategories";
 
 import coinIcon from "@/assets/icons/icon-coin.png";
 import defaultGuestAvatar from "@/assets/guest-avatar.png";
@@ -55,33 +56,50 @@ interface CategoryPlateProps {
   /**
    * A reel to turn, instead of a name to swap.
    *
-   * The Guess versus screen's wheel used to be twelve timed swaps of the
-   * name and the icon, and however the steps were paced it read as a
+   * Both wheels used to be timed swaps of the name and the icon — twelve
+   * or fourteen of them — and however the steps were paced they read as a
    * flicker, not a spin (owner, twice: "it rolls very fast, we need smooth
    * animation"). With a reel, the plate IS a slot machine: every game is
    * a row on one strip, the strip travels REEL_LOOPS full turns and lands
-   * on `target` in one continuous ease-out motion of `seconds`, and the
-   * icon rides a strip of its own in step. Nothing blinks, because
-   * nothing is swapped. `turnKey` changing turns it again; `onLanded` is
-   * the moment to lock and pop. The quick game's wheel keeps its swaps.
+   * on `target` in one continuous motion of REEL_SECONDS, and the icon
+   * rides a strip of its own in step. Nothing blinks, because nothing is
+   * swapped. `turnKey` changing turns it again; `onLanded` is the moment
+   * to lock and pop. The quick game and the Guess card both turn it.
    */
   reel?: PlateReel;
 }
 
 export interface PlateReel {
-  items: { name: string; iconSlug?: string | null }[];
+  /** A row: its name, and its picture — `iconUrl` (bundled art) wins over `iconSlug` (icon-library). */
+  items: { name: string; iconSlug?: string | null; iconUrl?: string | null }[];
   target: number;
   turnKey: number;
-  seconds: number;
   onLanded: () => void;
 }
 
-/** Full turns the reel makes before it lands. */
-export const REEL_LOOPS = 3;
-/** One motion, fast then slow: the reel's ease-out. */
-export const REEL_EASE = [0.12, 0.8, 0.18, 1] as const;
+/**
+ * Full turns the reel makes before it lands. Two, not three: at three, the
+ * rows went by too fast to be rows (owner: "we need smooth loader, not too
+ * fast").
+ */
+export const REEL_LOOPS = 2;
+/**
+ * One motion: a gentle start, a long slow-down onto the row it lands on.
+ * The old curve put 80% of the travel in the first 12% of the time, which
+ * is a blur, not a spin.
+ */
+export const REEL_EASE = [0.32, 0.08, 0.16, 1] as const;
+/** How long the reel turns, both wheels. */
+export const REEL_SECONDS = 4.4;
 const NAME_ROW_H = 24;
-const ICON_ROW_H = 84;
+/**
+ * The plate is 112 tall and the icon 96, hanging 30 off the plate's left
+ * edge; the name starts at 76, so there is clear water between the two
+ * (owner: "increase category loader in height to fit well … enough space
+ * between logo and category title"). Change one, change them all.
+ */
+const ICON_ROW_H = 96;
+const PLATE_ICON_CLASS = "-left-[30px] top-[8px] w-[90px] h-[96px]";
 
 /** The strip: every game REEL_LOOPS times over, then up to the one to land on. */
 function reelRows(reel: PlateReel) {
@@ -115,7 +133,7 @@ export function CategoryPlate({
   const turning = !!reel && !isLocked && reel.items.length > 0;
   const rows = turning ? reelRows(reel) : [];
   const travel = rows.length - 1;
-  const reelTransition = { duration: reel?.seconds ?? 0, ease: REEL_EASE };
+  const reelTransition = { duration: REEL_SECONDS, ease: REEL_EASE };
 
   return (
     <div className="relative w-full max-w-[371px] mx-auto">
@@ -123,7 +141,7 @@ export function CategoryPlate({
           and the icon roll through it; when it stops, the plate itself pops
           once so the reveal has a beat of its own. */}
       <motion.div
-        className="relative h-[97px] flex flex-col justify-center gap-[6px] pl-[52px] pr-[72px] backdrop-blur-[24px] overflow-hidden"
+        className="relative h-[112px] flex flex-col justify-center gap-[6px] pl-[76px] pr-[72px] backdrop-blur-[24px] overflow-hidden"
         animate={isLocked ? { scale: [1, 1.06, 0.99, 1] } : { scale: 1 }}
         transition={isLocked ? { duration: 0.45, times: [0, 0.35, 0.7, 1], ease: "easeOut" } : { duration: 0.2 }}
         style={{
@@ -196,20 +214,23 @@ export function CategoryPlate({
           While the reel turns, the icons ride a strip of their own, in step
           with the names. */}
       {turning ? (
-        <div className="absolute -left-[26px] top-[5px] w-[79px] overflow-hidden pointer-events-none" style={{ height: ICON_ROW_H }}>
+        <div className="absolute -left-[30px] top-[8px] w-[90px] overflow-hidden pointer-events-none" style={{ height: ICON_ROW_H }}>
           <motion.div key={reel!.turnKey} initial={{ y: 0 }} animate={{ y: -travel * ICON_ROW_H }} transition={reelTransition}>
-            {rows.map((row, i) => (
-              <div key={i} className="flex items-center justify-center" style={{ height: ICON_ROW_H }}>
-                {row.iconSlug && (
-                  <img
-                    src={`${ICON_STORAGE_URL}/${row.iconSlug}.png`}
-                    alt=""
-                    className="w-[79px] h-[84px] object-contain"
-                    style={{ filter: "drop-shadow(0 4px 16px rgba(0,0,0,0.2))" }}
-                  />
-                )}
-              </div>
-            ))}
+            {rows.map((row, i) => {
+              const src = row.iconUrl ?? (row.iconSlug ? `${ICON_STORAGE_URL}/${row.iconSlug}.png` : undefined);
+              return (
+                <div key={i} className="flex items-center justify-center" style={{ height: ICON_ROW_H }}>
+                  {src && (
+                    <img
+                      src={src}
+                      alt=""
+                      className="w-[90px] h-[96px] object-contain"
+                      style={{ filter: "drop-shadow(0 4px 16px rgba(0,0,0,0.2))" }}
+                    />
+                  )}
+                </div>
+              );
+            })}
           </motion.div>
         </div>
       ) : (
@@ -219,7 +240,7 @@ export function CategoryPlate({
               key={resolvedIcon}
               src={resolvedIcon}
               alt=""
-              className="absolute -left-[26px] top-[5px] w-[79px] h-[84px] object-contain pointer-events-none"
+              className={`absolute ${PLATE_ICON_CLASS} object-contain pointer-events-none`}
               style={{ filter: "drop-shadow(0 4px 16px rgba(0,0,0,0.2))" }}
               initial={{ opacity: 0, y: 22, scale: 0.85 }}
               animate={{ opacity: 1, y: 0, scale: isLocked ? [0.85, 1.12, 1] : 1 }}
@@ -300,11 +321,12 @@ export function VSScreen() {
     icon_slug: "mystery-box",
   };
 
-  // Category slot state
+  // Category reel state: the pool it turns through, the row it will land
+  // on (null until a turn is decided), and which turn this is.
   const [categoryPool, setCategoryPool] = useState<typeof categories>([]);
-  const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
+  const [reelTarget, setReelTarget] = useState<number | null>(null);
+  const [reelTurn, setReelTurn] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState<{id: string; name: string} | null>(null);
-  const categoryIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const categoryPoolSetForStageRef = useRef(false);
 
   // Player data
@@ -312,8 +334,6 @@ export function VSScreen() {
   const playerLevelInfo = calculateLevel(profile?.total_points || 0);
   const opponentPoints = opponent?.points || 0;
   const opponentLevelInfo = calculateLevel(opponentPoints);
-
-  const currentCategory = categoryPool[currentCategoryIndex];
 
   // Fetch AI-generated avatar URLs and merge with mascot avatars
   useEffect(() => {
@@ -410,7 +430,9 @@ export function VSScreen() {
   );
 
   // Stage 3: the category is either the one the player picked — no spin,
-  // there is nothing to decide — or the slot machine picks one.
+  // there is nothing to decide — or the reel picks one: the winner is
+  // drawn now, the plate's reel turns to it (CategoryPlate.reel, the
+  // Guess card's wheel), and says when it is there.
   useEffect(() => {
     if (stage !== "finding-category") return;
     if (chosenCategory) {
@@ -418,40 +440,29 @@ export function VSScreen() {
       setStage("category-found");
       return;
     }
-    if (categoryPool.length === 0) return;
+    if (categoryPool.length === 0 || reelTarget !== null) return;
+    setReelTarget(Math.floor(Math.random() * categoryPool.length));
+    setReelTurn((k) => k + 1);
+  }, [stage, categoryPool, chosenCategory, reelTarget]);
 
-    let cycleCount = 0;
-    const maxCycles = 14;
-    
-    const getDelay = (count: number): number => {
-      if (count < 7) return 80;
-      if (count < 10) return 150;
-      if (count < 12) return 250;
-      return 400;
-    };
+  const reelLanded = useCallback(() => {
+    if (stage !== "finding-category" || reelTarget === null) return;
+    const winner = categoryPool[reelTarget];
+    if (!winner) return;
+    setSelectedCategory({ id: winner.id, name: winner.name });
+    setStage("category-found");
+  }, [stage, reelTarget, categoryPool]);
 
-    const cycleCategory = () => {
-      cycleCount++;
-      setCurrentCategoryIndex(prev => (prev + 1) % categoryPool.length);
-
-      if (cycleCount < maxCycles) {
-        categoryIntervalRef.current = setTimeout(cycleCategory, getDelay(cycleCount));
-      } else {
-        // Lock in category
-        const winnerIndex = Math.floor(Math.random() * categoryPool.length);
-        setCurrentCategoryIndex(winnerIndex);
-        const winner = categoryPool[winnerIndex];
-        setSelectedCategory({ id: winner.id, name: winner.name });
-        setStage("category-found");
-      }
-    };
-
-    categoryIntervalRef.current = setTimeout(cycleCategory, 200);
-
-    return () => {
-      if (categoryIntervalRef.current) clearTimeout(categoryIntervalRef.current);
-    };
-  }, [stage, categoryPool, chosenCategory]);
+  /** The reel's rows: the pool, each with the picture its card wears. */
+  const reelItems = useMemo(
+    () =>
+      categoryPool.map((c) =>
+        c.id === "__mixed__"
+          ? { name: t("extra.mixedCategory"), iconUrl: mysteryBoxIcon }
+          : { name: c.name, iconSlug: c.icon_slug ?? undefined, iconUrl: popularCategoryIcon(c.category_id) ?? undefined },
+      ),
+    [categoryPool, t],
+  );
 
   // Pre-fetch questions ref
   const prefetchedQuestionsRef = useRef<TriviaQuestion[] | null>(null);
@@ -525,23 +536,28 @@ export function VSScreen() {
     if (categorySpinsLeft <= 0) return;
     setCategorySpinsLeft((n) => n - 1);
     setSelectedCategory(null);
-    setCurrentCategoryIndex(0);
     prefetchedQuestionsRef.current = null;
     setIsStarting(false);
+    let pool = categoryPool;
     if (categories.length > 0) {
       const shuffled = [...categories].sort(() => Math.random() - 0.5);
-      const poolWithMixed = [MIXED_CATEGORY as typeof categories[0], ...shuffled.slice(0, Math.min(7, shuffled.length))];
-      setCategoryPool(poolWithMixed);
+      pool = [MIXED_CATEGORY as typeof categories[0], ...shuffled.slice(0, Math.min(7, shuffled.length))];
+      setCategoryPool(pool);
     }
+    // The winner and the turn are decided here, in the same render as the
+    // stage, so the reel starts turning at once rather than after a frame
+    // of whatever row it happened to be on.
+    setReelTarget(pool.length > 0 ? Math.floor(Math.random() * pool.length) : null);
+    setReelTurn((k) => k + 1);
     setStage("finding-category");
-  }, [categorySpinsLeft, categories]);
+  }, [categorySpinsLeft, categories, categoryPool]);
 
   // Handle refresh - re-spin for new opponent and category
   const handleRefresh = useCallback(() => {
     // Reset local state
     setStage("finding-opponent");
     setSelectedCategory(null);
-    setCurrentCategoryIndex(0);
+    setReelTarget(null);
     setConnectionError(false);
     categoryPoolSetForStageRef.current = false;
     prefetchedQuestionsRef.current = null;
@@ -560,8 +576,11 @@ export function VSScreen() {
     startMatchmaking();
   }, [categories, startMatchmaking]);
 
-  /** What the plate shows: the locked category once there is one, otherwise
-      whichever category the wheel is passing through. */
+  /** What the plate shows once the reel is still: the locked category, with
+      the picture its card wears (the six picture games ship their own art;
+      the icon-library slug they carry is a generic stand-in). While the
+      reel turns, the reel's rows are what shows; before it turns, the
+      mystery box. */
   const plateCategory = useMemo(() => {
     if (selectedCategory) {
       if (selectedCategory.id === "__mixed__") {
@@ -570,16 +589,14 @@ export function VSScreen() {
       const match =
         categoryPool.find((c) => c.id === selectedCategory.id) ??
         categories.find((c) => c.id === selectedCategory.id);
-      return { name: selectedCategory.name, iconSlug: match?.icon_slug ?? undefined, iconUrl: undefined };
-    }
-    if (currentCategory) {
-      if (currentCategory.id === "__mixed__") {
-        return { name: t("extra.mixedCategory"), iconSlug: undefined, iconUrl: mysteryBoxIcon };
-      }
-      return { name: currentCategory.name, iconSlug: currentCategory.icon_slug ?? undefined, iconUrl: undefined };
+      return {
+        name: selectedCategory.name,
+        iconSlug: match?.icon_slug ?? undefined,
+        iconUrl: popularCategoryIcon(match?.category_id) ?? undefined,
+      };
     }
     return { name: t("extra.searchingCategory"), iconSlug: undefined, iconUrl: mysteryBoxIcon };
-  }, [selectedCategory, currentCategory, categoryPool, categories, t]);
+  }, [selectedCategory, categoryPool, categories, t]);
 
   const displayCategoryName = plateCategory.name;
   const displayCategoryIconSlug = plateCategory.iconSlug;
@@ -704,6 +721,11 @@ export function VSScreen() {
             canSpin={isCategoryLocked && !chosenCategory && categorySpinsLeft > 0}
             onSpin={handleCategorySpin}
             spinLabel={t("extra.spinCategoryBtn", { count: categorySpinsLeft })}
+            reel={
+              reelTarget !== null && !chosenCategory
+                ? { items: reelItems, target: reelTarget, turnKey: reelTurn, onLanded: reelLanded }
+                : undefined
+            }
           />
         </motion.div>
 

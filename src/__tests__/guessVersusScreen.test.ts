@@ -70,22 +70,52 @@ describe("the screen is the quick game's", () => {
     // animation"). Now every game is a row on one strip that travels three
     // full turns and lands in one ease-out motion; nothing is swapped.
     const plate = read("src/components/game/VSScreen.tsx");
-    expect(plate).toMatch(/export const REEL_LOOPS = 3;/);
-    expect(plate).toMatch(/export const REEL_EASE = \[0\.12, 0\.8, 0\.18, 1\] as const;/);
+    // Two turns over 4.4s on a gentle curve: three turns in 3s, front-loaded
+    // (80% of the travel in the first 12% of the time), was a blur again
+    // (owner: "we need smooth loader, not too fast").
+    expect(plate).toMatch(/export const REEL_LOOPS = 2;/);
+    expect(plate).toMatch(/export const REEL_EASE = \[0\.32, 0\.08, 0\.16, 1\] as const;/);
+    expect(plate).toMatch(/export const REEL_SECONDS = 4\.4;/);
+    expect(plate).toMatch(/const reelTransition = \{ duration: REEL_SECONDS, ease: REEL_EASE \};/);
     expect(plate).toMatch(/animate=\{\{ y: -travel \* NAME_ROW_H \}\}/);
     expect(plate).toMatch(/animate=\{\{ y: -travel \* ICON_ROW_H \}\}/);
     expect(plate).toMatch(/onAnimationComplete=\{reel!\.onLanded\}/);
-    expect(screen).toMatch(/const REEL_SECONDS = 3;/);
-    expect(screen).toMatch(/reel=\{\{ items: categories, target: wheelIndex, turnKey: spinKey, seconds: REEL_SECONDS, onLanded: landed \}\}/);
+    expect(screen).toMatch(/reel=\{\{ items: reelItems, target: wheelIndex, turnKey: spinKey, onLanded: landed \}\}/);
     expect(screen).toMatch(/const landed = useCallback\(\(\) => setLocked\(true\), \[\]\);/);
-    expect(screen).not.toMatch(/setTimeout|wheelDelay|WHEEL_CYCLES/);
-    // The quick game's wheel keeps its swaps: the reel is opt-in.
+    expect(screen).not.toMatch(/setTimeout|wheelDelay|WHEEL_CYCLES|REEL_SECONDS =/);
     expect(plate).toMatch(/const turning = !!reel && !isLocked && reel\.items\.length > 0;/);
-    // And the one line that says how it is scored, once the wheel has
-    // stopped — narrow, so it never runs into the cards (owner: "show text
-    // below in more narrow container").
-    expect(screen).toMatch(/\{t\("extra\.duelRulesHint"\)\}/);
-    expect(screen).toMatch(/className="mx-auto mt-3 max-w-\[260px\] text-center/);
+    // The quick game turns the same reel now — its fourteen swaps are gone
+    // (owner: "we have same loader on quick game … we need smooth loader").
+    expect(plate).not.toMatch(/cycleCategory|categoryIntervalRef|currentCategoryIndex/);
+    expect(plate).toMatch(/reel=\{\s*reelTarget !== null && !chosenCategory\s*\? \{ items: reelItems, target: reelTarget, turnKey: reelTurn, onLanded: reelLanded \}\s*: undefined\s*\}/);
+    expect(plate).toMatch(/setReelTarget\(pool\.length > 0 \? Math\.floor\(Math\.random\(\) \* pool\.length\) : null\);/);
+    // No rules line under the plate any more (owner: "remove description below").
+    expect(screen).not.toMatch(/duelRulesHint/);
+  });
+
+  it("the plate is tall enough for the art, with clear water before the name", () => {
+    // 97 tall with a 84 icon hanging 26 off the edge and the name at 52: the
+    // icon's right edge sat ON the name (owner: "increase category loader in
+    // height to fit well … enough space between logo and category title").
+    const plate = read("src/components/game/VSScreen.tsx");
+    expect(plate).toMatch(/className="relative h-\[112px\] flex flex-col justify-center gap-\[6px\] pl-\[76px\] pr-\[72px\]/);
+    expect(plate).toMatch(/const ICON_ROW_H = 96;/);
+    expect(plate).toMatch(/const PLATE_ICON_CLASS = "-left-\[30px\] top-\[8px\] w-\[90px\] h-\[96px\]";/);
+    expect(plate).toMatch(/className="absolute -left-\[30px\] top-\[8px\] w-\[90px\] overflow-hidden pointer-events-none" style=\{\{ height: ICON_ROW_H \}\}/);
+    expect(plate).toMatch(/className="w-\[90px\] h-\[96px\] object-contain"/);
+  });
+
+  it("the picture games wear their card art on the plate, not the library stand-in", () => {
+    // guess_logo's icon_slug is a magnifier; its card shows the logo art
+    // (CategoryArtwork → POPULAR_CATEGORY_ICONS). The plate — landed and
+    // every reel row — makes the same choice (owner: "i still see other icon
+    // on guess the logo, we should use what we have in categories").
+    const plate = read("src/components/game/VSScreen.tsx");
+    expect(screen).toMatch(/iconUrl=\{popularCategoryIcon\(category\?\.category_id\) \?\? undefined\}/);
+    expect(screen).toMatch(/iconUrl: popularCategoryIcon\(c\.category_id\) \?\? undefined/);
+    expect(plate).toMatch(/const src = row\.iconUrl \?\? \(row\.iconSlug \? `\$\{ICON_STORAGE_URL\}\/\$\{row\.iconSlug\}\.png` : undefined\);/);
+    expect(plate).toMatch(/iconUrl: popularCategoryIcon\(match\?\.category_id\) \?\? undefined,/);
+    expect(plate).toMatch(/iconUrl: popularCategoryIcon\(c\.category_id\) \?\? undefined \}/);
   });
 
   it("Play hands the landed game to the caller", () => {
