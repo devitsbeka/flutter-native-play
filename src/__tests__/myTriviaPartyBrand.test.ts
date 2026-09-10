@@ -236,7 +236,7 @@ describe("the lobby names the trivia on the chip, not the product", () => {
 
   it("and the emblem stands alone above the name", () => {
     expect(universal).toMatch(/<span className="mb-\[15px\] block">\{emblem\}<\/span>/);
-    expect(universal).toMatch(/<RoomTitle name=\{roomName\} icon=\{icon\} editable \/>/);
+    expect(universal).toMatch(/<RoomTitle name=\{roomName\} icon=\{icon\} iconFramed=\{iconFramed\} editable \/>/);
   });
 
   it("and only a real party is named as one", () => {

@@ -1553,6 +1553,8 @@ function TeamContentV2() {
                   {showsPrivateTrivias && (privateFilterApplied !== "all" || hasTrivias) && (
                     <MyTriviaTab
                       onCreateQuiz={() => setShowCreateTypeModal(true)}
+                      canHostRoom={!roomsLocked}
+                      onRoomsLocked={() => setShowRoomsWall(true)}
                       onPlay={(post, collectionPosts) => {
                         setPlayingQuiz({ post, collectionPosts });
                       }}

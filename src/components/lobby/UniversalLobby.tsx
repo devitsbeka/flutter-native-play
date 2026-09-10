@@ -134,6 +134,13 @@ export interface UniversalLobbyProps {
    * icon it actually wears, which is the host's to change.
    */
   icon?: string | null;
+  /**
+   * The face is a picture the host uploaded, not one of the catalogue's
+   * transparent icons: drawn in a 20px-rounded frame, cropped to fill
+   * (owner: "if user uploaded image ... let's have container with corner
+   * radius 20").
+   */
+  iconFramed?: boolean;
   /** The host renames by tapping the name; a guest gets the name alone. */
   onRename?: () => void;
   onBack: () => void;
@@ -150,6 +157,8 @@ export interface UniversalLobbyProps {
   category?: {
     label: string;
     iconSlug?: string | null;
+    /** An image for the chip instead of a catalogue slug: a party, a trivia, a collection. */
+    iconSrc?: string | null;
     /** "+5" — the extra rounds, shown at the FAR RIGHT of the chip. */
     trailing?: string;
     onPress?: () => void;
@@ -363,6 +372,7 @@ export function UniversalLobby({
   sceneArt,
   roomName,
   icon,
+  iconFramed = false,
   onRename,
   onBack,
   unreadCount = 0,
@@ -864,6 +874,7 @@ export function UniversalLobby({
             <Ring on={!!category.glow} className="min-w-0">
               <Chip
                 iconSlug={category.iconSlug}
+                iconSrc={category.iconSrc}
                 label={category.label}
                 trailing={category.trailing}
                 onPress={category.onPress}
@@ -973,10 +984,10 @@ export function UniversalLobby({
                 onClick={onRename}
                 className="flex w-full flex-col items-center"
               >
-                <RoomTitle name={roomName} icon={icon} editable />
+                <RoomTitle name={roomName} icon={icon} iconFramed={iconFramed} editable />
               </motion.button>
             ) : (
-              <RoomTitle name={roomName} icon={icon} />
+              <RoomTitle name={roomName} icon={icon} iconFramed={iconFramed} />
             )}
             {/* How full the room is, right under its name.
                 It used to sit at the foot of the players tab, below every
@@ -1574,10 +1585,12 @@ const TITLE_GUTTER_PX = 24;
 export function RoomTitle({
   name,
   icon,
+  iconFramed = false,
   editable = false,
 }: {
   name: string;
   icon?: string | null;
+  iconFramed?: boolean;
   editable?: boolean;
 }) {
   // Stacked and centred (Figma 1059:532): the emblem at 91px, the name
@@ -1639,7 +1652,12 @@ export function RoomTitle({
       <img
         alt=""
         src={icon}
-        className="size-full object-contain drop-shadow-[0_4px_10px_rgba(88,50,160,0.22)]"
+        className={cn(
+          "size-full drop-shadow-[0_4px_10px_rgba(88,50,160,0.22)]",
+          // A photo fills a rounded frame; a catalogue icon is transparent
+          // and stands on its own.
+          iconFramed ? "rounded-[20px] object-cover" : "object-contain",
+        )}
       />
       {editable && <span className="absolute left-[65px] top-[4px]">{chip}</span>}
     </span>
@@ -1670,6 +1688,7 @@ export function RoomTitle({
  */
 function Chip({
   iconSlug,
+  iconSrc,
   label,
   trailing,
   onPress,
@@ -1678,6 +1697,8 @@ function Chip({
   /** The category's own icon, once one is picked. With nothing picked the
       mock shows the words alone rather than a placeholder for it. */
   iconSlug?: string | null;
+  /** An image in the icon's place — the party house, the trivia, the collection. */
+  iconSrc?: string | null;
   label: string;
   /** A note pinned to the far right of the chip — "+5" extra rounds. */
   trailing?: string;
@@ -1714,7 +1735,7 @@ function Chip({
           // The picked category wears its own face; with nothing picked yet
           // the mock shows the words alone, so the label takes the icon's
           // place rather than standing beside a placeholder for it.
-          iconSlug ? "pl-[13px]" : "pl-[31px]",
+          iconSlug || iconSrc ? "pl-[13px]" : "pl-[31px]",
           // 8px is the gap before the + , which carries the real inset in
           // its own mr-[20px]. With no + there is nothing to carry it, and
           // the "+N" pill ended up 8px from the pill's edge — reading as
@@ -1724,11 +1745,15 @@ function Chip({
           action ? "pr-[8px]" : "pr-[20px]",
         )}
       >
-        {iconSlug && (
+        {iconSrc ? (
+          <span className="pointer-events-none shrink-0">
+            <img alt="" src={iconSrc} className="h-8 w-8 object-contain" />
+          </span>
+        ) : iconSlug ? (
           <span className="pointer-events-none shrink-0">
             <DynamicIcon slug={iconSlug} size={32} />
           </span>
-        )}
+        ) : null}
         {/* The tabs' own 18px: the chip and the bar under it are the two
             labels on the same column, and they read as one voice at one
             size (owner: "increase select category font size, same font

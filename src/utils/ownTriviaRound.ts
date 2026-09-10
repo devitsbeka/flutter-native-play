@@ -1,4 +1,7 @@
 import { isUndecidedRound, UNDECIDED_ICON_SLUG } from "@/utils/undecidedRound";
+import iconHouseParty from "@/assets/house-party.png";
+import iconTrivia from "@/assets/icon-trivia.png";
+import iconCollections from "@/assets/icon-collections.png";
 /**
  * A round built on one of the player's own trivias.
  *
@@ -96,4 +99,40 @@ export function roomPlaysOwnTrivia(
 ): boolean {
   if (room?.user_trivia_id) return true;
   return !isPublic && queue.some(roundIsOwnTrivia);
+}
+
+/**
+ * Which of the player's own things a room plays: a My Trivia Party, a
+ * trivia, or a collection.
+ *
+ * All three wore the party house on the lobby's chip, because the room only
+ * said `user_trivia_id` (owner: "we should separate and show properly icons
+ * - My trivia party, trivia or collection, each have their icons"). The
+ * room's `game_mode` names it now — `party:<id>`, `trivia:<id>`,
+ * `collection:<id>` — written by every path that makes such a room. A room
+ * from before that carries only `user_trivia_id`, and reads as a party, which
+ * is what it looked like.
+ */
+export type OwnTriviaKind = "party" | "trivia" | "collection";
+
+export function ownTriviaKind(
+  room: { game_mode?: string | null; user_trivia_id?: string | null } | null | undefined,
+): OwnTriviaKind | null {
+  const mode = room?.game_mode ?? "";
+  if (mode.startsWith("party:")) return "party";
+  if (mode.startsWith("trivia:")) return "trivia";
+  if (mode.startsWith("collection:")) return "collection";
+  return room?.user_trivia_id ? "party" : null;
+}
+
+/** The face each kind wears: an image, not a catalogue slug. */
+export function ownTriviaIconSrc(kind: OwnTriviaKind): string {
+  switch (kind) {
+    case "trivia":
+      return iconTrivia;
+    case "collection":
+      return iconCollections;
+    default:
+      return iconHouseParty;
+  }
 }

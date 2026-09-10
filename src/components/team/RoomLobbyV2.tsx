@@ -20,7 +20,7 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { toast } from "@/lib/toast";
 import { supabase } from "@/integrations/supabase/client";
 import { routeForRoom } from "@/utils/roomRoutes";
-import { OWN_TRIVIA_ICON_SLUG, roomPlaysOwnTrivia, roundIconSlug } from "@/utils/ownTriviaRound";
+import { OWN_TRIVIA_ICON_SLUG, ownTriviaIconSrc, ownTriviaKind, roomPlaysOwnTrivia, roundIconSlug } from "@/utils/ownTriviaRound";
 import { isUndecidedRound, UNDECIDED_ICON_SLUG } from "@/utils/undecidedRound";
 import { MatchSummarySheet } from "./MatchSummarySheet";
 import { RematchWaitSheet, type RematchSeat } from "./RematchWaitSheet";
@@ -1398,6 +1398,12 @@ export function RoomLobbyV2() {
           || (currentRoom.user_trivia_id ? OWN_TRIVIA_ICON_SLUG : null)
           // A mixed round held by the room itself: the box, as everywhere else.
           || (isUndecidedRound(currentRoom.category_id, currentRoom.category_name) ? UNDECIDED_ICON_SLUG : null),
+        // The player's own thing wears its own face — the party house, the
+        // trivia, the collection — rather than the party house for all three.
+        iconSrc: (() => {
+          const kind = ownTriviaKind(currentRoom);
+          return kind ? ownTriviaIconSrc(kind) : null;
+        })(),
       }
     : null;
   const totalRounds = (heldRound ? 1 : 0) + queue.length;
@@ -1646,6 +1652,10 @@ export function RoomLobbyV2() {
    * still wins over the dealt one, party or not.
    */
   const roomFace = currentRoom.room_icon ?? dealtRoomIcon(currentRoom.id, iconPool);
+  // A face that is not one of the catalogue's is a picture the host uploaded
+  // (a trivia's cover): framed and cropped rather than floated (owner: "if
+  // user uploaded image ... container with corner radius 20").
+  const iconFramed = !!currentRoom.room_icon && iconPool.length > 0 && !iconPool.includes(currentRoom.room_icon);
   // A My Trivia room plays the quiz as written — its own question count —
   // so the questions-per-round choice is a library/random room's alone.
   const playsUserTrivia = !!currentRoom.user_trivia_id && !currentRoom.category_id;
@@ -1834,6 +1844,7 @@ export function RoomLobbyV2() {
       sceneArt={classicLobbyScene(currentRoom)}
       roomName={roomName}
       icon={roomFace}
+      iconFramed={iconFramed}
       onRename={canRename ? () => setShowIconPicker(true) : undefined}
       onBack={handleExitRoom}
       unreadCount={unreadCount}
@@ -1880,6 +1891,7 @@ export function RoomLobbyV2() {
           // not crowded against the category's name.
           trailing: !freshStart && firstName && extra > 0 ? `+${extra}` : undefined,
           iconSlug: freshStart ? undefined : (firstIconSlug ?? undefined),
+          iconSrc: freshStart ? undefined : (heldRound?.iconSrc ?? undefined),
           // Tapping opens the round list when there is more than one; a single
           // round opens the picker to change it. The + always queues another.
           onPress:

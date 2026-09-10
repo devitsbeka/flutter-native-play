@@ -1208,6 +1208,16 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     if (!user) return;
     if (isCreating) return;
 
+    // The player's own trivia or collection is a ROOM only for PRO; without
+    // it the pick is played solo, on the thing's own page (owner: "if
+    // player has trivia created and is not pro ... they should play it
+    // solo").
+    if (selectionMode === "my-trivias" && challengeTrivia && !isVip) {
+      onClose();
+      handoff(challengeTrivia.type === "collection" ? `/collection/${challengeTrivia.id}` : `/trivia/${challengeTrivia.id}`);
+      return;
+    }
+
     // Quick game is the /game matchmaking flow — no room to create; its
     // own guards (limits, stake) live centrally in the game flow.
     if (gameChoice === "quick") {

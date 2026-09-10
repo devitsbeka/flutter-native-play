@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Play, Users, Monitor } from "lucide-react";
+import { X, Play, Users, Monitor, Lock } from "lucide-react";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -25,6 +25,15 @@ interface TriviaPlayModeModalProps {
   onPlaySolo: () => void;
   onCreateRoom: () => void;
   onPlayTV: () => void;
+  /**
+   * Whether the player may host a room at all. A room — the lobby, the TV
+   * — is a PRO feature; a player without PRO plays their own trivia solo
+   * (owner: "if player has trivia created and is not pro ... they should
+   * play it solo"). Locked, the two options wear a padlock and open the
+   * PRO wall instead.
+   */
+  canHostRoom?: boolean;
+  onRoomsLocked?: () => void;
   /** The owner already played this blind trivia — solo is off the table
       (they know the answers now); what's left is challenging friends. */
   alreadyPlayed?: boolean;
@@ -37,6 +46,8 @@ export function TriviaPlayModeModal({
   onPlaySolo,
   onCreateRoom,
   onPlayTV,
+  canHostRoom = true,
+  onRoomsLocked,
   alreadyPlayed,
 }: TriviaPlayModeModalProps) {
   // Hook must run before the early return below
@@ -52,14 +63,29 @@ export function TriviaPlayModeModal({
   };
 
   const handleCreateRoom = () => {
+    if (!canHostRoom) {
+      onClose();
+      onRoomsLocked?.();
+      return;
+    }
     onCreateRoom();
     onClose();
   };
 
   const handlePlayTV = () => {
+    if (!canHostRoom) {
+      onClose();
+      onRoomsLocked?.();
+      return;
+    }
     onPlayTV();
     onClose();
   };
+  const lock = !canHostRoom && (
+    <span className="ml-auto flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+      <Lock className="h-3.5 w-3.5" strokeWidth={2.5} />
+    </span>
+  );
 
   return (
     <AnimatePresence>
@@ -163,6 +189,7 @@ export function TriviaPlayModeModal({
                       {t("extra.withFriendsDesc")}
                     </p>
                   </div>
+                  {lock}
                 </button>
 
                 {/* TV Mode */}
@@ -181,6 +208,7 @@ export function TriviaPlayModeModal({
                       {t("extra.onBigScreenDesc")}
                     </p>
                   </div>
+                  {lock}
                 </button>
               </div>
             </div>

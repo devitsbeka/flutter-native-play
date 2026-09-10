@@ -101,6 +101,14 @@ interface MyTriviaTabProps {
   onPlay?: (post: any, collectionPosts?: any[]) => void;
   onEditingRoundChange?: (isEditing: boolean) => void;
   onNavigateToTab?: (tab: string) => void;
+  /**
+   * A room is a PRO feature. Without it the player's own trivia, collection
+   * and party are played solo, and the room options wear a padlock that
+   * opens the PRO wall (owner: "if player has trivia created and is not
+   * pro ... they should play it solo").
+   */
+  canHostRoom?: boolean;
+  onRoomsLocked?: () => void;
 }
 
 // Compact quiz card for inside collections
@@ -598,7 +606,7 @@ function CollectionCard({
 }
 
 // Personal trivia card with distinct styling
-function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNew, isPosting, coverIcon }: { post: any; profile: any; index: number; onEdit: (post: any) => void; onPlay?: (post: any) => void; onPost?: (post: any) => void; isNew?: boolean; isPosting?: boolean; coverIcon?: PartyCoverIconSlug }) {
+function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNew, isPosting, coverIcon, canHostRoom = true }: { post: any; profile: any; index: number; onEdit: (post: any) => void; onPlay?: (post: any) => void; onPost?: (post: any) => void; isNew?: boolean; isPosting?: boolean; coverIcon?: PartyCoverIconSlug; canHostRoom?: boolean }) {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { createRoom } = useMultiplayerV2();
@@ -614,6 +622,13 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
 
   const handlePlayOnTV = async () => {
     if (isStartingTV) return;
+    // A party's Play makes a room, and a room is PRO. Without it the party
+    // is played solo, on its own page (owner: "same goes with collection and
+    // trivia party").
+    if (!canHostRoom) {
+      navigate(`/trivia/${post.id}`);
+      return;
+    }
     await (async () => {
       setIsStartingTV(true);
       try {
@@ -661,7 +676,7 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
           // No need to add to room_category_queue - the room's category_name serves as round 1
           await supabase
             .from("game_rooms")
-            .update({ user_trivia_id: post.id })
+            .update({ user_trivia_id: post.id, game_mode: `party:${post.id}` })
             .eq("id", room.id);
 
           navigate(`/team?join=${room.room_code}&tvMode=true`);
@@ -984,7 +999,7 @@ function StandaloneQuizCard({
     </motion.div>
   );
 }
-export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft, searchQuery = "", sortFilter = "all", onPlay, onEditingRoundChange, onNavigateToTab }: MyTriviaTabProps) {
+export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft, searchQuery = "", sortFilter = "all", onPlay, onEditingRoundChange, onNavigateToTab, canHostRoom = true, onRoomsLocked }: MyTriviaTabProps) {
   const queryClient = useQueryClient();
   const { data: myPosts, isLoading: postsLoading } = useMyQuizPosts();
   const { data: myCollections, isLoading: collectionsLoading } = useMyCollections();
@@ -1122,7 +1137,7 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
           rememberDraftRoom(room.id, { publishAs: "private" });
           await supabase
             .from("game_rooms")
-            .update({ user_trivia_id: playModeTrivia.id })
+            .update({ user_trivia_id: playModeTrivia.id, game_mode: `trivia:${playModeTrivia.id}` })
             .eq("id", room.id);
 
           navigate(`/team?join=${room.room_code}`);
@@ -1177,7 +1192,7 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
           rememberDraftRoom(room.id, { publishAs: "private" });
           await supabase
             .from("game_rooms")
-            .update({ user_trivia_id: playModeTrivia.id })
+            .update({ user_trivia_id: playModeTrivia.id, game_mode: `trivia:${playModeTrivia.id}` })
             .eq("id", room.id);
 
           navigate(`/team?join=${room.room_code}&tvMode=true`);
@@ -1523,7 +1538,8 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
               isMobile={isMobile}
             />
           ) : item.data.subject === 'personal' ? (
-            <PersonalTriviaCard 
+            <PersonalTriviaCard
+              canHostRoom={canHostRoom}
               key={item.data.id} 
               post={item.data} 
               profile={profile} 
@@ -1594,6 +1610,8 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
         onPlaySolo={handlePlaySolo}
         onCreateRoom={handleCreateRoom}
         onPlayTV={handlePlayTV}
+        canHostRoom={canHostRoom}
+        onRoomsLocked={onRoomsLocked}
         alreadyPlayed={ownerHasSeenTrivia(playModeTrivia)}
       />
     </motion.div>
