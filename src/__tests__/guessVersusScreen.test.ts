@@ -57,6 +57,22 @@ describe("the screen is the quick game's", () => {
     expect(screen).toMatch(/stake=\{REWARDS\.GUESS_STAKE\}/);
   });
 
+  it("turns like a wheel — one game to the next, slowing to a stop — and the plate glides with it", () => {
+    // It used to jump to a random game every 60ms, a flicker rather than a
+    // spin (owner: "it rolls very fast, we need more smooth animation").
+    expect(screen).toMatch(/setWheelIndex\(\(i\) => \(i \+ 1\) % categories\.length\);/);
+    expect(screen).toMatch(/const WHEEL_FIRST_MS = 110;/);
+    expect(screen).toMatch(/const WHEEL_LAST_MS = 520;/);
+    expect(screen).toMatch(/return Math\.round\(WHEEL_FIRST_MS \+ \(WHEEL_LAST_MS - WHEEL_FIRST_MS\) \* t \* t\);/);
+    expect(screen).not.toMatch(/return 60;/);
+    // Each swap on the plate gets a share of the step it has to fit in.
+    expect(screen).toMatch(/rollDuration=\{rollDurationFor\(stepMs\)\}/);
+    expect(read("src/components/game/VSScreen.tsx")).toMatch(/duration: isLocked \? 0\.22 : rollDuration/);
+    expect(read("src/components/game/VSScreen.tsx")).toMatch(/duration: isLocked \? 0\.34 : rollDuration/);
+    // And the one line that says how it is scored, once the wheel has stopped.
+    expect(screen).toMatch(/\{t\("extra\.duelRulesHint"\)\}/);
+  });
+
   it("Play hands the landed game to the caller", () => {
     expect(screen).toMatch(/onClick=\{\(\) => category && onPlay\(category\)\}/);
     expect(screen).toMatch(/disabled=\{!ready\}/);

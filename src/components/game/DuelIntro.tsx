@@ -19,7 +19,7 @@ import { CategoryArtwork } from "@/components/shared/CategoryArtwork";
 import { QuizPlayerAvatar } from "@/components/ui/quiz-player-avatar";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { REWARDS } from "@/config/rewardConfig";
-import crownMascot from "@/assets/crown-mascot.png";
+import triviaKingAvatar from "@/assets/trivia-king.png";
 import coinIcon from "@/assets/tb-lobby/coin.png";
 
 interface DuelIntroProps {
@@ -69,7 +69,7 @@ export function DuelIntro({ categoryId, categoryName, iconSlug, playerAvatarUrl,
           </div>
           <span className="font-display text-[28px] font-black italic text-white/80">VS</span>
           <div className="flex flex-col items-center gap-2">
-            <QuizPlayerAvatar avatarUrl={crownMascot} size="large" state="active" />
+            <QuizPlayerAvatar avatarUrl={triviaKingAvatar} size="large" state="active" />
             <span className="font-display text-[16px] font-bold text-white">{t("extra.duelOpponent")}</span>
           </div>
         </div>

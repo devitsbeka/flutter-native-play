@@ -2266,6 +2266,7 @@ export const pt: KaTranslations = {
     duelDraw: "Empate — ninguém leva o pote",
     duelBackToGuess: "Voltar aos jogos de adivinhar",
     duelIntroHint: "Faz mais pontos que o Trivia King e o pote é teu.",
+    duelRulesHint: "100 pontos por acertar em 5 s, menos depois. O Trivia King marca 90 em todas — vence-o e o pote é teu.",
     roomPreviewEyebrow: "Pré-visualização da sala",
     rematchWaitHint: "Todos à mesa foram questionados. Quem recusar sai da sala — o pote segue os lugares.",
     rematchWaitReady: "Pronto",

@@ -2250,6 +2250,7 @@ export const de: KaTranslations = {
     duelDraw: "Unentschieden — niemand nimmt den Pot",
     duelBackToGuess: "Zurück zu den Ratespielen",
     duelIntroHint: "Erziele mehr Punkte als Trivia King und der Pot ist deiner.",
+    duelRulesHint: "100 Punkte für eine richtige Antwort binnen 5 s, danach weniger. Trivia King holt bei jeder Frage 90 — schlag ihn und der Pot ist deiner.",
     roomPreviewEyebrow: "Raum-Vorschau",
     rematchWaitHint: "Alle am Tisch wurden gefragt. Wer ablehnt, verlässt den Raum — der Pot richtet sich nach den Plätzen.",
     rematchWaitReady: "Bereit",

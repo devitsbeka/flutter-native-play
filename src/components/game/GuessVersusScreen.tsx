@@ -47,14 +47,25 @@ export interface GuessCategory {
   icon_slug: string | null;
 }
 
-/** How the wheel slows: the quick game's own cadence (VSScreen). */
+/**
+ * How the wheel turns. It used to jump to a random game every 60ms, which
+ * read as a flicker rather than a spin (owner: "it rolls very fast, we need
+ * more smooth animation"). Now it starts somewhere random and steps to the
+ * NEXT game each time, like a wheel, and each step takes longer than the
+ * last on an ease-out curve — from WHEEL_FIRST_MS to WHEEL_LAST_MS over
+ * WHEEL_CYCLES steps, about two and a half seconds in all — while the plate
+ * is told how long each swap has (CategoryPlate.rollDuration) so the name
+ * and the icon glide across rather than blink.
+ */
 const WHEEL_CYCLES = 12;
+const WHEEL_FIRST_MS = 110;
+const WHEEL_LAST_MS = 520;
 const wheelDelay = (count: number): number => {
-  if (count < 6) return 60;
-  if (count < 9) return 120;
-  if (count < 11) return 200;
-  return 350;
+  const t = Math.min(1, count / WHEEL_CYCLES);
+  return Math.round(WHEEL_FIRST_MS + (WHEEL_LAST_MS - WHEEL_FIRST_MS) * t * t);
 };
+/** The plate's swap, as a share of the step it has to fit in. Capped at the reveal's own. */
+const rollDurationFor = (stepMs: number): number => Math.min(0.22, (stepMs * 0.45) / 1000);
 /** Three free re-rolls, as the quick game gives. */
 const FREE_SPINS = 3;
 
@@ -77,21 +88,28 @@ export function GuessVersusScreen({ categories, onPlay, onBack, busy = false }: 
   const [locked, setLocked] = useState(false);
   const [spinsLeft, setSpinsLeft] = useState(FREE_SPINS);
   const [spinKey, setSpinKey] = useState(0);
+  const [stepMs, setStepMs] = useState(WHEEL_FIRST_MS);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (categories.length === 0) return;
     setLocked(false);
+    // A random start, then one game to the next: where it stops is as
+    // random as before, but the way there reads as a wheel.
+    setWheelIndex(Math.floor(Math.random() * categories.length));
     let count = 0;
     const roll = () => {
       count += 1;
-      setWheelIndex(Math.floor(Math.random() * categories.length));
+      setWheelIndex((i) => (i + 1) % categories.length);
       if (count < WHEEL_CYCLES) {
-        timer.current = setTimeout(roll, wheelDelay(count));
+        const next = wheelDelay(count);
+        setStepMs(next);
+        timer.current = setTimeout(roll, next);
       } else {
         setLocked(true);
       }
     };
+    setStepMs(WHEEL_FIRST_MS);
     timer.current = setTimeout(roll, 200);
     return () => {
       if (timer.current) clearTimeout(timer.current);
@@ -168,7 +186,18 @@ export function GuessVersusScreen({ categories, onPlay, onBack, busy = false }: 
               canSpin={locked && spinsLeft > 0 && !busy}
               onSpin={spin}
               spinLabel={t("extra.spinCategoryBtn", { count: spinsLeft })}
+              rollDuration={rollDurationFor(stepMs)}
             />
+            {/* How it is scored, in one line: the five seconds, the 100,
+                and the King's 90 a question (duelOpponent). */}
+            <motion.p
+              className="mt-3 px-2 text-center text-[13px] leading-[18px] text-white/70"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: locked ? 1 : 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              {t("extra.duelRulesHint")}
+            </motion.p>
           </motion.div>
 
           {/* You — lower right, as on the quick game. */}

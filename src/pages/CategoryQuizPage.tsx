@@ -52,8 +52,8 @@ import { PowerUpType as UIPowerUpType } from "@/components/ui/quiz-power-up-butt
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { DuelIntro } from "@/components/game/DuelIntro";
 import { DuelResult } from "@/components/game/DuelResult";
-import { duelOutcome, mascotAnswers } from "@/utils/duelOpponent";
-import crownMascot from "@/assets/crown-mascot.png";
+import { KING_POINTS, answerPoints, duelOutcome } from "@/utils/duelOpponent";
+import triviaKingAvatar from "@/assets/trivia-king.png";
 import { useUserPowerUps, PowerUpType } from "@/hooks/useUserPowerUps";
 import { adService } from "@/services/adService";
 import { PowerUpScreenEffect } from "@/components/game/ActivePowerUpIndicator";
@@ -198,6 +198,19 @@ export default function CategoryQuizPage() {
    * the pot.
    */
   const [mascotScore, setMascotScore] = useState(0);
+  /**
+   * The player's points against him, and the clock they are scored by.
+   *
+   * `score` stays the count of right answers — the level's stars and
+   * progress are still counted that way. The duel is decided on points:
+   * 100 for a right answer within five seconds, less after, nothing for a
+   * miss, against the King's fixed 90 a question (duelOpponent). The
+   * elapsed seconds tick with the visible clock, so they stop for a freeze
+   * and do not start before the picture is on screen, and they reset with
+   * the question.
+   */
+  const [duelPoints, setDuelPoints] = useState(0);
+  const elapsedSeconds = useRef(0);
   const { settleGuessGame } = useGameStake();
   const { t } = useLanguage();
   const { user, profile } = useAuth();
@@ -241,6 +254,9 @@ export default function CategoryQuizPage() {
   const [mediaReadyFor, setMediaReadyFor] = useState(-1);
   const mediaReady = mediaReadyFor === currentQuestionIndex;
   const markMediaReady = useCallback(() => setMediaReadyFor(currentQuestionIndex), [currentQuestionIndex]);
+  useEffect(() => {
+    elapsedSeconds.current = 0;
+  }, [currentQuestionIndex]);
   /**
    * Where leaving goes. A level reached from the Guess card belongs to the
    * home's Play rail, not to the library: sending its player to the
@@ -508,6 +524,7 @@ export default function CategoryQuizPage() {
       // nobody. The tell was the clock: a genuine timeout shows 0, and those
       // questions were showing whatever the new question had counted down to.
       setTimeRemaining((prev) => (prev <= 1 ? 0 : prev - 1));
+      elapsedSeconds.current += 1;
     }, 1000);
 
     return () => clearInterval(timer);
@@ -540,7 +557,7 @@ export default function CategoryQuizPage() {
       // A pass is a win at the Guess card's stake, a fail a loss. Settled
       // once per run; what comes back is what actually moved.
       if (guessStake) {
-        const applied = await settleGuessGame(duelOutcome(score, mascotScore), guessRunId.current);
+        const applied = await settleGuessGame(duelOutcome(duelPoints, mascotScore), guessRunId.current);
         setGuessDelta(applied);
       }
 
@@ -729,9 +746,9 @@ export default function CategoryQuizPage() {
   const handleTimeUp = useCallback(() => {
     if (!isAnswered) {
       setAnswerRecord({ questionIndex: currentQuestionIndex, choice: null });
-      // The King still gets its turn on a question the player let go.
-      if (guessStake && mascotAnswers(guessRunId.current, currentQuestionIndex)) {
-        setMascotScore((prev) => prev + 1);
+      // The King knows this one too: his 90, and nothing for the player.
+      if (guessStake) {
+        setMascotScore((prev) => prev + KING_POINTS);
       }
       // Running out of time is a miss: the dot goes red like a wrong answer.
       setAnswerResults((prev) => {
@@ -774,8 +791,11 @@ export default function CategoryQuizPage() {
     if (isCorrect) {
       setScore((prev) => prev + 1);
     }
-    if (guessStake && mascotAnswers(guessRunId.current, currentQuestionIndex)) {
-      setMascotScore((prev) => prev + 1);
+    if (guessStake) {
+      // The player's points are the clock's; the King knows every answer
+      // and takes his 90 regardless (duelOpponent).
+      setDuelPoints((prev) => prev + answerPoints(isCorrect, elapsedSeconds.current));
+      setMascotScore((prev) => prev + KING_POINTS);
     }
     setAnswerResults((prev) => {
       const next = [...prev];
@@ -1091,6 +1111,8 @@ export default function CategoryQuizPage() {
     guessRunId.current = mintRunId();
     setMascotScore(0);
     setGuessDelta(null);
+    setDuelPoints(0);
+    elapsedSeconds.current = 0;
   }, []);
 
 
@@ -1273,9 +1295,10 @@ export default function CategoryQuizPage() {
           />
         )}
         <DuelResult
-          outcome={duelOutcome(score, mascotScore)}
-          score={score}
+          outcome={duelOutcome(duelPoints, mascotScore)}
+          score={duelPoints}
           mascotScore={mascotScore}
+          correct={score}
           total={questions.length}
           delta={guessDelta}
           saving={isSaving}
@@ -1520,9 +1543,9 @@ export default function CategoryQuizPage() {
           stands. Only in a duel — a level has nobody to score against. */}
       {guessStake && (
         <div className="flex items-center justify-center gap-6 px-4 pt-3 flex-shrink-0">
-          <QuizPlayerAvatar avatarUrl={profile?.avatar_url ?? null} score={score} position="left" state={score > mascotScore ? "active" : "default"} />
+          <QuizPlayerAvatar avatarUrl={profile?.avatar_url ?? null} score={duelPoints} position="left" state={duelPoints > mascotScore ? "active" : "default"} />
           <span className="font-display text-[14px] font-black italic text-white/60">VS</span>
-          <QuizPlayerAvatar avatarUrl={crownMascot} score={mascotScore} position="right" state={mascotScore > score ? "active" : "default"} />
+          <QuizPlayerAvatar avatarUrl={triviaKingAvatar} score={mascotScore} position="right" state={mascotScore > duelPoints ? "active" : "default"} />
         </div>
       )}
 

@@ -2247,6 +2247,7 @@ export const fr: KaTranslations = {
     duelDraw: "Égalité — personne ne prend la cagnotte",
     duelBackToGuess: "Retour aux jeux de devinettes",
     duelIntroHint: "Marque plus que Trivia King pour remporter la cagnotte.",
+    duelRulesHint: "100 points pour une bonne réponse en 5 s, moins ensuite. Trivia King marque 90 à chaque question — bats-le pour la cagnotte.",
     roomPreviewEyebrow: "Aperçu de la salle",
     rematchWaitHint: "Tout le monde à la table a été sondé. Qui refuse quitte la salle — la cagnotte suit les places.",
     rematchWaitReady: "Prêt",
