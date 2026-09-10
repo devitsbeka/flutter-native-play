@@ -3784,11 +3784,29 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     // Phones drop packets. One immediate retry turns most "my answer never
     // registered" cases into a normal submission instead of a lost answer.
-    let { data: rpcData, error: rpcError } = await callSubmitRpc();
-    if (rpcError) {
-      console.warn('[submitAnswer] RPC failed once (', rpcError.message, ') - retrying');
-      await new Promise(resolve => setTimeout(resolve, 250));
-      ({ data: rpcData, error: rpcError } = await callSubmitRpc());
+    // The write is an upsert keyed on (session, player, question), so
+    // asking again is safe — and on a phone it has to be asked again. One
+    // retry after 250ms used to be all it got; a connection that drops two
+    // requests in a row (a phone on the edge of wifi is one) then reverted
+    // the tap and the player had to press the same answer four or five
+    // times before one got through (owner: "it was exhausting"). The
+    // submitted state stays on screen through the retries; only when every
+    // attempt has failed is the tap given back. A rejection by the server
+    // (a stale question) is final at once — that is not a network failure.
+    const SUBMIT_RETRY_DELAYS_MS = [0, 400, 900, 1600, 2500];
+    let rpcData: unknown = null;
+    let rpcError: { message: string } | null = null;
+    for (const delay of SUBMIT_RETRY_DELAYS_MS) {
+      if (delay) await new Promise(resolve => setTimeout(resolve, delay));
+      try {
+        ({ data: rpcData, error: rpcError } = await callSubmitRpc());
+      } catch (err) {
+        rpcData = null;
+        rpcError = { message: err instanceof Error ? err.message : String(err) };
+      }
+      if (!rpcError && rpcData) break;
+      if (!rpcError && !rpcData) rpcError = { message: 'empty response' };
+      console.warn('[submitAnswer] RPC failed (', rpcError?.message, ') - retrying');
     }
 
     if (!rpcError && rpcData) {

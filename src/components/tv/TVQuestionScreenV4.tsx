@@ -13,6 +13,11 @@ import { TVDebugOverlay } from './TVDebugOverlay';
 import retroTvIcon from '@/assets/retro-tv-colored.png';
 import { TVBrandingOverlay } from './TVBrandingOverlay';
 import { questionImageSrc } from "@/utils/questionImage";
+import { cn } from "@/lib/utils";
+import { ImageRevealMask, hashSeed } from "@/components/ui/image-reveal-mask";
+import { ROOM_GRADIENT_PRESETS, roomGradientCss } from "@/components/ui/noisy-gradient-backgrounds";
+import { imageTreatmentFor } from "@/utils/questionImageTreatment";
+import { useCategoryIdByName } from "@/utils/categoryDisplayName";
 
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -59,9 +64,29 @@ export const TVQuestionScreenV4: React.FC = () => {
   const [dbAnswers, setDbAnswers] = useState<Map<string, boolean>>(new Map());
   // Failed question image -> show the question text instead (reset per question)
   const [tvImageFailed, setTvImageFailed] = useState(false);
+  const [tvImageLoaded, setTvImageLoaded] = useState(false);
   useEffect(() => {
     setTvImageFailed(false);
+    setTvImageLoaded(false);
   }, [currentQuestionIndex]);
+
+  // The picture is presented the way the quiz presents it (QuizQuestionCard,
+  // questionImageTreatment): a logo on plain white, contained, capped at
+  // 72% of the box and opened tile by tile as the clock runs; a flag
+  // contained with a hairline; a photograph contained over a soft wash. It
+  // used to be object-cover of the whole half-screen — a giant, cropped
+  // mark with no reveal (owner: "giant image of logos, cropped and we don't
+  // show pixels like we do on default games"). The session stores the
+  // round's category NAME, in whatever language the host had; the slug is
+  // found from it the way every other surface finds the icon.
+  const idForCategory = useCategoryIdByName();
+  const imageTreatment = imageTreatmentFor(idForCategory(categoryName));
+  const bandGradient = React.useMemo(
+    () => roomGradientCss(
+      ROOM_GRADIENT_PRESETS[hashSeed(currentQuestion?.image_url || "") % ROOM_GRADIENT_PRESETS.length].colors,
+    ),
+    [currentQuestion?.image_url],
+  );
 
   useEffect(() => {
     if (!sessionId || sessionId === 'mock-session-id') return;
@@ -403,13 +428,50 @@ export const TVQuestionScreenV4: React.FC = () => {
                 </p>
               </div>
             ) : (
-              <div className="flex-1 min-h-0 rounded-2xl overflow-hidden shadow-lg">
-                <img
-                  src={questionImageSrc(currentQuestion.image_url)!}
-                  alt="Question"
-                  className="w-full h-full object-cover object-top"
-                  onError={() => setTvImageFailed(true)}
-                />
+              <div
+                className={cn(
+                  "relative flex-1 min-h-0 rounded-2xl overflow-hidden shadow-lg flex items-center justify-center",
+                  imageTreatment.inset ? "bg-white" : "bg-gray-100",
+                  imageTreatment.framed && "px-6",
+                )}
+              >
+                {imageTreatment.band && (
+                  <div
+                    aria-hidden
+                    className="pointer-events-none absolute -inset-12 opacity-50 blur-2xl"
+                    style={{ background: bandGradient }}
+                  />
+                )}
+                {imageTreatment.inset ? (
+                  <span className="relative inline-flex max-h-[72%] max-w-[80%]">
+                    <img
+                      src={questionImageSrc(currentQuestion.image_url)!}
+                      alt="Question"
+                      className={cn("block max-h-full max-w-full w-auto h-auto object-contain", !tvImageLoaded && "opacity-0")}
+                      onLoad={() => setTvImageLoaded(true)}
+                      onError={() => setTvImageFailed(true)}
+                    />
+                    {tvImageLoaded && (
+                      <ImageRevealMask
+                        seed={currentQuestion.image_url!}
+                        progressPercent={Math.max(0, Math.min(100, timerPercent))}
+                        revealAll={isReveal}
+                      />
+                    )}
+                  </span>
+                ) : (
+                  <img
+                    src={questionImageSrc(currentQuestion.image_url)!}
+                    alt="Question"
+                    className={cn(
+                      "relative object-contain",
+                      imageTreatment.framed
+                        ? "max-h-[80%] max-w-full w-auto h-auto ring-1 ring-black/20 rounded-[2px]"
+                        : "w-full h-full",
+                    )}
+                    onError={() => setTvImageFailed(true)}
+                  />
+                )}
               </div>
             )}
           </div>
