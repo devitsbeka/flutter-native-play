@@ -2259,6 +2259,7 @@ export const it: KaTranslations = {
     duelDraw: "Pareggio: nessuno prende il piatto",
     duelBackToGuess: "Torna ai giochi di indovinare",
     duelIntroHint: "Fai più punti di Trivia King e il piatto è tuo.",
+    duelRulesHint: "100 punti per una risposta giusta entro 5 s, meno dopo. Trivia King ne fa 90 a ogni domanda: battilo e il piatto è tuo.",
     roomPreviewEyebrow: "Anteprima stanza",
     rematchWaitHint: "Tutti al tavolo sono stati interpellati. Chi rifiuta lascia la stanza: il piatto segue i posti.",
     rematchWaitReady: "Pronto",

@@ -2576,6 +2576,7 @@ export const en: KaTranslations = {
     duelDraw: "A draw — nobody takes the pot",
     duelBackToGuess: "Back to guess games",
     duelIntroHint: "Score more than Trivia King to take the pot.",
+    duelRulesHint: "A right answer within 5 s is 100 points, fewer after. Trivia King scores 90 on every one — beat him for the pot.",
     roomPreviewEyebrow: "Room preview",
     rematchWaitHint: "Everyone at the table has been asked. Whoever declines leaves the room — the pot follows the seats.",
     rematchWaitReady: "Ready",

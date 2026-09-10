@@ -2267,6 +2267,7 @@ export const es: KaTranslations = {
     duelDraw: "Empate: nadie se lleva el bote",
     duelBackToGuess: "Volver a los juegos de adivinar",
     duelIntroHint: "Consigue más puntos que Trivia King y el bote es tuyo.",
+    duelRulesHint: "100 puntos por acertar en 5 s, menos después. Trivia King suma 90 en cada pregunta: gánale y el bote es tuyo.",
     roomPreviewEyebrow: "Vista de la sala",
     rematchWaitHint: "Se ha preguntado a todos en la mesa. Quien rechace sale de la sala; el bote sigue a los asientos.",
     rematchWaitReady: "Listo",

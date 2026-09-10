@@ -52,6 +52,13 @@ interface CategoryPlateProps {
   canSpin: boolean;
   spinLabel: string;
   onSpin: () => void;
+  /**
+   * How long each swap takes while the wheel is turning, in seconds. The
+   * quick game's wheel steps fast and keeps the default; a wheel that slows
+   * as it stops passes a share of its current step, so the name and the
+   * icon glide from one game to the next instead of blinking.
+   */
+  rollDuration?: number;
 }
 
 /**
@@ -72,6 +79,7 @@ export function CategoryPlate({
   canSpin,
   spinLabel,
   onSpin,
+  rollDuration = 0.1,
 }: CategoryPlateProps) {
   const resolvedIcon = iconUrl || (iconSlug ? `${ICON_STORAGE_URL}/${iconSlug}.png` : undefined);
 
@@ -99,7 +107,7 @@ export function CategoryPlate({
             initial={{ opacity: 0, y: 26 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -26 }}
-            transition={{ duration: isLocked ? 0.22 : 0.1, ease: "easeOut" }}
+            transition={{ duration: isLocked ? 0.22 : rollDuration, ease: "easeOut" }}
           >
             {name}
           </motion.p>
@@ -140,7 +148,7 @@ export function CategoryPlate({
             initial={{ opacity: 0, y: 22, scale: 0.85 }}
             animate={{ opacity: 1, y: 0, scale: isLocked ? [0.85, 1.12, 1] : 1 }}
             exit={{ opacity: 0, y: -22, scale: 0.85 }}
-            transition={{ duration: isLocked ? 0.34 : 0.1, ease: "easeOut" }}
+            transition={{ duration: isLocked ? 0.34 : rollDuration, ease: "easeOut" }}
           />
         )}
       </AnimatePresence>

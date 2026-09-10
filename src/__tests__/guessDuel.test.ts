@@ -13,9 +13,14 @@
  *
  *   before   an intro — the category, the King's face, the 400 pot — and
  *            the 3-2-1 from its Play, not from arrival;
- *   during   the King answers every question the player does, right with a
- *            fixed chance decided by the run and the question, and both
- *            scores are on the screen;
+ *   during   the King knows every answer and takes 90 a question; the
+ *            player scores by the clock — 100 inside five seconds, less
+ *            after, nothing for a miss — and both are on the screen
+ *            (owner: "if user answers correctly in 5 seconds point is theirs
+ *            but if they answer correctly after 5 seconds point gets trivia
+ *            king ... Trivia king knows all the answers, never gets 1000
+ *            points but it is hard to beat Trivia King but if user knows
+ *            all answers and answers in 5 seconds user should win");
  *   after    the two scores, who took the pot, and two exits: another match
  *            or the guess games. Never the category.
  *
@@ -28,7 +33,14 @@ import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { REWARDS } from "@/config/rewardConfig";
-import { MASCOT_ACCURACY, duelOutcome, mascotAnswers } from "@/utils/duelOpponent";
+import {
+  FAST_ANSWER_SECONDS,
+  KING_POINTS,
+  QUESTION_POINTS,
+  SLOW_ANSWER_FLOOR,
+  answerPoints,
+  duelOutcome,
+} from "@/utils/duelOpponent";
 
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 const level = read("src/pages/CategoryQuizPage.tsx");
@@ -36,36 +48,38 @@ const intro = read("src/components/game/DuelIntro.tsx");
 const result = read("src/components/game/DuelResult.tsx");
 
 describe("the King", () => {
-  it("answers the same way every time it is asked the same question of the same run", () => {
-    for (let i = 0; i < 10; i++) {
-      expect(mascotAnswers("run-a", i)).toBe(mascotAnswers("run-a", i));
-    }
+  it("knows every answer, and scores 90 for each: 900 over ten, never 1000", () => {
+    expect(KING_POINTS).toBe(90);
+    expect(KING_POINTS * 10).toBe(900);
+    expect(KING_POINTS).toBeLessThan(QUESTION_POINTS);
   });
 
-  it("answers differently between runs and between questions — it is not a constant", () => {
-    const runs = Array.from({ length: 200 }, (_, r) => Array.from({ length: 10 }, (_, i) => mascotAnswers(`run-${r}`, i)));
-    const distinct = new Set(runs.map((r) => r.join("")));
-    expect(distinct.size).toBeGreaterThan(100);
+  it("a fast right answer is 100 — the question is the player's", () => {
+    for (let s = 0; s <= FAST_ANSWER_SECONDS; s++) expect(answerPoints(true, s)).toBe(100);
+    expect(answerPoints(true, 4.6)).toBe(100);
+    expect(QUESTION_POINTS).toBeGreaterThan(KING_POINTS);
   });
 
-  it("is right about six of ten, not a house edge", () => {
-    expect(MASCOT_ACCURACY).toBe(0.6);
-    let right = 0;
-    const n = 20000;
-    for (let i = 0; i < n; i++) if (mascotAnswers(`sample-${i >> 4}`, i & 15)) right++;
-    expect(right / n).toBeGreaterThan(0.57);
-    expect(right / n).toBeLessThan(0.63);
-    // And the knobs go both ways: nothing at 0, everything at 1.
-    for (let i = 0; i < 50; i++) {
-      expect(mascotAnswers("x", i, 0)).toBe(false);
-      expect(mascotAnswers("x", i, 1)).toBe(true);
-    }
+  it("a slow right answer starts at 80 and falls to 40 — the question is the King's", () => {
+    expect(answerPoints(true, 6)).toBe(80);
+    expect(answerPoints(true, 7)).toBe(70);
+    expect(answerPoints(true, 8)).toBe(60);
+    expect(answerPoints(true, 9)).toBe(50);
+    expect(answerPoints(true, 10)).toBe(40);
+    expect(answerPoints(true, 15)).toBe(SLOW_ANSWER_FLOOR);
+    for (let s = 6; s <= 15; s++) expect(answerPoints(true, s)).toBeLessThan(KING_POINTS);
   });
 
-  it("loses to more, beats fewer, and a tie moves nothing", () => {
-    expect(duelOutcome(7, 6)).toBe("win");
-    expect(duelOutcome(5, 6)).toBe("lose");
-    expect(duelOutcome(6, 6)).toBe("draw");
+  it("a wrong answer, or none, is nothing", () => {
+    expect(answerPoints(false, 1)).toBe(0);
+    expect(answerPoints(false, 15)).toBe(0);
+  });
+
+  it("ten fast answers beat him; nine and a miss draw; nine fast and one slow still win; guessing loses", () => {
+    expect(duelOutcome(10 * 100, 10 * KING_POINTS)).toBe("win");
+    expect(duelOutcome(9 * 100, 10 * KING_POINTS)).toBe("draw");
+    expect(duelOutcome(9 * 100 + answerPoints(true, 6), 10 * KING_POINTS)).toBe("win");
+    expect(duelOutcome(5 * 100, 10 * KING_POINTS)).toBe("lose");
     expect(duelOutcome(0, 0)).toBe("draw");
   });
 });
@@ -89,8 +103,13 @@ describe("before", () => {
   it("shows the category, the King, and the pot of two stakes; Play waits on the questions", () => {
     expect(intro).toMatch(/<CategoryArtwork categoryId=\{categoryId\} iconSlug=\{iconSlug\} size=\{96\}/);
     expect(intro).toMatch(/\{categoryName\}<\/p>/);
-    expect(intro).toMatch(/import crownMascot from "@\/assets\/crown-mascot\.png";/);
-    expect(intro).toMatch(/<QuizPlayerAvatar avatarUrl=\{crownMascot\} size="large" state="active" \/>/);
+    // His face is the one the versus screen wears (owner: "show this
+    // avatar for Trivia King avatar ... on game play screen too").
+    expect(intro).toMatch(/import triviaKingAvatar from "@\/assets\/trivia-king\.png";/);
+    expect(intro).toMatch(/<QuizPlayerAvatar avatarUrl=\{triviaKingAvatar\} size="large" state="active" \/>/);
+    expect(result).toMatch(/import triviaKingAvatar from "@\/assets\/trivia-king\.png";/);
+    expect(result).toMatch(/<QuizPlayerAvatar avatarUrl=\{triviaKingAvatar\} size="large" score=\{mascotScore\}/);
+    for (const src of [intro, result, level]) expect(src).not.toMatch(/crown-mascot/);
     expect(intro).toMatch(/t\("extra\.duelOpponent"\)/);
     expect(intro).toMatch(/const stake = REWARDS\.GUESS_STAKE;\s*\n\s*const pot = stake \* 2;/);
     expect(REWARDS.GUESS_STAKE * 2).toBe(400);
@@ -105,34 +124,47 @@ describe("before", () => {
 });
 
 describe("during", () => {
-  it("the King answers on both of the player's paths — an answer and a timeout", () => {
-    const turns = level.match(/if \(guessStake && mascotAnswers\(guessRunId\.current, currentQuestionIndex\)\) \{\s*\n\s*setMascotScore\(\(prev\) => prev \+ 1\);\s*\n\s*\}/g) ?? [];
+  it("the King takes his 90 on both of the player's paths — an answer and a timeout", () => {
+    const turns = level.match(/setMascotScore\(\(prev\) => prev \+ KING_POINTS\);/g) ?? [];
     expect(turns).toHaveLength(2);
     const timeUp = level.indexOf("const handleTimeUp = useCallback(");
     const select = level.indexOf("const handleAnswerSelect = ");
     expect(timeUp).toBeGreaterThan(0);
     expect(select).toBeGreaterThan(timeUp);
-    expect(level.indexOf("mascotAnswers(guessRunId.current", timeUp)).toBeLessThan(select);
-    expect(level.indexOf("mascotAnswers(guessRunId.current", select)).toBeGreaterThan(select);
+    expect(level.indexOf("prev + KING_POINTS", timeUp)).toBeLessThan(select);
+    expect(level.indexOf("prev + KING_POINTS", select)).toBeGreaterThan(select);
+    expect(level).not.toMatch(/mascotAnswers/);
+  });
+
+  it("the player's points are the clock's, and the clock is the one on screen", () => {
+    expect(level).toMatch(/setDuelPoints\(\(prev\) => prev \+ answerPoints\(isCorrect, elapsedSeconds\.current\)\);/);
+    // Ticks with the visible clock — after the picture, not during a freeze —
+    // and resets with the question.
+    expect(level).toMatch(/setTimeRemaining\(\(prev\) => \(prev <= 1 \? 0 : prev - 1\)\);\s*\n\s*elapsedSeconds\.current \+= 1;/);
+    expect(level).toMatch(/useEffect\(\(\) => \{\s*\n\s*elapsedSeconds\.current = 0;\s*\n\s*\}, \[currentQuestionIndex\]\);/);
+    // Right answers are still counted for the level's own stars.
+    expect(level).toMatch(/if \(isCorrect\) \{\s*\n\s*setScore\(\(prev\) => prev \+ 1\);\s*\n\s*\}/);
   });
 
   it("both scores are on the board, only in a duel", () => {
     expect(level).toMatch(
-      /\{guessStake && \(\s*\n\s*<div[^>]*>\s*\n\s*<QuizPlayerAvatar avatarUrl=\{profile\?\.avatar_url \?\? null\} score=\{score\} position="left"[^\n]*\n\s*<span[^>]*>VS<\/span>\s*\n\s*<QuizPlayerAvatar avatarUrl=\{crownMascot\} score=\{mascotScore\} position="right"/,
+      /\{guessStake && \(\s*\n\s*<div[^>]*>\s*\n\s*<QuizPlayerAvatar avatarUrl=\{profile\?\.avatar_url \?\? null\} score=\{duelPoints\} position="left"[^\n]*\n\s*<span[^>]*>VS<\/span>\s*\n\s*<QuizPlayerAvatar avatarUrl=\{triviaKingAvatar\} score=\{mascotScore\} position="right"/,
     );
   });
 });
 
 describe("after", () => {
-  it("settles by the match's outcome, under the run's id", () => {
-    expect(level).toMatch(/settleGuessGame\(duelOutcome\(score, mascotScore\), guessRunId\.current\)/);
+  it("settles by the match's outcome — points, not the count — under the run's id", () => {
+    expect(level).toMatch(/settleGuessGame\(duelOutcome\(duelPoints, mascotScore\), guessRunId\.current\)/);
+    expect(level).not.toMatch(/duelOutcome\(score,/);
     expect(level).not.toMatch(/settleGuessGame\(result\.stars/);
   });
 
   it("shows the duel's own result, whose exits are a rematch or the guess games — never the category", () => {
     const branch = level.slice(level.indexOf("if (showResults && guessStake) {"), level.indexOf("if (showResults) {"));
     expect(branch.length).toBeGreaterThan(0);
-    expect(branch).toMatch(/<DuelResult\s*\n\s*outcome=\{duelOutcome\(score, mascotScore\)\}/);
+    expect(branch).toMatch(/<DuelResult\s*\n\s*outcome=\{duelOutcome\(duelPoints, mascotScore\)\}\s*\n\s*score=\{duelPoints\}\s*\n\s*mascotScore=\{mascotScore\}\s*\n\s*correct=\{score\}/);
+    expect(result).toMatch(/t\("extra\.quizCorrectAnswers", \{ score: correct, total \}\)/);
     expect(branch).toMatch(/onPlayAgain=\{resetQuiz\}/);
     expect(branch).toMatch(/onBack=\{\(\) => navigate\("\/create-room\?mode=guess"\)\}/);
     expect(branch).not.toMatch(/\/category\//);
@@ -144,7 +176,7 @@ describe("after", () => {
   });
 
   it("a rematch is a new run, from nil", () => {
-    expect(level).toMatch(/guessRunId\.current = mintRunId\(\);\s*\n\s*setMascotScore\(0\);\s*\n\s*setGuessDelta\(null\);/);
+    expect(level).toMatch(/guessRunId\.current = mintRunId\(\);\s*\n\s*setMascotScore\(0\);\s*\n\s*setGuessDelta\(null\);\s*\n\s*setDuelPoints\(0\);\s*\n\s*elapsedSeconds\.current = 0;/);
   });
 });
 
@@ -152,7 +184,7 @@ describe("the words", () => {
   it("are in all seven", () => {
     for (const lang of ["en", "ka", "de", "es", "fr", "it", "pt"]) {
       const src = read(`src/locales/${lang}.ts`);
-      for (const key of ["duelTitle", "duelOpponent", "duelWin", "duelLose", "duelDraw", "duelBackToGuess", "duelIntroHint"]) {
+      for (const key of ["duelTitle", "duelOpponent", "duelWin", "duelLose", "duelDraw", "duelBackToGuess", "duelIntroHint", "duelRulesHint"]) {
         expect(src, `${lang}.${key}`).toMatch(new RegExp(`\\n\\s+${key}: "[^"]+",`));
       }
     }

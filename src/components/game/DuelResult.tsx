@@ -15,13 +15,16 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { QuizPlayerAvatar } from "@/components/ui/quiz-player-avatar";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { DuelOutcome } from "@/utils/duelOpponent";
-import crownMascot from "@/assets/crown-mascot.png";
+import triviaKingAvatar from "@/assets/trivia-king.png";
 import coinIcon from "@/assets/tb-lobby/coin.png";
 
 interface DuelResultProps {
   outcome: DuelOutcome;
+  /** The player's points, and the King's — what decided it. */
   score: number;
   mascotScore: number;
+  /** Right answers, of `total`: the line under the two of them. */
+  correct: number;
   total: number;
   /** What actually moved, once settled; null while it is settling. */
   delta: number | null;
@@ -31,7 +34,7 @@ interface DuelResultProps {
   onBack: () => void;
 }
 
-export function DuelResult({ outcome, score, mascotScore, total, delta, saving, playerAvatarUrl, onPlayAgain, onBack }: DuelResultProps) {
+export function DuelResult({ outcome, score, mascotScore, correct, total, delta, saving, playerAvatarUrl, onPlayAgain, onBack }: DuelResultProps) {
   const { t } = useLanguage();
   const title = outcome === "win" ? t("extra.duelWin") : outcome === "lose" ? t("extra.duelLose") : t("extra.duelDraw");
 
@@ -63,11 +66,11 @@ export function DuelResult({ outcome, score, mascotScore, total, delta, saving, 
           </div>
           <span className="pb-8 font-display text-[22px] font-black italic text-white/70">VS</span>
           <div className="flex flex-col items-center gap-2">
-            <QuizPlayerAvatar avatarUrl={crownMascot} size="large" score={mascotScore} state={outcome === "lose" ? "correct" : outcome === "win" ? "wrong" : "default"} />
+            <QuizPlayerAvatar avatarUrl={triviaKingAvatar} size="large" score={mascotScore} state={outcome === "lose" ? "correct" : outcome === "win" ? "wrong" : "default"} />
             <span className="font-display text-[16px] font-bold text-white">{t("extra.duelOpponent")}</span>
           </div>
         </div>
-        <p className="mt-3 text-[13px] text-white/70">{t("extra.quizCorrectAnswers", { score, total })}</p>
+        <p className="mt-3 text-[13px] text-white/70">{t("extra.quizCorrectAnswers", { score: correct, total })}</p>
 
         {/* The stake, as it actually moved. Nothing on a draw, or while the
             server has not answered, or when it declined (an empty balance,

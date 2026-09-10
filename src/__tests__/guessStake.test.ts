@@ -79,7 +79,7 @@ describe("the level", () => {
     expect(level).toMatch(/const guessRunId = useRef<string>\(mintRunId\(\)\);/);
     // Was `result.stars >= 1 ? "win" : "lose"` — a pass. Now the match is
     // against Trivia King and the score decides it; see guessDuel.
-    expect(level).toMatch(/if \(guessStake\) \{\s*\n\s*const applied = await settleGuessGame\(duelOutcome\(score, mascotScore\), guessRunId\.current\);\s*\n\s*setGuessDelta\(applied\);/);
+    expect(level).toMatch(/if \(guessStake\) \{\s*\n\s*const applied = await settleGuessGame\(duelOutcome\(duelPoints, mascotScore\), guessRunId\.current\);\s*\n\s*setGuessDelta\(applied\);/);
     expect(level).toMatch(/\{guessStake && !isSaving && guessDelta !== null && guessDelta !== 0 && \(/);
     expect(level).toMatch(/t\("extra\.quizStakeWon"\)/);
     expect(level).toMatch(/t\("extra\.quizStakeLost"\)/);
