@@ -1,5 +1,6 @@
 /**
- * "What will you play?" and "What will you guess?" wear the display face.
+ * "What will you play?" wears the display face — and "What will you guess?"
+ * did, until its grid became the versus screen.
  *
  * The two chooser headings were set in Nunito while the paywall's "Get
  * unlimited access" is in the app's display face; the owner asked for the
@@ -7,7 +8,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
@@ -25,11 +26,12 @@ describe("the chooser headings wear the display face", () => {
     expect(create).not.toMatch(/font-\[Nunito\] text-\[24px\] leading-\[28px\] tracking-\[-0\.3px\]/);
   });
 
-  it("what will you guess", () => {
-    const screen = read("src/components/team/GuessPickerScreen.tsx");
-    expect(screen).toMatch(/className="shrink-0 pb-\[13px\] pt-\[7px\] font-display font-bold text-\[24px\] leading-\[28px\] text-\[#3a2260\]"/);
-    // The card labels below the heading keep Nunito; only the heading moved.
-    expect(screen).not.toMatch(/<h2[^>]*font-\[Nunito\]/);
+  it("what will you guess — a heading that is gone with its grid", () => {
+    // The picker grid became the quick game's versus screen, which has no
+    // heading at all (guessVersusScreen.test.ts); nothing here to set in
+    // Nunito, and nothing left to wear the display face.
+    expect(existsSync(join(process.cwd(), "src/components/team/GuessPickerScreen.tsx"))).toBe(false);
+    expect(read("src/components/game/GuessVersusScreen.tsx")).not.toMatch(/extra\.guessPickTitle/);
   });
 
   it("the same face the paywall title wears", () => {

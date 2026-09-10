@@ -22,7 +22,7 @@ import { createNotification, useNotifications } from "@/hooks/useNotifications";
 import { TVPlayModal } from "@/components/team/TVPlayModal";
 import { isPartyCategory } from "@/config/partyCategories";
 import { POPULAR_IMAGE_CATEGORY_IDS, popularCategoryIcon } from "@/config/popularImageCategories";
-import { GuessPickerScreen } from "@/components/team/GuessPickerScreen";
+import { GuessVersusScreen } from "@/components/game/GuessVersusScreen";
 import { CategorySelectorModal } from "@/components/team/CategorySelectorModal";
 import { CategoryPickerModal } from "@/components/team/CategoryPickerModal";
 import { CreateBlindTriviaModal } from "@/components/team/CreateBlindTriviaModal";
@@ -1604,7 +1604,10 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     // pass, -200 on a fail (settle_guess_game). A level reached from the
     // library map carries no such flag and stays what it was.
     const level = getCategoryProgress(cat.category_id ?? cat.id) || 1;
-    handoff(`/play/${cat.category_id ?? cat.id}/${level}`, { state: { countdown: true, guessStake: true } });
+    // `versus`: the King, the game and the stake were just shown on the
+    // versus screen, so the level page goes straight to its 3-2-1 rather
+    // than opening on the duel intro that said the same things again.
+    handoff(`/play/${cat.category_id ?? cat.id}/${level}`, { state: { countdown: true, guessStake: true, versus: true } });
     onClose();
   };
 
@@ -2045,15 +2048,16 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       )}
 
       {guessPicking ? (
-        // The screen the Guess card opens. Its own scroller, like every
-        // standalone page here — the document does not scroll on the device.
-        <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
-          <GuessPickerScreen
-            title={t("extra.guessPickTitle")}
+        // The screen the Guess card opens: the quick game's versus screen,
+        // with Trivia King and the wheel of picture games (GuessVersusScreen).
+        // Over the page, full-bleed, as the versus screen is drawn; its own
+        // back arrow closes the question the same way the header's does.
+        <div className="fixed inset-0 z-50">
+          <GuessVersusScreen
             categories={guessCategories}
-            onPick={pickGuessCategory}
-            busyCategoryId={isCreating ? selectedCategory?.category_id ?? null : null}
-            disabled={isCreating}
+            onPlay={pickGuessCategory}
+            onBack={() => setGameChoice(null)}
+            busy={isCreating}
           />
         </div>
       ) : (

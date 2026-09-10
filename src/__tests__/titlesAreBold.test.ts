@@ -37,9 +37,9 @@ const TITLES: Array<[file: string, pattern: RegExp]> = [
   ["src/components/team/PublicRoomsSection.tsx", /`font-display font-bold text-lg leading-tight line-clamp-2 \$\{ink\.text\}`/],
   // The shop's own heading, beside product sections that were already bold.
   ["src/components/shop/MyPowersSection.tsx", /font-display font-bold text-foreground/],
-  // The two chooser headings.
+  // The chooser heading. (The Guess picker's went with the picker: the
+  // versus screen that replaced it has no heading.)
   ["src/components/team/CreateRoomPage.tsx", /font-display font-bold text-\[24px\] leading-\[28px\] text-\[#3a2260\]/],
-  ["src/components/team/GuessPickerScreen.tsx", /font-display font-bold text-\[24px\] leading-\[28px\] text-\[#3a2260\]/],
   // The hero titles: the chooser card, the friends bar, the create-trivia chooser.
   ["src/components/team/CreateRoomPage.tsx", /font-hero font-bold overflow-hidden text-ellipsis whitespace-nowrap text-\[calc\(32\*var\(--u\)\)\]/],
   ["src/components/team/CreateRoomPage.tsx", /font-hero font-bold truncate text-\[22px\] capitalize leading-\[48px\]/],
