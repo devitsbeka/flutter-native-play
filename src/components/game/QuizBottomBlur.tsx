@@ -27,12 +27,24 @@ const RAMP = [
 /** The quiz ground (`bg-[#7E7ADB]`), which the tint has to be made of. */
 const GROUND = "126,122,219";
 
+/**
+ * How far above the controls the ramp starts, in px.
+ *
+ * The answers scroller has to reserve THIS much on top of the footer's own
+ * height, or the last answer comes to rest inside the ramp: at 140px with
+ * a footer of ~100 the fourth answer sat under 6–26px of blur, unreadable,
+ * and a wrong answer in red looked like a rendering fault (owner: "make
+ * sure blur is gone and answer D is visible"). Shorter now, and exported
+ * so the scrollers pad by the same number the ramp reaches.
+ */
+export const QUIZ_BLUR_REACH = 88;
+
 interface QuizBottomBlurProps {
   /** How far above the controls the ramp starts, in px. */
   reach?: number;
 }
 
-export function QuizBottomBlur({ reach = 140 }: QuizBottomBlurProps) {
+export function QuizBottomBlur({ reach = QUIZ_BLUR_REACH }: QuizBottomBlurProps) {
   return (
     <>
       {RAMP.map((step) => (

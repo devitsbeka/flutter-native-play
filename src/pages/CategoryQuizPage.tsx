@@ -7,7 +7,7 @@ import { ArrowLeft, ChevronRight, TrendingUp } from "lucide-react";
 import { TimerBadge } from "@/components/game/TimerBadge";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { ANSWER_FEEDBACK_CARD_SHOWN, AnswerFeedbackCard } from "@/components/game/AnswerFeedbackCard";
-import { QuizBottomBlur } from "@/components/game/QuizBottomBlur";
+import { QUIZ_BLUR_REACH, QuizBottomBlur } from "@/components/game/QuizBottomBlur";
 import { useFooterHeight } from "@/hooks/useFooterHeight";
 import { getCategoryById } from "@/data/categories";
 import { supabase } from "@/integrations/supabase/client";
@@ -990,6 +990,20 @@ export default function CategoryQuizPage() {
   // The floating foot is out of flow, so the answer list is padded by
   // exactly its height and every answer stays scrollable into view.
   const [footerRef, footerHeight] = useFooterHeight<HTMLDivElement>();
+  /**
+   * The answers scroller. Once an answer is in, it is scrolled to its end:
+   * the verdict is on the buttons, and on a short screen the last of them
+   * was resting under the footer's frosted ramp, blurred out of reading.
+   * The scroller pads by the ramp's reach as well as the footer, so the
+   * end of the list is clear of the blur.
+   */
+  const answersRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!isAnswered) return;
+    const el = answersRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+  }, [isAnswered]);
 
   const currentQuestion = questions[currentQuestionIndex];
   const starPercentage = (score / Math.max(questions.length, 1)) * 100;
@@ -1580,7 +1594,7 @@ export default function CategoryQuizPage() {
       {isTrueFalseQuestion ? (
         <div
           className="flex-1 min-h-0 px-4 pt-2 flex gap-3 items-center justify-center"
-          style={{ paddingBottom: footerHeight }}
+          style={{ paddingBottom: footerHeight + QUIZ_BLUR_REACH }}
         >
           {/* popLayout, or the question change stalls: in the default mode an
               exiting element keeps its layout slot until its exit animation
@@ -1619,8 +1633,9 @@ export default function CategoryQuizPage() {
         </div>
       ) : (
         <div
+          ref={answersRef}
           className="flex-1 px-4 pt-2 flex flex-col gap-2 overflow-y-auto min-h-0"
-          style={{ paddingBottom: footerHeight }}
+          style={{ paddingBottom: footerHeight + QUIZ_BLUR_REACH }}
         >
           {/* popLayout — see the true/false block above. */}
           <AnimatePresence mode="popLayout">

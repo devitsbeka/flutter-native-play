@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -14,7 +14,7 @@ import { QuizTrueFalseButton, type QuizTrueFalseState } from "@/components/ui/qu
 import { QuizPowerUpBar } from "@/components/ui/quiz-power-up-bar";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { ANSWER_FEEDBACK_CARD_SHOWN, AnswerFeedbackCard } from "./AnswerFeedbackCard";
-import { QuizBottomBlur } from "./QuizBottomBlur";
+import { QUIZ_BLUR_REACH, QuizBottomBlur } from "./QuizBottomBlur";
 import { useFooterHeight } from "@/hooks/useFooterHeight";
 import { TimerBadge } from "@/components/game/TimerBadge";
 import { PowerUpType as UIPowerUpType } from "@/components/ui/quiz-power-up-button";
@@ -98,6 +98,15 @@ export function QuizGameScreenProd() {
   // The floating foot is out of flow, so the answer list is padded by
   // exactly its height and every answer stays scrollable into view.
   const [footerRef, footerHeight] = useFooterHeight<HTMLDivElement>();
+  // Scrolled to its end on the reveal, so the last answer is clear of the
+  // footer's frosted ramp (see CategoryQuizPage).
+  const answersRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!answerRevealed) return;
+    const el = answersRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+  }, [answerRevealed]);
 
   const currentQuestion = questions[currentQuestionIndex];
   const isLastQuestion = currentQuestionIndex === questions.length - 1;
@@ -512,7 +521,7 @@ export function QuizGameScreenProd() {
       {isTrueFalseQuestion ? (
         <div
           className="flex-1 min-h-0 w-full px-4 mt-0 flex gap-3 [@media(max-height:600px)]:gap-2 items-center"
-          style={{ paddingBottom: footerHeight }}
+          style={{ paddingBottom: footerHeight + QUIZ_BLUR_REACH }}
         >
           {currentQuestion.allAnswers.map((answer, index) => {
             const isTrue = answer.toLowerCase() === "მართალია" || answer.toLowerCase() === "true";
@@ -536,8 +545,9 @@ export function QuizGameScreenProd() {
         </div>
       ) : (
         <div
+          ref={answersRef}
           className="flex-1 px-4 mt-0 flex flex-col gap-3 [@media(max-height:700px)]:gap-2 [@media(max-height:600px)]:gap-1.5 overflow-y-auto min-h-0"
-          style={{ paddingBottom: footerHeight }}
+          style={{ paddingBottom: footerHeight + QUIZ_BLUR_REACH }}
         >
           {currentQuestion.allAnswers.map((answer, index) => {
             const isHidden = hiddenAnswers.includes(answer);
