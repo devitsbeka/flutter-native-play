@@ -24,7 +24,7 @@ describe("a + on the row of somebody who is not a friend yet", () => {
     expect(lobby).toMatch(/<UserPlus className=\{addFriendIcon\}/);
     expect(lobby).toMatch(/aria-label=\{friendRequestedLabel\}[^>]*>\s*\n\s*<Check /);
     // Beside the body, never inside it: the body can itself be a button.
-    expect(lobby).toMatch(/\{Body\}\s*\n\s*\{addFriend\}\s*\n\s*\{call\}\s*\n\s*\{armband\}/);
+    expect(lobby).toMatch(/\{Body\}\s*\n\s*\{addFriend\}\s*\n\s*\{call\}\s*\n\s*\{remove\}\s*\n\s*\{score\}\s*\n\s*\{armband\}/);
   });
 
   it("the room lobby wires it for everyone who is not you and not a friend", () => {

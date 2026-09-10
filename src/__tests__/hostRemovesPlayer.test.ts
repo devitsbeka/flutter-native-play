@@ -34,7 +34,8 @@ describe("the row", () => {
     expect(universal).toMatch(/remove\?: string;/);
     expect(universal).toMatch(/onClick=\{player\.onRemove\}\s*\n\s*aria-label=\{removeLabel\}/);
     expect(universal).toMatch(/<Trash2 className=\{addFriendIcon\}/);
-    expect(universal).toMatch(/\{Body\}\s*\n\s*\{addFriend\}\s*\n\s*\{call\}\s*\n\s*\{armband\}\s*\n\s*\{remove\}/);
+    // The invite and the bin sit before the score (lobbyInviteAgain.test.ts).
+    expect(universal).toMatch(/\{Body\}\s*\n\s*\{addFriend\}\s*\n\s*\{call\}\s*\n\s*\{remove\}\s*\n\s*\{score\}\s*\n\s*\{armband\}/);
     // Both benches — the room's single list and the battle's two — get it.
     expect(universal.match(/removeLabel=\{labels\.remove \?\? "Remove"\}/g) ?? []).toHaveLength(2);
   });

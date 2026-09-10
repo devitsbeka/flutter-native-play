@@ -1525,6 +1525,17 @@ export function RoomLobbyV2() {
     score: p.total_score || 0,
     rounds: p.total_rounds_played || 0,
     pending: (p.status as string) === "invited",
+    // Seated but not in the app — the badge on the face and the paper
+    // plane beside the name. A public room's Start counts online players
+    // only, and the host could see the count come up short without a way
+    // to do anything about it (owner: "if player is offline i can't start
+    // game ... we need invite button ... to invite player again easily").
+    offline:
+      presenceLoaded &&
+      p.user_id !== user?.id &&
+      (p.status as string) !== "invited" &&
+      !onlineInRoom.has(p.user_id),
+    onCall: isHost && p.user_id !== user?.id ? () => void handleInvitePlayer(p.user_id) : undefined,
     // The host's bin, on everybody else's row while the room waits. A
     // question first: a tap on a 36px circle beside a name is not a thing
     // to be sure of.
@@ -1888,6 +1899,7 @@ export function RoomLobbyV2() {
         addFriend: t("extra.lobbyAddFriend"),
         friendRequested: t("extra.lobbyFriendRequested"),
         remove: t("extra.lobbyRemovePlayer"),
+        call: t("lobby.uInvite"),
         left: t("lobby.uLeftNote"),
         invited: t("lobby.uInvitedNote"),
       }}

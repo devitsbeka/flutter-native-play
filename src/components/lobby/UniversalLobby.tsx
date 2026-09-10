@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState, type ReactNode, useCallback } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { ArrowLeft, Bell, BellRing, Check, Loader2, Pencil, Plus, Trash2, UserPlus, X } from "lucide-react";
+import { ArrowLeft, Bell, BellRing, Check, Loader2, Pencil, Plus, Send, Trash2, UserPlus, X } from "lucide-react";
 import SpotlightSearch from "@/components/search/SpotlightSearch";
 import { MyTriviaLiveLogo } from "@/components/shared/MyTriviaLiveLogo";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
@@ -1972,14 +1972,19 @@ function PlayerRow({
           </motion.span>
         )}
       </AnimatePresence>
-      {player.score !== undefined && (
-        <span className="ml-2 flex shrink-0 items-center gap-1">
-          <span className="font-[Nunito] text-[16px] font-bold leading-6 tracking-[-0.16px] text-[#402666]">{player.score}</span>
-          <span className="font-[Nunito] text-[12px] leading-4 tracking-[-0.16px] text-black/60">({roundsLabel(player.rounds ?? 0)})</span>
-        </span>
-      )}
     </Tag>
   );
+
+  // The score, at the row's far end — AFTER the host's controls, so the
+  // invite and the bin sit between the name and the number rather than
+  // past it (owner: "put before the round count").
+  const score =
+    player.score !== undefined ? (
+      <span className="ml-2 flex shrink-0 items-center gap-1">
+        <span className="font-[Nunito] text-[16px] font-bold leading-6 tracking-[-0.16px] text-[#402666]">{player.score}</span>
+        <span className="font-[Nunito] text-[12px] leading-4 tracking-[-0.16px] text-black/60">({roundsLabel(player.rounds ?? 0)})</span>
+      </span>
+    ) : null;
 
   // The crown, said once. It used to be said twice on the host's own row —
   // one tipped over the avatar and one in the armband at the far end — which
@@ -2010,8 +2015,20 @@ function PlayerRow({
     )
   ) : null;
 
-  // The word next to the bell: "call them back", said once, in text, so the
-  // badge on the face is not the only thing carrying the meaning.
+  // Bare icons for the host's two acts on a seat, side by side before the
+  // score: no pill, no white disc — the row is busy enough, and a red disc
+  // beside every name read louder than "remove" needs to (owner: "show
+  // delete icon more lighter, it is too red now, do not need white circle
+  // container behind"). Sized for a thumb all the same.
+  const bareIconClass = cn(
+    "shrink-0 flex items-center justify-center rounded-full",
+    compact ? "ml-0.5 h-7 w-7" : "ml-1 h-9 w-9",
+  );
+
+  // Somebody seated but not in the app: the paper plane invites them back.
+  // The badge on their face says "away"; this is the way to do something
+  // about it (owner: "if player is offline i can't start game ... we need
+  // invite button before the delete icon to invite player again").
   const call =
     player.offline && player.onCall ? (
       <motion.button
@@ -2019,12 +2036,9 @@ function PlayerRow({
         whileTap={{ scale: 0.94 }}
         onClick={player.onCall}
         aria-label={callLabel}
-        className={cn(
-          "shrink-0 truncate rounded-full bg-amber-400 font-[Nunito] font-bold text-[#402666] shadow-sm",
-          compact ? "ml-1 px-2 py-1 text-[11px] leading-3" : "ml-2 px-3 py-1.5 text-[13px] leading-4",
-        )}
+        className={cn(bareIconClass, "text-[#8858d5]")}
       >
-        {callLabel}
+        <Send className={compact ? "h-4 w-4" : "h-[18px] w-[18px]"} strokeWidth={2.25} />
       </motion.button>
     ) : null;
 
@@ -2054,18 +2068,18 @@ function PlayerRow({
     </motion.button>
   ) : null;
 
-  // The host's bin. The last thing on the row, after the friendlier
-  // controls, in the red the app uses for "gone for good" — and a sibling
-  // of the body for the same reason the + is: the body is a button.
+  // The host's bin, after the invite and before the score, in a quiet
+  // rose rather than the app's alarm red — and a sibling of the body for
+  // the same reason the + is: the body is a button.
   const remove = player.onRemove ? (
     <motion.button
       type="button"
       whileTap={{ scale: 0.94 }}
       onClick={player.onRemove}
       aria-label={removeLabel}
-      className={cn(addFriendClass, "bg-white/60 text-[#e0245e]")}
+      className={cn(bareIconClass, "text-[#e0245e]/45")}
     >
-      <Trash2 className={addFriendIcon} strokeWidth={2.5} />
+      <Trash2 className={addFriendIcon} strokeWidth={2.25} />
     </motion.button>
   ) : null;
 
@@ -2081,8 +2095,9 @@ function PlayerRow({
       {Body}
       {addFriend}
       {call}
-      {armband}
       {remove}
+      {score}
+      {armband}
     </div>
   );
 }
