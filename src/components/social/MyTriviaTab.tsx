@@ -34,6 +34,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast";
 import { PUBLIC_SHARING_ENABLED } from "@/config/features";
 import { generateRoomIdentity } from "@/utils/roomNameGenerator";
+import { rememberDraftRoom } from "@/utils/roomCreateOffered";
 import { readAppLanguage } from "@/utils/appLanguage";
 
 // Localized time format helper
@@ -646,10 +647,16 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
           data.title || post.title || "My Trivia Party", // category_name (what's being played)
           customQuestions,
           generateRoomIdentity(readAppLanguage()).name, // room_name (dealt, not the brand)
-          (data.cover_image as string | null) || null
+          (data.cover_image as string | null) || null,
+          undefined,
+          false,
+          undefined,
+          // A draft until the lobby's Create: back out alone and it goes (privateDraft).
+          { publishAs: "private" },
         );
 
         if (room?.id && room?.room_code) {
+          rememberDraftRoom(room.id, { publishAs: "private" });
           // Update the game_rooms table with user_trivia_id for reference
           // No need to add to room_category_queue - the room's category_name serves as round 1
           await supabase
@@ -1103,10 +1110,16 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
           data.title || playModeTrivia.title || "My Trivia",
           customQuestions,
           "Trivia Room",
-          (data.cover_image as string | null) || null
+          (data.cover_image as string | null) || null,
+          undefined,
+          false,
+          undefined,
+          // A draft until the lobby's Create: back out alone and it goes (privateDraft).
+          { publishAs: "private" },
         );
 
         if (room?.id && room?.room_code) {
+          rememberDraftRoom(room.id, { publishAs: "private" });
           await supabase
             .from("game_rooms")
             .update({ user_trivia_id: playModeTrivia.id })
@@ -1152,10 +1165,16 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
           data.title || playModeTrivia.title || "My Trivia",
           customQuestions,
           "TV Trivia",
-          (data.cover_image as string | null) || null
+          (data.cover_image as string | null) || null,
+          undefined,
+          false,
+          undefined,
+          // A draft until the lobby's Create: back out alone and it goes (privateDraft).
+          { publishAs: "private" },
         );
 
         if (room?.id && room?.room_code) {
+          rememberDraftRoom(room.id, { publishAs: "private" });
           await supabase
             .from("game_rooms")
             .update({ user_trivia_id: playModeTrivia.id })

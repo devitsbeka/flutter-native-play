@@ -133,7 +133,7 @@ describe("every screen that shares a link declares its intent", () => {
     // The reserved code is still the one the room is created under; the
     // argument after it is the public/private switch, which is false for
     // the game types that cannot be published at all.
-    expect(create).toContain("plannedRoomCode, publishRoom)");
+    expect(create).toMatch(/plannedRoomCode,\s*\n\s*publishRoom,\s*\n\s*undefined,\s*\n\s*privateDraft\(publishRoom\),/);
   });
 
   it("createRoom uses the reserved code when it is given one", () => {
