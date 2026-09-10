@@ -21,11 +21,11 @@
 import type { ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { RoomCardPlayButton, type RoomCardTone } from "@/components/team/RoomCardPlayButton";
-import { DynamicIcon } from "@/components/shared/DynamicIcon";
+import { CategoryArtwork } from "@/components/shared/CategoryArtwork";
 import { roundIconSlug } from "@/utils/ownTriviaRound";
 import { undecidedRoundKind } from "@/utils/undecidedRound";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useCategoryIconByName, useLocalizedCategoryName } from "@/utils/categoryDisplayName";
+import { useCategoryIconByName, useCategoryIdByName, useLocalizedCategoryName } from "@/utils/categoryDisplayName";
 import { REWARDS } from "@/config/rewardConfig";
 import { firstPlaceShare } from "@/utils/roomPot";
 import coinIcon from "@/assets/tb-lobby/coin.png";
@@ -119,6 +119,7 @@ export function RoomPreviewSheet({
   // category copied into the list) drew the empty box here while the card
   // beside it drew the category's face off its name. Same resolver.
   const iconForCategory = useCategoryIconByName();
+  const idForCategory = useCategoryIdByName();
   // A seat costs the stake wherever it is taken — a room, a quick game, PRO
   // or not (see 20261102140000_quick_game_charges_everyone.sql). Under two
   // players there is no pot at all: settle_room_round calls that practice.
@@ -184,10 +185,14 @@ export function RoomPreviewSheet({
                         {isMixedRound(round) ? (
                           <img src={questionIcon} alt="" className="h-7 w-7 object-contain" />
                         ) : (
-                          <DynamicIcon
-                            slug={roundIconSlug({ ...round, category_name: round.name }) ?? iconForCategory(round.name) ?? "mystery-box"}
-                            size={22}
-                            shadow={false}
+                          // The face Discover gives the category: bundled
+                          // art for the six picture games, the library glyph
+                          // for the rest (CategoryArtwork).
+                          <CategoryArtwork
+                            categoryId={idForCategory(round.name)}
+                            iconSlug={roundIconSlug({ ...round, category_name: round.name }) ?? iconForCategory(round.name) ?? "mystery-box"}
+                            size={28}
+                            flat
                           />
                         )}
                       </span>

@@ -3,7 +3,7 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { ArrowLeft, Bell, BellRing, Check, Loader2, Pencil, Plus, Send, Trash2, UserPlus, X } from "lucide-react";
 import SpotlightSearch from "@/components/search/SpotlightSearch";
 import { MyTriviaLiveLogo } from "@/components/shared/MyTriviaLiveLogo";
-import { DynamicIcon } from "@/components/shared/DynamicIcon";
+import { CategoryArtwork } from "@/components/shared/CategoryArtwork";
 import { cn } from "@/lib/utils";
 import type { CSSProperties } from "react";
 import { FooterHaze, TopHaze } from "@/components/shared/FooterHaze";
@@ -159,6 +159,8 @@ export interface UniversalLobbyProps {
     iconSlug?: string | null;
     /** An image for the chip instead of a catalogue slug: a party, a trivia, a collection. */
     iconSrc?: string | null;
+    /** The category's ASCII id, for Discover's own art on the six picture games (CategoryArtwork). */
+    categoryId?: string | null;
     /** "+5" — the extra rounds, shown at the FAR RIGHT of the chip. */
     trailing?: string;
     onPress?: () => void;
@@ -875,6 +877,7 @@ export function UniversalLobby({
               <Chip
                 iconSlug={category.iconSlug}
                 iconSrc={category.iconSrc}
+                categoryId={category.categoryId}
                 label={category.label}
                 trailing={category.trailing}
                 onPress={category.onPress}
@@ -1689,6 +1692,7 @@ export function RoomTitle({
 function Chip({
   iconSlug,
   iconSrc,
+  categoryId,
   label,
   trailing,
   onPress,
@@ -1699,6 +1703,7 @@ function Chip({
   iconSlug?: string | null;
   /** An image in the icon's place — the party house, the trivia, the collection. */
   iconSrc?: string | null;
+  categoryId?: string | null;
   label: string;
   /** A note pinned to the far right of the chip — "+5" extra rounds. */
   trailing?: string;
@@ -1751,7 +1756,8 @@ function Chip({
           </span>
         ) : iconSlug ? (
           <span className="pointer-events-none shrink-0">
-            <DynamicIcon slug={iconSlug} size={32} />
+            {/* The same face Discover gives the category (CategoryArtwork). */}
+            <CategoryArtwork categoryId={categoryId ?? undefined} iconSlug={iconSlug} size={32} flat />
           </span>
         ) : null}
         {/* The tabs' own 18px: the chip and the bar under it are the two

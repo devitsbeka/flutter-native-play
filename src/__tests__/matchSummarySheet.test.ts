@@ -74,7 +74,7 @@ describe("Create opens the summary; Start opens the match", () => {
   });
 
   it("lists the rounds in play order, the held round first", () => {
-    expect(lobby).toMatch(/const summaryRounds = \[\s*\.\.\.\(heldRound \? \[\{ name: heldRound\.name, iconSlug: heldRound\.iconSlug \?\? null \}\] : \[\]\),\s*\.\.\.queue\.map/);
+    expect(lobby).toMatch(/const summaryRounds = \[\s*\.\.\.\(heldRound \? \[\{ name: heldRound\.name, iconSlug: heldRound\.iconSlug \?\? null, categoryId: heldRound\.categoryId \}\] : \[\]\),\s*\.\.\.queue\.map/);
   });
 
   it("carries the question count and what a seat costs", () => {

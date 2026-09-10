@@ -27,9 +27,10 @@ import { REWARDS } from "@/config/rewardConfig";
 import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
 import { GradientBackground, ROOM_GRADIENT_PRESETS } from "@/components/ui/noisy-gradient-backgrounds";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
+import { CategoryArtwork } from "@/components/shared/CategoryArtwork";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
-import { useCategoryIconByName, useLocalizedCategoryName } from "@/utils/categoryDisplayName";
+import { useCategoryIconByName, useCategoryIdByName, useLocalizedCategoryName } from "@/utils/categoryDisplayName";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast";
 import {
@@ -184,6 +185,7 @@ function PublicRoomCard({
   const { openProfile } = usePlayerProfile();
   const localizeCategory = useLocalizedCategoryName();
   const iconForCategory = useCategoryIconByName();
+  const idForCategory = useCategoryIdByName();
 
   const lounge = room.game_type_key ? LOUNGES[room.game_type_key] : undefined;
   // The card's face: the host's icon, else the game's lounge icon, else a
@@ -676,7 +678,9 @@ function PublicRoomCard({
                 caption above it was noise (owner's call) — a picked round
                 wears its category's icon, an unpicked one the library's
                 mystery box, the same face the picker gives "mixed". */}
-            <DynamicIcon slug={categoryIcon} className="w-[26px] h-[26px] shrink-0" />
+            {/* Discover's own face for the category (CategoryArtwork): the
+                logo tile for Guess the Logo, not a magnifying glass. */}
+            <CategoryArtwork categoryId={mixed ? undefined : idForCategory(room.first_category_name)} iconSlug={categoryIcon} size={26} flat className="shrink-0" />
             <p className={`text-[15px] font-semibold truncate leading-tight ${ink.text}`}>
               {category || t("extra.cpMixedCategory")}
             </p>

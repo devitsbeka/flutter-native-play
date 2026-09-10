@@ -31,7 +31,7 @@ describe("one answer to what plays first", () => {
   });
 
   it("the room's held round is round 1 of the SAME list, and the numbers run 1..N", () => {
-    expect(modal).toMatch(/current\?: \{ name: string; iconSlug\?: string \| null \} \| null;/);
+    expect(modal).toMatch(/current\?: \{ name: string; iconSlug\?: string \| null; categoryId\?: string \| null \} \| null;/);
     // One list: the held round is an entry of it, not a pinned row above it.
     // Pinned, the list read 1, 1, 2, 3 (owner's screenshot).
     expect(modal).toMatch(/useState<RoundEntry\[\]>\(\(\) => roundEntries\(current, items\)\)/);

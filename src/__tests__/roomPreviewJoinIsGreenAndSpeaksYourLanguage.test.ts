@@ -47,7 +47,7 @@ describe("the sheet's rounds", () => {
   const sheet = read("src/components/team/RoomPreviewSheet.tsx");
 
   it("are named in the reader's language", () => {
-    expect(sheet).toMatch(/import \{ useCategoryIconByName, useLocalizedCategoryName \} from "@\/utils\/categoryDisplayName";/);
+    expect(sheet).toMatch(/import \{ useCategoryIconByName, useCategoryIdByName, useLocalizedCategoryName \} from "@\/utils\/categoryDisplayName";/);
     expect(sheet).toMatch(/const localizeCategory = useLocalizedCategoryName\(\);/);
     expect(sheet).toMatch(/\{localizeCategory\(round\.name\) \?\? t\("extra\.cpMixedCategory"\)\}/);
     expect(sheet).not.toMatch(/\{round\.name \?\? t\(/);

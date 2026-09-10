@@ -140,7 +140,7 @@ describe("what opening it says", () => {
     // The icon off the row when it has one, else off the category's name
     // (the card's own resolver), else the box — a Guess round's queue row
     // carries no icon and drew an empty tile beside a card that drew one.
-    expect(sheet).toMatch(/<DynamicIcon\s*\n\s*slug=\{roundIconSlug\(\{ \.\.\.round, category_name: round\.name \}\) \?\? iconForCategory\(round\.name\) \?\? "mystery-box"\}\s*\n\s*size=\{22\}\s*\n\s*shadow=\{false\}\s*\n\s*\/>/);
+    expect(sheet).toMatch(/<CategoryArtwork\s*\n\s*categoryId=\{idForCategory\(round\.name\)\}\s*\n\s*iconSlug=\{roundIconSlug\(\{ \.\.\.round, category_name: round\.name \}\) \?\? iconForCategory\(round\.name\) \?\? "mystery-box"\}\s*\n\s*size=\{28\}\s*\n\s*flat\s*\n\s*\/>/);
   });
 });
 
