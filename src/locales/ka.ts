@@ -1114,6 +1114,8 @@ export const ka = {
     notReady: "არ არის მზად",
     leaveConfirmTitle: "დატოვება?",
     leaveConfirmMessage: "შეგიძლია გახვიდე და მოგვიანებით დაბრუნდე, ან სამუდამოდ დატოვო ოთახი.",
+    removePlayerTitle: "წავშალოთ {name}?",
+    removePlayerMessage: "ის ახლავე დატოვებს ოთახს. ბმულით დაბრუნება შეეძლება.",
     exitKeepRoom: "გასვლა (დარჩენა ოთახში)",
     leavePermanently: "სამუდამოდ დატოვება",
     // Additional team translations
@@ -3774,6 +3776,8 @@ export const ka = {
     ssAddRoom: "ახალი ოთახი",
     lobbyAddFriend: "მეგობრად დამატება",
     lobbyFriendRequested: "მოთხოვნა გაგზავნილია",
+    lobbyRemovePlayer: "ოთახიდან წაშლა",
+    removedByHost: "ჰოსტმა ოთახიდან წაგშალა.",
     friendAskBody: "სურს იყოს შენი მეგობარი",
     friendAskLater: "ახლა არა",
     ssOnline: "ონლაინ",

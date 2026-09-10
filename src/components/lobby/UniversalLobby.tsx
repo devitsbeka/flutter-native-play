@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState, type ReactNode, useCallback } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { ArrowLeft, Bell, BellRing, Check, Loader2, Pencil, Plus, UserPlus, X } from "lucide-react";
+import { ArrowLeft, Bell, BellRing, Check, Loader2, Pencil, Plus, Trash2, UserPlus, X } from "lucide-react";
 import SpotlightSearch from "@/components/search/SpotlightSearch";
 import { MyTriviaLiveLogo } from "@/components/shared/MyTriviaLiveLogo";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
@@ -68,6 +68,15 @@ export interface LobbyPlayer {
   offline?: boolean;
   /** Ping an absent player. Absent when there is nobody to call. */
   onCall?: () => void;
+  /**
+   * The host's bin, on everybody else's row: a seated player, or an
+   * invitation nobody answered. The room used to have no way to be rid of
+   * a seat once it was filled — a wrong invite sat there until its owner
+   * chose to leave (owner: "host should be able remove players from lobby,
+   * show delete icon next to the players username"). Absent for guests,
+   * for the host's own row, and once a round is under way.
+   */
+  onRemove?: () => void;
   /** For the row's tap: a profile, a seat menu. */
   onPress?: () => void;
   /**
@@ -179,6 +188,8 @@ export interface UniversalLobbyProps {
     /** Read out for the + that asks to be friends, and for the tick once asked. */
     addFriend?: string;
     friendRequested?: string;
+    /** Read out for the host's bin on a player's row. */
+    remove?: string;
     /** The note beside a name for a moment: somebody arrived, somebody left. */
     left?: string;
     /** Beside the name of somebody asked but not yet here. */
@@ -1159,6 +1170,7 @@ export function UniversalLobby({
                               callLabel={labels.call ?? "Call"}
                               addFriendLabel={labels.addFriend ?? "Add friend"}
                               friendRequestedLabel={labels.friendRequested ?? "Sent"}
+                              removeLabel={labels.remove ?? "Remove"}
                               leftLabel={labels.left ?? "left"}
                               invitedLabel={labels.invited ?? "invited"}
                               compact
@@ -1191,6 +1203,7 @@ export function UniversalLobby({
                             callLabel={labels.call ?? "Call"}
                             addFriendLabel={labels.addFriend ?? "Add friend"}
                             friendRequestedLabel={labels.friendRequested ?? "Sent"}
+                              removeLabel={labels.remove ?? "Remove"}
                             leftLabel={labels.left ?? "left"}
                             invitedLabel={labels.invited ?? "invited"}
                           />
@@ -1829,6 +1842,7 @@ function PlayerRow({
   callLabel,
   addFriendLabel,
   friendRequestedLabel,
+  removeLabel,
   leftLabel,
   invitedLabel,
   compact = false,
@@ -1840,6 +1854,7 @@ function PlayerRow({
   callLabel: string;
   addFriendLabel: string;
   friendRequestedLabel: string;
+  removeLabel: string;
   leftLabel: string;
   invitedLabel: string;
   /** Half the width to work in: two benches share the card. */
@@ -2039,6 +2054,21 @@ function PlayerRow({
     </motion.button>
   ) : null;
 
+  // The host's bin. The last thing on the row, after the friendlier
+  // controls, in the red the app uses for "gone for good" — and a sibling
+  // of the body for the same reason the + is: the body is a button.
+  const remove = player.onRemove ? (
+    <motion.button
+      type="button"
+      whileTap={{ scale: 0.94 }}
+      onClick={player.onRemove}
+      aria-label={removeLabel}
+      className={cn(addFriendClass, "bg-white/60 text-[#e0245e]")}
+    >
+      <Trash2 className={addFriendIcon} strokeWidth={2.5} />
+    </motion.button>
+  ) : null;
+
   return (
     <div
       className={cn(
@@ -2052,6 +2082,7 @@ function PlayerRow({
       {addFriend}
       {call}
       {armband}
+      {remove}
     </div>
   );
 }

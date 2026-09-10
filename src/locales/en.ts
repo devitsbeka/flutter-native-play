@@ -1115,6 +1115,8 @@ export const en: KaTranslations = {
     notReady: "Not Ready",
     leaveConfirmTitle: "Leave?",
     leaveConfirmMessage: "You can exit and return later, or permanently leave the room.",
+    removePlayerTitle: "Remove {name}?",
+    removePlayerMessage: "They leave the room now. They can come back with the link.",
     exitKeepRoom: "Exit (Stay in Room)",
     leavePermanently: "Leave Permanently",
     // Additional team translations
@@ -3772,6 +3774,8 @@ export const en: KaTranslations = {
     ssAddRoom: "New room",
     lobbyAddFriend: "Add friend",
     lobbyFriendRequested: "Request sent",
+    lobbyRemovePlayer: "Remove from room",
+    removedByHost: "The host removed you from the room.",
     friendAskBody: "wants to be your friend",
     friendAskLater: "Not now",
     ssOnline: "Online",

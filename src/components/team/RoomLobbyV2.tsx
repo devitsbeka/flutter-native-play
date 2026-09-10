@@ -159,6 +159,8 @@ export function RoomLobbyV2() {
   );
   const { online: onlineInRoom, loaded: presenceLoaded } = useParticipantPresence(seatedIdsForPresence);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  /** The player the host's bin is asking about, until they answer. */
+  const [removeTarget, setRemoveTarget] = useState<{ userId: string; name: string } | null>(null);
   // Can this player cover a seat at the table? The pot is collected when the
   // round ends, but being told then is being told too late.
   /**
@@ -857,28 +859,76 @@ export function RoomLobbyV2() {
     setIsStarting(false);
   };
 
-  // Handler for removing a participant (invited players)
-  const handleRemoveParticipant = async (participantId: string) => {
-    if (!currentRoom || !isHost) return;
+  /**
+   * The host removes a player.
+   *
+   * There was a handler here that deleted the participant row itself and
+   * nothing that called it. This one goes through lobby_manage_seat, the
+   * function the battle lobby's benches already use: it checks that the
+   * caller is the host, that the room is still waiting (a seat is not
+   * pulled mid-round), and that the host is not removing themself — so a
+   * stale button gets a refusal, not a silent zero-row delete. The row
+   * vanishes for everyone by realtime; the removed player's own device
+   * notices its seat is gone and leaves (below).
+   */
+  const handleRemovePlayer = async (userId: string) => {
+    if (!currentRoom || !isHost || userId === user?.id) return;
     try {
-      // RLS silently matches 0 rows when the delete isn't permitted,
-      // so verify via returned rows instead of assuming success
-      const { data: removed, error } = await supabase
-        .from("room_participants")
-        .delete()
-        .eq("id", participantId)
-        .select("id");
+      const { error } = await supabase.rpc("lobby_manage_seat", {
+        p_room_id: currentRoom.id,
+        p_user_id: userId,
+        p_action: "remove",
+      });
       if (error) throw error;
-      if (!removed || removed.length === 0) {
-        toast.error(t("extra.removePlayerFailed"));
-        return;
-      }
       toast.success(t("extra.playerRemoved"));
     } catch (error) {
-      console.error("Remove participant error:", error);
+      console.error("Remove player error:", error);
       toast.error(t("extra.removePlayerFailed"));
+    } finally {
+      setRemoveTarget(null);
     }
   };
+
+  /**
+   * Your seat is gone: leave.
+   *
+   * A removed player's row disappears from the list on every device,
+   * including their own — where the lobby would otherwise stay open on a
+   * room they are no longer in, and carry them into the next round with no
+   * row to score on. So: once seated, if the list comes back without you
+   * while the room is still waiting, and the table agrees, you are out —
+   * told so, and put back on the rooms page. Your own leave resets the room
+   * state first, so this never fires on it.
+   */
+  const wasSeatedRef = useRef(false);
+  useEffect(() => {
+    const roomId = currentRoom?.id;
+    const userId = user?.id;
+    if (!roomId || !userId) return;
+    if (participants.some((p) => p.user_id === userId)) {
+      wasSeatedRef.current = true;
+      return;
+    }
+    if (!wasSeatedRef.current || participants.length === 0) return;
+    if (currentRoom.status !== "waiting") return;
+    let cancelled = false;
+    void supabase
+      .from("room_participants")
+      .select("id")
+      .eq("room_id", roomId)
+      .eq("user_id", userId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled || data) return;
+        wasSeatedRef.current = false;
+        toast.info(t("extra.removedByHost"));
+        exitRoom();
+        navigate("/team", { replace: true });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [participants, currentRoom?.id, currentRoom?.status, user?.id, exitRoom, navigate, t]);
 
   // "Come and play" — one notification, two callers.
   //
@@ -1463,6 +1513,13 @@ export function RoomLobbyV2() {
     score: p.total_score || 0,
     rounds: p.total_rounds_played || 0,
     pending: (p.status as string) === "invited",
+    // The host's bin, on everybody else's row while the room waits. A
+    // question first: a tap on a 36px circle beside a name is not a thing
+    // to be sure of.
+    onRemove:
+      isHost && p.user_id !== user?.id && !matchLive
+        ? () => setRemoveTarget({ userId: p.user_id, name: p.nickname })
+        : undefined,
     // Your own row opens the way out (owner's ask: a leave-room button
     // behind your name). The host's tap on somebody else: "come and play"
     // for a seated player, the invitation again for a placeholder who never
@@ -1818,6 +1875,7 @@ export function RoomLobbyV2() {
         notifications: t("extra.notifications"),
         addFriend: t("extra.lobbyAddFriend"),
         friendRequested: t("extra.lobbyFriendRequested"),
+        remove: t("extra.lobbyRemovePlayer"),
         left: t("lobby.uLeftNote"),
         invited: t("lobby.uInvitedNote"),
       }}
@@ -2026,6 +2084,40 @@ export function RoomLobbyV2() {
 
       {/* Leave Confirmation Modal */}
       <AnimatePresence>
+        {removeTarget && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 pt-[calc(1rem_+_var(--safe-top))] pb-[calc(1rem_+_var(--safe-bottom))]"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-card rounded-2xl p-6 max-w-sm w-full shadow-xl"
+            >
+              <h3 className="text-lg font-bold text-foreground mb-2">{t("team.removePlayerTitle", { name: removeTarget.name })}</h3>
+              <p className="text-muted-foreground text-sm mb-4">{t("team.removePlayerMessage")}</p>
+              <div className="space-y-2">
+                <ChunkyButton
+                  variant="danger"
+                  size="md"
+                  className="w-full"
+                  onClick={() => void handleRemovePlayer(removeTarget.userId)}
+                >
+                  {t("lobby.removeSeat")}
+                </ChunkyButton>
+                <button
+                  onClick={() => setRemoveTarget(null)}
+                  className="w-full py-2 text-muted-foreground text-sm hover:text-foreground"
+                >
+                  {t("common.cancel")}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
         {showLeaveConfirm && (
           <motion.div
             initial={{ opacity: 0 }}
