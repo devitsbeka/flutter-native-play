@@ -37,7 +37,9 @@ export type NotificationType =
   | 'room_join_declined'
   // A rematch asked — by the host starting over, or a PRO player with a
   // pick of their own — to accept or decline.
-  | 'rematch_request';
+  | 'rematch_request'
+  // An admin's: notify_admins_of_report writes one per report filed.
+  | 'moderation_report';
 
 export interface Notification {
   id: string;

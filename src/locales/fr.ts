@@ -2263,6 +2263,7 @@ export const fr: KaTranslations = {
     notifView: "Voir",
     notifOpen: "Ouvrir",
     notifActivity: "Activité",
+    reportNotifTitle: "Nouveau signalement de contenu",
     notifGamesTab: "Parties",
     notifSocialTab: "Amis",
     notifShowMore: "Afficher plus",

@@ -464,6 +464,10 @@ export default function Notifications() {
       case 'subscription':
         navigate('/profile?tab=PRO');
         break;
+      // An admin's: the report itself, open on the Reports page.
+      case 'moderation_report':
+        navigate(data?.report_id ? `/admin/reports?report=${data.report_id}` : '/admin/reports');
+        break;
       default:
         setDetailNotification(notification);
         break;

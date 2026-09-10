@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Flag, Search, Check, X, User, MessageSquare, Clock, Filter, ChevronDown, AlertTriangle, Eye, Trash2, Ban, UserCheck, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -165,6 +166,17 @@ export default function AdminReports() {
   useEffect(() => {
     fetchReports();
   }, [statusFilter, typeFilter]);
+
+  // Opened from a report's notification: land on that report, once, and
+  // leave the filters alone — it is in the unfiltered list by default.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const wantedReportId = searchParams.get('report');
+  useEffect(() => {
+    if (!wantedReportId || loading) return;
+    const wanted = reports.find((r) => r.id === wantedReportId);
+    if (wanted) setSelectedReport(wanted);
+    setSearchParams((prev) => { prev.delete('report'); return prev; }, { replace: true });
+  }, [wantedReportId, loading, reports, setSearchParams]);
 
   const fetchReports = async () => {
     setLoading(true);

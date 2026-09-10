@@ -2595,6 +2595,7 @@ export const ka = {
     notifOpen: "გახსნა",
     // Notifications page
     notifActivity: "აქტივობა",
+    reportNotifTitle: "ახალი საჩივარი კონტენტზე",
     notifGamesTab: "თამაშები",
     notifSocialTab: "მეგობრები",
     notifTriviaTab: "ტრივია",

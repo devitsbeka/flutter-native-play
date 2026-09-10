@@ -442,6 +442,10 @@ export function NotificationsPanel({ isOpen, onClose, defaultTab }: Notification
         onClose();
         navigate('/profile?tab=PRO');
         break;
+      case 'moderation_report':
+        onClose();
+        navigate(data?.report_id ? `/admin/reports?report=${data.report_id}` : '/admin/reports');
+        break;
       default:
         setDetailNotification(notification);
         break;

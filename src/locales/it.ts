@@ -2275,6 +2275,7 @@ export const it: KaTranslations = {
     notifView: "Vedi",
     notifOpen: "Apri",
     notifActivity: "Attività",
+    reportNotifTitle: "Nuova segnalazione di contenuto",
     notifGamesTab: "Partite",
     notifSocialTab: "Amici",
     notifShowMore: "Mostra altro",
