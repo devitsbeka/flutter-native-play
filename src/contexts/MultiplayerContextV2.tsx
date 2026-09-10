@@ -471,6 +471,7 @@ const MultiplayerContext = createContext<MultiplayerContextType>({
   exitRoom: () => missingProvider(),
   continueInRoom: () => missingProvider(),
   leaveRoomPermanently: async () => missingProvider(),
+  refreshParticipants: async () => missingProvider(),
   deleteRoom: async () => missingProvider(),
   resetMultiplayer: () => missingProvider(),
   awardObserverBonus: async () => missingProvider(),
@@ -585,8 +586,8 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
   // matched against (see the participants channel).
   const seatIdsRef = useRef<Set<string>>(new Set());
   useEffect(() => {
-    seatIdsRef.current = new Set(state.participants.map((p) => p.id));
-  }, [state.participants]);
+    seatIdsRef.current = new Set(participants.map((p) => p.id));
+  }, [participants]);
 
   const isHost = state.currentRoom?.host_user_id === user?.id;
   // NOTE: room-start sync no longer keys off isHost - any player can start a

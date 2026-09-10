@@ -21,7 +21,7 @@ describe("the participants channel", () => {
   it("hears DELETE unfiltered and keeps the seats it knows", () => {
     expect(ctx).toMatch(/\{ event: "DELETE", schema: "public", table: "room_participants" \},/);
     expect(ctx).toMatch(/const gone = \(payload\.old as \{ id\?: string \} \| null\)\?\.id;\s*\n\s*if \(!gone \|\| !seatIdsRef\.current\.has\(gone\)\) return;\s*\n\s*void onParticipantChange\(/);
-    expect(ctx).toMatch(/seatIdsRef\.current = new Set\(state\.participants\.map\(\(p\) => p\.id\)\);/);
+    expect(ctx).toMatch(/seatIdsRef\.current = new Set\(participants\.map\(\(p\) => p\.id\)\);/);
   });
 
   it("runs the same handler for both listeners, so a leaving seat re-checks completion", () => {
