@@ -7,7 +7,7 @@ import { ArrowLeft, ChevronRight, TrendingUp } from "lucide-react";
 import { TimerBadge } from "@/components/game/TimerBadge";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { ANSWER_FEEDBACK_CARD_SHOWN, AnswerFeedbackCard } from "@/components/game/AnswerFeedbackCard";
-import { QUIZ_BLUR_REACH, QuizBottomBlur } from "@/components/game/QuizBottomBlur";
+import { QUIZ_BLUR_REACH, QUIZ_PLAY_BLUR_REACH, QuizBottomBlur } from "@/components/game/QuizBottomBlur";
 import { useFooterHeight } from "@/hooks/useFooterHeight";
 import { getCategoryById } from "@/data/categories";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,7 +41,6 @@ import {
 } from "@/components/ui/alert-dialog";
 
 // Import shared quiz UI components
-import { QuizPlayerAvatar } from "@/components/ui/quiz-player-avatar";
 import { QuizQuestionCard } from "@/components/ui/quiz-question-card";
 import { questionImageSrc } from "@/utils/questionImage";
 import { QuizProgressDots } from "@/components/ui/quiz-progress-dots";
@@ -52,6 +51,7 @@ import { PowerUpType as UIPowerUpType } from "@/components/ui/quiz-power-up-butt
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { DuelIntro } from "@/components/game/DuelIntro";
 import { CategoryArtwork } from "@/components/shared/CategoryArtwork";
+import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { DuelResult } from "@/components/game/DuelResult";
 import { KING_POINTS, answerPoints, duelOutcome } from "@/utils/duelOpponent";
 import triviaKingAvatar from "@/assets/trivia-king.png";
@@ -106,6 +106,31 @@ const SUCCESS_ICONS = [
   balloonArchIcon,
   windSpinnerIcon,
 ];
+
+/** A face on the duel's one-row scoreboard: 40px, ringed mint while ahead. */
+function DuelFace({ avatarUrl, fallback, leading }: { avatarUrl: string | null; fallback: string; leading: boolean }) {
+  return (
+    <span className={`rounded-full ring-[3px] ${leading ? "ring-[#83F7DA] shadow-[0_3px_0_#1E9A7F]" : "ring-[#9C99E8] shadow-[0_3px_0_#5957A7]"}`}>
+      <SmartAvatar avatarUrl={avatarUrl} fallback={fallback} size="sm" autoPlay={false} showSparkle={false} />
+    </span>
+  );
+}
+
+/** Points on that row, popping when they change; gold for the player, white for the King. */
+function DuelPoints({ value, tone }: { value: number; tone: "player" | "king" }) {
+  return (
+    <motion.span
+      key={value}
+      initial={{ scale: 1.3 }}
+      animate={{ scale: 1 }}
+      transition={{ type: "spring", stiffness: 500, damping: 15 }}
+      className={`min-w-[44px] text-center font-display text-[18px] font-black ${tone === "player" ? "text-[#F2C860]" : "text-[#F2FFFB]"}`}
+      style={{ textShadow: "0 2px 4px rgba(0,0,0,0.2)" }}
+    >
+      {value}
+    </motion.span>
+  );
+}
 
 // Perfect score icon from icon library (Starfish Wizard)
 const PERFECT_SCORE_ICON = "https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library/starfish-wizard.png";
@@ -1011,6 +1036,9 @@ export default function CategoryQuizPage() {
   // The floating foot is out of flow, so the answer list is padded by
   // exactly its height and every answer stays scrollable into view.
   const [footerRef, footerHeight] = useFooterHeight<HTMLDivElement>();
+  // The frost above the foot: a soft edge in play, the full ramp once the
+  // verdict is in (QUIZ_PLAY_BLUR_REACH). The scrollers pad by the same.
+  const rampReach = isAnswered ? QUIZ_BLUR_REACH : QUIZ_PLAY_BLUR_REACH;
   /**
    * The answers scroller. Once an answer is in, it is scrolled to its end:
    * the verdict is on the buttons, and on a short screen the last of them
@@ -1562,15 +1590,27 @@ export default function CategoryQuizPage() {
       {/* The duel's scoreboard: the player and the King, as the round
           stands. Only in a duel — a level has nobody to score against. */}
       {guessStake && (
-        <div className="flex items-center justify-center gap-6 px-4 pt-3 flex-shrink-0">
-          <QuizPlayerAvatar avatarUrl={profile?.avatar_url ?? null} score={duelPoints} position="left" state={duelPoints > mascotScore ? "active" : "default"} />
+        // One row — face, points, VS, points, face — where two 50px avatars
+        // with their scores under them stood 90px tall. On a short phone
+        // that height, the 40px gap under it and the 144px picture were
+        // what pushed the fourth answer into the foot's frost.
+        <div className="flex items-center justify-center gap-3 px-4 pt-2 flex-shrink-0">
+          <DuelFace avatarUrl={profile?.avatar_url ?? null} fallback={profile?.nickname?.charAt(0) || "?"} leading={duelPoints > mascotScore} />
+          <DuelPoints value={duelPoints} tone="player" />
           <span className="font-display text-[14px] font-black italic text-white/60">VS</span>
-          <QuizPlayerAvatar avatarUrl={triviaKingAvatar} score={mascotScore} position="right" state={mascotScore > duelPoints ? "active" : "default"} />
+          <DuelPoints value={mascotScore} tone="king" />
+          <DuelFace avatarUrl={triviaKingAvatar} fallback="K" leading={mascotScore > duelPoints} />
         </div>
       )}
 
       {/* Question Card with Overlapping Icon - Solo mode optimized */}
-      <div className="px-4 flex-shrink-0 mt-10 mb-2 [@media(max-height:700px)]:mt-6 [@media(max-height:600px)]:mt-4 [@media(max-height:700px)]:mb-1 relative">
+      <div
+        className={`px-4 flex-shrink-0 mb-2 [@media(max-height:700px)]:mb-1 relative ${
+          // The 40px clears the icon that overhangs a text question's card;
+          // a picture question has none, and the room is the answers'.
+          currentQuestion?.image_url ? "mt-3 [@media(max-height:700px)]:mt-2" : "mt-10 [@media(max-height:700px)]:mt-6 [@media(max-height:600px)]:mt-4"
+        }`}
+      >
         {/* Category Icon - hide for media questions (image/video/audio) */}
         {!currentQuestion?.image_url && !currentQuestion?.video_url && !currentQuestion?.audio_url && (
           <div className="absolute left-1/2 -translate-x-1/2 -top-12 z-20">
@@ -1623,7 +1663,7 @@ export default function CategoryQuizPage() {
       {isTrueFalseQuestion ? (
         <div
           className="flex-1 min-h-0 px-4 pt-2 flex gap-3 items-center justify-center"
-          style={{ paddingBottom: footerHeight + QUIZ_BLUR_REACH }}
+          style={{ paddingBottom: footerHeight + rampReach }}
         >
           {/* popLayout, or the question change stalls: in the default mode an
               exiting element keeps its layout slot until its exit animation
@@ -1664,7 +1704,7 @@ export default function CategoryQuizPage() {
         <div
           ref={answersRef}
           className="flex-1 px-4 pt-2 flex flex-col gap-2 overflow-y-auto min-h-0"
-          style={{ paddingBottom: footerHeight + QUIZ_BLUR_REACH }}
+          style={{ paddingBottom: footerHeight + rampReach }}
         >
           {/* popLayout — see the true/false block above. */}
           <AnimatePresence mode="popLayout">
@@ -1700,7 +1740,7 @@ export default function CategoryQuizPage() {
           it and blur out as they go, instead of being clipped short of it
           with a hard edge. */}
       <div ref={footerRef} className="absolute inset-x-0 bottom-0 z-20">
-      <QuizBottomBlur />
+      <QuizBottomBlur reach={rampReach} />
 
       {/* Answer feedback — Figma 1154:9157. Lands over the next button once
           an answer is in: the verdict, somewhere to keep the question or
