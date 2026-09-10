@@ -4,13 +4,17 @@ import { useTVGame } from '@/contexts/TVGameContext';
 import { SafeAvatar } from '@/components/shared/SafeAvatar';
 import { tvLog } from '@/utils/tvDebug';
 import { TVBrandingOverlay } from './TVBrandingOverlay';
-import { AppIcon } from '@/components/shared/AppIcon';
+import { CategoryArtwork } from '@/components/shared/CategoryArtwork';
+import { useCategoryIdByName } from '@/utils/categoryDisplayName';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 
 export const TVCountdownScreenV2: React.FC = () => {
   const { players, categoryName, categoryIcon, roundNumber } = useTVGame();
   const { t } = useLanguage();
+  // Discover's own art for the category, found from the name the session
+  // carries (TVRoundIntroScreen does the same).
+  const idForCategory = useCategoryIdByName();
   const [count, setCount] = useState(3);
 
   useEffect(() => {
@@ -50,7 +54,7 @@ export const TVCountdownScreenV2: React.FC = () => {
         >
           <p className="text-purple-300 text-lg">{t('extra.tvRoundLabel')} {roundNumber || 1}</p>
           <div className="flex items-center gap-3 text-white text-2xl font-bold">
-            <AppIcon slug={categoryIcon} size={40} hideIfEmpty />
+            {categoryIcon && <CategoryArtwork categoryId={idForCategory(categoryName)} iconSlug={categoryIcon} size={40} flat />}
             <span>{categoryName}</span>
           </div>
         </motion.div>

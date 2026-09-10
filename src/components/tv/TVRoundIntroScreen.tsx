@@ -5,7 +5,8 @@ import { useTVGame } from '@/contexts/TVGameContext';
 import { SmartAvatar } from '@/components/shared/SmartAvatar';
 import { Check, Loader2 } from 'lucide-react';
 import { TVBrandingOverlay } from './TVBrandingOverlay';
-import { AppIcon } from '@/components/shared/AppIcon';
+import { CategoryArtwork } from '@/components/shared/CategoryArtwork';
+import { useCategoryIdByName } from '@/utils/categoryDisplayName';
 
 interface TVRoundIntroScreenProps {
   isController?: boolean;
@@ -24,6 +25,10 @@ export const TVRoundIntroScreen: React.FC<TVRoundIntroScreenProps> = ({
     roundNumber,
     totalRounds,
   } = useTVGame();
+  // The TV session carries the round's name and icon slug, not its id;
+  // Discover's own art for the six picture games is keyed by the id, so
+  // it is found from the name (categoryFacesMatchDiscover.test.ts).
+  const idForCategory = useCategoryIdByName();
 
   const [isReady, setIsReady] = useState(false);
 
@@ -67,7 +72,10 @@ export const TVRoundIntroScreen: React.FC<TVRoundIntroScreenProps> = ({
         transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
         className="mb-10 flex flex-col items-center gap-4"
       >
-        <AppIcon slug={categoryIcon} size={80} hideIfEmpty />
+        {/* The same face Discover gives the category — the logo tile for
+            Guess the Logo, not a magnifying glass (owner: "why i'm still
+            seeing this icon? guess logo icon is different"). */}
+        {categoryIcon && <CategoryArtwork categoryId={idForCategory(categoryName)} iconSlug={categoryIcon} size={80} />}
         <h2 className="text-2xl sm:text-3xl font-bold text-white text-center">
           {categoryName || t("extra.tvCategoryFallback")}
         </h2>
