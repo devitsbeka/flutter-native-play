@@ -153,13 +153,29 @@ function seatedByRoom(seats: Array<{ room_id: string }> | null): Map<string, num
   return counts;
 }
 
+/** What became of a knock: let in, turned away, or nothing left to answer. */
+export type JoinAnswer = "approved" | "declined" | "gone";
+
 /**
  * Answer a knock from its NOTIFICATION rather than from the lobby.
  *
  * The notification carries the room and the asker, not the request row —
- * so this looks the pending row up (the host can read their own rooms'
- * requests) and answers it through respond_room_join. "gone" means there is
- * nothing pending any more: answered from the lobby, withdrawn, or blocked.
+ * so this looks the row up (the host can read their own rooms' requests)
+ * and answers it through respond_room_join.
+ *
+ * It answers with what HAPPENED, not with what was tapped. A knock is
+ * often answered somewhere else first — the lobby's doorstep, the gate on
+ * another screen, the asker withdrawing — and the notification's buttons
+ * stay up regardless. This used to look for a PENDING row only and answer
+ * "gone" when there was none, and both callers then stamped the card with
+ * whatever "gone" was not, which was "Declined": a host who let someone in
+ * from the lobby and then tapped Accept here read "Declined" (owner: "when
+ * i click accept it says denied ... how the hell accept means deny?"). So
+ * the latest row is read whatever its status: a request already approved
+ * answers "approved" (even to a Decline tap — the seat is taken, and that
+ * is the truth of it), one already declined or blocked answers "declined",
+ * and only a row that is withdrawn or missing is "gone" — which the
+ * callers say in so many words rather than as either answer.
  */
 export async function answerJoinRequest(
   roomId: string,
@@ -167,15 +183,22 @@ export async function answerJoinRequest(
   approve: boolean,
   /** The arena only: which side an approved player lands on. */
   team?: "a" | "b",
-): Promise<"approved" | "declined" | "gone"> {
+): Promise<JoinAnswer> {
+  // The latest knock from this asker at this door, whatever became of it.
   const { data: req } = await supabase
     .from("room_join_requests")
-    .select("id")
+    .select("id, status")
     .eq("room_id", roomId)
     .eq("user_id", requesterId)
-    .eq("status", "pending")
+    .order("created_at", { ascending: false })
+    .limit(1)
     .maybeSingle();
   if (!req) return "gone";
+  if (req.status !== "pending") {
+    if (req.status === "approved") return "approved";
+    if (req.status === "declined" || req.status === "blocked") return "declined";
+    return "gone";
+  }
   const { error } = await supabase.rpc("respond_room_join", {
     p_request_id: req.id,
     p_approve: approve,
@@ -183,6 +206,15 @@ export async function answerJoinRequest(
   });
   if (error) throw error;
   return approve ? "approved" : "declined";
+}
+
+/**
+ * How a notification card records that answer: the same two words the
+ * buttons offered, and a third for a knock that was withdrawn before it
+ * could be answered — never one of the two for the other.
+ */
+export function joinAnswerTaken(outcome: JoinAnswer): "accepted" | "declined" | "gone" {
+  return outcome === "approved" ? "accepted" : outcome === "declined" ? "declined" : "gone";
 }
 
 /** Shut the door for good, from anywhere — see block_room_join. */

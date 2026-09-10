@@ -12,7 +12,7 @@ import { useGameInvitations } from '@/hooks/useGameInvitations';
 import { useNavigate } from 'react-router-dom';
 import { routeForRoom, ROOM_KIND_COLUMNS } from "@/utils/roomRoutes";
 import { supabase } from '@/integrations/supabase/client';
-import { answerJoinRequest } from '@/hooks/useRoomJoinRequests';
+import { answerJoinRequest, joinAnswerTaken } from '@/hooks/useRoomJoinRequests';
 import { answerRematchRequest } from '@/utils/rematchRequests';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from "@/lib/toast";
@@ -276,11 +276,14 @@ export function NotificationsPanel({ isOpen, onClose, defaultTab }: Notification
           read_at: new Date().toISOString(),
           data: {
             ...((current?.data as Record<string, unknown>) || {}),
-            action_taken: outcome === 'approved' ? 'accepted' : 'declined',
+            action_taken: joinAnswerTaken(outcome),
           },
         })
         .eq('id', notificationId);
-      toast.success(outcome === 'approved' ? t("extra.notifAccepted") : t("extra.notifDeclined"));
+      // What happened, in its own words: a knock answered elsewhere says
+      // how it was answered; one withdrawn says so, not "Declined".
+      if (outcome === 'gone') toast.info(t("extra.notifRequestGone"));
+      else toast.success(outcome === 'approved' ? t("extra.notifAccepted") : t("extra.notifDeclined"));
     } catch (error) {
       console.error('[notifications] join answer failed', error);
       toast.error(t("notificationsPanel.errorOccurred"));
