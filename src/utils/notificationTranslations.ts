@@ -69,6 +69,9 @@ export function translateNotificationTitle(
     'room_join_approved': 'extra.joinApprovedTitle',
     'room_join_declined': 'extra.joinDeclinedTitle',
     'rematch_request': 'extra.rematchRequestTitle',
+    // Written by notify_admins_of_report in English; said in the admin's
+    // language here.
+    'moderation_report': 'extra.reportNotifTitle',
   };
 
   // A completed mission's row carries the title in the language the app was
@@ -141,6 +144,33 @@ export function translateNotificationTitle(
   return originalTitle;
 }
 
+/**
+ * What a report is about, for the admin's inbox.
+ *
+ * The trigger copies the report's description into the notification, and a
+ * question reported from the answer card writes a machine note there —
+ * `[trivia/category] ka · "…" · answer: Xbox · question <uuid>` — which is
+ * for the Reports page, not for a list on a phone (owner: "why am i seeing
+ * this report notification like that in my activity log"). Read out as the
+ * question and its answer; any other report as its reason, with what the
+ * reporter wrote after it.
+ */
+function describeReport(message: string, data?: NotificationData): string {
+  const quoted = message.match(/[“"](.+?)[”"]/);
+  if (message.startsWith('[trivia/') && quoted) {
+    const answer = message.match(/answer: (.+?)(?: · |$)/);
+    return answer ? `“${quoted[1]}” · ${answer[1]}` : `“${quoted[1]}”`;
+  }
+  const reportType = typeof data?.report_type === 'string' ? data.report_type : '';
+  const reasonKey = `moderation.reason.${reportType}`;
+  const reason = reportType ? getTranslation(reasonKey) : reasonKey;
+  const hasReason = reason !== reasonKey;
+  // The message is the report type itself when the reporter wrote nothing.
+  const note = message === reportType ? '' : message;
+  if (hasReason && note) return `${reason} · ${note}`;
+  return hasReason ? reason : note;
+}
+
 export function translateNotificationMessage(
   type: string,
   originalMessage: string | null,
@@ -162,6 +192,8 @@ export function translateNotificationMessage(
       );
     }
   }
+
+  if (type === 'moderation_report') return describeReport(originalMessage, data);
 
   // Map notification types to translation keys with dynamic content
   const messageMap: Record<string, string> = {

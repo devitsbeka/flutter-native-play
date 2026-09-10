@@ -19,6 +19,8 @@ import billingIcon from "@/assets/notifications/billing.png";
 import subscriptionIcon from "@/assets/notifications/subscription.png";
 import welcomeIcon from "@/assets/notifications/welcome.png";
 import systemIcon from "@/assets/notifications/system.png";
+// A report to the admins: a flag, not the info tile every unknown type wears.
+import moderationreportIcon from "@/assets/notifications/moderation_report.svg";
 
 /**
  * The drawn icon for each notification type — one per member of the
@@ -50,4 +52,5 @@ export const NOTIFICATION_ICONS: Record<string, string> = {
   subscription: subscriptionIcon,
   welcome: welcomeIcon,
   system: systemIcon,
+  moderation_report: moderationreportIcon,
 };

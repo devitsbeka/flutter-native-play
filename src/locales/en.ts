@@ -2593,6 +2593,7 @@ export const en: KaTranslations = {
     notifOpen: "Open",
     // Notifications page
     notifActivity: "Activity",
+    reportNotifTitle: "New content report",
     notifGamesTab: "Games",
     notifSocialTab: "Friends",
     notifTriviaTab: "Trivia",
