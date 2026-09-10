@@ -259,7 +259,9 @@ export function MatchResultScreen() {
   const { playSound } = useSound();
   const { trackMissionEvent } = useMissions();
   const { t } = useLanguage();
-  const { settleGame, hasEnoughCoins } = useGameStake();
+  const { settleGameDetailed, hasEnoughCoins } = useGameStake();
+  /** Why the badge shows nothing, when the server moved nothing on purpose. */
+  const [settleNote, setSettleNote] = useState<string | null>(null);
   const { exhaustionInfo } = useTrivia();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -394,9 +396,16 @@ export function MatchResultScreen() {
         // a credit the day's ceiling refused, or a debit larger than the
         // balance, both used to be announced as a full ±500 that never
         // reached the profile.
-        const applied = await settleGame(isWin ? "win" : isDraw ? "draw" : "lose", matchId);
+        const { applied, reason } = await settleGameDetailed(isWin ? "win" : isDraw ? "draw" : "lose", matchId);
         if (applied !== 0) {
           setCoinChange(applied);
+        } else if (reason === "daily_cap" || reason === "no_balance") {
+          // The server refused on purpose — the day's ceiling, or nothing
+          // to stake — and the counter did not move. Announcing the
+          // intended ±500 here was a lie the coin counter contradicted a
+          // second later; the badge stays empty and the reason is said.
+          setCoinChange(0);
+          setSettleNote(t(reason === "daily_cap" ? "extra.settleDailyCap" : "extra.settleNoBalance"));
         } else {
           // Nothing moved (PRO loss exemption, cap, or settle refused) —
           // show the intended stake outcome so a win/lose always reads as
@@ -697,6 +706,10 @@ export function MatchResultScreen() {
               correctSummary={`${opponentCorrect}/${totalQuestions} ${t("modals.correctAnswers")}`}
             />
           </motion.div>
+
+          {settleNote && (
+            <p className="mt-2 text-center text-xs font-semibold text-white/80">{settleNote}</p>
+          )}
 
           {/* Exhaustion Indicator - show when nearing exhaustion */}
           {exhaustionInfo && exhaustionInfo.percentUsed >= 70 && (

@@ -1121,11 +1121,20 @@ export function PublicRoomsSection({
         navigate(publicRoomPath(room));
         return;
       }
+      // The server's other answers, each said as itself: a blocked pair is
+      // not "asked — waiting for the host" (nothing was sent and the host
+      // will never see it), and a full room is not "could not send".
+      if (outcome === "blocked") {
+        toast.error(t("extra.joinBlocked"));
+        return;
+      }
       toast.success(t("extra.joinAsked"));
       void refetch();
     } catch (e) {
       console.error("[publicRooms] join request failed", e);
-      toast.error(t("extra.joinAskFailed"));
+      const message = e instanceof Error ? e.message : String((e as { message?: string })?.message ?? "");
+      toast.error(t(/full/i.test(message) ? "extra.joinRoomFull" : "extra.joinAskFailed"));
+      if (/full/i.test(message)) void refetch();
     } finally {
       setBusyId(null);
     }
@@ -1203,7 +1212,10 @@ export function PublicRoomsSection({
           online={onlineIds}
           knocks={knocksByRoom?.get(room.id) ?? 0}
           index={i}
-          blocked={!!waitingRoomId && waitingRoomId !== room.id}
+          // One ask at a time — but only a NEW ask is held back. A room the
+          // player already sits in, or hosts, is entered whatever is pending
+          // elsewhere; it used to be locked too, own rooms included.
+          blocked={!!waitingRoomId && waitingRoomId !== room.id && room.my_state !== "host" && room.my_state !== "joined"}
           onInvite={setInviting}
           onAsk={(r) => void ask(r)}
           onPreview={(r, action) => setPreviewing({ room: r, action })}

@@ -611,10 +611,12 @@ describe("a knock shows on the host's card, and back leads to the online-game pa
 });
 
 describe("one door at a time", () => {
-  it("an ask waiting elsewhere blocks every other join until it is withdrawn", () => {
+  it("an ask waiting elsewhere blocks every other NEW ask until it is withdrawn", () => {
     const section = read("src/components/team/PublicRoomsSection.tsx");
     expect(section).toMatch(/const waitingRoomId = \(data \?\? \[\]\)\.find\(\(r\) => r\.my_state === "pending"\)\?\.id \?\? null;/);
-    expect(section).toMatch(/blocked=\{!!waitingRoomId && waitingRoomId !== room\.id\}/);
+    // A room the player hosts or already sits in is entered whatever is
+    // pending elsewhere (chooserGates.test.ts).
+    expect(section).toMatch(/blocked=\{!!waitingRoomId && waitingRoomId !== room\.id && room\.my_state !== "host" && room\.my_state !== "joined"\}/);
     expect(section).toMatch(/disabled=\{busy \|\| waiting \|\| blocked\}/);
     // And the ask itself refuses, so the card body's tap explains why
     // instead of silently moving the ask to another room.

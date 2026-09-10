@@ -86,9 +86,9 @@ export function useGameStake(): GameStakeResult {
    * What comes back is what actually moved, so the result screen announces
    * the real number rather than an intended ±500 that may never have landed.
    */
-  const settleGame = useCallback(
-    async (outcome: GameOutcome, matchId?: string): Promise<number> => {
-      if (!user) return 0;
+  const settleGameDetailed = useCallback(
+    async (outcome: GameOutcome, matchId?: string): Promise<{ applied: number; reason: string | null }> => {
+      if (!user) return { applied: 0, reason: "no_user" };
 
       // Cast rather than regenerate the whole database type file — see the
       // note in AGENTS.md about what regenerating it deletes.
@@ -109,9 +109,9 @@ export function useGameStake(): GameStakeResult {
           // PGRST202: the function is not in the schema cache, i.e. the
           // migration has not been applied to this project yet.
           const missing = error.code === "PGRST202" || /settle_quick_game/i.test(error.message);
-          if (missing) return settleLocally(outcome);
+          if (missing) return { applied: await settleLocally(outcome), reason: "not_deployed" };
           console.error("[useGameStake] settle_quick_game failed:", error);
-          return 0;
+          return { applied: 0, reason: "error" };
         }
 
         if (typeof data?.coins === "number") {
@@ -120,13 +120,22 @@ export function useGameStake(): GameStakeResult {
         if (data?.reason === "daily_cap") {
           console.warn("[useGameStake] win not paid: daily settlement ceiling reached");
         }
-        return typeof data?.applied === "number" ? data.applied : 0;
+        return {
+          applied: typeof data?.applied === "number" ? data.applied : 0,
+          reason: data?.reason ?? null,
+        };
       } catch (err) {
         console.error("[useGameStake] settle_quick_game threw:", err);
-        return 0;
+        return { applied: 0, reason: "error" };
       }
     },
     [user, setProfileLocal, settleLocally],
+  );
+
+  /** The number alone, for callers that only draw it. */
+  const settleGame = useCallback(
+    async (outcome: GameOutcome, matchId?: string): Promise<number> => (await settleGameDetailed(outcome, matchId)).applied,
+    [settleGameDetailed],
   );
 
   const settleGuessGame = useCallback(
@@ -173,6 +182,7 @@ export function useGameStake(): GameStakeResult {
     hasEnoughCoins,
     stakeAmount,
     settleGame,
+    settleGameDetailed,
     settleGuessGame,
     winAmount,
     drawAmount,

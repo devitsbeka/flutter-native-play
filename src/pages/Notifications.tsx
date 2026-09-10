@@ -348,9 +348,13 @@ export default function Notifications() {
       markAsRead(notification.id);
     }
     
+    // room_join_approved: the host said yes to your ask, and the room is
+    // where that leads. It used to fall to the detail modal, which had no
+    // way in.
     switch (notification.type) {
       case 'game_started':
       case 'rematch_request':
+      case 'room_join_approved':
       case 'room_invite':
         (async () => {
           try {

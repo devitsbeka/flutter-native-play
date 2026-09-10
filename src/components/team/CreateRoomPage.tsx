@@ -222,7 +222,7 @@ interface CreateRoomPageProps {
 }
 
 export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType, initialMode, ownsRoute = false, autoOpenPersonalTrivia, preSelectedCategory, enterInstantly = false }: CreateRoomPageProps) {
-  const { user, profile } = useAuth();
+  const { user, profile, loading: authLoading } = useAuth();
   const { t } = useLanguage();
   // Which level of a picture game the player is up to.
   const { getCategoryProgress } = useCategoryProgress();
@@ -322,9 +322,13 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
    * category, and hit the wall at the first question. The wall is shown here
    * instead, on the tap (Figma 1102:5148 → 1102:4315).
    */
-  const { canPlay, timeUntilNextPlay, resetsAt } = usePlayLimit();
+  const { canPlay, timeUntilNextPlay, resetsAt, loading: limitLoading } = usePlayLimit();
   const [showLimitWall, setShowLimitWall] = useState(false);
-  const blockedByLimit = !canPlay && !isVip;
+  // Not while the quota is still being read: until the window read lands
+  // the count falls back to lifetime games played, which for any veteran
+  // account is "used up", and a ?mode= arrival opened the wall on mount for
+  // a player with games left. PlayGuardContext holds the same way.
+  const blockedByLimit = !canPlay && !isVip && !limitLoading;
 
   /**
    * The friends bar wears its padlock for either of two reasons: the room
@@ -701,10 +705,37 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
 
   const startMode = (key: GameChoice) => {
     if (isCreating) return;
+    // Signed out: a tap armed the handoff and painted the spinner, the
+    // watcher waited for a user who was never coming, and ten seconds later
+    // it said the room could not be created. The door is the sign-in.
+    // While the session is still being restored the tap simply waits.
+    if (!user) {
+      if (!authLoading) {
+        onClose();
+        navigate("/auth");
+      }
+      return;
+    }
     // Out of games: every card on the shelf leads to the same wall, and it
     // opens here rather than at the first question of a round that was
-    // never going to count.
-    if (blockedByLimit) return setShowLimitWall(true);
+    // never going to count. Not the cards that spend no quota: Words is
+    // free and Guess is one match against the King for coins; both were
+    // walled by a counter neither of them ever decrements.
+    if (blockedByLimit && key !== "words" && key !== "guess") return setShowLimitWall(true);
+    // The friends half is a Pro room. The bar asked; the cards seeded from
+    // the home rail (?mode=library) did not, and a non-PRO player got a
+    // real room past a padlock the same tap wore on the bar.
+    if (friendsOnlyMode(key) && !isVip) return requirePro("rooms", () => launchMode(key));
+    // A quick game costs the stake, and /game's refusal dropped the player
+    // home (the handoff had replaced this entry). Asked here, like Guess.
+    if (key === "quick" && coins < REWARDS.GAME_STAKE) {
+      setShowQuickStake(true);
+      return;
+    }
+    launchMode(key);
+  };
+
+  const launchMode = (key: GameChoice) => {
     rememberLobbyScene(key);
     setGameChoice(key);
     if (key === "words") {
@@ -825,9 +856,12 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       if (!hasAny) {
         // Nothing made yet: ask what to make — trivia, collection or a My
         // Trivia Party (Figma 1065:1019) — rather than dropping the player
-        // straight into the trivia editor without a word.
+        // straight into the trivia editor without a word. Through handoff,
+        // so this screen's own history entry is replaced: a plain navigate
+        // left it behind, Back re-ran the seeded mode, and the player was
+        // thrown forward again.
         onClose();
-        navigate("/team", { state: { openCreateChooser: true } });
+        handoff("/team", { state: { openCreateChooser: true } });
         return;
       }
       setShowMyTriviasModal(true);
@@ -1539,6 +1573,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   // a player short of it is offered the ways to cover it, not a game that
   // cannot pay out (owner: "-200 if looses").
   const [showGuessStake, setShowGuessStake] = useState(false);
+  const [showQuickStake, setShowQuickStake] = useState(false);
   const pickGuessCategory = (cat: Category) => {
     if (coins < REWARDS.GUESS_STAKE) {
       setShowGuessStake(true);
@@ -2611,6 +2646,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
 
       {/* A Guess pick short of its 200: the ways to cover it. */}
       <NotEnoughStakeModal isOpen={showGuessStake} onClose={() => setShowGuessStake(false)} stake={REWARDS.GUESS_STAKE} />
+      <NotEnoughStakeModal isOpen={showQuickStake} onClose={() => setShowQuickStake(false)} stake={REWARDS.GAME_STAKE} />
 
       {/* Deliberate crest choice — the same icon picker the lobby uses. */}
       {crestPickerFor && (

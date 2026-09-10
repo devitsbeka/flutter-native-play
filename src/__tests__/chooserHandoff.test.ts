@@ -95,6 +95,8 @@ describe("the modes that ask a question back are not handed off", () => {
     const body = startMode.slice(0, startMode.indexOf("autoStart.current = true;"));
     expect(body).toMatch(/if \(key === "words"\)/);
     expect(body).toMatch(/if \(key === "guess"\)/);
-    expect(body.match(/return;/g) ?? []).toHaveLength(3);
+    // isCreating, signed out, the quick stake, Words, Guess — five doors
+    // out before the handoff is armed (chooserGates.test.ts).
+    expect(body.match(/return;/g) ?? []).toHaveLength(5);
   });
 });

@@ -722,6 +722,9 @@ export function RoomLobbyV2() {
     // failed publish is said, and Create is not settled over it.
     const isPublic = await publishDraft();
     if (isPublic === null) return;
+    // The list it lands on is asked again: the Public tab's cache was up
+    // to ten seconds old, and the room just published was not on it.
+    if (isPublic) void queryClient.invalidateQueries({ queryKey: PUBLIC_ROOMS_KEY });
     rememberPressedCreate(currentRoom?.id);
     setRoomCreated(true);
     // Created is settled: the draft is a room now, and backing out keeps it.
