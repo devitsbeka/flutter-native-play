@@ -25,7 +25,7 @@ import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { roundIconSlug } from "@/utils/ownTriviaRound";
 import { undecidedRoundKind } from "@/utils/undecidedRound";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useLocalizedCategoryName } from "@/utils/categoryDisplayName";
+import { useCategoryIconByName, useLocalizedCategoryName } from "@/utils/categoryDisplayName";
 import { REWARDS } from "@/config/rewardConfig";
 import { firstPlaceShare } from "@/utils/roomPot";
 import coinIcon from "@/assets/tb-lobby/coin.png";
@@ -115,6 +115,10 @@ export function RoomPreviewSheet({
    * trivia's own title through untouched.
    */
   const localizeCategory = useLocalizedCategoryName();
+  // A round whose queue row carries no icon (a Guess category, a room's own
+  // category copied into the list) drew the empty box here while the card
+  // beside it drew the category's face off its name. Same resolver.
+  const iconForCategory = useCategoryIconByName();
   // A seat costs the stake wherever it is taken — a room, a quick game, PRO
   // or not (see 20261102140000_quick_game_charges_everyone.sql). Under two
   // players there is no pot at all: settle_room_round calls that practice.
@@ -180,7 +184,11 @@ export function RoomPreviewSheet({
                         {isMixedRound(round) ? (
                           <img src={questionIcon} alt="" className="h-7 w-7 object-contain" />
                         ) : (
-                          <DynamicIcon slug={roundIconSlug({ ...round, category_name: round.name })} size={22} shadow={false} />
+                          <DynamicIcon
+                            slug={roundIconSlug({ ...round, category_name: round.name }) ?? iconForCategory(round.name) ?? "mystery-box"}
+                            size={22}
+                            shadow={false}
+                          />
                         )}
                       </span>
                       <span className="min-w-0 flex-1">

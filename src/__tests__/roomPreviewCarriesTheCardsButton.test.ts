@@ -98,7 +98,10 @@ describe("the round rows", () => {
     // each category with icons").
     expect(sheet).toMatch(/className="flex min-h-\[58px\] items-center gap-2 rounded-xl border border-\[#e8e0f5\] bg-white\/70 py-2 pl-2 pr-3"/);
     expect(sheet).toMatch(/<span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-\[#7126d5\]\/10">\s*\n\s*\{isMixedRound\(round\) \? \(/);
-    expect(sheet).toMatch(/<DynamicIcon slug=\{roundIconSlug\(\{ \.\.\.round, category_name: round\.name \}\)\} size=\{22\} shadow=\{false\} \/>/);
+    // The icon off the row when it has one, else off the category's name
+    // (the card's own resolver), else the box — a Guess round's queue row
+    // carries no icon and drew an empty tile beside a card that drew one.
+    expect(sheet).toMatch(/<DynamicIcon\s*\n\s*slug=\{roundIconSlug\(\{ \.\.\.round, category_name: round\.name \}\) \?\? iconForCategory\(round\.name\) \?\? "mystery-box"\}\s*\n\s*size=\{22\}\s*\n\s*shadow=\{false\}\s*\n\s*\/>/);
     expect(sheet).toMatch(/t\("lobby\.uRoundLabel", \{ count: i \+ 1 \}\)/);
     expect(sheet).not.toMatch(/className="h-6 w-6 shrink-0"/);
   });

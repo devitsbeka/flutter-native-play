@@ -132,10 +132,22 @@ export function RoomLobbyV2() {
    * alone, so a created room is never briefly editable while the effect
    * catches up.
    */
-  const [roomCreated, setRoomCreated] = useState(() => hasPressedCreate(currentRoom?.id));
+  const [pressedCreate, setPressedCreate] = useState(() => hasPressedCreate(currentRoom?.id));
   useEffect(() => {
-    setRoomCreated(hasPressedCreate(currentRoom?.id));
+    setPressedCreate(hasPressedCreate(currentRoom?.id));
   }, [currentRoom?.id]);
+  /**
+   * Created is what the ROW says first. "Pressed Create" is remembered per
+   * device, so the host of a published public room who came back on
+   * another device — or after clearing the app — was offered Create again
+   * over a room that was already on everybody's list, with its rules
+   * unlocked (owner: "i can modify already created public room, i clicked
+   * and it shows create button instead start game"). A row that is not a
+   * draft has been settled by Create or Start somewhere; the device's
+   * memory only fills in for rows from before is_draft existed.
+   */
+  const roomCreated =
+    pressedCreate || (typeof currentRoom?.is_draft === "boolean" && !currentRoom.is_draft);
   /**
    * Whether the room can start, for the handler rather than the button.
    *
@@ -728,7 +740,7 @@ export function RoomLobbyV2() {
     // to ten seconds old, and the room just published was not on it.
     if (isPublic) void queryClient.invalidateQueries({ queryKey: PUBLIC_ROOMS_KEY });
     rememberPressedCreate(currentRoom?.id);
-    setRoomCreated(true);
+    setPressedCreate(true);
     // Created is settled: the draft is a room now, and backing out keeps it.
     forgetDraftRoom(currentRoom?.id);
     // Only leave when leaving is the point. The trip to the list exists to

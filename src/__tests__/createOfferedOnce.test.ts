@@ -127,10 +127,10 @@ describe("what the lobby does with it", () => {
     // must never be briefly editable while the effect catches up, now that
     // the same flag settles a published room's rules.
     expect(lobby).toMatch(
-      /const \[roomCreated, setRoomCreated\] = useState\(\(\) => hasPressedCreate\(currentRoom\?\.id\)\);/,
+      /const \[pressedCreate, setPressedCreate\] = useState\(\(\) => hasPressedCreate\(currentRoom\?\.id\)\);/,
     );
     expect(lobby).toMatch(
-      /setRoomCreated\(hasPressedCreate\(currentRoom\?\.id\)\);\s*\n\s*\}, \[currentRoom\?\.id\]\);/,
+      /setPressedCreate\(hasPressedCreate\(currentRoom\?\.id\)\);\s*\n\s*\}, \[currentRoom\?\.id\]\);/,
     );
   });
 
@@ -144,7 +144,7 @@ describe("what the lobby does with it", () => {
   });
 
   it("writes it before leaving, so coming back finds the offer spent", () => {
-    expect(lobby).toMatch(/rememberPressedCreate\(currentRoom\?\.id\);\s*\n\s*setRoomCreated\(true\);/);
+    expect(lobby).toMatch(/rememberPressedCreate\(currentRoom\?\.id\);\s*\n\s*setPressedCreate\(true\);/);
   });
 
   it("and the button goes back to a dead Start once it is", () => {
@@ -168,5 +168,19 @@ describe("what the lobby does with it", () => {
     // It hangs off awaitingPlayers, not the offer — a spent offer does not
     // make the room any less short of a player.
     expect(lobby).toMatch(/caption: awaitingPlayers/);
+  });
+});
+
+describe("created is what the row says first", () => {
+  it("a room that is not a draft is created on every device, and its rules stay locked", () => {
+    // The host of a published public room came back on another device and
+    // was offered Create again over a room already on everybody's list,
+    // with its rules unlocked (owner: "i can modify already created public
+    // room, i clicked and it shows create button instead start game").
+    const lobby = readFileSync(join(process.cwd(), "src/components/team/RoomLobbyV2.tsx"), "utf8");
+    expect(lobby).toMatch(
+      /const roomCreated =\s*\n\s*pressedCreate \|\| \(typeof currentRoom\?\.is_draft === "boolean" && !currentRoom\.is_draft\);/,
+    );
+    expect(lobby).toMatch(/const publishedRoom = isPublicRoom && roomCreated && !needsCategorySelection;/);
   });
 });

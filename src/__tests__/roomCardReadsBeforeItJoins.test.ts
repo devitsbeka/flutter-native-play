@@ -137,7 +137,10 @@ describe("what opening it says", () => {
     expect(sheet).toMatch(/import questionIcon from "@\/assets\/lobby\/chip-question\.webp";/);
     expect(sheet).toMatch(/return round\.source_type === "mixed" \|\| undecidedRoundKind\(null, round\.name\) === "mixed";/);
     expect(sheet).toMatch(/\{isMixedRound\(round\) \? \(\s*\n\s*<img src=\{questionIcon\} alt="" className="h-7 w-7 object-contain" \/>/);
-    expect(sheet).toMatch(/<DynamicIcon slug=\{roundIconSlug\(\{ \.\.\.round, category_name: round\.name \}\)\} size=\{22\} shadow=\{false\} \/>/);
+    // The icon off the row when it has one, else off the category's name
+    // (the card's own resolver), else the box — a Guess round's queue row
+    // carries no icon and drew an empty tile beside a card that drew one.
+    expect(sheet).toMatch(/<DynamicIcon\s*\n\s*slug=\{roundIconSlug\(\{ \.\.\.round, category_name: round\.name \}\) \?\? iconForCategory\(round\.name\) \?\? "mystery-box"\}\s*\n\s*size=\{22\}\s*\n\s*shadow=\{false\}\s*\n\s*\/>/);
   });
 });
 
