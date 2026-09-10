@@ -53,7 +53,10 @@ describe("createRoom carries the door policy the same way it carries visibility"
     // added later — keeps making an open room, which is the column default.
     expect(ctx).toMatch(/requiresApproval = false,/);
     expect(ctx).toMatch(
-      /createRoom: \(categoryId\?: string.*isPublic\?: boolean, requiresApproval\?: boolean\) => Promise<GameRoom \| null>;/,
+      // ...and, after it, the "+ Room" draft, which is the ninth argument
+      // TeamV2 passes (the type had lagged the implementation by one and
+      // broke the typecheck on main).
+      /createRoom: \(categoryId\?: string.*isPublic\?: boolean, requiresApproval\?: boolean, draft\?: \{ publishAs: "public" \| "private" \}\) => Promise<GameRoom \| null>;/,
     );
   });
 

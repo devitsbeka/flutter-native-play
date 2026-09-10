@@ -707,7 +707,7 @@ export function GameResultsScreenV2() {
         if (statsKey) processedResultsGames.delete(statsKey);
       });
     }
-  }, [user, profile, myScore, myRankForPayout, isWin, isHost, currentRoom, setProfileLocal, rankedParticipants, addCoins, settleRoomRound, participants, mltAllVotersDone, isMostLikelyRound, waitingForPlayers, isPublicRoom]);
+  }, [user, profile, myScore, myRankForPayout, isWin, isHost, currentRoom, setProfileLocal, rankedParticipants, settleRoomRound, participants, mltAllVotersDone, isMostLikelyRound, waitingForPlayers, isPublicRoom]);
 
   // Prefetch the questions a challenge link carries, so sharing is one tap
   // and not a wait.
