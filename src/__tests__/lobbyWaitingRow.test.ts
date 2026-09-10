@@ -41,7 +41,7 @@ describe("the invite line is said once", () => {
       /caption: awaitingPlayers\s*\n\s*\? invitedPlayers > 0\s*\n\s*\? t\("extra\.rlWaitingOnInvites"\)\s*\n\s*: t\("extra\.rlNeedsSecondPlayer"\)\s*\n\s*: null,/,
     );
     // Exactly one place renders that string as lobby chrome now.
-    expect(classic.match(/t\("extra\.rlNeedsSecondPlayer"\)/g) ?? []).toHaveLength(2); // caption + the start toast
+    expect(classic.match(/t\("extra\.rlNeedsSecondPlayer"\)/g) ?? []).toHaveLength(3); // caption + the start toast + the rematch's recount
   });
 
   it("but the prop survives, because the arena's hint says something else", () => {

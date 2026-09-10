@@ -358,10 +358,14 @@ function TeamContentV2() {
       false,
       // Ask-me on a public room; a private room has no door to guard.
       isPublic,
+      // On the row too (is_draft, draft_public), so a second device agrees.
+      { publishAs: isPublic ? "public" : "private" },
     );
     if (room) {
       // A draft until the host presses Create or Start in the lobby: backing
       // out before that, still alone, deletes it (see the lobby's back arrow).
+      // Remembered here as well, for a database the migration has not
+      // reached yet (roomIsDraft reads the row first).
       rememberDraftRoom(room.id, { publishAs: isPublic ? "public" : "private" });
       navigate(`/team?room=${room.room_code}`);
     }

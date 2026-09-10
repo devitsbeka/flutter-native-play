@@ -62,7 +62,7 @@ describe("what settles a room", () => {
     // ...plus a public draft's intent and a publish that has just happened
     // (draftIsPrivateUntilCreate.test.ts); the row's column is still the
     // truth once it has caught up.
-    expect(lobby).toMatch(/const isPublicRoom =\s*\n\s*Boolean\(\(currentRoom as \{ is_public\?: boolean \}\)\.is_public\) \|\|\s*\n\s*publishedNow \|\|\s*\n\s*draftWantsPublic\(currentRoom\.id\);/);
+    expect(lobby).toMatch(/const isPublicRoom =\s*\n\s*Boolean\(currentRoom\.is_public\) \|\|\s*\n\s*publishedNow \|\|\s*\n\s*roomWantsPublic\(currentRoom\);/);
     expect(lobby).not.toMatch(/roomVisibilityFields/);
   });
 });

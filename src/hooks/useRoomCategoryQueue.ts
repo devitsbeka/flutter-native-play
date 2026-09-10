@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface QueueItem {
@@ -57,6 +57,18 @@ export function useRoomCategoryQueue(roomId: string | null) {
     };
   }, [roomId, fetchQueue]);
 
+  /**
+   * Adds are serialised, and each takes its position from the server.
+   *
+   * The picker queues a multi-pick — or "5 random" — in a loop without
+   * awaiting, and the position used to be `queue.length` from hook state,
+   * which every iteration read before any insert landed: all N rows got
+   * the same position, and with no unique constraint on (room_id, position)
+   * the round order was whatever the planner felt like. Each add now waits
+   * for the one before it and asks the table for max(position) + 1.
+   */
+  const addChain = useRef<Promise<unknown>>(Promise.resolve());
+
   // Add item to queue
   const addToQueue = useCallback(async (item: {
     source_type: "category" | "random" | "user_trivia";
@@ -66,32 +78,44 @@ export function useRoomCategoryQueue(roomId: string | null) {
     icon_slug?: string | null;
   }) => {
     if (!roomId) return false;
-    
-    setLoading(true);
-    try {
-      const nextPosition = queue.length;
-      
-      const { error } = await supabase
-        .from("room_category_queue")
-        .insert({
-          room_id: roomId,
-          position: nextPosition,
-          source_type: item.source_type,
-          category_id: item.category_id || null,
-          category_name: item.category_name || null,
-          user_trivia_id: item.user_trivia_id || null,
-          icon_slug: item.icon_slug || null,
-        });
-      
-      if (error) throw error;
-      return true;
-    } catch (e) {
-      console.error("Error adding to queue:", e);
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  }, [roomId, queue.length]);
+
+    const run = async (): Promise<boolean> => {
+      setLoading(true);
+      try {
+        const { data: last } = await supabase
+          .from("room_category_queue")
+          .select("position")
+          .eq("room_id", roomId)
+          .order("position", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        const nextPosition = (last?.position ?? -1) + 1;
+
+        const { error } = await supabase
+          .from("room_category_queue")
+          .insert({
+            room_id: roomId,
+            position: nextPosition,
+            source_type: item.source_type,
+            category_id: item.category_id || null,
+            category_name: item.category_name || null,
+            user_trivia_id: item.user_trivia_id || null,
+            icon_slug: item.icon_slug || null,
+          });
+
+        if (error) throw error;
+        return true;
+      } catch (e) {
+        console.error("Error adding to queue:", e);
+        return false;
+      } finally {
+        setLoading(false);
+      }
+    };
+    const next = addChain.current.then(run, run);
+    addChain.current = next;
+    return next;
+  }, [roomId]);
 
   // Remove item from queue
   const removeFromQueue = useCallback(async (itemId: string) => {

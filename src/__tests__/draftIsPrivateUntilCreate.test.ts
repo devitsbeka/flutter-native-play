@@ -86,24 +86,27 @@ describe("the draft store", () => {
 
 describe("+ Room", () => {
   it("makes the row private on either tab and stores the tab's intent", () => {
-    expect(hub).toMatch(/\/\/ Private until Create publishes it \(draftWantsPublic\)\.\s*\n\s*false,\s*\n(\s*\/\/[^\n]*\n)*\s*isPublic,\s*\n\s*\);/);
+    expect(hub).toMatch(/\/\/ Private until Create publishes it \(draftWantsPublic\)\.\s*\n\s*false,\s*\n(\s*\/\/[^\n]*\n)*\s*isPublic,\s*\n(\s*\/\/[^\n]*\n)*\s*\{ publishAs: isPublic \? "public" : "private" \},\s*\n\s*\);/);
     expect(hub).toMatch(/rememberDraftRoom\(room\.id, \{ publishAs: isPublic \? "public" : "private" \}\);/);
   });
 });
 
 describe("the lobby", () => {
   it("treats a public draft as public: rules, counting, the door", () => {
-    expect(lobby).toMatch(/const isPublicRoom =\s*\n\s*Boolean\(\(currentRoom as \{ is_public\?: boolean \}\)\.is_public\) \|\|\s*\n\s*publishedNow \|\|\s*\n\s*draftWantsPublic\(currentRoom\.id\);/);
+    expect(lobby).toMatch(/const isPublicRoom =\s*\n\s*Boolean\(currentRoom\.is_public\) \|\|\s*\n\s*publishedNow \|\|\s*\n\s*roomWantsPublic\(currentRoom\);/);
   });
 
   it("publishes the draft on Create and on Start, and lands Create on the list it published to", () => {
-    expect(lobby).toMatch(/const publishDraft = async \(\): Promise<boolean> => \{/);
-    expect(lobby).toMatch(/if \(!draftWantsPublic\(currentRoom\.id\)\) return false;\s*\n\s*const \{ error \} = await supabase\.from\("game_rooms"\)\.update\(\{ is_public: true \}\)\.eq\("id", currentRoom\.id\);/);
+    // Settles the draft on the row and publishes it if the Public tab made
+    // it; null when the write failed (draftsLiveOnTheRow.test.ts).
+    expect(lobby).toMatch(/const publishDraft = async \(\): Promise<boolean \| null> => \{/);
+    expect(lobby).toMatch(/\.\.\.\(wantsPublic && !alreadyPublic \? \{ is_public: true \} : \{\}\),/);
+    expect(lobby).toMatch(/const \{ error \} = await supabase\.from\("game_rooms"\)\.update\(patch\)\.eq\("id", currentRoom\.id\);/);
     const create = lobby.slice(lobby.indexOf("const handleDoneCreating"), lobby.indexOf("};", lobby.indexOf("const handleDoneCreating")));
     expect(create).toMatch(/const isPublic = await publishDraft\(\);/);
     expect(create.indexOf("await publishDraft()")).toBeLessThan(create.indexOf("forgetDraftRoom("));
     expect(create).toMatch(/navigate\(`\/team\?tab=\$\{isPublic \? "public" : "private"\}`, \{ replace: true \}\);/);
     const start = lobby.slice(lobby.indexOf("const handleStartGame"), lobby.indexOf("enoughPlayersRef.current", lobby.indexOf("const handleStartGame")));
-    expect(start).toMatch(/await publishDraft\(\);\s*\n\s*forgetDraftRoom\(currentRoom\.id\);/);
+    expect(start).toMatch(/if \(\(await publishDraft\(\)\) === null\) return;\s*\n\s*forgetDraftRoom\(currentRoom\.id\);/);
   });
 });

@@ -39,8 +39,10 @@ describe("the client remembers the game it finished", () => {
   });
 
   it("forgets it only on leaving the room", () => {
+    // exitRoom, the "cancelled" branch, and enterRoom leaving a held room
+    // before entering another (draftsLiveOnTheRow.test.ts).
     const clears = ctx.match(/finishedGameIdRef\.current = null;/g) ?? [];
-    expect(clears).toHaveLength(2);
+    expect(clears).toHaveLength(3);
   });
 });
 

@@ -55,7 +55,8 @@ import type { QueueItem } from "@/hooks/useRoomCategoryQueue";
 import { classicLobbyScene } from "@/utils/lobbyScene";
 import { gameRoomsHasApproval } from "@/utils/roomVisibility";
 import { dealtRoomIcon, fetchCrestPool } from "@/utils/roomCrests";
-import { draftWantsPublic, forgetDraftRoom, hasPressedCreate, isDraftRoom, rememberPressedCreate } from "@/utils/roomCreateOffered";
+import { forgetDraftRoom, hasPressedCreate, rememberPressedCreate, roomIsDraft, roomWantsPublic } from "@/utils/roomCreateOffered";
+import { roomDraftFields } from "@/utils/roomVisibility";
 import { useParticipantPresence } from "@/hooks/useParticipantPresence";
 import coinIconAsset from "@/assets/tb-lobby/coin.png";
 import { NotEnoughStakeModal } from "@/components/home/NotEnoughStakeModal";
@@ -607,7 +608,7 @@ export function RoomLobbyV2() {
     const abandonedDraft =
       !!currentRoom &&
       isHost &&
-      isDraftRoom(currentRoom.id) &&
+      roomIsDraft(currentRoom) &&
       !roomCreated &&
       currentRoom.status !== "playing" &&
       participants.every((p) => p.user_id === user?.id);
@@ -663,18 +664,38 @@ export function RoomLobbyV2() {
    * come back round. Returns whether the room is public afterwards.
    */
   const [publishedNow, setPublishedNow] = useState(false);
-  const publishDraft = async (): Promise<boolean> => {
-    if (!currentRoom) return false;
-    const alreadyPublic = Boolean((currentRoom as { is_public?: boolean }).is_public) || publishedNow;
-    if (alreadyPublic) return true;
-    if (!draftWantsPublic(currentRoom.id)) return false;
-    const { error } = await supabase.from("game_rooms").update({ is_public: true }).eq("id", currentRoom.id);
+  // Once the row itself says public, the bridge is not needed — and must
+  // not stay: complete_room_round makes a public room private after its
+  // first round, and a sticky flag kept the lobby believing otherwise
+  // (TV hidden, the Open/Ask row live on a door that no longer exists).
+  useEffect(() => {
+    if (currentRoom?.is_public) setPublishedNow(false);
+  }, [currentRoom?.is_public]);
+  /**
+   * Settle the draft: the row stops being one, and is published if the
+   * Public tab made it. Resolves to whether the room is public afterwards,
+   * or null when the write FAILED — offline, RLS, a transient — in which
+   * case the caller says so and does not pretend. A swallowed failure here
+   * used to leave the room permanently private, no longer a draft, the
+   * host on the wrong tab and nothing on screen about it.
+   */
+  const publishDraft = async (): Promise<boolean | null> => {
+    if (!currentRoom) return null;
+    const alreadyPublic = Boolean(currentRoom.is_public) || publishedNow;
+    const wantsPublic = roomWantsPublic(currentRoom);
+    const patch: { is_public?: boolean; is_draft?: boolean } = {
+      ...(roomIsDraft(currentRoom) ? await roomDraftFields(false) : {}),
+      ...(wantsPublic && !alreadyPublic ? { is_public: true } : {}),
+    };
+    if (Object.keys(patch).length === 0) return alreadyPublic;
+    const { error } = await supabase.from("game_rooms").update(patch).eq("id", currentRoom.id);
     if (error) {
-      console.warn("[RoomLobbyV2] draft room was not published:", error.message);
-      return false;
+      console.warn("[RoomLobbyV2] draft room was not settled:", error.message);
+      toast.error(t("extra.errorOccurred"));
+      return null;
     }
-    setPublishedNow(true);
-    return true;
+    if (patch.is_public) setPublishedNow(true);
+    return alreadyPublic || Boolean(patch.is_public);
   };
 
   /**
@@ -697,8 +718,10 @@ export function RoomLobbyV2() {
    * would be a loop rather than a way on.
    */
   const handleDoneCreating = async () => {
-    // Published first, so the list it lands on is the one it is on.
+    // Published first, so the list it lands on is the one it is on. A
+    // failed publish is said, and Create is not settled over it.
     const isPublic = await publishDraft();
+    if (isPublic === null) return;
     rememberPressedCreate(currentRoom?.id);
     setRoomCreated(true);
     // Created is settled: the draft is a room now, and backing out keeps it.
@@ -747,8 +770,8 @@ export function RoomLobbyV2() {
   const handleStartGame = async () => {
     if (!currentRoom) return;
     // A round played in it settles a draft as surely as Create does - and
-    // publishes one the Public tab made.
-    await publishDraft();
+    // publishes one the Public tab made. Not over a failed write.
+    if ((await publishDraft()) === null) return;
     forgetDraftRoom(currentRoom.id);
     // The button is disabled for this, but the category picker can start a
     // round on its own (startAfterPick) and the last player can leave between
@@ -1175,9 +1198,9 @@ export function RoomLobbyV2() {
   // by Create (draftWantsPublic); or one published a moment ago, before the
   // row's own column has caught up (publishedNow).
   const isPublicRoom =
-    Boolean((currentRoom as { is_public?: boolean }).is_public) ||
+    Boolean(currentRoom.is_public) ||
     publishedNow ||
-    draftWantsPublic(currentRoom.id);
+    roomWantsPublic(currentRoom);
   /**
    * A PUBLIC room counts the people who are actually in the app.
    *
@@ -1673,6 +1696,16 @@ export function RoomLobbyV2() {
         });
     }
     setShowRematchWait(false);
+    // Counted off the table as it stands AFTER the undecided left, not off
+    // last render's gate: with nobody saying yes the host used to start a
+    // solo round, which settles as practice, under a lobby that had shown a
+    // pot.
+    const gone = new Set(undecided.map((p) => p.id));
+    const staying = participants.filter((p) => !gone.has(p.id) && (p.status as string) !== "invited");
+    if (staying.length < 2) {
+      toast.error(t("extra.rlNeedsSecondPlayer"));
+      return;
+    }
     void handleStartGame();
   };
 

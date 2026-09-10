@@ -135,3 +135,39 @@ export function resetRoomVisibilityProbe(): void {
   namesProbe = null;
   approvalProbe = null;
 }
+
+/**
+ * Same story again: `is_draft` / `draft_public` ride along on a "+ Room"
+ * insert, and until 20261106120000_drafts_on_the_row.sql is pasted the
+ * columns do not exist. Before it, the draft is remembered per device only
+ * (roomCreateOffered), which is what it was; after it, the row says so and
+ * every device agrees.
+ */
+let draftProbe: Promise<boolean> | null = null;
+
+export function gameRoomsHasDraftColumns(): Promise<boolean> {
+  if (!draftProbe) {
+    draftProbe = (async () => {
+      try {
+        const { error } = await supabase.from("game_rooms").select("is_draft").limit(1);
+        return !error;
+      } catch {
+        return false;
+      }
+    })();
+  }
+  return draftProbe;
+}
+
+/**
+ * The draft half of a game_rooms write, or nothing at all when the columns
+ * are not there yet. `draftPublic` is the tab the draft came from — what
+ * Create will publish it as; it only matters while `isDraft` is true.
+ */
+export async function roomDraftFields(
+  isDraft: boolean,
+  draftPublic?: boolean,
+): Promise<{ is_draft?: boolean; draft_public?: boolean }> {
+  if (!(await gameRoomsHasDraftColumns())) return {};
+  return draftPublic === undefined ? { is_draft: isDraft } : { is_draft: isDraft, draft_public: draftPublic };
+}

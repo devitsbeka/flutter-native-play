@@ -36,7 +36,7 @@ describe("the room a tab makes", () => {
   it("has its door on the latch only when it is meant to be public — a private room has no door", () => {
     // The row itself is born private either way; the Public tab's intent
     // is published by Create (draftIsPrivateUntilCreate.test.ts).
-    expect(hub).toMatch(/undefined,\s*\n(\s*\/\/[^\n]*\n)*\s*false,\s*\n(\s*\/\/[^\n]*\n)*\s*isPublic,\s*\n\s*\);/);
+    expect(hub).toMatch(/undefined,\s*\n(\s*\/\/[^\n]*\n)*\s*false,\s*\n(\s*\/\/[^\n]*\n)*\s*isPublic,\s*\n(\s*\/\/[^\n]*\n)*\s*\{ publishAs: isPublic \? "public" : "private" \},\s*\n\s*\);/);
   });
 });
 

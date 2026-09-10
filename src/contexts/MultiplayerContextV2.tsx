@@ -7,7 +7,7 @@ import { isPublicRoomOver } from "@/utils/publicRoomOver";
 import { t as tStandalone } from "@/utils/standaloneTranslation";
 import { supabase } from "@/integrations/supabase/client";
 import { roomIconOrNull } from "@/utils/categoryIcons";
-import { roomApprovalFields, roomVisibilityFields } from "@/utils/roomVisibility";
+import { roomApprovalFields, roomDraftFields, roomVisibilityFields } from "@/utils/roomVisibility";
 import type { Json } from "@/integrations/supabase/types";
 import { useAuth } from "./AuthContext";
 import { TriviaQuestion } from "@/hooks/useTrivia";
@@ -330,6 +330,11 @@ export interface GameRoom {
   user_trivia_id?: string | null; // Track which user trivia is being played
   last_activity_at?: string | null; // Track last activity for room staleness detection
   host_is_observer?: boolean | null; // Track if host is in observer mode
+  is_public?: boolean | null;
+  /** "+ Room" made it and the host has not pressed Create or Start yet (roomCreateOffered). */
+  is_draft?: boolean | null;
+  /** What Create publishes the draft as: the tab it came from. */
+  draft_public?: boolean | null;
 }
 
 export interface RoomGame {
@@ -569,6 +574,12 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
   useEffect(() => {
     phaseRef.current = state.phase;
   }, [state.phase]);
+  // The held room, for callbacks that must not re-create on every room
+  // change (enterRoom reads it to leave one room before entering another).
+  const currentRoomRef = useRef<GameRoom | null>(state.currentRoom);
+  useEffect(() => {
+    currentRoomRef.current = state.currentRoom;
+  }, [state.currentRoom]);
 
   const isHost = state.currentRoom?.host_user_id === user?.id;
   // NOTE: room-start sync no longer keys off isHost - any player can start a
@@ -1406,6 +1417,14 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
      * public and ask me - as selected").
      */
     requiresApproval = false,
+    /**
+     * A "+ Room" draft: the row exists so the lobby has something to
+     * subscribe to, but the host has not said they want it — Create or
+     * Start does that, and backing out alone before then deletes it. On
+     * the row (is_draft, draft_public) so every device agrees; see
+     * roomCreateOffered.
+     */
+    draft?: { publishAs: "public" | "private" },
   ): Promise<GameRoom | null> => {
     if (!user || !profile) {
       toast.error(tStandalone("extra.mpAuthRequired"));
@@ -1443,6 +1462,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             room_icon: finalRoomIcon,
             ...(await roomVisibilityFields(isPublic)),
             ...(await roomApprovalFields(requiresApproval)),
+            ...(draft ? await roomDraftFields(true, draft.publishAs === "public") : {}),
             last_activity_at: new Date().toISOString(),
           })
           .select()
@@ -1547,6 +1567,27 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       avatar_url: null,
       country_code: null,
     };
+
+    // One room at a time. The rooms page entered a second room over the
+    // first without leaving it — both channels stayed up, both seats stayed
+    // live, and the first room's start could pull the player out of the
+    // second (and stake them in both). Leaving is what the back arrow does;
+    // it happens here too, for a room that is not the one being entered.
+    const held = currentRoomRef.current;
+    if (held && held.room_code !== roomCode.toUpperCase()) {
+      if (phaseRef.current === "playing") {
+        void supabase
+          .from("room_participants")
+          .update({ status: "disconnected" })
+          .eq("room_id", held.id)
+          .eq("user_id", user.id);
+      }
+      setRoomPresence(null);
+      cleanupChannels();
+      expectedGameIdRef.current = null;
+      finishedGameIdRef.current = null;
+      setState(initialState);
+    }
     
     setLoading(true);
     try {

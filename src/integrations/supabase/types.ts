@@ -781,6 +781,7 @@ export type Database = {
           cover_image: string | null
           created_at: string | null
           current_game_id: string | null
+          draft_public: boolean | null
           game_mode: string | null
           game_type: Database["public"]["Enums"]["game_type"]
           game_type_key: string | null
@@ -789,6 +790,7 @@ export type Database = {
           host_user_id: string
           id: string
           is_archived: boolean | null
+          is_draft: boolean | null
           is_permanent: boolean | null
           is_public: boolean
           last_activity_at: string | null
@@ -820,6 +822,7 @@ export type Database = {
           cover_image?: string | null
           created_at?: string | null
           current_game_id?: string | null
+          draft_public?: boolean | null
           game_mode?: string | null
           game_type?: Database["public"]["Enums"]["game_type"]
           game_type_key?: string | null
@@ -828,6 +831,7 @@ export type Database = {
           host_user_id: string
           id?: string
           is_archived?: boolean | null
+          is_draft?: boolean | null
           is_permanent?: boolean | null
           is_public?: boolean
           last_activity_at?: string | null
@@ -859,6 +863,7 @@ export type Database = {
           cover_image?: string | null
           created_at?: string | null
           current_game_id?: string | null
+          draft_public?: boolean | null
           game_mode?: string | null
           game_type?: Database["public"]["Enums"]["game_type"]
           game_type_key?: string | null
@@ -867,6 +872,7 @@ export type Database = {
           host_user_id?: string
           id?: string
           is_archived?: boolean | null
+          is_draft?: boolean | null
           is_permanent?: boolean | null
           is_public?: boolean
           last_activity_at?: string | null

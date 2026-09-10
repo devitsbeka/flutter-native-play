@@ -77,6 +77,8 @@ describe("the draft memory", () => {
 describe("+ Room makes a draft; Create and Start settle it", () => {
   it("the hub remembers the row it just made as a draft", () => {
     expect(hub).toMatch(/rememberDraftRoom\(room\.id, \{ publishAs: isPublic \? "public" : "private" \}\);\s*\n\s*navigate\(`\/team\?room=\$\{room\.room_code\}`\);/);
+    // And on the row, so a second device agrees (draftsLiveOnTheRow.test.ts).
+    expect(hub).toMatch(/\{ publishAs: isPublic \? "public" : "private" \},\s*\n\s*\);/);
   });
 
   it("Create forgets it, and so does Start", () => {
@@ -91,7 +93,8 @@ describe("the back arrow on an abandoned draft", () => {
   const exit = lobby.slice(lobby.indexOf("const handleExitRoom"), lobby.indexOf('navigate("/team", { replace: true });', lobby.indexOf("const handleExitRoom")));
 
   it("deletes the row — only the host's own unsettled draft, not playing, alone in it", () => {
-    expect(exit).toMatch(/isHost &&\s*\n\s*isDraftRoom\(currentRoom\.id\) &&\s*\n\s*!roomCreated &&\s*\n\s*currentRoom\.status !== "playing" &&\s*\n\s*participants\.every\(\(p\) => p\.user_id === user\?\.id\);/);
+    // roomIsDraft reads the row first and this device's memory second.
+    expect(exit).toMatch(/isHost &&\s*\n\s*roomIsDraft\(currentRoom\) &&\s*\n\s*!roomCreated &&\s*\n\s*currentRoom\.status !== "playing" &&\s*\n\s*participants\.every\(\(p\) => p\.user_id === user\?\.id\);/);
     expect(exit).toMatch(/void deleteDraftRoom\(draftId\);/);
     expect(exit).toMatch(/forgetDraftRoom\(draftId\);/);
   });

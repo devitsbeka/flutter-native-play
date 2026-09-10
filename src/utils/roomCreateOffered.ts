@@ -159,3 +159,34 @@ export function isDraftRoom(roomId: string | null | undefined): boolean {
   if (!roomId) return false;
   return readDraftIds().includes(roomId);
 }
+
+/**
+ * The row, when it can say; this device's memory when it cannot.
+ *
+ * The draft used to live in localStorage only, and localStorage is per
+ * device: on the host's second device the same room was not a draft and
+ * had no publish intent, so Create there published nothing and landed on
+ * the wrong tab, while the first device still believed the room could be
+ * backed out of and deleted. 20261106120000_drafts_on_the_row.sql puts
+ * both facts on game_rooms (`is_draft`, `draft_public`); a row that carries
+ * them is believed over the device, and a row from before the migration
+ * (the column missing, so `undefined`) falls back to what the device
+ * remembers, which is what it was.
+ */
+export interface DraftRoomLike {
+  id: string;
+  is_draft?: boolean | null;
+  draft_public?: boolean | null;
+}
+
+export function roomIsDraft(room: DraftRoomLike | null | undefined): boolean {
+  if (!room) return false;
+  if (typeof room.is_draft === "boolean") return room.is_draft;
+  return isDraftRoom(room.id);
+}
+
+export function roomWantsPublic(room: DraftRoomLike | null | undefined): boolean {
+  if (!room) return false;
+  if (typeof room.is_draft === "boolean") return room.is_draft && Boolean(room.draft_public);
+  return draftWantsPublic(room.id);
+}

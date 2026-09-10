@@ -169,7 +169,7 @@ describe("the private tab and the lobby it opens", () => {
     // Told what is already on the list, so it does not deal a repeat
     // (roomNamesDoNotRepeat.test.ts).
     expect(page).toMatch(/generateRoomIdentity\(readAppLanguage\(\), await fetchRoomNamesInUse\(\)\)/);
-    expect(page).toMatch(/undefined,\s*\n(\s*\/\/[^\n]*\n)*\s*false,\s*\n(\s*\/\/[^\n]*\n)*\s*isPublic,\s*\n\s*\);/);
+    expect(page).toMatch(/undefined,\s*\n(\s*\/\/[^\n]*\n)*\s*false,\s*\n(\s*\/\/[^\n]*\n)*\s*isPublic,\s*\n(\s*\/\/[^\n]*\n)*\s*\{ publishAs: isPublic \? "public" : "private" \},\s*\n\s*\);/);
   });
 
   it("a room is two people — a lone host cannot start one", () => {

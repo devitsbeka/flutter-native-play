@@ -77,5 +77,14 @@ export function acceptRoomInvite(notificationId: string): void {
  */
 export async function declineRoomInvite(roomId: string, userId: string, notificationId: string): Promise<void> {
   await supabase.from("room_participants").delete().eq("room_id", roomId).eq("user_id", userId);
+  // The invitation row as well: it is what lets an invitee past an "Ask me"
+  // door and what the global invite modal lists as pending. Left "pending",
+  // a declined invite still opened the door and could be raised again.
+  await supabase
+    .from("game_invitations")
+    .update({ status: "declined" })
+    .eq("room_id", roomId)
+    .eq("receiver_id", userId)
+    .eq("status", "pending");
   await markNotificationActioned(notificationId, "declined");
 }
