@@ -63,9 +63,12 @@ describe("the match's totals", () => {
 });
 
 describe("the card", () => {
-  it("sits in the list under the podium, in the list's own tile shape", () => {
-    expect(results).toMatch(/\(rankedParticipants\.length > PODIUM_ORDER\.length \|\| \(matchRounds && matchInfo\)\) && \(/);
-    expect(results).toMatch(/<motion\.section[\s\S]*?className="rounded-\[24px\] border-2 border-\[rgba\(255,217,217,0\.1\)\] bg-\[rgba\(255,222,222,0\.2\)\] px-4 py-3/);
+  it("sits in the list under the standings, in the list's own tile shape", () => {
+    // Only the EARLIER rounds: this round is the standings above it and is
+    // not told twice, and a match of one round has nothing earlier.
+    expect(results).toMatch(/const earlierRounds = \(matchRounds \?\? \[\]\)\.filter\(\(r\) => r\.id !== currentRoom\?\.current_game_id\);/);
+    expect(results).toMatch(/\{matchInfo && earlierRounds\.length > 0 && \(/);
+    expect(results).toMatch(/<motion\.section[\s\S]*?className=\{TILE\}/);
     // Not in the footer any more: the footer floats over the list and a
     // block there hid the tiles behind it.
     expect(results).not.toMatch(/className="relative p-4 pb-5 space-y-3"\s*>\s*\{\/\*[\s\S]*?\{matchStandings && matchInfo && \(/);
@@ -75,11 +78,15 @@ describe("the card", () => {
     expect(results).toMatch(/t\("extra\.matchRoundsTitle", \{ game: matchInfo\.game \}\)/);
     expect(results).toMatch(/\{localizeCategory\(round\.categoryName\) \|\| t\("extra\.categoryFallback"\)\}/);
     expect(results).toMatch(/t\("lobby\.uRoundLabel", \{ count: round\.number \}\)/);
-    expect(results).toMatch(/t\("extra\.roundPotLabel", \{ amount: round\.pot\.toLocaleString\(\) \}\)/);
+    expect(results).toMatch(/\{round\.pot > 0 && <PotPill amount=\{round\.pot\} \/>\}/);
+    expect(results).toMatch(/t\("extra\.roundPotLabel", \{ amount: amount\.toLocaleString\(\) \}\)/);
   });
 
   it("says who won and who lost it: every seat, the winner first with the medal", () => {
-    expect(results).toMatch(/\{round\.seats\.map\(\(seat, i\) => \{/);
+    // One under the other — never wrapped across the row, which is what
+    // put ten 24px faces in a block nobody could read.
+    expect(results).toMatch(/<ul className="mt-2 space-y-1">\s*\n\s*\{round\.seats\.map\(\(seat, i\) => \{/);
+    expect(results).not.toMatch(/flex flex-wrap gap-x-4 gap-y-1\.5 pl-10/);
     expect(results).toMatch(/\{placeMark\(i, i \+ 1\)\}/);
     expect(results).toMatch(/<PotLine net=\{seat\.net\} compact tone=\{seat\.net > 0 \? "gold" : "white"\} \/>/);
   });

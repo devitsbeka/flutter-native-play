@@ -97,11 +97,12 @@ describe("the host starts with whoever said yes", () => {
   });
 });
 
-describe("two players sit centred on the podium", () => {
-  it("two columns, not three with an empty step", () => {
-    expect(results).toMatch(/const TWO_UP_ORDER = \[0, 1\] as const;/);
-    expect(results).toMatch(/rankedParticipants\.length === 2 \? "max-w-\[260px\] grid-cols-2 gap-6" : "max-w-\[362px\] grid-cols-3 gap-2"/);
-    expect(results).toMatch(/\(rankedParticipants\.length === 2 \? TWO_UP_ORDER : PODIUM_ORDER\)\.map/);
+describe("two players are two rows, like any other number", () => {
+  it("no podium to centre — the list has no empty step to leave", () => {
+    // The two-up podium existed to fix a pair huddled left of an empty
+    // third step. A list has no steps (owner: "show players as list").
+    expect(results).not.toMatch(/TWO_UP_ORDER|PODIUM_ORDER|grid-cols-3/);
+    expect(results).toMatch(/\{rankedParticipants\.map\(\(p, idx\) => \(/);
   });
 });
 

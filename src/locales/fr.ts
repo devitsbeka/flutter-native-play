@@ -4158,6 +4158,8 @@ export const fr: KaTranslations = {
     matchRoundLabel: "Partie {game}, manche {round}",
     matchStandingsTitle: "Partie {game} · {rounds} manches · classement final",
     matchRoundsTitle: "Partie {game} · manche par manche",
+    resultsStandingsTitle: "Classement",
+    resultsPoints: "{n} pts",
     roundPotLabel: "Cagnotte {amount}",
     matchTotalsLabel: "Total de la partie",
     categoryFallback: "Catégorie",

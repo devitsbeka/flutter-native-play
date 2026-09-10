@@ -4229,6 +4229,8 @@ export const pt: KaTranslations = {
     matchRoundLabel: "Jogo {game}, ronda {round}",
     matchStandingsTitle: "Jogo {game} · {rounds} rondas · classificação final",
     matchRoundsTitle: "Jogo {game} · ronda a ronda",
+    resultsStandingsTitle: "Classificação",
+    resultsPoints: "{n} pts",
     roundPotLabel: "Pote {amount}",
     matchTotalsLabel: "Total do jogo",
     categoryFallback: "Categoria",

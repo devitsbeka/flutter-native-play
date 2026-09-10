@@ -4805,6 +4805,8 @@ export const ka = {
     matchRoundLabel: "თამაში {game}, რაუნდი {round}",
     matchStandingsTitle: "თამაში {game} · {rounds} რაუნდი · საბოლოო შედეგი",
     matchRoundsTitle: "თამაში {game} · რაუნდების მიხედვით",
+    resultsStandingsTitle: "შედეგები",
+    resultsPoints: "{n} ქულა",
     roundPotLabel: "ბანკი {amount}",
     matchTotalsLabel: "მატჩის ჯამი",
     categoryFallback: "კატეგორია",
