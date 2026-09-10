@@ -825,7 +825,20 @@ export function UniversalLobby({
                 the card is not a scroll container, so the bar sticks to the
                 body's scroll, and the blur keeps the rows scrolling under it
                 from showing through the bar's 77% white. */}
-            <div className="sticky top-[calc(var(--chip-clearance)+10px)] z-20 flex items-center gap-[6px] rounded-[28px] border border-[#ceb8e4] bg-[rgba(255,255,255,0.77)] p-[10px] shadow-[0px_8px_0px_0px_#d0bbe3] backdrop-blur-md">
+            <div className="sticky top-[calc(var(--chip-clearance)+10px)] z-20">
+              {/* The haze continues behind the bar: the rows scrolling up
+                  under the tabs frost out here, not just in the strip under
+                  the chip (owner: "we need blurry background behind the game
+                  rules and players container, increase blurry bg height
+                  behind"). It rides with the sticky bar — under it, over the
+                  rows — from 10px above the bar, where the chip's own ramp
+                  ends, to 28px below it, so the two ramps meet and the
+                  frost fades out just under the bar. The card's 9px side
+                  padding is spanned so the haze reaches the card's edges. */}
+              <div aria-hidden className="pointer-events-none absolute inset-x-[-9px] bottom-[-28px] top-[-10px]">
+                <TopHaze />
+              </div>
+              <div className="relative flex items-center gap-[6px] rounded-[28px] border border-[#ceb8e4] bg-[rgba(255,255,255,0.77)] p-[10px] shadow-[0px_8px_0px_0px_#d0bbe3] backdrop-blur-md">
               {(["rules", "players"] as const).map((key) => {
                 const active = tab === key;
                 // The same asymmetric corner the category chip wears (see
@@ -863,6 +876,7 @@ export function UniversalLobby({
                   </button>
                 );
               })}
+              </div>
             </div>
 
             <AnimatePresence mode="wait" initial={false}>

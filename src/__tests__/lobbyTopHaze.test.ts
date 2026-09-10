@@ -64,4 +64,12 @@ describe("the lobby", () => {
     expect(lobby).toMatch(/sticky top-\[calc\(var\(--chip-clearance\)\+10px\)\] z-20/);
     expect(lobby).not.toMatch(/sticky top-\[10px\]/);
   });
+
+  it("and carry a haze of their own behind the bar, over the rows", () => {
+    // From 10px above the bar - where the chip's ramp ends - to 28px below
+    // it, spanning the card's side padding; under the bar, which draws
+    // itself over it (owner: "we need blurry background behind the game
+    // rules and players container, increase blurry bg height behind").
+    expect(lobby).toMatch(/<div className="sticky top-\[calc\(var\(--chip-clearance\)\+10px\)\] z-20">\s*\n(\s*\{\/\*[\s\S]*?\*\/\}\s*\n)?\s*<div aria-hidden className="pointer-events-none absolute inset-x-\[-9px\] bottom-\[-28px\] top-\[-10px\]">\s*\n\s*<TopHaze \/>\s*\n\s*<\/div>\s*\n\s*<div className="relative flex items-center/);
+  });
 });
