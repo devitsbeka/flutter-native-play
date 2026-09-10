@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ChevronRight, TrendingUp } from "lucide-react";
 import { TimerBadge } from "@/components/game/TimerBadge";
 import { ChunkyButton } from "@/components/ui/chunky-button";
-import { AnswerFeedbackCard } from "@/components/game/AnswerFeedbackCard";
+import { ANSWER_FEEDBACK_CARD_SHOWN, AnswerFeedbackCard } from "@/components/game/AnswerFeedbackCard";
 import { QuizBottomBlur } from "@/components/game/QuizBottomBlur";
 import { useFooterHeight } from "@/hooks/useFooterHeight";
 import { getCategoryById } from "@/data/categories";
@@ -1660,9 +1660,10 @@ export default function CategoryQuizPage() {
 
       {/* Answer feedback — Figma 1154:9157. Lands over the next button once
           an answer is in: the verdict, somewhere to keep the question or
-          flag it, and a few words about the answer. */}
+          flag it, and a few words about the answer. Hidden for now
+          (ANSWER_FEEDBACK_CARD_SHOWN). */}
       <AnimatePresence>
-        {isAnswered && currentQuestion && (
+        {ANSWER_FEEDBACK_CARD_SHOWN && isAnswered && currentQuestion && (
           <motion.div key={`feedback-${currentQuestionIndex}`} className="relative px-4 pt-2 pb-5 flex-shrink-0">
             <AnswerFeedbackCard
               isCorrect={selectedAnswer === currentQuestion.correct_answer}

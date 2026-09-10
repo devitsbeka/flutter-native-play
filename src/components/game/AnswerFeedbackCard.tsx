@@ -55,6 +55,17 @@ const INCORRECT: Palette = {
   iconTint: "#C2415F",
 };
 
+/**
+ * Off for now. The card blurs the answer the player just chose and, for a
+ * question without an authored explanation, only repeats the correct
+ * answer the green row already shows (owner: "it covers last answer with
+ * blur and gives us no new info about the question or answer, we don't
+ * need it for now during the game plays, hide it"). Both screens that
+ * draw it gate on this, so bringing it back is one flip — and the card,
+ * the favourite and the report underneath stay whole for when it does.
+ */
+export const ANSWER_FEEDBACK_CARD_SHOWN = false;
+
 type ReportState = "idle" | "busy" | "sent" | "failed";
 
 export interface AnswerFeedbackCardProps {
