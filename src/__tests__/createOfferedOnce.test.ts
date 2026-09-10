@@ -149,7 +149,7 @@ describe("what the lobby does with it", () => {
 
   it("and the button goes back to a dead Start once it is", () => {
     expect(lobby).toMatch(
-      /disabled:\s*\n\s*!canStartGame \|\| isStarting \|\| loading \|\| \(awaitingPlayers && !offerCreate\),/,
+      /disabled:\s*\n\s*!canStartGame \|\| isStarting \|\| loading \|\| \(awaitingPlayers && !offerCreate\) \|\| !!unplayableRound,/,
     );
   });
 
@@ -167,7 +167,7 @@ describe("what the lobby does with it", () => {
   it("and the caption keeps explaining the wait either way", () => {
     // It hangs off awaitingPlayers, not the offer — a spent offer does not
     // make the room any less short of a player.
-    expect(lobby).toMatch(/caption: awaitingPlayers/);
+    expect(lobby).toMatch(/: awaitingPlayers\s*\n\s*\? invitedPlayers > 0/);
   });
 });
 

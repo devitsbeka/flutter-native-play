@@ -30,6 +30,7 @@ import { inviteLinkPath } from "@/utils/inviteLink";
 import { useRoomMatchHistory } from "@/hooks/useRoomMatchHistory";
 import { useRoomCategoryQueue } from "@/hooks/useRoomCategoryQueue";
 import { useCategoryIconByName, useCategoryIdByName, useLocalizedCategoryName } from "@/utils/categoryDisplayName";
+import { useCategoryDisplay } from "@/hooks/useCategoryDisplay";
 import { Input } from "@/components/ui/input";
 import { RoomScoreboard } from "./RoomScoreboard";
 import { TVSetupInline } from "./TVSetupInline";
@@ -423,6 +424,10 @@ export function RoomLobbyV2() {
   const localizeQueueCategory = useLocalizedCategoryName();
   const iconForCategoryName = useCategoryIconByName();
   const idForCategoryName = useCategoryIdByName();
+  const { playableFor } = useCategoryDisplay();
+  // The round Start must refuse, by name — read by handleStartGame, which is
+  // declared above the render-time check that sets it.
+  const unplayableRoundRef = useRef<string | null>(null);
 
   // Who just left: their row kept a moment longer to carry "left" (owner's
   // ask). The first snapshot is the room as found, not arrivals.
@@ -799,6 +804,15 @@ export function RoomLobbyV2() {
     // the tap and the write.
     if (!enoughPlayersRef.current) {
       toast.error(t("extra.rlNeedsSecondPlayer"));
+      return;
+    }
+    // A round with no questions in the host's language does not start: the
+    // pickers never offer such a category, but a room keeps the one it was
+    // given, and the host's country can change after that (see
+    // categoryPlayableIn). The button is disabled for this too; this is for
+    // the picker's own start (startAfterPick).
+    if (unplayableRoundRef.current) {
+      toast.error(t("extra.rlRoundNotInLanguage", { name: unplayableRoundRef.current }));
       return;
     }
 
@@ -1337,6 +1351,24 @@ export function RoomLobbyV2() {
   const hasContent = queue.length > 0 || currentRoom.category_id || currentRoom.user_trivia_id;
   // Only offer "choose a category" when there's truly nothing to play
   const needsCategorySelection = !hasContent;
+
+  /**
+   * A held or queued category round the host cannot play — one with no
+   * questions in their language. Named so the caption can say which; null
+   * while the facts load, so a slow network never disables Start.
+   */
+  const unplayableRound = (() => {
+    const held = currentRoom.user_trivia_id ? null : currentRoom.category_id;
+    if (held && held !== "__mixed__" && playableFor(held) === false) {
+      return localizeQueueCategory(currentRoom.category_name) || currentRoom.category_name || t("extra.categoryType");
+    }
+    const queued = queue.find(
+      (item) => item.source_type === "category" && item.category_id && playableFor(item.category_id) === false,
+    );
+    if (queued) return localizeQueueCategory(queued.category_name) || queued.category_name || t("extra.categoryType");
+    return null;
+  })();
+  unplayableRoundRef.current = unplayableRound;
 
   /**
    * What the room plays first, and how many rounds it has.
@@ -2054,16 +2086,18 @@ export function RoomLobbyV2() {
               // way out (enabled, above) or the plain truth: Start, dead
               // until somebody else is here.
               disabled:
-                !canStartGame || isStarting || loading || (awaitingPlayers && !offerCreate),
+                !canStartGame || isStarting || loading || (awaitingPlayers && !offerCreate) || !!unplayableRound,
               loading: isStarting,
               icon: needsCategorySelection ? <Plus className="h-5 w-5" /> : undefined,
               // Still says why the game has not begun; it just sits under a
               // button that now leads somewhere instead of over a dead one.
-              caption: awaitingPlayers
-                ? invitedPlayers > 0
-                  ? t("extra.rlWaitingOnInvites")
-                  : t("extra.rlNeedsSecondPlayer")
-                : null,
+              caption: unplayableRound
+                ? t("extra.rlRoundNotInLanguage", { name: unplayableRound })
+                : awaitingPlayers
+                  ? invitedPlayers > 0
+                    ? t("extra.rlWaitingOnInvites")
+                    : t("extra.rlNeedsSecondPlayer")
+                  : null,
             }
           : {
               label: pingCooldown ? t("extra.pingHostSent") : t("extra.pingHostBtn"),

@@ -3276,6 +3276,7 @@ export const it: KaTranslations = {
     rlChooseCategory: "Scegli Categoria",
     rlStartGame: "Inizia Gioco",
     rlNeedsSecondPlayer: "Invita qualcuno: servono due giocatori",
+    rlRoundNotInLanguage: "{name} non ha domande nella tua lingua. Scegli un'altra categoria.",
     rlWaitingOnInvites: "Invitato: in attesa che si unisca",
     rlHowItWorks: "Come funziona",
     rlRenameRoom: "Rinomina stanza",

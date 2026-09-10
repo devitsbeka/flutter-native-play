@@ -38,7 +38,7 @@ describe("the invite line is said once", () => {
     // the button beside it reads off the same state — see
     // createButtonInsteadOfDeadStart.test.ts.
     expect(classic).toMatch(
-      /caption: awaitingPlayers\s*\n\s*\? invitedPlayers > 0\s*\n\s*\? t\("extra\.rlWaitingOnInvites"\)\s*\n\s*: t\("extra\.rlNeedsSecondPlayer"\)\s*\n\s*: null,/,
+      /: awaitingPlayers\s*\n\s*\? invitedPlayers > 0\s*\n\s*\? t\("extra\.rlWaitingOnInvites"\)\s*\n\s*: t\("extra\.rlNeedsSecondPlayer"\)\s*\n\s*: null,/,
     );
     // Exactly one place renders that string as lobby chrome now.
     expect(classic.match(/t\("extra\.rlNeedsSecondPlayer"\)/g) ?? []).toHaveLength(3); // caption + the start toast + the rematch's recount

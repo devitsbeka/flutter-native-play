@@ -35,7 +35,7 @@ describe("the state the button changes for", () => {
     expect(lobby).toMatch(
       /const awaitingPlayers = !needsCategorySelection && !enoughPlayers && !isStarting;/,
     );
-    expect(lobby).toMatch(/caption: awaitingPlayers/);
+    expect(lobby).toMatch(/: awaitingPlayers\s*\n\s*\? invitedPlayers > 0/);
   });
 
   it("says Create, and only there — choosing a category is still its own label", () => {
@@ -48,7 +48,7 @@ describe("the state the button changes for", () => {
     // "Create" first took its place. It disables again after that offer is
     // spent — see the one-time block below.
     expect(lobby).toMatch(
-      /disabled:\s*\n\s*!canStartGame \|\| isStarting \|\| loading \|\| \(awaitingPlayers && !offerCreate\),/,
+      /disabled:\s*\n\s*!canStartGame \|\| isStarting \|\| loading \|\| \(awaitingPlayers && !offerCreate\) \|\| !!unplayableRound,/,
     );
   });
 

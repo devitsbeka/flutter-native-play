@@ -3710,6 +3710,7 @@ export const en: KaTranslations = {
     rlChooseCategory: "Choose Category",
     rlStartGame: "Start Game",
     rlNeedsSecondPlayer: "Invite a friend — a game needs two players",
+    rlRoundNotInLanguage: "{name} has no questions in your language. Pick another category.",
     rlWaitingOnInvites: "Invited — waiting for them to join",
     // Room menu & dialogs
     rlHowItWorks: "How it works",

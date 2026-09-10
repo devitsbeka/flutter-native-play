@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { CATEGORY_ID_TO_ICON } from "@/data/categoryIconMap";
 import { readAppLanguage } from "@/utils/appLanguage";
+import { categoryPlayableIn } from "@/utils/languageCategoryFilter";
 
 /**
  * The icon slug for a category, from the table Discover reads.
@@ -30,11 +31,16 @@ interface CategoryFacts {
   /** categories.name, which is the GEORGIAN name for every row. */
   nameKa: string;
   iconSlug: string | null;
+  /** `categories.is_language_specific` / `.language` — see categoryPlayableIn. */
+  isLanguageSpecific: boolean | null;
+  language: string | null;
 }
 
 type FactsMap = Map<string, CategoryFacts>;
 
 let cached: FactsMap | null = null;
+/** The same facts by `categories.id`: rooms and queue rows store the uuid. */
+let cachedByUuid: FactsMap | null = null;
 let inflight: Promise<FactsMap> | null = null;
 /** Localised names by language, then by category uuid. */
 const namesByLang = new Map<string, Map<string, string>>();
@@ -43,7 +49,7 @@ const nameLoads = new Map<string, Promise<void>>();
 async function loadFacts(): Promise<FactsMap> {
   const { data, error } = await supabase
     .from("categories")
-    .select("id, category_id, name, icon_slug")
+    .select("id, category_id, name, icon_slug, is_language_specific, language")
     .eq("is_active", true);
 
   if (error || !data) {
@@ -54,12 +60,50 @@ async function loadFacts(): Promise<FactsMap> {
   }
 
   const map: FactsMap = new Map();
-  for (const row of data as { id: string; category_id: string | null; name: string | null; icon_slug: string | null }[]) {
+  const byUuid: FactsMap = new Map();
+  type Row = {
+    id: string;
+    category_id: string | null;
+    name: string | null;
+    icon_slug: string | null;
+    is_language_specific: boolean | null;
+    language: string | null;
+  };
+  for (const row of data as Row[]) {
     if (!row.category_id) continue;
-    map.set(row.category_id, { uuid: row.id, nameKa: row.name ?? "", iconSlug: row.icon_slug });
+    const facts: CategoryFacts = {
+      uuid: row.id,
+      nameKa: row.name ?? "",
+      iconSlug: row.icon_slug,
+      isLanguageSpecific: row.is_language_specific,
+      language: row.language,
+    };
+    map.set(row.category_id, facts);
+    byUuid.set(row.id, facts);
   }
   cached = map;
+  cachedByUuid = byUuid;
   return map;
+}
+
+/**
+ * Whether a category has questions in the reader's language: true, false,
+ * or null while the facts are still loading (or for a category the table
+ * does not carry — a user trivia, "__mixed__", a random round). `ref` is
+ * the slug or the uuid; rooms and queue rows store either.
+ *
+ * null is "cannot say", and every caller treats it as playable: this gate
+ * exists to stop a round with no questions, never to stop one on a slow
+ * network.
+ */
+export function categoryPlayableSync(
+  ref: string | null | undefined,
+  lang = readAppLanguage("en"),
+): boolean | null {
+  if (!ref) return null;
+  const facts = cached?.get(ref) ?? cachedByUuid?.get(ref);
+  if (!facts) return null;
+  return categoryPlayableIn({ is_language_specific: facts.isLanguageSpecific, language: facts.language }, lang);
 }
 
 /**
@@ -205,5 +249,11 @@ export function useCategoryDisplay() {
     [ready, lang], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
-  return { iconSlugFor, nameFor, ready };
+  /** categoryPlayableSync, re-resolved when the facts land or the language changes. */
+  const playableFor = useCallback(
+    (ref: string | null | undefined) => categoryPlayableSync(ref, lang),
+    [ready, lang], // eslint-disable-line react-hooks/exhaustive-deps
+  );
+
+  return { iconSlugFor, nameFor, playableFor, ready };
 }

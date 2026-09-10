@@ -31,6 +31,7 @@ import { CategoryArtwork } from "@/components/shared/CategoryArtwork";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import { useCategoryIconByName, useCategoryIdByName, useLocalizedCategoryName } from "@/utils/categoryDisplayName";
+import { useCategoryDisplay } from "@/hooks/useCategoryDisplay";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast";
 import {
@@ -1034,9 +1035,25 @@ export function PublicRoomsSection({
   //
   // Fails OPEN, like every read-only list here.
   const { hiddenIds } = useContentModeration();
+  // Nor a room whose rounds the viewer could not play: a round is asked in
+  // the host's language, and a category that is specific to another one
+  // (Georgian Cuisine, Cocina española) has no questions in the viewer's.
+  // The pickers never offer such a category to this viewer; the list does
+  // not offer a room built on one either (see categoryPlayableIn). Unknown
+  // rounds — mixed, random, a user trivia, facts not yet loaded — pass.
+  const idForRoundCategory = useCategoryIdByName();
+  const { playableFor } = useCategoryDisplay();
+  const roundsPlayableHere = (r: { rounds: { name: string | null; source_type?: string | null }[] }) =>
+    r.rounds.every(
+      (round) =>
+        round.source_type !== "category" ||
+        !round.name ||
+        MIXED_LABELS.has(round.name) ||
+        playableFor(idForRoundCategory(round.name)) !== false,
+    );
   const rooms = sortPublicRooms(
     filterPublicRooms(data ?? [], filter, searchQuery, roomsCtx, developerMode).filter(
-      (r) => !hiddenIds.has(r.host_user_id),
+      (r) => !hiddenIds.has(r.host_user_id) && roundsPlayableHere(r),
     ),
     friendIds,
     roomsCtx,
