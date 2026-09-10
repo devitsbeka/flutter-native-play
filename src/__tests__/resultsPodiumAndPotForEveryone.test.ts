@@ -58,30 +58,40 @@ describe("every device is told what moved", () => {
   });
 });
 
-describe("the standings — one list, every seat", () => {
-  // The podium (three faces side by side, first bigger, tiles under it for
-  // fourth down) is gone: three shapes for the same people, names cut to
-  // "TriviaMas…" by a third of the width, and a pair told twice on a
-  // two-player screen (owner: "looks awful ... show players as list not
-  // besides, what if there are 10 players"). resultsAreAList.test.ts pins
-  // the list; what is kept here is what the podium was FOR.
-  it("everyone is ranked, top to bottom, with a medal for the first three", () => {
-    expect(results).toMatch(/\{rankedParticipants\.map\(\(p, idx\) => \(\s*\n\s*<StandingRow/);
-    expect(results).toMatch(/const placeMark = \(idx: number, rank: number\) =>\s*\n\s*idx === 0 \? "🥇" : idx === 1 \? "🥈" : idx === 2 \? "🥉" : `#\$\{rank\}`;/);
-    expect(results).not.toMatch(/PODIUM_ORDER|TWO_UP_ORDER/);
+describe("the podium", () => {
+  it("second on the left, first in the middle, third on the right", () => {
+    expect(results).toMatch(/const PODIUM_ORDER = \[1, 0, 2\] as const;/);
+    // Three steps for three or more; a pair sits centred on two
+    // (rematchAskedAtStart.test pins the two-up case).
+    expect(results).toMatch(/"max-w-\[362px\] grid-cols-3 gap-2"/);
+    expect(results).toMatch(/"w-full grid items-end flex-shrink-0 pt-2"/);
+  });
+
+  it("first place is the bigger face — 110 to the 76 beside it, all three in the gold ring", () => {
+    // Figma 1157:10233..10244 (resultsScreenFigma.test.ts).
+    expect(results).toMatch(/"border-2 border-\[#fcd34d\] shadow-\[0_0_0_4px_rgba\(251,191,36,0\.35\)\]",\s*\n\s*first \? "w-\[110px\] h-\[110px\]" : "w-\[76px\] h-\[76px\]"/);
+  });
+
+  it("a medal under each face, and the coins under the medal", () => {
+    const step = results.slice(results.indexOf(": PODIUM_ORDER).map((idx) => {"), results.indexOf("{/* Everyone from fourth down."));
+    const avatar = step.indexOf("<SafeAvatar");
+    const medal = step.indexOf("{placeMark(idx, p.rank)}");
+    const coins = step.indexOf("<PotLine net={netFor(p)} tone=");
+    expect(avatar).toBeGreaterThan(-1);
+    expect(medal).toBeGreaterThan(avatar);
+    expect(coins).toBeGreaterThan(medal);
   });
 
   it("names no amount of its own — a seat's line comes from the server", () => {
     const fn = results.slice(results.indexOf("const netFor = "), results.indexOf("const hasUpdatedStats"));
     expect(fn).toMatch(/const line = potLines\[p\.user_id\];\s*\n\s*if \(line\) return line\.net;/);
-    expect(results).toMatch(/net=\{netFor\(p\)\}/);
   });
 
-  it("and every seat gets its line, not only the top three", () => {
-    // The whole point of room_round_deltas: the list has as many coin
-    // pills as it has rows.
-    const list = results.slice(results.indexOf("{rankedParticipants.map((p, idx) => ("), results.indexOf("</StandingsCard>"));
-    expect(list).not.toMatch(/slice\(/);
+  it("and the list starts from fourth, or is not there", () => {
+    // One row per seat under the podium — the three on it are not told
+    // twice, and ten seats are seven rows.
+    expect(results).toMatch(/\{rankedParticipants\.length > PODIUM_ORDER\.length && \(/);
+    expect(results).toMatch(/rankedParticipants\.slice\(PODIUM_ORDER\.length\)\.map\(\(p, i\) => \(\s*\n\s*<StandingRow/);
   });
 });
 
@@ -91,13 +101,13 @@ describe("what left the screen, and what the button says", () => {
     expect(results).not.toMatch(/<Star className/);
   });
 
-  it("the category sits under the room title, before the standings", () => {
+  it("the category sits under the room title, before the podium", () => {
     const title = results.indexOf("{currentRoom?.room_name || t(\"extra.gameRoomLabel\")}");
     const category = results.indexOf("{currentRoom?.category_name && (");
-    const standings = results.indexOf("{rankedParticipants.map((p, idx) => (");
+    const podium = results.indexOf(": PODIUM_ORDER).map((idx) => {");
     expect(title).toBeGreaterThan(-1);
     expect(category).toBeGreaterThan(title);
-    expect(standings).toBeGreaterThan(category);
+    expect(podium).toBeGreaterThan(category);
   });
 
   it("the host's button says New Game", () => {

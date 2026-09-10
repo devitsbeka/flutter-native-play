@@ -34,24 +34,26 @@ describe("the category pill", () => {
   });
 });
 
-describe("the standings", () => {
-  // The podium's faces and the tiles under them are one list now
-  // (resultsAreAList.test.ts). What survives of the design here: the gold
-  // ring on the winner, the metals on the coin pills, and the tile the
-  // list sits in.
-  it("the winner's face is still the one in the gold ring", () => {
-    expect(results).toMatch(/const PLACE_RING = \[\s*\n\s*"border-\[#fcd34d\] shadow-\[0_0_0_3px_rgba\(251,191,36,0\.35\)\]",/);
-    expect(results).toMatch(/const ring = PLACE_RING\[idx\] \?\? "border-white\/40";/);
+describe("the podium", () => {
+  it("every face in the gold ring, 110 in the middle and 76 beside", () => {
+    expect(results).toMatch(/"border-2 border-\[#fcd34d\] shadow-\[0_0_0_4px_rgba\(251,191,36,0\.35\)\]",\s*\n\s*first \? "w-\[110px\] h-\[110px\]" : "w-\[76px\] h-\[76px\]"/);
   });
 
-  it("each place's coins in its own metal, white from fourth down", () => {
-    expect(results).toMatch(/const tone: PotTone = idx === 0 \? "gold" : idx === 1 \? "silver" : idx === 2 \? "bronze" : "white";/);
+  it("the medal hangs off the ring, and the wrapper keeps room for it", () => {
+    // A third of the medal over the ring, not half: the emoji's ribbon
+    // rides above its disc and covered the face (owner: "move down the
+    // medals a little they are covering half avatars").
+    expect(results).toMatch(/"absolute left-1\/2 -translate-x-1\/2 leading-none",\s*\n(\s*\/\/[^\n]*\n)*\s*first \? "-bottom-\[32px\] text-\[46px\]" : "-bottom-\[22px\] text-\[32px\]"/);
+    expect(results).toMatch(/first \? "mb-\[34px\]" : "mb-\[24px\]"/);
   });
 
-  it("the score sits under the name now, where a row has room for it", () => {
-    // The podium had no room; a row does, and a tie on coins is decided
-    // by it.
-    expect(results).toMatch(/detail=\{t\("extra\.resultsPoints", \{ n: p\.score \}\)\}/);
+  it("the name at 22px display, then the place's coins in its own metal", () => {
+    expect(results).toMatch(/w-full text-center font-display text-\[22px\] font-bold leading-6 tracking-\[-0\.16px\] text-white truncate/);
+    expect(results).toMatch(/<PotLine net=\{netFor\(p\)\} tone=\{idx === 0 \? "gold" : idx === 1 \? "silver" : "bronze"\} \/>/);
+  });
+
+  it("no score under the name — the design carries the coins alone", () => {
+    expect(results).not.toMatch(/text-white\/70 text-xs font-semibold">\{p\.score\}/);
   });
 });
 
@@ -69,10 +71,16 @@ describe("the coin pills", () => {
   });
 });
 
-describe("the list's tile", () => {
-  it("is the lobby's chunky shape — rose wash, rose foot, 24px corners", () => {
-    expect(results).toMatch(/const TILE =\s*\n\s*"rounded-\[24px\] border-2 border-\[rgba\(255,217,217,0\.1\)\] bg-\[rgba\(255,222,222,0\.2\)\] px-3 py-3 shadow-\[0px_2px_8px_0px_rgba\(102,51,153,0\.06\),0px_8px_0px_0px_rgba\(232,185,185,0\.4\)\]";/);
-    expect(results).toMatch(/const EYEBROW = "text-\[12px\] font-bold uppercase leading-\[18px\] tracking-\[0\.3px\] text-white\/60";/);
+describe("fourth down", () => {
+  it("each seat is a row: place, ringed face, name, score, white coins", () => {
+    // The tiles from fourth down became rows in one tile: a fixed 60px
+    // each, the place at 20px, a 44px face, the name truncating, the score
+    // under it, and the coins in white (owner: "show players as list").
+    expect(results).toMatch(/"flex h-\[60px\] items-center gap-3 rounded-2xl px-2",/);
+    expect(results).toMatch(/w-8 shrink-0 text-center font-display text-\[20px\] font-bold leading-none text-\[#ffe9a8\]/);
+    expect(results).toMatch(/className=\{cn\("h-11 w-11 border-2", ring\)\}/);
+    expect(results).toMatch(/const tone: PotTone = idx === 0 \? "gold" : idx === 1 \? "silver" : idx === 2 \? "bronze" : "white";/);
+    expect(results).toMatch(/detail=\{t\("extra\.resultsPoints", \{ n: p\.score \}\)\}/);
   });
 
   it("the tiles stand 17px apart in a list that scrolls, not in a card", () => {

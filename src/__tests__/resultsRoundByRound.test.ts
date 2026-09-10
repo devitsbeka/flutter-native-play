@@ -41,8 +41,13 @@ describe("what a round is made of", () => {
   it("waits for the current round's own lines before reading any", () => {
     // The money is still settling until then; reading earlier would draw
     // the current round with nobody in it.
+    // useMatchRounds keeps its guard; the screen reads the ROOM's rounds
+    // now (useRoomRounds), which waits the same way on the current round's
+    // lines being in.
     expect(hook).toMatch(/if \(!roomId \|\| !matchInfo \|\| !ready \|\| matchInfo\.roundIds\.length === 0\)/);
-    expect(results).toMatch(/useMatchRounds\(currentRoom\?\.id, matchInfo, hasPotLines, settleRoomRound\)/);
+    const room = read("src/hooks/useRoomRounds.ts");
+    expect(room).toMatch(/if \(!roomId \|\| !ready\) \{\s*\n\s*setRounds\(null\);/);
+    expect(results).toMatch(/useRoomRounds\(currentRoom\?\.id, hasPotLines, settleRoomRound\)/);
   });
 });
 
@@ -58,24 +63,27 @@ describe("the match's totals", () => {
   });
 
   it("are only drawn once the last round of a match of two or more is in", () => {
-    expect(results).toMatch(/const matchStandings = matchRounds && matchRounds\.length >= 2 && matchOver \? matchTotals\(matchRounds\) : null;/);
+    // Over the whole room now, not one match, and shown from the second
+    // round on (owner: "show all coins users won or lose, like summery of
+    // the all games"). A room that has played one round is its podium.
+    expect(results).toMatch(/const roomTotals = roomRounds && roomRounds\.length >= 2 \? matchTotals\(roomRounds\) : null;/);
   });
 });
 
 describe("the card", () => {
-  it("sits in the list under the standings, in the list's own tile shape", () => {
-    // Only the EARLIER rounds: this round is the standings above it and is
-    // not told twice, and a match of one round has nothing earlier.
-    expect(results).toMatch(/const earlierRounds = \(matchRounds \?\? \[\]\)\.filter\(\(r\) => r\.id !== currentRoom\?\.current_game_id\);/);
-    expect(results).toMatch(/\{matchInfo && earlierRounds\.length > 0 && \(/);
+  it("sits in the list under the podium, in the list's own tile shape", () => {
+    // One tile per GAME the room has played, newest first, each in the
+    // list's shape; from the second round on.
+    expect(results).toMatch(/\{roomRounds && roomRounds\.length >= 2 && roomGames\.map\(\(\[game, rounds\]\) => \(/);
     expect(results).toMatch(/<motion\.section[\s\S]*?className=\{TILE\}/);
+    expect(results).toMatch(/const TILE =\s*\n\s*"rounded-\[24px\] border-2 border-\[rgba\(255,217,217,0\.1\)\] bg-\[rgba\(255,222,222,0\.2\)\] px-3 py-3/);
     // Not in the footer any more: the footer floats over the list and a
     // block there hid the tiles behind it.
     expect(results).not.toMatch(/className="relative p-4 pb-5 space-y-3"\s*>\s*\{\/\*[\s\S]*?\{matchStandings && matchInfo && \(/);
   });
 
   it("names each round, its category in the reader's language, and its pot", () => {
-    expect(results).toMatch(/t\("extra\.matchRoundsTitle", \{ game: matchInfo\.game \}\)/);
+    expect(results).toMatch(/t\("extra\.matchRoundsTitle", \{ game \}\)/);
     expect(results).toMatch(/\{localizeCategory\(round\.categoryName\) \|\| t\("extra\.categoryFallback"\)\}/);
     expect(results).toMatch(/t\("lobby\.uRoundLabel", \{ count: round\.number \}\)/);
     expect(results).toMatch(/\{round\.pot > 0 && <PotPill amount=\{round\.pot\} \/>\}/);
@@ -83,10 +91,7 @@ describe("the card", () => {
   });
 
   it("says who won and who lost it: every seat, the winner first with the medal", () => {
-    // One under the other — never wrapped across the row, which is what
-    // put ten 24px faces in a block nobody could read.
-    expect(results).toMatch(/<ul className="mt-2 space-y-1">\s*\n\s*\{round\.seats\.map\(\(seat, i\) => \{/);
-    expect(results).not.toMatch(/flex flex-wrap gap-x-4 gap-y-1\.5 pl-10/);
+    expect(results).toMatch(/\{round\.seats\.map\(\(seat, i\) => \{/);
     expect(results).toMatch(/\{placeMark\(i, i \+ 1\)\}/);
     expect(results).toMatch(/<PotLine net=\{seat\.net\} compact tone=\{seat\.net > 0 \? "gold" : "white"\} \/>/);
   });

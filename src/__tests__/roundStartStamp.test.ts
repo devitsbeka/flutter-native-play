@@ -27,10 +27,16 @@ const source = readFileSync(
   "utf8"
 );
 
-/** Every `.from("game_rooms").update({...})` that begins a round. */
+/**
+ * Every write that begins a round. It was `.from("game_rooms").update({...})`
+ * on each path; it is `claimRoundStart(roomId, <the round it saw>, {...})`
+ * now — the same fields, behind a compare-and-swap so two starts cannot
+ * both land (roundStartIsOneWrite.test.ts). The two halves asserted below
+ * are unchanged by that.
+ */
 function roundStartWrites(): string[] {
   const all = source.match(
-    /await supabase\n\s*\.from\("game_rooms"\)\n\s*\.update\(\{[\s\S]*?\}\)\n\s*\.eq\("id", roomId\);[\s\S]{0,120}/g
+    /if \(!\(await claimRoundStart\(roomId, [^,]+, \{[\s\S]*?\}\)\)\) return;[\s\S]{0,120}/g
   );
   return (all ?? []).filter((block) => /status: "playing"/.test(block));
 }

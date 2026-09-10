@@ -113,9 +113,12 @@ describe("the lounges invite through the invite page", () => {
     expect(mp).toMatch(/const pendingWarm = warmQuestionImages\(questions\.map\(q => q\.imageUrl\)\);/);
     expect(mp).toMatch(/if \(pendingWarm\) await pendingWarm;/);
     // Awaited BEFORE the room goes to "playing", not after.
-    const flip = mp.indexOf('status: "playing",\n        started_at: roundStartedAt');
+    // The flip is a compare-and-swap now (claimRoundStart); its fields are
+    // the same, one indent shallower.
+    const save = mp.slice(mp.indexOf("const saveQuestionsAndStartGame = useCallback"));
+    const flip = save.search(/status: "playing",\n\s+started_at: roundStartedAt/);
     expect(flip).toBeGreaterThan(-1);
-    expect(mp.indexOf("if (pendingWarm) await pendingWarm;")).toBeLessThan(flip);
+    expect(save.indexOf("if (pendingWarm) await pendingWarm;")).toBeLessThan(flip);
     expect(mp).toMatch(/import \{ warmQuestionImages \} from "@\/utils\/questionImage";/);
     // The warm helper waits only for the FIRST image, and only briefly — it
     // resolves either way, because a picture that refuses is the card's to

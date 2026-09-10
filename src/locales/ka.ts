@@ -4807,6 +4807,7 @@ export const ka = {
     matchStandingsTitle: "თამაში {game} · {rounds} რაუნდი · საბოლოო შედეგი",
     matchRoundsTitle: "თამაში {game} · რაუნდების მიხედვით",
     resultsStandingsTitle: "შედეგები",
+    resultsAllGamesTitle: "ყველა თამაში · {rounds} რაუნდი · ჯამი",
     resultsPoints: "{n} ქულა",
     roundPotLabel: "ბანკი {amount}",
     matchTotalsLabel: "მატჩის ჯამი",
