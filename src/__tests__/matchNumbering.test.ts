@@ -63,12 +63,13 @@ describe("the results screen", () => {
     // off the ledger, game by game, the totals folded from all of them
     // (owner: "show all rounds pot not only last game"). useMatchRounds
     // keeps the per-match read and the ranking the totals use.
-    expect(results).toMatch(/const roomRounds = useRoomRounds\(currentRoom\?\.id, hasPotLines, settleRoomRound\);/);
+    expect(results).toMatch(/const roomRounds = useRoomRounds\(currentRoom\?\.id, hasPotLines, readRoomRound\);/);
     expect(results).toMatch(/const roomTotals = roomRounds && roomRounds\.length >= 2 \? matchTotals\(roomRounds\) : null;/);
     const hook = read("src/hooks/useMatchRounds.ts");
     expect(hook).toMatch(/\.sort\(\(a, b\) => b\.net - a\.net\)/);
     const room = read("src/hooks/useRoomRounds.ts");
-    expect(room).toMatch(/const settlements = await Promise\.all\(rows\.map\(\(r\) => settleRoomRound\(roomId, r\.id\)\)\);/);
+    // Read through room_round_ledger — a look at the summary settles nothing.
+    expect(room).toMatch(/const settlements = await Promise\.all\(rows\.map\(\(r\) => readRoomRound\(r\.id\)\)\);/);
     expect(results).toMatch(/t\("extra\.resultsAllGamesTitle", \{ rounds: roomRounds!\.length \}\)/);
   });
 });

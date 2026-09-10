@@ -379,3 +379,23 @@ jobs:
           psql -h localhost -p 5432 -U postgres \
             -v ON_ERROR_STOP=1 -f supabase/tests/21-guess-stake.sql
 
+      # The doors the audit found open: participants cannot rewrite the
+      # room, prices are the admins', only player rewards can be claimed,
+      # a PRO seat pays no welcome, a yes needs a free seat in a waiting
+      # room, a knock asks the block list, the list counts the seated.
+      - name: Assert the house is locked
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -p 5432 -U postgres \
+            -v ON_ERROR_STOP=1 -f supabase/tests/22-lock-the-house.sql
+
+      # The pot: paid to the seats that staked it, split as the table was
+      # told, ties shared, observers out, never burned; the ledger readable
+      # without settling.
+      - name: Assert the pot is honest
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -p 5432 -U postgres \
+            -v ON_ERROR_STOP=1 -f supabase/tests/23-honest-pot.sql

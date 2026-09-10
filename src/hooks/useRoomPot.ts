@@ -19,7 +19,7 @@ import { REWARDS } from "@/config/rewardConfig";
  * left open (see supabase/migrations/20261015100000_room_round_pot.sql).
  */
 
-/** What `settle_room_round` sends back. */
+/** What `settle_room_round` sends back (and `room_round_ledger`, in part). */
 interface RoomPotResponse {
   pot?: number;
   paid?: number;
@@ -145,5 +145,47 @@ export function useRoomPot() {
     [user, profile?.coins, setProfileLocal],
   );
 
-  return { settleRoomRound, stakeAmount: REWARDS.GAME_STAKE };
+  /**
+   * The ledger of a round, READ — nothing moves.
+   *
+   * room_round_ledger answers `{ settled, pot, deltas }` for a round this
+   * player sat in: the lines of a settled round, or `settled: false` and no
+   * lines for one that has not settled yet. The results screen's round-by-
+   * round list reads every earlier round of the match through this; it
+   * used to call settleRoomRound for them, and a screen that only meant to
+   * look settled rounds other players had not finished.
+   */
+  const readRoomRound = useCallback(
+    async (gameId: string): Promise<RoomPotSettlement> => {
+      if (!user || !gameId) return NOTHING;
+      const client = supabase as unknown as {
+        rpc: (fn: string, args: Record<string, unknown>) => Promise<{
+          data: (RoomPotResponse & { settled?: boolean }) | null;
+          error: { message: string; code?: string } | null;
+        }>;
+      };
+      try {
+        const { data, error } = await client.rpc("room_round_ledger", { p_game_id: gameId });
+        if (error) {
+          const missing = error.code === "PGRST202" || /room_round_ledger/i.test(error.message);
+          if (!missing) console.error("[useRoomPot] room_round_ledger failed:", error);
+          return { ...NOTHING, reason: missing ? "not_deployed" : "error" };
+        }
+        const lines = foldLines(data?.deltas);
+        return {
+          applied: lines[user.id]?.net ?? 0,
+          pot: data?.pot ?? 0,
+          lines,
+          unsettled: !data?.settled,
+          reason: data?.settled ? "settled" : "unsettled",
+        };
+      } catch (err) {
+        console.error("[useRoomPot] room_round_ledger threw:", err);
+        return { ...NOTHING, reason: "error" };
+      }
+    },
+    [user],
+  );
+
+  return { settleRoomRound, readRoomRound, stakeAmount: REWARDS.GAME_STAKE };
 }

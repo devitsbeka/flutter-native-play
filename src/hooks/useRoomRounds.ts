@@ -32,9 +32,11 @@ interface StoredScore {
  * users won or lose, like summery of the all games"). This is the same
  * read over all of room_games for the room rather than one match's ids —
  * the category and scores off each row, the money off the ledger through
- * settle_room_round, which is idempotent and reports every seat's stake and
- * prize back for a round already settled. The client still names no
- * amounts.
+ * room_round_ledger, a READ that reports every seat's stake and prize for a
+ * round that has settled and nothing for one that has not. It used to go
+ * through settle_room_round, which settles — so opening the results of
+ * round three settled round two for anyone who had not finished it. The
+ * client still names no amounts.
  *
  * In play order, oldest first; `game` and `number` say where each one sat.
  * Null until read, and null when there is nothing to tell: no room, or no
@@ -44,7 +46,7 @@ interface StoredScore {
 export function useRoomRounds(
   roomId: string | null | undefined,
   ready: boolean,
-  settleRoomRound: (roomId: string, gameId: string | null) => Promise<RoomPotSettlement>,
+  readRoomRound: (gameId: string) => Promise<RoomPotSettlement>,
 ): RoomRound[] | null {
   const [rounds, setRounds] = useState<RoomRound[] | null>(null);
 
@@ -61,7 +63,7 @@ export function useRoomRounds(
         .eq("room_id", roomId)
         .order("created_at", { ascending: true });
       if (cancelled || !rows) return;
-      const settlements = await Promise.all(rows.map((r) => settleRoomRound(roomId, r.id)));
+      const settlements = await Promise.all(rows.map((r) => readRoomRound(r.id)));
       if (cancelled) return;
 
       // Round numbers restart with each game.
@@ -102,7 +104,7 @@ export function useRoomRounds(
     return () => {
       cancelled = true;
     };
-  }, [roomId, ready, settleRoomRound]);
+  }, [roomId, ready, readRoomRound]);
 
   return rounds;
 }

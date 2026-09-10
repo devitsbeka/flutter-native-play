@@ -16,8 +16,8 @@ import { matchTotals, type MatchRound } from "@/hooks/useMatchRounds";
  * Now every round of the match is a row: its category and its pot, and
  * under it every seat with what the round paid them — the winner first,
  * wearing the medal, the rest in the grey a place that did not pay wears.
- * The money is the ledger's, read back through settle_room_round for each
- * round; the client still names no amounts.
+ * The money is the ledger's, READ through room_round_ledger for each
+ * round — nothing settles on a look; the client still names no amounts.
  */
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 const hook = read("src/hooks/useMatchRounds.ts");
@@ -26,7 +26,8 @@ const results = read("src/components/team/GameResultsScreenV2.tsx");
 describe("what a round is made of", () => {
   it("reads the round rows and the ledger together, once per round of the match", () => {
     expect(hook).toMatch(/\.from\("room_games"\)\s*\.select\("id, questions_data, player_scores"\)\s*\.in\("id", ids\)/);
-    expect(hook).toMatch(/Promise\.all\(ids\.map\(\(id\) => settleRoomRound\(roomId, id\)\)\)/);
+    expect(hook).toMatch(/Promise\.all\(ids\.map\(\(id\) => readRoomRound\(id\)\)\)/);
+    expect(hook).not.toMatch(/settleRoomRound\(/);
   });
 
   it("names the round by the category its questions were played in", () => {
@@ -47,7 +48,10 @@ describe("what a round is made of", () => {
     expect(hook).toMatch(/if \(!roomId \|\| !matchInfo \|\| !ready \|\| matchInfo\.roundIds\.length === 0\)/);
     const room = read("src/hooks/useRoomRounds.ts");
     expect(room).toMatch(/if \(!roomId \|\| !ready\) \{\s*\n\s*setRounds\(null\);/);
-    expect(results).toMatch(/useRoomRounds\(currentRoom\?\.id, hasPotLines, settleRoomRound\)/);
+    expect(results).toMatch(/useRoomRounds\(currentRoom\?\.id, hasPotLines, readRoomRound\)/);
+    // And reads them through the ledger; nothing settles on a look.
+    expect(room).toMatch(/Promise\.all\(rows\.map\(\(r\) => readRoomRound\(r\.id\)\)\)/);
+    expect(room).not.toMatch(/settleRoomRound\(/);
   });
 });
 

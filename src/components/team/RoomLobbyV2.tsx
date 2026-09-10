@@ -61,6 +61,7 @@ import coinIconAsset from "@/assets/tb-lobby/coin.png";
 import { NotEnoughStakeModal } from "@/components/home/NotEnoughStakeModal";
 import { useCurrency } from "@/hooks/useCurrency";
 import { REWARDS } from "@/config/rewardConfig";
+import { firstPlaceShare } from "@/utils/roomPot";
 import { triviaDisplayTitle } from "@/utils/triviaTitle";
 import { useFriends } from "@/hooks/useFriends";
 import {
@@ -1768,9 +1769,13 @@ export function RoomLobbyV2() {
        *
        * Every seat puts REWARDS.GAME_STAKE in and the pot goes to the top
        * three — so the host has to be able to read the number BEFORE Start,
-       * not discover it on the coin counter afterwards. Counted off the
-       * seated players, which is what settle_room_round collects from: an
-       * invitation nobody accepted neither pays in nor is paid out.
+       * not discover it on the coin counter afterwards. The number is what
+       * FIRST PLACE takes (firstPlaceShare): the whole pot at two players,
+       * 70% of it at three or more. It used to print the whole pot under
+       * "Winner takes" and a three-player winner then got 70% of what they
+       * were promised. Counted off the seated players, which is what
+       * settle_room_round collects from: an invitation nobody accepted
+       * neither pays in nor is paid out.
        *
        * Hidden below two players, where there is no pot: the arena and the
        * King's couch carry their own stake strips and are not this screen.
@@ -1780,7 +1785,7 @@ export function RoomLobbyV2() {
           ? {
               label: t("lobby.winnerTakes"),
               icon: coinIconAsset,
-              amount: seatedPlayers * REWARDS.GAME_STAKE,
+              amount: firstPlaceShare(seatedPlayers) ?? 0,
             }
           : undefined
       }

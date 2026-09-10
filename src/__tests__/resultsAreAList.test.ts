@@ -73,8 +73,9 @@ describe("one row per player, from fourth down", () => {
 describe("every game the room has played", () => {
   it("is read off room_games for the whole room, not one match's ids", () => {
     expect(hook).toMatch(/\.from\("room_games"\)\s*\n\s*\.select\("id, game_number, questions_data, player_scores, created_at"\)\s*\n\s*\.eq\("room_id", roomId\)/);
-    // The money still comes off the ledger, one idempotent settle per round.
-    expect(hook).toMatch(/const settlements = await Promise\.all\(rows\.map\(\(r\) => settleRoomRound\(roomId, r\.id\)\)\);/);
+    // The money still comes off the ledger — READ through room_round_ledger,
+    // so a look at the summary settles nothing for anyone.
+    expect(hook).toMatch(/const settlements = await Promise\.all\(rows\.map\(\(r\) => readRoomRound\(r\.id\)\)\);/);
     // Round numbers restart with each game.
     expect(hook).toMatch(/const number = \(seenInGame\.get\(game\) \?\? 0\) \+ 1;/);
   });

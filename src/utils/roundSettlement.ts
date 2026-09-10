@@ -5,8 +5,12 @@ import { activeRoundPlayers, type RoundContext, type RoundPlayerLike } from "@/u
  *
  * A PUBLIC room is played through: everyone is in the app, answering now,
  * and the results screen names a winner while they are all still looking at
- * it. It settles the moment the round ends, which is what it has always
- * done.
+ * it. It used to settle the moment the FIRST player's round ended — and
+ * that player arrived at the results with a scoreboard of one, so the pot
+ * was ranked on whoever answered fastest while the others were still on
+ * question four. Now it waits for every seat that can still answer, like a
+ * private round does, with a much shorter deadline: a public round is
+ * minutes long, so the wait for a player who closed the app is too.
  *
  * A PRIVATE room is not that. It is invited friends playing "at different
  * times" — one on the bus, one after dinner — and settling on the first
@@ -34,6 +38,16 @@ import { activeRoundPlayers, type RoundContext, type RoundPlayerLike } from "@/u
  * still open when the people in it have forgotten they were playing.
  */
 export const PRIVATE_ROUND_DEADLINE_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * How long a public round waits for a seat that went quiet.
+ *
+ * A public round is a few minutes of questions played together; a player
+ * whose app went to sleep mid-round is out of it after this, and the table
+ * settles with whoever played. Long enough for a slow last question and a
+ * phone call, short enough that nobody stares at "waiting" for an evening.
+ */
+export const PUBLIC_ROUND_DEADLINE_MS = 15 * 60 * 1000;
 
 /**
  * Has this seat played the round out?
@@ -70,16 +84,17 @@ export function allRoundPlayersFinished(
 export function roundDeadlinePassed(
   startedAt: string | null | undefined,
   now: number = Date.now(),
+  deadlineMs: number = PRIVATE_ROUND_DEADLINE_MS,
 ): boolean {
   const at = startedAt ? Date.parse(startedAt) : NaN;
   if (!Number.isFinite(at)) return false;
-  return now - at > PRIVATE_ROUND_DEADLINE_MS;
+  return now - at > deadlineMs;
 }
 
 export type SettleHold = "ready" | "waiting_for_players";
 
 export interface SettleTimingInput {
-  /** A published room settles immediately; a private one waits. */
+  /** A published room waits minutes for its players; a private one, a day. */
   isPublic: boolean;
   participants: readonly RoundPlayerLike[];
   ctx: RoundContext;
@@ -98,9 +113,9 @@ export interface SettleTimingInput {
  */
 export function roundSettleTiming(input: SettleTimingInput): SettleHold {
   const { isPublic, participants, ctx, totalQuestions, startedAt, now } = input;
-  if (isPublic) return "ready";
   if (allRoundPlayersFinished(participants, ctx, totalQuestions)) return "ready";
-  if (roundDeadlinePassed(startedAt, now)) return "ready";
+  const deadline = isPublic ? PUBLIC_ROUND_DEADLINE_MS : PRIVATE_ROUND_DEADLINE_MS;
+  if (roundDeadlinePassed(startedAt, now, deadline)) return "ready";
   return "waiting_for_players";
 }
 

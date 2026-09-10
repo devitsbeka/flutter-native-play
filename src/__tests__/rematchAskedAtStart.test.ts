@@ -83,7 +83,8 @@ describe("the answer", () => {
 describe("the host starts with whoever said yes", () => {
   it("the wait sheet shows the table's answers and the pot for those in", () => {
     expect(wait).toMatch(/const ready = seats\.filter\(\(s\) => s\.answer === "ready"\)\.length;/);
-    expect(wait).toMatch(/\{\(playing \* stake\)\.toLocaleString\(\)\}/);
+    // First place's share of the table's pot, not the pot (roomPot.test.ts).
+    expect(wait).toMatch(/\{\(firstPlaceShare\(playing, stake\) \?\? 0\)\.toLocaleString\(\)\}/);
     expect(wait).toMatch(/disabled=\{starting \|\| ready === 0\}/);
     // Who said what: see rematchAnswersAreShown.test.ts.
     expect(lobby).toMatch(/answer: !seated \? "declined" : \(seated\.status as string\) === "ready" \? "ready" : "waiting",/);

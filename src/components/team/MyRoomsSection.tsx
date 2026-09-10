@@ -296,11 +296,11 @@ export function MyRoomsSection({
     }
     // Cosmetic, and nothing below depends on it — don't make the player wait
     // on a write that only clears a dot.
+    // Through clear_room_unread: participants no longer hold an UPDATE
+    // policy on game_rooms at all (20261106100000), because that policy
+    // let a guest rewrite the host's whole row.
     if (room.has_unread_activity) {
-      void supabase
-        .from("game_rooms")
-        .update({ has_unread_activity: false })
-        .eq("id", room.id);
+      void supabase.rpc("clear_room_unread", { p_room_id: room.id });
     }
     
     // Check if TV session exists but is expired (3+ hours old)

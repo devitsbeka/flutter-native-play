@@ -248,7 +248,7 @@ export function GameResultsScreenV2() {
   const { t } = useLanguage();
   const localizeCategory = useLocalizedCategoryName();
   const { addCoins } = useCurrency();
-  const { settleRoomRound } = useRoomPot();
+  const { settleRoomRound, readRoomRound } = useRoomPot();
   const { trackMissionEvent } = useMissions();
   const { openProfile } = usePlayerProfile();
   const [coinsEarned, setCoinsEarned] = useState(0);
@@ -338,8 +338,9 @@ export function GameResultsScreenV2() {
    * different times and when all invited players play the round we give
    * rewards after that").
    *
-   * A public room is unaffected: it settles the moment the round ends,
-   * which is what "results instantly" means over there.
+   * A public room waits the same way, for minutes rather than a day
+   * (PUBLIC_ROUND_DEADLINE_MS): it used to settle on the first player to
+   * finish, and ranked the pot on a scoreboard of one.
    */
   const isPublicRoom = Boolean((currentRoom as { is_public?: boolean } | null)?.is_public);
   const roundCtx = { hostIsObserver, hostUserId: currentRoom?.host_user_id };
@@ -474,20 +475,15 @@ export function GameResultsScreenV2() {
   const matchInfo = useMatchInfo(currentRoom?.id, currentRoom?.current_game_id);
 
   /**
-   * The match, round by round: which category each round was, what its
-   * pot was, and who won and who lost it (useMatchRounds — the ledger read
-   * back through settle_room_round for every round of the match, once the
-   * current round's own lines are in). The podium says what THIS round
-   * paid; this says what every round paid, so a match of three rounds ends
-   * on a screen that can say what happened in round two (owner: "show
-   * what happened in rounds, per match has its pot - we need to show it
-   * clear who won who lose per round").
-   *
-   * And the match's standings, once its last round is in: every round's
-   * pot lines, summed per seat, ranked by what each seat won over the
-   * whole match (owner: "who won the most coins in all rounds the match
-   * had, who is first, second"). A match of one round is its own round
-   * result and needs no total.
+   * The room, round by round: which category each round was, what its pot
+   * was, and who won and who lost it — the ledger READ through
+   * room_round_ledger for every round, once the current round's own lines
+   * are in. Nothing settles on that read: it used to go through
+   * settle_room_round, and a screen that only meant to look settled rounds
+   * other players had not finished. The podium says what THIS round paid;
+   * this says what every round paid (owner: "show what happened in rounds,
+   * per match has its pot - we need to show it clear who won who lose per
+   * round").
    */
   const hasPotLines = Object.keys(potLines).length > 0;
   /**
@@ -499,7 +495,7 @@ export function GameResultsScreenV2() {
    * current round's own lines are in, so it never reads before the round
    * that just happened has been settled.
    */
-  const roomRounds = useRoomRounds(currentRoom?.id, hasPotLines, settleRoomRound);
+  const roomRounds = useRoomRounds(currentRoom?.id, hasPotLines, readRoomRound);
   /** Newest game first, its rounds in play order — the one just played on top. */
   const roomGames = useMemo(() => {
     const byGame = new Map<number, RoomRound[]>();

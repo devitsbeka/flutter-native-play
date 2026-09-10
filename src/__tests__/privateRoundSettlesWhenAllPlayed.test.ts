@@ -20,8 +20,9 @@
  * Nothing is lost while nobody looks, because the stakes are collected by
  * the settlement itself.
  *
- * A PUBLIC room is untouched: it settles the moment the round ends, in front
- * of everyone who was in it.
+ * A PUBLIC room waits the same way, for minutes rather than a day: it used
+ * to settle on the first player to finish, and ranked the pot on a
+ * scoreboard of one while the rest were still answering.
  */
 
 import { describe, expect, it } from "vitest";
@@ -30,6 +31,7 @@ import { join } from "node:path";
 
 import {
   PRIVATE_ROUND_DEADLINE_MS,
+  PUBLIC_ROUND_DEADLINE_MS,
   allRoundPlayersFinished,
   hasFinishedRound,
   playersStillOut,
@@ -128,7 +130,9 @@ describe("when a device may settle", () => {
   const ctx = { hostIsObserver: false, hostUserId: "host" };
   const half = [seat({ user_id: "a", status: "finished" }), seat({ user_id: "b" })];
 
-  it("a public round: immediately, however few have finished", () => {
+  it("a public round: not on the first player to finish either", () => {
+    // The pot was ranked on a scoreboard of one while the rest were still
+    // on question four.
     expect(
       roundSettleTiming({
         isPublic: true,
@@ -137,7 +141,34 @@ describe("when a device may settle", () => {
         totalQuestions: TOTAL,
         startedAt: ago(1000),
       }),
+    ).toBe("waiting_for_players");
+  });
+
+  it("a public round: once everyone has, or after a quarter of an hour", () => {
+    expect(PUBLIC_ROUND_DEADLINE_MS).toBe(15 * 60 * 1000);
+    const all = [seat({ user_id: "a", status: "finished" }), seat({ user_id: "b", status: "finished" })];
+    expect(
+      roundSettleTiming({ isPublic: true, participants: all, ctx, totalQuestions: TOTAL, startedAt: ago(1000) }),
     ).toBe("ready");
+    expect(
+      roundSettleTiming({
+        isPublic: true,
+        participants: half,
+        ctx,
+        totalQuestions: TOTAL,
+        startedAt: ago(PUBLIC_ROUND_DEADLINE_MS + 1000),
+      }),
+    ).toBe("ready");
+    // A private round is still out for the day at that point.
+    expect(
+      roundSettleTiming({
+        isPublic: false,
+        participants: half,
+        ctx,
+        totalQuestions: TOTAL,
+        startedAt: ago(PUBLIC_ROUND_DEADLINE_MS + 1000),
+      }),
+    ).toBe("waiting_for_players");
   });
 
   it("a private round: not while it is still out with somebody", () => {

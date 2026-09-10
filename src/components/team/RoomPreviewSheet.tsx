@@ -27,6 +27,7 @@ import { undecidedRoundKind } from "@/utils/undecidedRound";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useLocalizedCategoryName } from "@/utils/categoryDisplayName";
 import { REWARDS } from "@/config/rewardConfig";
+import { firstPlaceShare } from "@/utils/roomPot";
 import coinIcon from "@/assets/tb-lobby/coin.png";
 import questionIcon from "@/assets/lobby/chip-question.webp";
 
@@ -117,8 +118,10 @@ export function RoomPreviewSheet({
   // A seat costs the stake wherever it is taken — a room, a quick game, PRO
   // or not (see 20261102140000_quick_game_charges_everyone.sql). Under two
   // players there is no pot at all: settle_room_round calls that practice.
+  // "Winner takes" is first place's share of the pot, not the pot
+  // (firstPlaceShare): 70% of it at three or more players.
   const stake = REWARDS.GAME_STAKE;
-  const pot = players >= 2 ? players * stake : null;
+  const pot = firstPlaceShare(players, stake);
   // No queue is a mixed round, not no round (MIXED_ROUND).
   const shown = rounds.length > 0 ? rounds : [MIXED_ROUND];
 

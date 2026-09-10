@@ -21,6 +21,7 @@ import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { REWARDS } from "@/config/rewardConfig";
+import { firstPlaceShare, roundPot } from "@/utils/roomPot";
 
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 const migration = read("supabase/migrations/20261015100000_room_round_pot.sql");
@@ -86,9 +87,34 @@ describe("the client names no amounts", () => {
 });
 
 describe("a player is told before the round, not after", () => {
-  it("the lobby shows the pot once there is one", () => {
+  it("the lobby shows what first place takes once there is a pot", () => {
     expect(lobby).toMatch(/seatedPlayers >= 2\s*\n\s*\? \{\s*\n\s*label: t\("lobby\.winnerTakes"\)/);
-    expect(lobby).toMatch(/amount: seatedPlayers \* REWARDS\.GAME_STAKE/);
+    // Not the whole pot: "Winner takes" printed 1 500 under a three-player
+    // table and the winner took 1 050.
+    expect(lobby).toMatch(/amount: firstPlaceShare\(seatedPlayers\) \?\? 0/);
+    expect(lobby).not.toMatch(/seatedPlayers \* REWARDS\.GAME_STAKE/);
+  });
+
+  it("and so do the preview and rematch sheets, from the same helper", () => {
+    const preview = read("src/components/team/RoomPreviewSheet.tsx");
+    const rematch = read("src/components/team/RematchWaitSheet.tsx");
+    expect(preview).toMatch(/const pot = firstPlaceShare\(players, stake\);/);
+    expect(rematch).toMatch(/firstPlaceShare\(playing, stake\) \?\? 0/);
+    expect(preview).not.toMatch(/players \* stake/);
+    expect(rematch).not.toMatch(/playing \* stake/);
+  });
+
+  it("the helper agrees with the migration's arithmetic", () => {
+    const s = REWARDS.GAME_STAKE;
+    expect(roundPot(1)).toBeNull();
+    expect(firstPlaceShare(1)).toBeNull();
+    expect(roundPot(2)).toBe(2 * s);
+    expect(firstPlaceShare(2)).toBe(2 * s);
+    expect(firstPlaceShare(3)).toBe(Math.floor((3 * s * 70) / 100));
+    expect(firstPlaceShare(4)).toBe(Math.floor((4 * s * 70) / 100));
+    // Rounding goes to first, so first + second + third is the pot.
+    const pot = 7;
+    expect(firstPlaceShare(pot, 1)).toBe(pot - Math.floor((pot * 20) / 100) - Math.floor((pot * 10) / 100));
   });
 
   it("and Start refuses a seat the player cannot pay for", () => {

@@ -102,7 +102,9 @@ describe("what opening it says", () => {
   it("and the pot, only where there is one", () => {
     // Under two players settle_room_round settles nothing: that is practice,
     // and quoting a pot for it would be a promise the database will not keep.
-    expect(sheet).toMatch(/const pot = players >= 2 \? players \* stake : null;/);
+    // And the number under "Winner takes" is first place's share of it,
+    // which is the whole pot only at two players (roomPot.test.ts).
+    expect(sheet).toMatch(/const pot = firstPlaceShare\(players, stake\);/);
     expect(sheet).toMatch(/\{pot !== null && \(/);
   });
 

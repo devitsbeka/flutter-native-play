@@ -32,6 +32,7 @@ import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
 import coinIcon from "@/assets/tb-lobby/coin.png";
+import { firstPlaceShare } from "@/utils/roomPot";
 
 /** Said yes, still deciding, or gave the seat up. */
 export type RematchAnswer = "ready" | "waiting" | "declined";
@@ -46,7 +47,10 @@ export interface RematchSeat {
 interface RematchWaitSheetProps {
   open: boolean;
   seats: RematchSeat[];
-  /** Per seat; the pot shown is the host plus every seat that said yes. */
+  /**
+   * Per seat; the number shown is what first place takes from a pot of the
+   * host plus every seat that said yes (firstPlaceShare).
+   */
   stake: number;
   starting?: boolean;
   onCancel: () => void;
@@ -104,7 +108,7 @@ export function RematchWaitSheet({ open, seats, stake, starting = false, onCance
                 <span className="text-[12px] text-[#402666]/60">{t("lobby.winnerTakes")}</span>
                 <span className="flex items-center gap-1.5 font-display text-[20px] font-bold leading-6 text-[#402666]">
                   <img src={coinIcon} alt="" className="h-5 w-5 object-contain" />
-                  {(playing * stake).toLocaleString()}
+                  {(firstPlaceShare(playing, stake) ?? 0).toLocaleString()}
                 </span>
               </div>
 

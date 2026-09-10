@@ -17,6 +17,9 @@ import { isDeveloperOnlyGameType } from "@/game-types/registry";
  */
 export interface PublicRoom {
   id: string;
+  /** Whether a knock waits on the host (Ask-me) or seats at once. Absent
+   *  until 20261106100000 is applied; the card then cannot tell. */
+  requires_approval?: boolean;
   room_code: string;
   room_name: string | null;
   room_icon: string | null;

@@ -174,7 +174,9 @@ BEGIN
   PERFORM pg_temp.must_equal(v_res->>'reason', 'practice', 'a solo room settles nothing');
   PERFORM pg_temp.must_equal(pg_temp.coins_of(a), 2000, 'and costs nothing');
 
-  -- ── a player who cannot cover the stake pays what they have ─────────────
+  -- ── a player who cannot cover the stake is not at the table for money ───
+  -- (20261106110000: they play the round for practice; with only one seat
+  -- able to stake, nobody pays and nobody is paid.)
   UPDATE public.profiles SET coins = 2000 WHERE user_id = a;
   UPDATE public.profiles SET coins = 120  WHERE user_id = b;
   INSERT INTO public.game_rooms (room_code, host_user_id, status)
@@ -187,9 +189,9 @@ BEGIN
 
   PERFORM pg_temp.as_user(a);
   v_res := public.settle_room_round(v_room, v_game);
-  PERFORM pg_temp.must_equal((v_res->>'pot')::int, 620, 'the short player stakes what they have');
-  PERFORM pg_temp.must_equal(pg_temp.coins_of(b), 0, 'and is left at zero, never below it');
-  PERFORM pg_temp.must_equal(pg_temp.coins_of(a), 1500 + 620, 'the winner takes the smaller pot');
+  PERFORM pg_temp.must_equal(v_res->>'reason', 'practice', 'one seat that can stake is practice');
+  PERFORM pg_temp.must_equal(pg_temp.coins_of(b), 120, 'the short player keeps what they have');
+  PERFORM pg_temp.must_equal(pg_temp.coins_of(a), 2000, 'and the other pays nothing either');
 
   -- ── PRO stakes like everybody else ──────────────────────────────────────
   -- A pot must balance. Exempting PRO would mean the other players fund the

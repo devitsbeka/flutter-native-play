@@ -4802,6 +4802,10 @@ export type Database = {
         Args: never
         Returns: number[]
       }
+      clear_room_unread: {
+        Args: { p_room_id: string }
+        Returns: undefined
+      }
       claim_daily_reward: {
         Args: never
         Returns: {
@@ -5318,6 +5322,7 @@ export type Database = {
           room_icon: string
           room_name: string
           status: string
+          requires_approval: boolean
         }[]
       }
       question_translation_progress: {
@@ -5403,6 +5408,10 @@ export type Database = {
           p_room_id: string
         }
         Returns: number
+      }
+      room_round_ledger: {
+        Args: { p_game_id: string }
+        Returns: Json
       }
       settle_guess_game: {
         Args: { p_outcome: string; p_reference?: string }

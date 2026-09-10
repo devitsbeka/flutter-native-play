@@ -53,9 +53,11 @@ interface StoredScore {
  * come off room_games (useMatchInfo lists the match's rounds), whose
  * questions_data names the category the round was played in and whose
  * player_scores says who scored what. The money comes off the ledger
- * through settle_room_round, which is idempotent and reports every seat's
- * stake and prize back for a round already settled — the same call this
- * screen makes for the current round, made once per earlier round. The
+ * through room_round_ledger, a READ: it reports every seat's stake and
+ * prize for a round that has settled and nothing for one that has not.
+ * This used to call settle_room_round per round, which settles — so
+ * opening the results of round three settled round two for anyone who had
+ * not finished it, through a screen that was only meant to look. The
  * client still names no amounts.
  *
  * Null until read, and null when there is nothing to tell: no match, or
@@ -65,7 +67,7 @@ export function useMatchRounds(
   roomId: string | null | undefined,
   matchInfo: MatchInfo | null,
   ready: boolean,
-  settleRoomRound: (roomId: string, gameId: string | null) => Promise<RoomPotSettlement>,
+  readRoomRound: (gameId: string) => Promise<RoomPotSettlement>,
 ): MatchRound[] | null {
   const [rounds, setRounds] = useState<MatchRound[] | null>(null);
   // The ids as one string, so a re-render with the same rounds is not a re-read.
@@ -84,7 +86,7 @@ export function useMatchRounds(
           .from("room_games")
           .select("id, questions_data, player_scores")
           .in("id", ids),
-        Promise.all(ids.map((id) => settleRoomRound(roomId, id))),
+        Promise.all(ids.map((id) => readRoomRound(id))),
       ]);
       if (cancelled) return;
       const byId = new Map((rows ?? []).map((r) => [r.id, r]));
@@ -118,7 +120,7 @@ export function useMatchRounds(
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roomId, roundKey, ready, settleRoomRound]);
+  }, [roomId, roundKey, ready, readRoomRound]);
 
   return rounds;
 }
