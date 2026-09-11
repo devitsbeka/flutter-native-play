@@ -2241,7 +2241,7 @@ export const de: KaTranslations = {
     rematchGateHostBody: "startet eine Revanche",
     rematchGateAskBody: "will eine Revanche",
     rematchGatePlay: "Spielen",
-    rematchGateLeave: "Raum verlassen",
+    rematchGateLeave: "Verlassen",
     rematchWaitTitle: "Revanche angefragt",
     duelTitle: "Gegen Trivia King",
     duelOpponent: "Trivia King",

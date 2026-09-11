@@ -2569,7 +2569,7 @@ export const ka = {
     rematchGateHostBody: "იწყებს რევანშს",
     rematchGateAskBody: "რევანში უნდა",
     rematchGatePlay: "თამაში",
-    rematchGateLeave: "ოთახის დატოვება",
+    rematchGateLeave: "გასვლა",
     rematchWaitTitle: "რევანში შეთავაზებულია",
     duelTitle: "Trivia King-ის წინააღმდეგ",
     duelOpponent: "Trivia King",

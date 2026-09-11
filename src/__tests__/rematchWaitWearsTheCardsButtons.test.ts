@@ -32,7 +32,7 @@ describe("the buttons", () => {
   it("are the card's pills: Cancel outlined, Start mint with the play triangle", () => {
     expect(wait).toMatch(/import \{ RoomCardPlayButton \} from "@\/components\/team\/RoomCardPlayButton";/);
     expect(wait).toMatch(/import \{ PREVIEW_BUTTON_CLASS \} from "@\/components\/team\/RoomPreviewSheet";/);
-    expect(wait).toMatch(/<RoomCardPlayButton tone="outline" className=\{`\$\{PREVIEW_BUTTON_CLASS\} flex-none`\} onClick=\{onCancel\} disabled=\{starting\}>/);
+    expect(wait).toMatch(/<RoomCardPlayButton tone="outline" className=\{`\$\{PREVIEW_BUTTON_CLASS\} flex-none pt-\[10px\] whitespace-nowrap`\} onClick=\{onCancel\} disabled=\{starting\}>/);
     expect(wait).toMatch(/tone="mint"\s*\n\s*className=\{`\$\{PREVIEW_BUTTON_CLASS\} min-w-0 whitespace-nowrap px-3`\}\s*\n\s*onClick=\{onStart\}\s*\n\s*disabled=\{starting \|\| ready === 0\}/);
   });
 
@@ -41,7 +41,10 @@ describe("the buttons", () => {
     // "show start with 1 player on one row and reduce cancel button to
     // fit"). The shared class is flex-1; Cancel overrides it to flex-none
     // and Start refuses to wrap.
-    expect(wait).toMatch(/\$\{PREVIEW_BUTTON_CLASS\} flex-none`\} onClick=\{onCancel\}/);
+    expect(wait).toMatch(/\$\{PREVIEW_BUTTON_CLASS\} flex-none pt-\[10px\] whitespace-nowrap`\} onClick=\{onCancel\}/);
+    // ...and the two pills are the same height: the outline tone draws a
+    // 2px top border the mint one does not, so Cancel's top padding is
+    // 10 where Start's is 12 (owner: "reduce height to match").
     expect(wait).toMatch(/\$\{PREVIEW_BUTTON_CLASS\} min-w-0 whitespace-nowrap px-3`\}/);
     expect(wait).toMatch(/<Play className="h-3\.5 w-3\.5 fill-current" \/>\s*\n\s*\{t\("extra\.rematchWaitStart", \{ count: playing \}\)\}/);
     expect(wait).not.toMatch(/ChunkyButton/);

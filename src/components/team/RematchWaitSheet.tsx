@@ -122,7 +122,12 @@ export function RematchWaitSheet({ open, seats, stake, starting = false, onCance
                   takes the rest, on one line (owner: "show start with 1
                   player on one row and reduce cancel button to fit"). */}
               <div className="flex items-center gap-2">
-                <RoomCardPlayButton tone="outline" className={`${PREVIEW_BUTTON_CLASS} flex-none`} onClick={onCancel} disabled={starting}>
+                {/* pt-[10px]: the outline tone draws a 2px border along its
+                    top that the mint one does not, so the same py-3 made
+                    Cancel two pixels taller than Start. Ten plus the border
+                    is twelve, which is what Start's padding alone comes to
+                    (owner: "reduce height to match 'start with' button"). */}
+                <RoomCardPlayButton tone="outline" className={`${PREVIEW_BUTTON_CLASS} flex-none pt-[10px] whitespace-nowrap`} onClick={onCancel} disabled={starting}>
                   {t("common.cancel")}
                 </RoomCardPlayButton>
                 <RoomCardPlayButton

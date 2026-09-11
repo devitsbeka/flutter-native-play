@@ -2567,7 +2567,7 @@ export const en: KaTranslations = {
     rematchGateHostBody: "is starting a rematch",
     rematchGateAskBody: "wants a rematch",
     rematchGatePlay: "Play",
-    rematchGateLeave: "Leave room",
+    rematchGateLeave: "Leave",
     rematchWaitTitle: "Rematch asked",
     duelTitle: "Versus Trivia King",
     duelOpponent: "Trivia King",

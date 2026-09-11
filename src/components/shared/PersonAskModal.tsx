@@ -120,22 +120,28 @@ export function PersonAskModal({
 
             {children}
 
+            {/* Two words, one line each. A label that wrapped took its
+                button to two rows and left the pair uneven — "ოთახის
+                დატოვება" on the rematch ask was the one that showed it
+                (owner: "make sure texts on buttons are always on one
+                line"). The labels are short now; nowrap and a truncating
+                span are what keep a longer translation from undoing that. */}
             <div className="mt-5 flex gap-2">
               <button
                 type="button"
                 onClick={onDecline}
-                className="flex-1 flex items-center justify-center gap-1.5 rounded-2xl border border-border bg-muted/60 py-3 font-bold text-foreground active:scale-[0.98] transition-transform"
+                className="min-w-0 flex-1 flex items-center justify-center gap-1.5 whitespace-nowrap rounded-2xl border border-border bg-muted/60 py-3 font-bold text-foreground active:scale-[0.98] transition-transform"
               >
-                <X className="w-4 h-4" />
-                {declineLabel}
+                <X className="w-4 h-4 shrink-0" />
+                <span className="truncate">{declineLabel}</span>
               </button>
               <button
                 type="button"
                 onClick={onAccept}
-                className="flex-1 flex items-center justify-center gap-1.5 rounded-2xl bg-primary py-3 font-bold text-primary-foreground shadow-md active:scale-[0.98] transition-transform"
+                className="min-w-0 flex-1 flex items-center justify-center gap-1.5 whitespace-nowrap rounded-2xl bg-primary py-3 font-bold text-primary-foreground shadow-md active:scale-[0.98] transition-transform"
               >
-                <Check className="w-4 h-4" />
-                {acceptLabel}
+                <Check className="w-4 h-4 shrink-0" />
+                <span className="truncate">{acceptLabel}</span>
               </button>
             </div>
 

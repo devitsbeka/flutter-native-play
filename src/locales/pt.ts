@@ -2257,7 +2257,7 @@ export const pt: KaTranslations = {
     rematchGateHostBody: "está a começar uma desforra",
     rematchGateAskBody: "quer uma desforra",
     rematchGatePlay: "Jogar",
-    rematchGateLeave: "Sair da sala",
+    rematchGateLeave: "Sair",
     rematchWaitTitle: "Desforra proposta",
     duelTitle: "Contra o Trivia King",
     duelOpponent: "Trivia King",
