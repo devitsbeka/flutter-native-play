@@ -4239,7 +4239,7 @@ export const it: KaTranslations = {
     nextRoundLabel: "Prossimo round:",
     matchRoundLabel: "Partita {game}, round {round}",
     matchStandingsTitle: "Partita {game} · {rounds} round · classifica finale",
-    matchRoundsTitle: "Partita {game} · round per round",
+    matchRoundsTitle: "Partita {game}",
     resultsRoundByRoundCta: "Vedi i risultati round per round",
     resultsStandingsTitle: "Classifica",
     resultsAllGamesTitle: "Tutte le partite · {rounds} round · totali",

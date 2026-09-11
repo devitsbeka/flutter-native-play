@@ -88,6 +88,19 @@ describe("the card", () => {
 
   it("names each round, its category in the reader's language, and its pot", () => {
     expect(results).toMatch(/t\("extra\.matchRoundsTitle", \{ game \}\)/);
+    // The heading is the game's number and nothing else: "round by round"
+    // was said once on every card, and the sheet's own title already says
+    // it (owner: "don't show round by round on all cards just say game 1
+    // game 2 game 3 etc and rounds below").
+    for (const lang of ["en", "ka", "de", "es", "fr", "it", "pt"]) {
+      expect(read(`src/locales/${lang}.ts`), lang).toMatch(/matchRoundsTitle: "[^"·]*\{game\}",/);
+    }
+    // And what was played, read at a glance: the icon, the category and
+    // the round were 32/15/12 and are 44/17/14.
+    expect(results).toMatch(/className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white\/15"/);
+    expect(results).toMatch(/<DynamicIcon slug=\{slug\} size=\{30\} shadow=\{false\} \/>/);
+    expect(results).toMatch(/className="block truncate text-\[17px\] font-semibold leading-6 text-white"/);
+    expect(results).toMatch(/className="block text-\[14px\] leading-5 text-white\/70"/);
     expect(results).toMatch(/\{localizeCategory\(round\.categoryName\) \|\| t\("extra\.categoryFallback"\)\}/);
     expect(results).toMatch(/t\("lobby\.uRoundLabel", \{ count: round\.number \}\)/);
     expect(results).toMatch(/\{round\.pot > 0 && <PotPill amount=\{round\.pot\} \/>\}/);

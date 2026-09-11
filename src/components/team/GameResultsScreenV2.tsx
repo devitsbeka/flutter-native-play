@@ -1217,15 +1217,23 @@ export function GameResultsScreenV2() {
                           : round.iconSlug ?? iconForCategoryName(round.categoryName) ?? UNDECIDED_ICON_SLUG;
                         return (
                           <li key={round.id} className="py-3 first:pt-0 last:pb-0">
-                            <div className="flex items-center gap-2">
-                              <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white/15">
-                                <DynamicIcon slug={slug} size={20} shadow={false} />
+                            {/* What was played and when, read at a glance:
+                                this is the line the sheet exists for, and
+                                at 15px over a 12px round it was the
+                                quietest thing on its own row (owner:
+                                "increase icons + category titles and
+                                'round' font to see clearly in what
+                                category and in which round i won or
+                                lose"). */}
+                            <div className="flex items-center gap-2.5">
+                              <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white/15">
+                                <DynamicIcon slug={slug} size={30} shadow={false} />
                               </span>
                               <span className="min-w-0 flex-1">
-                                <span className="block truncate text-[15px] font-semibold leading-5 text-white">
+                                <span className="block truncate text-[17px] font-semibold leading-6 text-white">
                                   {localizeCategory(round.categoryName) || t("extra.categoryFallback")}
                                 </span>
-                                <span className="block text-[12px] leading-4 text-white/60">
+                                <span className="block text-[14px] leading-5 text-white/70">
                                   {t("lobby.uRoundLabel", { count: round.number })}
                                 </span>
                               </span>

@@ -4184,7 +4184,7 @@ export const fr: KaTranslations = {
     nextRoundLabel: "Prochaine manche :",
     matchRoundLabel: "Partie {game}, manche {round}",
     matchStandingsTitle: "Partie {game} · {rounds} manches · classement final",
-    matchRoundsTitle: "Partie {game} · manche par manche",
+    matchRoundsTitle: "Partie {game}",
     resultsRoundByRoundCta: "Voir les résultats manche par manche",
     resultsStandingsTitle: "Classement",
     resultsAllGamesTitle: "Toutes les parties · {rounds} manches · totaux",
