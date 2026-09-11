@@ -174,6 +174,20 @@ function TeamContentV2() {
     if (roomsLocked) return setShowRoomsWall(true);
     setShowCreateTypeModal(true);
   };
+
+  /**
+   * Making a trivia, a collection or a My Trivia Party is PRO.
+   *
+   * The + on the Private tab has always asked; the other doors into the
+   * same three editors — the team menu, and the deep links a push or a
+   * mission arrives with — opened them cold. One gate for all of them, and
+   * the same wall the + shows (owner: "to create trivia, collection, my
+   * trivia party - users should be pro").
+   */
+  const requireProToCreate = (open: () => void) => {
+    if (roomsLocked) return setShowRoomsWall(true);
+    open();
+  };
   // Ads are strictly opt-in: a player sees one only by pressing a button
   // that says so (extra plays, spins, power-ups). Room creation, challenges
   // and TV flows run without any ad gate.
@@ -201,8 +215,10 @@ function TeamContentV2() {
 
   useEffect(() => {
     if (location.state?.openPersonalTrivia) {
-      setAutoOpenPersonalTrivia(true);
-      setShowCreateModal(true);
+      requireProToCreate(() => {
+        setAutoOpenPersonalTrivia(true);
+        setShowCreateModal(true);
+      });
       arrivedToCreate.current = false;
       navigate(location.pathname, { replace: true, state: {} });
     }
@@ -221,11 +237,11 @@ function TeamContentV2() {
       })();
     }
     if (location.state?.openTrivia) {
-      setShowCreateQuizModal(true);
+      requireProToCreate(() => setShowCreateQuizModal(true));
       navigate(location.pathname, { replace: true, state: {} });
     }
     if (location.state?.openCollection) {
-      setShowCreateCollectionModal(true);
+      requireProToCreate(() => setShowCreateCollectionModal(true));
       navigate(location.pathname, { replace: true, state: {} });
     }
     // The play chooser's My Trivias tile, with nothing made yet: ask what
@@ -1631,16 +1647,22 @@ function TeamContentV2() {
             }}
             onSelectTrivia={() => {
               setShowTeamMenu(false);
-              setShowCreateQuizModal(true);
+              requireProToCreate(() => setShowCreateQuizModal(true));
             }}
             onSelectCollection={(draftId) => {
               setShowTeamMenu(false);
-              if (draftId) setEditingDraftId(draftId);
-              setShowCreateCollectionModal(true);
+              // A draft is something they already started; the gate is on
+              // starting a new one.
+              if (draftId) {
+                setEditingDraftId(draftId);
+                setShowCreateCollectionModal(true);
+                return;
+              }
+              requireProToCreate(() => setShowCreateCollectionModal(true));
             }}
             onSelectPersonalTrivia={() => {
               setShowTeamMenu(false);
-              setShowPersonalTriviaModal(true);
+              requireProToCreate(() => setShowPersonalTriviaModal(true));
             }}
             onSelectRandom={() => {
               setShowTeamMenu(false);

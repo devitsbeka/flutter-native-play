@@ -37,9 +37,14 @@ describe("the Private tab's create button is gated like the Public one", () => {
     // Both helpers read `roomsLocked` and raise the same wall, so a player
     // cannot be locked out of one and into the other.
     expect(hub).toMatch(/const roomsLocked = !isVip;/);
+    // Three now: the two buttons, and the one gate every other door into a
+    // trivia, a collection or a party goes through — the team menu and the
+    // deep links (creatingIsProOnly.test.ts). All of them read the same
+    // flag and raise the same wall.
     expect(
       (hub.match(/if \(roomsLocked\) return setShowRoomsWall\(true\);/g) ?? []).length,
-    ).toBe(2);
+    ).toBe(3);
+    expect(hub).toMatch(/const requireProToCreate = \(open: \(\) => void\) => \{/);
   });
 });
 

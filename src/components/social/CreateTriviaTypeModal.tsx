@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Bell } from "lucide-react";
+import { ArrowLeft, Bell, Lock } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useNotifications } from "@/hooks/useNotifications";
 import SpotlightSearch from "@/components/search/SpotlightSearch";
@@ -10,6 +10,8 @@ import iconCollections from "@/assets/icon-collections.png";
 import iconHouseParty from "@/assets/house-party.png";
 import danceFloor from "@/assets/dance-floor.png";
 import { DraftsList } from "./DraftsList";
+import { useProGating } from "@/hooks/useProGating";
+import { ProPaywallModal } from "@/components/pro/ProPaywallModal";
 
 /**
  * "What shall we create?" — Figma 1065:1019.
@@ -51,6 +53,23 @@ export function CreateTriviaTypeModal({
   const { t } = useLanguage();
   const navigate = useNavigate();
   const { unreadCount } = useNotifications();
+  /**
+   * Making something of your own is PRO.
+   *
+   * This page is where all three are made — a trivia, a collection, a My
+   * Trivia Party — through every door that reaches it: the hub's +, the
+   * play chooser's My Trivia card, the drawer. The + on the Private tab
+   * was already padlocked; the other doors walked straight past it, so the
+   * lock belongs here, on the choice itself (owner: "to create trivia,
+   * collection, my trivia party - users should be pro. show lock icon and
+   * clicking on it to create one - we should show become pro page").
+   *
+   * Resuming a DRAFT below is not gated: a draft is something this person
+   * already started, and taking it away is not what a lapsed subscription
+   * is for.
+   */
+  const { isVip, requirePro, showProModal, setShowProModal } = useProGating();
+  const createLocked = !isVip;
 
   const handleResumeDraft = (draftId: string, type: "collection" | "trivia" | "personal") => {
     if (type === "trivia") {
@@ -67,11 +86,11 @@ export function CreateTriviaTypeModal({
   // The three things to make. Trivia and Collection share a row; the Party
   // takes the full width beneath them (its icon is the widest, and the
   // frame gives it the room).
-  const cards: { key: string; icon: string; title: string; wide?: boolean; onPick: () => void }[] = [
-    { key: "trivia", icon: triviaBuzzer, title: t("extra.triviaLabel"), onPick: () => onSelectSingle() },
-    { key: "collection", icon: iconCollections, title: t("extra.collectionLabel"), onPick: () => onSelectCollection() },
+  const cards: { key: string; icon: string; title: string; wide?: boolean; feature: "trivia" | "collection"; onPick: () => void }[] = [
+    { key: "trivia", icon: triviaBuzzer, title: t("extra.triviaLabel"), feature: "trivia", onPick: () => onSelectSingle() },
+    { key: "collection", icon: iconCollections, title: t("extra.collectionLabel"), feature: "collection", onPick: () => onSelectCollection() },
     ...(onSelectPersonal
-      ? [{ key: "personal", icon: iconHouseParty, title: "My Trivia Party", wide: true, onPick: () => onSelectPersonal() }]
+      ? [{ key: "personal", icon: iconHouseParty, title: "My Trivia Party", wide: true, feature: "trivia" as const, onPick: () => onSelectPersonal() }]
       : []),
   ];
 
@@ -182,15 +201,27 @@ export function CreateTriviaTypeModal({
                     transition={{ delay: 0.05 * i, type: "spring", stiffness: 380, damping: 28 }}
                     whileTap={{ scale: 0.97 }}
                     onClick={() => {
+                      // The page stays up behind the paywall: closing it
+                      // first would land them back where they started with
+                      // nothing said.
+                      if (createLocked) {
+                        requirePro(card.feature, () => undefined);
+                        return;
+                      }
                       handleClose();
                       card.onPick();
                     }}
-                    className={`flex h-[167px] flex-col items-center justify-center gap-[10px] rounded-[24px] border-[1.5px] border-white/80 bg-[rgba(255,255,255,0.55)] shadow-[0px_10px_28px_0px_rgba(88,50,160,0.12),inset_0px_1px_0px_0px_rgba(255,255,255,0.9)] backdrop-blur-xl ${
+                    className={`relative flex h-[167px] flex-col items-center justify-center gap-[10px] rounded-[24px] border-[1.5px] border-white/80 bg-[rgba(255,255,255,0.55)] shadow-[0px_10px_28px_0px_rgba(88,50,160,0.12),inset_0px_1px_0px_0px_rgba(255,255,255,0.9)] backdrop-blur-xl ${
                       card.wide ? "col-span-2" : ""
                     }`}
                   >
-                    <img src={card.icon} alt="" draggable={false} className="h-[92px] w-[92px] object-contain drop-shadow-[0_6px_10px_rgba(88,50,160,0.18)]" />
+                    <img src={card.icon} alt="" draggable={false} className={`h-[92px] w-[92px] object-contain drop-shadow-[0_6px_10px_rgba(88,50,160,0.18)] ${createLocked ? "opacity-60 grayscale" : ""}`} />
                     <span className="font-hero font-bold text-[18px] leading-[28px] tracking-[-0.16px] text-[#402666]">{card.title}</span>
+                    {createLocked && (
+                      <span className="absolute right-[12px] top-[12px] flex h-[30px] w-[30px] items-center justify-center rounded-full border-[1.5px] border-white/80 bg-[rgba(255,255,255,0.85)] text-[#6b5b86] shadow-[0px_4px_10px_0px_rgba(88,50,160,0.14)]">
+                        <Lock className="h-[15px] w-[15px]" strokeWidth={2.5} />
+                      </span>
+                    )}
                   </motion.button>
                 ))}
               </div>
@@ -201,6 +232,7 @@ export function CreateTriviaTypeModal({
               </div>
             </div>
           </div>
+          <ProPaywallModal isOpen={showProModal} onClose={() => setShowProModal(false)} />
         </motion.div>
       )}
     </AnimatePresence>

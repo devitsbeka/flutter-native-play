@@ -72,7 +72,7 @@ function generateRoomCode() {
   }
   return result;
 }
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Json } from "@/integrations/supabase/types";
 import { resolveAvatarUrl, fallbackAvatarFor } from "@/utils/avatarUtils";
 import { useProGating } from "@/hooks/useProGating";
@@ -738,6 +738,10 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     // the home rail (?mode=library) did not, and a non-PRO player got a
     // real room past a padlock the same tap wore on the bar.
     if (friendsOnlyMode(key) && !isVip) return requirePro("rooms", () => launchMode(key));
+    // Nothing of your own and no PRO: this card only leads to the editor,
+    // so it leads to the PRO page instead (owner: "show lock icon and
+    // clicking on it to create one - we should show become pro page").
+    if (key === "mytrivias" && myTriviasLocked) return requirePro("trivia", () => launchMode(key));
     // A quick game costs the stake, and /game's refusal dropped the player
     // home (the handoff had replaced this entry). Asked here, like Guess.
     if (key === "quick" && coins < REWARDS.GAME_STAKE) {
@@ -832,6 +836,28 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     setSelectionMode("library");
   };
 
+  /**
+   * Making something of your own — a trivia, a collection, a My Trivia
+   * Party — is a PRO feature (owner: "to create trivia, collection, my
+   * trivia party - users should be pro").
+   *
+   * PLAYING what you already made is not: a player whose PRO has lapsed
+   * keeps their own quizzes and can still play them solo, which is the
+   * rule this screen already follows elsewhere. So the My Trivia card is
+   * padlocked only for somebody who has nothing of their own — for them
+   * the card leads nowhere but the editor.
+   */
+  const { data: hasOwnTrivias } = useQuery({
+    queryKey: ["has-own-trivias", user?.id],
+    enabled: !!user?.id,
+    staleTime: 60_000,
+    // Wrapped, not passed: the helper is declared just below and is
+    // only ever called after this render.
+    queryFn: () => hasAnyCreatedTriviasOrCollections(),
+  });
+  const createIsLocked = !isVip;
+  const myTriviasLocked = createIsLocked && hasOwnTrivias === false;
+
   const hasAnyCreatedTriviasOrCollections = async () => {
     if (!user?.id) return false;
 
@@ -865,6 +891,12 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     }
     if (mode === "my-trivias") {
       const hasAny = await hasAnyCreatedTriviasOrCollections();
+      if (!hasAny && !isVip) {
+        // The same wall as the card, for the tap that got here before the
+        // card knew (the answer is fetched, and a first tap can beat it).
+        requirePro("trivia", () => undefined);
+        return;
+      }
       if (!hasAny) {
         // Nothing made yet: ask what to make — trivia, collection or a My
         // Trivia Party (Figma 1065:1019) — rather than dropping the player
@@ -894,6 +926,10 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
 
   const handleCreateOptionSelect = (type: "trivia" | "collection" | "personal") => {
     setShowCreateOptionsMenu(false);
+    if (createIsLocked) {
+      requirePro(type === "collection" ? "collection" : "trivia", () => undefined);
+      return;
+    }
     if (type === "trivia") {
       setShowCreateTriviaModal(true);
     } else if (type === "collection") {
@@ -2325,6 +2361,16 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                     <div className="absolute left-[calc(12*var(--u))] top-[calc(12*var(--u))] z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white/80 shadow-md">
                       <Loader2 className="h-[18px] w-[18px] animate-spin text-[#7126d5]" />
                     </div>
+                  )}
+                  {/* The same padlock the friends bar wears, on the one card
+                      that is PRO-only for this player: My Trivia, with
+                      nothing of their own in it. */}
+                  {card.key === "mytrivias" && myTriviasLocked && (
+                    <img
+                      alt=""
+                      src={lockRender}
+                      className="pointer-events-none absolute right-[calc(14*var(--u))] top-[calc(70*var(--u))] z-20 h-[calc(72*var(--u))] w-[calc(72*var(--u))] object-contain"
+                    />
                   )}
                 </motion.button>
               );
