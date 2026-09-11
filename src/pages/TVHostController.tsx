@@ -451,19 +451,35 @@ const TVHostController: React.FC = () => {
     }
   }, [localPhase, isHost]);
 
-  // Trigger startPlaying when countdown reaches 0 and user is host
+  /**
+   * The countdown ends, and this phone is the only thing that can start the
+   * question.
+   *
+   * It used to get ONE attempt, behind a ref set before the call: a refused
+   * write, a dropped request, a phone that locked for those two seconds,
+   * and the session sat in 'countdown' for ever — no device, client or
+   * server, writes 'playing' from there. So it keeps asking until the
+   * session leaves the countdown, which tears this effect down. startPlaying
+   * holds its own mutex and no-ops on a session that is already playing, so
+   * asking again is free.
+   */
   useEffect(() => {
-    if (countdownValue === 0 && isHost && !hasTriggeredPlayingRef.current) {
-      hasTriggeredPlayingRef.current = true;
-      tvLog('Host controller countdown ended, triggering startPlaying');
-      
-      const transitionTimer = setTimeout(() => {
-        startPlaying();
-      }, 500);
-
-      return () => clearTimeout(transitionTimer);
-    }
-  }, [countdownValue, isHost, startPlaying]);
+    if (countdownValue !== 0 || !isHost || localPhase !== 'countdown') return;
+    hasTriggeredPlayingRef.current = true;
+    tvLog('Host controller countdown ended, triggering startPlaying');
+    let cancelled = false;
+    const fire = () => {
+      if (cancelled) return;
+      void startPlaying();
+    };
+    const first = setTimeout(fire, 500);
+    const retry = setInterval(fire, 2500);
+    return () => {
+      cancelled = true;
+      clearTimeout(first);
+      clearInterval(retry);
+    };
+  }, [countdownValue, isHost, localPhase, startPlaying]);
 
   // Reset votingEnded when phase changes away from poll-voting
   useEffect(() => {

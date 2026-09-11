@@ -142,18 +142,36 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
 
   // Auto-trigger voting end when timer expires (host only)
   // This updates the database so all clients see the transition
+  /**
+   * The vote's clock runs out, and this phone is the only thing that can
+   * end it — the TV never calls endVoting.
+   *
+   * One attempt, behind a ref set before the call, meant a single refused
+   * or dropped write left the whole room on the "voting ended" spinner for
+   * ever. It keeps asking until the phase moves, which tears this down.
+   */
   useEffect(() => {
-    if (pollPhase === 'voting' && timeRemaining === 0 && isHost && !hasEndedRef.current) {
-      hasEndedRef.current = true;
-      console.log('[ControllerPollScreen] Timer expired, calling endVoting');
-      // Update database status to poll-results - this triggers realtime for all clients
-      endVoting().then((success) => {
+    if (pollPhase !== 'voting' || timeRemaining !== 0 || !isHost) return;
+    hasEndedRef.current = true;
+    let cancelled = false;
+    let asking = false;
+    const ask = async () => {
+      if (cancelled || asking) return;
+      asking = true;
+      try {
+        const success = await endVoting();
         console.log('[ControllerPollScreen] endVoting returned:', success);
-        if (success) {
-          onVotingEnded?.();
-        }
-      });
-    }
+        if (success && !cancelled) onVotingEnded?.();
+      } finally {
+        asking = false;
+      }
+    };
+    void ask();
+    const retry = setInterval(() => void ask(), 3000);
+    return () => {
+      cancelled = true;
+      clearInterval(retry);
+    };
   }, [pollPhase, timeRemaining, isHost, onVotingEnded, endVoting]);
 
   // Reset ref when phase changes

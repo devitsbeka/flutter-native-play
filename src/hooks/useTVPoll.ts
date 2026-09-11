@@ -454,7 +454,7 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
     }
 
     // First verify we're the host
-    const { data: sessionCheck } = await supabase
+    const { data: sessionCheck, error: sessionCheckError } = await supabase
       .from('tv_sessions')
       .select('host_user_id, status')
       .eq('id', sessionId)
@@ -466,7 +466,14 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
       isHostMatch: sessionCheck?.host_user_id === user.id
     });
 
-    if (sessionCheck?.host_user_id !== user.id) {
+    // A read that FAILED is not an answer. `sessionCheck?.host_user_id !==
+    // user.id` was true when the select had simply errored, so a blink of
+    // network told the host they were not the host — and the write below,
+    // which is filtered by host_user_id anyway, never got the chance to be
+    // the one that decides.
+    if (sessionCheckError) {
+      console.warn('[useTVPoll] endVoting: could not read the session, asking the write instead', sessionCheckError);
+    } else if (sessionCheck?.host_user_id !== user.id) {
       console.error('[useTVPoll] endVoting: Not the host');
       return false;
     }
@@ -828,6 +835,11 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
       // this used to answer "started" and leave everyone watching a screen
       // that would never move.
       tvLog('[useTVPoll] No questions found for the winning round, back to the lobby');
+      // ...and it leaves the queue. Left at position 0 it was offered again
+      // by the lobby's own Start, fetched nothing again, and toasted again:
+      // a loop with no way out but a different pick.
+      const deadRow = (insertedQueue ?? []).find(row => row.position === 0);
+      if (deadRow) await supabase.from('tv_session_queue').delete().eq('id', deadRow.id);
       const { error } = await supabase
         .from('tv_sessions')
         .update({

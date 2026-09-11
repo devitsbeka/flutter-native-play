@@ -169,6 +169,16 @@ const shuffleArray = <T,>(array: T[]): T[] => {
 };
 
 /**
+ * Why a queued round did not start.
+ *
+ * "There are no more rounds" ends the game; "something went wrong" must
+ * not. They were the same `false`, so a queue read that failed on a weak
+ * connection ended the game and threw away every round still waiting in it
+ * — with nothing said to anybody.
+ */
+type QueueAdvanceResult = { started: boolean; reason?: "no_more_rounds" | "failed" };
+
+/**
  * Consume a played round from the TV queue: delete it and renumber the rest.
  *
  * Called only AFTER the session row says the round has started. A round the
@@ -1028,9 +1038,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // One queued-round advance at a time, whoever asked (see startNextRoundFromQueueIfAny).
   const queueAdvanceInFlightRef = useRef(false);
 
-  const advanceToNextQueuedRound = useCallback(async () => {
-    if (!isHost) return false;
-    if (!state.sessionId) return false;
+  const advanceToNextQueuedRound = useCallback(async (): Promise<QueueAdvanceResult> => {
+    if (!isHost) return { started: false, reason: "failed" };
+    if (!state.sessionId) return { started: false, reason: "failed" };
 
     // Hard stop: never exceed total rounds. If we've reached the configured
     // total, we should end the game and show final results.
@@ -1038,7 +1048,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const totalRoundsNow = stateRef.current.totalRounds;
     if (totalRoundsNow > 0 && currentRoundNumber >= totalRoundsNow) {
       tvLog('No next round: reached totalRounds', { currentRoundNumber, totalRoundsNow });
-      return false;
+      return { started: false, reason: "no_more_rounds" };
     }
 
     // CRITICAL: Clear all answers from previous rounds for this session
@@ -1075,7 +1085,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .maybeSingle();
 
       const roomId = (sessionRow as any)?.room_id as string | null | undefined;
-      if (!roomId) return false;
+      if (!roomId) return { started: false, reason: "no_more_rounds" };
 
       const { data: roomQueueItems } = await supabase
         .from('room_category_queue')
@@ -1085,12 +1095,12 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .limit(1);
 
       nextItem = roomQueueItems?.[0] as any | undefined;
-      if (!nextItem) return false;
+      if (!nextItem) return { started: false, reason: "no_more_rounds" };
       consumeFrom = 'room';
       tvLog('TV queue empty; falling back to room queue', { roomId });
     }
 
-    if (!nextItem.category_id && !nextItem.user_trivia_id) return false;
+    if (!nextItem.category_id && !nextItem.user_trivia_id) return { started: false, reason: "failed" };
 
     try {
       let formattedQuestions: { id: string; question_text: string; correct_answer: string; options: string[]; icon_slug?: string | null; image_url?: string | null; video_url?: string | null; audio_url?: string | null }[] = [];
@@ -1110,7 +1120,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         if (triviaError || !triviaData?.questions) {
           tvLogError('startNextRoundFromQueueIfAny', 'No questions found for user trivia');
-          return false;
+          return { started: false, reason: "failed" };
         }
 
         const triviaQuestions = triviaData.questions as Array<{
@@ -1122,7 +1132,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         if (triviaQuestions.length === 0) {
           tvLogError('startNextRoundFromQueueIfAny', 'User trivia has no questions');
-          return false;
+          return { started: false, reason: "failed" };
         }
 
         nextCategoryName = nextCategoryName || triviaData.title || 'User Trivia';
@@ -1148,7 +1158,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const { markQuestionsAsAsked } = await import('@/services/questionTracker');
 
         const categoryUUID = await resolveCategoryUuid(nextItem.category_id);
-        if (!categoryUUID) return false;
+        if (!categoryUUID) return { started: false, reason: "failed" };
 
         const result = await getQuestions({
           mode: 'tv',
@@ -1179,7 +1189,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         nextCategoryIcon = nextCategoryIcon || category?.icon || null;
       }
 
-      if (formattedQuestions.length === 0) return false;
+      if (formattedQuestions.length === 0) return { started: false, reason: "failed" };
 
       // Go to round-intro phase instead of countdown - wait for all players to be ready
       // Extract suggester info from queue item
@@ -1223,7 +1233,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const newRoundNumber = currentRoundNumber2 + 1;
       if (totalRoundsNow2 > 0 && newRoundNumber > totalRoundsNow2) {
         tvLog('Prevented round overflow', { newRoundNumber, totalRoundsNow2 });
-        return false;
+        return { started: false, reason: "no_more_rounds" };
       }
 
       // CAS on the phase being left. A round is advanced from the last
@@ -1261,7 +1271,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         tvLogError('startNextRoundFromQueueIfAny update session', updateError);
         const { toast } = await import('sonner');
         toast.error(t('extra.tvNextRoundFailed'));
-        return false;
+        return { started: false, reason: "failed" };
       }
       if (!advancedRows?.length) {
         // Somebody moved the session on already. Say the round started when
@@ -1274,7 +1284,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           .maybeSingle();
         const live = ['round-intro', 'countdown', 'playing', 'question'].includes(now?.status ?? '');
         tvLog('startNextRoundFromQueueIfAny: session already moved on - write skipped', { status: now?.status, live });
-        return live;
+        return live ? { started: true } : { started: false, reason: "failed" };
       }
 
       // The host's own state follows the write at once — before the queue
@@ -1335,12 +1345,12 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
 
       tvLog('Advanced to next round', { newRoundNumber });
-      return true;
+      return { started: true };
     } catch (err) {
       tvLogError('startNextRoundFromQueueIfAny', err);
       const { toast } = await import('sonner');
       toast.error(t('extra.tvNextRoundFailed'));
-      return false;
+      return { started: false, reason: "failed" };
     }
   }, [isHost, state.sessionId, confirmActivePlayers]);
 
@@ -1352,10 +1362,10 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
    * round that was never played. A duplicate is answered "started": a round
    * IS starting, and answering false would end the game.
    */
-  const startNextRoundFromQueueIfAny = useCallback(async () => {
+  const startNextRoundFromQueueIfAny = useCallback(async (): Promise<QueueAdvanceResult> => {
     if (queueAdvanceInFlightRef.current) {
       tvLog('startNextRoundFromQueueIfAny: already in flight - duplicate ignored');
-      return true;
+      return { started: true };
     }
     queueAdvanceInFlightRef.current = true;
     try {
@@ -1652,19 +1662,28 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // (question -> reveal -> results), so a DB phase further along than the
       // host's is unambiguously the host being behind - never the host
       // leading during its own transition.
-      // HOST, between rounds: the session in 'round-intro' or 'countdown'
-      // while this phone still shows a question or a reveal is never the
-      // host leading — a question is reached only through a countdown the
-      // session has already passed. It is the phone left behind (a missed
-      // realtime event; a late write the staleness filter refused). The rank
-      // table below has no entry for either phase, so this was invisible,
-      // and "I'm ready" lives on a screen the phone was not drawing.
-      if (
-        isHostRef.current &&
-        (dbPhase === 'round-intro' || dbPhase === 'countdown') &&
-        (s.phase === 'question' || s.phase === 'reveal')
-      ) {
-        console.log('[SyncPoll] ⚠️ Host still on a question while the session is between rounds (db', dbPhase, ') - resyncing');
+      // HOST, between rounds: the session has started a round and this
+      // phone has not followed it. Never the host leading — the host that
+      // wrote the countdown IS in the countdown — so it is the phone left
+      // behind: a missed realtime event, or a late write the staleness
+      // filter refused. Two ways in, and neither is visible to the rank
+      // table below (it has no entry for the phases either side):
+      //
+      //   - still on a question or a reveal from the round just finished;
+      //   - still on a waiting screen (the poll, the results, the category
+      //     picker) after the vote it just finalised started the game.
+      //
+      // Both leave the host on a screen whose buttons cannot move the
+      // session, while everyone else waits for exactly those buttons.
+      const sessionStartedARound = dbPhase === 'round-intro' || dbPhase === 'countdown';
+      const stillOnTheOldScreen =
+        s.phase === 'question' ||
+        s.phase === 'reveal' ||
+        s.phase === 'results' ||
+        s.phase === 'category-select' ||
+        s.phase.startsWith('poll-');
+      if (isHostRef.current && sessionStartedARound && stillOnTheOldScreen) {
+        console.log('[SyncPoll] ⚠️ Host behind the round the session started (local', s.phase, 'db', dbPhase, ') - resyncing');
         refetchSessionData(s.sessionId);
         return;
       }
@@ -1886,26 +1905,44 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         // If this was the last round, end the game and show final leaderboard.
         const currentRound = stateRef.current.roundNumber;
         const totalRoundsNow = stateRef.current.totalRounds;
-        if (totalRoundsNow > 0 && currentRound >= totalRoundsNow) {
-          await supabase
+        // The game ends on the row first, and this phone follows it. It
+        // used to set its own phase to results whether or not the write
+        // landed: the host saw the leaderboard while the TV and everybody
+        // else sat in the reveal, and nothing retried, because the reveal
+        // effect only runs while the phase IS reveal.
+        const endTheGame = async (why: string) => {
+          const { error: endError } = await supabase
             .from('tv_sessions')
             .update({ status: 'completed', reveal_start_time: null })
             .eq('id', state.sessionId);
-          // CRITICAL FIX: Update local state immediately for host
+          if (endError) {
+            tvLogError('[Game End] could not end the game', endError);
+            entry.started = false; // let the watchdog try again
+            return;
+          }
           setState(prev => ({ ...prev, phase: 'results' }));
-          console.log('[Game End] 📱 Host local state updated to results (final round)');
+          console.log('[Game End] 📱 Host local state updated to results (', why, ')');
+        };
+
+        if (totalRoundsNow > 0 && currentRound >= totalRoundsNow) {
+          await endTheGame('final round');
           return;
         }
 
-        const startedNext = await startNextRoundFromQueueIfAny();
-        if (!startedNext) {
-          await supabase
-            .from('tv_sessions')
-            .update({ status: 'completed', reveal_start_time: null })
-            .eq('id', state.sessionId);
-          // CRITICAL FIX: Update local state immediately for host
-          setState(prev => ({ ...prev, phase: 'results' }));
-          console.log('[Game End] 📱 Host local state updated to results (no more queue)');
+        // A round that could not be READ is not a round that does not
+        // exist. One retry, and only then is the game over — with a word
+        // to the host, so "the rounds I queued vanished" is never silent.
+        let outcome = await startNextRoundFromQueueIfAny();
+        if (!outcome.started && outcome.reason === "failed") {
+          await new Promise(resolve => setTimeout(resolve, 1200));
+          outcome = await startNextRoundFromQueueIfAny();
+        }
+        if (!outcome.started) {
+          if (outcome.reason === "failed") {
+            const { toast } = await import('sonner');
+            toast.error(t('extra.tvNextRoundFailed'));
+          }
+          await endTheGame(outcome.reason ?? 'no more queue');
         }
       } else {
         // Reset answers via local state + presence track; presence sync will update everyone.
@@ -2275,14 +2312,25 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (!session.host_user_id && !isTVDisplay) {
         const hostIdToStore = authUserId || playerId;
         tvLog('Setting host_user_id', { hostIdToStore: hostIdToStore.slice(0, 8) });
-        await supabase
+        // Checked, and it decides. A refused write here — a signed-out
+        // joiner, since anon has no UPDATE on tv_sessions — used to be
+        // thrown away: the row kept no host and stayed in 'waiting' (the TV
+        // going on showing its pairing code), while this device believed it
+        // was the host and every button it offered was refused in silence.
+        const { data: claimed, error: claimError } = await supabase
           .from('tv_sessions')
-          .update({ 
+          .update({
             host_user_id: hostIdToStore,
             is_paired: true,
             status: 'paired'  // Use 'paired' for DB (constraint-compatible)
           })
-          .eq('id', session.id);
+          .eq('id', session.id)
+          .select('host_user_id');
+        if (claimError || !claimed?.length) {
+          tvLogError('joinSession', `could not claim the session as host: ${claimError?.message ?? 'no row'}`);
+          toast.error(t('extra.tvStartGameFailed'));
+          return false;
+        }
       }
 
       // ENFORCE UNIQUE NICKNAMES: TV-mode identity is the normalized nickname
@@ -3947,13 +3995,21 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // stops a queued round starting twice (countdown, a beat of the first
       // question, countdown again) when a second call lands after
       // startPlaying has already moved on.
-      const { data: countdownRows } = await supabase
+      const { data: countdownRows, error: countdownError } = await supabase
         .from('tv_sessions')
         .update({ status: 'countdown' })
         .eq('id', state.sessionId)
         .eq('status', 'round-intro')
         .select('id');
 
+      if (countdownError) {
+        // Not the same thing as a duplicate tap, and it used to be reported
+        // as one: the host read "already moved on" in a log they cannot see
+        // and watched a button do nothing.
+        tvLogError('markReady', `countdown write rejected: ${countdownError.message}`);
+        toast.error(t('extra.tvStartGameFailed'));
+        return;
+      }
       if (!countdownRows?.length) {
         console.log('[markReady] ⏭️ Session already moved on - countdown write skipped (round did not restart)');
         return;
@@ -4030,11 +4086,12 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       nextRoundInFlightRef.current = true;
       tvLog('startNextRound: phase is results, calling startNextRoundFromQueueIfAny');
       try {
-        const started = await startNextRoundFromQueueIfAny();
-        if (!started) {
-          tvLog('startNextRound: no more rounds in queue');
+        const outcome = await startNextRoundFromQueueIfAny();
+        if (!outcome.started) {
+          tvLog('startNextRound: no next round', { reason: outcome.reason });
           const { toast } = await import('sonner');
-          toast(t('extra.tvRoundsCompleted'));
+          if (outcome.reason === "failed") toast.error(t('extra.tvNextRoundFailed'));
+          else toast(t('extra.tvRoundsCompleted'));
         }
       } finally {
         nextRoundInFlightRef.current = false;

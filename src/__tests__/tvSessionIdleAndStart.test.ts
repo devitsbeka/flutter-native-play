@@ -34,9 +34,14 @@ const codeOf = (src: string) =>
 
 describe("which phases may be called stalled", () => {
   it("times the phases that advance on their own", () => {
-    for (const phase of ["countdown", "question", "playing", "reveal", "round-intro"]) {
+    for (const phase of ["countdown", "question", "playing", "reveal"]) {
       expect(tvPhaseCanStall(phase), phase).toBe(true);
     }
+    // round-intro is NOT one of them: it waits for the host to tap "I'm
+    // ready", and the host is the only device that can leave it. Ejecting
+    // them after a minute of reading the category out to the room left the
+    // session stuck for everybody (tvNeverStallsOnOneDevice.test.ts).
+    expect(tvPhaseCanStall("round-intro")).toBe(false);
   });
 
   it("never times a phase that is waiting for a person", () => {

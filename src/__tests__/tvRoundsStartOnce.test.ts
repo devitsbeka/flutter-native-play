@@ -46,8 +46,8 @@ describe("a queued round leaves the queue only once the session has started it",
 describe("the next round is advanced once, from a round that can be left", () => {
   it("one advance in flight, whoever asked; a duplicate is 'started', not 'ended'", () => {
     expect(ctx).toMatch(/const queueAdvanceInFlightRef = useRef\(false\);/);
-    expect(ctx).toMatch(/const advanceToNextQueuedRound = useCallback\(async \(\) => \{\s*\n\s*if \(!isHost\) return false;/);
-    expect(ctx).toMatch(/const startNextRoundFromQueueIfAny = useCallback\(async \(\) => \{\s*\n\s*if \(queueAdvanceInFlightRef\.current\) \{[\s\S]*?return true;\s*\n\s*\}\s*\n\s*queueAdvanceInFlightRef\.current = true;\s*\n\s*try \{\s*\n\s*return await advanceToNextQueuedRound\(\);\s*\n\s*\} finally \{\s*\n\s*queueAdvanceInFlightRef\.current = false;/);
+    expect(ctx).toMatch(/const advanceToNextQueuedRound = useCallback\(async \(\): Promise<QueueAdvanceResult> => \{\s*\n\s*if \(!isHost\) return \{ started: false, reason: "failed" \};/);
+    expect(ctx).toMatch(/const startNextRoundFromQueueIfAny = useCallback\(async \(\): Promise<QueueAdvanceResult> => \{\s*\n\s*if \(queueAdvanceInFlightRef\.current\) \{[\s\S]*?return \{ started: true \};\s*\n\s*\}\s*\n\s*queueAdvanceInFlightRef\.current = true;\s*\n\s*try \{\s*\n\s*return await advanceToNextQueuedRound\(\);\s*\n\s*\} finally \{\s*\n\s*queueAdvanceInFlightRef\.current = false;/);
   });
 
   it("the round number rides the same write as the status, behind a CAS on the phase being left", () => {
@@ -61,7 +61,7 @@ describe("the next round is advanced once, from a round that can be left", () =>
     expect(guard).toBeLessThan(write);
     // A write that matched nothing answers by what the session is doing now.
     expect(ctx).toMatch(/const live = \['round-intro', 'countdown', 'playing', 'question'\]\.includes\(now\?\.status \?\? ''\);/);
-    expect(ctx).toMatch(/return live;/);
+    expect(ctx).toMatch(/return live \? \{ started: true \} : \{ started: false, reason: "failed" \};/);
   });
 
   it("the host's own state follows the write before the queue tidy-up", () => {
@@ -75,7 +75,10 @@ describe("the next round is advanced once, from a round that can be left", () =>
 
 describe("a host left behind between rounds catches up", () => {
   it("the sync poll resyncs a host still on a question while the session is in intro or countdown", () => {
-    expect(ctx).toMatch(/isHostRef\.current &&\s*\n\s*\(dbPhase === 'round-intro' \|\| dbPhase === 'countdown'\) &&\s*\n\s*\(s\.phase === 'question' \|\| s\.phase === 'reveal'\)\s*\n\s*\) \{[\s\S]*?refetchSessionData\(s\.sessionId\);\s*\n\s*return;/);
+// Widened since, to every waiting screen a host can be left on
+    // (tvNeverStallsOnOneDevice.test.ts).
+    expect(ctx).toMatch(/const sessionStartedARound = dbPhase === 'round-intro' \|\| dbPhase === 'countdown';/);
+    expect(ctx).toMatch(/if \(isHostRef\.current && sessionStartedARound && stillOnTheOldScreen\) \{[\s\S]*?refetchSessionData\(s\.sessionId\);\s*\n\s*return;/);
   });
 
   it("and the refetch applies an intro at question 0 even with a stale round number", () => {

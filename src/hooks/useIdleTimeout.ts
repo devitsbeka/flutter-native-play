@@ -51,8 +51,18 @@ export const SELF_ADVANCING_TV_PHASES = [
   'question',
   'playing',
   'reveal',
-  'round-intro',
 ] as const;
+
+/**
+ * 'round-intro' is NOT on that list, and that is the point of the list.
+ *
+ * The round intro waits for the host to tap "I'm ready" — a human, reading
+ * the category out to the room, pouring a drink, taking a call. It was
+ * timed like a phase that advances on its own, so a minute of that ejected
+ * the host, and the host is the ONLY device that can write the countdown
+ * that leaves this phase. The session was then stuck for everybody, with
+ * nobody left who could move it.
+ */
 
 /** Whether a stalled `phase` means the session is stuck rather than waiting. */
 export const tvPhaseCanStall = (phase: string): boolean =>
