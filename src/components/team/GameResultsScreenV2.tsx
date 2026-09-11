@@ -1064,7 +1064,7 @@ export function GameResultsScreenV2() {
                 <div
                   className={cn(
                     "relative",
-                    first ? "mb-[34px]" : "mb-[24px]",
+                    first ? "mb-[40px]" : "mb-[29px]",
                     !p.isMe && "cursor-pointer active:scale-95 transition-transform",
                   )}
                   onClick={!p.isMe ? () => openProfile(p.user_id) : undefined}
@@ -1088,14 +1088,17 @@ export function GameResultsScreenV2() {
                       // Lower than the design's half-and-half: the emoji's
                       // ribbon rides above its disc, so a medal hung by its
                       // middle covered half the face (owner: "move down the
-                      // medals a little"). About a third of it over the ring.
-                      first ? "-bottom-[32px] text-[46px]" : "-bottom-[22px] text-[32px]",
+                      // medals a little", and again six pixels later). About
+                      // a quarter of it over the ring; the wrapper's margin
+                      // above reserves what hangs below, so the two move
+                      // together or the medal lands on the name.
+                      first ? "-bottom-[38px] text-[46px]" : "-bottom-[27px] text-[32px]",
                     )}
                   >
                     {placeMark(idx, p.rank)}
                   </span>
                 </div>
-                <span className="w-full text-center font-display text-[22px] font-bold leading-6 tracking-[-0.16px] text-white truncate">
+                <span className="w-full text-center font-display text-[20px] font-bold leading-6 tracking-[-0.16px] text-white truncate">
                   {p.isMe ? t("game.you") : p.nickname}
                 </span>
                 <PotLine net={netFor(p)} />

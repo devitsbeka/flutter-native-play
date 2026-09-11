@@ -100,7 +100,7 @@ describe("the place numbers are quieter than the medals", () => {
     // The design's sizes now (Figma 1157:10036, resultsScreenFigma.test.ts):
     // the winner's medal at 46px hanging off the ring, the two beside it
     // at 32, and "#4" at 20px in the tile's violet.
-    expect(results).toMatch(/first \? "-bottom-\[32px\] text-\[46px\]" : "-bottom-\[22px\] text-\[32px\]"/);
+    expect(results).toMatch(/first \? "-bottom-\[38px\] text-\[46px\]" : "-bottom-\[27px\] text-\[32px\]"/);
     // The rows from fourth down keep the place at 20px, in the list's pale
     // gold rather than the old tile's violet.
     expect(results).toMatch(/w-8 shrink-0 text-center font-display text-\[20px\] font-bold leading-none text-\[#ffe9a8\]/);

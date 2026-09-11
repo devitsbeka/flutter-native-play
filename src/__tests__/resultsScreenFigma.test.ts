@@ -44,12 +44,12 @@ describe("the podium", () => {
     // A third of the medal over the ring, not half: the emoji's ribbon
     // rides above its disc and covered the face (owner: "move down the
     // medals a little they are covering half avatars").
-    expect(results).toMatch(/"absolute left-1\/2 -translate-x-1\/2 leading-none",\s*\n(\s*\/\/[^\n]*\n)*\s*first \? "-bottom-\[32px\] text-\[46px\]" : "-bottom-\[22px\] text-\[32px\]"/);
-    expect(results).toMatch(/first \? "mb-\[34px\]" : "mb-\[24px\]"/);
+    expect(results).toMatch(/"absolute left-1\/2 -translate-x-1\/2 leading-none",\s*\n(\s*\/\/[^\n]*\n)*\s*first \? "-bottom-\[38px\] text-\[46px\]" : "-bottom-\[27px\] text-\[32px\]"/);
+    // The margin above reserves what hangs below, so it moves with the\n    // medal: 38 + 2 and 27 + 2.\n    expect(results).toMatch(/first \? "mb-\[40px\]" : "mb-\[29px\]"/);
   });
 
   it("the name at 22px display, then the place's coins", () => {
-    expect(results).toMatch(/w-full text-center font-display text-\[22px\] font-bold leading-6 tracking-\[-0\.16px\] text-white truncate/);
+    expect(results).toMatch(/w-full text-center font-display text-\[20px\] font-bold leading-6 tracking-\[-0\.16px\] text-white truncate/);
     expect(results).toMatch(/<PotLine net=\{netFor\(p\)\} \/>/);
   });
 
