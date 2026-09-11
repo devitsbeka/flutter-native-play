@@ -15,7 +15,7 @@ import { MatchSummarySheet } from "@/components/team/MatchSummarySheet";
 import { PersonAskModal } from "@/components/shared/PersonAskModal";
 import { JoinRequestRoomCard } from "@/components/team/JoinRequestGate";
 import { RematchMatchCard } from "@/components/team/RematchGate";
-import { RematchWaitSheet } from "@/components/team/RematchWaitSheet";
+import { RematchSheet } from "@/components/team/RematchSheet";
 import { LibraryCard } from "@/components/team/CategoryPickerModal";
 import { RoundOrderModal } from "@/components/team/RoundOrderModal";
 import { RoomTitle } from "@/components/lobby/UniversalLobby";
@@ -247,19 +247,26 @@ export default function HomeShot() {
       </div>
     );
   }
-  if (params.get("view") === "rematch-wait") {
-    // The host's side: who said yes, and Start with them.
+  if (params.get("view") === "rematch-wait" || params.get("view") === "rematch-ask") {
+    // The rematch sheet, in both of its states: the question (the table, the
+    // rounds, the stake) and the answers under the same faces.
+    const asked = params.get("view") === "rematch-wait";
     return (
       <div className="h-[100dvh] w-full bg-[#e9dcf7]">
-        <RematchWaitSheet
+        <RematchSheet
           open
+          phase={asked ? "asked" : "ask"}
+          winnerName="Gloria"
+          rounds={[{ name: "Random", iconSlug: "mystery-box", categoryId: null }]}
+          questionsPerRound={5}
           seats={[
-            { user_id: "1", nickname: "TriviaMaste", avatar_url: FACE, answer: "ready" },
-            { user_id: "2", nickname: "Gloria", avatar_url: null, answer: "waiting" },
-            { user_id: "3", nickname: "Marco", avatar_url: null, answer: "declined" },
+            { user_id: "1", nickname: "TriviaMaste", avatar_url: FACE, answer: asked ? "ready" : "waiting", online: true },
+            { user_id: "2", nickname: "Gloria", avatar_url: null, answer: "waiting", online: true, isWinner: true },
+            { user_id: "3", nickname: "Marco", avatar_url: null, answer: asked ? "declined" : "waiting" },
           ]}
           stake={500}
           onCancel={noop}
+          onAsk={noop}
           onStart={noop}
         />
       </div>

@@ -77,7 +77,9 @@ describe("where Create goes", () => {
     expect(lobby).toMatch(/onPress: offerCreate \? handleCreatePress : handleStartOrPick,/);
     // Create's confirm still ends in handleDoneCreating; the same sheet in
     // its rematch dress ends in the ask instead (rematchAskedAtStart.test).
-    expect(lobby).toMatch(/setShowMatchSummary\(false\);\s*\n\s*if \(askingTable\) void askTableForRematch\(\);\s*\n\s*else handleDoneCreating\(\);/);
+    // Create's summary confirms Create, and nothing else: the rematch has
+    // its own sheet (rematchIsOneSheet.test.ts).
+    expect(lobby).toMatch(/setShowMatchSummary\(false\);\s*\n\s*handleDoneCreating\(\);/);
   });
 
   it("and the hub reads that tab off the URL, which is why a param is enough", () => {

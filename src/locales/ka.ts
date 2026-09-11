@@ -2571,6 +2571,8 @@ export const ka = {
     rematchGatePlay: "თამაში",
     rematchGateLeave: "გასვლა",
     rematchWaitTitle: "რევანში შეთავაზებულია",
+    rematchWonTitle: "{name} მოიგო!",
+    rematchWaiting: "ველოდებით…",
     duelTitle: "Trivia King-ის წინააღმდეგ",
     duelOpponent: "Trivia King",
     duelWin: "Trivia King დაამარცხე!",

@@ -33,11 +33,11 @@ describe("Create opens the summary; Start opens the match", () => {
     expect(lobby).toMatch(/onPress: offerCreate \? handleCreatePress : handleStartOrPick,/);
   });
 
-  it("and the sheet's own button finishes what Create began - or asks the table, on a later match", () => {
-    // Start on a later match opens the same sheet in its rematch dress
-    // (rematchAskedAtStart.test); Create's confirm is unchanged.
+  it("and the sheet's own button finishes what Create began", () => {
+    // Only that: a later match asks the table on the rematch's own sheet
+    // (rematchIsOneSheet.test), so this confirm has one job again.
     expect(lobby).toMatch(
-      /onConfirm=\{\(\) => \{\s*setShowMatchSummary\(false\);\s*if \(askingTable\) void askTableForRematch\(\);\s*else handleDoneCreating\(\);\s*\}\}/,
+      /onConfirm=\{\(\) => \{\s*setShowMatchSummary\(false\);\s*handleDoneCreating\(\);\s*\}\}/,
     );
     // Change closes it and leaves the host in the lobby, still editable.
     expect(lobby).toMatch(/onChange=\{\(\) => setShowMatchSummary\(false\)\}/);
@@ -65,12 +65,11 @@ describe("Create opens the summary; Start opens the match", () => {
     const gate = lobby.slice(lobby.indexOf("const handleStartOrPick = () => {"), lobby.indexOf("const summaryRounds = ["));
     expect(gate).toMatch(/if \(seatedPlayers >= 2 && !canCoverStake\) \{\s*setShowNoStake\(true\);\s*return;\s*\}/);
     expect(gate).toMatch(/void handleStartGame\(\);/);
-    // The one detour left is a later match with people at the table, which
-    // asks them before it starts (rematchAskedAtStart.test) - never the
-    // create-time summary again.
-    const opens = gate.match(/setShowMatchSummary\(true\)/g) ?? [];
-    expect(opens).toHaveLength(1);
-    expect(gate).toMatch(/if \(asksTable\) \{\s*setAskingTable\(true\);\s*setShowMatchSummary\(true\);\s*return;\s*\}/);
+    // The one detour left is a later match with people at the table, and it
+    // goes to the rematch's own sheet (rematchAskedAtStart.test) — this
+    // summary belongs to Create, and Start never opens it at all.
+    expect(gate).not.toMatch(/setShowMatchSummary\(true\)/);
+    expect(gate).toMatch(/if \(asksTable\) \{[\s\S]*?setShowRematch\(true\);/);
   });
 
   it("lists the rounds in play order, the held round first", () => {

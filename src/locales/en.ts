@@ -2569,6 +2569,8 @@ export const en: KaTranslations = {
     rematchGatePlay: "Play",
     rematchGateLeave: "Leave",
     rematchWaitTitle: "Rematch asked",
+    rematchWonTitle: "{name} won!",
+    rematchWaiting: "Waiting…",
     duelTitle: "Versus Trivia King",
     duelOpponent: "Trivia King",
     duelWin: "You beat Trivia King!",

@@ -24,7 +24,7 @@ const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 const lobby = read("src/components/team/RoomLobbyV2.tsx");
 const util = read("src/utils/rematchRequests.ts");
 const gate = read("src/components/team/RematchGate.tsx");
-const wait = read("src/components/team/RematchWaitSheet.tsx");
+const wait = read("src/components/team/RematchSheet.tsx");
 const results = read("src/components/team/GameResultsScreenV2.tsx");
 
 describe("the lobby's Start asks the table on a later match", () => {
@@ -41,21 +41,23 @@ describe("the lobby's Start asks the table on a later match", () => {
     expect(ask).toMatch(/rounds: summaryRounds\.map\(\(r\) => \(\{ name: r\.name, icon_slug: r\.iconSlug \}\)\),/);
     expect(ask).toMatch(/questions_per_round: playsUserTrivia \? null : questionsPerRound\(currentRoom\.total_questions\),/);
     expect(ask).toMatch(/stake: REWARDS\.GAME_STAKE,/);
-    expect(ask).toMatch(/setShowRematchWait\(true\);/);
+    expect(ask).toMatch(/setRematchAsked\(true\);/);
     // The card carries them.
     expect(util).toMatch(/rounds\?: \{ name: string; icon_slug: string \| null \}\[\];/);
     expect(util).toMatch(/\.\.\.\(match \?\? \{\}\),/);
   });
 
-  it("Start opens the summary in its rematch dress, and its button proposes rather than creates", () => {
-    // Create's sheet is untouched: the rematch mode is set by Start alone
-    // and cleared whenever the sheet closes.
-    expect(lobby).toMatch(/if \(asksTable\) \{\s*setAskingTable\(true\);\s*setShowMatchSummary\(true\);\s*return;\s*\}\s*void handleStartGame\(\);/);
-    expect(lobby).toMatch(/if \(!showMatchSummary\) setAskingTable\(false\);/);
-    expect(lobby).toMatch(/rematch=\{askingTable\}/);
+  it("Start opens the rematch's own sheet, which asks before it starts", () => {
+    // It used to dress the match summary up as a rematch, which could show
+    // neither the table nor its answers. One sheet for the whole thing now
+    // (rematchIsOneSheet.test.ts); Create's summary is Create's alone.
+    expect(lobby).toMatch(/if \(asksTable\) \{[\s\S]*?setRematchAsked\(false\);\s*\n\s*setShowRematch\(true\);\s*\n\s*return;\s*\n\s*\}/);
+    expect(lobby).toMatch(/onAsk=\{\(\) => void askTableForRematch\(\)\}/);
+    expect(lobby).not.toMatch(/askingTable/);
     const sheet = read("src/components/team/MatchSummarySheet.tsx");
-    expect(sheet).toMatch(/rematch \? t\("lobby\.summaryRematchTitle"\) : t\("lobby\.summaryTitle"\)/);
-    expect(sheet).toMatch(/rematch \? \(\s*t\("lobby\.summaryAskTable"\)\s*\) : \(\s*t\("extra\.createBtn"\)\s*\)/);
+    expect(sheet).not.toMatch(/rematch\?: boolean/);
+    expect(sheet).not.toMatch(/t\("lobby\.summaryRematchTitle"\)/);
+    expect(sheet).toMatch(/\{t\("lobby\.summaryTitle"\)\}/);
   });
 
   it("the results screen no longer asks", () => {
@@ -84,8 +86,8 @@ describe("the host starts with whoever said yes", () => {
   it("the wait sheet shows the table's answers and the pot for those in", () => {
     expect(wait).toMatch(/const ready = seats\.filter\(\(s\) => s\.answer === "ready"\)\.length;/);
     // First place's share of the table's pot, not the pot (roomPot.test.ts).
-    expect(wait).toMatch(/\{\(firstPlaceShare\(playing, stake\) \?\? 0\)\.toLocaleString\(\)\}/);
-    expect(wait).toMatch(/disabled=\{starting \|\| ready === 0\}/);
+    expect(wait).toMatch(/showsPot \? \(firstPlaceShare\(playing, stake\) \?\? 0\) : stake/);
+    expect(wait).toMatch(/disabled=\{starting \|\| \(asked && ready === 0\)\}/);
     // Who said what: see rematchAnswersAreShown.test.ts.
     expect(lobby).toMatch(/answer: !seated \? "declined" : \(seated\.status as string\) === "ready" \? "ready" : "waiting",/);
   });

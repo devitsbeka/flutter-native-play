@@ -23,7 +23,7 @@ import { routeForRoom } from "@/utils/roomRoutes";
 import { OWN_TRIVIA_ICON_SLUG, ownTriviaIconSrc, ownTriviaKind, roomPlaysOwnTrivia, roundIconSlug } from "@/utils/ownTriviaRound";
 import { isUndecidedRound, UNDECIDED_ICON_SLUG } from "@/utils/undecidedRound";
 import { MatchSummarySheet } from "./MatchSummarySheet";
-import { RematchWaitSheet, type RematchSeat } from "./RematchWaitSheet";
+import { RematchSheet, type RematchSeat } from "./RematchSheet";
 import { sendRematchRequest, type RematchPick } from "@/utils/rematchRequests";
 import { siteUrl } from "@/config/site";
 import { inviteLinkPath } from "@/utils/inviteLink";
@@ -195,7 +195,9 @@ export function RoomLobbyV2() {
   const canCoverStake = coins >= REWARDS.GAME_STAKE;
   const [showNoStake, setShowNoStake] = useState(false);
   const [showMatchSummary, setShowMatchSummary] = useState(false);
-  const [showRematchWait, setShowRematchWait] = useState(false);
+  /** The rematch sheet, and whether the table has been asked yet. */
+  const [showRematch, setShowRematch] = useState(false);
+  const [rematchAsked, setRematchAsked] = useState(false);
   /**
    * Who was ASKED, taken when the ask goes out.
    *
@@ -206,15 +208,6 @@ export function RoomLobbyV2() {
    * remembers the table; the room says what each of them has answered since.
    */
   const [askedSeats, setAskedSeats] = useState<Omit<RematchSeat, "answer">[]>([]);
-  /**
-   * Why the summary sheet is open: Create (the room, once) or Start on a
-   * later match, which asks the table rather than commits. Set by Start,
-   * cleared whenever the sheet closes, so Create never inherits it.
-   */
-  const [askingTable, setAskingTable] = useState(false);
-  useEffect(() => {
-    if (!showMatchSummary) setAskingTable(false);
-  }, [showMatchSummary]);
   const [isStarting, setIsStarting] = useState(false);
   const [isTVModeEnabled, setIsTVModeEnabled] = useState(() => searchParams.get("tvMode") === "true");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -1470,8 +1463,14 @@ export function RoomLobbyV2() {
       // rounds, the question count and the stake, and "Ask for rematch"
       // where Create was (owner's ask; see askTableForRematch).
       if (asksTable) {
-        setAskingTable(true);
-        setShowMatchSummary(true);
+        // The rematch has its own sheet, and it is the SAME sheet from the
+        // question to the start: the table's faces, the rounds and the
+        // stake, then the answers under those faces (owner: "instead what
+        // we show on rematch flow we should show like on screenshot 2 than
+        // show waiting ... and when i or more players would confirm to play
+        // new game we show start game button").
+        setRematchAsked(false);
+        setShowRematch(true);
         return;
       }
       void handleStartGame();
@@ -1812,7 +1811,9 @@ export function RoomLobbyV2() {
     setAskedSeats(
       tableToAsk.map((p) => ({ user_id: p.user_id, nickname: p.nickname, avatar_url: p.avatar_url })),
     );
-    setShowRematchWait(true);
+    // Same sheet, next state: the faces the host was just looking at start
+    // answering under themselves.
+    setRematchAsked(true);
   };
 
   /**
@@ -1828,8 +1829,43 @@ export function RoomLobbyV2() {
     return {
       ...seat,
       answer: !seated ? "declined" : (seated.status as string) === "ready" ? "ready" : "waiting",
+      online: onlineInRoom.has(seat.user_id),
     };
   });
+
+  /**
+   * Who took the last round, for the sheet's title.
+   *
+   * `score` is this round's, and it is zeroed when the next one starts — so
+   * between games it still holds what the results screen showed. A clear
+   * single best above zero is a winner; a tie, or a table that has not
+   * played, is nobody, and the sheet asks its plain question instead of
+   * naming the wrong person.
+   */
+  const lastWinner = (() => {
+    const scored = [...participants]
+      .filter((p) => (p.score ?? 0) > 0)
+      .sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
+    if (scored.length === 0) return null;
+    if (scored.length > 1 && (scored[0].score ?? 0) === (scored[1].score ?? 0)) return null;
+    return scored[0];
+  })();
+
+  /**
+   * The table as the ask shows it: everybody who would be asked, before any
+   * of them has been. The answers only exist once the cards are out, so
+   * every face here is simply waiting — the sheet draws them plain.
+   */
+  const tableSeats: RematchSeat[] = tableToAsk.map((p) => ({
+    user_id: p.user_id,
+    nickname: p.nickname,
+    avatar_url: p.avatar_url,
+    answer: "waiting",
+    online: onlineInRoom.has(p.user_id),
+    isWinner: p.user_id === lastWinner?.user_id,
+  }));
+
+
 
   const startWithWhoSaidYes = async () => {
     if (!currentRoom) return;
@@ -1861,7 +1897,7 @@ export function RoomLobbyV2() {
           if (error) console.error("[lobby] could not tell the removed seats", error);
         });
     }
-    setShowRematchWait(false);
+    setShowRematch(false);
     // Counted off the table as it stands AFTER the undecided left, not off
     // last render's gate: with nobody saying yes the host used to start a
     // solo round, which settles as practice, under a lobby that had shown a
@@ -2135,22 +2171,25 @@ export function RoomLobbyV2() {
         stake={REWARDS.GAME_STAKE}
         soloFree={seatedPlayers < 2}
         starting={isStarting}
-        rematch={askingTable}
         onChange={() => setShowMatchSummary(false)}
         onConfirm={() => {
           setShowMatchSummary(false);
-          if (askingTable) void askTableForRematch();
-          else handleDoneCreating();
+          handleDoneCreating();
         }}
       />
 
-      {/* The host's side of the ask: who said yes, and Start with them. */}
-      <RematchWaitSheet
-        open={showRematchWait}
-        seats={rematchSeats}
+      {/* The rematch, from the question to the start. */}
+      <RematchSheet
+        open={showRematch}
+        phase={rematchAsked ? "asked" : "ask"}
+        seats={rematchAsked ? rematchSeats : tableSeats}
+        winnerName={lastWinner ? (lastWinner.user_id === user?.id ? t("game.you") : lastWinner.nickname) : null}
+        rounds={summaryRounds}
+        questionsPerRound={playsUserTrivia ? null : questionsPerRound(currentRoom.total_questions)}
         stake={REWARDS.GAME_STAKE}
         starting={isStarting}
-        onCancel={() => setShowRematchWait(false)}
+        onCancel={() => setShowRematch(false)}
+        onAsk={() => void askTableForRematch()}
         onStart={() => void startWithWhoSaidYes()}
       />
 

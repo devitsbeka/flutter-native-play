@@ -19,6 +19,10 @@
  * One sheet, the same one the Play-on-TV pairing wears over the lobby, so
  * it reads as the lobby's own. Change closes it back onto the rules, with
  * everything still editable; Create is the tap that settles it.
+ *
+ * Create's sheet only, now: a rematch wears its own (RematchSheet), which
+ * carries the table's faces and their answers as well as the rounds — this
+ * one had been dressed up as that and could show neither.
  */
 
 import { motion, AnimatePresence } from "framer-motion";
@@ -53,11 +57,6 @@ interface MatchSummarySheetProps {
    */
   soloFree: boolean;
   starting?: boolean;
-  /**
-   * A later match with people at the table: Start asks them first, so the
-   * sheet says so and its button proposes rather than starts.
-   */
-  rematch?: boolean;
   onChange: () => void;
   onConfirm: () => void;
 }
@@ -69,7 +68,6 @@ export function MatchSummarySheet({
   stake,
   soloFree,
   starting = false,
-  rematch = false,
   onChange,
   onConfirm,
 }: MatchSummarySheetProps) {
@@ -97,10 +95,10 @@ export function MatchSummarySheet({
               <div className="mb-6 flex flex-col items-center text-center">
                 <img src={buzzerIcon} alt="" className="h-20 w-20 shrink-0 object-contain" />
                 <h3 className="mt-3 font-display text-[24px] font-bold leading-[30px] text-[#402666]">
-                  {rematch ? t("lobby.summaryRematchTitle") : t("lobby.summaryTitle")}
+                  {t("lobby.summaryTitle")}
                 </h3>
                 <p className="mt-2 max-w-[300px] text-[14px] leading-[20px] text-[#402666]/70">
-                  {rematch ? t("lobby.summaryRematchHint") : t("lobby.summaryHint")}
+                  {t("lobby.summaryHint")}
                 </p>
               </div>
 
@@ -156,13 +154,7 @@ export function MatchSummarySheet({
                   {t("lobby.summaryChange")}
                 </ChunkyButton>
                 <ChunkyButton variant="primary" size="md" className="flex-1" onClick={onConfirm} disabled={starting}>
-                  {starting ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : rematch ? (
-                    t("lobby.summaryAskTable")
-                  ) : (
-                    t("extra.createBtn")
-                  )}
+                  {starting ? <Loader2 className="h-4 w-4 animate-spin" /> : t("extra.createBtn")}
                 </ChunkyButton>
               </div>
             </div>

@@ -22,7 +22,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
-const wait = read("src/components/team/RematchWaitSheet.tsx");
+const wait = read("src/components/team/RematchSheet.tsx");
 const lobby = read("src/components/team/RoomLobbyV2.tsx");
 
 describe("a seat's answer", () => {
@@ -39,7 +39,8 @@ describe("a seat's answer", () => {
     // reads as the person the host was just sitting with.
     expect(wait).toMatch(/"block h-14 w-14 overflow-hidden rounded-full bg-\[#e9d8ff\]",/);
     expect(wait).toMatch(/shadow-\[0px_0px_0px_2px_rgba\(148,163,184,0\.75\)\]/);
-    expect(wait).toMatch(/said !== "ready" && "opacity-45 grayscale",/);
+    expect(wait).toMatch(/dimmed && "opacity-45 grayscale",/);
+    expect(wait).toMatch(/const dimmed = asked && said !== "ready";/);
     // Through SafeAvatarImage: a build-hashed avatar_url from an older
     // deploy 404s, and a torn-page glyph is not a face.
     expect(wait).toMatch(/<SafeAvatarImage/);
@@ -81,7 +82,8 @@ describe("what the lobby passes it", () => {
     expect(lobby).toMatch(
       /answer: !seated \? "declined" : \(seated\.status as string\) === "ready" \? "ready" : "waiting",/,
     );
-    expect(lobby).toMatch(/seats=\{rematchSeats\}/);
+    // The ask shows the table; once asked, the same faces carry answers.
+    expect(lobby).toMatch(/seats=\{rematchAsked \? rematchSeats : tableSeats\}/);
   });
 
   it("which is live because the room's own channel keeps participants live", () => {

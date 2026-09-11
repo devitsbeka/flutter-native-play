@@ -104,7 +104,7 @@ describe("a player is told before the round, not after", () => {
 
   it("and so do the preview and rematch sheets, from the same helper", () => {
     const preview = read("src/components/team/RoomPreviewSheet.tsx");
-    const rematch = read("src/components/team/RematchWaitSheet.tsx");
+    const rematch = read("src/components/team/RematchSheet.tsx");
     expect(preview).toMatch(/const pot = firstPlaceShare\(players, stake\);/);
     expect(rematch).toMatch(/firstPlaceShare\(playing, stake\) \?\? 0/);
     expect(preview).not.toMatch(/players \* stake/);
