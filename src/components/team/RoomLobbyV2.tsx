@@ -758,8 +758,28 @@ export function RoomLobbyV2() {
       return;
     }
     if (isPublic === null) return;
-    // The list it lands on is asked again: the Public tab's cache was up
-    // to ten seconds old, and the room just published was not on it.
+    /**
+     * BOTH lists are asked again, for BOTH kinds of room.
+     *
+     * Only the Public tab was refreshed here, and only for a public room —
+     * so the whole private half of Create landed on a list rendered from
+     * cache. `useMyRooms` holds its answer for 30s and its realtime
+     * subscription is ref-counted by mounted consumers, which means it is
+     * gone for the entire time the host is in the lobby: the room's INSERT
+     * and the `is_draft` UPDATE both happen with nothing listening. Create
+     * then navigated to /team?tab=private, the list remounted still fresh,
+     * and showed the rooms from before the room existed.
+     *
+     * From the host's side that is a Create that created nothing — they had
+     * made four real rooms, every one of them settled correctly on the row,
+     * and seen none of them (owner: "after clicking create it doesn't
+     * create private room"). The delete path a hundred lines up already
+     * invalidates both keys; this one had drifted.
+     *
+     * A public room needs the my-rooms half too — the Private tab keeps the
+     * rooms you host, whichever kind they are.
+     */
+    void queryClient.invalidateQueries({ queryKey: [MY_ROOMS_KEY] });
     if (isPublic) void queryClient.invalidateQueries({ queryKey: PUBLIC_ROOMS_KEY });
     rememberPressedCreate(currentRoom?.id);
     setPressedCreate(true);

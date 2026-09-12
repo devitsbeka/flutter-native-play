@@ -87,3 +87,34 @@ describe("publishing the draft", () => {
     expect(lobby).toContain('toast.success(t("extra.roomCreatedToast"))');
   });
 });
+
+/**
+ * And the list Create lands on is asked again — for BOTH kinds of room.
+ *
+ * The private half of Create navigated to /team?tab=private without
+ * touching the my-rooms cache. That cache is 30s fresh and its realtime
+ * subscription is ref-counted by mounted consumers, so it is unsubscribed
+ * for the whole time the host is in the lobby: neither the room's INSERT
+ * nor the `is_draft` UPDATE is heard. The tab remounted still fresh and
+ * rendered the rooms from before the room existed — four real, correctly
+ * settled rooms made and none of them visible, which reads exactly like
+ * "create doesn't create a room".
+ */
+describe("the list Create lands on", () => {
+  it("is invalidated for every room, not just a public one", () => {
+    const create = lobby.slice(lobby.indexOf("const handleDoneCreating"));
+    const body = create.slice(0, create.indexOf("\n  };"));
+    const myRooms = body.indexOf("invalidateQueries({ queryKey: [MY_ROOMS_KEY] })");
+    expect(myRooms, "the my-rooms cache is never refreshed on Create").toBeGreaterThan(-1);
+    // Unconditional: not tucked behind `if (isPublic)` the way the public
+    // one is. The Private tab keeps the rooms you host, whichever kind.
+    const publicOnly = body.indexOf("if (isPublic) void queryClient.invalidateQueries");
+    expect(publicOnly).toBeGreaterThan(myRooms);
+  });
+
+  it("refreshes before it navigates or stays", () => {
+    const create = lobby.slice(lobby.indexOf("const handleDoneCreating"));
+    const body = create.slice(0, create.indexOf("\n  };"));
+    expect(body.indexOf("[MY_ROOMS_KEY]")).toBeLessThan(body.indexOf("enoughPlayersRef.current"));
+  });
+});
