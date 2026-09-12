@@ -19,6 +19,7 @@
  */
 
 import type { ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { RoomCardPlayButton, type RoomCardTone } from "@/components/team/RoomCardPlayButton";
 import { CategoryArtwork } from "@/components/shared/CategoryArtwork";
@@ -130,7 +131,20 @@ export function RoomPreviewSheet({
   // No queue is a mixed round, not no round (MIXED_ROUND).
   const shown = rounds.length > 0 ? rounds : [MIXED_ROUND];
 
-  return (
+  /**
+   * Drawn on <body>, not where it is written.
+   *
+   * The sheet is `fixed inset-0 z-[120]` and the bottom nav is `z-50`, so
+   * on the page it wins — but z-index only ranks siblings within a
+   * stacking context, and the home's feed sits in a `relative z-10`
+   * wrapper (MobileHomeScroll). Everything the rail renders is ranked
+   * inside THAT, at 10, and the nav sat over the sheet with its green
+   * play button across it (owner: "nav bar covering modal when i click
+   * on room cards on main page"). A portal to <body> leaves every
+   * ancestor context behind — the same fix the other overlays these
+   * sections open already carry (game-modal, InviteFriendsModal).
+   */
+  const sheet = (
     <AnimatePresence>
       {open && (
         <motion.div
@@ -258,4 +272,6 @@ export function RoomPreviewSheet({
       )}
     </AnimatePresence>
   );
+
+  return typeof document === "undefined" ? sheet : createPortal(sheet, document.body);
 }
