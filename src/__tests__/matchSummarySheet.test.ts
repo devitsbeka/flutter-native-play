@@ -58,7 +58,11 @@ describe("Create opens the summary; Start opens the match", () => {
     // The trip to the rooms list is for finding a second player. With one
     // already here it would carry the host out of a room that is ready to
     // start, past the person waiting in it.
-    expect(lobby).toMatch(/if \(enoughPlayersRef\.current\) return;\s*\n\s*exitRoom\(\);/);
+    // And staying put says so now — the room was made, and a button that
+    // only changed a word was the whole confirmation the host got.
+    expect(lobby).toMatch(
+      /if \(enoughPlayersRef\.current\) \{\s*\n\s*toast\.success\(t\("extra\.roomCreatedToast"\)\);\s*\n\s*return;\s*\n\s*\}\s*\n\s*exitRoom\(\);/,
+    );
   });
 
   it("Start no longer detours through it on the first match — the stake check still stands", () => {

@@ -101,7 +101,13 @@ describe("Create and Start over a failed publish", () => {
 
   it("Create does not settle, and Start does not start", () => {
     const create = lobby.slice(lobby.indexOf("const handleDoneCreating"), lobby.indexOf("};", lobby.indexOf("const handleDoneCreating")));
-    expect(create).toMatch(/const isPublic = await publishDraft\(\);\s*\n\s*if \(isPublic === null\) return;/);
+    // The call sits in a try now, so the two are no longer adjacent: a
+    // publish that THROWS is caught and said out loud instead of vanishing.
+    expect(create).toMatch(/isPublic = await publishDraft\(\);/);
+    expect(create).toMatch(/if \(isPublic === null\) return;/);
+    expect(create.indexOf("isPublic = await publishDraft()")).toBeLessThan(
+      create.indexOf("if (isPublic === null) return;"),
+    );
     expect(create.indexOf("if (isPublic === null) return;")).toBeLessThan(create.indexOf("rememberPressedCreate("));
     const start = lobby.slice(lobby.indexOf("const handleStartGame"), lobby.indexOf("enoughPlayersRef.current", lobby.indexOf("const handleStartGame")));
     expect(start).toMatch(/if \(\(await publishDraft\(\)\) === null\) return;/);

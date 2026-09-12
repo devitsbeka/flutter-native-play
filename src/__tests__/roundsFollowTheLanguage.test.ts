@@ -49,7 +49,11 @@ describe("the lobby", () => {
   });
 
   it("disables Start with the reason under it, and refuses the picker's own start too", () => {
-    expect(lobby).toMatch(/\(awaitingPlayers && !offerCreate\) \|\| !!unplayableRound,/);
+    // An unplayable round still kills BOTH arms of the button — Create's
+    // as well as Start's — because a room that cannot be played is not worth
+    // publishing either. Only the head-count moved to Start alone.
+    expect(lobby).toMatch(/\? isStarting \|\| !!unplayableRound/);
+    expect(lobby).toMatch(/: !canStartGame \|\| isStarting \|\| loading \|\| awaitingPlayers \|\| !!unplayableRound,/);
     expect(lobby).toMatch(/caption: unplayableRound\s*\n\s*\? t\("extra\.rlRoundNotInLanguage", \{ name: unplayableRound \}\)/);
     expect(lobby).toMatch(/if \(unplayableRoundRef\.current\) \{\s*\n\s*toast\.error\(t\("extra\.rlRoundNotInLanguage", \{ name: unplayableRoundRef\.current \}\)\);\s*\n\s*return;/);
   });

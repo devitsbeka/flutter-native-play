@@ -104,9 +104,16 @@ describe("the lobby", () => {
     // it; null when the write failed (draftsLiveOnTheRow.test.ts).
     expect(lobby).toMatch(/const publishDraft = async \(\): Promise<boolean \| null> => \{/);
     expect(lobby).toMatch(/\.\.\.\(wantsPublic && !alreadyPublic \? \{ is_public: true \} : \{\}\),/);
-    expect(lobby).toMatch(/const \{ error \} = await supabase\.from\("game_rooms"\)\.update\(patch\)\.eq\("id", currentRoom\.id\);/);
+    // `.select("id")` on it: PostgREST reports NO error for an update that
+    // matched no row, so the write is checked by what came back, not by the
+    // absence of a complaint (createIsNotGatedOnThePlayerList.test.ts).
+    expect(lobby).toMatch(
+      /const \{ data: settled, error \} = await supabase\s*\n\s*\.from\("game_rooms"\)\s*\n\s*\.update\(patch\)\s*\n\s*\.eq\("id", currentRoom\.id\)\s*\n\s*\.select\("id"\);/,
+    );
     const create = lobby.slice(lobby.indexOf("const handleDoneCreating"), lobby.indexOf("};", lobby.indexOf("const handleDoneCreating")));
-    expect(create).toMatch(/const isPublic = await publishDraft\(\);/);
+    // Declared above the try that calls it — a throw here used to be an
+  // unhandled rejection over a closed sheet, which is a tap that did nothing.
+    expect(create).toMatch(/isPublic = await publishDraft\(\);/);
     expect(create.indexOf("await publishDraft()")).toBeLessThan(create.indexOf("forgetDraftRoom("));
     expect(create).toMatch(/navigate\(`\/team\?tab=\$\{isPublic \? "public" : "private"\}`, \{ replace: true \}\);/);
     const start = lobby.slice(lobby.indexOf("const handleStartGame"), lobby.indexOf("enoughPlayersRef.current", lobby.indexOf("const handleStartGame")));

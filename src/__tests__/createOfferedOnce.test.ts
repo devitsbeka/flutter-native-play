@@ -149,7 +149,10 @@ describe("what the lobby does with it", () => {
 
   it("and the button goes back to a dead Start once it is", () => {
     expect(lobby).toMatch(
-      /disabled:\s*\n\s*!canStartGame \|\| isStarting \|\| loading \|\| \(awaitingPlayers && !offerCreate\) \|\| !!unplayableRound,/,
+      // Create and Start were split apart: Create is the host's own tap and
+      // no longer waits on the player list loading, Start still counts heads.
+      // See createIsNotGatedOnThePlayerList.test.ts.
+      /: !canStartGame \|\| isStarting \|\| loading \|\| awaitingPlayers \|\| !!unplayableRound,/,
     );
   });
 
@@ -167,7 +170,9 @@ describe("what the lobby does with it", () => {
   it("and the caption keeps explaining the wait either way", () => {
     // It hangs off awaitingPlayers, not the offer — a spent offer does not
     // make the room any less short of a player.
-    expect(lobby).toMatch(/: awaitingPlayers\s*\n\s*\? invitedPlayers > 0/);
+    // "…and !offerCreate": the wait belongs under Start. Under Create it
+    // contradicted a button that was ready and needed nobody.
+    expect(lobby).toMatch(/: awaitingPlayers && !offerCreate\s*\n\s*\? invitedPlayers > 0/);
   });
 });
 

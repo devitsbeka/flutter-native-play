@@ -638,13 +638,33 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
 
   // Fetch participants for current room with fresh profile data
   const fetchParticipants = useCallback(async (roomId: string) => {
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from("room_participants")
       .select("*")
       .eq("room_id", roomId)
       .order("joined_at", { ascending: true });
-    
-    if (!error && data) {
+
+    // One retry, and a word when it still fails.
+    //
+    // This read is the only thing that ever fills `participants`, and it used
+    // to drop its error on the floor: a single blip left the list empty with
+    // nothing scheduled to ask again, and everything downstream read that as
+    // "the room is empty" — including, until it was untangled, the host's own
+    // Create button. Better to try twice and say so than to be quietly wrong
+    // about who is in the room.
+    if (error) {
+      ({ data, error } = await supabase
+        .from("room_participants")
+        .select("*")
+        .eq("room_id", roomId)
+        .order("joined_at", { ascending: true }));
+    }
+    if (error) {
+      console.warn("[MultiplayerV2] could not read the room's players:", error.message);
+      return;
+    }
+
+    if (data) {
       if (data.length === 0) {
         setParticipants([]);
         return;

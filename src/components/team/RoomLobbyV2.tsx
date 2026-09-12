@@ -705,9 +705,18 @@ export function RoomLobbyV2() {
       ...(wantsPublic && !alreadyPublic ? { is_public: true } : {}),
     };
     if (Object.keys(patch).length === 0) return alreadyPublic;
-    const { error } = await supabase.from("game_rooms").update(patch).eq("id", currentRoom.id);
-    if (error) {
-      console.warn("[RoomLobbyV2] draft room was not settled:", error.message);
+    // `.select("id")`, so a write that CHANGED NOTHING is a failure rather
+    // than a success. An update whose filter matches no row — the room
+    // deleted underneath, a policy that refuses this host — comes back with
+    // no error at all in PostgREST, and Create then walked on as though it
+    // had settled the draft, leaving a room that says "Create" for ever.
+    const { data: settled, error } = await supabase
+      .from("game_rooms")
+      .update(patch)
+      .eq("id", currentRoom.id)
+      .select("id");
+    if (error || !settled?.length) {
+      console.warn("[RoomLobbyV2] draft room was not settled:", error?.message ?? "no row updated");
       toast.error(t("extra.errorOccurred"));
       return null;
     }
@@ -737,7 +746,17 @@ export function RoomLobbyV2() {
   const handleDoneCreating = async () => {
     // Published first, so the list it lands on is the one it is on. A
     // failed publish is said, and Create is not settled over it.
-    const isPublic = await publishDraft();
+    let isPublic: boolean | null = null;
+    try {
+      isPublic = await publishDraft();
+    } catch (err) {
+      // Anything thrown here used to be an unhandled rejection: the sheet
+      // had already closed, so the tap simply did nothing and said nothing
+      // (owner: "when i click create to create room - it does nothing").
+      console.error("[RoomLobbyV2] create failed", err);
+      toast.error(t("extra.errorOccurred"));
+      return;
+    }
     if (isPublic === null) return;
     // The list it lands on is asked again: the Public tab's cache was up
     // to ten seconds old, and the room just published was not on it.
@@ -750,7 +769,12 @@ export function RoomLobbyV2() {
     // go and find a second player; with somebody already here it would walk
     // the host out of a room that is ready to start, past the people
     // waiting in it. Then the footer is just Start.
-    if (enoughPlayersRef.current) return;
+    // Staying put is the other half of Create, and it used to be silent:
+    // the room was made, the button changed a word, and nothing said so.
+    if (enoughPlayersRef.current) {
+      toast.success(t("extra.roomCreatedToast"));
+      return;
+    }
     exitRoom();
     navigate(`/team?tab=${isPublic ? "public" : "private"}`, { replace: true });
   };
@@ -2116,18 +2140,40 @@ export function RoomLobbyV2() {
                     ? t("extra.createBtn")
                     : t("lobby.uStartGame"),
               onPress: offerCreate ? handleCreatePress : handleStartOrPick,
-              // Short of a second player, the button is either the one-time
-              // way out (enabled, above) or the plain truth: Start, dead
-              // until somebody else is here.
-              disabled:
-                !canStartGame || isStarting || loading || (awaitingPlayers && !offerCreate) || !!unplayableRound,
-              loading: isStarting,
+              /**
+               * Create and Start are disabled by DIFFERENT things.
+               *
+               * They shared one expression and it was Start's — `!canStartGame`,
+               * which is `participants.length >= 1`. But `participants` does
+               * not arrive with the room: `createRoom` sets `currentRoom` and
+               * returns, and the list comes from its own later fetch, one with
+               * no retry and no error branch (a failed read leaves it `[]` and
+               * nothing ever asks again). Until that lands — or for good, if it
+               * blipped — the host sat in the room they had just made, looking
+               * at a full-strength violet Create that swallowed every tap
+               * (owner: "i click create to create room - it does nothing").
+               *
+               * Create does not start a game. It publishes the draft and raises
+               * the summary, both of them the host's alone; who else has loaded
+               * is none of its business. Counting people is Start's job, and
+               * Start still does it.
+               */
+              disabled: offerCreate
+                ? isStarting || !!unplayableRound
+                : !canStartGame || isStarting || loading || awaitingPlayers || !!unplayableRound,
+              // A busy context spins instead of going quietly dead. `loading`
+              // is shared with createRoom/enterRoom, and it used to disable
+              // this button while showing nothing at all.
+              loading: isStarting || (loading && !offerCreate),
               icon: needsCategorySelection ? <Plus className="h-5 w-5" /> : undefined,
               // Still says why the game has not begun; it just sits under a
               // button that now leads somewhere instead of over a dead one.
+              // "Waiting for a second player" belongs under Start. Under
+              // Create it contradicts the button above it, which is ready
+              // and does not need anybody.
               caption: unplayableRound
                 ? t("extra.rlRoundNotInLanguage", { name: unplayableRound })
-                : awaitingPlayers
+                : awaitingPlayers && !offerCreate
                   ? invitedPlayers > 0
                     ? t("extra.rlWaitingOnInvites")
                     : t("extra.rlNeedsSecondPlayer")
