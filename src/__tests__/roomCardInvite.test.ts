@@ -60,7 +60,7 @@ describe("the room card's own invite", () => {
     const start = grid.lastIndexOf("playButton()");
     const rightSide = grid.slice(start, grid.indexOf("</GradientBackground>", start));
     expect(rightSide).not.toMatch(/onInvite\?\.\(room\)/);
-    expect(grid).toMatch(/\{action && \(\s*\n\s*\/\* The public list's button in white/);
+    expect(grid).toMatch(/\{\(\s*\n\s*\/\* The public list's button in white/);
   });
 
   it("opens the same sheet the Public tab's cards use", () => {

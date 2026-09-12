@@ -38,8 +38,8 @@ describe("the tap that reads", () => {
   });
 
   it("and the private cards do the same", () => {
-    // The grid card hands its button along; the rail card has none to hand.
-    const taps = myRooms.match(/if \(roomKind\(room\) === "classic"\) onPreview\((action \? playButton : undefined)?\);\s*\n\s*else onJoin\(\);/g) ?? [];
+    // Both hand their button along, so neither sheet is a dead end.
+    const taps = myRooms.match(/if \(roomKind\(room\) === "classic"\) onPreview\(playButton\);\s*\n\s*else onJoin\(\);/g) ?? [];
     expect(taps, "both the grid card and the rail card").toHaveLength(2);
   });
 

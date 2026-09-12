@@ -66,14 +66,20 @@ describe("the public card", () => {
 
 describe("the private cards", () => {
   it("the grid card builds its button once and draws it on itself", () => {
-    expect(myRooms).toMatch(/const playButton: PreviewActionFactory = \(opts = \{\}\) => \(/);
-    expect(myRooms).toMatch(/\{action && \(\s*\/\*[\s\S]*?playButton\(\)\s*\n\s*\)\}/);
+    expect(myRooms).toMatch(/function useRoomPlayButton\(room: MyRoom, isJoining: boolean, onJoin: \(\) => void\): PreviewActionFactory \{/);
+    expect((myRooms.match(/const playButton = useRoomPlayButton\(room, isJoining, onJoin\);/g) ?? []).length).toBe(2);
+    expect(myRooms).toMatch(/\{\(\s*\/\*[\s\S]*?playButton\(\)\s*\n\s*\)\}/);
   });
 
-  it("hands it to the sheet only when it has one; the rail card hands nothing", () => {
-    expect(myRooms).toMatch(/onPreview\(action \? playButton : undefined\);/);
-    expect(myRooms).toMatch(/onPreview=\{\(action\) => setPreviewing\(\{ room, action \}\)\}/);
-    expect(myRooms).toMatch(/onPreview=\{\(\) => setPreviewing\(\{ room \}\)\}/);
+  it("and BOTH cards hand it to the sheet: a preview that only closes is a dead end", () => {
+    // The rail card (the home page's Rooms row) had no button of its own,
+    // so its sheet opened with Close and nothing else — the only way in was
+    // to close it and tap the card again, which reopened the sheet (owner:
+    // "we should show second button to enter/join/play the room now we show
+    // only close button when i click on room card").
+    expect((myRooms.match(/onPreview\(playButton\);/g) ?? []).length).toBe(2);
+    expect((myRooms.match(/onPreview=\{\(action\) => setPreviewing\(\{ room, action \}\)\}/g) ?? []).length).toBe(2);
+    expect(myRooms).not.toMatch(/onPreview=\{\(\) => setPreviewing\(\{ room \}\)\}/);
     expect(myRooms).toMatch(/action=\{previewing\?\.action\?\.\(\{ className: PREVIEW_BUTTON_CLASS, tone: PREVIEW_BUTTON_TONE, then: \(\) => setPreviewing\(null\) \}\)\}/);
   });
 });

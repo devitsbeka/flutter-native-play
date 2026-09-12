@@ -104,7 +104,10 @@ describe("the card that draws it", () => {
     // roomCardInvite.test.ts) — it does not move over to fill this space.
     // The button itself is built by playButton, which the preview sheet
     // draws too (roomPreviewCarriesTheCardsButton.test.ts).
-    expect(source).toMatch(/\{action && \(\s*\/\*[\s\S]*?playButton\(\)\s*\n\s*\)\}/);
+    // roomCardAction always answers ("live" | "start" | "enter"), so the
+    // old `{action && …}` guard was always true and read as a state that
+    // could not happen. The button is simply drawn.
+    expect(source).toMatch(/\{\(\s*\/\*[\s\S]*?playButton\(\)\s*\n\s*\)\}/);
   });
 
   it("says Play, in the short form, whichever state the card is in", () => {

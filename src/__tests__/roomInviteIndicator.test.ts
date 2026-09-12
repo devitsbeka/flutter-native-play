@@ -40,7 +40,8 @@ describe("the hook says who asked, and how many are waiting", () => {
 
 describe("the card wears the invitation", () => {
   const grid = read("src/components/team/MyRoomsSection.tsx");
-  const card = grid.slice(grid.indexOf("export function RoomCardGrid("));
+  // The button both cards wear is built above them, by useRoomPlayButton.
+  const card = grid.slice(grid.indexOf("function useRoomPlayButton("));
 
   it("as the viewer's own face in black and white, and a green Confirm with an X — not a badge", () => {
     // The purple "Invited by …" pill was one thing too many on the row
