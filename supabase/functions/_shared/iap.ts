@@ -266,7 +266,36 @@ export async function syncSubscription(
       { onConflict: "user_id" },
     );
 
-  if (error) throw error;
+  if (error) {
+    // 23505 on this table is the apple-transaction guard, not a bug.
+    //
+    // The upsert resolves conflicts on `user_id`, while the table also carries
+    // a partial unique index on `apple_original_transaction_id` — deliberately,
+    // so one Apple transaction can never activate two accounts. When a row
+    // under a *different* user_id already holds this transaction, the upsert
+    // raises instead of merging.
+    //
+    // Throwing here took the whole sync down with it, and syncSubscription
+    // runs before creditConsumables — so a subscription that could not be
+    // written also stopped every gem pack from being credited, for every later
+    // purchase, permanently. A player who bought gems saw the App Store
+    // confirm the charge and their balance never move, and nothing anywhere
+    // said why.
+    //
+    // The guard is right and stays. What changes is the blast radius: the
+    // subscription is not granted, that is recorded, and the consumables the
+    // same call is responsible for still get credited.
+    if (error.code === "23505") {
+      console.error(
+        `Subscription not granted for ${userId}: Apple transaction ` +
+          `${best.transactionId} is already held by another account. ` +
+          `Consumables in this sync are unaffected.`,
+        error,
+      );
+      return { tier: null, expiresAt: null };
+    }
+    throw error;
+  }
 
   await creditSubscriptionWelcome(supabase, userId, best.tier, best);
 

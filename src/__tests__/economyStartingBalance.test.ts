@@ -124,9 +124,30 @@ describe("a subscription", () => {
   });
 
   it("after the subscription row is written, not instead of it", () => {
-    expect(iap).toMatch(
-      /if \(error\) throw error;\s*\n\s*await creditSubscriptionWelcome\(supabase, userId, best\.tier, best\);/,
+    // The welcome bundle must be unreachable unless the upsert actually wrote
+    // a row. The error handling above it grew a branch — a 23505 from the
+    // apple-transaction guard now returns instead of throwing, so the
+    // subscription is not granted and neither is the bundle — so this pins the
+    // ordering rather than one literal spelling of the guard: every path out
+    // of the error block leaves, and creditSubscriptionWelcome sits after it.
+    const body = iap.slice(
+      iap.indexOf("export async function syncSubscription"),
+      iap.indexOf("return { tier: best.tier, expiresAt: best.expiresAt };"),
     );
+
+    const errorBlock = body.slice(body.lastIndexOf("if (error) {"));
+    expect(errorBlock, "the 23505 branch must return, not fall through").toMatch(
+      /return \{ tier: null, expiresAt: null \};/,
+    );
+    expect(errorBlock, "any other database error must still throw").toMatch(
+      /throw error;/,
+    );
+
+    // And the bundle is credited only after that block has been passed.
+    expect(
+      body.indexOf("await creditSubscriptionWelcome(supabase, userId, best.tier, best);"),
+      "creditSubscriptionWelcome must come after the upsert's error handling",
+    ).toBeGreaterThan(body.lastIndexOf("if (error) {"));
   });
 });
 
