@@ -5215,6 +5215,8 @@ export const ka = {
     storeUnavailable: "გეგმები ამჟამად მიუწვდომელია",
     storeUnavailableHint: "App Store-თან დაკავშირება ვერ მოხერხდა. შეამოწმე კავშირი და სცადე ხელახლა.",
     storeRetry: "ხელახლა ცდა",
+    purchaseSyncFailed: "PRO-ს გააქტიურება ჯერ ვერ მოხერხდა. შენი შენაძენი დაცულია — ცოტა ხანში დააჭირე „შესყიდვის აღდგენა“.",
+    purchaseFailed: "ვერ განხორციელდა. თანხა არ ჩამოგეჭრა.",
     planMonthly: "ყოველთვიური",
     planMonthlyBlurb: "სრული წვდომა + 1 მეგობარი",
     planFriends: "PRO + მეგობრები",

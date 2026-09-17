@@ -674,8 +674,19 @@ export function useInAppPurchases() {
 
 
   // Re-read the profile so the balance on screen matches the database.
+  //
+  // Bounded and swallowed for the same reason as the sync above: this is the
+  // last await before the buy button is released, and a profile fetch that
+  // hangs would hold the spinner open on a purchase that has already gone
+  // through. A stale balance corrects itself on the next read; a button that
+  // never returns does not.
   const refreshBalance = useCallback(async () => {
-    if (user?.id) await fetchProfile(user.id);
+    if (!user?.id) return;
+    try {
+      await withTimeout(fetchProfile(user.id), "fetchProfile");
+    } catch (e) {
+      iapLog("balance refresh did not settle:", String(e));
+    }
   }, [user?.id, fetchProfile]);
 
   // Purchase a product
@@ -1038,7 +1049,25 @@ interface EntitlementSync {
  */
 async function syncEntitlements(): Promise<EntitlementSync> {
   try {
-    const { data, error } = await supabase.functions.invoke("verify-receipt");
+    // Bounded, because this call sits between a completed charge and the
+    // `finally` that releases the buy button.
+    //
+    // `supabase.functions.invoke` is a fetch with no timeout of its own, and
+    // it will also block on an auth-token refresh before it sends anything.
+    // When either stalls, nothing downstream runs: `setPurchasing(false)`
+    // never fires, and the Subscribe button sits on "one moment…" for the
+    // rest of the session while the App Store has already said "You're all
+    // set". That is the shape of the 2.1(b) report — money taken, sheet
+    // dismissed, button still spinning.
+    //
+    // A timeout here is not a lost purchase. The RevenueCat webhook settles
+    // the entitlement server-side regardless, and Restore re-runs this exact
+    // sync on demand. All that is lost is the immediate confirmation, and a
+    // late confirmation beats a button that never comes back.
+    const { data, error } = await withTimeout(
+      supabase.functions.invoke("verify-receipt"),
+      "verify-receipt",
+    );
 
     if (error) throw error;
     return {

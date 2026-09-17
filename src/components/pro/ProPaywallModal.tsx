@@ -90,6 +90,8 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
   const storeUnavailable = plans.length === 0;
 
   const [selectedId, setSelectedId] = useState<ProPlan["id"] | null>(null);
+  /** What went wrong on the last attempt, rendered under the button. */
+  const [purchaseError, setPurchaseError] = useState<string | null>(null);
 
   // The paywall opens on the featured plan. Deferred to an effect because the
   // catalogue arrives from StoreKit a moment after the first render, and a
@@ -233,12 +235,40 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
     // The tier is what Stripe prices by on the web; the product id is what
     // StoreKit rings up on a phone, and two plans can grant the same tier
     // while differing in period.
+    // Clear the previous answer first, so a second attempt that lands on the
+    // same outcome does not read as nothing having happened.
+    setPurchaseError(null);
+
     const result = await initiateProCheckout(
       selected.tier,
       isNative ? selected.productId : undefined,
       selected.months >= 12 ? "year" : "month",
     );
-    if (result.success) onClose();
+
+    if (result.success) {
+      onClose();
+      return;
+    }
+
+    // Everything below here used to be silent.
+    //
+    // A failed or half-finished purchase reported itself through `toast`, and
+    // src/lib/toast.ts swallows every toast in the app — successes dropped,
+    // errors sent to the console. So "we could not activate it", "the store
+    // did not answer" and "you cancelled" were one thing on screen: nothing.
+    // Combined with a spinner that only cleared in a `finally`, the honest
+    // description of this button was that it did nothing, which is what App
+    // Review wrote down.
+    //
+    // A cancel is the player's own doing and needs no notice; everything else
+    // gets a line under the button, where the tap happened.
+    if (result.error === "cancelled") return;
+
+    setPurchaseError(
+      result.error === "sync_failed"
+        ? t("paywall.purchaseSyncFailed")
+        : t("paywall.purchaseFailed"),
+    );
   };
 
   if (!isOpen) return null;
@@ -487,6 +517,19 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
         >
           {ctaLabel}
         </ChunkyButton>
+
+        {/* role="status" so the answer is announced, not only drawn. The tap
+            may have come from someone using VoiceOver, and the entire point of
+            this element is that the screen stops being silent after a charge. */}
+        {purchaseError && !busy && (
+          <p
+            role="status"
+            className="mt-2 text-center text-[13px] leading-snug"
+            style={{ color: inkSoft }}
+          >
+            {purchaseError}
+          </p>
+        )}
 
         {/* Restore sits directly under the button it belongs beside.
             It used to be the last thing on the screen: 11px grey, on a line

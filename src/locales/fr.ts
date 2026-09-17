@@ -4517,6 +4517,8 @@ export const fr: KaTranslations = {
     storeUnavailable: "Les formules sont indisponibles pour le moment",
     storeUnavailableHint: "Impossible de joindre l'App Store. Vérifie ta connexion et réessaie dans un instant.",
     storeRetry: "Réessayer",
+    purchaseSyncFailed: "Nous n\u2019avons pas encore pu activer PRO. Ton achat est en sécurité — touche « Restaurer les achats » dans un instant.",
+    purchaseFailed: "Cela n\u2019a pas abouti. Tu n\u2019as pas été débité.",
     planMonthly: "Mensuel",
     planMonthlyBlurb: "Accès complet + 1 ami",
     planFriends: "PRO + amis",

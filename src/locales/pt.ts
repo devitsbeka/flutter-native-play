@@ -4592,6 +4592,8 @@ export const pt: KaTranslations = {
     storeUnavailable: "Os planos estão indisponíveis no momento",
     storeUnavailableHint: "Não conseguimos acessar a App Store. Verifique sua conexão e tente de novo em instantes.",
     storeRetry: "Tentar de novo",
+    purchaseSyncFailed: "Ainda não conseguimos ativar o PRO. Sua compra está segura — toque em «Restaurar compras» em instantes.",
+    purchaseFailed: "Não foi concluído. Você não foi cobrado.",
     planMonthly: "Mensal",
     planMonthlyBlurb: "Acesso total + 1 amigo",
     planFriends: "PRO + amigos",
