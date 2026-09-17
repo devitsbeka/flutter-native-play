@@ -65,7 +65,7 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
   const { t, language } = useLanguage();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { products, loading, purchasing } = useInAppPurchases();
+  const { products, loading, purchasing, unavailable, retry } = useInAppPurchases();
   // The app's own price resolver: StoreKit's localised string on a phone,
   // the tier's figure converted to GEL on the web. Re-implementing it here
   // is how a Georgian user ends up shown "$3.99" for a charge in ₾.
@@ -342,6 +342,27 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
               <p className="mt-1.5 text-[13px]" style={{ color: inkSoft }}>
                 {t("paywall.storeUnavailableHint")}
               </p>
+            )}
+            {/* Something to press.
+
+                Guideline 2.1(b) on build 55 was "In-App purchase buttons were
+                unresponsive", and the button genuinely was inert: an empty
+                catalogue disables Subscribe, so the only control on this panel
+                did nothing when tapped and said nothing about why. A reviewer
+                cannot tell that apart from a broken app — and neither can a
+                player.
+
+                So when the store has given up, this panel carries its own live
+                button. It is never disabled except while it is working. */}
+            {!loading && unavailable && (
+              <button
+                type="button"
+                onClick={() => void retry()}
+                className="mt-4 rounded-full px-6 py-2.5 text-[14px] font-bold"
+                style={{ background: "rgba(124,58,237,0.12)", color: ink }}
+              >
+                {t("paywall.storeRetry")}
+              </button>
             )}
           </div>
         ) : (

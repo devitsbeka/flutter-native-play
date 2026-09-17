@@ -5214,6 +5214,7 @@ export const ka = {
     loadingPlans: "გეგმები იტვირთება...",
     storeUnavailable: "გეგმები ამჟამად მიუწვდომელია",
     storeUnavailableHint: "App Store-თან დაკავშირება ვერ მოხერხდა. შეამოწმე კავშირი და სცადე ხელახლა.",
+    storeRetry: "ხელახლა ცდა",
     planMonthly: "ყოველთვიური",
     planMonthlyBlurb: "სრული წვდომა + 1 მეგობარი",
     planFriends: "PRO + მეგობრები",

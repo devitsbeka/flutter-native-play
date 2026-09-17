@@ -4590,6 +4590,7 @@ export const es: KaTranslations = {
     loadingPlans: "Cargando planes...",
     storeUnavailable: "Los planes no están disponibles ahora mismo",
     storeUnavailableHint: "No pudimos conectar con la App Store. Revisa tu conexión e inténtalo de nuevo en un momento.",
+    storeRetry: "Reintentar",
     planMonthly: "Mensual",
     planMonthlyBlurb: "Acceso completo + 1 amigo",
     planFriends: "PRO + amigos",

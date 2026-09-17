@@ -282,6 +282,60 @@ let storeInit: Promise<IAPProduct[]> | null = null;
 let storeProducts: IAPProduct[] = [];
 const storeSubscribers = new Set<(p: IAPProduct[]) => void>();
 
+/**
+ * The store answered, and there is nothing to sell.
+ *
+ * Thrown rather than returned, and that distinction is the whole of the
+ * guideline 2.1(b) rejection on build 55.
+ *
+ * `ensureStore` caches `storeInit` and only clears it from its `.catch`. So a
+ * path that *resolved* with `[]` — no plugin, or a StoreKit query that came
+ * back empty — latched a resolved-empty promise into a module-level singleton
+ * for the rest of the process. `storeProducts` stayed `[]`, every later mount
+ * read it back instantly without retrying, and because every buy button in the
+ * app is disabled on an empty catalogue (`storeUnavailable` on the paywall,
+ * `sellable` on gem cards, `storeReady` in useProPurchase) the entire store
+ * stayed dead until the app was force-quit.
+ *
+ * That is precisely the state a reviewer lands in. A fresh install signed into
+ * a sandbox Apple ID is exactly when StoreKit's first product query comes back
+ * empty — the account is still settling, the ATT dialog is competing for the
+ * main thread, and the network is cold. First launch is both the likeliest
+ * moment to fail and the moment that latched it.
+ *
+ * Throwing routes these through the existing `.catch`, which already clears
+ * `storeInit`. The comment there always claimed "a later mount retries"; it
+ * was simply wired to the one branch that almost never fired.
+ */
+class StoreUnavailableError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "StoreUnavailableError";
+  }
+}
+
+/**
+ * Waiting out a store that is still waking up, without hammering it.
+ *
+ * A reviewer does not mount and unmount components to trigger a retry — they
+ * sit on the paywall and tap. So the store has to come back on its own, and
+ * these are the delays it waits before each attempt. They stop after the last
+ * one: past ~20s the fault is configuration, not propagation, and a retry loop
+ * that never gives up is a battery drain that still shows an empty shop.
+ */
+const STORE_RETRY_DELAYS_MS = [2_000, 5_000, 15_000];
+let storeRetryTimer: ReturnType<typeof setTimeout> | null = null;
+let storeRetryAttempt = 0;
+
+/** Told the catalogue is empty *and* no further attempt is scheduled. */
+const storeFailureSubscribers = new Set<(failed: boolean) => void>();
+let storeFailed = false;
+
+function announceFailure(failed: boolean) {
+  storeFailed = failed;
+  storeFailureSubscribers.forEach((fn) => fn(failed));
+}
+
 function toIAPProduct(product: any): IAPProduct {
   return {
     productId: product.identifier,
@@ -305,8 +359,14 @@ async function initStore(): Promise<IAPProduct[]> {
   if (!plugin) {
     // Was a bare `return []`. It is one of only two ways out of initStore
     // before the store is touched, and it said nothing on the way.
-    iapLog("no plugin available — purchases disabled for this launch");
-    return [];
+    //
+    // Now thrown, not returned. `loadPurchasesPlugin` swallows its own
+    // failures — including the 15s bound on the dynamic import — and hands
+    // back `null`, which is a *transient* condition: a chunk fetch that
+    // stalled once on a cold launch will usually succeed seconds later. A
+    // resolved `[]` here disabled purchases for the whole process instead.
+    iapLog("no plugin available — will retry");
+    throw new StoreUnavailableError("purchases plugin unavailable");
   }
 
   // Get platform-specific API key.
@@ -408,6 +468,11 @@ async function initStore(): Promise<IAPProduct[]> {
         "product ids exist and are at least 'Ready to Submit', bundle id " +
         "matches, and that newly created products have finished propagating.",
     );
+    // Thrown so the result is not cached. On a fresh install against a sandbox
+    // account this is routinely a *timing* answer rather than a final one —
+    // StoreKit has not finished resolving the storefront yet — and the second
+    // ask a couple of seconds later returns the full catalogue.
+    throw new StoreUnavailableError("StoreKit returned zero products");
   }
 
   return mapped;
@@ -458,7 +523,12 @@ function ensureStore(): Promise<IAPProduct[]> {
     storeInit = initStore()
       .then((p) => {
         storeProducts = p;
+        storeRetryAttempt = 0;
         storeSubscribers.forEach((fn) => fn(p));
+        // An empty catalogue that *resolved* can only be a missing API key or
+        // the web. Neither improves by asking again, so no retry is scheduled
+        // — but the surfaces still need to know not to render a live price.
+        announceFailure(Capacitor.isNativePlatform() && p.length === 0);
         return p;
       })
       .catch((e) => {
@@ -466,10 +536,74 @@ function ensureStore(): Promise<IAPProduct[]> {
         // Cleared so a later mount retries. A timed-out first fetch on a bad
         // connection should not disable the shop for the rest of the session.
         storeInit = null;
+
+        // A mount is not the only way back. A reviewer sits on the paywall and
+        // taps; nothing unmounts, so nothing would ever ask again. Schedule it.
+        const delay = STORE_RETRY_DELAYS_MS[storeRetryAttempt];
+        if (delay !== undefined && storeRetryTimer === null) {
+          storeRetryAttempt += 1;
+          iapLog(`retrying store init in ${delay}ms (attempt ${storeRetryAttempt})`);
+          storeRetryTimer = setTimeout(() => {
+            storeRetryTimer = null;
+            void ensureStore();
+          }, delay);
+          announceFailure(false);
+        } else {
+          // Out of attempts. Now it is worth telling the player, and giving
+          // them something to press — see `retryStore`.
+          iapLog("store init failed and no further attempt is scheduled");
+          announceFailure(true);
+        }
         return [];
       });
   }
   return storeInit;
+}
+
+/**
+ * Ask the store again, now, at the player's request.
+ *
+ * The automatic attempts above cover a store that is merely slow. This covers
+ * the rest: a device that was offline when the app launched, an Apple ID
+ * signed in after the fact, or simply a reviewer who wants the button to do
+ * something. Resets the attempt budget, because a deliberate tap is new
+ * information — the conditions that failed may well have changed.
+ */
+export function retryStore(): Promise<IAPProduct[]> {
+  if (storeRetryTimer !== null) {
+    clearTimeout(storeRetryTimer);
+    storeRetryTimer = null;
+  }
+  storeRetryAttempt = 0;
+  storeInit = null;
+  announceFailure(false);
+  return ensureStore();
+}
+
+/**
+ * Come back when the app does.
+ *
+ * Returning from the background is the one moment a dead store is most likely
+ * to have become a live one: it is where a player lands after leaving to sign
+ * into the App Store, fix their network, or accept an agreement. Registered
+ * once per process, and only when the catalogue is actually empty — a healthy
+ * store is never re-queried.
+ */
+let resumeListenerAttached = false;
+function attachResumeListener() {
+  if (resumeListenerAttached || !Capacitor.isNativePlatform()) return;
+  resumeListenerAttached = true;
+
+  void import("@capacitor/app")
+    .then(({ App }) => {
+      void App.addListener("appStateChange", ({ isActive }) => {
+        if (!isActive) return;
+        if (storeProducts.length > 0) return;
+        iapLog("app resumed with an empty catalogue — asking the store again");
+        void retryStore();
+      });
+    })
+    .catch((e) => iapLog("could not attach resume listener:", String(e)));
 }
 
 export function useInAppPurchases() {
@@ -484,10 +618,20 @@ export function useInAppPurchases() {
   // which reads as the wrong button having been pressed.
   const [restoring, setRestoring] = useState(false);
   const [isInitialized, setIsInitialized] = useState(storeProducts.length > 0);
+  /**
+   * The store has nothing to sell and has stopped trying on its own.
+   *
+   * Distinct from "no products yet": while a retry is still scheduled this
+   * stays false, so the screen keeps showing its loading copy instead of
+   * flashing an error between attempts.
+   */
+  const [unavailable, setUnavailable] = useState(storeFailed);
 
   useEffect(() => {
     let alive = true;
     storeSubscribers.add(setProducts);
+    storeFailureSubscribers.add(setUnavailable);
+    attachResumeListener();
 
     ensureStore().then((p) => {
       if (!alive) return;
@@ -499,7 +643,25 @@ export function useInAppPurchases() {
     return () => {
       alive = false;
       storeSubscribers.delete(setProducts);
+      storeFailureSubscribers.delete(setUnavailable);
     };
+  }, []);
+
+  // Products arriving from a retry must clear the loading state too. The
+  // effect above only runs on mount, so a catalogue that showed up on the
+  // second attempt would otherwise leave the screen spinning forever.
+  useEffect(() => {
+    if (products.length > 0) {
+      setIsInitialized(true);
+      setLoading(false);
+    }
+  }, [products]);
+
+  const retry = useCallback(async () => {
+    setLoading(true);
+    const p = await retryStore();
+    setLoading(false);
+    return p;
   }, []);
 
   // Identify the user to RevenueCat once the store is up. Separate from
@@ -820,6 +982,10 @@ export function useInAppPurchases() {
     purchasing,
     restoring,
     isInitialized,
+    /** Empty catalogue, nothing further scheduled — offer `retry`. */
+    unavailable,
+    /** Ask the store again at the player's request. */
+    retry,
     purchase,
     restorePurchases,
     getProduct,
