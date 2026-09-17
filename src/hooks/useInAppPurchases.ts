@@ -369,6 +369,17 @@ export interface PurchaseAnnouncement {
    * that rather than shown a silent no-op.
    */
   pending?: boolean;
+  /**
+   * The charge went through and the credit did not.
+   *
+   * Distinct from `pending`: pending is still coming, this one has stopped.
+   * The player has been billed either way, so this is never presented as "your
+   * purchase failed" — it is presented as "we have your money and not yet your
+   * gems", with Restore as the way to finish it.
+   */
+  failed?: boolean;
+  /** What the server said, shown so a failure can be diagnosed from a screenshot. */
+  reason?: string;
 }
 
 const purchaseSubscribers = new Set<(a: PurchaseAnnouncement) => void>();
@@ -939,7 +950,23 @@ export function useInAppPurchases() {
           // The money moved even though the sync didn't. Say so honestly
           // rather than reporting a failed purchase the user was charged for —
           // the webhook will settle it, and restore covers the rest.
+          //
+          // This return was the silent one. `useGemPurchase` throws the result
+          // away, and the toast below is swallowed app-wide, so a failing
+          // verify-receipt produced exactly nothing on screen: no confirmation,
+          // no error, and a balance that never moved. That is the whole of
+          // "iOS says the purchase succeeded and the app does nothing".
+          //
+          // Announced now, with the reason attached, so the player is told the
+          // charge landed and the credit has not — and so the failure names
+          // itself instead of having to be guessed at from outside.
           toast.error(tStandalone("extra.iapActivationFailed"));
+          announcePurchase({
+            productId,
+            gems: gemsForProduct(productId),
+            failed: true,
+            reason: synced.error,
+          });
           return { success: false, error: "sync_failed" };
         }
 
@@ -1152,6 +1179,17 @@ interface EntitlementSync {
   success: boolean;
   tier: string | null;
   gemsCredited: number;
+  /**
+   * Why it failed, when it did.
+   *
+   * Kept because the failure path was completely silent: `purchase()` returned
+   * `sync_failed`, `useGemPurchase` discarded the result, and the only notice
+   * was a `toast.error` that `src/lib/toast.ts` swallows. A player saw the App
+   * Store confirm the charge and then nothing at all — no message, no balance.
+   * Carrying the reason up means the screen can say what actually went wrong
+   * instead of pretending nothing happened.
+   */
+  error?: string;
 }
 
 /**
@@ -1190,9 +1228,20 @@ async function syncEntitlements(): Promise<EntitlementSync> {
       success: data?.success === true,
       tier: data?.tier ?? null,
       gemsCredited: data?.gemsCredited ?? 0,
+      // verify-receipt answers 200 with `success: false` and its own `error`
+      // string for a failure it handled, so a non-throwing call can still be a
+      // failure. That case used to be discarded along with the reason.
+      error: data?.success === true ? undefined : (data?.error ?? "unknown"),
     };
   } catch (error) {
+    // The message, not just the fact. A FunctionsHttpError carries the status
+    // and body that says whether this was a 500 from the function, a timeout,
+    // or an expired token — and every one of those was previously flattened
+    // into the same silent `success: false`.
+    const message =
+      error instanceof Error ? error.message : String(error ?? "unknown error");
     console.error("Entitlement sync error:", error);
-    return { success: false, tier: null, gemsCredited: 0 };
+    iapLog("verify-receipt failed:", message);
+    return { success: false, tier: null, gemsCredited: 0, error: message };
   }
 }

@@ -4,6 +4,19 @@ const config: CapacitorConfig = {
   appId: 'io.mytrivia.app',
   appName: 'MyTrivia',
   webDir: 'dist',
+  // Forward webview console output to the native log, in release builds too.
+  //
+  // The default ('debug') drops it, which is why a device attached with
+  // `devicectl device process launch --console` showed Capacitor's own plugin
+  // lines and not one of the `[iap]` breadcrumbs the purchase path writes at
+  // warn level specifically so they would survive a production build. They
+  // survive esbuild; they were being discarded by the bridge.
+  //
+  // This is here to diagnose purchases that take the money and credit nothing.
+  // It exposes nothing secret — the app logs product ids and outcomes, never
+  // tokens — but it is noise on a shipping build, so it comes back out once
+  // the crediting failure is understood.
+  loggingBehavior: 'production',
   ios: {
     // Capacitor 8's own podspec sets ios.deployment_target = '15.0'. Declaring
     // 14.0 here doesn't lower that floor, it just makes `pod install` fail on

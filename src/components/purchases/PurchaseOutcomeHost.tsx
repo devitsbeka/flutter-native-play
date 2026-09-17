@@ -5,6 +5,7 @@ import {
 } from "@/hooks/useInAppPurchases";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { PurchaseSuccessModal } from "@/components/shop/PurchaseSuccessModal";
+import { GameModal } from "@/components/ui/game-modal";
 
 /**
  * The one place a completed purchase is confirmed.
@@ -36,7 +37,34 @@ export function PurchaseOutcomeHost() {
 
   if (!announcement) return null;
 
-  const { gems } = announcement;
+  const { gems, failed, reason } = announcement;
+
+  // Billed, not credited. Never framed as "the purchase failed" — the money
+  // has moved, and telling someone their purchase failed when they have been
+  // charged is worse than saying nothing. The reason is shown verbatim
+  // underneath: it is the only route a failure has out of a shipped build,
+  // since webview logs are dropped in a release Capacitor app, and a
+  // screenshot of it is a complete bug report.
+  if (failed) {
+    return (
+      <GameModal
+        isOpen
+        onClose={() => setAnnouncement(null)}
+        variant="info"
+        iconEmoji="🧾"
+        title={t("extra.iapActivationFailed")}
+        subtitle={t("paywall.purchaseSyncFailed")}
+        primaryLabel={t("shop.continue")}
+        onPrimaryClick={() => setAnnouncement(null)}
+      >
+        {reason && (
+          <p className="mt-2 break-words text-center font-mono text-[11px] leading-snug text-muted-foreground">
+            {reason}
+          </p>
+        )}
+      </GameModal>
+    );
+  }
 
   // Gems name themselves by count; anything else sold through this path is
   // PRO. The modal renders "+{quantity}x {itemName}", so these stay short.
