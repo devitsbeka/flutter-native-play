@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { RefreshCw, Loader2 } from "lucide-react";
 import { useInAppPurchases, type RestoreOutcome } from "@/hooks/useInAppPurchases";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { restoreOutcomeKeys } from "@/utils/restoreOutcome";
+import { RestoreResultModal } from "@/components/purchases/RestoreResultModal";
 
 /**
  * Restore previously bought purchases.
@@ -61,19 +61,20 @@ export function RestorePurchasesRow({ delay = 0.24 }: { delay?: number }) {
           <span className="font-medium text-foreground block">
             {restoring ? t("extra.restoring") : t("extra.restorePurchases")}
           </span>
-          {/* The result replaces the description once there is one. The
-              description is an invitation and the result is the answer to the
-              tap; showing both leaves the player deciding which line is about
-              what just happened. */}
+          {/* The row keeps its description. The answer to the tap arrives in
+              the same modal every other surface uses — see RestoreResultModal.
+              This line used to carry the result in 14px muted grey, which is
+              the whisper the paywall footer was rightly criticised for. */}
           <span className="text-sm text-muted-foreground block">
-            {outcome && !restoring
-              ? restoreOutcomeKeys(outcome)
-                  .map((key) => t(key))
-                  .join(" ")
-              : t("extra.restoreDescription")}
+            {t("extra.restoreDescription")}
           </span>
         </div>
       </button>
+
+      {/* Same answer, same modal, as the paywall and the shop. */}
+      {!restoring && (
+        <RestoreResultModal outcome={outcome} onClose={() => setOutcome(null)} />
+      )}
     </motion.div>
   );
 }

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useInAppPurchases, type RestoreOutcome } from "@/hooks/useInAppPurchases";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { restoreOutcomeKeys } from "@/utils/restoreOutcome";
+import { RestoreResultModal } from "@/components/purchases/RestoreResultModal";
 
 /**
  * "Restore purchases", as a line of text rather than a row.
@@ -82,19 +82,15 @@ export function RestorePurchasesLink({
         {restoring ? t("extra.restoring") : t("extra.restorePurchases")}
       </button>
 
-      {outcome && !restoring && (
-        // role="status" so the result is announced rather than only drawn —
-        // the tap may well have come from someone using VoiceOver, and the
-        // whole point of this element is that the app stops being silent.
-        <p
-          role="status"
-          className={`mt-1 text-[12px] leading-snug ${mutedColor ? "" : "text-muted-foreground"}`}
-          style={mutedColor ? { color: mutedColor } : undefined}
-        >
-          {restoreOutcomeKeys(outcome)
-            .map((key) => t(key))
-            .join(" ")}
-        </p>
+      {/* The answer goes in a modal, not a footnote.
+
+          This used to be a 12px grey line under the link — on the paywall that
+          put it between a four-line renewal paragraph and the Terms row, in
+          the palest colour on the screen. Every other outcome in this app gets
+          a modal, and Restore is the one thing a player taps when they believe
+          they have already paid. */}
+      {!restoring && (
+        <RestoreResultModal outcome={outcome} onClose={() => setOutcome(null)} />
       )}
     </div>
   );

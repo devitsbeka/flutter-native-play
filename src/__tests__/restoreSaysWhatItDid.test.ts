@@ -82,11 +82,18 @@ describe("every surface that offers restore shows the answer", () => {
     ["RestorePurchasesLink", link],
   ] as const) {
     it(`${name} renders the outcome`, () => {
+      // Either by rendering the keys itself, or by handing the outcome to
+      // RestoreResultModal, which does. The surfaces moved to the shared modal
+      // once the inline version turned out to be a 12px grey line under the
+      // link — displayed, technically, and missed by everyone who tapped it.
+      // What this guards is unchanged: the answer is drawn, not toasted, and
+      // toasts are suppressed app-wide.
       expect(
         source,
-        `${name} does not render restoreOutcomeKeys — the result is being ` +
-          "reported through a toast again, and toasts are suppressed app-wide",
-      ).toMatch(/restoreOutcomeKeys\(/);
+        `${name} neither renders restoreOutcomeKeys nor passes its outcome to ` +
+          "RestoreResultModal — the result is being reported through a toast " +
+          "again, and toasts are suppressed app-wide",
+      ).toMatch(/restoreOutcomeKeys\(|<RestoreResultModal[\s\S]*?outcome=\{outcome\}/);
     });
 
     it(`${name} shows its own progress, not the store's`, () => {

@@ -549,24 +549,26 @@ async function initStore(): Promise<IAPProduct[]> {
 // whether a purchase was attributed correctly came down to whether the user
 // tapped Buy before or after a network round trip finished.
 let identifiedAs: string | null = null;
-let identifyInFlight: Promise<void> | null = null;
+let identifyInFlight: Promise<boolean> | null = null;
 
-function ensureIdentified(userId: string): Promise<void> {
-  if (identifiedAs === userId) return Promise.resolve();
+function ensureIdentified(userId: string): Promise<boolean> {
+  if (identifiedAs === userId) return Promise.resolve(true);
   if (identifyInFlight) return identifyInFlight;
 
   identifyInFlight = (async () => {
     await ensureStore();
     const plugin = (await loadPurchasesPlugin())?.plugin;
-    if (!plugin) return;
+    if (!plugin) return false;
     // RevenueCat transfers purchases made while anonymous onto the id being
     // logged in, so this also repairs a purchase that raced ahead of it.
     await withTimeout(plugin.logIn({ appUserID: userId }), "logIn");
     identifiedAs = userId;
     iapLog("identified to RevenueCat as", userId);
+    return true;
   })()
     .catch((e) => {
       iapLog("logIn failed — purchases would be attributed anonymously:", String(e));
+      return false;
     })
     .finally(() => {
       identifyInFlight = null;
@@ -766,11 +768,32 @@ export function useInAppPurchases() {
         throw new Error("Purchase plugin not available");
       }
 
-      // Identify before charging, never after. The alternative is a purchase
-      // attributed to an anonymous id that this account cannot be credited
-      // for. Awaited rather than assumed: the effect that starts this runs on
-      // mount, and a fast tap beats a network round trip.
-      await ensureIdentified(user.id);
+      // Identify before charging, and REFUSE TO CHARGE if it did not work.
+      //
+      // This is the bug behind "the App Store says it worked and my gems never
+      // arrive". `ensureIdentified` swallowed its own failure and returned
+      // regardless, so a failed `logIn` left RevenueCat still holding its own
+      // anonymous id ($RCAnonymousID:…). The purchase then completed and was
+      // recorded against that anonymous id — while `verify-receipt` asks
+      // RevenueCat about the *Supabase* user id and is correctly told there is
+      // nothing there. Result: a real charge, `gemsCredited: 0`, a balance
+      // that never moves, and a poll that waits for a credit that is never
+      // coming, because the money is attached to an identity this account has
+      // no claim on.
+      //
+      // Taking money we have already established we cannot credit is the worst
+      // available outcome, so this stops instead. The store has not been
+      // touched at this point — nothing is charged, nothing needs refunding —
+      // and the player gets a message rather than a silent failure.
+      const identified = await ensureIdentified(user.id);
+      if (!identified) {
+        console.error(
+          "[iap] Refusing to purchase: this device could not be identified to " +
+            "RevenueCat, so the purchase could not be credited to this account.",
+        );
+        toast.error(tStandalone("extra.iapActivationFailed"));
+        return { success: false, error: "not_identified" };
+      }
 
       // Get offerings to find the package for this product
       const offerings = await withTimeout(plugin.getOfferings(), "getOfferings");
@@ -1004,6 +1027,12 @@ export function useInAppPurchases() {
       if (!plugin) {
         throw new Error("Purchase plugin not available");
       }
+
+      // Identify first, for the same reason purchase() does. RevenueCat
+      // transfers anonymous purchases onto the id being logged in, so this is
+      // also the repair path for anything that was bought before the account
+      // was known — which, until the guard in purchase(), was possible.
+      if (user) await ensureIdentified(user.id);
 
       // Hand the restore to StoreKit, then let the server decide what it
       // means. One sync replaces the old per-entitlement loop, which walked
