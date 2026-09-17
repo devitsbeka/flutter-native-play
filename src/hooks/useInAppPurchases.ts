@@ -1234,12 +1234,28 @@ async function syncEntitlements(): Promise<EntitlementSync> {
       error: data?.success === true ? undefined : (data?.error ?? "unknown"),
     };
   } catch (error) {
-    // The message, not just the fact. A FunctionsHttpError carries the status
-    // and body that says whether this was a 500 from the function, a timeout,
-    // or an expired token — and every one of those was previously flattened
-    // into the same silent `success: false`.
-    const message =
-      error instanceof Error ? error.message : String(error ?? "unknown error");
+    // Read the body, not just the status line.
+    //
+    // verify-receipt answers a failure with `{ success: false, error: <the
+    // actual message> }` and a 500. supabase-js turns any non-2xx into a
+    // FunctionsHttpError whose `.message` is the fixed string "Edge Function
+    // returned a non-2xx status code" and parks the real response on
+    // `.context`. Reporting `.message` therefore threw away the one piece of
+    // information the server had gone to the trouble of sending — which is
+    // exactly what a device reported back: a generic non-2xx and nothing to
+    // act on.
+    let message = error instanceof Error ? error.message : String(error ?? "unknown error");
+
+    const context = (error as { context?: unknown })?.context;
+    if (context && typeof (context as Response).json === "function") {
+      try {
+        const body = await (context as Response).json();
+        if (body?.error) message = String(body.error);
+      } catch {
+        // Not JSON, or already consumed. Keep the status-line message.
+      }
+    }
+
     console.error("Entitlement sync error:", error);
     iapLog("verify-receipt failed:", message);
     return { success: false, tier: null, gemsCredited: 0, error: message };
