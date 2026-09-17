@@ -73,6 +73,75 @@ function revealRanks(seed: number): number[] {
   return rank;
 }
 
+/**
+ * What the cover knows about the picture it is currently over.
+ *
+ * It needs this because a question change reaches the mask in pieces. The new
+ * picture's URL arrives on the render that switches question; the new
+ * question's clock, and the previous question's lifted cover, arrive on the
+ * render after it, when the parent's effects have run. For that one paint the
+ * mask was handed the NEW seed with the OLD question's numbers -- a clock at
+ * zero and a reveal still set -- and a cover computed from those is wide open.
+ * The next picture was on screen uncovered, and the tiles then faded back over
+ * it: the "logo, then the pixels close in" the player sees.
+ *
+ * So nothing here is read straight from the props on the first render of a
+ * seed. `top` is the highest progress this picture has been shown at, which a
+ * leftover clock can only be below, and `trustReveal` withholds a reveal that
+ * was already set when the seed changed until the parent puts it down.
+ */
+export interface RevealRun {
+  seed: string;
+  top: number;
+  trustReveal: boolean;
+}
+
+const clampPercent = (value: number) => Math.max(0, Math.min(100, value));
+
+/**
+ * Fold one render's props into the run. Pure and idempotent -- called during
+ * render, so StrictMode's second pass must not move it.
+ */
+export function trackRun(
+  previous: RevealRun | null,
+  seed: string,
+  progressPercent: number,
+  revealAll: boolean,
+): RevealRun {
+  if (!previous || previous.seed !== seed) {
+    return {
+      seed,
+      top: clampPercent(progressPercent),
+      // A fresh mount has no previous question to have left anything behind,
+      // so its props are the truth -- an observer joining mid-reveal included.
+      trustReveal: previous === null ? true : !revealAll,
+    };
+  }
+  return {
+    seed,
+    top: Math.max(previous.top, clampPercent(progressPercent)),
+    trustReveal: previous.trustReveal || !revealAll,
+  };
+}
+
+/** How many tiles are open, for this run, at this moment. */
+export function openTileCount(
+  run: RevealRun,
+  progressPercent: number,
+  revealAll: boolean,
+): number {
+  if (revealAll && run.trustReveal) return TILES;
+  // Before the question's own clock has been seen, top IS the current value:
+  // elapsed is zero and the cover is shut, which is exactly where a question
+  // starts. A leftover clock therefore opens nothing.
+  const elapsed =
+    run.top <= 0 ? 0 : Math.min(1, Math.max(0, (run.top - clampPercent(progressPercent)) / run.top));
+  return Math.min(
+    TILES,
+    START_VISIBLE + Math.round((elapsed / FULLY_OPEN_AT) * (TILES - START_VISIBLE)),
+  );
+}
+
 interface ImageRevealMaskProps {
   /** Anything stable and unique to this question. The image URL is both. */
   seed: string;
@@ -91,13 +160,9 @@ export const ImageRevealMask: React.FC<ImageRevealMaskProps> = ({
 }) => {
   const ranks = React.useMemo(() => revealRanks(hashSeed(seed)), [seed]);
 
-  const elapsed = 1 - Math.max(0, Math.min(100, progressPercent)) / 100;
-  const opened = revealAll
-    ? TILES
-    : Math.min(
-        TILES,
-        START_VISIBLE + Math.round((elapsed / FULLY_OPEN_AT) * (TILES - START_VISIBLE)),
-      );
+  const runRef = React.useRef<RevealRun | null>(null);
+  runRef.current = trackRun(runRef.current, seed, progressPercent, revealAll);
+  const opened = openTileCount(runRef.current, progressPercent, revealAll);
 
   return (
     <div
@@ -110,7 +175,12 @@ export const ImageRevealMask: React.FC<ImageRevealMaskProps> = ({
     >
       {ranks.map((rank, tile) => (
         <div
-          key={tile}
+          // Keyed by the picture, not just by position: a tile that survives
+          // a question change keeps its element, and a transition runs on it.
+          // The last question ended with every tile lifted, so the new
+          // question's cover would ANIMATE shut over a logo that was already
+          // legible. A new key is a new element, which paints closed.
+          key={`${seed}:${tile}`}
           // The white line is drawn INSIDE the tile rather than as a grid gap.
           // A gap would let a hairline of the picture through every seam, and
           // on a wordmark those hairlines are enough to read the name.

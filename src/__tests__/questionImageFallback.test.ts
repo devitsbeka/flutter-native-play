@@ -33,12 +33,17 @@ describe("a question image cannot leave the card blank", () => {
   );
 
   it("bounds how long it waits for the image", () => {
-    // The effect that resets status on a new URL must also arm a timer that
-    // gives up. Without it a stalled request never resolves either way.
+    // The effect that runs on a new URL must arm a timer that gives up.
+    // Without it a stalled request never resolves either way.
+    //
+    // The status reset itself no longer lives in this effect: an effect runs
+    // after the paint, and that paint showed the next question's picture
+    // under the previous question's cover. It is done during render now —
+    // logoRevealNeverFlashes.test.ts pins that, and this pins the deadline.
     const effect = source.match(
-      /React\.useEffect\(\(\)\s*=>\s*\{[\s\S]*?setImageStatus\("loading"\)[\s\S]*?\}\s*,\s*\[imageUrl\]\)/
+      /React\.useEffect\(\(\)\s*=>\s*\{[\s\S]*?attemptRef\.current = 0;[\s\S]*?\}\s*,\s*\[imageUrl\]\)/
     );
-    expect(effect, "expected the effect that resets image status per URL").not.toBeNull();
+    expect(effect, "expected the per-URL effect that bounds the image wait").not.toBeNull();
     expect(
       effect![0],
       "the image wait must be bounded — a stalled request fires neither load nor error"

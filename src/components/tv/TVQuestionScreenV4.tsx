@@ -65,10 +65,16 @@ export const TVQuestionScreenV4: React.FC = () => {
   // Failed question image -> show the question text instead (reset per question)
   const [tvImageFailed, setTvImageFailed] = useState(false);
   const [tvImageLoaded, setTvImageLoaded] = useState(false);
-  useEffect(() => {
+  // Reset during render, not in an effect on the index: an effect runs after
+  // the browser has painted, so that paint had the next question's <img> still
+  // marked loaded — the picture at full opacity under the cover the question
+  // that just ended had left open. A logo, uncovered, for a frame.
+  const [loadedIndex, setLoadedIndex] = useState(currentQuestionIndex);
+  if (loadedIndex !== currentQuestionIndex) {
+    setLoadedIndex(currentQuestionIndex);
     setTvImageFailed(false);
     setTvImageLoaded(false);
-  }, [currentQuestionIndex]);
+  }
 
   // The picture is presented the way the quiz presents it (QuizQuestionCard,
   // questionImageTreatment): a logo on plain white, contained, capped at
