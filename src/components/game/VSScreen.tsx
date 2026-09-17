@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { useGame } from "@/contexts/GameContext";
+import { useGame, type GamePhase } from "@/contexts/GameContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ArrowLeft, HelpCircle, RefreshCw, WifiOff } from "lucide-react";
@@ -39,6 +39,24 @@ const baseMascotAvatars = [
 
 /** The frame colour of the VS screen (Figma 1147:8822). Shared with the Guess card's versus screen. */
 export const VS_PURPLE = "#5651CE";
+
+/**
+ * The phases this screen is on for.
+ *
+ * Two places read it: GameContainer, which decides what to render, and the
+ * Game page, which paints the band under the status bar — the page carries
+ * the safe-area inset and clips its child, so that band is the page's colour
+ * and has to be the versus screen's while the versus screen is up. Kept in
+ * one place because a list that drifts shows up as a purple strip on top.
+ */
+export const VS_SCREEN_PHASES: readonly GamePhase[] = [
+  "home",
+  "matchmaking",
+  "preparing",
+  "vs-screen",
+];
+
+export const isVersusPhase = (phase: GamePhase): boolean => VS_SCREEN_PHASES.includes(phase);
 
 /** The icon-library bucket the category icons are served from. */
 const ICON_STORAGE_URL =
@@ -631,7 +649,9 @@ export function VSScreen() {
       <div className="w-full h-full flex flex-col max-w-[700px] mx-auto relative overflow-hidden">
 
       {/* VS watermark — Figma 1147:8834: Slackey at 296px, barely-there white,
-          bled off the left edge rather than centred. */}
+          bled off the left edge rather than centred. A quarter larger than the
+          180px it was drawn at, by request; the bleed and the drop off centre
+          are scaled with it so the composition holds. */}
       <motion.div
         className="absolute inset-0 flex items-center pointer-events-none overflow-hidden"
         style={{ zIndex: 1 }}
@@ -639,7 +659,7 @@ export function VSScreen() {
         animate={{ opacity: isOpponentLocked ? 1 : 0, scale: 1 }}
         transition={{ duration: 0.5 }}
       >
-        <span className="font-slackey text-[180px] leading-[180px] tracking-[-9px] text-white/[0.06] select-none -translate-x-[42px] translate-y-[20px]">
+        <span className="font-slackey text-[225px] leading-[225px] tracking-[-11.25px] text-white/[0.06] select-none -translate-x-[52.5px] translate-y-[25px]">
           VS
         </span>
       </motion.div>

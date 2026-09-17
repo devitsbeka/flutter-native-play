@@ -113,7 +113,7 @@ export function GuessVersusScreen({ categories, onPlay, onBack, busy = false }: 
       <div className="w-full h-full flex flex-col max-w-[700px] mx-auto relative overflow-hidden">
         {/* VS watermark — the quick game's (Figma 1147:8834). */}
         <div className="absolute inset-0 flex items-center pointer-events-none overflow-hidden" style={{ zIndex: 1 }}>
-          <span className="font-slackey text-[180px] leading-[180px] tracking-[-9px] text-white/[0.06] select-none -translate-x-[42px] translate-y-[20px]">
+          <span className="font-slackey text-[225px] leading-[225px] tracking-[-11.25px] text-white/[0.06] select-none -translate-x-[52.5px] translate-y-[25px]">
             VS
           </span>
         </div>
