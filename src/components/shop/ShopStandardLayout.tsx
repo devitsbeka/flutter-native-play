@@ -6,6 +6,7 @@ import { ProBannerReel } from "./MobileProCarousel";
 import { ShopCurrencySection } from "./ShopCurrencySection";
 import { isCurrencySection } from "./currencySections";
 import { MyPowersSection } from "./MyPowersSection";
+import { RestorePurchasesLink } from "@/components/purchases/RestorePurchasesLink";
 import { PowerUpType } from "@/hooks/useUserPowerUps";
 
 
@@ -260,6 +261,16 @@ export function ShopStandardLayout({
           the countdown deals at the foot are gone. Kept as a note rather
           than deleted outright so the next person knows the slot existed and
           why it is empty — ProBannerReel still supports slides="deals". */}
+
+      {/* Restore closes the shop.
+          The shop is where a player who already paid arrives when the app has
+          forgotten it — a reinstall, a new phone, a purchase that landed on
+          another identity — and until now the only way out of that was a row
+          buried in Settings. It is the surface App Review tests purchases on,
+          too, which is the other half of the 3.1.1 finding. */}
+      <div className="mt-6 border-t border-border/40 pt-5">
+        <RestorePurchasesLink />
+      </div>
     </div>
   );
 }

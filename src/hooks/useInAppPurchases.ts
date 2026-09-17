@@ -139,6 +139,36 @@ export interface IAPProduct {
   introFreeDays?: number;
 }
 
+/**
+ * What a restore actually did, in a form the screen can say out loud.
+ *
+ * It used to return a bare boolean and announce itself with `toast` — and
+ * every toast in this app is swallowed on purpose (see src/lib/toast.ts, which
+ * drops successes outright and writes errors to the console). So a restore
+ * that worked, one that found nothing on the Apple ID, and one that failed
+ * were all indistinguishable at the button: nothing appeared. The only visible
+ * effect of tapping Restore was the Subscribe button beside it switching to
+ * "working", because restore shared the `purchasing` flag.
+ *
+ * That is the whole of the 3.1.1 finding. A Restore button that restores and
+ * says nothing is, from the far side of the glass, a Restore button that does
+ * nothing — and no amount of restoring fixes it.
+ *
+ * So the outcome comes back instead, and each surface renders it where the tap
+ * happened. The toasts stay for the console breadcrumb.
+ */
+export type RestoreOutcome =
+  /** Apple had something and this account now has it. */
+  | "restored"
+  /** Apple replayed the transactions; there is no account to attach them to. */
+  | "signedOut"
+  /** This Apple ID has never bought anything here. */
+  | "none"
+  /** StoreKit refused, or the server could not be reached. */
+  | "failed"
+  /** The web. There is no device receipt to replay. */
+  | "notMobile";
+
 export interface PurchaseResult {
   success: boolean;
   transactionId?: string;
@@ -447,6 +477,12 @@ export function useInAppPurchases() {
   const [products, setProducts] = useState<IAPProduct[]>(storeProducts);
   const [loading, setLoading] = useState(storeProducts.length === 0);
   const [purchasing, setPurchasing] = useState(false);
+  // Deliberately not `purchasing`. Restore used to raise that flag, and every
+  // buy button in the app — including the Subscribe button directly above the
+  // Restore link on the paywall — is disabled by it. Tapping Restore therefore
+  // greyed out the control next to it and changed its label to "working",
+  // which reads as the wrong button having been pressed.
+  const [restoring, setRestoring] = useState(false);
   const [isInitialized, setIsInitialized] = useState(storeProducts.length > 0);
 
   useEffect(() => {
@@ -707,16 +743,17 @@ export function useInAppPurchases() {
    * sign-in picks them up (`syncEntitlements` runs again on purchase and on
    * the next restore).
    *
-   * Not a silent no-op either way: signed out it says the purchases were
-   * restored and to sign in.
+   * Not a silent no-op either way. Which of the five things happened comes
+   * back as a RestoreOutcome, because the toasts this used to rely on are
+   * suppressed app-wide and the button was therefore mute.
    */
-  const restorePurchases = useCallback(async (): Promise<boolean> => {
+  const restorePurchases = useCallback(async (): Promise<RestoreOutcome> => {
     if (!Capacitor.isNativePlatform()) {
       toast.info(tStandalone("extra.iapRestoreOnlyMobile"));
-      return false;
+      return "notMobile";
     }
 
-    setPurchasing(true);
+    setRestoring(true);
 
     try {
       const plugin = (await loadPurchasesPlugin())?.plugin;
@@ -746,29 +783,29 @@ export function useInAppPurchases() {
         toast.success(
           `${tStandalone("iap.purchasesRestored")} ${tStandalone("iap.pleaseSignIn")}`,
         );
-        return true;
+        return "signedOut";
       }
 
       const synced = await syncEntitlements();
       if (!synced.success) {
         toast.error(tStandalone("iap.restoreFailed"));
-        return false;
+        return "failed";
       }
 
       if (synced.tier || synced.gemsCredited > 0) {
         await refreshBalance();
         toast.success(tStandalone("iap.purchasesRestored"));
-        return true;
+        return "restored";
       }
 
       toast.info(tStandalone("iap.noPreviousPurchases"));
-      return false;
+      return "none";
     } catch (error: any) {
       console.error("Restore error:", error);
       toast.error(tStandalone("iap.restoreFailed"));
-      return false;
+      return "failed";
     } finally {
-      setPurchasing(false);
+      setRestoring(false);
     }
   }, [user, refreshBalance]);
 
@@ -781,6 +818,7 @@ export function useInAppPurchases() {
     products,
     loading,
     purchasing,
+    restoring,
     isInitialized,
     purchase,
     restorePurchases,

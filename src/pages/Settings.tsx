@@ -157,6 +157,15 @@ export default function Settings() {
             </motion.button>
           )}
 
+          {/* Restore purchases. Apple requires this to exist (3.1.1) and a
+              reviewer looks for it here before anything else; it is also the
+              only repair a player has after a reinstall or a new device.
+
+              High on the page on purpose. It used to sit between Notifications
+              and Help, roughly a screen down past two collapsible rows, and
+              the last review came back saying the app had no restore feature —
+              which is what a control nobody scrolls to amounts to. */}
+          <RestorePurchasesRow delay={0.1} />
 
           {/* Divider */}
           <div className="h-px bg-border/50 my-4" />
@@ -258,11 +267,6 @@ export default function Settings() {
           {/* Notifications — the only place the permission prompt is asked
               for. Above Help because it is a setting rather than a link out. */}
           <NotificationSettingsRow />
-
-          {/* Restore purchases. Apple requires this to exist and a reviewer
-              looks for it here; it is also the only repair a player has after
-              a reinstall or a new device. */}
-          <RestorePurchasesRow />
 
           {/* Help */}
           <motion.button

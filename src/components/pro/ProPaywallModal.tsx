@@ -12,6 +12,7 @@ import { PRICES, currencyForLanguage, formatMoney } from "@/config/pricing";
 import { GLASS_SHEEN, SKIN_WHITE } from "@/components/shop/ProBannerCard";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { SubscriptionTerms } from "@/components/shared/SubscriptionTerms";
+import { RestorePurchasesLink } from "@/components/purchases/RestorePurchasesLink";
 
 // The brand's crown, not a stock one. `icon-vip-crown` is an ornate
 // jewelled render that belongs to nothing else in the app; this is the
@@ -64,13 +65,12 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
   const { t, language } = useLanguage();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { products, loading, purchasing, restorePurchases } = useInAppPurchases();
+  const { products, loading, purchasing } = useInAppPurchases();
   // The app's own price resolver: StoreKit's localised string on a phone,
   // the tier's figure converted to GEL on the web. Re-implementing it here
   // is how a Georgian user ends up shown "$3.99" for a charge in ₾.
   const resolvePrice = useStorePrice();
   const { initiateProCheckout, isProcessing } = useProPurchase();
-  const [restoring, setRestoring] = useState(false);
 
   const isNative = Capacitor.isNativePlatform();
 
@@ -241,16 +241,9 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
     if (result.success) onClose();
   };
 
-  const handleRestore = async () => {
-    setRestoring(true);
-    const restored = await restorePurchases();
-    setRestoring(false);
-    if (restored) onClose();
-  };
-
   if (!isOpen) return null;
 
-  const busy = purchasing || isProcessing || restoring;
+  const busy = purchasing || isProcessing;
 
   /**
    * What the button says.
@@ -474,6 +467,20 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
           {ctaLabel}
         </ChunkyButton>
 
+        {/* Restore sits directly under the button it belongs beside.
+            It used to be the last thing on the screen: 11px grey, on a line
+            with Terms and Privacy, under a four-line renewal paragraph. App
+            Review reported the app had no Restore feature at all, and that is
+            a fair reading of a control drawn to be overlooked. The order now
+            is buy, restore, then the small print — the two things a player
+            came here to press, then the things they came here to read. */}
+        <RestorePurchasesLink
+          className="mt-3"
+          color={ink}
+          mutedColor={inkSoft}
+          onRestored={onClose}
+        />
+
         {selected && (
           <p className="mt-3 text-center text-[13px]" style={{ color: inkSoft }}>
             {(() => {
@@ -503,27 +510,22 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
             the buy button opens Stripe Checkout instead. */}
         <SubscriptionTerms className="mt-3 text-center" onNavigate={onClose} />
 
-        <div
-          className="mt-3 flex items-center justify-center gap-4 text-[11px] leading-tight"
-          style={{ color: inkSoft }}
-        >
-          {!isNative && (
+        {/* Last, and only on the web: SubscriptionTerms above carries its own
+            Terms and Privacy links on a phone, so rendering these too put the
+            same two links on the screen twice. */}
+        {!isNative && (
+          <div
+            className="mt-3 flex items-center justify-center gap-4 text-[11px] leading-tight"
+            style={{ color: inkSoft }}
+          >
             <button type="button" onClick={() => { onClose(); navigate("/terms"); }}>
               {t("paywall.terms")}
             </button>
-          )}
-          {/* Restore stays on every platform and in every state: a player
-              whose purchase landed against another identity reaches this
-              screen precisely because the app does not think they are PRO. */}
-          <button type="button" onClick={handleRestore} disabled={busy}>
-            {t("paywall.restore")}
-          </button>
-          {!isNative && (
             <button type="button" onClick={() => { onClose(); navigate("/privacy-policy"); }}>
               {t("paywall.privacy")}
             </button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,8 +1,9 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { RefreshCw, Loader2 } from "lucide-react";
-import { Capacitor } from "@capacitor/core";
-import { useInAppPurchases } from "@/hooks/useInAppPurchases";
+import { useInAppPurchases, type RestoreOutcome } from "@/hooks/useInAppPurchases";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { restoreOutcomeKeys } from "@/utils/restoreOutcome";
 
 /**
  * Restore previously bought purchases.
@@ -21,39 +22,58 @@ import { useLanguage } from "@/contexts/LanguageContext";
  * nothing to press.
  *
  * Settings, because that is the first place a reviewer looks and the first
- * place a player looks. Native only — there is nothing to restore on the web,
- * where Stripe purchases are already tied to the account.
+ * place a player looks — near the top of it, above the collapsible name and
+ * password rows, because a row far enough down the page to need scrolling is a
+ * row that gets reported as missing.
+ *
+ * **Rendered on every platform.** It used to return null off native, and that
+ * is a failure mode with no symptom: the row simply is not there, and nothing
+ * on the screen distinguishes "this build has no restore" from "this platform
+ * hides it". The web answer is one line of honest text — restoring happens in
+ * the app — which is worth more than an absence.
  */
 export function RestorePurchasesRow({ delay = 0.24 }: { delay?: number }) {
   const { t } = useLanguage();
-  const { restorePurchases, purchasing } = useInAppPurchases();
+  const { restorePurchases, restoring } = useInAppPurchases();
+  const [outcome, setOutcome] = useState<RestoreOutcome | null>(null);
 
-  if (!Capacitor.isNativePlatform()) return null;
+  const run = async () => {
+    setOutcome(null);
+    setOutcome(await restorePurchases());
+  };
 
   return (
-    <motion.button
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay }}
-      disabled={purchasing}
-      onClick={() => void restorePurchases()}
-      className="w-full flex items-center gap-4 p-4 rounded-xl bg-card border border-border hover:bg-muted/50 transition-colors disabled:opacity-60"
-    >
-      <div className="w-12 h-12 rounded-xl bg-teal-500/10 flex items-center justify-center shrink-0">
-        {purchasing ? (
-          <Loader2 className="w-6 h-6 text-teal-500 animate-spin" />
-        ) : (
-          <RefreshCw className="w-6 h-6 text-teal-500" />
-        )}
-      </div>
-      <div className="flex-1 min-w-0 text-left">
-        <span className="font-medium text-foreground block">
-          {purchasing ? t("extra.restoring") : t("extra.restorePurchases")}
-        </span>
-        <span className="text-sm text-muted-foreground block">
-          {t("extra.restoreDescription")}
-        </span>
-      </div>
-    </motion.button>
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay }}>
+      <button
+        type="button"
+        disabled={restoring}
+        onClick={() => void run()}
+        className="w-full flex items-center gap-4 p-4 rounded-xl bg-card border border-border hover:bg-muted/50 transition-colors disabled:opacity-60"
+      >
+        <div className="w-12 h-12 rounded-xl bg-teal-500/10 flex items-center justify-center shrink-0">
+          {restoring ? (
+            <Loader2 className="w-6 h-6 text-teal-500 animate-spin" />
+          ) : (
+            <RefreshCw className="w-6 h-6 text-teal-500" />
+          )}
+        </div>
+        <div className="flex-1 min-w-0 text-left">
+          <span className="font-medium text-foreground block">
+            {restoring ? t("extra.restoring") : t("extra.restorePurchases")}
+          </span>
+          {/* The result replaces the description once there is one. The
+              description is an invitation and the result is the answer to the
+              tap; showing both leaves the player deciding which line is about
+              what just happened. */}
+          <span className="text-sm text-muted-foreground block">
+            {outcome && !restoring
+              ? restoreOutcomeKeys(outcome)
+                  .map((key) => t(key))
+                  .join(" ")
+              : t("extra.restoreDescription")}
+          </span>
+        </div>
+      </button>
+    </motion.div>
   );
 }
