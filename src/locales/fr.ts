@@ -1233,6 +1233,8 @@ export const fr: KaTranslations = {
     purchasesRestored: "Achats restaurés! 🎉",
     noPreviousPurchases: "Aucun achat précédent trouvé",
     restoreFailed: "Échec de la restauration",
+    restoreSignInFirst: "Connecte-toi pour restaurer tes achats.",
+    restoreCouldNotCheck: "Nous n'avons pas pu vérifier tes achats. Vérifie ta connexion et réessaie.",
   },
   featured: {
     ...en.featured,
@@ -4467,6 +4469,8 @@ export const fr: KaTranslations = {
     tpmStep3: "3. Invite tes amis avec le code QR",
     iapItemUnavailable: "Cet article n'est pas disponible dans la boutique pour le moment.",
     iapGemsShortly: "Achat terminé — tes gemmes apparaîtront sous peu.",
+    gemsLabel: "Gemmes",
+    proLabel: "PRO",
     iapActivationFailed: "L'achat a réussi, mais l'activation a échoué. Il apparaîtra sous peu.",
     iapStoreNoResponse: "La boutique n'a pas répondu. Réessaie.",
     iapRestoreOnlyMobile: "Restauration disponible uniquement dans l'app mobile",

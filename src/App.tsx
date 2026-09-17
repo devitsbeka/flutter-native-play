@@ -38,6 +38,7 @@ import { PageSkeleton } from "@/components/PageSkeleton";
 import { Navigate, useParams } from "react-router-dom";
 import { isLegalLanguage } from "@/utils/legalLanguage";
 import { OfflineBanner } from "./components/shared/OfflineBanner";
+import { PurchaseOutcomeHost } from "@/components/purchases/PurchaseOutcomeHost";
 import { GlobalJoinRequestGate } from "@/components/team/JoinRequestGate";
 import { GlobalGameInviteGate } from "@/components/team/GameInviteGate";
 import { GlobalRematchGate } from "@/components/team/RematchGate";
@@ -290,6 +291,12 @@ const App = () => (
 
             {/* Offline detection banner */}
             <OfflineBanner />
+
+            {/* Confirms a completed purchase, wherever it was started.
+                Mounted here because the paywall closes itself on success and
+                the shop sheet unmounts on navigation — a confirmation owned by
+                either would vanish with the screen that bought the thing. */}
+            <PurchaseOutcomeHost />
 
             {/* Somebody knocking on a room this player hosts, wherever they
                 are in the app: the same doorstep the lobby used to own, so

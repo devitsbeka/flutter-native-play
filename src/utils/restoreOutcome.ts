@@ -17,11 +17,16 @@ export function restoreOutcomeKeys(outcome: RestoreOutcome): string[] {
     case "restored":
       return ["iap.purchasesRestored"];
     case "signedOut":
-      return ["iap.purchasesRestored", "iap.pleaseSignIn"];
+      // Not "restored". Signed out, the app cannot know whether this Apple ID
+      // owns anything, so it must not say that it does — see the note in
+      // restorePurchases. One sentence, and it names the next step.
+      return ["iap.restoreSignInFirst"];
     case "none":
       return ["iap.noPreviousPurchases"];
     case "failed":
-      return ["iap.restoreFailed"];
+      // The check did not complete. Distinct from "you own nothing", which is
+      // an answer; this is the absence of one.
+      return ["iap.restoreCouldNotCheck"];
     case "notMobile":
       return ["extra.iapRestoreOnlyMobile"];
   }

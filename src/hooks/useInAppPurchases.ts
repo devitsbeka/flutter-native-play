@@ -52,7 +52,7 @@ export const IAP_PRODUCTS = {
 // src/config/gemPacks.ts, so the shop and the store SKUs cannot drift apart.
 // Imported as well as re-exported: `export { X } from` is a pure re-export and
 // does not bind X in this module's scope.
-import { GEM_PACK_PRODUCTS } from "@/config/gemPacks";
+import { GEM_PACK_PRODUCTS, GEM_PACKS } from "@/config/gemPacks";
 export { GEM_PACK_PRODUCTS } from "@/config/gemPacks";
 
 // Every id the app can sell, for the direct StoreKit query below. Offerings
@@ -334,6 +334,63 @@ let storeFailed = false;
 function announceFailure(failed: boolean) {
   storeFailed = failed;
   storeFailureSubscribers.forEach((fn) => fn(failed));
+}
+
+/**
+ * What a completed purchase should say out loud.
+ *
+ * Every success path in `purchase()` used to end at `toast.success(...)`, and
+ * `src/lib/toast.ts` swallows those app-wide. So the App Store took the money,
+ * showed its own "You're all set", and the app itself said nothing at all —
+ * no confirmation, no modal, and a gem balance that only moved if RevenueCat
+ * happened to propagate before `refreshBalance()` read it.
+ *
+ * The gem path was worse still: `useGemPurchase` did `await
+ * nativePurchase(productId)` and threw the result away, so even a caller who
+ * wanted to react had nothing to react to. `PurchaseSuccessModal` existed the
+ * whole time, wired up for coins and power-ups, and was never once shown for
+ * the things people pay real money for.
+ *
+ * Announcing from here rather than from each caller is deliberate: `purchase()`
+ * is the single choke point every IAP goes through — gems, PRO, from the shop,
+ * the paywall, or the not-enough-gems modal. One subscriber renders one
+ * confirmation and no call site can forget to.
+ */
+export interface PurchaseAnnouncement {
+  productId: string;
+  /** Gems the pack promises, when this was a gem pack. */
+  gems?: number;
+  /**
+   * The money moved but the credit has not landed yet.
+   *
+   * RevenueCat's REST API is eventually consistent, so a gem purchase can
+   * legitimately report `gemsCredited: 0` for a second or two. The balance is
+   * still coming — `pollForCredit` is watching — and the player must be told
+   * that rather than shown a silent no-op.
+   */
+  pending?: boolean;
+}
+
+const purchaseSubscribers = new Set<(a: PurchaseAnnouncement) => void>();
+
+function announcePurchase(a: PurchaseAnnouncement) {
+  iapLog("announcing purchase", a);
+  purchaseSubscribers.forEach((fn) => fn(a));
+}
+
+/** Subscribe to completed purchases. Used by the app-wide confirmation host. */
+export function usePurchaseAnnouncements(onPurchase: (a: PurchaseAnnouncement) => void) {
+  useEffect(() => {
+    purchaseSubscribers.add(onPurchase);
+    return () => {
+      purchaseSubscribers.delete(onPurchase);
+    };
+  }, [onPurchase]);
+}
+
+/** Gems a store product grants, for the confirmation. */
+function gemsForProduct(productId: string): number | undefined {
+  return GEM_PACKS.find((p) => p.productId === productId)?.gems;
 }
 
 function toIAPProduct(product: any): IAPProduct {
@@ -844,6 +901,14 @@ export function useInAppPurchases() {
           void pollForCredit(refreshBalance);
           await refreshBalance();
           toast.success(tStandalone("extra.iapGemsShortly"));
+          // Say so on screen. This is the case that looked most broken: the
+          // charge went through, the balance had not moved yet, and the only
+          // notice was a toast nothing renders.
+          announcePurchase({
+            productId,
+            gems: gemsForProduct(productId),
+            pending: true,
+          });
           return { success: true };
         }
 
@@ -865,6 +930,12 @@ export function useInAppPurchases() {
         await refreshBalance();
 
         toast.success(tStandalone("iap.purchaseComplete"));
+        // The balance has been re-read and the entitlement is live. Confirm it
+        // where the player can actually see it.
+        announcePurchase({
+          productId,
+          gems: synced.gemsCredited > 0 ? synced.gemsCredited : gemsForProduct(productId),
+        });
         return { success: true };
       }
 
@@ -953,13 +1024,26 @@ export function useInAppPurchases() {
       // do here, so say that and point at the step the player still owes —
       // rather than reporting a failure for something that succeeded.
       if (!user) {
-        toast.success(
-          `${tStandalone("iap.purchasesRestored")} ${tStandalone("iap.pleaseSignIn")}`,
-        );
+        // Do NOT claim anything was restored here.
+        //
+        // Apple has replayed whatever this Apple ID owns onto the device, but
+        // with no account signed in there is nothing to attach it to and no
+        // way to know whether it owned anything at all. Announcing "Purchases
+        // restored! 🎉" to someone who has never bought anything is the app
+        // asserting a fact it has not checked, and it is what made Restore
+        // look broken: the same celebration whether or not there was a
+        // purchase. Ask them to sign in; that is the only true next step.
+        iapLog("restore ran signed out — nothing to attach it to");
         return "signedOut";
       }
 
       const synced = await syncEntitlements();
+
+      // "We could not check" is not "you own nothing", and the two must never
+      // print the same sentence. A restore that timed out told the player
+      // "Restore failed", which reads as "your purchase is gone" — when in
+      // fact nothing was even asked. The copy for this outcome now says the
+      // check did not complete and to try again.
       if (!synced.success) {
         toast.error(tStandalone("iap.restoreFailed"));
         return "failed";
@@ -971,6 +1055,9 @@ export function useInAppPurchases() {
         return "restored";
       }
 
+      // The check completed and this Apple ID owns nothing here. That is a
+      // perfectly normal answer and Apple expects it to be stated plainly —
+      // not dressed up as a failure, and not as a celebration.
       toast.info(tStandalone("iap.noPreviousPurchases"));
       return "none";
     } catch (error: any) {

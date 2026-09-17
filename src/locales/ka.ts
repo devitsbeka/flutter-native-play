@@ -1463,6 +1463,8 @@ export const ka = {
     purchasesRestored: "შესყიდვები აღდგენილია! 🎉",
     noPreviousPurchases: "წინა შესყიდვები ვერ მოიძებნა",
     restoreFailed: "აღდგენა ვერ მოხერხდა",
+    restoreSignInFirst: "შესყიდვების აღსადგენად გაიარე ავტორიზაცია.",
+    restoreCouldNotCheck: "ახლა ვერ შევამოწმეთ შენი შესყიდვები. შეამოწმე კავშირი და სცადე ხელახლა.",
   },
 
   // ==========================================
@@ -5156,6 +5158,8 @@ export const ka = {
     // useInAppPurchases
     iapItemUnavailable: "ეს პროდუქტი მაღაზიაში ამჟამად მიუწვდომელია.",
     iapGemsShortly: "შესყიდვა დასრულდა — ალმასები მალე დაგერიცხება.",
+    gemsLabel: "ბრილიანტი",
+    proLabel: "PRO",
     iapActivationFailed: "შესყიდვა შესრულდა, მაგრამ გააქტიურება ვერ მოხერხდა. მალე გამოჩნდება.",
     iapStoreNoResponse: "მაღაზიამ არ უპასუხა. სცადე თავიდან.",
     iapRestoreOnlyMobile: "აღდგენა ხელმისაწვდომია მხოლოდ მობილურ აპლიკაციაში",

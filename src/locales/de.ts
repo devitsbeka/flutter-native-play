@@ -1236,6 +1236,8 @@ export const de: KaTranslations = {
     purchasesRestored: "Käufe wiederhergestellt! 🎉",
     noPreviousPurchases: "Keine vorherigen Käufe gefunden",
     restoreFailed: "Wiederherstellung fehlgeschlagen",
+    restoreSignInFirst: "Melde dich an, um deine Käufe wiederherzustellen.",
+    restoreCouldNotCheck: "Wir konnten deine Käufe gerade nicht prüfen. Prüfe deine Verbindung und versuche es erneut.",
   },
   featured: {
     ...en.featured,
@@ -4509,6 +4511,8 @@ export const de: KaTranslations = {
     tpmStep3: "3. Lade Freunde mit dem QR-Code ein",
     iapItemUnavailable: "Dieser Artikel ist im Store gerade nicht verfügbar.",
     iapGemsShortly: "Kauf abgeschlossen — deine Edelsteine erscheinen in Kürze.",
+    gemsLabel: "Edelsteine",
+    proLabel: "PRO",
     iapActivationFailed: "Der Kauf war erfolgreich, aber die Aktivierung ist fehlgeschlagen. Er erscheint in Kürze.",
     iapStoreNoResponse: "Der Store hat nicht geantwortet. Bitte versuche es erneut.",
     iapRestoreOnlyMobile: "Wiederherstellen nur in der Mobil-App möglich",

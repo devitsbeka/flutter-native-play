@@ -1464,6 +1464,8 @@ export const en: KaTranslations = {
     purchasesRestored: "Purchases restored! 🎉",
     noPreviousPurchases: "No previous purchases found",
     restoreFailed: "Restore failed",
+    restoreSignInFirst: "Sign in to restore your purchases.",
+    restoreCouldNotCheck: "We couldn't check your purchases just now. Check your connection and try again.",
   },
 
   // ==========================================
@@ -5124,6 +5126,8 @@ export const en: KaTranslations = {
     // useInAppPurchases
     iapItemUnavailable: "This item isn't available from the store right now.",
     iapGemsShortly: "Purchase completed — your gems will appear shortly.",
+    gemsLabel: "Gems",
+    proLabel: "PRO",
     iapActivationFailed: "Purchase went through, but activating it failed. It will appear shortly.",
     iapStoreNoResponse: "The store did not respond. Please try again.",
     iapRestoreOnlyMobile: "Restore only available in mobile app",
