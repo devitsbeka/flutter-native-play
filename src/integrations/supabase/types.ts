@@ -86,6 +86,30 @@ export type Database = {
         }
         Relationships: []
       }
+      avatar_generation_claims: {
+        Row: {
+          billable: boolean
+          charged: boolean
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          billable: boolean
+          charged: boolean
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          billable?: boolean
+          charged?: boolean
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       avatar_generations: {
         Row: {
           animated_avatar_url: string | null
@@ -113,6 +137,30 @@ export type Database = {
           is_current?: boolean | null
           source_image_url?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      blocked_terms: {
+        Row: {
+          created_at: string
+          match_kind: string
+          normalized: string
+          note: string | null
+          term: string
+        }
+        Insert: {
+          created_at?: string
+          match_kind: string
+          normalized: string
+          note?: string | null
+          term: string
+        }
+        Update: {
+          created_at?: string
+          match_kind?: string
+          normalized?: string
+          note?: string | null
+          term?: string
         }
         Relationships: []
       }
@@ -781,7 +829,7 @@ export type Database = {
           cover_image: string | null
           created_at: string | null
           current_game_id: string | null
-          draft_public: boolean | null
+          draft_public: boolean
           game_mode: string | null
           game_type: Database["public"]["Enums"]["game_type"]
           game_type_key: string | null
@@ -790,7 +838,7 @@ export type Database = {
           host_user_id: string
           id: string
           is_archived: boolean | null
-          is_draft: boolean | null
+          is_draft: boolean
           is_permanent: boolean | null
           is_public: boolean
           last_activity_at: string | null
@@ -822,7 +870,7 @@ export type Database = {
           cover_image?: string | null
           created_at?: string | null
           current_game_id?: string | null
-          draft_public?: boolean | null
+          draft_public?: boolean
           game_mode?: string | null
           game_type?: Database["public"]["Enums"]["game_type"]
           game_type_key?: string | null
@@ -831,7 +879,7 @@ export type Database = {
           host_user_id: string
           id?: string
           is_archived?: boolean | null
-          is_draft?: boolean | null
+          is_draft?: boolean
           is_permanent?: boolean | null
           is_public?: boolean
           last_activity_at?: string | null
@@ -863,7 +911,7 @@ export type Database = {
           cover_image?: string | null
           created_at?: string | null
           current_game_id?: string | null
-          draft_public?: boolean | null
+          draft_public?: boolean
           game_mode?: string | null
           game_type?: Database["public"]["Enums"]["game_type"]
           game_type_key?: string | null
@@ -872,7 +920,7 @@ export type Database = {
           host_user_id?: string
           id?: string
           is_archived?: boolean | null
-          is_draft?: boolean | null
+          is_draft?: boolean
           is_permanent?: boolean | null
           is_public?: boolean
           last_activity_at?: string | null
@@ -1504,6 +1552,45 @@ export type Database = {
           },
         ]
       }
+      king_question_reports: {
+        Row: {
+          correct_answer: string | null
+          created_at: string
+          id: string
+          language: string
+          match_id: string | null
+          mode: string
+          question_number: number | null
+          question_text: string
+          room_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          correct_answer?: string | null
+          created_at?: string
+          id?: string
+          language: string
+          match_id?: string | null
+          mode?: string
+          question_number?: number | null
+          question_text: string
+          room_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          correct_answer?: string | null
+          created_at?: string
+          id?: string
+          language?: string
+          match_id?: string | null
+          mode?: string
+          question_number?: number | null
+          question_text?: string
+          room_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       king_questions: {
         Row: {
           correct_answer: string
@@ -1932,6 +2019,51 @@ export type Database = {
           },
         ]
       }
+      power_up_grant_limits: {
+        Row: {
+          kind: string
+          max_per_call: number
+          max_per_day: number
+        }
+        Insert: {
+          kind: string
+          max_per_call: number
+          max_per_day: number
+        }
+        Update: {
+          kind?: string
+          max_per_call?: number
+          max_per_day?: number
+        }
+        Relationships: []
+      }
+      power_up_grants: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          kind: string
+          power_type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          kind: string
+          power_type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          kind?: string
+          power_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       pro_seats: {
         Row: {
           granted_at: string
@@ -1998,6 +2130,9 @@ export type Database = {
           region: string | null
           security_answer_hash: string | null
           security_question_id: number | null
+          suspended_at: string | null
+          suspended_by: string | null
+          suspended_reason: string | null
           total_correct_answers: number | null
           total_points: number | null
           updated_at: string
@@ -2029,6 +2164,9 @@ export type Database = {
           region?: string | null
           security_answer_hash?: string | null
           security_question_id?: number | null
+          suspended_at?: string | null
+          suspended_by?: string | null
+          suspended_reason?: string | null
           total_correct_answers?: number | null
           total_points?: number | null
           updated_at?: string
@@ -2060,6 +2198,9 @@ export type Database = {
           region?: string | null
           security_answer_hash?: string | null
           security_question_id?: number | null
+          suspended_at?: string | null
+          suspended_by?: string | null
+          suspended_reason?: string | null
           total_correct_answers?: number | null
           total_points?: number | null
           updated_at?: string
@@ -2197,6 +2338,69 @@ export type Database = {
           token?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      question_favorites: {
+        Row: {
+          category_id: string | null
+          created_at: string
+          id: string
+          language: string | null
+          question_id: string
+          question_text: string | null
+          user_id: string
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string
+          id?: string
+          language?: string | null
+          question_id: string
+          question_text?: string | null
+          user_id: string
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string
+          id?: string
+          language?: string | null
+          question_id?: string
+          question_text?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      question_reports: {
+        Row: {
+          correct_answer: string | null
+          created_at: string
+          id: string
+          language: string | null
+          question_id: string | null
+          question_text: string
+          source: string | null
+          user_id: string | null
+        }
+        Insert: {
+          correct_answer?: string | null
+          created_at?: string
+          id?: string
+          language?: string | null
+          question_id?: string | null
+          question_text: string
+          source?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          correct_answer?: string | null
+          created_at?: string
+          id?: string
+          language?: string | null
+          question_id?: string | null
+          question_text?: string
+          source?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -2581,6 +2785,7 @@ export type Database = {
           player_scores: Json
           questions_data: Json
           room_id: string
+          stakes_applied: boolean
           started_at: string
           totals_applied: boolean
           winner_user_id: string | null
@@ -2593,6 +2798,7 @@ export type Database = {
           player_scores?: Json
           questions_data?: Json
           room_id: string
+          stakes_applied?: boolean
           started_at?: string
           totals_applied?: boolean
           winner_user_id?: string | null
@@ -2605,6 +2811,7 @@ export type Database = {
           player_scores?: Json
           questions_data?: Json
           room_id?: string
+          stakes_applied?: boolean
           started_at?: string
           totals_applied?: boolean
           winner_user_id?: string | null
@@ -2851,6 +3058,45 @@ export type Database = {
           settled_at?: string
           vote_counts?: Json
           winners?: string[]
+        }
+        Relationships: []
+      }
+      shop_catalog: {
+        Row: {
+          coins: number
+          frame_id: string | null
+          gems: number
+          id: string
+          is_active: boolean
+          power_amount: number
+          power_type: string | null
+          powers: number
+          price_gems: number
+          vip_duration: string | null
+        }
+        Insert: {
+          coins?: number
+          frame_id?: string | null
+          gems?: number
+          id: string
+          is_active?: boolean
+          power_amount?: number
+          power_type?: string | null
+          powers?: number
+          price_gems: number
+          vip_duration?: string | null
+        }
+        Update: {
+          coins?: number
+          frame_id?: string | null
+          gems?: number
+          id?: string
+          is_active?: boolean
+          power_amount?: number
+          power_type?: string | null
+          powers?: number
+          price_gems?: number
+          vip_duration?: string | null
         }
         Relationships: []
       }
@@ -4513,6 +4759,8 @@ export type Database = {
       }
       user_reports: {
         Row: {
+          content_id: string | null
+          content_type: string | null
           created_at: string | null
           description: string | null
           id: string
@@ -4526,6 +4774,8 @@ export type Database = {
           status: string | null
         }
         Insert: {
+          content_id?: string | null
+          content_type?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
@@ -4539,6 +4789,8 @@ export type Database = {
           status?: string | null
         }
         Update: {
+          content_id?: string | null
+          content_type?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
@@ -4761,6 +5013,14 @@ export type Database = {
         Args: { p_delta: number; p_type: string }
         Returns: number
       }
+      admin_remove_reported_content: {
+        Args: { p_report_id: string; p_target?: string }
+        Returns: Json
+      }
+      admin_set_user_suspended: {
+        Args: { p_reason?: string; p_suspended?: boolean; p_user_id: string }
+        Returns: Json
+      }
       admin_user_economy: { Args: never; Returns: Json }
       apply_currency_grant: {
         Args: {
@@ -4796,21 +5056,9 @@ export type Database = {
         Args: { p_games: number; p_source: string }
         Returns: Json
       }
-      claim_streak_milestone: {
-        Args: { p_days: number }
-        Returns: {
-          coins_awarded: number
-          new_coins: number
-          new_gems: number
-        }[]
-      }
-      streak_milestones_claimed: {
-        Args: never
-        Returns: number[]
-      }
-      clear_room_unread: {
-        Args: { p_room_id: string }
-        Returns: undefined
+      claim_avatar_generation: {
+        Args: { p_billable?: boolean; p_user_id: string }
+        Returns: string
       }
       claim_daily_reward: {
         Args: never
@@ -4835,11 +5083,22 @@ export type Database = {
           new_gems: number
         }[]
       }
+      claim_streak_milestone: {
+        Args: { p_days: number }
+        Returns: {
+          coins_awarded: number
+          new_coins: number
+          new_gems: number
+        }[]
+      }
+      claim_vip_frame: { Args: { p_frame_id: string }; Returns: boolean }
+      clear_room_unread: { Args: { p_room_id: string }; Returns: undefined }
       complete_room_round: {
         Args: { p_game_id: string; p_room_id: string }
         Returns: boolean
       }
       consume_free_play: { Args: never; Returns: Json }
+      contains_blocked_text: { Args: { p_text: string }; Returns: boolean }
       credit_gameplay_reward: {
         Args: {
           p_coins?: number
@@ -4857,7 +5116,6 @@ export type Database = {
         Returns: undefined
       }
       ensure_admin_lifetime_pro: { Args: never; Returns: boolean }
-      claim_vip_frame: { Args: { p_frame_id: string }; Returns: boolean }
       ensure_default_power_ups: {
         Args: never
         Returns: {
@@ -4868,21 +5126,6 @@ export type Database = {
       exchange_currency: {
         Args: { p_amount: number; p_direction: string }
         Returns: {
-          new_coins: number
-          new_gems: number
-        }[]
-      }
-      purchase_power_up: {
-        Args: { p_quantity?: number; p_type: string }
-        Returns: {
-          new_coins: number
-          owned: number
-        }[]
-      }
-      purchase_shop_item: {
-        Args: { p_item_id: string }
-        Returns: {
-          granted: Json
           new_coins: number
           new_gems: number
         }[]
@@ -4995,8 +5238,15 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      grant_power_ups: {
+        Args: { p_amount: number; p_type: string; p_user_id: string }
+        Returns: number
+      }
       grant_pro_seat: { Args: { p_holder_id: string }; Returns: Json }
-      grant_reward_power_up: { Args: { p_amount?: number; p_kind: string; p_type: string }; Returns: number }
+      grant_reward_power_up: {
+        Args: { p_amount?: number; p_kind: string; p_type: string }
+        Returns: number
+      }
       grant_vip_days: {
         Args: { p_duration: string }
         Returns: {
@@ -5062,6 +5312,8 @@ export type Database = {
           user_id: string
         }[]
       }
+      is_block_between: { Args: { a: string; b: string }; Returns: boolean }
+      is_category_icon: { Args: { p_icon: string }; Returns: boolean }
       is_tv_session_participant: {
         Args: { p_player_identifier: string; p_session_id: string }
         Returns: boolean
@@ -5268,6 +5520,12 @@ export type Database = {
         }
         Returns: string
       }
+      moderation_normalize: { Args: { p_text: string }; Returns: string }
+      moderation_tokens: { Args: { p_text: string }; Returns: string[] }
+      moderation_word_candidates: {
+        Args: { p_text: string }
+        Returns: string[]
+      }
       national_question_progress: {
         Args: never
         Returns: {
@@ -5308,6 +5566,10 @@ export type Database = {
         Args: { p_expires_at: string; p_platform: string; p_tier: string }
         Returns: boolean
       }
+      public_room_is_over: {
+        Args: { r: Database["public"]["Tables"]["game_rooms"]["Row"] }
+        Returns: boolean
+      }
       public_rooms: {
         Args: { p_limit?: number }
         Returns: {
@@ -5327,8 +5589,24 @@ export type Database = {
           room_code: string
           room_icon: string
           room_name: string
+          rounds: Json
           status: string
-          requires_approval: boolean
+          total_questions: number
+        }[]
+      }
+      purchase_power_up: {
+        Args: { p_quantity?: number; p_type: string }
+        Returns: {
+          new_coins: number
+          owned: number
+        }[]
+      }
+      purchase_shop_item: {
+        Args: { p_item_id: string }
+        Returns: {
+          granted: Json
+          new_coins: number
+          new_gems: number
         }[]
       }
       question_translation_progress: {
@@ -5338,6 +5616,10 @@ export type Database = {
           source_total: number
           translated: number
         }[]
+      }
+      refund_avatar_generation: {
+        Args: { p_user_id: string }
+        Returns: undefined
       }
       request_room_join: { Args: { p_room_id: string }; Returns: string }
       reset_room_participants: {
@@ -5351,6 +5633,7 @@ export type Database = {
         Returns: string
       }
       revoke_pro_seat: { Args: { p_holder_id: string }; Returns: Json }
+      room_icon_slug: { Args: { p_icon: string }; Returns: string }
       room_players: {
         Args: { p_room_code: string }
         Returns: {
@@ -5381,6 +5664,8 @@ export type Database = {
           room_status: string
         }[]
       }
+      room_round_deltas: { Args: { p_game_id: string }; Returns: Json }
+      room_round_ledger: { Args: { p_game_id: string }; Returns: Json }
       search_questions: {
         Args: {
           p_category_id?: string
@@ -5407,6 +5692,10 @@ export type Database = {
           video_url: string
         }[]
       }
+      settle_guess_game: {
+        Args: { p_outcome: string; p_reference?: string }
+        Returns: Json
+      }
       settle_most_likely_votes: {
         Args: {
           p_game_id: string
@@ -5415,18 +5704,16 @@ export type Database = {
         }
         Returns: number
       }
-      room_round_ledger: {
-        Args: { p_game_id: string }
-        Returns: Json
-      }
-      settle_guess_game: {
-        Args: { p_outcome: string; p_reference?: string }
-        Returns: Json
-      }
       settle_quick_game: {
         Args: { p_outcome: string; p_reference?: string }
         Returns: Json
       }
+      settle_room_round: {
+        Args: { p_game_id: string; p_room_id: string }
+        Returns: Json
+      }
+      streak_milestone_coins: { Args: { p_days: number }; Returns: number }
+      streak_milestones_claimed: { Args: never; Returns: number[] }
       submit_tv_answer: {
         Args: {
           p_answer: string
@@ -5441,6 +5728,7 @@ export type Database = {
         }
         Returns: Json
       }
+      sweep_ended_public_rooms: { Args: never; Returns: number }
       tb_add_bot: {
         Args: { p_room_id: string; p_team: string }
         Returns: string
