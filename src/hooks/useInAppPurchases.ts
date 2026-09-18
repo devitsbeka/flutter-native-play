@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useVipStatus } from "@/contexts/VipContext";
 import { toast } from "@/lib/toast";
 import { t as tStandalone } from "@/contexts/LanguageContext";
 import { introFreeDays } from "@/utils/introOffer";
@@ -759,6 +760,25 @@ export function useInAppPurchases() {
     }
   }, [user?.id, fetchProfile]);
 
+  /**
+   * Re-read the subscription after the server has written it.
+   *
+   * Without this a PRO purchase completed, verify-receipt wrote the row, the
+   * success modal appeared — and the app carried on showing the non-PRO UI
+   * until it was killed and relaunched.
+   *
+   * VipContext loads once on mount and otherwise waits on a realtime
+   * subscription to `vip_subscriptions`. That table is **not** in the
+   * `supabase_realtime` publication, so the listener never fires and the only
+   * other route back, `refresh()`, had no caller anywhere in the app. The row
+   * was correct the whole time; nothing ever asked for it again.
+   *
+   * Adding the table to the publication would also fix it and is worth doing
+   * server-side, but this is the deterministic half: the client knows exactly
+   * when it has bought something, and asks.
+   */
+  const { refresh: refreshVip } = useVipStatus();
+
   // Purchase a product
   const purchase = useCallback(async (productId: string): Promise<PurchaseResult> => {
     if (!user) {
@@ -979,6 +999,10 @@ export function useInAppPurchases() {
         // what "I had those gems on launch" was.
         await refreshBalance();
 
+        // A subscription was written. Re-read it, or the app keeps rendering
+        // the non-PRO UI over a row that says otherwise until it is relaunched.
+        if (synced.tier) refreshVip();
+
         toast.success(tStandalone("iap.purchaseComplete"));
         // The balance has been re-read and the entitlement is live. Confirm it
         // where the player can actually see it.
@@ -1016,7 +1040,7 @@ export function useInAppPurchases() {
     } finally {
       setPurchasing(false);
     }
-  }, [user, refreshBalance]);
+  }, [user, refreshBalance, refreshVip]);
 
   /**
    * Restore previous purchases.
@@ -1107,6 +1131,9 @@ export function useInAppPurchases() {
 
       if (synced.tier || synced.gemsCredited > 0) {
         await refreshBalance();
+        // Same as after a purchase: a restored subscription is only visible
+        // once VipContext is told to look again.
+        if (synced.tier) refreshVip();
         toast.success(tStandalone("iap.purchasesRestored"));
         return "restored";
       }
@@ -1123,7 +1150,7 @@ export function useInAppPurchases() {
     } finally {
       setRestoring(false);
     }
-  }, [user, refreshBalance]);
+  }, [user, refreshBalance, refreshVip]);
 
   // Get product by ID
   const getProduct = useCallback((productId: string): IAPProduct | undefined => {

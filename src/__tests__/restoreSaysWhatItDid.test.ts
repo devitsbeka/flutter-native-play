@@ -43,7 +43,10 @@ const shop = read("src/components/shop/ShopStandardLayout.tsx");
 const restoreBody = (() => {
   const start = hook.indexOf("const restorePurchases = useCallback");
   expect(start, "restorePurchases is no longer declared as a useCallback").toBeGreaterThan(-1);
-  const end = hook.indexOf("}, [user, refreshBalance]);", start);
+  // The dependency array is not a stable landmark — it gains entries as the
+  // callback grows (refreshVip arrived with the PRO-activation fix). Match
+  // the closing of the useCallback instead.
+  const end = hook.slice(start).search(/\n  \}, \[[^\]]*\]\);/) + start;
   expect(end, "could not find the end of restorePurchases").toBeGreaterThan(start);
   return hook.slice(start, end);
 })();

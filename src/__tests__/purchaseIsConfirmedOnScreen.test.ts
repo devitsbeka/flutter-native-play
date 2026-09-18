@@ -49,7 +49,8 @@ describe("a completed purchase is confirmed on screen", () => {
   it("announces on the fully-settled success path", () => {
     const body = hook.slice(
       hook.indexOf("const purchase = useCallback"),
-      hook.indexOf("}, [user, refreshBalance]);"),
+      hook.indexOf("const purchase = useCallback") +
+        hook.slice(hook.indexOf("const purchase = useCallback")).search(/\n  \}, \[[^\]]*\]\);/),
     );
     const announcements = body.match(/announcePurchase\(/g) ?? [];
     expect(
@@ -91,7 +92,8 @@ describe("restore only claims what it has verified", () => {
   it("does not say 'restored' when signed out", () => {
     const body = hook.slice(
       hook.indexOf("const restorePurchases = useCallback"),
-      hook.indexOf("}, [user, refreshBalance]);", hook.indexOf("const restorePurchases")),
+      hook.indexOf("const restorePurchases") +
+        hook.slice(hook.indexOf("const restorePurchases")).search(/\n  \}, \[[^\]]*\]\);/),
     );
     const signedOut = body.slice(body.indexOf("if (!user)"), body.indexOf('return "signedOut"'));
 

@@ -77,7 +77,8 @@ describe("nothing between the charge and the finally can hang", () => {
   it("still releases the button in a finally", () => {
     const purchaseBody = hook.slice(
       hook.indexOf("const purchase = useCallback"),
-      hook.indexOf("}, [user, refreshBalance]);"),
+      hook.indexOf("const purchase = useCallback") +
+        hook.slice(hook.indexOf("const purchase = useCallback")).search(/\n  \}, \[[^\]]*\]\);/),
     );
 
     expect(
