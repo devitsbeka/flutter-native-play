@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { GameProvider, useGame } from "@/contexts/GameContext";
 import { GameContainer } from "@/components/game/GameContainer";
+import { VS_PURPLE, isVersusPhase } from "@/components/game/VSScreen";
 import { ArrowLeft } from "lucide-react";
 import { usePlayLimit } from "@/hooks/usePlayLimit";
 import { PlayLimitModal } from "@/components/home/PlayLimitModal";
@@ -101,9 +102,26 @@ function GameContent() {
 
   // Phases that have their own full-screen background
   const hasOwnBackground = phase === "home" || phase === "matchmaking" || phase === "preparing" || phase === "vs-screen" || phase === "playing" || phase === "question-result" || phase === "match-result";
+  // The phases GameContainer gives to the versus screen, which paints a
+  // deeper purple than the quiz ground. One list, in VSScreen.
+  const showsVersusScreen = isVersusPhase(phase);
 
   return (
-    <div className="h-[100dvh] w-full flex flex-col relative overflow-hidden bg-[#7E7ADB]" style={{ marginTop: "calc(-1 * var(--safe-top))", paddingTop: "var(--safe-top)" }}>
+    // The band under the status bar is THIS element's colour, and nothing
+    // inside can change that: the page carries the inset (the negative margin
+    // and the padding back), and the box holding the screen clips, so a
+    // child's own safe-bleed is cut off at the padding edge rather than
+    // painting up over the bar. So the page has to wear the background of
+    // whatever phase is showing. #7E7ADB is the quiz ground; the versus
+    // screen is #5651CE, and that difference was the purple band on top of it.
+    <div
+      className="h-[100dvh] w-full flex flex-col relative overflow-hidden"
+      style={{
+        background: showsVersusScreen ? VS_PURPLE : "#7E7ADB",
+        marginTop: "calc(-1 * var(--safe-top))",
+        paddingTop: "var(--safe-top)",
+      }}
+    >
       {/* White Radial Mask - only show for match-result phase */}
       {!hasOwnBackground && (
         <div 

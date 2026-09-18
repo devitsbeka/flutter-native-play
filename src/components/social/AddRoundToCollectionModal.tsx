@@ -87,7 +87,7 @@ export function AddRoundToCollectionModal({
   onRoundCreated 
 }: AddRoundToCollectionModalProps) {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -171,7 +171,7 @@ export function AddRoundToCollectionModal({
 
     try {
       const { data, error } = await supabase.functions.invoke("generate-custom-quiz", {
-        body: { subject, questionCount, answerFormat },
+        body: { subject, questionCount, answerFormat, language },
       });
 
       clearInterval(progressInterval);

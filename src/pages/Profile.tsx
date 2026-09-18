@@ -1,13 +1,12 @@
 import { motion } from "framer-motion";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Settings, HelpCircle, Shield, FileText, LogOut, ChevronRight, Pencil, Check, Loader2 } from "lucide-react";
+import { Settings, HelpCircle, Shield, FileText, LogOut, ChevronRight, Pencil, Check, Loader2, Globe } from "lucide-react";
 import { toast } from "@/lib/toast";
 import { supabase } from "@/integrations/supabase/client";
 import { translateErrorMessage } from "@/utils/errorTranslations";
 
 import { useAuth } from "@/hooks/useAuth";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { getRankFromPoints } from "@/data/opponents";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -17,6 +16,9 @@ import { AvatarReel } from "@/components/profile/AvatarReel";
 import { ProBadge } from "@/components/shared/ProBadge";
 import { useVipStatus } from "@/hooks/useVipStatus";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { CountrySelectModal } from "@/components/profile/CountrySelectModal";
+import { countryFlag } from "@/utils/countryName";
+import { NICKNAME_MAX_CHARS, clampNickname } from "@/config/nickname";
 import { HeaderActions } from "@/components/shared/HeaderActions";
 
 // Stat icons
@@ -41,6 +43,10 @@ export default function Profile() {
     return "PRO";
   });
 
+  // The flag beside the name opens the app's own country picker, which
+  // writes the profile and moves the language with it (CountrySelectModal).
+  const [showCountry, setShowCountry] = useState(false);
+
   // Inline nickname editing — quick access next to the name, mirroring
   // ChangeNameModal's save path (direct profiles update + refetch)
   const [editingName, setEditingName] = useState(false);
@@ -53,7 +59,7 @@ export default function Profile() {
   };
 
   const saveName = async () => {
-    const trimmed = nameDraft.trim();
+    const trimmed = clampNickname(nameDraft);
     if (!user || savingName) return;
     if (!trimmed || trimmed === profile?.nickname) {
       setEditingName(false);
@@ -91,8 +97,6 @@ export default function Profile() {
     return t("extra.becomePro");
   };
 
-  const rank = profile ? getRankFromPoints(profile.total_points) : null;
-
   // Redirect guests directly to auth page
   useEffect(() => {
     if (!user) {
@@ -119,7 +123,7 @@ export default function Profile() {
           <div className="fixed inset-0 bg-gradient-to-b from-background/10 via-transparent to-background/20 -z-10" />
 
           {/* Page Header with Back Button - Sticky */}
-          <PageHeader title={t("profile.title")} rightElements={<HeaderActions />} />
+          <PageHeader title={t("profile.myProfile")} rightElements={<HeaderActions />} />
 
           {/* Scrollable Content */}
           <div className="flex-1 relative">
@@ -143,6 +147,30 @@ export default function Profile() {
                 {/* Nickname in the main page's hero font, with inline
                     edit/save quick access on the right */}
                 <div className="flex items-center gap-2 mt-2">
+                  {/* The flag, and the way to change it, before the name —
+                      where every other surface in the app draws it (the
+                      player card, the leaderboard row). It was readable on
+                      this page and settable only four taps away in Settings,
+                      which is the wrong way round for a thing this page is
+                      about. No country yet reads as a globe, which is a
+                      prompt rather than a blank.
+
+                      The emoji flag, as Settings and the player card draw it
+                      — not CircleFlag, which is seven vendored SVGs for the
+                      seven languages we ship and has no artwork for the other
+                      two hundred countries this picker offers. */}
+                  <button
+                    type="button"
+                    onClick={() => setShowCountry(true)}
+                    aria-label={t("profile.country")}
+                    className="w-9 h-9 rounded-full flex items-center justify-center text-[26px] leading-none shrink-0 transition-transform active:scale-95"
+                  >
+                    {profile.country_code ? (
+                      countryFlag(profile.country_code)
+                    ) : (
+                      <Globe className="w-5 h-5 text-gray-500" />
+                    )}
+                  </button>
                   {editingName ? (
                     <input
                       value={nameDraft}
@@ -151,7 +179,7 @@ export default function Profile() {
                         if (e.key === "Enter") void saveName();
                         if (e.key === "Escape") setEditingName(false);
                       }}
-                      maxLength={20}
+                      maxLength={NICKNAME_MAX_CHARS}
                       autoFocus
                       className="font-slackey text-gray-800 capitalize font-black text-center bg-white/80 border border-border/50 rounded-xl px-3 h-11 outline-none focus:ring-2 focus:ring-primary/40 max-w-[240px]"
                       style={{ fontSize: 24 }}
@@ -195,9 +223,11 @@ export default function Profile() {
                     )}
                   </button>
                 </div>
-                <p className={cn("text-sm font-medium", rank?.color || "text-muted-foreground")}>
-                  {rank?.name || t("profile.beginner")}
-                </p>
+                {/* The league name used to sit here ("Diamond", "Gold") and
+                    was taken out: it is the one thing on this line that is
+                    not yours to set, and read as a label on the name above it
+                    rather than as a rank. The league still has its own screen
+                    and the points are in Statistics. */}
               </div>
             </motion.div>
 
@@ -315,6 +345,13 @@ export default function Profile() {
             </div>
           </div>
 
+          {/* The picker Settings already uses — one list, one save path, and
+              the language follows the country there as it does there. */}
+          <CountrySelectModal
+            isOpen={showCountry}
+            onClose={() => setShowCountry(false)}
+            currentCountryCode={profile.country_code}
+          />
       </div>
     </MainLayout>
   );

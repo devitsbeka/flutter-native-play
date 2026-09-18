@@ -61,6 +61,7 @@ DECLARE
   nobody uuid := '40000000-0000-0000-0000-000000000001';
   v_tier text; v_platform text; v_exp timestamptz; v_boss_exp timestamptz;
   v_live int;
+  v_ids uuid[];
 BEGIN
   DELETE FROM public.pro_seats;
   DELETE FROM public.vip_subscriptions;
@@ -215,6 +216,51 @@ BEGIN
   PERFORM pg_temp.must_fail(
     format('SELECT public.grant_pro_seat(%L::uuid)', f5),
     'cannot overwrite PRO the player already holds');
+
+  -- ── who the panel is allowed to offer ──────────────────────────────────
+  --
+  -- The list on screen has to be the set grant_pro_seat would accept, or the
+  -- Send PRO button on a friend who already has PRO does nothing at all —
+  -- which is what players saw. pro_seat_candidates answers that, and it
+  -- answers it with the SAME pro_seat_holder_has_pro the refusal uses, so the
+  -- two cannot drift.
+
+  DELETE FROM public.friendships
+  WHERE user_id IN (solo, f1, f2, f5, f6, payer)
+     OR friend_id IN (solo, f1, f2, f5, f6, payer);
+  DELETE FROM public.vip_subscriptions WHERE user_id IN (f1, f2, f5, f6);
+
+  -- f1: an accepted friend with nothing — the one case that may be offered.
+  -- f2: accepted, and holding somebody else's seat. Moving between granters
+  --     is allowed (a seat is not PRO of one's own), so f2 may be offered.
+  -- f5: accepted, and PRO in their own right. Never offered.
+  -- f6: no answer to the friend request yet. Not a friend, not offered.
+  -- payer: not a friend at all.
+  INSERT INTO public.friendships (user_id, friend_id, status) VALUES
+    (solo, f1, 'accepted'),
+    (f1, solo, 'accepted'),   -- both directions: still one candidate
+    (f2, solo, 'accepted'),   -- the other side sent it
+    (solo, f5, 'accepted'),
+    (solo, f6, 'pending');
+  PERFORM pg_temp.give_sub(f2, 'pro', 30, 'seat');
+  PERFORM pg_temp.give_sub(f5, 'pro', 30, 'ios');
+
+  PERFORM pg_temp.as_user(solo);
+  SELECT array_agg(candidate_id ORDER BY candidate_id)
+    INTO v_ids FROM public.pro_seat_candidates();
+  PERFORM pg_temp.must_equal(
+    v_ids, ARRAY[f1, f2]::uuid[],
+    'the panel is offered exactly the friends without PRO of their own');
+
+  -- 18. And it is the caller's own list. payer is nobody's friend here.
+  PERFORM pg_temp.as_user(payer);
+  SELECT count(*) INTO v_live FROM public.pro_seat_candidates();
+  PERFORM pg_temp.must_equal(v_live, 0, 'a stranger reads nobody''s friends');
+
+  -- 19. Signed out, it is empty rather than everybody.
+  PERFORM set_config('test.uid', '', false);
+  SELECT count(*) INTO v_live FROM public.pro_seat_candidates();
+  PERFORM pg_temp.must_equal(v_live, 0, 'signed out returns nothing');
 
   RAISE NOTICE '--- all pro-seat assertions held ---';
 END $$;

@@ -6,6 +6,27 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+/**
+ * The card's own words, in the challenger's language.
+ *
+ * They were Georgian for everybody, which is what an English player's friends
+ * saw when the link was pasted into a chat. Whose language it should be is not
+ * obvious — a share card has no viewer to ask — so it is the person who made
+ * it: they chose to send it, their friends most likely read what they read,
+ * and it is the only language this function can actually know.
+ *
+ * English is the fallback, as everywhere else in the app.
+ */
+const CARD_COPY: Record<string, { challenge: string; cta: string }> = {
+  ka: { challenge: "🎯 შეგიძლია დამამარცხო?", cta: "ითამაშე ახლავე!" },
+  en: { challenge: "🎯 Can you beat me?", cta: "Play now!" },
+  es: { challenge: "🎯 ¿Puedes ganarme?", cta: "¡Juega ahora!" },
+  fr: { challenge: "🎯 Peux-tu me battre ?", cta: "Joue maintenant !" },
+  de: { challenge: "🎯 Schaffst du mehr?", cta: "Jetzt spielen!" },
+  it: { challenge: "🎯 Riesci a battermi?", cta: "Gioca ora!" },
+  pt: { challenge: "🎯 Consegue me vencer?", cta: "Jogue agora!" },
+};
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -25,7 +46,7 @@ Deno.serve(async (req) => {
 
     const { data: challenge, error } = await supabase
       .from("challenge_links")
-      .select("challenger_nickname, challenger_score, total_questions, category_name")
+      .select("challenger_id, challenger_nickname, challenger_score, total_questions, category_name")
       .eq("code", code)
       .single();
 
@@ -33,7 +54,16 @@ Deno.serve(async (req) => {
       return new Response("Challenge not found", { status: 404, headers: corsHeaders });
     }
 
-    const { challenger_nickname, challenger_score, total_questions, category_name } = challenge;
+    const { challenger_id, challenger_nickname, challenger_score, total_questions, category_name } = challenge;
+
+    // Best effort: a card in the wrong language is better than no card, so a
+    // failed or empty read falls through to English rather than 500ing.
+    const { data: challenger } = await supabase
+      .from("profiles")
+      .select("preferred_language")
+      .eq("user_id", challenger_id)
+      .maybeSingle();
+    const copy = CARD_COPY[challenger?.preferred_language ?? "en"] ?? CARD_COPY.en;
 
     const svg = `
 <svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
@@ -47,7 +77,7 @@ Deno.serve(async (req) => {
   
   <!-- Title -->
   <text x="600" y="160" text-anchor="middle" fill="white" font-size="48" font-weight="bold" font-family="Arial, sans-serif">
-    🎯 შეგიძლია დამამარცხო?
+    ${escapeXml(copy.challenge)}
   </text>
   
   <!-- Challenger name -->
@@ -66,7 +96,7 @@ Deno.serve(async (req) => {
   <!-- CTA -->
   <rect x="350" y="490" width="500" height="70" rx="35" fill="white"/>
   <text x="600" y="535" text-anchor="middle" fill="#7C5CFC" font-size="28" font-weight="bold" font-family="Arial, sans-serif">
-    ითამაშე ახლავე!
+    ${escapeXml(copy.cta)}
   </text>
 </svg>`;
 

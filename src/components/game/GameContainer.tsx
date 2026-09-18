@@ -1,5 +1,5 @@
 import { useGame } from "@/contexts/GameContext";
-import { VSScreen } from "./VSScreen";
+import { VSScreen, isVersusPhase } from "./VSScreen";
 import { QuizGameScreenProd } from "./QuizGameScreenProd";
 import { MatchResultScreen } from "./MatchResultScreen";
 import { AnimatePresence, motion } from "framer-motion";
@@ -11,7 +11,7 @@ export function GameContainer() {
   const getStableKey = () => {
     if (phase === "playing" || phase === "question-result") return "question-flow";
     // Keep VS screen mounted during all pre-game phases
-    if (phase === "home" || phase === "matchmaking" || phase === "preparing" || phase === "vs-screen") return "vs-flow";
+    if (isVersusPhase(phase)) return "vs-flow";
     return phase;
   };
 
@@ -27,7 +27,7 @@ export function GameContainer() {
           className="w-full h-full"
         >
           {/* VS Screen handles matchmaking + vs-screen phases */}
-          {(phase === "home" || phase === "matchmaking" || phase === "preparing" || phase === "vs-screen") && <VSScreen />}
+          {isVersusPhase(phase) && <VSScreen />}
           {(phase === "playing" || phase === "question-result") && <QuizGameScreenProd />}
           {phase === "match-result" && <MatchResultScreen />}
         </motion.div>

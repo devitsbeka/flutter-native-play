@@ -86,7 +86,7 @@ interface TopicSuggestion {
 
 export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, onTriviaHandedOff, resumeDraftId, onDraftResumed, onSwitchToCollection }: CreateBlindTriviaModalProps) {
   const { toast: toastHook } = useToast();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { saveDraft, loadDraft, deleteDraft } = useTriviaDrafts();
@@ -289,7 +289,7 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, onTr
 
     try {
       const { data, error } = await supabase.functions.invoke("generate-custom-quiz", {
-        body: { subject, questionCount, answerFormat, difficulty },
+        body: { subject, questionCount, answerFormat, difficulty, language },
       });
 
       clearInterval(progressInterval);

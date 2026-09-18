@@ -155,6 +155,13 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
     // fall back to showing the text - otherwise the card is completely blank
     // and the question is unanswerable. Track the load lifecycle per URL.
     const [imageStatus, setImageStatus] = React.useState<"loading" | "loaded" | "error">("loading");
+    // Which URL that status belongs to. The reset below has to happen during
+    // render rather than in the effect on imageUrl: an effect runs after the
+    // browser has painted, and that paint had the NEXT question's picture in
+    // an <img> still marked loaded -- visible, at full opacity, under a cover
+    // built from the question that just ended. On a logo that is the answer,
+    // for a frame, before anything closes over it.
+    const [statusUrl, setStatusUrl] = React.useState(imageUrl);
     // A refusal is retried before the card surrenders to text: a cold edge
     // can eat a 429 for the first player at that location, and a second ask
     // a moment later usually finds the image (the rate window rolled, or a
@@ -167,6 +174,11 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
     // StrictMode runs updaters twice — which would double every retry.
     const attemptRef = React.useRef(0);
     const retryTimer = React.useRef<number | undefined>(undefined);
+    if (statusUrl !== imageUrl) {
+      setStatusUrl(imageUrl);
+      setImageStatus("loading");
+      setImageAttempt(0);
+    }
     const handleImageError = () => {
       if (attemptRef.current >= 2) {
         setImageStatus("error");
@@ -178,8 +190,10 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
       retryTimer.current = window.setTimeout(() => setImageAttempt(next), next === 1 ? 700 : 1400);
     };
     React.useEffect(() => {
-      setImageStatus("loading");
-      setImageAttempt(0);
+      // The status itself is reset above, during the render that changes the
+      // URL. Doing it here as well would undo a cached picture's load event
+      // when that event beat the effect: back to "loading", opacity-0, and no
+      // second load event coming to clear it.
       attemptRef.current = 0;
       if (!imageUrl) return;
 

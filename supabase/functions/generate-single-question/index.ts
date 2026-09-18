@@ -9,61 +9,77 @@ import {
   containsBlockedText,
   firstBlockedText,
 } from "../_shared/contentFilter.ts";
+import {
+  grammarRules,
+  knownLanguage,
+  languageName,
+  trueFalseWords,
+  writeInLanguage,
+} from "../_shared/questionLanguage.ts";
 
 // App-wide character limits - strict for gameplay display
 const QUESTION_MAX_LENGTH = 70;
 const ANSWER_MAX_LENGTH = 35;
 
-// Fisher-Yates shuffle for randomizing answer positions
-function shuffleArray<T>(array: T[]): T[] {
-  const shuffled = [...array];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+/**
+ * How a question may open, as a shape rather than as text.
+ *
+ * Georgian keeps the patterns it was tuned with. Every other language gets
+ * the same six shapes in English, with the instruction above them that the
+ * OUTPUT is not English — a model writes "¿Qué año…" perfectly well from
+ * "In what year…", and one list per language would be six lists to keep
+ * right.
+ */
+function triviaStyles(lang: string): string {
+  if (lang === "ka") {
+    return `1. "რომელმა..." (Which one...)
+2. "რა წელს..." (In what year...)
+3. "ვინ არის/იყო..." (Who is/was...)
+4. "რომელი ქვეყანა..." (Which country...)
+5. "რა არის..." (What is...)
+6. "სად მდებარეობს..." (Where is located...)`;
   }
-  return shuffled;
+  return `1. "Which one..."
+2. "In what year..."
+3. "Who is/was..."
+4. "Which country..."
+5. "What is..."
+6. "Where is located..."`;
 }
 
-interface GeneratedQuestion {
-  question_text: string;
-  correct_answer: string;
-  incorrect_answers: string[];
-  difficulty?: string;
-  icon_keywords?: string[];
+function personalStyles(lang: string): string {
+  if (lang === "ka") {
+    return `1. "ვინ არის ყველაზე..." (Who is the most...)
+2. "ვის უყვარს..." (Who loves...)
+3. "ვინ გააკეთებდა..." (Who would do...)
+4. "ვინ იტყოდა..." (Who would say...)
+5. "ვინ დაივიწყებდა..." (Who would forget...)
+6. "ვისთვის არის ტიპიური..." (What's typical for...)`;
+  }
+  return `1. "Who is the most..."
+2. "Who loves..."
+3. "Who would do..."
+4. "Who would say..."
+5. "Who would forget..."
+6. "What's typical for..."`;
 }
 
-// STRICT validation
-function isValidQuestion(q: GeneratedQuestion, isTrueFalse: boolean = false): boolean {
-  if (!q.question_text || !q.correct_answer || !Array.isArray(q.incorrect_answers)) {
-    return false;
+/** The people a party answer names. */
+function personTypes(lang: string): string {
+  if (lang === "ka") {
+    return `"დედა", "მამა", "ბებია", "საუკეთესო მეგობარი", "მე თვითონ", "ყველა ერთად", "უმცროსი და/ძმა", "უფროსი და/ძმა"`;
   }
-  if (q.question_text.length > QUESTION_MAX_LENGTH) {
-    console.log(`Rejecting question (${q.question_text.length} chars > ${QUESTION_MAX_LENGTH}): ${q.question_text.substring(0, 50)}...`);
-    return false;
-  }
-  if (q.correct_answer.length > ANSWER_MAX_LENGTH) {
-    console.log(`Rejecting answer (${q.correct_answer.length} chars > ${ANSWER_MAX_LENGTH}): ${q.correct_answer}`);
-    return false;
-  }
-  
-  const expectedIncorrectCount = isTrueFalse ? 1 : 3;
-  if (q.incorrect_answers.length !== expectedIncorrectCount) {
-    console.log(`Rejecting question: expected ${expectedIncorrectCount} incorrect answers, got ${q.incorrect_answers.length}`);
-    return false;
-  }
-  
-  for (const answer of q.incorrect_answers) {
-    if (!answer || answer.length > ANSWER_MAX_LENGTH) {
-      console.log(`Rejecting incorrect answer (${(answer || '').length} chars > ${ANSWER_MAX_LENGTH}): ${answer}`);
-      return false;
-    }
-  }
-  return true;
+  return `mum, dad, grandma, best friend, me, everyone, little brother/sister, big brother/sister — written in ${languageName(lang)}`;
 }
 
+/** Grammar rules worth naming. Georgian's are the ones that went wrong. */
 // Build system prompt for TRIVIA mode (factual questions about topics)
-function buildTriviaPrompt(subject: string, difficulty: string, isTrueFalse: boolean): string {
-  return `You are an expert trivia question generator for a Georgian quiz app.
+function buildTriviaPrompt(subject: string, difficulty: string, isTrueFalse: boolean, lang: string): string {
+  const name = languageName(lang);
+  const tf = trueFalseWords(lang);
+  return `You are an expert trivia question generator for a quiz app.
+
+${writeInLanguage(lang, `The question, the correct answer and every incorrect answer are read by a player whose app is in ${name}, and a question in any other language is unusable to them.`)}
 
 ${CONTENT_SAFETY_PROMPT}
 
@@ -72,12 +88,7 @@ ${CONTENT_SAFETY_PROMPT}
 GENERATE: Factual trivia questions with FACTUAL answers about the topic.
 
 📚 QUESTION STYLES FOR TRIVIA:
-1. "რომელმა..." (Which one...)
-2. "რა წელს..." (In what year...)
-3. "ვინ არის/იყო..." (Who is/was...)
-4. "რომელი ქვეყანა..." (Which country...)
-5. "რა არის..." (What is...)
-6. "სად მდებარეობს..." (Where is located...)
+${triviaStyles(lang)}
 
 💡 EXAMPLES for trivia topics:
 - Topic: "ჩემპიონთა ლიგა" → "ვინ მოიგო ჩემპიონთა ლიგა 2022-ში?" with answers: "რეალ მადრიდი", "მანჩ. სითი", "ლივერპული", "ბაიერნი"
@@ -87,10 +98,7 @@ GENERATE: Factual trivia questions with FACTUAL answers about the topic.
 ❌ DO NOT generate personal/family questions like "ვინ არის ყველაზე დრამატული?" or answers like "მამა", "დედა", "ბებია"
 
 ⚠️ GRAMMAR RULES - CRITICAL:
-- All Georgian text MUST be grammatically correct
-- Double-check spelling of all Georgian words
-- Use proper Georgian verb conjugations
-- Questions must be natural-sounding Georgian sentences
+${grammarRules(lang)}
 
 ⚠️ LENGTH RULES - VERY STRICT:
 - Question: MAX ${QUESTION_MAX_LENGTH} chars (VERY SHORT! Be concise!)
@@ -98,26 +106,29 @@ GENERATE: Factual trivia questions with FACTUAL answers about the topic.
 - Example good length: "ვინ მოიგო ჩემპიონთა ლიგა 2022-ში?" = 36 chars ✓
 - If question is too long, REWRITE it shorter!
 
-LANGUAGE: Georgian only - MUST BE GRAMMATICALLY PERFECT
+LANGUAGE: ${name} only - MUST BE GRAMMATICALLY PERFECT
 
 ${isTrueFalse ? `TRUE/FALSE FORMAT - CRITICAL RULES:
 - RANDOMLY choose to generate either a TRUE statement or a FALSE statement
-- For TRUE statements: write a factually CORRECT statement, correctAnswer = "მართალია"
-- For FALSE statements: write a factually INCORRECT/WRONG statement, correctAnswer = "მცდარია"  
-- incorrectAnswers is always the OPPOSITE: ["მცდარია"] for true statements, ["მართალია"] for false statements
+- The two answer words are FIXED: "${tf.yes}" and "${tf.no}". Use them exactly,
+  whatever language the statement itself is in — every screen that draws a
+  true/false card matches on these two words.
+- For TRUE statements: write a factually CORRECT statement, correctAnswer = "${tf.yes}"
+- For FALSE statements: write a factually INCORRECT/WRONG statement, correctAnswer = "${tf.no}"
+- incorrectAnswers is always the OPPOSITE: ["${tf.no}"] for true statements, ["${tf.yes}"] for false statements
 - FALSE statements should be believable but clearly wrong when you know the facts
 
-EXAMPLES:
-✓ TRUE: "საქართველოს დედაქალაქია თბილისი." → correct_answer: "მართალია", incorrect_answers: ["მცდარია"]
-✓ FALSE: "საქართველოს დედაქალაქია ბათუმი." → correct_answer: "მცდარია", incorrect_answers: ["მართალია"]
-✓ TRUE: "მზის სისტემაში 8 პლანეტაა." → correct_answer: "მართალია", incorrect_answers: ["მცდარია"]
-✓ FALSE: "მზის სისტემაში 12 პლანეტაა." → correct_answer: "მცდარია", incorrect_answers: ["მართალია"]` : `4 MULTIPLE CHOICE answers - 1 correct and 3 incorrect`}
+EXAMPLES (shape only — write yours in ${name}):
+✓ TRUE: "The capital of Georgia is Tbilisi." → correct_answer: "${tf.yes}", incorrect_answers: ["${tf.no}"]
+✓ FALSE: "The capital of Georgia is Batumi." → correct_answer: "${tf.no}", incorrect_answers: ["${tf.yes}"]
+✓ TRUE: "The solar system has 8 planets." → correct_answer: "${tf.yes}", incorrect_answers: ["${tf.no}"]
+✓ FALSE: "The solar system has 12 planets." → correct_answer: "${tf.no}", incorrect_answers: ["${tf.yes}"]` : `4 MULTIPLE CHOICE answers - 1 correct and 3 incorrect`}
 
 JSON FORMAT:
 {
   "question_text": "...",
-  "correct_answer": "${isTrueFalse ? 'მართალია ან მცდარია' : '...'}",
-  "incorrect_answers": ${isTrueFalse ? '["მცდარია ან მართალია"]' : '["...", "...", "..."]'},
+  "correct_answer": "${isTrueFalse ? `${tf.yes} or ${tf.no}` : '...'}",
+  "incorrect_answers": ${isTrueFalse ? `["${tf.no} or ${tf.yes}"]` : '["...", "...", "..."]'},
   "difficulty": "${difficulty}",
   "icon_keywords": ["relevant", "topic", "keywords"]
 }`;
@@ -170,8 +181,11 @@ const PERSONAL_THEME_ICONS: Record<string, string[]> = {
 };
 
 // Build system prompt for PERSONAL mode (family/friends questions)
-function buildPersonalPrompt(subject: string, difficulty: string, isTrueFalse: boolean, focusCategory: { theme: string; examples: string[] }): string {
+function buildPersonalPrompt(subject: string, difficulty: string, isTrueFalse: boolean, focusCategory: { theme: string; examples: string[] }, lang: string): string {
+  const name = languageName(lang);
   return `You are a CREATIVE party game question generator for friends & family. Your goal is to create FUN, PERSONAL questions that spark laughter and memories.
+
+${writeInLanguage(lang, `The question and all four answers are read out at a table where the app is in ${name}.`)}
 
 ${CONTENT_SAFETY_PROMPT}
 
@@ -187,12 +201,7 @@ Examples for this theme:
 ${focusCategory.examples.map(e => `- ${e}`).join('\n')}
 
 🎯 QUESTION STYLES TO USE:
-1. "ვინ არის ყველაზე..." (Who is the most...)
-2. "ვის უყვარს..." (Who loves...)
-3. "ვინ გააკეთებდა..." (Who would do...)
-4. "ვინ იტყოდა..." (Who would say...)
-5. "ვინ დაივიწყებდა..." (Who would forget...)
-6. "ვისთვის არის ტიპიური..." (What's typical for...)
+${personalStyles(lang)}
 
 💡 BE CREATIVE! Think about:
 - Funny habits people have
@@ -207,23 +216,14 @@ ${focusCategory.examples.map(e => `- ${e}`).join('\n')}
 - General knowledge
 
 💡 ANSWERS should be person types:
-"დედა", "მამა", "ბებია", "საუკეთესო მეგობარი", "მე თვითონ", "ყველა ერთად", "უმცროსი და/ძმა", "უფროსი და/ძმა"
+${personTypes(lang)}
 
 ⚠️ GRAMMAR RULES - CRITICAL:
-- All Georgian text MUST be grammatically correct
-- Double-check spelling of all Georgian words
-- Use proper Georgian verb conjugations (ვინ არის, ვინ იქნებოდა, ვინ გააკეთებდა)
-- Questions must be natural-sounding Georgian sentences
-- Common correct patterns:
-  • "ვინ არის ყველაზე..." + adjective
-  • "ვის უყვარს..." + noun
-  • "ვინ გააკეთებდა..." + action
-  • "ვინ დაივიწყებდა..." + noun
+${grammarRules(lang)}
 - Before outputting, VERIFY:
   1. All words are spelled correctly
   2. Verb forms match the subject
-  3. Case endings are correct
-  4. The sentence sounds natural to a Georgian speaker
+  3. The sentence sounds natural to a native ${name} speaker
 
 💎 ICON_KEYWORDS - CRITICAL FOR VARIETY:
 - Generate 3-5 UNIQUE visual keywords based on THIS specific question's theme
@@ -231,8 +231,8 @@ ${focusCategory.examples.map(e => `- ${e}`).join('\n')}
 - Think about VISUAL OBJECTS that represent the question's concept
 - Use ENGLISH keywords for icon matching
 
-EXAMPLES OF GOOD ICON_KEYWORDS:
-- "ვინ ხვრინავს ძილში?" → ["sleeping", "bed", "moon", "pillow", "snoring"]
+EXAMPLES OF GOOD ICON_KEYWORDS (the questions are examples of shape, not of language):
+- "ვინ ხვრინავს ძილში?" (who snores?) → ["sleeping", "bed", "moon", "pillow", "snoring"]
 - "ვის უყვარს ხაჭაპური?" → ["cheese", "bread", "food", "fork", "plate"]
 - "ვინ დააგვიანებდა?" → ["clock", "alarm", "running", "watch", "time"]
 - "ვინ არის ყველაზე დრამატული?" → ["theater", "drama", "mask", "stage", "star"]
@@ -246,7 +246,7 @@ EXAMPLES OF GOOD ICON_KEYWORDS:
 - Example: "ვინ არის ყველაზე დრამატული?" = 28 chars ✓
 - If question is too long, REWRITE it shorter!
 
-LANGUAGE: Georgian only - MUST BE GRAMMATICALLY PERFECT
+LANGUAGE: ${name} only - MUST BE GRAMMATICALLY PERFECT
 
 ${isTrueFalse ? `TRUE/FALSE format` : `4 MULTIPLE CHOICE answers`}
 
@@ -274,8 +274,13 @@ serve(async (req) => {
       difficulty = "medium", 
       existingQuestions = [], 
       randomSeed = "",
-      mode = "personal" // NEW: "trivia" or "personal"
+      mode = "personal", // NEW: "trivia" or "personal"
+      language: requestedLanguage,
     } = await req.json();
+
+    // The player's own language. Absent (an old client) means Georgian, which
+    // is what every caller got before this parameter existed.
+    const lang = knownLanguage(requestedLanguage);
 
     if (!subject) {
       return new Response(
@@ -300,8 +305,13 @@ serve(async (req) => {
 
     const isTrueFalse = answerFormat === "true_false";
     
-    // Personal question categories to rotate through for variety (only used in personal mode)
-    const personalCategories = [
+    // Personal question categories to rotate through for variety (only used
+    // in personal mode). The Georgian set is the one these were tuned with;
+    // every other language gets the same eight themes in English, and the
+    // prompt says in capitals that the OUTPUT is not English. Eight themes in
+    // seven languages would be seven lists to keep in step, and a theme is
+    // only ever read by the model.
+    const personalCategories = lang === "ka" ? [
       { theme: "ნიშან-თვისებები და ხასიათი", examples: ["ვინ არის ყველაზე დრამატული?", "ვინ არის ყველაზე მომთმენი?", "ვინ ატირდებოდა ფილმზე?"] },
       { theme: "ჩვევები და მანერები", examples: ["ვინ ხვრინავს ძილში?", "ვინ ლაპარაკობს ძილში?", "ვინ თითს წყალში არ ჩაუშვებს?"] },
       { theme: "კულინარია და საჭმელი", examples: ["ვინ მიაკითხავდა მაცივარს შუაღამეს?", "ვის უყვარს ყველაზე მეტად ხაჭაპური?", "ვინ ჭამს ყველაზე ნელა?"] },
@@ -310,6 +320,15 @@ serve(async (req) => {
       { theme: "დავიწყება და შეცდომები", examples: ["ვინ დაივიწყებდა საფულეს სახლში?", "ვინ დაივიწყებდა დაბადების დღეს?", "ვინ დაკარგავდა გასაღებებს?"] },
       { theme: "საყვარელი საქმიანობები", examples: ["ვინ უყურებს ყველაზე მეტ სერიალს?", "ვინ იძინებს ყველაზე გვიან?", "ვინ არის ყველაზე ძილმოყვარე?"] },
       { theme: "ფრაზები და გამონათქვამები", examples: ["ვინ იტყოდა: 'ერთი წუთით'?", "ვინ იტყოდა: 'მე ვიცოდი'?", "ვინ გაიმეორებდა ერთ ხუმრობას?"] },
+    ] : [
+      { theme: "personality and character", examples: ["Who is the most dramatic?", "Who is the most patient?", "Who would cry at a film?"] },
+      { theme: "habits and quirks", examples: ["Who snores in their sleep?", "Who talks in their sleep?", "Who never touches cold water?"] },
+      { theme: "cooking and food", examples: ["Who raids the fridge at midnight?", "Who loves pizza the most?", "Who eats the slowest?"] },
+      { theme: "phones and social media", examples: ["Whose phone is always dead?", "Who sends voice messages?", "Who never answers calls?"] },
+      { theme: "being late and time", examples: ["Who would be late to dinner?", "Who would arrive first?", "Who says 'five more minutes'?"] },
+      { theme: "forgetting things", examples: ["Who would leave their wallet at home?", "Who would forget a birthday?", "Who would lose the keys?"] },
+      { theme: "favourite things to do", examples: ["Who watches the most series?", "Who goes to bed the latest?", "Who loves a lie-in the most?"] },
+      { theme: "catchphrases", examples: ["Who says 'just a second'?", "Who says 'I knew it'?", "Who repeats the same joke?"] },
     ];
     
     // Pick random category based on seed for variety
@@ -325,20 +344,21 @@ serve(async (req) => {
     // Choose prompt based on mode
     let systemPrompt: string;
     if (mode === "trivia") {
-      systemPrompt = buildTriviaPrompt(subject, difficulty, isTrueFalse);
-      console.log(`Generating TRIVIA question about: ${subject}`);
+      systemPrompt = buildTriviaPrompt(subject, difficulty, isTrueFalse, lang);
+      console.log(`Generating TRIVIA question in ${lang} about: ${subject}`);
     } else {
-      systemPrompt = buildPersonalPrompt(subject, difficulty, isTrueFalse, focusCategory);
-      console.log(`Generating PERSONAL question with focus category: ${focusCategory.theme}, seed: ${randomSeed}`);
+      systemPrompt = buildPersonalPrompt(subject, difficulty, isTrueFalse, focusCategory, lang);
+      console.log(`Generating PERSONAL question in ${lang}, focus category: ${focusCategory.theme}, seed: ${randomSeed}`);
     }
 
     // For True/False, randomly decide if we want a true or false statement
     const generateTrueStatement = Math.random() > 0.5;
+    const tf = trueFalseWords(lang);
     const trueFalseInstruction = isTrueFalse 
-      ? `\n\n🎲 FOR THIS QUESTION: Generate a ${generateTrueStatement ? 'TRUE (მართალია)' : 'FALSE (მცდარია)'} statement.
+      ? `\n\n🎲 FOR THIS QUESTION: Generate a ${generateTrueStatement ? `TRUE (${tf.yes})` : `FALSE (${tf.no})`} statement.
 ${generateTrueStatement 
-  ? '- Write a factually CORRECT statement. correct_answer = "მართალია", incorrect_answers = ["მცდარია"]'
-  : '- Write a factually INCORRECT statement. correct_answer = "მცდარია", incorrect_answers = ["მართალია"]'}`
+  ? `- Write a factually CORRECT statement. correct_answer = "${tf.yes}", incorrect_answers = ["${tf.no}"]`
+  : `- Write a factually INCORRECT statement. correct_answer = "${tf.no}", incorrect_answers = ["${tf.yes}"]`}`
       : '';
 
     const userPrompt = mode === "trivia"
@@ -348,8 +368,9 @@ ${existingContext}${trueFalseInstruction}
 ⚡ IMPORTANT: 
 - Generate factual questions with REAL answers about the topic
 - DO NOT generate personal/family questions
-- Answers should be facts, names, places, dates, etc. - NOT person types like "მამა", "დედა"
-- VERIFY Georgian grammar and spelling before responding
+- Answers should be facts, names, places, dates, etc. - NOT person types like "dad", "mum"
+- Write the question and every answer in ${languageName(lang)}
+- VERIFY grammar and spelling before responding
 Return ONLY valid JSON.`
       : `🎲 Generate 1 UNIQUE, FUN question about: "${subject}"
 Focus on theme: ${focusCategory.theme}
@@ -358,11 +379,12 @@ ${existingContext}${trueFalseInstruction}
 ⚡ IMPORTANT: 
 - Generate something COMPLETELY NEW and DIFFERENT!
 - Be creative - think of funny, nostalgic, or slightly embarrassing situations.
-- VERIFY Georgian grammar and spelling before responding
-- The question MUST be grammatically perfect in Georgian
+- Write the question and every answer in ${languageName(lang)}
+- VERIFY grammar and spelling before responding
+- The question MUST be grammatically perfect in ${languageName(lang)}
 Return ONLY valid JSON.`;
 
-    console.log(`Mode: ${mode}, Subject: ${subject}, Format: ${answerFormat}`);
+    console.log(`Mode: ${mode}, Language: ${lang}, Subject: ${subject}, Format: ${answerFormat}`);
 
     const response = await fetch(AI_CHAT_URL, {
       method: "POST",
@@ -446,46 +468,51 @@ Return ONLY valid JSON.`;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Georgian Grammar Verification
-    console.log("Verifying Georgian grammar...");
-    try {
-      const textsToVerify = [
-        questionData.question_text,
-        questionData.correct_answer,
-        ...questionData.incorrect_answers
-      ];
+    // Georgian Grammar Verification — for Georgian. `verify-georgian-grammar`
+    // is a Georgian proofreader; handed a Spanish question it would "correct"
+    // it into Georgian, which is the bug this whole change is about, arriving
+    // one step later.
+    if (lang === "ka") {
+      console.log("Verifying Georgian grammar...");
+      try {
+        const textsToVerify = [
+          questionData.question_text,
+          questionData.correct_answer,
+          ...questionData.incorrect_answers
+        ];
       
-      const grammarResponse = await fetch(`${supabaseUrl}/functions/v1/verify-georgian-grammar`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${supabaseKey}`,
-        },
-        body: JSON.stringify({ texts: textsToVerify }),
-      });
+        const grammarResponse = await fetch(`${supabaseUrl}/functions/v1/verify-georgian-grammar`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${supabaseKey}`,
+          },
+          body: JSON.stringify({ texts: textsToVerify }),
+        });
 
-      if (grammarResponse.ok) {
-        const grammarResult = await grammarResponse.json();
-        if (grammarResult.results && grammarResult.results.length > 0) {
-          // Apply corrections
-          if (grammarResult.results[0]?.corrected) {
-            questionData.question_text = grammarResult.results[0].corrected;
-          }
-          if (grammarResult.results[1]?.corrected) {
-            questionData.correct_answer = grammarResult.results[1].corrected;
-          }
-          for (let i = 0; i < questionData.incorrect_answers.length; i++) {
-            if (grammarResult.results[i + 2]?.corrected) {
-              questionData.incorrect_answers[i] = grammarResult.results[i + 2].corrected;
+        if (grammarResponse.ok) {
+          const grammarResult = await grammarResponse.json();
+          if (grammarResult.results && grammarResult.results.length > 0) {
+            // Apply corrections
+            if (grammarResult.results[0]?.corrected) {
+              questionData.question_text = grammarResult.results[0].corrected;
+            }
+            if (grammarResult.results[1]?.corrected) {
+              questionData.correct_answer = grammarResult.results[1].corrected;
+            }
+            for (let i = 0; i < questionData.incorrect_answers.length; i++) {
+              if (grammarResult.results[i + 2]?.corrected) {
+                questionData.incorrect_answers[i] = grammarResult.results[i + 2].corrected;
+              }
+            }
+            if (grammarResult.totalErrors > 0) {
+              console.log(`Grammar: Fixed ${grammarResult.totalErrors} errors`);
             }
           }
-          if (grammarResult.totalErrors > 0) {
-            console.log(`Grammar: Fixed ${grammarResult.totalErrors} errors`);
-          }
         }
+      } catch (grammarError) {
+        console.error("Grammar verification failed (non-blocking):", grammarError);
       }
-    } catch (grammarError) {
-      console.error("Grammar verification failed (non-blocking):", grammarError);
     }
 
     // STRICT Fact-check for trivia mode only (personal mode is subjective by design)
@@ -501,7 +528,7 @@ Return ONLY valid JSON.`;
           },
         ],
         context: {
-          language: "ka",
+          language: lang,
           mode: isTrueFalse ? "true_false" : "multiple_choice",
           topicHint: subject,
         },
@@ -575,8 +602,11 @@ Return ONLY valid JSON.`;
         }
       }
       
-      // Tier 4: Use theme mapping fallback for personal questions
-      if (!iconSlug && mode === "personal") {
+      // Tier 4: Use theme mapping fallback for personal questions.
+      // PERSONAL_THEME_ICONS is keyed by Georgian words, so it only ever
+      // matches a Georgian question — the tiers above it search on the
+      // model's icon_keywords, which are English in every language.
+      if (!iconSlug && mode === "personal" && lang === "ka") {
         // Check question text for Georgian theme keywords
         const questionLower = questionData.question_text.toLowerCase();
         

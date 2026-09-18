@@ -9,6 +9,13 @@ import {
   containsBlockedText,
   firstBlockedText,
 } from "../_shared/contentFilter.ts";
+import {
+  grammarRules,
+  knownLanguage,
+  languageName,
+  trueFalseWords,
+  writeInLanguage,
+} from "../_shared/questionLanguage.ts";
 
 // App-wide character limits
 const QUESTION_MAX_LENGTH = 65;
@@ -126,7 +133,19 @@ serve(async (req) => {
   }
 
   try {
-    const { subject, questionCount = 10, answerFormat = "4_answers", difficulty = "mixed" } = await req.json();
+    const {
+      subject,
+      questionCount = 10,
+      answerFormat = "4_answers",
+      difficulty = "mixed",
+      language: requestedLanguage,
+    } = await req.json();
+
+    // The player's own language. Absent (an old client) means Georgian, which
+    // is what every caller got before this parameter existed.
+    const lang = knownLanguage(requestedLanguage);
+    const langName = languageName(lang);
+    const tf = trueFalseWords(lang);
 
     if (!subject) {
       return new Response(
@@ -155,7 +174,9 @@ serve(async (req) => {
     // Request extra questions to account for duplicates that will be filtered
     const requestCount = questionCount + 5;
     
-const systemPrompt = `You are an expert trivia question generator for a Georgian quiz app. You create fun, accurate, and engaging trivia questions.
+const systemPrompt = `You are an expert trivia question generator for a quiz app. You create fun, accurate, and engaging trivia questions.
+
+${writeInLanguage(lang, `Every question, every answer and the suggested title are read by a player whose app is in ${langName}; a quiz in any other language is unusable to them.`)}
 
 ${CONTENT_SAFETY_PROMPT}
 
@@ -199,9 +220,9 @@ CRITICAL CHARACTER LIMITS - STRICT:
 - Each answer: MAXIMUM ${ANSWER_MAX_LENGTH} characters
 
 LANGUAGE RULES:
-- Generate ALL questions and answers in Georgian (ქართული)
-- The subject/topic may be in English - translate concepts to Georgian
-- Use proper Georgian grammar and spelling
+- Generate ALL questions, answers and the title in ${langName}
+- The subject/topic may be written in another language - translate the concept
+${grammarRules(lang)}
 
 QUESTION QUALITY:
 - Make questions interesting and fun
@@ -218,17 +239,20 @@ ${difficulty === "mixed"
 ${isTrueFalse ? `
 TRUE/FALSE FORMAT - CRITICAL RULES:
 - Generate a MIX of TRUE and FALSE statements (approximately 50% each)
-- For TRUE statements: write factually CORRECT statements, correctAnswer = "მართალია"
-- For FALSE statements: write factually INCORRECT/WRONG statements, correctAnswer = "მცდარია"
-- incorrectAnswers is always the OPPOSITE: ["მცდარია"] for true, ["მართალია"] for false
+- The two answer words are FIXED: "${tf.yes}" and "${tf.no}". Use them exactly,
+  whatever language the statement itself is in — every screen that draws a
+  true/false card matches on these two words.
+- For TRUE statements: write factually CORRECT statements, correctAnswer = "${tf.yes}"
+- For FALSE statements: write factually INCORRECT/WRONG statements, correctAnswer = "${tf.no}"
+- incorrectAnswers is always the OPPOSITE: ["${tf.no}"] for true, ["${tf.yes}"] for false
 - FALSE statements should be believable but clearly wrong when you know the facts
 - VARY THE TRUTH VALUE - don't make all questions true or all false!
 
-EXAMPLES:
-✓ TRUE: "საქართველოს დედაქალაქია თბილისი." → correct_answer: "მართალია", incorrect_answers: ["მცდარია"]
-✓ FALSE: "საქართველოს დედაქალაქია ბათუმი." → correct_answer: "მცდარია", incorrect_answers: ["მართალია"]
-✓ TRUE: "წყალი 100°C-ზე დუღს." → correct_answer: "მართალია", incorrect_answers: ["მცდარია"]
-✓ FALSE: "მზე დედამიწის გარშემო ბრუნავს." → correct_answer: "მცდარია", incorrect_answers: ["მართალია"]
+EXAMPLES (shape only — write yours in ${langName}):
+✓ TRUE: "The capital of Georgia is Tbilisi." → correct_answer: "${tf.yes}", incorrect_answers: ["${tf.no}"]
+✓ FALSE: "The capital of Georgia is Batumi." → correct_answer: "${tf.no}", incorrect_answers: ["${tf.yes}"]
+✓ TRUE: "Water boils at 100°C." → correct_answer: "${tf.yes}", incorrect_answers: ["${tf.no}"]
+✓ FALSE: "The Sun orbits the Earth." → correct_answer: "${tf.no}", incorrect_answers: ["${tf.yes}"]
 ` : `
 MULTIPLE CHOICE FORMAT:
 - Provide exactly 4 options (1 correct, 3 incorrect)
@@ -242,9 +266,9 @@ MULTIPLE CHOICE FORMAT:
 4. If the answer is short, make ALL answers equally short
 5. NEVER make the correct answer stand out by length - this allows players to guess without knowing
 
-EXAMPLES:
-❌ BAD: Correct: "პირველი მსოფლიო ომი" | Incorrect: "ომი", "ბრძოლა", "კონფლიქტი"
-✓ GOOD: Correct: "პირველი მსოფლიო ომი" | Incorrect: "მეორე მსოფლიო ომი", "კორეის ომი 1950", "ვიეტნამის ომი"
+EXAMPLES (shape only — write yours in ${langName}):
+❌ BAD: Correct: "The First World War" | Incorrect: "A war", "A battle", "A conflict"
+✓ GOOD: Correct: "The First World War" | Incorrect: "The Second World War", "The Korean War", "The Vietnam War"
 `}
 
 ICON KEYWORDS RULES:
@@ -254,12 +278,12 @@ ICON KEYWORDS RULES:
 
 RETURN FORMAT - JSON only:
 {
-  "suggestedTitle": "catchy Georgian title for this quiz",
+  "suggestedTitle": "catchy title for this quiz, in ${langName}",
   "questions": [
     {
-      "question_text": "კითხვა აქ (max ${QUESTION_MAX_LENGTH} chars)",
-      "correct_answer": "სწორი (max ${ANSWER_MAX_LENGTH} chars)",
-      "incorrect_answers": ["არასწორი 1", "არასწორი 2", "არასწორი 3"],
+      "question_text": "the question, in ${langName} (max ${QUESTION_MAX_LENGTH} chars)",
+      "correct_answer": "the correct answer (max ${ANSWER_MAX_LENGTH} chars)",
+      "incorrect_answers": ["wrong 1", "wrong 2", "wrong 3"],
       "difficulty": "easy|medium|hard",
       "icon_keywords": ["specific", "relevant", "keywords"]
     }
@@ -271,16 +295,16 @@ RETURN FORMAT - JSON only:
 CRITICAL REMINDERS:
 1. ⚠️ FACTUAL ACCURACY: Only include facts you are 100% certain about. If unsure, skip that question.
 2. ⚠️ NO DUPLICATES: Each question must cover a COMPLETELY DIFFERENT fact. No repetition!
-3. ALL text must be in Georgian
+3. ALL text must be in ${langName}
 4. Questions max ${QUESTION_MAX_LENGTH} chars, answers max ${ANSWER_MAX_LENGTH} chars
 5. ${isTrueFalse 
-  ? `TRUE/FALSE FORMAT - CRITICAL: Generate approximately 50% TRUE statements (correct_answer: "მართალია") and 50% FALSE statements (correct_answer: "მცდარია"). Do NOT make all statements true!` 
+  ? `TRUE/FALSE FORMAT - CRITICAL: Generate approximately 50% TRUE statements (correct_answer: "${tf.yes}") and 50% FALSE statements (correct_answer: "${tf.no}"). Do NOT make all statements true!` 
   : '4 unique answer options per question'}
 6. Include icon_keywords (2-3 English words) for each question
 
 Return ONLY valid JSON.`;
 
-    console.log(`Generating ${requestCount} ${answerFormat} questions (${difficulty}) about: ${subject} (will filter to ${questionCount})`);
+    console.log(`Generating ${requestCount} ${answerFormat} questions in ${lang} (${difficulty}) about: ${subject} (will filter to ${questionCount})`);
 
     // Retry logic with timeout
     let response: Response | null = null;
@@ -423,47 +447,51 @@ Return ONLY valid JSON.`;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Georgian Grammar Verification
-    console.log("Verifying Georgian grammar...");
-    for (const q of candidateQuestions) {
-      try {
-        const textsToVerify = [
-          q.question_text,
-          q.correct_answer,
-          ...(q.incorrect_answers || [])
-        ];
+    // Georgian Grammar Verification — for Georgian. `verify-georgian-grammar`
+    // is a Georgian proofreader; handed a Spanish question it would "correct"
+    // it into Georgian, which is this same bug arriving one step later.
+    if (lang === "ka") {
+      console.log("Verifying Georgian grammar...");
+      for (const q of candidateQuestions) {
+        try {
+          const textsToVerify = [
+            q.question_text,
+            q.correct_answer,
+            ...(q.incorrect_answers || [])
+          ];
         
-        const grammarResponse = await fetch(`${supabaseUrl}/functions/v1/verify-georgian-grammar`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${supabaseKey}`,
-          },
-          body: JSON.stringify({ texts: textsToVerify }),
-        });
+          const grammarResponse = await fetch(`${supabaseUrl}/functions/v1/verify-georgian-grammar`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${supabaseKey}`,
+            },
+            body: JSON.stringify({ texts: textsToVerify }),
+          });
 
-        if (grammarResponse.ok) {
-          const grammarResult = await grammarResponse.json();
-          if (grammarResult.results && grammarResult.results.length > 0) {
-            // Apply corrections
-            if (grammarResult.results[0]?.corrected) {
-              q.question_text = grammarResult.results[0].corrected;
-            }
-            if (grammarResult.results[1]?.corrected) {
-              q.correct_answer = grammarResult.results[1].corrected;
-            }
-            for (let i = 0; i < (q.incorrect_answers || []).length; i++) {
-              if (grammarResult.results[i + 2]?.corrected) {
-                q.incorrect_answers[i] = grammarResult.results[i + 2].corrected;
+          if (grammarResponse.ok) {
+            const grammarResult = await grammarResponse.json();
+            if (grammarResult.results && grammarResult.results.length > 0) {
+              // Apply corrections
+              if (grammarResult.results[0]?.corrected) {
+                q.question_text = grammarResult.results[0].corrected;
+              }
+              if (grammarResult.results[1]?.corrected) {
+                q.correct_answer = grammarResult.results[1].corrected;
+              }
+              for (let i = 0; i < (q.incorrect_answers || []).length; i++) {
+                if (grammarResult.results[i + 2]?.corrected) {
+                  q.incorrect_answers[i] = grammarResult.results[i + 2].corrected;
+                }
+              }
+              if (grammarResult.totalErrors > 0) {
+                console.log(`Grammar fixed for: "${q.question_text.substring(0, 30)}..."`);
               }
             }
-            if (grammarResult.totalErrors > 0) {
-              console.log(`Grammar fixed for: "${q.question_text.substring(0, 30)}..."`);
-            }
           }
+        } catch (grammarError) {
+          console.error("Grammar verification failed (non-blocking):", grammarError);
         }
-      } catch (grammarError) {
-        console.error("Grammar verification failed (non-blocking):", grammarError);
       }
     }
 
@@ -477,7 +505,7 @@ Return ONLY valid JSON.`;
         incorrect_answers: q.incorrect_answers || [],
       })),
       context: {
-        language: "ka",
+        language: lang,
         mode: isTrueFalse ? "true_false" : "multiple_choice",
         topicHint: subject,
       },

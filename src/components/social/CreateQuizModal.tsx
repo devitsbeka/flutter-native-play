@@ -175,7 +175,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onTriviaHan
   const [isPublic, setIsPublic] = useState(false);
   const [suggestedTitles, setSuggestedTitles] = useState<string[]>([]);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [topicSuggestions, setTopicSuggestions] = useState<TopicSuggestion[]>([]);
   const [isLoadingTopics, setIsLoadingTopics] = useState(false);
 
@@ -332,7 +332,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onTriviaHan
 
     try {
       const { data, error } = await supabase.functions.invoke("generate-custom-quiz", {
-        body: { subject, questionCount, answerFormat, difficulty },
+        body: { subject, questionCount, answerFormat, difficulty, language },
       });
 
       clearInterval(progressInterval);

@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useAvatarModal } from "@/contexts/AvatarModalContext";
 import { t } from "@/lib/i18n";
 import { passwordStrength } from "@/utils/passwordStrength";
+import { NICKNAME_MAX_CHARS } from "@/config/nickname";
 import { PasswordStrengthMeter } from "@/components/shared/PasswordStrengthMeter";
 import { toast } from "@/lib/toast";
 import confetti from "canvas-confetti";
@@ -188,6 +189,8 @@ export function SignupOnboardingModal() {
   const validateUsername = (value: string): string | undefined => {
     if (!value.trim()) return t("auth.usernameRequired");
     if (value.length < 3) return t("auth.usernameTooShort");
+    if (value.length > NICKNAME_MAX_CHARS)
+      return t("auth.usernameTooLong", { max: NICKNAME_MAX_CHARS });
     if (!/^[a-zA-Z0-9_\u10A0-\u10FF]+$/.test(value)) {
       return t("extra.onlyLettersAllowed");
     }
@@ -431,6 +434,7 @@ export function SignupOnboardingModal() {
                       setErrors(prev => ({ ...prev, username: undefined }));
                     }}
                     placeholder={t("auth.usernamePlaceholder")}
+                    maxLength={NICKNAME_MAX_CHARS}
                     className="w-full pl-12 pr-5 py-3.5 rounded-2xl bg-background border-4 border-border focus:border-primary outline-none text-base font-medium text-left transition-all duration-200"
                     style={{
                       boxShadow: "0 4px 0 hsl(var(--border))",

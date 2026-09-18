@@ -640,6 +640,11 @@ export function GameStylePersonalTrivia({
           existingQuestions,
           randomSeed,
           mode: 'personal', // Personal/family questions for MyTrivia Party
+          // The party opens on a starter pack in this language
+          // (config/partyStarterPack), so change-question has to answer in it
+          // too. Without this the function defaults to Georgian and an
+          // English party turned Georgian on the first press.
+          language,
         }
       });
       
