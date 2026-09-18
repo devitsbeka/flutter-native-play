@@ -1188,7 +1188,12 @@ export default function CategoryQuizPage() {
   if (!loading && questions.length > 0 && countdown !== null && countdown > 0) {
     return (
       <div className="h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] bg-background flex flex-col items-center justify-center gap-6">
-        <p className="font-display text-2xl text-foreground">{category?.name ?? ""}</p>
+        {/* The heading the rest of this page uses. `category` is the static
+            table in src/data/categories.ts, whose names are Georgian for
+            everyone — reading it raw put a Georgian category name on the
+            countdown of an English game, for the three seconds before the
+            first question replaced it with the translated one. */}
+        <p className="font-display text-2xl text-foreground">{categoryTitle}</p>
         <AnimatePresence mode="popLayout">
           <motion.span
             key={countdown}

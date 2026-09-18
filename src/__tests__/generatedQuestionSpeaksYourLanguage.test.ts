@@ -126,3 +126,16 @@ describe("true and false stay the two words every screen knows", () => {
     expect(FN).toMatch(/The two answer words are FIXED: "\$\{tf\.yes\}" and "\$\{tf\.no\}"/);
   });
 });
+
+describe("the countdown before a solo game", () => {
+  const PAGE = read("src/pages/CategoryQuizPage.tsx");
+
+  it("names the category in the player's language", () => {
+    // `category` is the static table in src/data/categories.ts, whose names
+    // are Georgian for everyone; `categoryTitle` is the same name through
+    // category_translations, which this page already computes for its
+    // heading. The countdown was reading the raw one.
+    expect(PAGE).toMatch(/<p className="font-display text-2xl text-foreground">\{categoryTitle\}<\/p>/);
+    expect(PAGE).not.toMatch(/\{category\?\.name \?\? ""\}/);
+  });
+});
