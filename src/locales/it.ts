@@ -1240,6 +1240,8 @@ export const it: KaTranslations = {
     noPreviousPurchases: "Nessun acquisto precedente trovato",
     restoreFailed: "Ripristino fallito",
     restoreSignInFirst: "Accedi per ripristinare i tuoi acquisti.",
+    restoredBody: "Tutto ciò che hai acquistato è di nuovo attivo su questo account.",
+    noneBody: "Questo ID Apple non ha ancora acquistato nulla qui.",
     restoreCouldNotCheck: "Non siamo riusciti a controllare i tuoi acquisti. Controlla la connessione e riprova.",
   },
   featured: {

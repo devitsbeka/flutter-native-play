@@ -1465,6 +1465,8 @@ export const en: KaTranslations = {
     noPreviousPurchases: "No previous purchases found",
     restoreFailed: "Restore failed",
     restoreSignInFirst: "Sign in to restore your purchases.",
+    restoredBody: "Everything you bought is active on this account again.",
+    noneBody: "This Apple ID hasn't bought anything here yet.",
     restoreCouldNotCheck: "We couldn't check your purchases just now. Check your connection and try again.",
   },
 

@@ -1247,6 +1247,8 @@ export const es: KaTranslations = {
     noPreviousPurchases: "No se encontraron compras anteriores",
     restoreFailed: "Error al restaurar",
     restoreSignInFirst: "Inicia sesión para restaurar tus compras.",
+    restoredBody: "Todo lo que compraste vuelve a estar activo en esta cuenta.",
+    noneBody: "Este Apple ID todavía no ha comprado nada aquí.",
     restoreCouldNotCheck: "No pudimos comprobar tus compras ahora mismo. Revisa tu conexión e inténtalo de nuevo.",
   },
   featured: {

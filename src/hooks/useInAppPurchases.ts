@@ -702,7 +702,7 @@ function attachResumeListener() {
 }
 
 export function useInAppPurchases() {
-  const { user, fetchProfile } = useAuth();
+  const { user, profile, fetchProfile, setProfileLocal } = useAuth();
   const [products, setProducts] = useState<IAPProduct[]>(storeProducts);
   const [loading, setLoading] = useState(storeProducts.length === 0);
   const [purchasing, setPurchasing] = useState(false);
@@ -991,6 +991,25 @@ export function useInAppPurchases() {
         announcePurchase({ productId, gems: gemsForProduct(productId) });
         iapLog(`confirmation on screen ${ms()}`);
 
+        // Show the gems on the balance now, for the same reason.
+        //
+        // Measured on a device: verify-receipt takes ~3.5s (cold start, a
+        // RevenueCat HTTP lookup, then the writes). Until it answered, the
+        // confirmation said "+500 Gems" while the counter above it still read
+        // the old number — which is the one place a player looks to check that
+        // a purchase was real.
+        //
+        // This is display only. `update_user_currency` refuses a positive
+        // delta from a signed-in caller and the credit is written by the
+        // server from the verified purchase (CLAUDE.md 3) — nothing here
+        // changes what is owed. refreshBalance() re-reads the authoritative
+        // number a moment later and overwrites this, including downwards if
+        // the credit never landed.
+        const purchasedGems = gemsForProduct(productId);
+        if (purchasedGems && profile) {
+          setProfileLocal({ gems: (profile.gems ?? 0) + purchasedGems });
+        }
+
         // The purchase itself is done. What the account is now entitled to is
         // decided server-side: we ask the backend to re-read this user from
         // RevenueCat and write the result. Nothing about the transaction is
@@ -1111,7 +1130,7 @@ export function useInAppPurchases() {
     } finally {
       setPurchasing(false);
     }
-  }, [user, refreshBalance, refreshVip, applyEntitlement]);
+  }, [user, profile, setProfileLocal, refreshBalance, refreshVip, applyEntitlement]);
 
   /**
    * Restore previous purchases.
@@ -1221,7 +1240,7 @@ export function useInAppPurchases() {
     } finally {
       setRestoring(false);
     }
-  }, [user, refreshBalance, refreshVip, applyEntitlement]);
+  }, [user, profile, setProfileLocal, refreshBalance, refreshVip, applyEntitlement]);
 
   // Get product by ID
   const getProduct = useCallback((productId: string): IAPProduct | undefined => {

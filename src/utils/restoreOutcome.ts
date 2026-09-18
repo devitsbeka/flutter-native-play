@@ -15,14 +15,19 @@ import type { RestoreOutcome } from "@/hooks/useInAppPurchases";
 export function restoreOutcomeKeys(outcome: RestoreOutcome): string[] {
   switch (outcome) {
     case "restored":
-      return ["iap.purchasesRestored"];
+      // Not the heading's own string. RestoreResultModal puts the outcome in
+      // the title and this underneath, so returning "Purchases restored!" here
+      // printed the same sentence twice, one above the other.
+      return ["iap.restoredBody"];
     case "signedOut":
       // Not "restored". Signed out, the app cannot know whether this Apple ID
       // owns anything, so it must not say that it does — see the note in
       // restorePurchases. One sentence, and it names the next step.
       return ["iap.restoreSignInFirst"];
     case "none":
-      return ["iap.noPreviousPurchases"];
+      // Likewise: the heading already says nothing was found. This says what
+      // that means, so the player is not left wondering whether it failed.
+      return ["iap.noneBody"];
     case "failed":
       // The check did not complete. Distinct from "you own nothing", which is
       // an answer; this is the absence of one.
