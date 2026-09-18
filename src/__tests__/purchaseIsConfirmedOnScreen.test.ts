@@ -88,7 +88,7 @@ describe("a completed purchase is confirmed on screen", () => {
         hook.slice(hook.indexOf("const purchase = useCallback")).search(/\n  \}, \[[^\]]*\]\);/),
     );
 
-    const all = body.match(/announcePurchase\(\{[\s\S]*?\}\)/g) ?? [];
+    const all: string[] = body.match(/announcePurchase\(\{[\s\S]*?\}\)/g) ?? [];
     const successes = all.filter((a) => !a.includes("failed: true"));
 
     // Failures may be announced from more than one place — the sync branch and
