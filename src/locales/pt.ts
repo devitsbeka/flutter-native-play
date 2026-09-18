@@ -2757,6 +2757,7 @@ export const pt: KaTranslations = {
     proSeatsSend: "Enviar PRO",
     proSeatsSentBadge: "PRO enviado",
     proSeatsNoFriends: "Adicione um amigo primeiro, depois você pode dar PRO a ele.",
+    proSeatsAllHavePro: "Todos os seus amigos já têm PRO.",
     proSeatsAddFriend: "Encontrar amigos",
     proSeatsUnknown: "Jogador",
     proSeatErrSignedOut: "Entre primeiro.",

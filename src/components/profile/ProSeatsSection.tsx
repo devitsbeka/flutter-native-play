@@ -58,13 +58,28 @@ export function ProSeatsSection() {
     (subscription as { purchase_platform?: string } | null)?.purchase_platform === "seat";
   const seatsTotal = isSeatHolder ? 0 : (SEATS_BY_TIER[tier] ?? 0);
 
-  const { seats, seatsUsed, seatsFree, loading, busy, grant, revoke } =
+  const { seats, candidates, seatsUsed, seatsFree, loading, busy, grant, revoke } =
     useProSeats(seatsTotal);
 
   const held = useMemo(() => new Set(seats.map((s) => s.holderId)), [seats]);
+  const accepted = useMemo(() => friends.filter((f) => f.status === "accepted"), [friends]);
+  /**
+   * Only the friends a seat can be given to.
+   *
+   * A friend who already has PRO is one `grant_pro_seat` refuses — a seat
+   * must never overwrite a subscription somebody is paying for — so their
+   * Send PRO did nothing but raise an error, and the row looked broken
+   * (owner: "i click send pro and nothing happens because they already have
+   * it"). `candidates` is the server's own answer to who is left, from the
+   * same check the refusal uses; null means it could not be asked, and then
+   * everyone is offered exactly as before.
+   */
   const grantable = useMemo(
-    () => friends.filter((f) => f.status === "accepted" && !held.has(f.friendId)),
-    [friends, held],
+    () =>
+      accepted.filter(
+        (f) => !held.has(f.friendId) && (candidates === null || candidates.has(f.friendId)),
+      ),
+    [accepted, held, candidates],
   );
   // A seat can outlive the friendship it was given across, so the holder may
   // not be in the friends list any more. The seat is still real and still
@@ -151,10 +166,20 @@ export function ProSeatsSection() {
 
           {/* Nobody to give it to yet. Saying "add a friend first" and
               leaving it there is half an answer — the other half is a way to
-              do it without going to find the screen that does. */}
+              do it without going to find the screen that does.
+
+              Two ways to have nobody, and they are not the same sentence: an
+              empty friends list, and a list where everyone already has PRO.
+              Telling the second one to add a friend first is simply wrong —
+              they have several. Either way the way out is the same, so the
+              button stays under both. */}
           {seatsFree > 0 && grantable.length === 0 && !picking && (
             <div className="mt-3 flex flex-col items-center gap-2">
-              <p className="text-sm text-muted-foreground text-center">{t("extra.proSeatsNoFriends")}</p>
+              <p className="text-sm text-muted-foreground text-center">
+                {accepted.length === 0
+                  ? t("extra.proSeatsNoFriends")
+                  : t("extra.proSeatsAllHavePro")}
+              </p>
               <button
                 type="button"
                 onClick={() => setAddingFriend(true)}

@@ -3130,6 +3130,7 @@ export const ka = {
     proSeatsSend: "PRO-ს გაგზავნა",
     proSeatsSentBadge: "PRO გაგზავნილია",
     proSeatsNoFriends: "ჯერ დაამატე მეგობარი, შემდეგ შეძლებ PRO-ს ჩუქებას.",
+    proSeatsAllHavePro: "შენს ყველა მეგობარს უკვე აქვს PRO.",
     proSeatsAddFriend: "მეგობრების მოძებნა",
     proSeatsUnknown: "მოთამაშე",
     proSeatErrSignedOut: "ჯერ შედი ანგარიშზე.",

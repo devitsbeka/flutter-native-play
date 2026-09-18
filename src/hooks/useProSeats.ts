@@ -61,14 +61,43 @@ function seatErrorMessage(error: RpcError): string {
 export function useProSeats(seatsTotal: number) {
   const { user } = useAuth();
   const [seats, setSeats] = useState<ProSeat[]>([]);
+  /**
+   * The friends a seat can actually be given to.
+   *
+   * `null` means the question could not be asked — the function is not
+   * deployed yet, or the call failed — and callers must then offer everyone,
+   * which is what the panel did before this existed. An empty set is an
+   * answer: every friend already has PRO.
+   *
+   * It has to come from the server. RLS on `vip_subscriptions` is
+   * `auth.uid() = user_id`, so the app can read its own subscription and
+   * nobody else's; a client-side "do they have PRO" would be a guess. See
+   * 20261107100000_pro_seat_candidates.sql.
+   */
+  const [candidates, setCandidates] = useState<Set<string> | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
 
   const refresh = useCallback(async () => {
     if (!user) {
       setSeats([]);
+      setCandidates(null);
       setLoading(false);
       return;
+    }
+
+    const { data: eligible, error: eligibleError } = await callRpc<
+      { candidate_id: string }[]
+    >("pro_seat_candidates");
+    if (eligibleError) {
+      // Fail open: a panel that offers a friend the server will refuse is a
+      // worse answer than one that offers nobody, but only just — and the
+      // refusal still says why. What must not happen is an empty list read
+      // as "all your friends have PRO" when nothing was ever asked.
+      console.error("[pro-seats] could not load candidates:", eligibleError.message);
+      setCandidates(null);
+    } else {
+      setCandidates(new Set((eligible ?? []).map((r) => r.candidate_id)));
     }
     const { data, error } = await selectRows<{
       id: string;
@@ -152,6 +181,7 @@ export function useProSeats(seatsTotal: number) {
 
   return {
     seats,
+    candidates,
     seatsUsed: seats.length,
     seatsTotal,
     seatsFree: Math.max(0, seatsTotal - seats.length),
