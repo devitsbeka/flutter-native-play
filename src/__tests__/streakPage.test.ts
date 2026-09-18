@@ -96,8 +96,14 @@ describe("a milestone pays once, and the server decides", () => {
     expect(read(".github/workflows/pr-checks.yml")).toContain("supabase/tests/14-streak-milestones.sql");
     expect(existsSync(join(process.cwd(), "supabase/tests/14-streak-milestones.sql"))).toBe(true);
     const types = read("src/integrations/supabase/types.ts");
-    expect(types).toMatch(/claim_streak_milestone: \{\s*\n\s*Args: \{ p_days: number \}/);
-    expect(types).toMatch(/streak_milestones_claimed: \{\s*\n\s*Args: never\s*\n\s*Returns: number\[\]/);
+    // Layout-agnostic on purpose. The Supabase type generator collapses short
+    // signatures onto one line and expands longer ones, and which side of that
+    // a function falls on changes as unrelated functions are added around it —
+    // `streak_milestones_claimed` moved from three lines to one on a
+    // regeneration that did not touch its meaning. What must hold is the
+    // signature: the argument shape and the return type.
+    expect(types).toMatch(/claim_streak_milestone: \{\s*Args: \{ p_days: number \}/);
+    expect(types).toMatch(/streak_milestones_claimed: \{\s*Args: never;?\s*Returns: number\[\]/);
   });
 
   it("the page lists the selected day's four missions, easiest first, and the streak they keep", () => {
