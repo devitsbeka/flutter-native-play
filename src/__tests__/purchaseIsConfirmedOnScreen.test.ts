@@ -46,18 +46,85 @@ describe("a completed purchase is confirmed on screen", () => {
     );
   });
 
-  it("announces on the fully-settled success path", () => {
+  it("confirms as soon as StoreKit completes, not after the server answers", () => {
     const body = hook.slice(
       hook.indexOf("const purchase = useCallback"),
-      hook.indexOf("}, [user, refreshBalance]);"),
+      hook.indexOf("const purchase = useCallback") +
+        hook.slice(hook.indexOf("const purchase = useCallback")).search(/\n  \}, \[[^\]]*\]\);/),
     );
-    const announcements = body.match(/announcePurchase\(/g) ?? [];
+
+    const customerInfo = body.indexOf("if (customerInfo) {");
+    const firstAnnounce = body.indexOf("announcePurchase(", customerInfo);
+    const sync = body.indexOf("await syncEntitlements()");
+
+    expect(firstAnnounce, "purchase() no longer announces at all").toBeGreaterThan(-1);
     expect(
-      announcements.length,
-      "purchase() must announce on BOTH success paths — the settled one and " +
-        "the credited-shortly one. The second is the case that looked most " +
-        "broken: money taken, balance unmoved, nothing said",
-    ).toBeGreaterThanOrEqual(2);
+      firstAnnounce,
+      "the confirmation moved back behind syncEntitlements. That is the " +
+        "eight-second wait a device reported: the App Store says the purchase " +
+        "went through and the app sits silent while verify-receipt cold-starts, " +
+        "queries RevenueCat and writes a row. StoreKit has already confirmed it",
+    ).toBeLessThan(sync);
+  });
+
+  it("still announces the failure, so a failed credit is not silent", () => {
+    const body = hook.slice(
+      hook.indexOf("const purchase = useCallback"),
+      hook.indexOf("const purchase = useCallback") +
+        hook.slice(hook.indexOf("const purchase = useCallback")).search(/\n  \}, \[[^\]]*\]\);/),
+    );
+    expect(
+      body,
+      "the sync-failure branch stopped announcing — that return was the silent " +
+        "one, and it is the branch that produced 'iOS says it worked and the " +
+        "app does nothing'",
+    ).toMatch(/announcePurchase\(\{[\s\S]{0,200}failed: true/);
+  });
+
+  it("announces success exactly once", () => {
+    const body = hook.slice(
+      hook.indexOf("const purchase = useCallback"),
+      hook.indexOf("const purchase = useCallback") +
+        hook.slice(hook.indexOf("const purchase = useCallback")).search(/\n  \}, \[[^\]]*\]\);/),
+    );
+
+    const all = body.match(/announcePurchase\(\{[\s\S]*?\}\)/g) ?? [];
+    const successes = all.filter((a) => !a.includes("failed: true"));
+
+    // Failures may be announced from more than one place — the sync branch and
+    // the catch both end a purchase badly, and each was silent at some point.
+    // Success must not: a second success announce fires seconds after the
+    // first and re-opens a modal the player has already dismissed.
+    expect(
+      successes.length,
+      "purchase() announces success more than once (or not at all). The " +
+        "confirmation goes up when StoreKit returns, and nothing after that " +
+        "should raise it again",
+    ).toBe(1);
+  });
+
+  it("announces a rejected purchase, not just a failed sync", () => {
+    const body = hook.slice(
+      hook.indexOf("const purchase = useCallback"),
+      hook.indexOf("const purchase = useCallback") +
+        hook.slice(hook.indexOf("const purchase = useCallback")).search(/\n  \}, \[[^\]]*\]\);/),
+    );
+    const catchBlock = body.slice(body.lastIndexOf("} catch (error: any) {"));
+
+    // A device capture caught four gem purchases rejecting with RevenueCat
+    // code 2 ("problem communicating with the Store"). Every one ended at a
+    // swallowed toast, with useGemPurchase discarding the result — the App
+    // Store showed its sheet and the app then said nothing at all.
+    expect(
+      catchBlock,
+      "the catch path is silent again. A purchase the store rejects is the " +
+        "case most likely to look like the app doing nothing",
+    ).toMatch(/announcePurchase\(\{[\s\S]{0,200}failed: true/);
+
+    expect(
+      catchBlock,
+      "a cancel must still return before announcing — the player did it",
+    ).toMatch(/return \{ success: false, error: "cancelled" \}/);
   });
 
   it("carries the gem count so the confirmation can name what was bought", () => {
@@ -91,7 +158,8 @@ describe("restore only claims what it has verified", () => {
   it("does not say 'restored' when signed out", () => {
     const body = hook.slice(
       hook.indexOf("const restorePurchases = useCallback"),
-      hook.indexOf("}, [user, refreshBalance]);", hook.indexOf("const restorePurchases")),
+      hook.indexOf("const restorePurchases") +
+        hook.slice(hook.indexOf("const restorePurchases")).search(/\n  \}, \[[^\]]*\]\);/),
     );
     const signedOut = body.slice(body.indexOf("if (!user)"), body.indexOf('return "signedOut"'));
 

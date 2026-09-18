@@ -68,7 +68,32 @@ Deno.serve(async (req: Request) => {
       gemsCredited: result.gemsCredited,
     });
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Unknown error";
+    // Describe what was actually thrown, including the things that are not
+    // Errors.
+    //
+    // This used to be `error instanceof Error ? error.message : "Unknown
+    // error"`, and a PostgrestError is a plain object — so every database
+    // failure in this path reported itself as the literal string "Unknown
+    // error", with the code, message, details and hint all discarded. The one
+    // statement in syncUserFromStore that throws a non-Error is
+    // syncSubscription's `if (error) throw error` on the vip_subscriptions
+    // upsert, so "Unknown error" meant precisely "the upsert failed and we
+    // will not tell you why". It cost several build cycles to narrow from the
+    // client side, which is exactly the work this line exists to avoid.
+    const message =
+      error instanceof Error
+        ? error.message
+        : (() => {
+            const e = error as Record<string, unknown> | null;
+            if (e && typeof e === "object" && typeof e.message === "string") {
+              // PostgrestError shape: message plus code/details/hint.
+              return [e.message, e.code && `(${e.code})`, e.details, e.hint]
+                .filter(Boolean)
+                .join(" ");
+            }
+            return typeof error === "string" ? error : JSON.stringify(error);
+          })();
+
     console.error("Entitlement sync failed:", error);
     return json({ success: false, error: message }, 500);
   }

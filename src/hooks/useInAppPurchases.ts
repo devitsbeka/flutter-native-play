@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useVipStatus } from "@/contexts/VipContext";
 import { toast } from "@/lib/toast";
 import { t as tStandalone } from "@/contexts/LanguageContext";
 import { introFreeDays } from "@/utils/introOffer";
@@ -63,6 +64,30 @@ const ALL_PRODUCT_IDS: string[] = [
   ...Object.values(IAP_PRODUCTS),
   ...Object.values(GEM_PACK_PRODUCTS),
 ];
+
+/**
+ * What tier each subscription grants, for the optimistic UI only.
+ *
+ * Mirrors ENTITLEMENTS in supabase/functions/_shared/iap.ts, which is what
+ * actually writes `vip_subscriptions` — including that the annual plan grants
+ * `pro_plus` rather than `pro`. If the two ever disagree the screen would show
+ * one tier for a second and then correct itself to the server's, which is
+ * exactly the flicker this is meant to avoid, so they are kept in step.
+ */
+const SUBSCRIPTION_TIERS: Record<string, string> = {
+  [IAP_PRODUCTS.PRO_MONTHLY]: "pro",
+  [IAP_PRODUCTS.PRO_ANNUAL]: "pro_plus",
+  [IAP_PRODUCTS.PRO_PLUS_MONTHLY]: "pro_plus",
+};
+
+/**
+ * Expiry to assume when customerInfo does not carry one.
+ *
+ * A day out: long enough that `isAfter(expires_at, now)` holds while the real
+ * row is being read back, short enough to be worthless if the read never
+ * happens. The authoritative date replaces it within a second or two.
+ */
+const OPTIMISTIC_EXPIRY = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
 // Diagnostics that survive a production build.
 //
@@ -677,7 +702,7 @@ function attachResumeListener() {
 }
 
 export function useInAppPurchases() {
-  const { user, fetchProfile } = useAuth();
+  const { user, profile, fetchProfile, setProfileLocal } = useAuth();
   const [products, setProducts] = useState<IAPProduct[]>(storeProducts);
   const [loading, setLoading] = useState(storeProducts.length === 0);
   const [purchasing, setPurchasing] = useState(false);
@@ -759,6 +784,25 @@ export function useInAppPurchases() {
     }
   }, [user?.id, fetchProfile]);
 
+  /**
+   * Re-read the subscription after the server has written it.
+   *
+   * Without this a PRO purchase completed, verify-receipt wrote the row, the
+   * success modal appeared — and the app carried on showing the non-PRO UI
+   * until it was killed and relaunched.
+   *
+   * VipContext loads once on mount and otherwise waits on a realtime
+   * subscription to `vip_subscriptions`. That table is **not** in the
+   * `supabase_realtime` publication, so the listener never fires and the only
+   * other route back, `refresh()`, had no caller anywhere in the app. The row
+   * was correct the whole time; nothing ever asked for it again.
+   *
+   * Adding the table to the publication would also fix it and is worth doing
+   * server-side, but this is the deterministic half: the client knows exactly
+   * when it has bought something, and asks.
+   */
+  const { refresh: refreshVip, applyEntitlement } = useVipStatus();
+
   // Purchase a product
   const purchase = useCallback(async (productId: string): Promise<PurchaseResult> => {
     if (!user) {
@@ -772,6 +816,17 @@ export function useInAppPurchases() {
     }
 
     setPurchasing(true);
+
+    // Elapsed timings for the whole purchase path.
+    //
+    // "It takes about eight seconds" is not something the existing breadcrumbs
+    // could confirm or place: they say what happened, never when, so the wait
+    // inside StoreKit's payment sheet (the player's own Face ID and tap, which
+    // is not the app being slow) could not be told apart from the wait after
+    // it returns (which is). Every line below carries milliseconds since the
+    // tap, so the gap can be attributed rather than guessed at.
+    const startedAt = Date.now();
+    const ms = () => `+${Date.now() - startedAt}ms`;
 
     try {
       const plugin = (await loadPurchasesPlugin())?.plugin;
@@ -838,7 +893,9 @@ export function useInAppPurchases() {
       
       if (targetPackage) {
         // Purchase using package (preferred method)
+        iapLog(`opening payment sheet (package) ${ms()}`);
         const result = await plugin.purchasePackage({ aPackage: targetPackage });
+        iapLog(`StoreKit returned ${ms()} — everything after this is the app`);
         customerInfo = result.customerInfo;
       } else {
         // No package carries this product, which always means the RevenueCat
@@ -890,11 +947,69 @@ export function useInAppPurchases() {
           return { success: false, error: "product_not_found" };
         }
 
+        iapLog(`opening payment sheet (direct product) ${ms()}`);
         const result = await plugin.purchaseStoreProduct({ product: storeProduct });
+        iapLog(`StoreKit returned ${ms()} — everything after this is the app`);
         customerInfo = result.customerInfo;
       }
 
       if (customerInfo) {
+        // Draw PRO now, before the server is asked anything.
+        //
+        // StoreKit has confirmed the purchase and handed back a verified
+        // customerInfo — that is already the answer to "does this Apple ID own
+        // the subscription". Waiting for verify-receipt to cold-start, query
+        // RevenueCat over HTTP, write vip_subscriptions and be re-read left the
+        // App Store saying "you're subscribed" while every PRO feature in the
+        // app stayed locked for about eight seconds.
+        //
+        // The server round trip below still runs and still decides what is
+        // persisted; VipContext re-reads the row and corrects this if it
+        // disagrees. Entitlements remain enforced in the database — nothing
+        // here writes one.
+        const purchasedTier = SUBSCRIPTION_TIERS[productId];
+        if (purchasedTier) {
+          applyEntitlement(
+            purchasedTier,
+            customerInfo.latestExpirationDate ?? OPTIMISTIC_EXPIRY,
+          );
+        }
+
+        // Confirm it now, for the same reason.
+        //
+        // The confirmation used to be announced after syncEntitlements, so it
+        // arrived with the rest of the eight-second wait — the App Store had
+        // already said the purchase went through and the app then sat silent
+        // for long enough to look broken twice over.
+        //
+        // Announcing here is not a guess: StoreKit has completed the purchase,
+        // so "this succeeded" is true whatever the server does next with it.
+        // What the server decides is whether the *credit* landed, and the
+        // failure branch below announces over this one if it did not — which
+        // is the honest ordering, because the charge really did happen either
+        // way.
+        announcePurchase({ productId, gems: gemsForProduct(productId) });
+        iapLog(`confirmation on screen ${ms()}`);
+
+        // Show the gems on the balance now, for the same reason.
+        //
+        // Measured on a device: verify-receipt takes ~3.5s (cold start, a
+        // RevenueCat HTTP lookup, then the writes). Until it answered, the
+        // confirmation said "+500 Gems" while the counter above it still read
+        // the old number — which is the one place a player looks to check that
+        // a purchase was real.
+        //
+        // This is display only. `update_user_currency` refuses a positive
+        // delta from a signed-in caller and the credit is written by the
+        // server from the verified purchase (CLAUDE.md 3) — nothing here
+        // changes what is owed. refreshBalance() re-reads the authoritative
+        // number a moment later and overwrites this, including downwards if
+        // the credit never landed.
+        const purchasedGems = gemsForProduct(productId);
+        if (purchasedGems && profile) {
+          setProfileLocal({ gems: (profile.gems ?? 0) + purchasedGems });
+        }
+
         // The purchase itself is done. What the account is now entitled to is
         // decided server-side: we ask the backend to re-read this user from
         // RevenueCat and write the result. Nothing about the transaction is
@@ -913,7 +1028,9 @@ export function useInAppPurchases() {
         // no gems, so waiting on that would be waiting for something that is
         // never coming.
         const expectsGems = Object.values(GEM_PACK_PRODUCTS).includes(productId);
+        iapLog(`calling verify-receipt ${ms()}`);
         const synced = await syncEntitlements();
+        iapLog(`verify-receipt answered ${ms()} (tier=${synced.tier ?? "none"}, gems=${synced.gemsCredited})`);
 
         if (expectsGems && synced.success && synced.gemsCredited === 0) {
           // Not credited on the first ask. Stop waiting in front of the user
@@ -935,14 +1052,10 @@ export function useInAppPurchases() {
           void pollForCredit(refreshBalance);
           await refreshBalance();
           toast.success(tStandalone("extra.iapGemsShortly"));
-          // Say so on screen. This is the case that looked most broken: the
-          // charge went through, the balance had not moved yet, and the only
-          // notice was a toast nothing renders.
-          announcePurchase({
-            productId,
-            gems: gemsForProduct(productId),
-            pending: true,
-          });
+          // Not announced again. The confirmation went up the moment StoreKit
+          // completed the purchase, and re-announcing the same thing here would
+          // re-open a modal the player may already have dismissed. Only the
+          // balance is still outstanding, and pollForCredit is chasing it.
           return { success: true };
         }
 
@@ -979,13 +1092,14 @@ export function useInAppPurchases() {
         // what "I had those gems on launch" was.
         await refreshBalance();
 
+        // A subscription was written. Re-read it, or the app keeps rendering
+        // the non-PRO UI over a row that says otherwise until it is relaunched.
+        if (synced.tier) refreshVip();
+
         toast.success(tStandalone("iap.purchaseComplete"));
-        // The balance has been re-read and the entitlement is live. Confirm it
-        // where the player can actually see it.
-        announcePurchase({
-          productId,
-          gems: synced.gemsCredited > 0 ? synced.gemsCredited : gemsForProduct(productId),
-        });
+        // Already confirmed on screen, above, the moment StoreKit completed
+        // the purchase. Announcing again here would re-open the modal several
+        // seconds later, on top of whatever the player had moved on to.
         return { success: true };
       }
 
@@ -1011,12 +1125,35 @@ export function useInAppPurchases() {
         return { success: false, error: "cancelled" };
       }
       
+      // Say it on screen, not only to the console.
+      //
+      // This was the last silent exit. A device capture caught four gem
+      // purchases in a row rejecting with RevenueCat code 2 — "There was a
+      // problem with the App Store. Problem communicating with the Store when
+      // trying to validate the receipt" — and every one of them ended here, at
+      // a toast src/lib/toast.ts swallows, with useGemPurchase discarding the
+      // returned result. The App Store had put its own sheet up, so from the
+      // outside that is "iOS says something happened and the app does
+      // nothing", which is the same report that has been chased through five
+      // builds. Nothing was charged and nothing was owed; what was missing was
+      // anyone saying so.
+      //
+      // The store's own message is carried through as the reason. It is the
+      // difference between "something went wrong" and knowing the App Store
+      // could not validate a receipt — which is not a bug in this app and is
+      // not something the player can fix by tapping again.
       toast.error(tStandalone("iap.purchaseFailed"));
+      announcePurchase({
+        productId,
+        gems: gemsForProduct(productId),
+        failed: true,
+        reason: error?.errorMessage ?? error?.message ?? String(error),
+      });
       return { success: false, error: error.message };
     } finally {
       setPurchasing(false);
     }
-  }, [user, refreshBalance]);
+  }, [user, profile, setProfileLocal, refreshBalance, refreshVip, applyEntitlement]);
 
   /**
    * Restore previous purchases.
@@ -1107,6 +1244,9 @@ export function useInAppPurchases() {
 
       if (synced.tier || synced.gemsCredited > 0) {
         await refreshBalance();
+        // Same as after a purchase: a restored subscription is only visible
+        // once VipContext is told to look again.
+        if (synced.tier) refreshVip();
         toast.success(tStandalone("iap.purchasesRestored"));
         return "restored";
       }
@@ -1123,7 +1263,7 @@ export function useInAppPurchases() {
     } finally {
       setRestoring(false);
     }
-  }, [user, refreshBalance]);
+  }, [user, profile, setProfileLocal, refreshBalance, refreshVip, applyEntitlement]);
 
   // Get product by ID
   const getProduct = useCallback((productId: string): IAPProduct | undefined => {
