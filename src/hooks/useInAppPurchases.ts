@@ -65,6 +65,30 @@ const ALL_PRODUCT_IDS: string[] = [
   ...Object.values(GEM_PACK_PRODUCTS),
 ];
 
+/**
+ * What tier each subscription grants, for the optimistic UI only.
+ *
+ * Mirrors ENTITLEMENTS in supabase/functions/_shared/iap.ts, which is what
+ * actually writes `vip_subscriptions` — including that the annual plan grants
+ * `pro_plus` rather than `pro`. If the two ever disagree the screen would show
+ * one tier for a second and then correct itself to the server's, which is
+ * exactly the flicker this is meant to avoid, so they are kept in step.
+ */
+const SUBSCRIPTION_TIERS: Record<string, string> = {
+  [IAP_PRODUCTS.PRO_MONTHLY]: "pro",
+  [IAP_PRODUCTS.PRO_ANNUAL]: "pro_plus",
+  [IAP_PRODUCTS.PRO_PLUS_MONTHLY]: "pro_plus",
+};
+
+/**
+ * Expiry to assume when customerInfo does not carry one.
+ *
+ * A day out: long enough that `isAfter(expires_at, now)` holds while the real
+ * row is being read back, short enough to be worthless if the read never
+ * happens. The authoritative date replaces it within a second or two.
+ */
+const OPTIMISTIC_EXPIRY = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+
 // Diagnostics that survive a production build.
 //
 // vite.config.ts lists console.log/debug/info as `pure` for production, so
@@ -777,7 +801,7 @@ export function useInAppPurchases() {
    * server-side, but this is the deterministic half: the client knows exactly
    * when it has bought something, and asks.
    */
-  const { refresh: refreshVip } = useVipStatus();
+  const { refresh: refreshVip, applyEntitlement } = useVipStatus();
 
   // Purchase a product
   const purchase = useCallback(async (productId: string): Promise<PurchaseResult> => {
@@ -915,6 +939,42 @@ export function useInAppPurchases() {
       }
 
       if (customerInfo) {
+        // Draw PRO now, before the server is asked anything.
+        //
+        // StoreKit has confirmed the purchase and handed back a verified
+        // customerInfo — that is already the answer to "does this Apple ID own
+        // the subscription". Waiting for verify-receipt to cold-start, query
+        // RevenueCat over HTTP, write vip_subscriptions and be re-read left the
+        // App Store saying "you're subscribed" while every PRO feature in the
+        // app stayed locked for about eight seconds.
+        //
+        // The server round trip below still runs and still decides what is
+        // persisted; VipContext re-reads the row and corrects this if it
+        // disagrees. Entitlements remain enforced in the database — nothing
+        // here writes one.
+        const purchasedTier = SUBSCRIPTION_TIERS[productId];
+        if (purchasedTier) {
+          applyEntitlement(
+            purchasedTier,
+            customerInfo.latestExpirationDate ?? OPTIMISTIC_EXPIRY,
+          );
+        }
+
+        // Confirm it now, for the same reason.
+        //
+        // The confirmation used to be announced after syncEntitlements, so it
+        // arrived with the rest of the eight-second wait — the App Store had
+        // already said the purchase went through and the app then sat silent
+        // for long enough to look broken twice over.
+        //
+        // Announcing here is not a guess: StoreKit has completed the purchase,
+        // so "this succeeded" is true whatever the server does next with it.
+        // What the server decides is whether the *credit* landed, and the
+        // failure branch below announces over this one if it did not — which
+        // is the honest ordering, because the charge really did happen either
+        // way.
+        announcePurchase({ productId, gems: gemsForProduct(productId) });
+
         // The purchase itself is done. What the account is now entitled to is
         // decided server-side: we ask the backend to re-read this user from
         // RevenueCat and write the result. Nothing about the transaction is
@@ -955,14 +1015,10 @@ export function useInAppPurchases() {
           void pollForCredit(refreshBalance);
           await refreshBalance();
           toast.success(tStandalone("extra.iapGemsShortly"));
-          // Say so on screen. This is the case that looked most broken: the
-          // charge went through, the balance had not moved yet, and the only
-          // notice was a toast nothing renders.
-          announcePurchase({
-            productId,
-            gems: gemsForProduct(productId),
-            pending: true,
-          });
+          // Not announced again. The confirmation went up the moment StoreKit
+          // completed the purchase, and re-announcing the same thing here would
+          // re-open a modal the player may already have dismissed. Only the
+          // balance is still outstanding, and pollForCredit is chasing it.
           return { success: true };
         }
 
@@ -1004,12 +1060,9 @@ export function useInAppPurchases() {
         if (synced.tier) refreshVip();
 
         toast.success(tStandalone("iap.purchaseComplete"));
-        // The balance has been re-read and the entitlement is live. Confirm it
-        // where the player can actually see it.
-        announcePurchase({
-          productId,
-          gems: synced.gemsCredited > 0 ? synced.gemsCredited : gemsForProduct(productId),
-        });
+        // Already confirmed on screen, above, the moment StoreKit completed
+        // the purchase. Announcing again here would re-open the modal several
+        // seconds later, on top of whatever the player had moved on to.
         return { success: true };
       }
 
@@ -1040,7 +1093,7 @@ export function useInAppPurchases() {
     } finally {
       setPurchasing(false);
     }
-  }, [user, refreshBalance, refreshVip]);
+  }, [user, refreshBalance, refreshVip, applyEntitlement]);
 
   /**
    * Restore previous purchases.
@@ -1150,7 +1203,7 @@ export function useInAppPurchases() {
     } finally {
       setRestoring(false);
     }
-  }, [user, refreshBalance, refreshVip]);
+  }, [user, refreshBalance, refreshVip, applyEntitlement]);
 
   // Get product by ID
   const getProduct = useCallback((productId: string): IAPProduct | undefined => {

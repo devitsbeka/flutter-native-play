@@ -46,7 +46,42 @@ describe("a completed purchase is confirmed on screen", () => {
     );
   });
 
-  it("announces on the fully-settled success path", () => {
+  it("confirms as soon as StoreKit completes, not after the server answers", () => {
+    const body = hook.slice(
+      hook.indexOf("const purchase = useCallback"),
+      hook.indexOf("const purchase = useCallback") +
+        hook.slice(hook.indexOf("const purchase = useCallback")).search(/\n  \}, \[[^\]]*\]\);/),
+    );
+
+    const customerInfo = body.indexOf("if (customerInfo) {");
+    const firstAnnounce = body.indexOf("announcePurchase(", customerInfo);
+    const sync = body.indexOf("await syncEntitlements()");
+
+    expect(firstAnnounce, "purchase() no longer announces at all").toBeGreaterThan(-1);
+    expect(
+      firstAnnounce,
+      "the confirmation moved back behind syncEntitlements. That is the " +
+        "eight-second wait a device reported: the App Store says the purchase " +
+        "went through and the app sits silent while verify-receipt cold-starts, " +
+        "queries RevenueCat and writes a row. StoreKit has already confirmed it",
+    ).toBeLessThan(sync);
+  });
+
+  it("still announces the failure, so a failed credit is not silent", () => {
+    const body = hook.slice(
+      hook.indexOf("const purchase = useCallback"),
+      hook.indexOf("const purchase = useCallback") +
+        hook.slice(hook.indexOf("const purchase = useCallback")).search(/\n  \}, \[[^\]]*\]\);/),
+    );
+    expect(
+      body,
+      "the sync-failure branch stopped announcing — that return was the silent " +
+        "one, and it is the branch that produced 'iOS says it worked and the " +
+        "app does nothing'",
+    ).toMatch(/announcePurchase\(\{[\s\S]{0,200}failed: true/);
+  });
+
+  it("does not announce twice for one purchase", () => {
     const body = hook.slice(
       hook.indexOf("const purchase = useCallback"),
       hook.indexOf("const purchase = useCallback") +
@@ -55,10 +90,10 @@ describe("a completed purchase is confirmed on screen", () => {
     const announcements = body.match(/announcePurchase\(/g) ?? [];
     expect(
       announcements.length,
-      "purchase() must announce on BOTH success paths — the settled one and " +
-        "the credited-shortly one. The second is the case that looked most " +
-        "broken: money taken, balance unmoved, nothing said",
-    ).toBeGreaterThanOrEqual(2);
+      "one success announcement and one failure announcement is the whole set. " +
+        "A second success announce fires seconds later and re-opens a modal the " +
+        "player has already dismissed",
+    ).toBe(2);
   });
 
   it("carries the gem count so the confirmation can name what was bought", () => {

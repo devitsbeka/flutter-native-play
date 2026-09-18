@@ -85,6 +85,27 @@ interface VipContextType {
   isVip: boolean;
   loading: boolean;
   refresh: () => void;
+  /**
+   * Turn PRO on now, from a purchase StoreKit has already confirmed.
+   *
+   * Everything that gates on PRO — the locked game modes, Create Room, the
+   * badge, the stake skip — reads `isVip` and `subscription.vip_tier` from
+   * here. Until this existed, the only way either changed was a round trip:
+   * verify-receipt cold-starting, asking RevenueCat over HTTP, writing
+   * vip_subscriptions, then a re-read of that row which itself retries at
+   * 1200ms when the row is not visible yet. Measured on a device that was
+   * about eight seconds of the App Store saying "you're subscribed" and the
+   * app still showing every PRO feature locked.
+   *
+   * None of that wait is needed to decide what to draw. `purchasePackage`
+   * resolves with a StoreKit-verified `customerInfo` the moment the sheet
+   * closes, and that is what says this Apple ID now owns the subscription. The
+   * server round trip still happens and still decides what is *persisted* —
+   * entitlements stay enforced in the database (CLAUDE.md 3), and the
+   * reconciling fetch below corrects this if it ever disagrees. This only
+   * decides what the screen shows in the meantime.
+   */
+  applyEntitlement: (tier: string, expiresAt: string) => void;
   getDaysRemaining: () => number;
   getXpMultiplier: () => number;
   getMaxDailySpins: () => number;
@@ -226,6 +247,28 @@ export function VipProvider({ children }: { children: ReactNode }) {
     fetchVipStatusRef.current?.();
   };
 
+  /**
+   * See the note on the interface. Draws PRO immediately, then reconciles.
+   *
+   * The reconciling fetch is still fired: this is a head start on the server,
+   * not a replacement for it. If verify-receipt never writes the row, the
+   * fetch finds nothing and PRO goes back off — which is the honest outcome
+   * and is still faster than showing a locked app to somebody who has just
+   * been charged.
+   */
+  const applyEntitlement = (tier: string, expiresAt: string): void => {
+    setSubscription((previous) =>
+      ({ ...(previous ?? {}), vip_tier: tier, expires_at: expiresAt }) as VipSubscription,
+    );
+    setIsVip(true);
+    try {
+      localStorage.setItem(VIP_CACHE_KEY, "true");
+    } catch {
+      // Private mode, cleared site data. The state above is what matters.
+    }
+    fetchVipStatusRef.current?.();
+  };
+
   const getDaysRemaining = (): number => {
     if (!subscription || !isVip) return 0;
     const now = new Date();
@@ -252,6 +295,7 @@ export function VipProvider({ children }: { children: ReactNode }) {
       isVip,
       loading,
       refresh,
+      applyEntitlement,
       getDaysRemaining,
       getXpMultiplier,
       getMaxDailySpins,
