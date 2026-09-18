@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { isTrueFalseWord, isTrueWord, trueFalseWords } from "@/utils/trueFalse";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence, Reorder, useDragControls } from "framer-motion";
 import { ChevronLeft, ChevronRight, Copy, Trash2, Check, Plus, Edit3, ImageIcon, GripVertical, X, Lightbulb, Image, Globe, Lock, RefreshCw, Loader2, Sparkles, Smile } from "lucide-react";
@@ -93,14 +94,19 @@ export function convertToGeneratedQuestions(questions: EditorQuestion[]): Genera
 }
 
 // Create empty question helper
-export function createEmptyQuestion(answerFormat: "4_answers" | "true_false" = "4_answers"): EditorQuestion {
+export function createEmptyQuestion(
+  answerFormat: "4_answers" | "true_false" = "4_answers",
+  /** The language the card is being written in; see utils/trueFalse. */
+  language = "ka",
+): EditorQuestion {
   const answerCount = answerFormat === "true_false" ? 2 : 4;
+  const tf = trueFalseWords(language);
   return {
     id: `new-${Date.now()}`,
     question: "",
     answers: Array.from({ length: answerCount }, (_, i) => ({
       id: `a-${Date.now()}-${i}`,
-      text: answerFormat === "true_false" ? (i === 0 ? "მართალია" : "მცდარი") : "",
+      text: answerFormat === "true_false" ? (i === 0 ? tf.yes : tf.no) : "",
       isCorrect: i === 0,
     })),
   };
@@ -307,8 +313,9 @@ export function GameStyleQuestionEditor({
       q.question.trim() !== "" ||
       q.answers.some(a => {
         const text = a.text.trim();
-        // Ignore default true/false values
-        return text !== "" && text !== "მართალია" && text !== "მცდარი";
+        // Ignore default true/false values — in either language's pair, and
+        // in the one-letter-short spelling the editor used to write.
+        return text !== "" && !isTrueFalseWord(text);
       }) ||
       q.backgroundImageUrl ||
       q.iconSlug
@@ -376,7 +383,7 @@ export function GameStyleQuestionEditor({
   const currentQuestion = questions[currentIndex];
 
   const handleAddQuestion = () => {
-    const newQuestion = createEmptyQuestion(answerFormat);
+    const newQuestion = createEmptyQuestion(answerFormat, language);
     const newQuestions = [...questions, newQuestion];
     onQuestionsChange(newQuestions);
     
@@ -574,6 +581,9 @@ export function GameStyleQuestionEditor({
           difficulty: 'medium',
           existingQuestions,
           mode: 'trivia', // Factual questions for Trivia/Collection mode
+          // In the language this editor is being read in — the function
+          // falls back to Georgian for a caller that says nothing.
+          language,
         }
       });
       
@@ -950,7 +960,7 @@ export function GameStyleQuestionEditor({
                 // Side-by-side layout for True/False
                 <div className="flex gap-4 pb-4">
                   {question.answers.map((answer) => {
-                    const isTrue = answer.text === "მართალია";
+                    const isTrue = isTrueWord(answer.text);
                     const hasError = errorField?.questionIndex === index && errorField?.answerId === answer.id;
                     
                     return (
