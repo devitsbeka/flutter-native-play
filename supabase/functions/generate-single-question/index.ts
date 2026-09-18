@@ -9,53 +9,17 @@ import {
   containsBlockedText,
   firstBlockedText,
 } from "../_shared/contentFilter.ts";
+import {
+  grammarRules,
+  knownLanguage,
+  languageName,
+  trueFalseWords,
+  writeInLanguage,
+} from "../_shared/questionLanguage.ts";
 
 // App-wide character limits - strict for gameplay display
 const QUESTION_MAX_LENGTH = 70;
 const ANSWER_MAX_LENGTH = 35;
-
-/**
- * The language the question is written in.
- *
- * Every prompt in this file used to end "LANGUAGE: Georgian only", and no
- * caller passed a language, so an English session that opened a party on the
- * English starter pack (config/partyStarterPack) got a Georgian question back
- * the moment it pressed change-question. The seven the app ships are the
- * seven `src/locales` ships; anything else, and a caller that says nothing,
- * falls back to Georgian, which is what this function did for everybody
- * before.
- */
-const LANGUAGE_NAMES: Record<string, string> = {
-  ka: "Georgian (ქართული)",
-  en: "English",
-  es: "Spanish (Español)",
-  fr: "French (Français)",
-  de: "German (Deutsch)",
-  it: "Italian (Italiano)",
-  pt: "Portuguese (Português)",
-};
-const FALLBACK_LANGUAGE = "ka";
-
-function languageName(code: string): string {
-  return LANGUAGE_NAMES[code] ?? LANGUAGE_NAMES[FALLBACK_LANGUAGE];
-}
-
-function knownLanguage(code: unknown): string {
-  return typeof code === "string" && code in LANGUAGE_NAMES ? code : FALLBACK_LANGUAGE;
-}
-
-/**
- * The two words a true/false card may use — mirrored from
- * `src/utils/trueFalse.ts`, and for the reason given there: every play screen
- * detects a true/false question by matching the Georgian pair or the English
- * one, so a card in Spanish still answers True and False or nothing can draw
- * it as true/false.
- */
-function trueFalseWords(lang: string): { yes: string; no: string } {
-  return lang === "ka"
-    ? { yes: "მართალია", no: "მცდარია" }
-    : { yes: "True", no: "False" };
-}
 
 /**
  * How a question may open, as a shape rather than as text.
@@ -109,82 +73,6 @@ function personTypes(lang: string): string {
 }
 
 /** Grammar rules worth naming. Georgian's are the ones that went wrong. */
-/**
- * The line that says which language to write in.
- *
- * Some of the examples further down the prompts are written in English to
- * show a question's shape. For any other target language that has to be
- * called out, or the model reads six English examples and answers in
- * English; for English itself the warning would contradict itself.
- */
-function writeInLanguage(lang: string, readerNote: string): string {
-  const name = languageName(lang);
-  const shapeNote = lang === "en"
-    ? ""
-    : `\nExamples below may be written in English to show the SHAPE of a question — never copy their language.`;
-  return `🌍 WRITE EVERYTHING IN ${name}. ${readerNote}${shapeNote}`;
-}
-
-function grammarRules(lang: string): string {
-  if (lang === "ka") {
-    return `- All Georgian text MUST be grammatically correct
-- Double-check spelling of all Georgian words
-- Use proper Georgian verb conjugations
-- Questions must be natural-sounding Georgian sentences`;
-  }
-  const name = languageName(lang);
-  return `- All ${name} text MUST be grammatically correct
-- Double-check spelling and accents
-- Questions must be natural-sounding ${name} sentences a native speaker would write`;
-}
-
-// Fisher-Yates shuffle for randomizing answer positions
-function shuffleArray<T>(array: T[]): T[] {
-  const shuffled = [...array];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled;
-}
-
-interface GeneratedQuestion {
-  question_text: string;
-  correct_answer: string;
-  incorrect_answers: string[];
-  difficulty?: string;
-  icon_keywords?: string[];
-}
-
-// STRICT validation
-function isValidQuestion(q: GeneratedQuestion, isTrueFalse: boolean = false): boolean {
-  if (!q.question_text || !q.correct_answer || !Array.isArray(q.incorrect_answers)) {
-    return false;
-  }
-  if (q.question_text.length > QUESTION_MAX_LENGTH) {
-    console.log(`Rejecting question (${q.question_text.length} chars > ${QUESTION_MAX_LENGTH}): ${q.question_text.substring(0, 50)}...`);
-    return false;
-  }
-  if (q.correct_answer.length > ANSWER_MAX_LENGTH) {
-    console.log(`Rejecting answer (${q.correct_answer.length} chars > ${ANSWER_MAX_LENGTH}): ${q.correct_answer}`);
-    return false;
-  }
-  
-  const expectedIncorrectCount = isTrueFalse ? 1 : 3;
-  if (q.incorrect_answers.length !== expectedIncorrectCount) {
-    console.log(`Rejecting question: expected ${expectedIncorrectCount} incorrect answers, got ${q.incorrect_answers.length}`);
-    return false;
-  }
-  
-  for (const answer of q.incorrect_answers) {
-    if (!answer || answer.length > ANSWER_MAX_LENGTH) {
-      console.log(`Rejecting incorrect answer (${(answer || '').length} chars > ${ANSWER_MAX_LENGTH}): ${answer}`);
-      return false;
-    }
-  }
-  return true;
-}
-
 // Build system prompt for TRIVIA mode (factual questions about topics)
 function buildTriviaPrompt(subject: string, difficulty: string, isTrueFalse: boolean, lang: string): string {
   const name = languageName(lang);

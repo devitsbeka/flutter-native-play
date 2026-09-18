@@ -107,7 +107,7 @@ async function removeEmptyCollection(collectionId: string) {
 }
 
 export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated, draftId, initialRoundSubject }: CreateCollectionModalProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   
@@ -305,7 +305,8 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
             subject: roundName, 
             questionCount: DEFAULT_QUESTIONS_PER_ROUND, 
             answerFormat: "4_answers", 
-            difficulty: "mixed" 
+            difficulty: "mixed",
+            language,
           },
         });
 

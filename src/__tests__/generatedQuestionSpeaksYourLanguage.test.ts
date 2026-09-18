@@ -26,6 +26,8 @@ import {
 
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 const FN = read("supabase/functions/generate-single-question/index.ts");
+const QUIZ_FN = read("supabase/functions/generate-custom-quiz/index.ts");
+const SHARED = read("supabase/functions/_shared/questionLanguage.ts");
 const PARTY = read("src/components/team/GameStylePersonalTrivia.tsx");
 const EDITOR = read("src/components/social/GameStyleQuestionEditor.tsx");
 
@@ -48,18 +50,26 @@ describe("every caller says which language", () => {
 });
 
 describe("the function is built around that language", () => {
-  it("knows the seven the app ships", () => {
+  it("knows the seven the app ships, in one table both generators read", () => {
     for (const { code } of LANGUAGES) {
-      expect(FN, `LANGUAGE_NAMES is missing ${code}`).toMatch(
+      expect(SHARED, `LANGUAGE_NAMES is missing ${code}`).toMatch(
         new RegExp(`^\\s+${code}: "`, "m"),
       );
+    }
+    // Neither function keeps a copy of it — two tables is how one of them
+    // ends up a language short.
+    for (const source of [FN, QUIZ_FN]) {
+      expect(source).toMatch(/from "\.\.\/_shared\/questionLanguage\.ts"/);
+      expect(source).not.toMatch(/const LANGUAGE_NAMES/);
     }
   });
 
   it("falls back to Georgian for a caller that says nothing", () => {
     // An old client keeps the behaviour it has always had.
-    expect(FN).toMatch(/const FALLBACK_LANGUAGE = "ka";/);
-    expect(FN).toMatch(/const lang = knownLanguage\(requestedLanguage\);/);
+    expect(SHARED).toMatch(/export const FALLBACK_LANGUAGE = "ka";/);
+    for (const source of [FN, QUIZ_FN]) {
+      expect(source).toMatch(/const lang = knownLanguage\(requestedLanguage\);/);
+    }
   });
 
   it("no longer pins either prompt to Georgian", () => {
@@ -121,9 +131,11 @@ describe("true and false stay the two words every screen knows", () => {
     expect(EDITOR).not.toMatch(/text !== "მართალია"/);
   });
 
-  it("and what the function tells the model to use", () => {
-    expect(FN).toMatch(/function trueFalseWords\(lang: string\)/);
-    expect(FN).toMatch(/The two answer words are FIXED: "\$\{tf\.yes\}" and "\$\{tf\.no\}"/);
+  it("and what both functions tell the model to use", () => {
+    expect(SHARED).toMatch(/export function trueFalseWords\(lang: string\)/);
+    for (const source of [FN, QUIZ_FN]) {
+      expect(source).toMatch(/The two answer words are FIXED: "\$\{tf\.yes\}" and "\$\{tf\.no\}"/);
+    }
   });
 });
 
@@ -137,5 +149,69 @@ describe("the countdown before a solo game", () => {
     // heading. The countdown was reading the raw one.
     expect(PAGE).toMatch(/<p className="font-display text-2xl text-foreground">\{categoryTitle\}<\/p>/);
     expect(PAGE).not.toMatch(/\{category\?\.name \?\? ""\}/);
+  });
+});
+
+/**
+ * The same bug, one function over.
+ *
+ * `generate-custom-quiz` is the bigger of the two: it writes a whole quiz —
+ * ten questions, forty answers and a title — and it said "Generate ALL
+ * questions and answers in Georgian (ქართული)" while four player-facing
+ * modals called it without a language.
+ */
+describe("a whole generated quiz", () => {
+  const QUIZ_CALLERS = [
+    "src/components/team/CreateBlindTriviaModal.tsx",
+    "src/components/social/AddRoundToCollectionModal.tsx",
+    "src/components/social/CreateQuizModal.tsx",
+    "src/components/social/CreateCollectionModal.tsx",
+  ];
+
+  it.each(QUIZ_CALLERS)("%s says which language", (path) => {
+    const source = read(path);
+    const call = source.slice(source.indexOf('invoke("generate-custom-quiz"'));
+    expect(call.slice(0, call.indexOf("});"))).toMatch(/\blanguage\b/);
+    expect(source).toMatch(/const \{ t, language \} = useLanguage\(\)/);
+  });
+
+  it("is written in that language, title included", () => {
+    expect(QUIZ_FN).not.toMatch(/Generate ALL questions and answers in Georgian/);
+    expect(QUIZ_FN).toMatch(/- Generate ALL questions, answers and the title in \$\{langName\}/);
+    expect(QUIZ_FN).toMatch(/"suggestedTitle": "catchy title for this quiz, in \$\{langName\}"/);
+    expect(QUIZ_FN).toMatch(/3\. ALL text must be in \$\{langName\}/);
+  });
+
+  it("keeps the Georgian proofreader behind the Georgian check", () => {
+    expect(QUIZ_FN).toMatch(/if \(lang === "ka"\) \{\s*\n\s*console\.log\("Verifying Georgian grammar/);
+  });
+
+  it("fact-checks in the language it wrote", () => {
+    expect(QUIZ_FN).toMatch(/language: lang,/);
+    expect(QUIZ_FN).not.toMatch(/language: "ka",/);
+  });
+});
+
+describe("what a player reads outside the app", () => {
+  it("a challenge share card is in the challenger's language", () => {
+    // A share card has no viewer to ask, so it is the person who made it —
+    // the only language this function can know.
+    const OG = read("supabase/functions/challenge-og-image/index.ts");
+    expect(OG).toMatch(/const CARD_COPY: Record<string, \{ challenge: string; cta: string \}>/);
+    for (const { code } of LANGUAGES) {
+      expect(OG, `CARD_COPY is missing ${code}`).toMatch(new RegExp(`^\\s+${code}: \\{ challenge:`, "m"));
+    }
+    expect(OG).toMatch(/\.select\("preferred_language"\)/);
+    expect(OG).toMatch(/CARD_COPY\[challenger\?\.preferred_language \?\? "en"\] \?\? CARD_COPY\.en/);
+    expect(OG).not.toMatch(/🎯 შეგიძლია დამამარცხო\?\n/);
+  });
+
+  it("a gem receipt is in the buyer's language", () => {
+    // The line item was already localised; the payment description was the
+    // Georgian catalog name from _shared/gems.ts.
+    const CHECKOUT = read("supabase/functions/create-gem-checkout/index.ts");
+    expect(CHECKOUT).toMatch(/const copy = gemPackCopy\(pack\.gems, language\);/);
+    expect(CHECKOUT).toMatch(/description: copy\.description,/);
+    expect(CHECKOUT).not.toMatch(/description: pack\.name,/);
   });
 });

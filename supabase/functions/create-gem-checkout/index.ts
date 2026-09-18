@@ -206,7 +206,10 @@ serve(async (req) => {
         sku,
       },
       payment_intent_data: {
-        description: pack.name,
+        // The buyer's own receipt line, so it takes the localised copy the
+        // line item already uses. `pack.name` is the Georgian catalog name
+        // from _shared/gems.ts, which is what a German buyer was reading.
+        description: copy.description,
         metadata: {
           user_id: userData.user.id,
           product_id: pack.id,
