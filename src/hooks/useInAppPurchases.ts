@@ -1125,7 +1125,30 @@ export function useInAppPurchases() {
         return { success: false, error: "cancelled" };
       }
       
+      // Say it on screen, not only to the console.
+      //
+      // This was the last silent exit. A device capture caught four gem
+      // purchases in a row rejecting with RevenueCat code 2 — "There was a
+      // problem with the App Store. Problem communicating with the Store when
+      // trying to validate the receipt" — and every one of them ended here, at
+      // a toast src/lib/toast.ts swallows, with useGemPurchase discarding the
+      // returned result. The App Store had put its own sheet up, so from the
+      // outside that is "iOS says something happened and the app does
+      // nothing", which is the same report that has been chased through five
+      // builds. Nothing was charged and nothing was owed; what was missing was
+      // anyone saying so.
+      //
+      // The store's own message is carried through as the reason. It is the
+      // difference between "something went wrong" and knowing the App Store
+      // could not validate a receipt — which is not a bug in this app and is
+      // not something the player can fix by tapping again.
       toast.error(tStandalone("iap.purchaseFailed"));
+      announcePurchase({
+        productId,
+        gems: gemsForProduct(productId),
+        failed: true,
+        reason: error?.errorMessage ?? error?.message ?? String(error),
+      });
       return { success: false, error: error.message };
     } finally {
       setPurchasing(false);

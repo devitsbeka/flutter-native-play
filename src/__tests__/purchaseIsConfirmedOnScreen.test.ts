@@ -81,19 +81,50 @@ describe("a completed purchase is confirmed on screen", () => {
     ).toMatch(/announcePurchase\(\{[\s\S]{0,200}failed: true/);
   });
 
-  it("does not announce twice for one purchase", () => {
+  it("announces success exactly once", () => {
     const body = hook.slice(
       hook.indexOf("const purchase = useCallback"),
       hook.indexOf("const purchase = useCallback") +
         hook.slice(hook.indexOf("const purchase = useCallback")).search(/\n  \}, \[[^\]]*\]\);/),
     );
-    const announcements = body.match(/announcePurchase\(/g) ?? [];
+
+    const all = body.match(/announcePurchase\(\{[\s\S]*?\}\)/g) ?? [];
+    const successes = all.filter((a) => !a.includes("failed: true"));
+
+    // Failures may be announced from more than one place — the sync branch and
+    // the catch both end a purchase badly, and each was silent at some point.
+    // Success must not: a second success announce fires seconds after the
+    // first and re-opens a modal the player has already dismissed.
     expect(
-      announcements.length,
-      "one success announcement and one failure announcement is the whole set. " +
-        "A second success announce fires seconds later and re-opens a modal the " +
-        "player has already dismissed",
-    ).toBe(2);
+      successes.length,
+      "purchase() announces success more than once (or not at all). The " +
+        "confirmation goes up when StoreKit returns, and nothing after that " +
+        "should raise it again",
+    ).toBe(1);
+  });
+
+  it("announces a rejected purchase, not just a failed sync", () => {
+    const body = hook.slice(
+      hook.indexOf("const purchase = useCallback"),
+      hook.indexOf("const purchase = useCallback") +
+        hook.slice(hook.indexOf("const purchase = useCallback")).search(/\n  \}, \[[^\]]*\]\);/),
+    );
+    const catchBlock = body.slice(body.lastIndexOf("} catch (error: any) {"));
+
+    // A device capture caught four gem purchases rejecting with RevenueCat
+    // code 2 ("problem communicating with the Store"). Every one ended at a
+    // swallowed toast, with useGemPurchase discarding the result — the App
+    // Store showed its sheet and the app then said nothing at all.
+    expect(
+      catchBlock,
+      "the catch path is silent again. A purchase the store rejects is the " +
+        "case most likely to look like the app doing nothing",
+    ).toMatch(/announcePurchase\(\{[\s\S]{0,200}failed: true/);
+
+    expect(
+      catchBlock,
+      "a cancel must still return before announcing — the player did it",
+    ).toMatch(/return \{ success: false, error: "cancelled" \}/);
   });
 
   it("carries the gem count so the confirmation can name what was bought", () => {
