@@ -90,10 +90,18 @@ const EXIT_MS = 320;
  * One number for both card layouts, because the two disagreeing is what made
  * a room look like it had lost players: the same room showed three faces in
  * one place and two in another, under a count pill that said something else
- * again. Past five it is a "+N" bubble, and the pill in the corner is still
+ * again. Past this it is a "+N" bubble, and the pill in the corner is still
  * the total either way.
+ *
+ * Three, not five, because the tightest of those layouts sets the number: the
+ * private card's bottom bar spends its width on the host's label (a face and
+ * a name, up to 110pt of it), then the faces, then the "+N", then the open
+ * seat, and the Play button holds the right-hand end. Five faces and the
+ * count came to about 170pt of row in 152pt of space, so the bubble was cut
+ * in half and the room's seventh player read as a stray "+" (owner: "show
+ * max 3 avatars to fit + button in that row, now it's cropped").
  */
-const ROOM_CARD_FACES = 5;
+const ROOM_CARD_FACES = 3;
 const HOME_RAIL_FIRST_GRADIENT = [
   { color: "rgba(238,174,202,1)", stop: "40%" },
   { color: "rgba(202,179,214,1)", stop: "65%" },
@@ -1650,6 +1658,13 @@ export function RoomCardGrid({ room, index, onJoin, onPreview, onDelete, onLeave
                       — the avatars are flex-shrink-0, so without this they
                       leave the group's box instead of shrinking it.
 
+                      The "+N" is NOT in that box, deliberately: it used to be
+                      the last thing inside it, so it was the first thing the
+                      clip reached, and a room with seven in it showed six
+                      faces and a bare "+". A clipped face still reads as a
+                      face; a clipped number reads as nothing. So the count
+                      sits outside the clip and the faces give way instead.
+
                       p-1 -m-1 is what keeps that from clipping the green
                       "online" ring, which paints 3px outside the avatar's box:
                       overflow clips to the padding box, so the padding buys
@@ -1734,14 +1749,18 @@ export function RoomCardGrid({ room, index, onJoin, onPreview, onDelete, onLeave
                         </div>
                       );
                     })}
-                    {guests.length > avatarLimit && (
-                      <div className="w-10 h-10 rounded-full border-2 border-white bg-white/60 backdrop-blur-sm flex items-center justify-center flex-shrink-0 shadow-md">
-                        <span className="text-[#2b1a4a] text-[10px] font-bold">
-                          +{guests.length - avatarLimit}
-                        </span>
-                      </div>
-                    )}
                   </div>
+                  {guests.length > avatarLimit && (
+                    // -ml-4 keeps the 8px overlap the cluster's own -space-x-2
+                    // gave it: the row's gap-2 puts 8px back, so the margin
+                    // has to cover both. The faces carry a z-index and this
+                    // does not, so it still tucks under the last of them.
+                    <div className="-ml-4 w-10 h-10 rounded-full border-2 border-white bg-white/60 backdrop-blur-sm flex items-center justify-center flex-shrink-0 shadow-md">
+                      <span className="text-[#2b1a4a] text-[10px] font-bold">
+                        +{guests.length - avatarLimit}
+                      </span>
+                    </div>
+                  )}
                   {canInvite && (
                     <button
                       type="button"
