@@ -15,6 +15,7 @@ import { PasswordStrengthMeter } from "@/components/shared/PasswordStrengthMeter
 import { z } from "zod";
 import { translateErrorMessage } from "@/utils/errorTranslations";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { NICKNAME_MAX_CHARS } from "@/config/nickname";
 import { trackSignupCompleted, trackLoginCompleted, trackAuthFailed, trackOAuthInitiated } from "@/lib/analytics";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -74,7 +75,12 @@ export default function Auth() {
     password: z
       .string()
       .refine((v) => passwordStrength(v).meetsPolicy, t("auth.pwTooWeak")),
-    nickname: z.string().min(2, t("auth.usernameTooShort")).max(20, t("auth.usernameTooShort")),
+    nickname: z
+      .string()
+      .min(2, t("auth.usernameTooShort"))
+      // The cap the rest of the app draws to. It was 20 here and reported
+      // as "too short", which is the wrong sentence for the wrong number.
+      .max(NICKNAME_MAX_CHARS, t("auth.usernameTooLong", { max: NICKNAME_MAX_CHARS })),
     email: z
       .string()
       .refine(isValidEmailFormat, t("auth.invalidEmail"))
@@ -346,6 +352,7 @@ export default function Auth() {
                     placeholder={t("auth.usernamePlaceholder")}
                     value={nickname}
                     onChange={(e) => setNickname(e.target.value)}
+                    maxLength={NICKNAME_MAX_CHARS}
                     className="pl-10"
                   />
                 </div>

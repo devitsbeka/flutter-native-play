@@ -74,6 +74,7 @@ export const de: KaTranslations = {
     resendConfirm: "Link erneut senden",
     confirmEmailResent: "Link erneut gesendet",
     usernameTooShort: "Benutzername muss mindestens 3 Zeichen haben",
+    usernameTooLong: "Benutzername darf höchstens {max} Zeichen haben",
     invalidCredentials: "Ungültige Anmeldedaten",
     accountCreated: "Konto erstellt!",
     welcomeBack: "Willkommen zurück!",

@@ -78,6 +78,7 @@ export const ka = {
     resendConfirm: "ბმულის ხელახლა გაგზავნა",
     confirmEmailResent: "ბმული ხელახლა გაიგზავნა",
     usernameTooShort: "მომხმარებლის სახელი მინიმუმ 3 სიმბოლო უნდა იყოს",
+    usernameTooLong: "მომხმარებლის სახელი მაქსიმუმ {max} სიმბოლოა",
     invalidCredentials: "არასწორი მონაცემები",
     accountCreated: "ანგარიში შეიქმნა!",
     welcomeBack: "კეთილი იყოს შენი დაბრუნება!",

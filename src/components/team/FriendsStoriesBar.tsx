@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { Friend, useFriends } from "@/hooks/useFriends";
@@ -165,10 +166,13 @@ function StoryAvatarCircle({
 /**
  * You, at the head of the reel.
  *
- * Always drawn online: you are looking at the app. It opens the same
- * `PlayerProfileModal` every other avatar in the strip opens — which already
- * knows it is you, and leaves out the Challenge button and the
- * played-together record, neither of which means anything against yourself.
+ * Always drawn online: you are looking at the app. It opens your own account
+ * page, not the `PlayerProfileModal` the other avatars open: that modal is
+ * built to introduce a stranger, and pointed at yourself it showed your
+ * avatar, your flag, your name and your points with nothing to do about any
+ * of them — with the Challenge button and the played-together record, the
+ * only things it adds, already suppressed because it knows it is you (owner:
+ * "instead show my account page").
  *
  * This is also where a running avatar generation shows itself. The progress
  * used to be a chip floating over the bottom-right of every screen, which
@@ -325,6 +329,7 @@ export function FriendsStoriesBar({ onAddFriendClick, onFriendClick, onShowAllFr
     refreshFriendsIfStale();
   }, [refreshFriendsIfStale]);
   const { openProfile } = usePlayerProfile();
+  const navigate = useNavigate();
   const scrollRef = useRef<HTMLDivElement>(null);
   const edges = useScrollEdges(scrollRef);
 
@@ -394,7 +399,7 @@ export function FriendsStoriesBar({ onAddFriendClick, onFriendClick, onShowAllFr
             avatarUrl={profile?.avatar_url}
             animatedAvatarUrl={profile?.animated_avatar_url}
             label={t("game.you")}
-            onOpen={() => openProfile(user.id)}
+            onOpen={() => navigate("/profile")}
           />
         )}
 

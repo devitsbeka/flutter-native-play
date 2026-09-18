@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { translateErrorMessage } from "@/utils/errorTranslations";
 import { containsBlockedText } from "@/utils/contentFilter";
+import { NICKNAME_MAX_CHARS, clampNickname } from "@/config/nickname";
 
 export default function SettingsName() {
   const { user, profile, fetchProfile } = useAuth();
@@ -39,7 +40,7 @@ export default function SettingsName() {
     try {
       const { error } = await supabase
         .from("profiles")
-        .update({ nickname: nickname.trim() })
+        .update({ nickname: clampNickname(nickname) })
         .eq("user_id", user.id);
 
       if (error) throw error;
@@ -78,7 +79,7 @@ export default function SettingsName() {
             onChange={(e) => setNickname(e.target.value)}
             placeholder={t("auth.usernamePlaceholder")}
             className="h-12 rounded-xl"
-            maxLength={20}
+            maxLength={NICKNAME_MAX_CHARS}
           />
 
           <ChunkyButton
