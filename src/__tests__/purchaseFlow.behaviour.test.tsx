@@ -835,6 +835,42 @@ describe("coming back from the background", () => {
     }
   });
 
+  it("keeps working when one of several mounted hooks unmounts", async () => {
+    // The shop renders this hook and so does every useStorePrice on the same
+    // page. Navigating away unmounts one of them; an unconditional teardown
+    // would take the surviving one's resume handler with it and the app would
+    // silently stop re-checking for the rest of the session.
+    const invoke = vi.fn().mockResolvedValue({
+      data: { success: true, tier: "pro", gemsCredited: 0 },
+      error: null,
+    });
+    installMocks({ plugin: makePlugin(), invoke });
+
+    const mod = await import("@/hooks/useInAppPurchases");
+    const first = renderHook(() => mod.useInAppPurchases());
+    const second = renderHook(() => mod.useInAppPurchases());
+    await waitFor(() => expect(first.result.current.loading).toBe(false));
+    await waitFor(() => expect(invoke).toHaveBeenCalledTimes(1));
+
+    // One screen goes away; the other is still on top.
+    second.unmount();
+
+    const realNow = Date.now;
+    const nowSpy = vi.spyOn(Date, "now").mockImplementation(() => realNow() + 61_000);
+    try {
+      await act(async () => {
+        resume();
+        await new Promise((r) => setTimeout(r, 50));
+      });
+      await waitFor(
+        () => expect(invoke).toHaveBeenCalledTimes(2),
+        { timeout: 3000 },
+      );
+    } finally {
+      nowSpy.mockRestore();
+    }
+  });
+
   it("does not re-check on every resume", async () => {
     // Backgrounding and foregrounding is not rare, and each check is a round
     // trip to RevenueCat through our own edge function.

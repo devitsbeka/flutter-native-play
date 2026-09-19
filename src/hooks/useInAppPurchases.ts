@@ -623,13 +623,20 @@ let lastReconcileAt = 0;
 const RECONCILE_THROTTLE_MS = 60_000;
 
 /**
- * What the mounted hook wants done when the app comes back.
+ * What the mounted hooks want done when the app comes back.
  *
- * Set by the reconcile effect and read by the single process-wide resume
- * listener, so that mounting the hook on four screens does not attach four
- * listeners that all fire at once.
+ * Read by the single process-wide resume listener, so that mounting this hook
+ * on four screens does not attach four `appStateChange` listeners.
+ *
+ * A Set rather than one slot: the shop renders this hook and so does every
+ * `useStorePrice` on the same page, and with a single slot the last one to
+ * mount overwrote the others — then unmounting *that* one left nobody
+ * registered, and the app silently stopped re-checking on resume for the rest
+ * of the session. Every registered hook is called; the throttle inside
+ * `reconcile` collapses them to one actual sync, because it claims the window
+ * synchronously before its first await.
  */
-let onResumeReconcile: (() => void) | null = null;
+const resumeReconcilers = new Set<() => void>();
 
 /**
  * Forget who the store thinks we are.
@@ -779,7 +786,7 @@ function attachResumeListener() {
         // accounts happens in Settings, with this app suspended. The app user
         // id does not move when that happens, so nothing else would ever
         // notice.
-        onResumeReconcile?.();
+        resumeReconcilers.forEach((fn) => fn());
 
         if (storeProducts.length > 0) return;
         iapLog("app resumed with an empty catalogue — asking the store again");
@@ -980,9 +987,10 @@ export function useInAppPurchases() {
 
     void reconcile("sign-in");
 
-    onResumeReconcile = () => void reconcile("resume");
+    const handler = () => void reconcile("resume");
+    resumeReconcilers.add(handler);
     return () => {
-      onResumeReconcile = null;
+      resumeReconcilers.delete(handler);
     };
     // refreshVip/refreshBalance are stable per user; re-running on their
     // identity would defeat the once-per-sign-in guard.
