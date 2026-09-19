@@ -5562,6 +5562,12 @@ export type Database = {
         Args: { p_expires_at: string; p_platform: string; p_tier: string }
         Returns: number
       }
+      pro_seat_candidates: {
+        Args: never
+        Returns: {
+          candidate_id: string
+        }[]
+      }
       pro_seat_holder_has_pro: {
         Args: { p_expires_at: string; p_platform: string; p_tier: string }
         Returns: boolean
