@@ -59,6 +59,7 @@ function makePlugin(overrides: Record<string, unknown> = {}) {
       customerInfo: { latestExpirationDate: "2027-01-01T00:00:00.000Z" },
     }),
     restorePurchases: vi.fn().mockResolvedValue({}),
+    getCustomerInfo: vi.fn().mockResolvedValue({ customerInfo: { activeSubscriptions: [] } }),
     ...overrides,
   };
 }
@@ -243,7 +244,14 @@ describe("a repeat purchase of a subscription already owned", () => {
     // subscribed" sheet and then resolves normally with customerInfo. Treating
     // that as a new purchase congratulated the player every single tap — which
     // is exactly what they do when the screen still shows them non-PRO.
-    installMocks({ plugin: makePlugin(), invoke: okInvoke(), isVip: true });
+    // StoreKit is the authority here, not VipContext — activeSubscriptions is
+    // what decides, because our own row can go briefly unreadable.
+    const plugin = makePlugin({
+      getCustomerInfo: vi.fn().mockResolvedValue({
+        customerInfo: { activeSubscriptions: [PRO_ANNUAL] },
+      }),
+    });
+    installMocks({ plugin, invoke: okInvoke(), isVip: true });
 
     const { result, announcements } = await mountPurchases();
     await act(async () => {
@@ -254,6 +262,29 @@ describe("a repeat purchase of a subscription already owned", () => {
     expect(
       announcements[0].alreadyActive,
       "a repeat subscription purchase is announced as a brand new one",
+    ).toBe(true);
+  });
+
+  it("trusts StoreKit over our database when the row is unreadable", async () => {
+    // The exact failure from a device: VipContext momentarily reports non-PRO
+    // because RLS hid the row, so the shop card falls back to Buy. StoreKit
+    // knows better, and it is the one that actually took the money.
+    const plugin = makePlugin({
+      getCustomerInfo: vi.fn().mockResolvedValue({
+        customerInfo: { activeSubscriptions: [PRO_ANNUAL] },
+      }),
+    });
+    installMocks({ plugin, invoke: okInvoke(), isVip: false });
+
+    const { result, announcements } = await mountPurchases();
+    await act(async () => {
+      await result.current.purchase(PRO_ANNUAL);
+    });
+
+    expect(
+      announcements[0].alreadyActive,
+      "announced a brand new subscription while StoreKit reported it already " +
+        "active — this is the congratulations-on-every-tap loop",
     ).toBe(true);
   });
 

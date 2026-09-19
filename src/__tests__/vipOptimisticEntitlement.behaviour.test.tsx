@@ -127,6 +127,32 @@ describe("an entitlement applied from a purchase is not revoked by a stale row",
     expect(result.current.isVip).toBe(true);
   });
 
+  it("does not revoke a live subscription when the row briefly goes unreadable", async () => {
+    // RLS hides the row around a token refresh, on resume, and on a cold
+    // launch — the read returns null with no error. Revoking on that is what
+    // made PRO blink off on a live subscriber, turn the shop card back into a
+    // Buy button, and produce Apple's "already subscribed" sheet followed by
+    // our own congratulations.
+    installSupabase([
+      { user_id: "user-1", vip_tier: "pro", expires_at: FUTURE }, // confirmed live
+      null,                                                       // then unreadable
+      null,
+      null,
+    ]);
+    const result = await mountVip();
+    await waitFor(() => expect(result.current.isVip).toBe(true));
+
+    await act(async () => {
+      result.current.refresh();
+      await new Promise((r) => setTimeout(r, 3200)); // past both 1200ms retries
+    });
+
+    expect(
+      result.current.isVip,
+      "a transient empty read revoked a confirmed subscription",
+    ).toBe(true);
+  });
+
   it("still revokes normally when no purchase is in flight", async () => {
     // The grace window must not become a way to never lose PRO. A cancellation
     // or expiry with no purchase behind it has to take effect.

@@ -851,10 +851,29 @@ export function useInAppPurchases() {
       // available outcome, so this stops instead. The store has not been
       // touched at this point — nothing is charged, nothing needs refunding —
       // and the player gets a message rather than a silent failure.
-      // Read before anything is bought. Afterwards applyEntitlement has
-      // already turned PRO on, so this could never tell a first purchase from
-      // a repeat one.
-      const wasSubscribed = isVip && Boolean(SUBSCRIPTION_TIERS[productId]);
+      // Ask the store, not our own database.
+      //
+      // This used to read `isVip` from VipContext, which is a view of
+      // vip_subscriptions — and that row goes briefly unreadable around a token
+      // refresh (see confirmedActiveRef). When it did, a live subscriber looked
+      // unsubscribed, so a repeat purchase was announced as a brand new one:
+      // Apple's "you're already subscribed" sheet, and then our congratulations
+      // on top of it.
+      //
+      // customerInfo.activeSubscriptions comes from StoreKit via RevenueCat and
+      // does not care what our database can see this second. `isVip` stays as
+      // the fallback for when the call fails.
+      let wasSubscribed = isVip && Boolean(SUBSCRIPTION_TIERS[productId]);
+      if (SUBSCRIPTION_TIERS[productId]) {
+        try {
+          const info = await withTimeout(plugin.getCustomerInfo(), "getCustomerInfo");
+          const active: string[] =
+            info?.customerInfo?.activeSubscriptions ?? info?.activeSubscriptions ?? [];
+          if (Array.isArray(active)) wasSubscribed = active.includes(productId);
+        } catch (e) {
+          iapLog("getCustomerInfo failed, falling back to VipContext:", String(e));
+        }
+      }
 
       const identified = await ensureIdentified(user.id);
       if (!identified) {
