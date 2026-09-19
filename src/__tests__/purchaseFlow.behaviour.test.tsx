@@ -893,3 +893,114 @@ describe("coming back from the background", () => {
     expect(invoke).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("tapping Subscribe seconds after signing in", () => {
+  /**
+   * "i logged out and logged in again and it initially showed me as non-pro...
+   * then i clicked on buy pro button on shop page and it showed ios dialogue
+   * saying i am already subscribed and when i dismissed it mytrivia acted as
+   * i have just subscribed now"
+   *
+   * `getCustomerInfo()` ran BEFORE `ensureIdentified`, so it asked RevenueCat
+   * about whatever identity the SDK still held — the previous account, or its
+   * own anonymous id — which reports no active subscriptions for somebody who
+   * has one. `isVip`, the fallback, is false until the sign-in reconcile
+   * lands. On a fresh sign-in both were wrong at once, so the app celebrated a
+   * subscription bought weeks earlier over Apple's own sheet saying exactly
+   * that.
+   *
+   * The race needs logIn to still be in flight when the tap arrives, which is
+   * the real-world shape: the store catalogue resolves from a local cache in
+   * milliseconds and the identity round trip does not.
+   */
+
+  /**
+   * customerInfo is only correct once logIn has landed, and logIn is slow.
+   */
+  function makeSlowIdentityPlugin(logInMs = 250) {
+    const plugin = makePlugin();
+    let identified = false;
+    plugin.logIn = vi.fn().mockImplementation(
+      () =>
+        new Promise((resolve) =>
+          setTimeout(() => {
+            identified = true;
+            resolve({});
+          }, logInMs),
+        ),
+    );
+    plugin.getCustomerInfo = vi.fn().mockImplementation(async () => ({
+      customerInfo: { activeSubscriptions: identified ? [PRO_ANNUAL] : [] },
+    }));
+    return plugin;
+  }
+
+  it("asks the store who we are before asking what we own", async () => {
+    const plugin = makeSlowIdentityPlugin();
+    installMocks({
+      plugin,
+      invoke: vi.fn().mockResolvedValue({
+        data: { success: true, tier: "pro_plus", gemsCredited: 0 },
+        error: null,
+      }),
+      isVip: false, // the sign-in reconcile has not landed yet
+    });
+
+    const mod = await import("@/hooks/useInAppPurchases");
+    const announcements: any[] = [];
+    const { result } = renderHook(() => {
+      mod.usePurchaseAnnouncements((a: any) => announcements.push(a));
+      return mod.useInAppPurchases();
+    });
+
+    // Deliberately NOT waiting for anything to settle: this is the tap that
+    // lands while identification is still in flight.
+    await act(async () => {
+      await result.current.purchase(PRO_ANNUAL);
+    });
+
+    expect(
+      announcements[0]?.alreadyActive,
+      "the app congratulated someone on a subscription they already had — " +
+        "over Apple's own sheet saying exactly that",
+    ).toBe(true);
+  });
+
+  it("does not read what we own until the pending reconcile has settled", async () => {
+    // Asserted as an ordering, because that is what the bug was: the purchase
+    // formed its opinion from a picture that was still being assembled.
+    const order: string[] = [];
+
+    const invoke = vi.fn().mockImplementation(async () => {
+      order.push("verify-receipt:start");
+      await new Promise((r) => setTimeout(r, 80));
+      order.push("verify-receipt:end");
+      return { data: { success: true, tier: "pro_plus", gemsCredited: 0 }, error: null };
+    });
+
+    const plugin = makeSlowIdentityPlugin(20);
+    const realGetCustomerInfo = plugin.getCustomerInfo;
+    plugin.getCustomerInfo = vi.fn().mockImplementation(async (...args: unknown[]) => {
+      order.push("getCustomerInfo");
+      return (realGetCustomerInfo as any)(...args);
+    });
+
+    installMocks({ plugin, invoke, isVip: false });
+
+    const mod = await import("@/hooks/useInAppPurchases");
+    const { result } = renderHook(() => mod.useInAppPurchases());
+
+    await act(async () => {
+      await result.current.purchase(PRO_ANNUAL);
+    });
+
+    const syncEnd = order.indexOf("verify-receipt:end");
+    const asked = order.indexOf("getCustomerInfo");
+
+    expect(syncEnd, "the sign-in reconcile never ran").toBeGreaterThanOrEqual(0);
+    expect(
+      asked,
+      `asked what we own before the reconcile had settled: ${order.join(" -> ")}`,
+    ).toBeGreaterThan(syncEnd);
+  });
+});

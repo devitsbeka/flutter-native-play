@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -619,6 +619,12 @@ let identifyInFlight: Promise<boolean> | null = null;
 let reconciledUserId: string | null = null;
 let lastReconcileAt = 0;
 
+/**
+ * The reconcile currently running, for anything that must not act on an
+ * entitlement picture that has not settled yet — `purchase()` above all.
+ */
+let reconcileInFlight: Promise<void> | null = null;
+
 /** Least time between two resume-triggered syncs. */
 const RECONCILE_THROTTLE_MS = 60_000;
 
@@ -898,6 +904,12 @@ export function useInAppPurchases() {
    */
   const { refresh: refreshVip, applyEntitlement, isVip } = useVipStatus();
 
+  // `purchase` is a useCallback that awaits before reading this, and a
+  // captured `isVip` would be whatever it was when the callback was built —
+  // false, on the sign-in where it matters most.
+  const isVipRef = useRef(isVip);
+  isVipRef.current = isVip;
+
   /**
    * Establish what this account owns, from the store, on every sign-in.
    *
@@ -949,7 +961,7 @@ export function useInAppPurchases() {
 
     const userId = user.id;
 
-    const reconcile = async (trigger: "sign-in" | "resume") => {
+    const reconcile = (trigger: "sign-in" | "resume") => {
       if (trigger === "sign-in" && reconciledUserId === userId) return;
       if (trigger === "resume" && Date.now() - lastReconcileAt < RECONCILE_THROTTLE_MS) return;
 
@@ -959,6 +971,11 @@ export function useInAppPurchases() {
       reconciledUserId = userId;
       lastReconcileAt = Date.now();
 
+      // Published so `purchase()` can wait for it. Tapping Subscribe seconds
+      // after signing in used to read an entitlement picture that had not
+      // settled, and charge — or celebrate — on the strength of it.
+      let work: Promise<void>;
+      work = (async () => {
       const identified = await ensureIdentified(userId);
       if (!identified) {
         // Syncing against an id RevenueCat is not holding would report
@@ -983,11 +1000,16 @@ export function useInAppPurchases() {
       // an expiry and a sign-in as a non-subscriber reach the screen.
       refreshVip();
       if (synced.gemsCredited > 0) await refreshBalance();
+      })().finally(() => {
+        if (reconcileInFlight === work) reconcileInFlight = null;
+      });
+
+      reconcileInFlight = work;
     };
 
-    void reconcile("sign-in");
+    reconcile("sign-in");
 
-    const handler = () => void reconcile("resume");
+    const handler = () => reconcile("resume");
     resumeReconcilers.add(handler);
     return () => {
       resumeReconcilers.delete(handler);
@@ -1046,7 +1068,41 @@ export function useInAppPurchases() {
       // customerInfo.activeSubscriptions comes from StoreKit via RevenueCat and
       // does not care what our database can see this second. `isVip` stays as
       // the fallback for when the call fails.
-      let wasSubscribed = isVip && Boolean(SUBSCRIPTION_TIERS[productId]);
+      const identified = await ensureIdentified(user.id);
+      if (!identified) {
+        console.error(
+          "[iap] Refusing to purchase: this device could not be identified to " +
+            "RevenueCat, so the purchase could not be credited to this account.",
+        );
+        toast.error(tStandalone("extra.iapActivationFailed"));
+        return { success: false, error: "not_identified" };
+      }
+
+      // Settle the entitlement picture before deciding anything about it.
+      //
+      // Both inputs below were read too early, and on a fresh sign-in both
+      // were wrong at the same time:
+      //
+      //   - `getCustomerInfo()` used to run BEFORE `ensureIdentified`, so it
+      //     asked RevenueCat about whatever identity the SDK still held — the
+      //     previous account, or its own anonymous id — which reports no
+      //     active subscriptions for someone who has one.
+      //   - `isVip`, the fallback, is false until the sign-in reconcile lands,
+      //     which takes a verify-receipt round trip.
+      //
+      // So tapping Subscribe seconds after signing in produced Apple's own
+      // "you're already subscribed" sheet followed by our congratulations on
+      // a subscription bought weeks earlier. Identify first, then wait for any
+      // reconcile already in flight, and only then ask.
+      if (reconcileInFlight) {
+        try {
+          await withTimeout(reconcileInFlight, "pending reconcile");
+        } catch (e) {
+          iapLog("pending reconcile did not settle before purchase:", String(e));
+        }
+      }
+
+      let wasSubscribed = isVipRef.current && Boolean(SUBSCRIPTION_TIERS[productId]);
       if (SUBSCRIPTION_TIERS[productId]) {
         try {
           const info = await withTimeout(plugin.getCustomerInfo(), "getCustomerInfo");
@@ -1056,16 +1112,6 @@ export function useInAppPurchases() {
         } catch (e) {
           iapLog("getCustomerInfo failed, falling back to VipContext:", String(e));
         }
-      }
-
-      const identified = await ensureIdentified(user.id);
-      if (!identified) {
-        console.error(
-          "[iap] Refusing to purchase: this device could not be identified to " +
-            "RevenueCat, so the purchase could not be credited to this account.",
-        );
-        toast.error(tStandalone("extra.iapActivationFailed"));
-        return { success: false, error: "not_identified" };
       }
 
       // Get offerings to find the package for this product
