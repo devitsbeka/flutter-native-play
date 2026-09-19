@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "types": ["node"],
     "allowImportingTsExtensions": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
