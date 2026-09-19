@@ -301,3 +301,34 @@ describe("the transaction key identifies one subscription", () => {
     expect(parsed.active[0].transactionId).toBe("io.mytrivia.pro.monthly");
   });
 });
+
+describe("sign-out reaches the store", () => {
+  /**
+   * A source-text guard, and labelled as one.
+   *
+   * The behaviour it protects IS executed elsewhere:
+   * `purchaseFlow.behaviour.test.tsx` drives `resetPurchaseIdentity` and the
+   * signed-out branch of the reconcile effect, and asserts that the next
+   * sign-in re-identifies and re-syncs. What cannot be reached from there is
+   * whether AuthContext actually calls it — rendering AuthProvider needs the
+   * whole session/profile/realtime surface mocked for one line of wiring.
+   *
+   * The wiring is not load-bearing for correctness: the effect clears
+   * `identifiedAs` and `reconciledUserId` itself, so a session that expires
+   * without passing through signOut still heals. This call adds the SDK-level
+   * logOut on top. The assertion exists so that removing it is a deliberate
+   * act rather than an accident.
+   */
+  it("AuthContext.signOut resets the purchase identity", async () => {
+    const fs = await import("node:fs");
+    const src = fs.readFileSync("src/contexts/AuthContext.tsx", "utf8");
+    const signOut = src.slice(src.indexOf("const signOut = async"));
+    const body = signOut.slice(0, signOut.indexOf("\n  };"));
+
+    expect(
+      body,
+      "signing out no longer tells RevenueCat the account has left — the SDK " +
+        "stays identified as the departing user",
+    ).toContain("resetPurchaseIdentity");
+  });
+});

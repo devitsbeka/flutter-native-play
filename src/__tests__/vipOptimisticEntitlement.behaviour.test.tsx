@@ -167,3 +167,45 @@ describe("an entitlement applied from a purchase is not revoked by a stale row",
     ).toBe(false);
   });
 });
+
+describe("what is left behind on sign-out", () => {
+  it("does not leave a cached PRO flag for the next account", async () => {
+    // `isVip` is seeded from localStorage so the first paint does not flicker.
+    // It is a hint that belongs to ONE account, and it was never cleared — so
+    // after a PRO user signed out, the next person to sign in on that phone
+    // started the session believing they were PRO, and a signed-out device
+    // kept rendering PRO surfaces.
+    installSupabase([{ user_id: "user-1", vip_tier: "pro", expires_at: FUTURE }]);
+    const result = await mountVip();
+    await waitFor(() => expect(result.current.isVip).toBe(true));
+    expect(localStorage.getItem("cached_vip_status")).toBe("true");
+
+    // Sign out: same provider, no user.
+    vi.resetModules();
+    vi.doMock("@/hooks/useAuth", () => ({ useAuth: () => ({ user: null }) }));
+    vi.doMock("@/integrations/supabase/client", () => ({
+      supabase: {
+        from: () => ({
+          select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null, error: null }) }) }),
+          update: () => ({ eq: async () => ({ data: null, error: null }) }),
+        }),
+        rpc: async () => ({ data: null, error: null }),
+        auth: { getUser: async () => ({ data: { user: null }, error: null }) },
+        channel: () => ({ on: () => ({ subscribe: () => ({}) }) }),
+        removeChannel: () => {},
+      },
+    }));
+    vi.doMock("@/lib/toast", () => ({
+      toast: Object.assign(vi.fn(), { error: vi.fn(), success: vi.fn(), info: vi.fn(), warning: vi.fn(), message: vi.fn() }),
+    }));
+    vi.doMock("@/utils/standaloneTranslation", () => ({ t: (k: string) => k }));
+
+    const signedOut = await mountVip();
+    await waitFor(() => expect(signedOut.current.isVip).toBe(false));
+
+    expect(
+      localStorage.getItem("cached_vip_status"),
+      "the next account to sign in on this phone inherits a PRO flag",
+    ).toBeNull();
+  });
+});

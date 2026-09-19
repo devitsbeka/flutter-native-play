@@ -180,6 +180,13 @@ export function VipProvider({ children }: { children: ReactNode }) {
       setIsVip(false);
       setLoading(false);
       fetchVipStatusRef.current = null;
+      // The cache seeds `isVip` on the next mount, so leaving it set means the
+      // next person to sign in on this phone starts the session believing they
+      // are PRO — and a signed-out device keeps showing PRO surfaces. It is a
+      // paint-time hint belonging to one account, not a device fact.
+      try { localStorage.removeItem(VIP_CACHE_KEY); } catch { /* private mode */ }
+      confirmedActiveRef.current = false;
+      optimisticUntilRef.current = 0;
       return;
     }
 

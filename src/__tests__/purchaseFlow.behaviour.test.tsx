@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import { renderHook, act, waitFor } from "@testing-library/react";
+import { renderHook, act, waitFor, cleanup } from "@testing-library/react";
 
 /**
  * The purchase path, executed rather than read.
@@ -45,6 +45,10 @@ function makePlugin(overrides: Record<string, unknown> = {}) {
     setLogLevel: vi.fn().mockResolvedValue(undefined),
     configure: vi.fn().mockResolvedValue(undefined),
     logIn: vi.fn().mockResolvedValue({}),
+    // Without this, resetPurchaseIdentity swallows a TypeError and the app
+    // silently never signs out of RevenueCat — a harness gap wearing the
+    // costume of a passing test, exactly like the missing registerPlugin above.
+    logOut: vi.fn().mockResolvedValue({}),
     getOfferings: vi.fn().mockResolvedValue({
       current: { availablePackages: catalogue.map((p) => ({ storeProduct: p })) },
       all: { default: { availablePackages: catalogue.map((p) => ({ storeProduct: p })) } },
@@ -92,13 +96,32 @@ function installMocks(opts: {
     LOG_LEVEL: { DEBUG: "DEBUG", ERROR: "ERROR" },
   }));
 
+  // attachResumeListener imports this dynamically. Capturing the handler is
+  // the only way to exercise the resume trigger, which is what notices an
+  // Apple ID swapped in Settings while the app was suspended.
+  vi.doMock("@capacitor/app", () => ({
+    App: {
+      addListener: (_event: string, handler: (s: { isActive: boolean }) => void) => {
+        resumeHandlers.push(handler);
+        return { remove: () => {} };
+      },
+    },
+  }));
+
   vi.doMock("@/integrations/supabase/client", () => ({
     supabase: { functions: { invoke: opts.invoke } },
   }));
 
+  // Mutable, so a test can sign the user out and back in without re-mocking:
+  // vi.doMock after the module has been imported changes nothing, since the
+  // import is already cached.
+  const authState = {
+    user: (opts.user === undefined ? { id: "user-1" } : opts.user) as { id: string } | null,
+  };
+
   vi.doMock("@/hooks/useAuth", () => ({
     useAuth: () => ({
-      user: opts.user === undefined ? { id: "user-1" } : opts.user,
+      user: authState.user,
       profile: { gems: opts.profileGems ?? 100 },
       fetchProfile,
       setProfileLocal,
@@ -127,7 +150,7 @@ function installMocks(opts: {
     }),
   }));
 
-  return { applyEntitlement, refreshVip, setProfileLocal, fetchProfile };
+  return { applyEntitlement, refreshVip, setProfileLocal, fetchProfile, authState };
 }
 
 /** Mount the hook and collect everything it announces. */
@@ -151,19 +174,47 @@ const okInvoke = () =>
     error: null,
   });
 
+/** Resume handlers registered by the module under test, one list per test. */
+let resumeHandlers: Array<(s: { isActive: boolean }) => void> = [];
+const resume = () => resumeHandlers.forEach((h) => h({ isActive: true }));
+
 beforeEach(() => {
   vi.resetModules();
   vi.clearAllMocks();
+  resumeHandlers = [];
 });
 
 afterEach(() => {
+  // Unmount everything this test rendered.
+  //
+  // @testing-library/react registers its own afterEach cleanup only when the
+  // test globals are present, and this project does not set `globals: true` —
+  // so nothing was ever unmounted. Every renderHook in the file stayed
+  // mounted for the rest of it, effects live, holding the module instance the
+  // test that created them was given. With the sign-in reconcile now firing
+  // on mount, those stale hooks kept doing store work across test boundaries,
+  // and the restore-failure case intermittently read a Capacitor that was no
+  // longer the mocked one: it reported 'notMobile' for a product path that
+  // was never reached. One failure in six full runs, never in isolation.
+  cleanup();
+
   // Unconditionally, not just on the happy path. The hang test switches to
   // fake timers and restored them only at its own end, so a failure there left
   // every later test running on a frozen clock — which showed up once as the
   // restore-failure case flaking in a full run and passing in isolation.
   vi.useRealTimers();
-  vi.doUnmock("@capacitor/core");
-  vi.doUnmock("@revenuecat/purchases-capacitor");
+  // Deliberately NOT vi.doUnmock here.
+  //
+  // It used to unmock @capacitor/core and @revenuecat/purchases-capacitor,
+  // which opened a window: the sign-in reconcile leaves detached async work
+  // in flight, and a dynamic import that resolved inside that window got the
+  // REAL @capacitor/core. The next test then read isNativePlatform() as false
+  // and restore returned 'notMobile' — a harness slip wearing the costume of
+  // a product bug, once in six full runs and never in isolation.
+  //
+  // There is nothing to unmock for: vitest isolates by file, all 29 tests
+  // here call installMocks, and beforeEach resets the module registry. A mock
+  // that is simply always registered cannot be missing.
 });
 
 describe("a successful gem purchase", () => {
@@ -626,5 +677,183 @@ describe("the launch reconcile", () => {
     await new Promise((r) => setTimeout(r, 50));
 
     expect(invoke).not.toHaveBeenCalled();
+  });
+});
+
+describe("signing out and signing back in", () => {
+  /**
+   * "it works until i sign out from device and sign in again, then it didn't
+   * remember I am pro, i think there is literally no effective process of
+   * understanding if user is pro or not on login or app launch"
+   *
+   * Correct. The reconcile kept a set of user ids that was never emptied and
+   * RevenueCat was never told about the sign-out, so `identifiedAs` and the
+   * guard both still named the departing user. Signing back in — even as the
+   * same account — matched the guard and skipped every check. Nothing else in
+   * the app asks the store, so there was no second chance.
+   */
+
+  const syncedInvoke = () =>
+    vi.fn().mockResolvedValue({
+      data: { success: true, tier: "pro_plus", gemsCredited: 0 },
+      error: null,
+    });
+
+  it("asks the store again on the next sign-in", async () => {
+    const invoke = syncedInvoke();
+    installMocks({ plugin: makePlugin(), invoke });
+
+    await mountPurchases();
+    await waitFor(() => expect(invoke).toHaveBeenCalledTimes(1));
+
+    const mod = await import("@/hooks/useInAppPurchases");
+    await act(async () => {
+      await mod.resetPurchaseIdentity();
+    });
+
+    await mountPurchases();
+
+    await waitFor(
+      () => expect(invoke).toHaveBeenCalledTimes(2),
+      { timeout: 3000 },
+    );
+  });
+
+  it("tells RevenueCat the account has left", async () => {
+    // Otherwise the next purchase on this phone is attributed to whoever was
+    // signed in before, which is how one subscription came to be spread over
+    // two app user ids.
+    const plugin = makePlugin();
+    installMocks({ plugin, invoke: syncedInvoke() });
+
+    await mountPurchases();
+    const mod = await import("@/hooks/useInAppPurchases");
+    await act(async () => {
+      await mod.resetPurchaseIdentity();
+    });
+
+    expect(plugin.logOut).toHaveBeenCalled();
+  });
+
+  it("re-identifies rather than trusting the previous session", async () => {
+    const plugin = makePlugin();
+    installMocks({ plugin, invoke: syncedInvoke() });
+
+    await mountPurchases();
+    await waitFor(() => expect(plugin.logIn).toHaveBeenCalledTimes(1));
+
+    const mod = await import("@/hooks/useInAppPurchases");
+    await act(async () => {
+      await mod.resetPurchaseIdentity();
+    });
+    await mountPurchases();
+
+    await waitFor(() => expect(plugin.logIn).toHaveBeenCalledTimes(2));
+  });
+
+  it("survives a sign-out that never reaches signOut()", async () => {
+    // An expired or revoked session sets user to null through
+    // onAuthStateChange and never calls AuthContext.signOut, so the effect's
+    // own signed-out branch has to clear the marker.
+    const invoke = syncedInvoke();
+    const { authState } = installMocks({ plugin: makePlugin(), invoke });
+
+    await mountPurchases();
+    await waitFor(() => expect(invoke).toHaveBeenCalledTimes(1));
+
+    const mod = await import("@/hooks/useInAppPurchases");
+
+    // The session goes away underneath the app.
+    authState.user = null;
+    await act(async () => {
+      renderHook(() => mod.useInAppPurchases());
+      await new Promise((r) => setTimeout(r, 20));
+    });
+
+    // And the same account signs back in.
+    authState.user = { id: "user-1" };
+    await act(async () => {
+      renderHook(() => mod.useInAppPurchases());
+    });
+
+    await waitFor(() => expect(invoke).toHaveBeenCalledTimes(2), { timeout: 3000 });
+  });
+
+  it("re-identifies after a revoked session too, without AuthContext", async () => {
+    // The guarantee must not depend on the sign-out having gone through
+    // AuthContext.signOut. Whatever route the session left by, the next
+    // sign-in has to re-identify before it syncs — otherwise it would ask
+    // RevenueCat about an id it is no longer holding.
+    const plugin = makePlugin();
+    const { authState } = installMocks({ plugin, invoke: syncedInvoke() });
+
+    await mountPurchases();
+    await waitFor(() => expect(plugin.logIn).toHaveBeenCalledTimes(1));
+
+    const mod = await import("@/hooks/useInAppPurchases");
+    authState.user = null;
+    await act(async () => {
+      renderHook(() => mod.useInAppPurchases());
+      await new Promise((r) => setTimeout(r, 20));
+    });
+
+    authState.user = { id: "user-1" };
+    await act(async () => {
+      renderHook(() => mod.useInAppPurchases());
+    });
+
+    await waitFor(() => expect(plugin.logIn).toHaveBeenCalledTimes(2), { timeout: 3000 });
+  });
+});
+
+describe("coming back from the background", () => {
+  it("re-checks entitlements, because the Apple ID may have changed", async () => {
+    // A tester switches sandbox accounts in Settings with the app suspended.
+    // The app user id does not move, so nothing else in the app notices.
+    const invoke = vi.fn().mockResolvedValue({
+      data: { success: true, tier: "pro", gemsCredited: 0 },
+      error: null,
+    });
+    installMocks({ plugin: makePlugin(), invoke });
+
+    await mountPurchases();
+    await waitFor(() => expect(invoke).toHaveBeenCalledTimes(1));
+
+    // Past the throttle. A Date.now spy rather than vi.setSystemTime, which
+    // wants fake timers installed — and installing those here would also
+    // freeze the awaits this test depends on.
+    const realNow = Date.now;
+    const nowSpy = vi.spyOn(Date, "now").mockImplementation(() => realNow() + 61_000);
+    try {
+      await act(async () => {
+        resume();
+        await new Promise((r) => setTimeout(r, 50));
+      });
+      await waitFor(() => expect(invoke).toHaveBeenCalledTimes(2));
+    } finally {
+      nowSpy.mockRestore();
+    }
+  });
+
+  it("does not re-check on every resume", async () => {
+    // Backgrounding and foregrounding is not rare, and each check is a round
+    // trip to RevenueCat through our own edge function.
+    const invoke = vi.fn().mockResolvedValue({
+      data: { success: true, tier: "pro", gemsCredited: 0 },
+      error: null,
+    });
+    installMocks({ plugin: makePlugin(), invoke });
+
+    await mountPurchases();
+    await waitFor(() => expect(invoke).toHaveBeenCalledTimes(1));
+
+    await act(async () => {
+      resume();
+      resume();
+      resume();
+      await new Promise((r) => setTimeout(r, 50));
+    });
+
+    expect(invoke).toHaveBeenCalledTimes(1);
   });
 });

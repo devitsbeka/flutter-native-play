@@ -599,15 +599,72 @@ let identifiedAs: string | null = null;
 let identifyInFlight: Promise<boolean> | null = null;
 
 /**
- * Users whose entitlements have already been reconciled this app session.
+ * Who this process has reconciled with the store, and when.
  *
  * Module scope rather than a ref: the hook is mounted by the shop, the
- * paywall and Settings, and every navigation between them would otherwise be
- * another round trip to verify-receipt. An entry is removed again when the
- * sync could not complete, so a launch that started offline retries on the
- * next mount instead of skipping the check for the rest of the session.
+ * paywall, Settings and `useStorePrice`, and every navigation between them
+ * would otherwise be another round trip to verify-receipt.
+ *
+ * It was a `Set` of user ids that was never emptied, and that was the bug
+ * behind "I signed out and signed in again and it forgot I am PRO". Sign-out
+ * left the id in the set, so signing back in — even as the same account —
+ * matched it and skipped the check. Combined with `identifiedAs` surviving
+ * too, nothing in the app asked the store anything after a re-sign-in.
+ *
+ * A single id, cleared on sign-out, makes "reconcile once per SIGN-IN"
+ * expressible. `lastReconcileAt` bounds the resume trigger, which exists
+ * because the Apple ID can be changed while the app is in the background and
+ * the app user id does not move when it is.
  */
-const reconciledUsers = new Set<string>();
+let reconciledUserId: string | null = null;
+let lastReconcileAt = 0;
+
+/** Least time between two resume-triggered syncs. */
+const RECONCILE_THROTTLE_MS = 60_000;
+
+/**
+ * What the mounted hook wants done when the app comes back.
+ *
+ * Set by the reconcile effect and read by the single process-wide resume
+ * listener, so that mounting the hook on four screens does not attach four
+ * listeners that all fire at once.
+ */
+let onResumeReconcile: (() => void) | null = null;
+
+/**
+ * Forget who the store thinks we are.
+ *
+ * Sign-out used to tear down the Supabase session and tell RevenueCat
+ * nothing, which left the SDK still identified as the account that had just
+ * left. Two consequences, both seen on a device:
+ *
+ *  - signing back in skipped every entitlement check, because `identifiedAs`
+ *    and the reconcile guard both still named that user;
+ *  - a *different* account signing in on the same phone inherited the
+ *    previous one's RevenueCat identity until `logIn` landed, which is how a
+ *    subscription came to be attributed across two app user ids.
+ *
+ * Exported for `AuthContext.signOut`, which imports it dynamically — a static
+ * import would close a cycle, since this module imports `useAuth`.
+ */
+export async function resetPurchaseIdentity(): Promise<void> {
+  reconciledUserId = null;
+  lastReconcileAt = 0;
+  identifiedAs = null;
+  identifyInFlight = null;
+
+  if (!Capacitor.isNativePlatform()) return;
+
+  try {
+    const plugin = (await loadPurchasesPlugin())?.plugin;
+    // Throws when the current id is already anonymous, which is a normal
+    // state to sign out from and not worth reporting as a failure.
+    await withTimeout(plugin?.logOut(), "logOut");
+    iapLog("signed out of RevenueCat");
+  } catch (e) {
+    iapLog("RevenueCat logOut did not complete:", String(e));
+  }
+}
 
 function ensureIdentified(userId: string): Promise<boolean> {
   if (identifiedAs === userId) return Promise.resolve(true);
@@ -715,6 +772,15 @@ function attachResumeListener() {
     .then(({ App }) => {
       void App.addListener("appStateChange", ({ isActive }) => {
         if (!isActive) return;
+
+        // Before the catalogue check, and not conditional on it. Returning
+        // from the background is also where the Apple ID has just been
+        // changed — the App Store sign-out a tester does between sandbox
+        // accounts happens in Settings, with this app suspended. The app user
+        // id does not move when that happens, so nothing else would ever
+        // notice.
+        onResumeReconcile?.();
+
         if (storeProducts.length > 0) return;
         iapLog("app resumed with an empty catalogue — asking the store again");
         void retryStore();
@@ -826,63 +892,100 @@ export function useInAppPurchases() {
   const { refresh: refreshVip, applyEntitlement, isVip } = useVipStatus();
 
   /**
-   * Reconcile with the store once per signed-in session.
+   * Establish what this account owns, from the store, on every sign-in.
    *
-   * Until this, `syncEntitlements` only ever ran from a purchase, a restore or
-   * the gem poll — so a subscription the database had failed to record stayed
-   * unrecorded until the player thought to press Restore Purchases. Relaunching
-   * did not help, which is what "I exited the app and launched it again and it
-   * still showed the Subscribe button" was.
+   * There used to be no such process. `syncEntitlements` ran from a purchase,
+   * a restore and the gem poll, and nowhere else — so a subscription the
+   * database had failed to record stayed unrecorded until the player thought
+   * to press Restore Purchases. Relaunching did not help: that is what "I
+   * exited the app and launched it again and it still showed the Subscribe
+   * button" was.
    *
-   * There are several ways to arrive in that state and none of them are the
-   * player's fault: the transaction moved to a new account (RevenueCat's
-   * transfer behaviour, see _shared/iap.ts), the webhook was dropped, or the
-   * row was written while the app was closed. RevenueCat knows the truth in
-   * every case; nothing was asking it.
+   * The first version of this ran once per *app process* and kept a set of
+   * user ids that was never emptied, which reproduced the same complaint one
+   * step along: "it works until i sign out and sign in again, then it didn't
+   * remember I am pro". Signing out left the id in the set, so signing back
+   * in matched it and skipped the check.
    *
-   * Detached and quiet on purpose. Nothing awaits it, nothing is announced —
-   * the purchase announcement channel belongs to `purchase()`, and a launch
-   * must never produce a congratulations modal. It only refreshes what the
-   * screen is already showing, and only when the sync actually found
+   * Two triggers now, and the state they key on is cleared on sign-out:
+   *
+   *   sign-in  — always, once per sign-in. Not once per process, and not once
+   *              per mount either; `reconciledUserId` is module scope so the
+   *              four screens that mount this hook share one answer.
+   *   resume   — throttled. The Apple ID can be swapped in Settings while the
+   *              app is suspended, and the app user id does not move when it
+   *              is, so nothing else in the app would notice.
+   *
+   * Detached and quiet on purpose. Nothing awaits it and nothing is
+   * announced — the purchase announcement channel belongs to `purchase()`,
+   * and a sign-in must never produce a congratulations modal. It refreshes
+   * what the screen is already showing, and only when the sync found
    * something.
-   *
-   * Once per user per app session. `syncedUsers` lives at module scope, so a
-   * remount — every navigation that unmounts the shop — does not re-run it.
    */
   useEffect(() => {
-    if (!user?.id || !Capacitor.isNativePlatform()) return;
-    if (reconciledUsers.has(user.id)) return;
-    reconciledUsers.add(user.id);
+    if (!user?.id || !Capacitor.isNativePlatform()) {
+      // Signed out — including a session that expired or was revoked, which
+      // never reaches AuthContext.signOut. The next sign-in has to ask the
+      // store again even if it is the same account.
+      //
+      // `identifiedAs` is cleared here as well as in resetPurchaseIdentity,
+      // deliberately. That makes the guarantee independent of whether the
+      // sign-out went through AuthContext at all: whatever route the session
+      // left by, the next sign-in re-identifies and re-syncs. The AuthContext
+      // call remains worth making because it also signs the RevenueCat SDK
+      // itself out, which this cannot do without a plugin round trip on a
+      // path that runs on every render pass with no user.
+      reconciledUserId = null;
+      identifiedAs = null;
+      return;
+    }
 
-    void (async () => {
-      const identified = await ensureIdentified(user.id);
+    const userId = user.id;
+
+    const reconcile = async (trigger: "sign-in" | "resume") => {
+      if (trigger === "sign-in" && reconciledUserId === userId) return;
+      if (trigger === "resume" && Date.now() - lastReconcileAt < RECONCILE_THROTTLE_MS) return;
+
+      // Claimed before the awaits, so two triggers landing together — a
+      // resume that arrives while the sign-in sync is still in flight — do
+      // not both call verify-receipt.
+      reconciledUserId = userId;
+      lastReconcileAt = Date.now();
+
+      const identified = await ensureIdentified(userId);
       if (!identified) {
         // Syncing against an id RevenueCat is not holding would report
         // "nothing owned" for someone who owns something, so don't ask.
-        iapLog("launch reconcile skipped — not identified to RevenueCat");
-        reconciledUsers.delete(user.id);
+        iapLog(`${trigger} reconcile skipped — not identified to RevenueCat`);
+        reconciledUserId = null;
         return;
       }
 
       const synced = await syncEntitlements();
       if (!synced.success) {
-        // Let the next launch try again rather than marking it done.
-        reconciledUsers.delete(user.id);
-        iapLog("launch reconcile did not complete:", synced.error ?? "unknown");
+        // Let the next trigger try again rather than marking it done.
+        reconciledUserId = null;
+        iapLog(`${trigger} reconcile did not complete:`, synced.error ?? "unknown");
         return;
       }
 
-      if (synced.tier) {
-        iapLog(`launch reconcile found tier ${synced.tier}`);
-        refreshVip();
-      }
-      if (synced.gemsCredited > 0) {
-        iapLog(`launch reconcile credited ${synced.gemsCredited} gems`);
-        await refreshBalance();
-      }
-    })();
+      iapLog(`${trigger} reconcile: tier=${synced.tier ?? "none"} gems=${synced.gemsCredited}`);
+
+      // refreshVip unconditionally, not only when a tier came back. A sync
+      // that reports nothing owned is also news — it is how a cancellation,
+      // an expiry and a sign-in as a non-subscriber reach the screen.
+      refreshVip();
+      if (synced.gemsCredited > 0) await refreshBalance();
+    };
+
+    void reconcile("sign-in");
+
+    onResumeReconcile = () => void reconcile("resume");
+    return () => {
+      onResumeReconcile = null;
+    };
     // refreshVip/refreshBalance are stable per user; re-running on their
-    // identity would defeat the once-per-session guard.
+    // identity would defeat the once-per-sign-in guard.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
