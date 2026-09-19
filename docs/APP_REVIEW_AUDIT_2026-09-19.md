@@ -23,14 +23,39 @@ times, which is the worst possible position to submit from. Everything in
 
 ## Verdict
 
-**Do not submit yet.** Three blockers, one of which (B1) is a near-certain
-repeat of a finding Apple has already written up once.
+**Do not submit yet.** Three blockers were found; **B1 and B2 are now fixed**
+(see the status notes on each). B3 is partially done and is the remaining gate.
+
+### Update — 2026-09-19, later the same day
+
+B1 and B2 were both **locked by B3** and could not be touched until items were
+withdrawn from submission `71c735ab`:
+
+- B2 via API: `409 ENTITY_ERROR.ATTRIBUTE.INVALID.UNMODIFIABLE — The field
+  (DESCRIPTION) can not be modified`
+- B1 via UI: *"There was an error uploading your screenshot"*, with **Save**
+  and **Add for Review** greyed out
+
+After withdrawing the four consumables and PRO Annual from the submission, B2's
+error changed to `TOO_LONG (max 55)` — proof the lock had lifted — and both were
+completed. The version item was deliberately left in place, so Apple's message
+thread is intact.
+
+One correction to the method used above: the ASC API relationships for IAP
+review screenshots (`appStoreReviewScreenshot`, `images`, `versions`) all return
+**404 for this key's role**, so the "MISSING" detection in this audit cannot see
+them even when they exist. Verification is by reloading the IAP page in the UI
+and confirming the image persists.
 
 ---
 
 ## BLOCKERS — will very likely cause rejection
 
 ### B1 · Gem consumables have no App Review screenshot — guideline 2.1(b)
+
+> **FIXED 2026-09-19.** All four now carry the Shop screenshot (1242×2688),
+> each verified by reloading the IAP page after upload. Note that the native
+> 1320×2868 capture was rejected by ASC; it had to be resized.
 
 Apple already told us this on submission `6fdcd50e`: *"each needs an App Review
 screenshot."* The subscriptions were fixed. **The four consumables were not.**
@@ -52,6 +77,10 @@ marketing. **Blocks submission on its own.**
 
 ### B2 · App Store product description contradicts what the app sells — 2.3.6 / 3.1.2
 
+> **FIXED 2026-09-19.** `io.mytrivia.pro.annual` now reads *"Double XP, no ads,
+> VIP badge and 5 friend invites."* (50 chars; the field caps at 55), matching
+> the paywall and the `pro_plus` entitlement the server grants.
+
 `io.mytrivia.pro.annual` — StoreKit returns this description to the device:
 
 > "Double XP, no ads, VIP badge and **1 friend invite**."
@@ -72,6 +101,11 @@ five seats against a store record promising one. That is squarely 2.3.6
 to match the five-seat entitlement. Metadata-only; no build needed.
 
 ### B3 · Submission `71c735ab` is stuck and cannot be resubmitted via API
+
+> **PARTIALLY DONE 2026-09-19.** Four consumables + PRO Annual withdrawn
+> (`state=REMOVED`) to unlock B1/B2. Still in the submission: PRO Monthly,
+> Friends PRO Monthly, the subscription group, and the rejected version.
+> "Resubmit to App Review" is disabled, confirming it cannot be reused.
 
 State `UNRESOLVED_ISSUES`, holding a version item in state `REJECTED`. Both API
 routes are refused:
@@ -235,9 +269,9 @@ push, which is the only way this stops regressing.
 ## Pre-submission checklist
 
 **Metadata / ASC**
-- [ ] B1 — review screenshot on each of the four gem consumables
-- [ ] B2 — fix `pro.annual` description (5 friend seats, not 1)
-- [ ] B3 — clear submission `71c735ab` in the UI
+- [x] B1 — review screenshot on each of the four gem consumables
+- [x] B2 — fix `pro.annual` description (5 friend seats, not 1)
+- [ ] B3 — withdraw the remaining 4 items from `71c735ab` (needs an ASC session)
 - [ ] Re-confirm Advertising = Yes, UGC = Yes, Contests = Frequent, Simulated Gambling = Infrequent **immediately before** submitting
 
 **Server**
@@ -245,9 +279,9 @@ push, which is the only way this stops regressing.
 - [ ] H2 — apply `20261106130000_vip_subscriptions_are_realtime.sql`
 
 **Build**
-- [ ] H1 — remove `loggingBehavior: 'production'` and the purchase timing logs
-- [ ] H3 — behavioural purchase tests green
-- [ ] H4 — confirm gem packages resolve from the offering, not the bundled fallback
+- [x] H1 — remove `loggingBehavior: 'production'` and the purchase timing logs
+- [x] H3 — behavioural purchase tests green (13 tests, `purchaseFlow.behaviour.test.tsx`)
+- [x] H4 — offering now returns `current` + `$rc_annual` on device; gem packages still report "in no offering" and remain on the compiled fallback price
 - [ ] Clean build from `main`, verify IPA, upload, attach to 1.0
 
 **Then**

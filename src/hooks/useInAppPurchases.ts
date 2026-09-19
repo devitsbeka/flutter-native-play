@@ -817,17 +817,6 @@ export function useInAppPurchases() {
 
     setPurchasing(true);
 
-    // Elapsed timings for the whole purchase path.
-    //
-    // "It takes about eight seconds" is not something the existing breadcrumbs
-    // could confirm or place: they say what happened, never when, so the wait
-    // inside StoreKit's payment sheet (the player's own Face ID and tap, which
-    // is not the app being slow) could not be told apart from the wait after
-    // it returns (which is). Every line below carries milliseconds since the
-    // tap, so the gap can be attributed rather than guessed at.
-    const startedAt = Date.now();
-    const ms = () => `+${Date.now() - startedAt}ms`;
-
     try {
       const plugin = (await loadPurchasesPlugin())?.plugin;
       if (!plugin) {
@@ -893,9 +882,7 @@ export function useInAppPurchases() {
       
       if (targetPackage) {
         // Purchase using package (preferred method)
-        iapLog(`opening payment sheet (package) ${ms()}`);
         const result = await plugin.purchasePackage({ aPackage: targetPackage });
-        iapLog(`StoreKit returned ${ms()} — everything after this is the app`);
         customerInfo = result.customerInfo;
       } else {
         // No package carries this product, which always means the RevenueCat
@@ -947,9 +934,7 @@ export function useInAppPurchases() {
           return { success: false, error: "product_not_found" };
         }
 
-        iapLog(`opening payment sheet (direct product) ${ms()}`);
         const result = await plugin.purchaseStoreProduct({ product: storeProduct });
-        iapLog(`StoreKit returned ${ms()} — everything after this is the app`);
         customerInfo = result.customerInfo;
       }
 
@@ -989,7 +974,6 @@ export function useInAppPurchases() {
         // is the honest ordering, because the charge really did happen either
         // way.
         announcePurchase({ productId, gems: gemsForProduct(productId) });
-        iapLog(`confirmation on screen ${ms()}`);
 
         // Show the gems on the balance now, for the same reason.
         //
@@ -1028,9 +1012,7 @@ export function useInAppPurchases() {
         // no gems, so waiting on that would be waiting for something that is
         // never coming.
         const expectsGems = Object.values(GEM_PACK_PRODUCTS).includes(productId);
-        iapLog(`calling verify-receipt ${ms()}`);
         const synced = await syncEntitlements();
-        iapLog(`verify-receipt answered ${ms()} (tier=${synced.tier ?? "none"}, gems=${synced.gemsCredited})`);
 
         if (expectsGems && synced.success && synced.gemsCredited === 0) {
           // Not credited on the first ask. Stop waiting in front of the user
