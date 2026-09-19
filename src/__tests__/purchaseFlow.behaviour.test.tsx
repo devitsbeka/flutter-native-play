@@ -425,8 +425,11 @@ describe("restore", () => {
   it("reports 'signedOut' without claiming anything was restored", async () => {
     installMocks({ plugin: makePlugin(), invoke: okInvoke(), user: null });
 
-    const mod = await import("@/hooks/useInAppPurchases");
-    const { result } = renderHook(() => mod.useInAppPurchases());
+    // Through mountPurchases, not a bare renderHook: restorePurchases loads
+    // the plugin itself, and calling it before the store has settled races the
+    // dynamic import — which surfaced as this test intermittently reporting
+    // "failed" in a full run while passing in isolation.
+    const { result } = await mountPurchases();
 
     let outcome: any;
     await act(async () => {
