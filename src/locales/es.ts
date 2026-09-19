@@ -1247,6 +1247,7 @@ export const es: KaTranslations = {
     purchasesRestored: "¡Compras restauradas! 🎉",
     noPreviousPurchases: "No se encontraron compras anteriores",
     alreadySubscribed: "Ya tienes la suscripción",
+    subscriptionOnAnotherAccount: "Esta suscripción ya está activa en otra cuenta. Toca «Restaurar compras» para traerla aquí.",
     alreadySubscribedBody: "Tu suscripción está activa. No se te ha cobrado nada.",
     restoreFailed: "Error al restaurar",
     restoreSignInFirst: "Inicia sesión para restaurar tus compras.",

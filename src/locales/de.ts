@@ -1237,6 +1237,7 @@ export const de: KaTranslations = {
     purchasesRestored: "Käufe wiederhergestellt! 🎉",
     noPreviousPurchases: "Keine vorherigen Käufe gefunden",
     alreadySubscribed: "Du bist bereits Abonnent",
+    subscriptionOnAnotherAccount: "Dieses Abo ist bereits auf einem anderen Konto aktiv. Tippe auf „Käufe wiederherstellen“.",
     alreadySubscribedBody: "Dein Abo ist aktiv. Es wurde nichts berechnet.",
     restoreFailed: "Wiederherstellung fehlgeschlagen",
     restoreSignInFirst: "Melde dich an, um deine Käufe wiederherzustellen.",

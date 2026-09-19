@@ -4,6 +4,13 @@ const config: CapacitorConfig = {
   appId: 'io.mytrivia.app',
   appName: 'MyTrivia',
   webDir: 'dist',
+  // TEMPORARY — diagnosis only, and it comes back out before submission.
+  //
+  // Without this the bridge drops both the [iap] breadcrumbs and the
+  // RevenueCat request/response traffic, so a device console shows nothing of
+  // the purchase path. Build 68 is the submission candidate and does NOT carry
+  // it; this build exists to watch the PRO entitlement behave.
+  loggingBehavior: 'production',
   ios: {
     // Capacitor 8's own podspec sets ios.deployment_target = '15.0'. Declaring
     // 14.0 here doesn't lower that floor, it just makes `pod install` fail on

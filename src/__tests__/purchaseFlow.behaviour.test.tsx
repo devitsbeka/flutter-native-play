@@ -251,7 +251,13 @@ describe("a repeat purchase of a subscription already owned", () => {
         customerInfo: { activeSubscriptions: [PRO_ANNUAL] },
       }),
     });
-    installMocks({ plugin, invoke: okInvoke(), isVip: true });
+    // A subscription that genuinely lands comes back with a tier; okInvoke
+    // models a gem sync and would now trip the not-granted guard.
+    const subInvoke = vi.fn().mockResolvedValue({
+      data: { success: true, tier: "pro_plus", gemsCredited: 0 },
+      error: null,
+    });
+    installMocks({ plugin, invoke: subInvoke, isVip: true });
 
     const { result, announcements } = await mountPurchases();
     await act(async () => {
@@ -274,7 +280,11 @@ describe("a repeat purchase of a subscription already owned", () => {
         customerInfo: { activeSubscriptions: [PRO_ANNUAL] },
       }),
     });
-    installMocks({ plugin, invoke: okInvoke(), isVip: false });
+    const subInvoke = vi.fn().mockResolvedValue({
+      data: { success: true, tier: "pro_plus", gemsCredited: 0 },
+      error: null,
+    });
+    installMocks({ plugin, invoke: subInvoke, isVip: false });
 
     const { result, announcements } = await mountPurchases();
     await act(async () => {
@@ -299,6 +309,59 @@ describe("a repeat purchase of a subscription already owned", () => {
 
     expect(announcements[0].alreadyActive).toBeFalsy();
     expect(announcements[0].gems).toBe(500);
+  });
+});
+
+describe("a subscription that granted this account nothing", () => {
+  it("is reported honestly instead of celebrated", async () => {
+    // Observed on a device: the Apple ID already held PRO under app user
+    // a22491af…, and the player was signed in as 215a70e6…. Apple refused to
+    // charge ("you're already subscribed"), RevenueCat kept the entitlement
+    // where it was, this account received nothing — and the app congratulated
+    // them on subscribing.
+    //
+    // StoreKit answers for the Apple ID; the entitlement belongs to the app
+    // account. verify-receipt is what knows the difference, and here it
+    // reports no tier.
+    const invoke = vi.fn().mockResolvedValue({
+      data: { success: true, tier: null, gemsCredited: 0 },
+      error: null,
+    });
+    installMocks({ plugin: makePlugin(), invoke });
+
+    const { result, announcements } = await mountPurchases();
+    let outcome: any;
+    await act(async () => {
+      outcome = await result.current.purchase(PRO_ANNUAL);
+    });
+
+    expect(outcome.error).toBe("entitlement_not_granted");
+
+    const last = announcements[announcements.length - 1];
+    expect(
+      last.failed,
+      "a subscription that attached to no account was announced as a success",
+    ).toBe(true);
+    expect(last.reason).toBe("iap.subscriptionOnAnotherAccount");
+  });
+
+  it("does not misfire on a gem pack, which grants no tier by design", async () => {
+    // Consumables legitimately return tier: null. Treating that as a failed
+    // entitlement would break every gem purchase.
+    const invoke = vi.fn().mockResolvedValue({
+      data: { success: true, tier: null, gemsCredited: 500 },
+      error: null,
+    });
+    installMocks({ plugin: makePlugin(), invoke });
+
+    const { result, announcements } = await mountPurchases();
+    let outcome: any;
+    await act(async () => {
+      outcome = await result.current.purchase(GEMS_500);
+    });
+
+    expect(outcome.success).toBe(true);
+    expect(announcements.some((a) => a.failed)).toBe(false);
   });
 });
 

@@ -1118,6 +1118,39 @@ export function useInAppPurchases() {
         // the non-PRO UI over a row that says otherwise until it is relaunched.
         if (synced.tier) refreshVip();
 
+        // A subscription that bought this account nothing must not be
+        // celebrated.
+        //
+        // The confirmation goes up the instant StoreKit returns, which is right
+        // for a purchase that lands — but StoreKit answers for the **Apple ID**,
+        // while the entitlement is granted to the **app account**. Those come
+        // apart whenever the Apple ID already owns the subscription under a
+        // different app user id: iOS shows "you're already subscribed",
+        // RevenueCat keeps it where it was, and this account receives nothing.
+        //
+        // Observed on a device: an Apple ID holding PRO under app user
+        // a22491af… bought PRO again while signed in as 215a70e6…. Apple
+        // refused to charge, nothing attached to the new account, and the app
+        // congratulated them on subscribing.
+        //
+        // verify-receipt has just told us what this account actually owns. If a
+        // subscription purchase produced no tier, the entitlement went
+        // somewhere else, and the honest thing is to say so and point at
+        // Restore rather than to cheer.
+        if (SUBSCRIPTION_TIERS[productId] && !synced.tier) {
+          console.error(
+            `[iap] ${productId} completed at the store but granted this ` +
+              `account no tier. The Apple ID most likely owns it under a ` +
+              `different app user id — Restore is the way across.`,
+          );
+          announcePurchase({
+            productId,
+            failed: true,
+            reason: tStandalone("iap.subscriptionOnAnotherAccount"),
+          });
+          return { success: false, error: "entitlement_not_granted" };
+        }
+
         toast.success(tStandalone("iap.purchaseComplete"));
         // Already confirmed on screen, above, the moment StoreKit completed
         // the purchase. Announcing again here would re-open the modal several
