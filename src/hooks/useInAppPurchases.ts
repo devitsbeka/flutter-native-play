@@ -405,6 +405,17 @@ export interface PurchaseAnnouncement {
   failed?: boolean;
   /** What the server said, shown so a failure can be diagnosed from a screenshot. */
   reason?: string;
+  /**
+   * This Apple ID already had the subscription before this tap.
+   *
+   * StoreKit does not refuse a second purchase of a subscription already
+   * owned — it shows its own "you're already subscribed" sheet and then
+   * resolves normally, with customerInfo. Treating that as a fresh purchase
+   * congratulated the player for subscribing again, every time they tapped,
+   * which is how the UI failing to show PRO turned into a loop: the screen said
+   * non-PRO, so they bought again, and were congratulated again.
+   */
+  alreadyActive?: boolean;
 }
 
 const purchaseSubscribers = new Set<(a: PurchaseAnnouncement) => void>();
@@ -801,7 +812,7 @@ export function useInAppPurchases() {
    * server-side, but this is the deterministic half: the client knows exactly
    * when it has bought something, and asks.
    */
-  const { refresh: refreshVip, applyEntitlement } = useVipStatus();
+  const { refresh: refreshVip, applyEntitlement, isVip } = useVipStatus();
 
   // Purchase a product
   const purchase = useCallback(async (productId: string): Promise<PurchaseResult> => {
@@ -840,6 +851,11 @@ export function useInAppPurchases() {
       // available outcome, so this stops instead. The store has not been
       // touched at this point — nothing is charged, nothing needs refunding —
       // and the player gets a message rather than a silent failure.
+      // Read before anything is bought. Afterwards applyEntitlement has
+      // already turned PRO on, so this could never tell a first purchase from
+      // a repeat one.
+      const wasSubscribed = isVip && Boolean(SUBSCRIPTION_TIERS[productId]);
+
       const identified = await ensureIdentified(user.id);
       if (!identified) {
         console.error(
@@ -973,7 +989,12 @@ export function useInAppPurchases() {
         // failure branch below announces over this one if it did not — which
         // is the honest ordering, because the charge really did happen either
         // way.
-        announcePurchase({ productId, gems: gemsForProduct(productId) });
+        announcePurchase({
+          productId,
+          gems: gemsForProduct(productId),
+          // Captured before the store was called: see `alreadyActive`.
+          alreadyActive: wasSubscribed,
+        });
 
         // Show the gems on the balance now, for the same reason.
         //
@@ -1135,7 +1156,7 @@ export function useInAppPurchases() {
     } finally {
       setPurchasing(false);
     }
-  }, [user, profile, setProfileLocal, refreshBalance, refreshVip, applyEntitlement]);
+  }, [user, profile, isVip, setProfileLocal, refreshBalance, refreshVip, applyEntitlement]);
 
   /**
    * Restore previous purchases.
@@ -1245,7 +1266,7 @@ export function useInAppPurchases() {
     } finally {
       setRestoring(false);
     }
-  }, [user, profile, setProfileLocal, refreshBalance, refreshVip, applyEntitlement]);
+  }, [user, profile, isVip, setProfileLocal, refreshBalance, refreshVip, applyEntitlement]);
 
   // Get product by ID
   const getProduct = useCallback((productId: string): IAPProduct | undefined => {

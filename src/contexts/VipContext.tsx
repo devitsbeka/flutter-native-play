@@ -139,6 +139,22 @@ export function VipProvider({ children }: { children: ReactNode }) {
   // owns, so the effect publishes it here.
   const fetchVipStatusRef = useRef<(() => void) | null>(null);
 
+  /**
+   * How long a just-purchased entitlement outranks the database.
+   *
+   * applyEntitlement turns PRO on from a StoreKit-verified purchase and then
+   * asks the server to confirm it. Those two raced, and the server won: the
+   * re-read landed a few hundred milliseconds later, found the OLD row — absent,
+   * or present and expired — and set isVip back to false before verify-receipt
+   * had written anything. The optimistic update reverted itself, so a completed
+   * PRO purchase showed its success modal over a UI that still said non-PRO.
+   *
+   * Inside this window a fetch may only ever UPGRADE. If the row does not yet
+   * confirm the purchase, it retries instead of revoking. verify-receipt takes
+   * ~3.5s on a device, so this has to outlast that with room to spare.
+   */
+  const optimisticUntilRef = useRef<number>(0);
+
   useEffect(() => {
     if (!user) {
       setSubscription(null);
@@ -158,11 +174,23 @@ export function VipProvider({ children }: { children: ReactNode }) {
 
         if (error) throw error;
 
+        const active = data ? isAfter(new Date(data.expires_at), new Date()) : false;
+
+        // A purchase this session outranks a row that has not caught up yet.
+        // Never revoke inside the grace window — come back instead.
+        if (!active && Date.now() < optimisticUntilRef.current) {
+          setTimeout(() => fetchVipStatus(0), 1000);
+          return;
+        }
+
         if (data) {
           setSubscription(data as VipSubscription);
-          const isActive = isAfter(new Date(data.expires_at), new Date());
-          setIsVip(isActive);
-          try { localStorage.setItem(VIP_CACHE_KEY, String(isActive)); } catch {}
+          setIsVip(active);
+          // Confirmed by the server: the optimistic window has served its
+          // purpose and must not keep suppressing a later, genuine downgrade
+          // (a cancellation, an expiry, a refund).
+          if (active) optimisticUntilRef.current = 0;
+          try { localStorage.setItem(VIP_CACHE_KEY, String(active)); } catch {}
         } else if (retryCount < 2) {
           // "No row" on a fresh load can be an auth race — the query fires
           // before the session token is fully attached and RLS hides the row.
@@ -261,6 +289,8 @@ export function VipProvider({ children }: { children: ReactNode }) {
       ({ ...(previous ?? {}), vip_tier: tier, expires_at: expiresAt }) as VipSubscription,
     );
     setIsVip(true);
+    // Outrank the database until it catches up — see optimisticUntilRef.
+    optimisticUntilRef.current = Date.now() + 30_000;
     try {
       localStorage.setItem(VIP_CACHE_KEY, "true");
     } catch {

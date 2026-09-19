@@ -37,7 +37,7 @@ export function PurchaseOutcomeHost() {
 
   if (!announcement) return null;
 
-  const { gems, failed, reason } = announcement;
+  const { gems, failed, reason, alreadyActive } = announcement;
 
   // Billed, not credited. Never framed as "the purchase failed" — the money
   // has moved, and telling someone their purchase failed when they have been
@@ -62,6 +62,30 @@ export function PurchaseOutcomeHost() {
             {reason}
           </p>
         )}
+      </GameModal>
+    );
+  }
+
+  // Already owned. Not a celebration.
+  //
+  // StoreKit resolves a repeat purchase of an active subscription normally, so
+  // without this the player is congratulated for subscribing every time they
+  // tap — which is precisely what they do when the screen is still showing
+  // them non-PRO.
+  if (alreadyActive) {
+    return (
+      <GameModal
+        isOpen
+        onClose={() => setAnnouncement(null)}
+        variant="info"
+        iconEmoji="\u2705"
+        title={t("iap.alreadySubscribed")}
+        primaryLabel={t("shop.continue")}
+        onPrimaryClick={() => setAnnouncement(null)}
+      >
+        <p className="px-2 pb-1 text-center text-base leading-relaxed text-foreground">
+          {t("iap.alreadySubscribedBody")}
+        </p>
       </GameModal>
     );
   }

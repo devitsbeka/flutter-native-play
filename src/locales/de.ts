@@ -1236,6 +1236,8 @@ export const de: KaTranslations = {
     purchaseFailed: "Kauf fehlgeschlagen",
     purchasesRestored: "Käufe wiederhergestellt! 🎉",
     noPreviousPurchases: "Keine vorherigen Käufe gefunden",
+    alreadySubscribed: "Du bist bereits Abonnent",
+    alreadySubscribedBody: "Dein Abo ist aktiv. Es wurde nichts berechnet.",
     restoreFailed: "Wiederherstellung fehlgeschlagen",
     restoreSignInFirst: "Melde dich an, um deine Käufe wiederherzustellen.",
     restoredBody: "Alles, was du gekauft hast, ist auf diesem Konto wieder aktiv.",

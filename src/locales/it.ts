@@ -1239,6 +1239,8 @@ export const it: KaTranslations = {
     purchaseFailed: "Acquisto fallito",
     purchasesRestored: "Acquisti ripristinati! 🎉",
     noPreviousPurchases: "Nessun acquisto precedente trovato",
+    alreadySubscribed: "Sei già abbonato",
+    alreadySubscribedBody: "Il tuo abbonamento è attivo. Non è stato addebitato nulla.",
     restoreFailed: "Ripristino fallito",
     restoreSignInFirst: "Accedi per ripristinare i tuoi acquisti.",
     restoredBody: "Tutto ciò che hai acquistato è di nuovo attivo su questo account.",

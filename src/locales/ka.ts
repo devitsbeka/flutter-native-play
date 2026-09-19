@@ -1463,6 +1463,8 @@ export const ka = {
     purchaseFailed: "შესყიდვა ვერ მოხერხდა",
     purchasesRestored: "შესყიდვები აღდგენილია! 🎉",
     noPreviousPurchases: "წინა შესყიდვები ვერ მოიძებნა",
+    alreadySubscribed: "უკვე გამოწერილი ხარ",
+    alreadySubscribedBody: "შენი გამოწერა აქტიურია. თანხა არ ჩამოგეჭრა.",
     restoreFailed: "აღდგენა ვერ მოხერხდა",
     restoreSignInFirst: "შესყიდვების აღსადგენად გაიარე ავტორიზაცია.",
     restoredBody: "ყველაფერი, რაც შეიძინე, ისევ აქტიურია ამ ანგარიშზე.",

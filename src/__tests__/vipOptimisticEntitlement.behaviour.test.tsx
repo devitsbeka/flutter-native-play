@@ -1,0 +1,143 @@
+// @vitest-environment jsdom
+import { describe, expect, it, vi, beforeEach } from "vitest";
+import { renderHook, act, waitFor } from "@testing-library/react";
+import type { ReactNode } from "react";
+
+/**
+ * A purchase must outrank a database that has not caught up.
+ *
+ * `applyEntitlement` turns PRO on from a StoreKit-verified purchase and then
+ * asks the server to confirm it. Those two raced, and the server won: the
+ * re-read landed a few hundred milliseconds later, found the row that was there
+ * *before* the purchase — absent, or present and expired — and set `isVip` back
+ * to false. verify-receipt takes ~3.5s on a device, so it had not written
+ * anything yet.
+ *
+ * The optimistic update reverted itself. A completed PRO purchase showed its
+ * success modal over a UI that still said non-PRO, which then sent the player
+ * back to the paywall to buy it again.
+ *
+ * The 13 purchase tests did not catch this: they assert that
+ * `applyEntitlement` is CALLED, which it always was. What was broken is what
+ * happened inside VipContext afterwards, so that is what this exercises.
+ */
+
+const EXPIRED = new Date(Date.now() - 86_400_000).toISOString();
+const FUTURE = new Date(Date.now() + 86_400_000).toISOString();
+
+/** Rows the vip_subscriptions read returns, one per successive call. */
+function installSupabase(rows: Array<Record<string, unknown> | null>) {
+  let call = 0;
+  const maybeSingle = vi.fn(async () => ({ data: rows[Math.min(call++, rows.length - 1)], error: null }));
+
+  vi.doMock("@/integrations/supabase/client", () => ({
+    supabase: {
+      from: () => ({
+        select: () => ({ eq: () => ({ maybeSingle }) }),
+        update: () => ({ eq: async () => ({ data: null, error: null }) }),
+      }),
+      // ensureAdminLifetimePro runs on mount and calls this; without it the
+      // provider throws into an unhandled rejection and muddies the output.
+      rpc: async () => ({ data: null, error: null }),
+      auth: { getUser: async () => ({ data: { user: { id: "user-1" } }, error: null }) },
+      channel: () => ({ on: () => ({ subscribe: () => ({}) }) }),
+      removeChannel: () => {},
+    },
+  }));
+
+  vi.doMock("@/hooks/useAuth", () => ({ useAuth: () => ({ user: { id: "user-1" } }) }));
+  vi.doMock("@/lib/toast", () => ({
+    toast: Object.assign(vi.fn(), { error: vi.fn(), success: vi.fn(), info: vi.fn(), warning: vi.fn(), message: vi.fn() }),
+  }));
+  vi.doMock("@/utils/standaloneTranslation", () => ({ t: (k: string) => k }));
+
+  return { maybeSingle };
+}
+
+async function mountVip() {
+  const mod = await import("@/contexts/VipContext");
+  const wrapper = ({ children }: { children: ReactNode }) =>
+    mod.VipProvider({ children }) as any;
+  const { result } = renderHook(() => mod.useVipStatus(), { wrapper });
+  return result;
+}
+
+beforeEach(() => {
+  vi.resetModules();
+  vi.clearAllMocks();
+  try { localStorage.clear(); } catch { /* jsdom */ }
+});
+
+describe("an entitlement applied from a purchase is not revoked by a stale row", () => {
+  it("survives a reconcile that still shows the OLD expired row", async () => {
+    // The exact shape of the bug: an admin/old row that has already expired.
+    installSupabase([{ user_id: "user-1", vip_tier: "pro", expires_at: EXPIRED }]);
+    const result = await mountVip();
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(result.current.isVip).toBe(false);
+
+    await act(async () => {
+      result.current.applyEntitlement("pro_plus", FUTURE);
+    });
+
+    // The reconcile fires immediately from inside applyEntitlement.
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 50));
+    });
+
+    expect(
+      result.current.isVip,
+      "the optimistic entitlement was clobbered by its own reconciling fetch — " +
+        "this is the bug that made a completed PRO purchase show non-PRO",
+    ).toBe(true);
+  });
+
+  it("survives a reconcile that finds no row at all", async () => {
+    installSupabase([null]);
+    const result = await mountVip();
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    await act(async () => {
+      result.current.applyEntitlement("pro", FUTURE);
+    });
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 50));
+    });
+
+    expect(result.current.isVip).toBe(true);
+  });
+
+  it("adopts the server's row once it confirms the purchase", async () => {
+    // First read: the stale row. Second: what verify-receipt wrote.
+    installSupabase([
+      { user_id: "user-1", vip_tier: "pro", expires_at: EXPIRED },
+      { user_id: "user-1", vip_tier: "pro_plus", expires_at: FUTURE },
+    ]);
+    const result = await mountVip();
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    await act(async () => {
+      result.current.applyEntitlement("pro_plus", FUTURE);
+    });
+
+    await waitFor(
+      () => expect(result.current.subscription?.vip_tier).toBe("pro_plus"),
+      { timeout: 4000 },
+    );
+    expect(result.current.isVip).toBe(true);
+  });
+
+  it("still revokes normally when no purchase is in flight", async () => {
+    // The grace window must not become a way to never lose PRO. A cancellation
+    // or expiry with no purchase behind it has to take effect.
+    installSupabase([{ user_id: "user-1", vip_tier: "pro", expires_at: EXPIRED }]);
+    const result = await mountVip();
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(
+      result.current.isVip,
+      "an expired subscription still reads as PRO — the grace window is " +
+        "suppressing a genuine downgrade",
+    ).toBe(false);
+  });
+});

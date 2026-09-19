@@ -69,6 +69,7 @@ function installMocks(opts: {
   invoke: ReturnType<typeof vi.fn>;
   profileGems?: number;
   user?: { id: string } | null;
+  isVip?: boolean;
 }) {
   const applyEntitlement = vi.fn();
   const refreshVip = vi.fn();
@@ -104,7 +105,11 @@ function installMocks(opts: {
   }));
 
   vi.doMock("@/contexts/VipContext", () => ({
-    useVipStatus: () => ({ refresh: refreshVip, applyEntitlement }),
+    useVipStatus: () => ({
+      refresh: refreshVip,
+      applyEntitlement,
+      isVip: opts.isVip ?? false,
+    }),
   }));
 
   vi.doMock("@/contexts/LanguageContext", () => ({
@@ -151,6 +156,11 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  // Unconditionally, not just on the happy path. The hang test switches to
+  // fake timers and restored them only at its own end, so a failure there left
+  // every later test running on a frozen clock — which showed up once as the
+  // restore-failure case flaking in a full run and passing in isolation.
+  vi.useRealTimers();
   vi.doUnmock("@capacitor/core");
   vi.doUnmock("@revenuecat/purchases-capacitor");
 });
@@ -224,6 +234,40 @@ describe("a PRO purchase", () => {
       "2027-01-01T00:00:00.000Z",
     );
     expect(mocks.refreshVip).toHaveBeenCalled();
+  });
+});
+
+describe("a repeat purchase of a subscription already owned", () => {
+  it("is not announced as a fresh subscription", async () => {
+    // StoreKit does not refuse this: it shows its own "you're already
+    // subscribed" sheet and then resolves normally with customerInfo. Treating
+    // that as a new purchase congratulated the player every single tap — which
+    // is exactly what they do when the screen still shows them non-PRO.
+    installMocks({ plugin: makePlugin(), invoke: okInvoke(), isVip: true });
+
+    const { result, announcements } = await mountPurchases();
+    await act(async () => {
+      await result.current.purchase(PRO_ANNUAL);
+    });
+
+    expect(announcements).toHaveLength(1);
+    expect(
+      announcements[0].alreadyActive,
+      "a repeat subscription purchase is announced as a brand new one",
+    ).toBe(true);
+  });
+
+  it("still treats a gem pack as a real purchase even when subscribed", async () => {
+    // Consumables are bought over and over by design; being PRO is irrelevant.
+    installMocks({ plugin: makePlugin(), invoke: okInvoke(), isVip: true });
+
+    const { result, announcements } = await mountPurchases();
+    await act(async () => {
+      await result.current.purchase(GEMS_500);
+    });
+
+    expect(announcements[0].alreadyActive).toBeFalsy();
+    expect(announcements[0].gems).toBe(500);
   });
 });
 

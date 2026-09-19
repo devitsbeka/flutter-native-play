@@ -1233,6 +1233,8 @@ export const fr: KaTranslations = {
     purchaseFailed: "Achat échoué",
     purchasesRestored: "Achats restaurés! 🎉",
     noPreviousPurchases: "Aucun achat précédent trouvé",
+    alreadySubscribed: "Tu es déjà abonné",
+    alreadySubscribedBody: "Ton abonnement est actif. Rien n'a été débité.",
     restoreFailed: "Échec de la restauration",
     restoreSignInFirst: "Connecte-toi pour restaurer tes achats.",
     restoredBody: "Tout ce que tu as acheté est de nouveau actif sur ce compte.",
