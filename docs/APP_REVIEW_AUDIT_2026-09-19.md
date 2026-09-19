@@ -102,10 +102,15 @@ to match the five-seat entitlement. Metadata-only; no build needed.
 
 ### B3 · Submission `71c735ab` is stuck and cannot be resubmitted via API
 
-> **PARTIALLY DONE 2026-09-19.** Four consumables + PRO Annual withdrawn
-> (`state=REMOVED`) to unlock B1/B2. Still in the submission: PRO Monthly,
-> Friends PRO Monthly, the subscription group, and the rejected version.
-> "Resubmit to App Review" is disabled, confirming it cannot be reused.
+> **DONE 2026-09-19.** All nine items withdrawn; `71c735ab` is now `COMPLETE`.
+> A fresh submission `d1d303a2` was created and repopulated with all nine —
+> version 1.0 (build 66), the four consumables, the three subscriptions and the
+> subscription group — and sits at `READY_FOR_REVIEW`, **not submitted**.
+>
+> Worth recording for next time: `reviewSubmissionItems` accepts only
+> `appStoreVersion`, `appEvent`, `appCustomProductPageVersion` and the two
+> experiment types. **IAPs, subscriptions and groups cannot be added by API at
+> all** — each product page's "Add for Review" → the draft is the only route.
 
 State `UNRESOLVED_ISSUES`, holding a version item in state `REJECTED`. Both API
 routes are refused:
@@ -271,8 +276,8 @@ push, which is the only way this stops regressing.
 **Metadata / ASC**
 - [x] B1 — review screenshot on each of the four gem consumables
 - [x] B2 — fix `pro.annual` description (5 friend seats, not 1)
-- [ ] B3 — withdraw the remaining 4 items from `71c735ab` (needs an ASC session)
-- [ ] Re-confirm Advertising = Yes, UGC = Yes, Contests = Frequent, Simulated Gambling = Infrequent **immediately before** submitting
+- [x] B3 — `71c735ab` cleared; fresh submission `d1d303a2` built with all 9 items
+- [x] Re-confirmed 2026-09-19: Advertising=true, UGC=true, Contests=FREQUENT, SimulatedGambling=INFREQUENT, rating 16+
 
 **Server**
 - [ ] H2 — deploy `revenuecat-webhook`
@@ -282,8 +287,8 @@ push, which is the only way this stops regressing.
 - [x] H1 — remove `loggingBehavior: 'production'` and the purchase timing logs
 - [x] H3 — behavioural purchase tests green (13 tests, `purchaseFlow.behaviour.test.tsx`)
 - [x] H4 — offering now returns `current` + `$rc_annual` on device; gem packages still report "in no offering" and remain on the compiled fallback price
-- [ ] Clean build from `main`, verify IPA, upload, attach to 1.0
+- [x] Clean build 66 from `main`, uploaded, attached to 1.0
 
 **Then**
-- [ ] New review submission: version 1.0 + 4 IAPs + 3 subscriptions + the group
+- [x] New review submission `d1d303a2`: version 1.0 + 4 IAPs + 3 subscriptions + the group
 - [ ] Submit
