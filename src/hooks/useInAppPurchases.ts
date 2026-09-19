@@ -598,6 +598,17 @@ async function initStore(): Promise<IAPProduct[]> {
 let identifiedAs: string | null = null;
 let identifyInFlight: Promise<boolean> | null = null;
 
+/**
+ * Users whose entitlements have already been reconciled this app session.
+ *
+ * Module scope rather than a ref: the hook is mounted by the shop, the
+ * paywall and Settings, and every navigation between them would otherwise be
+ * another round trip to verify-receipt. An entry is removed again when the
+ * sync could not complete, so a launch that started offline retries on the
+ * next mount instead of skipping the check for the rest of the session.
+ */
+const reconciledUsers = new Set<string>();
+
 function ensureIdentified(userId: string): Promise<boolean> {
   if (identifiedAs === userId) return Promise.resolve(true);
   if (identifyInFlight) return identifyInFlight;
@@ -813,6 +824,67 @@ export function useInAppPurchases() {
    * when it has bought something, and asks.
    */
   const { refresh: refreshVip, applyEntitlement, isVip } = useVipStatus();
+
+  /**
+   * Reconcile with the store once per signed-in session.
+   *
+   * Until this, `syncEntitlements` only ever ran from a purchase, a restore or
+   * the gem poll — so a subscription the database had failed to record stayed
+   * unrecorded until the player thought to press Restore Purchases. Relaunching
+   * did not help, which is what "I exited the app and launched it again and it
+   * still showed the Subscribe button" was.
+   *
+   * There are several ways to arrive in that state and none of them are the
+   * player's fault: the transaction moved to a new account (RevenueCat's
+   * transfer behaviour, see _shared/iap.ts), the webhook was dropped, or the
+   * row was written while the app was closed. RevenueCat knows the truth in
+   * every case; nothing was asking it.
+   *
+   * Detached and quiet on purpose. Nothing awaits it, nothing is announced —
+   * the purchase announcement channel belongs to `purchase()`, and a launch
+   * must never produce a congratulations modal. It only refreshes what the
+   * screen is already showing, and only when the sync actually found
+   * something.
+   *
+   * Once per user per app session. `syncedUsers` lives at module scope, so a
+   * remount — every navigation that unmounts the shop — does not re-run it.
+   */
+  useEffect(() => {
+    if (!user?.id || !Capacitor.isNativePlatform()) return;
+    if (reconciledUsers.has(user.id)) return;
+    reconciledUsers.add(user.id);
+
+    void (async () => {
+      const identified = await ensureIdentified(user.id);
+      if (!identified) {
+        // Syncing against an id RevenueCat is not holding would report
+        // "nothing owned" for someone who owns something, so don't ask.
+        iapLog("launch reconcile skipped — not identified to RevenueCat");
+        reconciledUsers.delete(user.id);
+        return;
+      }
+
+      const synced = await syncEntitlements();
+      if (!synced.success) {
+        // Let the next launch try again rather than marking it done.
+        reconciledUsers.delete(user.id);
+        iapLog("launch reconcile did not complete:", synced.error ?? "unknown");
+        return;
+      }
+
+      if (synced.tier) {
+        iapLog(`launch reconcile found tier ${synced.tier}`);
+        refreshVip();
+      }
+      if (synced.gemsCredited > 0) {
+        iapLog(`launch reconcile credited ${synced.gemsCredited} gems`);
+        await refreshBalance();
+      }
+    })();
+    // refreshVip/refreshBalance are stable per user; re-running on their
+    // identity would defeat the once-per-session guard.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   // Purchase a product
   const purchase = useCallback(async (productId: string): Promise<PurchaseResult> => {

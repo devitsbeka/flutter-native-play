@@ -547,3 +547,84 @@ describe("restore", () => {
     });
   });
 });
+
+describe("the launch reconcile", () => {
+  /**
+   * "I exited the app and launched it again and it still showed the Subscribe
+   * button."
+   *
+   * syncEntitlements only ever ran from a purchase, a restore or the gem poll.
+   * A subscription the database had failed to record — the transaction moved
+   * to a new account, a dropped webhook, a row written while the app was shut
+   * — therefore stayed unrecorded until the player thought to press Restore
+   * Purchases. Nothing asked RevenueCat on the way in, and RevenueCat knew.
+   */
+
+  it("asks the server once on mount, with no purchase involved", async () => {
+    const invoke = vi.fn().mockResolvedValue({
+      data: { success: true, tier: "pro_plus", gemsCredited: 0 },
+      error: null,
+    });
+    const { refreshVip } = installMocks({ plugin: makePlugin(), invoke });
+
+    const { announcements } = await mountPurchases();
+
+    await waitFor(() => expect(invoke).toHaveBeenCalledWith("verify-receipt"));
+    expect(
+      refreshVip,
+      "the sync found a subscription and the UI was never told to re-read it",
+    ).toHaveBeenCalled();
+    expect(
+      announcements,
+      "a launch produced a purchase announcement — that is the congratulations " +
+        "modal appearing for a subscription bought days ago",
+    ).toHaveLength(0);
+  });
+
+  it("does not repeat itself when the hook remounts", async () => {
+    // The shop, the paywall and Settings each mount this hook. One reconcile
+    // per session, not one per navigation.
+    const invoke = vi.fn().mockResolvedValue({
+      data: { success: true, tier: "pro", gemsCredited: 0 },
+      error: null,
+    });
+    installMocks({ plugin: makePlugin(), invoke });
+
+    await mountPurchases();
+    await waitFor(() => expect(invoke).toHaveBeenCalledTimes(1));
+
+    await mountPurchases();
+    await new Promise((r) => setTimeout(r, 50));
+
+    expect(invoke).toHaveBeenCalledTimes(1);
+  });
+
+  it("tries again next mount when the sync could not complete", async () => {
+    // A launch that started offline must not disable the check for the rest of
+    // the session.
+    const invoke = vi
+      .fn()
+      .mockResolvedValueOnce({ data: null, error: new Error("offline") })
+      .mockResolvedValue({
+        data: { success: true, tier: "pro", gemsCredited: 0 },
+        error: null,
+      });
+    installMocks({ plugin: makePlugin(), invoke });
+
+    await mountPurchases();
+    await waitFor(() => expect(invoke).toHaveBeenCalledTimes(1));
+
+    await mountPurchases();
+    await waitFor(() => expect(invoke).toHaveBeenCalledTimes(2));
+  });
+
+  it("stays out of it when nobody is signed in", async () => {
+    const invoke = okInvoke();
+    installMocks({ plugin: makePlugin(), invoke, user: null });
+
+    await mountPurchases();
+    await new Promise((r) => setTimeout(r, 50));
+
+    expect(invoke).not.toHaveBeenCalled();
+  });
+});

@@ -208,12 +208,19 @@ describe("repo invariants", () => {
     // These ids are also permanent: App Store Connect never lets one be
     // renamed or reused, so a typo caught here is free and the same typo
     // caught after launch is not fixable at all.
-    const ids = (source: string) =>
+    const ids = (...sources: string[]) =>
       new Set(
-        [...read(source).matchAll(/"(io\.mytrivia\.[a-z0-9.]+)"/g)].map((m) => m[1]),
+        sources.flatMap((source) =>
+          [...read(source).matchAll(/"(io\.mytrivia\.[a-z0-9.]+)"/g)].map((m) => m[1]),
+        ),
       );
 
-    const server = ids("supabase/functions/_shared/iap.ts");
+    // PRODUCTS moved into iapEntitlements.ts when the Deno half was split off
+    // (see noDenoInBrowserTypecheck.test.ts). Both are the server's catalog.
+    const server = ids(
+      "supabase/functions/_shared/iap.ts",
+      "supabase/functions/_shared/iapEntitlements.ts",
+    );
     const client = new Set([
       ...ids("src/hooks/useInAppPurchases.ts"),
       ...ids("src/config/gemPacks.ts"),
