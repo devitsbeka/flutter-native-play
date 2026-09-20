@@ -298,6 +298,20 @@ export function GameStyleQuestionEditor({
   const { t, language } = useLanguage();
   const [isUploading, setIsUploading] = useState(false);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  /**
+   * Why the last AI generation failed, shown on the card that asked for it.
+   *
+   * It used to be reported with `toast()`, and `src/lib/toast.ts` suppresses
+   * every toast in the app on purpose — so a generation that failed produced
+   * a spinner, then nothing. Tapping the button appeared to do nothing at
+   * all, which is exactly what was reported.
+   *
+   * That file names the one case it keeps a toast for: "nothing else on
+   * screen explains why an action did nothing, and the player cannot act on
+   * it without being told." This is that case, so the explanation goes on
+   * the card rather than into a channel that drops it.
+   */
+  const [aiError, setAiError] = useState<number | null>(null);
   const [generatingIndex, setGeneratingIndex] = useState<number | null>(null);
   const [errorField, setErrorField] = useState<{questionIndex: number; field: string; answerId?: string} | null>(null);
   const [iconPickerIndex, setIconPickerIndex] = useState<number | null>(null);
@@ -568,6 +582,7 @@ export function GameStyleQuestionEditor({
   const handleGenerateAI = async (index: number) => {
     setIsGeneratingAI(true);
     setGeneratingIndex(index);
+    setAiError(null);
     
     try {
       const existingQuestions = questions
@@ -617,6 +632,7 @@ export function GameStyleQuestionEditor({
       }
     } catch (error) {
       console.error('AI generation error:', error);
+      setAiError(index);
       toast({
         title: t("extra.errorTitle"),
         description: t("extra.ptAIFailed"),
@@ -876,6 +892,14 @@ export function GameStyleQuestionEditor({
                     )}
                     {t("extra.ideaBtn")}
                   </button>
+                  {aiError === index && !isGeneratingAI && (
+                    <p
+                      role="alert"
+                      className="mt-2 max-w-[240px] text-center text-xs text-red-200"
+                    >
+                      {t("extra.ptAIFailed")}
+                    </p>
+                  )}
                   <button
                     onClick={() => startEditing("question", "")}
                     className="mt-2 text-xs text-white/50 hover:text-white/70 transition-colors"
