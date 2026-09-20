@@ -19,6 +19,7 @@ import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import { supabase } from "@/integrations/supabase/client";
 import { getCountryFlag } from "@/data/opponents";
 import { countryName } from "@/utils/countryName";
+import { settleMonthsOnce } from "@/hooks/useMonthlyAwards";
 import { formatCompactNumber } from "@/lib/utils";
 import { useMyLeaderboardRank } from "@/hooks/useMyLeaderboardRank";
 import { useContentModeration } from "@/hooks/useContentModeration";
@@ -195,6 +196,15 @@ export default function Leaderboards() {
   const navigate = useNavigate();
   const location = useLocation();
   const [showAuthModal, setShowAuthModal] = useState(false);
+
+  // Nothing fires on the first of the month — this database has no
+  // scheduler — so the app is what pays out last month's top three. The call
+  // is idempotent and does a primary-key lookup once the month is settled,
+  // and the first signed-in person to open this screen settles it for
+  // everybody. See useMonthlyAwards.settleMonthsOnce.
+  useEffect(() => {
+    if (user) void settleMonthsOnce();
+  }, [user]);
 
   const countryCode = profile?.country_code || null;
   const [scope, setScope] = useState<Scope>(countryCode ? "local" : "global");

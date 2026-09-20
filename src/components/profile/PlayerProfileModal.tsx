@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useFriends } from "@/contexts/FriendsContext";
 import { toast } from "@/lib/toast";
 import { useState, useRef } from "react";
+import { MonthlyAwardChips } from "@/components/profile/MonthlyAwardChips";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { PlayerOverflowMenu } from "@/components/social/PlayerOverflowMenu";
 import { useAdminRole } from "@/hooks/useAdminRole";
@@ -361,6 +362,11 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                     )}
                     {data.profile.nickname}
                   </h3>
+
+                  {/* Leaderboard places, if any — see MonthlyAwardChips for
+                      why this is a row of chips and not the trophy section
+                      that was deliberately removed. */}
+                  <MonthlyAwardChips userId={data.profile.user_id} />
                   
                   {/* Points - only visible to friends/self */}
                   {canSeePrivateInfo && (

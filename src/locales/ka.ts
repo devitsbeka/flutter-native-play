@@ -3392,6 +3392,7 @@ export const ka = {
     privateVisibility: "პირადი",
     deleteRoundBtn: "რაუნდის წაშლა",
     uploadBtn: "ატვირთვა",
+    monthAwardTitle: "#{rank} ადგილი {where} რეიტინგში, {month}",
     shuffleGradientBtn: "არევა",
     coverBackgroundLabel: "ფონი",
     generateBtn: "გენერაცია",

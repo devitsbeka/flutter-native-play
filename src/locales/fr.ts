@@ -2961,6 +2961,7 @@ export const fr: KaTranslations = {
     privateVisibility: "Privé",
     deleteRoundBtn: "Supprimer la manche",
     uploadBtn: "Téléverser",
+    monthAwardTitle: "#{rank} au classement {where}, {month}",
     shuffleGradientBtn: "Mélanger",
     coverBackgroundLabel: "Arrière-plan",
     generateBtn: "Générer",
