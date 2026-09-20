@@ -29,9 +29,26 @@ describe("the profile modal", () => {
     expect(modal).not.toMatch(/chosenTab|showInfoTab|activeTab|fallbackTab/);
   });
 
-  it("keeps the person: face, name, points, the buttons, and a friend's recent activity", () => {
+  it("keeps the person: face, name, the buttons, and a friend's recent activity", () => {
     expect(modal).toMatch(/\{data\.profile\.nickname\}/);
-    expect(modal).toMatch(/data\.stats\.totalPoints\.toLocaleString\(\)/);
     expect(modal).toMatch(/\{canSeePrivateInfo && !data\.isCurrentUser && data\.interactions\.length > 0 && \(/);
+  });
+
+  /**
+   * The points total went the same way as the tabs.
+   *
+   * It was the last of the scoreboard — the games/wins/win-rate/streak row
+   * had already gone for the reason this whole file is about, and a lone
+   * running total is that in one line: a number about somebody that says
+   * nothing about who they are (owner: "it shows points, we don't need it,
+   * remove points").
+   *
+   * What stands in that slot instead is a place taken on a month's
+   * leaderboard — something that happened once, not a counter.
+   */
+  it("but not a points total", () => {
+    expect(modal).not.toMatch(/totalPoints/);
+    expect(modal).not.toMatch(/extra\.pointsLabel/);
+    expect(modal).toMatch(/<MonthlyAwardChips userId=\{data\.profile\.user_id\} \/>/);
   });
 });

@@ -368,14 +368,18 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                       that was deliberately removed. */}
                   <MonthlyAwardChips userId={data.profile.user_id} />
                   
-                  {/* Points - only visible to friends/self */}
-                  {canSeePrivateInfo && (
-                    <div className="mt-1">
-                      <span className="text-sm text-muted-foreground">
-                        {data.stats.totalPoints.toLocaleString()} {t("extra.pointsLabel", { count: "" }).trim()}
-                      </span>
-                    </div>
-                  )}
+                  {/* A points total stood here. It was the last of the
+                      scoreboard: the games/wins/win-rate/streak row went
+                      first, for the reason below, and a lone running total
+                      is the same thing in one line — a number about
+                      somebody that says nothing about who they are, and
+                      which nobody can do anything with (owner: "it shows
+                      points, we don't need it, remove points").
+
+                      What belongs in this slot is the chips above: a place
+                      taken on a month's leaderboard is something that
+                      HAPPENED, once, rather than a counter that only ever
+                      goes up. */}
 
                   {/* The games/wins/win-rate/streak row used to sit here,
                       shown to friends and to yourself. Removed from the public
