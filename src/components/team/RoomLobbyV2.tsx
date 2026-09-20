@@ -2097,6 +2097,11 @@ export function RoomLobbyV2() {
         const rounds = totalRounds;
         const extra = rounds - 1;
         const freshStart = justReturnedFromResults && !madeNewSelection && queue.length === 0 && !heldRound;
+        // Who the chip is FOR. The host of a room whose rules are still
+        // open picks the categories; everybody else — a guest, and the
+        // host once the room is published or the match is live — is only
+        // reading what has been picked.
+        const canPickCategory = isHost && !rulesLocked;
         const firstName = heldRound
           ? heldRound.name
           : firstQueue
@@ -2120,10 +2125,19 @@ export function RoomLobbyV2() {
           // triviaDisplayTitle is the same fallback the room's own heading
           // above it uses, so a still-unnamed trivia reads as "Untitled"
           // here too rather than repeating the brand.
+          // "Select Category" is an instruction, so it is only shown to
+          // somebody who can follow it. A guest was reading the host's
+          // to-do — a chip that asked them to do something, with no "+"
+          // and no tap behind it, on a room that simply is not ready yet
+          // (owner: "as an invited player i see private room with no
+          // category selected there, show no category selected or
+          // something ... host sees select category with + button").
           label: isPartyRoom
             ? triviaDisplayTitle(partyTitle, t)
             : freshStart || !firstName
-              ? t("lobby.uSelectCategory")
+              ? canPickCategory
+                ? t("lobby.uSelectCategory")
+                : t("lobby.uNoCategoryYet")
               : firstName,
           // The extra rounds ride the FAR RIGHT of the chip (owner's ask),
           // not crowded against the category's name.
@@ -2136,10 +2150,10 @@ export function RoomLobbyV2() {
           onPress:
             rounds > 1
               ? () => setShowRoundOrder(true)
-              : isHost && !rulesLocked
+              : canPickCategory
                 ? () => { setStartAfterPick(false); setShowCategoryPicker(true); }
                 : undefined,
-          onAdd: isHost && !rulesLocked ? () => { setStartAfterPick(false); setShowCategoryPicker(true); } : undefined,
+          onAdd: canPickCategory ? () => { setStartAfterPick(false); setShowCategoryPicker(true); } : undefined,
           // The host's chip and + wear the travelling ring only until a
           // category is picked — a pointer to the thing to do, not a
           // permanent decoration. Nobody else's chip wears it; they see

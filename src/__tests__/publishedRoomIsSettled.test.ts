@@ -93,12 +93,19 @@ describe("what a settled public room will not let the host do", () => {
 
   it("add another round", () => {
     expect(lobby).toMatch(
-      /onAdd: isHost && !rulesLocked \? \(\) => \{ setStartAfterPick\(false\); setShowCategoryPicker\(true\); \} : undefined,/,
+      /onAdd: canPickCategory \? \(\) => \{ setStartAfterPick\(false\); setShowCategoryPicker\(true\); \} : undefined,/,
     );
+    // `canPickCategory` is `isHost && !rulesLocked`, named so the chip's
+    // label, its tap and its "+" cannot drift apart. Asserted here too,
+    // because the rule this test is about now lives in that definition.
+    expect(lobby).toMatch(/const canPickCategory = isHost && !rulesLocked;/);
   });
 
   it("or swap the one it has, from the chip or the round list", () => {
-    expect(lobby).toMatch(/: isHost && !rulesLocked\n/);
+    // The chip's tap is behind the same `canPickCategory` as its "+"; the
+    // round list keeps spelling the predicate out, because it is not the
+    // chip and nothing about its label depends on it.
+    expect(lobby).toMatch(/: canPickCategory\s*\n\s*\? \(\) => \{ setStartAfterPick\(false\); setShowCategoryPicker\(true\); \}/);
     expect(lobby).toMatch(/canEdit=\{isHost && !rulesLocked\}/);
   });
 

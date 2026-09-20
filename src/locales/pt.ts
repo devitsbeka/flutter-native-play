@@ -1677,6 +1677,7 @@ export const pt: KaTranslations = {
     uJoining: "Entrada",
     uInviteHint: "Convida um amigo — um jogo precisa de dois jogadores",
     uSelectCategory: "Escolher categoria",
+    uNoCategoryYet: "Ainda sem categoria",
     uPlayOnTv: "Jogar na TV",
     uInvite: "Convidar",
     uStartGame: "Começar jogo",

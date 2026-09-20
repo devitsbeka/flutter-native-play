@@ -1941,6 +1941,7 @@ export const ka = {
     uJoining: "შემოსვლა",
     uInviteHint: "მოიწვიე მეგობარი — თამაშს ორი მოთამაშე სჭირდება",
     uSelectCategory: "აირჩიე კატეგორია",
+    uNoCategoryYet: "კატეგორია ჯერ არ არის არჩეული",
     // რაუნდების რიგი — თითო კატეგორია თითო რაუნდზე, თამაშის თანმიმდევრობით.
     uCategoriesCount: "{count} კატეგორია",
     uRoundsTitle: "რაუნდები",

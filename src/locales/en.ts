@@ -1936,6 +1936,7 @@ export const en: KaTranslations = {
     uJoining: "Joining",
     uInviteHint: "Invite a friend — a game needs two players",
     uSelectCategory: "Select Category",
+    uNoCategoryYet: "No category chosen yet",
     // The rounds queue — one category per round, in the order they play.
     uCategoriesCount: "{count} categories",
     uRoundsTitle: "Rounds",

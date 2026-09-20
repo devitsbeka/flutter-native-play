@@ -31,7 +31,11 @@ describe("a private room's host can still change it", () => {
   });
 
   it("lets the host add rounds and change the question count while unlocked", () => {
-    expect(lobby).toMatch(/onAdd: isHost && !rulesLocked \? \(\) => \{ setStartAfterPick\(false\); setShowCategoryPicker\(true\); \} : undefined/);
+    expect(lobby).toMatch(/onAdd: canPickCategory \? \(\) => \{ setStartAfterPick\(false\); setShowCategoryPicker\(true\); \} : undefined/);
+    // `canPickCategory` is `isHost && !rulesLocked`, named so the chip's
+    // label, its tap and its "+" cannot drift apart. Asserted here too,
+    // because the rule this test is about now lives in that definition.
+    expect(lobby).toMatch(/const canPickCategory = isHost && !rulesLocked;/);
     expect(lobby).toMatch(/onChange: isHost && !rulesLocked \? \(v: string\) => void setQuestions\(v\) : undefined/);
     expect(lobby).toMatch(/canEdit=\{isHost && !rulesLocked\}/);
   });
