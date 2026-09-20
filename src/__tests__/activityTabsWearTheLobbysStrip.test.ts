@@ -56,10 +56,25 @@ describe("the strip", () => {
   });
 });
 
-describe("the answered pill", () => {
-  it("is the question's own button, settled", () => {
-    expect(card).toMatch(/<RoomCardPlayButton\s+tone=\{actionTaken === 'accepted' \? "mint" : "outline"\}\s+aria-disabled\s+tabIndex=\{-1\}\s+className="pointer-events-none mt-3 min-h-\[40px\] px-5"/);
-    expect(card).not.toMatch(/bg-emerald-500\/20 text-emerald-600/);
-    expect(card).not.toMatch(/<span className="text-base">✓<\/span>/);
+describe("the answered card", () => {
+  /**
+   * The answer is a line of text, not a button.
+   *
+   * It used to wear the same pill the question wore — deliberately, for
+   * consistency with the Accept button beside it — and that turned out to be
+   * the problem: a settled card still looked like it was asking, and an
+   * "Accepted" pill where "Accept" had been read as a choice nobody had made
+   * yet (owner: "when notification is clicked - either accept or decline show
+   * only text - not as button ... say accepted or declined").
+   */
+  it("is text, and no longer a button", () => {
+    expect(card).toMatch(/<p\s+className=\{cn\(\s*\n\s*"mt-3 flex items-center gap-1\.5 text-sm font-bold",/);
+    expect(card).not.toMatch(/<RoomCardPlayButton\s+tone=\{actionTaken === 'accepted' \? "mint" : "outline"\}/);
+  });
+
+  it("still says which answer it was, at a glance", () => {
+    expect(card).toMatch(/t\("extra\.notifAccepted"\)/);
+    expect(card).toMatch(/t\("extra\.notifDeclined"\)/);
+    expect(card).toMatch(/t\("extra\.notifRequestGone"\)/);
   });
 });

@@ -2258,6 +2258,7 @@ export const es: KaTranslations = {
     notifAccepted: "Aceptado",
     notifDeclined: "Rechazado",
     notifRequestGone: "Solicitud retirada",
+    notifRequestAlreadyAnswered: "Esa solicitud ya fue respondida.",
     rematchAskCta: "Pedir revancha",
     rematchAskSent: "Solicitud de revancha enviada",
     rematchRequestTitle: "¿Revancha?",

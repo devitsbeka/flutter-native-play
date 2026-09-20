@@ -48,10 +48,43 @@ describe("what the card records", () => {
   it("is written through that mapping on both screens, with the withdrawn case said out loud", () => {
     for (const p of ["src/components/home/NotificationsPanel.tsx", "src/pages/Notifications.tsx"]) {
       const src = read(p);
-      expect(src, p).toMatch(/action_taken: joinAnswerTaken\(outcome\),/);
+      // The write moved into settleJoinNotifications, which stamps every
+      // card about this knock rather than only the one that was tapped. The
+      // mapping is still what is written, and still visible at the call site.
+      expect(src, p).toMatch(/taken: joinAnswerTaken\(outcome\),/);
       expect(src, p).not.toMatch(/outcome === 'approved' \? 'accepted' : 'declined'/);
       expect(src, p).toMatch(/if \(outcome === 'gone'\) toast\.info\(t\("extra\.notifRequestGone"\)\);/);
     }
+  });
+
+  /**
+   * The mirror of the bug above, reported the other way round: "if i click
+   * decline it still shows accepted".
+   *
+   * One knock can leave two cards. Answering settled only the tapped one, so
+   * the other kept live buttons pointed at a row that was no longer pending —
+   * and the helper, correctly, answers those with what already happened. A
+   * Decline then stamped "Accepted".
+   */
+  describe("a second card about the same knock", () => {
+    it("is settled by the first answer, so it cannot disagree with it", () => {
+      expect(hook).toMatch(/export async function settleJoinNotifications\(opts: \{/);
+      expect(hook).toMatch(/\.eq\("type", "room_join_request"\)/);
+      expect(hook).toMatch(/\.eq\("data->>room_id", roomId\)/);
+      expect(hook).toMatch(/\.eq\("data->>requester_id", requesterId\)/);
+      // The tapped card is settled even if that match misses it.
+      expect(hook).toMatch(/if \(!byId\.has\(notificationId\)\) \{/);
+    });
+
+    it("and a tap that lands on an answered knock says so, not the opposite word", () => {
+      for (const p of ["src/components/home/NotificationsPanel.tsx", "src/pages/Notifications.tsx"]) {
+        const src = read(p);
+        expect(src, p).toMatch(
+          /const contradicted =\s*\n\s*\(approve && outcome === 'declined'\) \|\| \(!approve && outcome === 'approved'\);/,
+        );
+        expect(src, p).toMatch(/else if \(contradicted\) toast\.info\(t\("extra\.notifRequestAlreadyAnswered"\)\);/);
+      }
+    });
   });
 
   it("draws the withdrawn knock in its own words, in the settled pill", () => {

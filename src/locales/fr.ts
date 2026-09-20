@@ -2238,6 +2238,7 @@ export const fr: KaTranslations = {
     notifAccepted: "Accepté",
     notifDeclined: "Refusé",
     notifRequestGone: "Demande retirée",
+    notifRequestAlreadyAnswered: "Cette demande a déjà reçu une réponse.",
     rematchAskCta: "Demander une revanche",
     rematchAskSent: "Demande de revanche envoyée",
     rematchRequestTitle: "Revanche ?",
