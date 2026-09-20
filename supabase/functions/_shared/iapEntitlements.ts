@@ -318,6 +318,39 @@ export async function creditSubscriptionWelcome(
   const bundle = SUBSCRIPTION_WELCOME[tier];
   if (!bundle) return;
 
+  // Claim the SUBSCRIPTION first, before the person.
+  //
+  // `welcome:<user>:<tier>` is unique per user, and the project's RevenueCat
+  // transfer behaviour is "Transfer to new App User ID" — so one Apple ID's
+  // subscription lands on whichever account signs in on that phone, and every
+  // new account it reached was paid a full bundle. Registering is free, so
+  // that was one subscription minting coins and gems without limit.
+  //
+  // Only attempted when there is a transaction id. Admin grants and referral
+  // rewards have none and are not store purchases; they keep the per-user
+  // rule. Mirrors the grant_subscription_welcome trigger, which makes the
+  // same two claims — either may run first and the other finds it taken.
+  if (entitlement.transactionId) {
+    const { error: txnClaimError } = await supabase.from("iap_events").insert({
+      event_id: `welcome-txn:${entitlement.transactionId}:${tier}`,
+      event_type: "SUBSCRIPTION_WELCOME_TXN",
+      user_id: userId,
+      product_id: entitlement.productId,
+      store: entitlement.store,
+      transaction_id: entitlement.transactionId,
+      event_at: new Date().toISOString(),
+      payload: { tier, grantedBy: "edge" },
+    });
+
+    if (txnClaimError) {
+      if (txnClaimError.code !== "23505") {
+        console.error("Failed to claim subscription welcome (txn):", txnClaimError);
+      }
+      // Already paid for this subscription, to whoever held it before.
+      return;
+    }
+  }
+
   const eventId = `welcome:${userId}:${tier}`;
 
   const { error: claimError } = await supabase.from("iap_events").insert({

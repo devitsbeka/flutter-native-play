@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import {
+  creditSubscriptionWelcome,
   parseSubscriber,
   syncSubscription,
   type SubscriberState,
@@ -330,5 +331,111 @@ describe("sign-out reaches the store", () => {
       "signing out no longer tells RevenueCat the account has left — the SDK " +
         "stays identified as the departing user",
     ).toContain("resetPurchaseIdentity");
+  });
+});
+
+describe("the welcome bundle is paid once per subscription", () => {
+  /**
+   * `welcome:<user>:<tier>` is unique per USER. With RevenueCat's transfer
+   * behaviour set to "Transfer to new App User ID" — which is this project's
+   * setting, confirmed in the dashboard — one Apple ID's subscription lands
+   * on whichever account signs in on that phone, and every new account it
+   * reached had no claim yet and was paid a full bundle: 25 000 coins + 10
+   * gems for pro, 50 000 + 20 for pro_plus.
+   *
+   * Registering is free and takes seconds. That is one subscription minting
+   * an unbounded amount of both currencies, gems included — the hard currency
+   * people pay money for.
+   *
+   * A second claim keyed on the store transaction closes it. The per-user
+   * claim stays, so nobody already paid is paid twice; changing the key
+   * outright would have handed every existing subscriber one more bundle.
+   */
+
+  function ledgerSupabase(existingEventIds: string[] = []) {
+    const claimed = new Set(existingEventIds);
+    const credits: unknown[] = [];
+    const client = {
+      from: (table: string) => {
+        if (table === "iap_events") {
+          return {
+            insert: async (row: Record<string, unknown>) => {
+              const id = String(row.event_id);
+              if (claimed.has(id)) return { error: { code: "23505" } };
+              claimed.add(id);
+              return { error: null };
+            },
+            delete: () => ({ eq: async () => ({ error: null }) }),
+          };
+        }
+        return { insert: async () => ({ error: null }) };
+      },
+      rpc: async (fn: string, args: unknown) => {
+        credits.push({ fn, args });
+        return { data: null, error: null };
+      },
+    };
+    return { client, claimed, credits };
+  }
+
+  const entitlement = {
+    productId: "io.mytrivia.proplus.monthly",
+    store: "app_store",
+    transactionId: TXN,
+  };
+
+  it("pays the first account that holds it", async () => {
+    const { client, credits } = ledgerSupabase();
+    await creditSubscriptionWelcome(client as never, "first-owner", "pro_plus", entitlement);
+    expect(credits).toHaveLength(1);
+  });
+
+  it("does not pay again when the same subscription moves to a new account", async () => {
+    const { client, credits } = ledgerSupabase();
+
+    await creditSubscriptionWelcome(client as never, "first-owner", "pro_plus", entitlement);
+    await creditSubscriptionWelcome(client as never, "second-account", "pro_plus", entitlement);
+    await creditSubscriptionWelcome(client as never, "third-account", "pro_plus", entitlement);
+
+    expect(
+      credits,
+      "one subscription paid a welcome bundle to every account it was " +
+        "transferred to — free to register, so unbounded",
+    ).toHaveLength(1);
+  });
+
+  it("still pays somebody who buys their own subscription", async () => {
+    const { client, credits } = ledgerSupabase();
+    await creditSubscriptionWelcome(client as never, "first-owner", "pro_plus", entitlement);
+    await creditSubscriptionWelcome(client as never, "other-buyer", "pro_plus", {
+      ...entitlement,
+      transactionId: "io.mytrivia.proplus.monthly:2027-01-01T00:00:00Z",
+    });
+    expect(credits).toHaveLength(2);
+  });
+
+  it("keeps the per-user rule for grants with no transaction", async () => {
+    // Admin grants and referral rewards are not store purchases and carry no
+    // transaction id. They must not all collide on one empty key.
+    const { client, credits } = ledgerSupabase();
+    const granted = { productId: "", store: "admin_grant", transactionId: "" };
+
+    await creditSubscriptionWelcome(client as never, "admin-a", "pro", granted);
+    await creditSubscriptionWelcome(client as never, "admin-b", "pro", granted);
+
+    expect(credits).toHaveLength(2);
+  });
+
+  it("does not pay twice for the same person and tier", async () => {
+    const { client, credits } = ledgerSupabase();
+    await creditSubscriptionWelcome(client as never, "owner", "pro", {
+      ...entitlement,
+      transactionId: "",
+    });
+    await creditSubscriptionWelcome(client as never, "owner", "pro", {
+      ...entitlement,
+      transactionId: "",
+    });
+    expect(credits).toHaveLength(1);
   });
 });

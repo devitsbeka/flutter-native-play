@@ -93,6 +93,41 @@ Deno.serve(async (req: Request) => {
     // credit yet, and the app's own re-sync will pick it up after login.
     const appUserId: string | undefined = event.app_user_id;
 
+    /**
+     * Who this event changes the entitlements of.
+     *
+     * Normally one account. A TRANSFER changes two, and carries **no
+     * `app_user_id` at all** — RevenueCat sends `transferred_from` and
+     * `transferred_to` arrays instead. TRANSFER was listed as an entitlement
+     * event and then read `event.app_user_id`, so every transfer fell through
+     * the "no signed-in user" branch below and was acknowledged without
+     * syncing anybody.
+     *
+     * What that left behind: the account that LOST the subscription kept its
+     * tier and a future expires_at in our table, and the one that GAINED it
+     * had nothing written until it next opened the app. Both accounts read as
+     * PRO at once, which is most of what "a lot of chaos" looked like on a
+     * device. This project's transfer behaviour is "Transfer to new App User
+     * ID", so transfers are routine, not exotic.
+     *
+     * Both sides are re-read from RevenueCat, which is the same rule the rest
+     * of this handler follows: the event says something changed, RevenueCat
+     * says what is now true.
+     */
+    const affectedUserIds: string[] = (
+      eventType === "TRANSFER"
+        ? [
+            ...(Array.isArray(event.transferred_from) ? event.transferred_from : []),
+            ...(Array.isArray(event.transferred_to) ? event.transferred_to : []),
+          ]
+        : appUserId
+          ? [appUserId]
+          : []
+    ).filter(
+      (id: unknown): id is string =>
+        typeof id === "string" && id.length > 0 && !id.startsWith("$RCAnonymousID"),
+    );
+
     if (!eventId) {
       return json({ error: "Missing event id" }, 400);
     }
@@ -123,18 +158,23 @@ Deno.serve(async (req: Request) => {
       return json({ received: true, applied: false });
     }
 
-    if (!appUserId || appUserId.startsWith("$RCAnonymousID")) {
+    if (affectedUserIds.length === 0) {
       console.log(`Event ${eventId} has no signed-in user; nothing to apply`);
       return json({ received: true, applied: false });
     }
 
     try {
-      const result = await syncUserFromStore(supabase, appUserId);
+      // Sequentially, and de-duplicated: a transfer between two ids the
+      // subscriber record already merges would otherwise sync the same user
+      // twice and race its own write.
+      for (const id of [...new Set(affectedUserIds)]) {
+        const result = await syncUserFromStore(supabase, id);
 
-      console.log(
-        `Applied ${eventType} for ${appUserId}: tier=${result.tier ?? "none"} ` +
-        `expires=${result.expiresAt ?? "n/a"} gemsCredited=${result.gemsCredited}`,
-      );
+        console.log(
+          `Applied ${eventType} for ${id}: tier=${result.tier ?? "none"} ` +
+          `expires=${result.expiresAt ?? "n/a"} gemsCredited=${result.gemsCredited}`,
+        );
+      }
     } catch (syncError) {
       // The ledger row is already in, and it is what makes retries idempotent —
       // so leaving it behind after a failed sync would turn RevenueCat's next
