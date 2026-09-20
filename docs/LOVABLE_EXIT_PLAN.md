@@ -341,13 +341,11 @@ Only after the new project has served production for a week or two.
 
 ## 4. What will bite
 
-1. **The migration chain has never been replayed.** Untested, 368 files,
-   errors currently swallowed by `|| true` in CI. Assume it does not work and
-   budget for the squashed-baseline path.
-2. **Schema drift.** 202 Lovable-authored migrations, plus an unknown amount
-   of SQL applied through its editor that never became a file. The diff in
-   Step 1.3 is the only way to know, and it must be done before anything is
-   rebuilt on top of the assumption.
+1. ~~**The migration chain has never been replayed.**~~ **It has now — see §6.**
+   It does not replay clean, but for reasons that are cheap to fix rather than
+   structural.
+2. ~~**Schema drift.**~~ **Measured — see §6.2.** Two objects exist only in
+   Lovable's database. Both are now known by name.
 3. **Auth users.** Password hashes and sessions. Rehearse; verify a real
    login against the copy before cutover.
 4. **The iOS binary holds the URL.** The reason to do this now rather than
@@ -377,3 +375,99 @@ One thing is worth doing regardless of which way the decision goes: **fix
 `pr-checks.yml` to stop swallowing migration errors**. Whether the schema is
 transferred or rebuilt, a migration chain that has never been proven to
 replay is a liability, and `|| true` is why nobody has noticed.
+
+---
+
+## 6. The replay, actually run
+
+Run on 2026-09-20 against our own project `bicdrlcuvncrxctomjjq`, over the
+Supabase Management API, each migration applied in filename order with the
+error surfaced rather than swallowed. This is the thing `pr-checks.yml` has
+never done: it applies the same files with `|| true`, so every error is
+discarded and the job passes whatever happens.
+
+**349 of 368 applied. 19 failed.** The 19 are not 19 problems.
+
+### 6.1 The failures, classified
+
+| Class | Count | What it means |
+|---|---|---|
+| Content migrations that cannot run on an empty database | 14 | Not a problem — skip them |
+| Policies recreated without a DROP | 2 | A replay-only idempotency bug |
+| An ordering bug | 1 | Real, and evidence of §6.2 |
+| Schema that exists only in Lovable's database | 2 | Real. The point of the exercise |
+
+**Content migrations are not part of a rebuild and should never be replayed.**
+`20260914100000_level17_backfill.sql` fails with *"still short of 170
+questions: portuguese_literature/pt=3"*; `20260908100000_every_category_has_its_own_icon.sql`
+fails naming twenty-odd icon slugs missing from `icon_library`. Both are
+behaving correctly: they assert things about a question bank that is not
+there yet. The 77,844 questions arrive by copying the live data, not by
+replaying the migrations that once inserted them. Same for the ten large
+`guess_*` and `question_repair_*` files.
+
+**Two policies are recreated without being dropped first** —
+`Host can remove room participants` on `room_participants`
+(`20260727185519_…`) and `Players can insert their own answers` on
+`player_answers` (`20260728220000_lock_player_answers.sql`). `CREATE POLICY`
+has no `IF NOT EXISTS`, so a replay that has already created them fails at
+`42710`. Harmless in place, fatal on rebuild.
+
+**`public.game_types` is inserted into at file 268 and created at file 294** —
+twenty-six files later. That cannot ever have worked in order, which means
+the table already existed when `20260901120000_words_game_type.sql` ran. It
+was created outside this directory, and `20260916100000_game_types_registry.sql`
+was written afterwards to describe something already there.
+
+### 6.2 Schema that exists only in Lovable's database
+
+This is what the whole audit was looking for.
+
+- **`quiz_post_comments`** — an entire table. Live (`HTTP 200` on PostgREST),
+  created by no migration. Already half-known: `20261013101000_account_deletion_cascades.sql`
+  says in its own comment that it *"was created outside this migrations
+  directory"* and guards every table so a missing one is skipped rather than
+  fatal. So a rebuild does not error — it silently omits the cascade, and
+  deleting an account orphans that table's rows instead of clearing them.
+- **`tv_players.is_active`** — a column. Live, used by
+  `20260727160000_tv_atomic_answer_rpc.sql` and two others, and defined
+  nowhere: not in the `CREATE TABLE` at `20260106235326_…`, not in any
+  `ADD COLUMN` in any of the 368 files.
+
+Both have to be written as migrations before the rebuild, or the new database
+is quietly missing them.
+
+Against `src/integrations/supabase/types.ts`, which is generated from the
+live database, the wider picture is reassuring: **115 live tables, and
+`quiz_post_comments` is the only one no migration creates.** The schema is
+sound. It is the chain's ordering, idempotency and data-surgery content that
+is not.
+
+### 6.3 Fingerprint of the rebuilt schema
+
+From `scripts/schema-fingerprint.sql`, after the replay above:
+
+```
+buckets 8 · columns 1187 · constraints 308 · enum_types 5 · extensions 8
+functions 167 · grants 3818 · indexes 305 · policies 289 · realtime 36
+tables 118 · triggers 62 · views 0
+```
+
+`realtime` at 36 matches the live database exactly, and `functions` at 167
+sits against 166 live. The same query has to be run on the Lovable project
+and compared hash by hash before any data is copied.
+
+### 6.4 What this changes about the plan
+
+The squashed-baseline fallback in Step 1.4 is not needed. The replay is a
+viable rebuild path with three edits:
+
+1. Add migrations for the two objects in §6.2.
+2. Add `DROP POLICY IF EXISTS` ahead of the two policies in §6.1.
+3. Skip the content migrations, and move `20260901120000_words_game_type.sql`
+   after the registry that creates the table it writes to.
+
+And one that outlives this migration: **`pr-checks.yml` must stop swallowing
+migration errors.** Every defect above has been in the repository for months,
+CI has run over all of them on every pull request, and `|| true` meant not one
+of them was ever reported.
