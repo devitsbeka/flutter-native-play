@@ -1708,7 +1708,14 @@ function TeamContentV2() {
       <CategorySelectorModal
         open={showCategorySelectorModal}
         onOpenChange={setShowCategorySelectorModal}
-        allowParty
+        // "Most Likely To" is friends voting on each other by name — a
+        // private room's game, and nothing to play with strangers. This
+        // library hands its pick straight to the CreateRoomPage below,
+        // which is public whenever the Public tab is the one open, so the
+        // tab decides here too (owner: "we don't need it if we are going to
+        // play trivia with strangers, show it in only private room
+        // library"). It used to allow it unconditionally.
+        allowParty={activeTab !== "public"}
         onSelect={(category) => {
           setShowCategorySelectorModal(false);
           // Store the pre-selected category and open create room

@@ -2788,7 +2788,14 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         }}
         onSelect={handleLibraryCategorySelect}
         selectedCategoryId={selectedCategory?.id}
-        allowParty={!publishRoom}
+        // The DOOR, not the outcome. `publishRoom` is false whenever the
+        // room cannot be published for any reason — a game choice that is
+        // not one of the three, or a party category already picked — so
+        // reading it here offered "Most Likely To" on the Public tab in
+        // exactly the moments the room had not become publishable yet.
+        // Whether this screen creates public rooms is a property of how it
+        // was opened, and that is what decides this.
+        allowParty={!isPublic}
       />
 
       {/* Create Blind Trivia Modal - Hides answers from creator */}
@@ -2852,7 +2859,9 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         onSelectTrivia={() => setShowQueuePicker(false)}
         onAddToQueue={handleAddPreRoomQueueItem}
         showQueueOption={true}
-        allowParty={!publishRoom}
+        // As above: the Public tab never offers the vote game, whatever
+        // else is or is not picked yet.
+        allowParty={!isPublic}
         allowMyTrivias={!publishRoom}
       />
 
