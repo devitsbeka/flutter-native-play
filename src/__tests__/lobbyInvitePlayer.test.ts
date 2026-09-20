@@ -178,14 +178,33 @@ describe("what the host's invite sends", () => {
   });
 
   it("is wired into the lobby's player rows", () => {
-    // The universal lobby's rows carry the two nudges the scoreboard's
-    // paper-plane used to: "come and play" to a seated player, and the
-    // invitation again to a placeholder who never arrived. Host-side only.
-    // Your own row is the way out instead (setShowLeaveConfirm); the host's
-    // nudges are the branch after it, so they never land on the host's own row.
+    // Your own row is the way out (setShowLeaveConfirm); the host's nudge is
+    // the branch after it, so it never lands on the host's own row.
     expect(lobby).toMatch(/p\.user_id === user\?\.id\s*\n\s*\? \(\) => setShowLeaveConfirm\(true\)\s*\n\s*: isHost/);
-    expect(lobby).toMatch(/handleInvitePlayer\(p\.user_id\)/);
+    // A placeholder who never arrived is the ONE row whose tap still sends:
+    // there is no paper plane on an invited seat, so it is the only way to
+    // ask again.
     expect(lobby).toMatch(/handleResendInvitation\(p\.user_id\)/);
+  });
+
+  /**
+   * A seated player's row no longer sends anything when tapped.
+   *
+   * It re-sent the invitation, which is what turned the decorative bell on
+   * their face into a spam button — the badge was `pointer-events-none`, so
+   * taps aimed at it landed on the row behind and called the person again,
+   * with nothing on screen to say so (owner: "i can click so many times on
+   * this bell and it sends many notifications to the user and i see
+   * nothing"). The paper plane on that same row does the calling.
+   */
+  it("but a seated player's row is not a send button", () => {
+    const rows = lobby.slice(
+      lobby.indexOf("const lobbyPlayers: LobbyPlayer[] ="),
+      lobby.indexOf("const queuedPlayers: LobbyPlayer[] ="),
+    );
+    const onPress = rows.slice(rows.indexOf("    onPress:"));
+    expect(onPress).not.toMatch(/handleInvitePlayer/);
+    expect(onPress).toMatch(/isHost && \(p\.status as string\) === "invited"/);
   });
 });
 

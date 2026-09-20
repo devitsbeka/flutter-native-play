@@ -41,8 +41,21 @@ describe("the classic lobby", () => {
     expect(lobby).toMatch(/offline:\s*\n\s*presenceLoaded &&\s*\n\s*p\.user_id !== user\?\.id &&\s*\n\s*\(p\.status as string\) !== "invited" &&\s*\n\s*!onlineInRoom\.has\(p\.user_id\),/);
   });
 
-  it("and lets the host invite them back with the same invite the row's tap sends", () => {
-    expect(lobby).toMatch(/onCall: isHost && p\.user_id !== user\?\.id \? \(\) => void handleInvitePlayer\(p\.user_id\) : undefined,/);
+  /**
+   * The row's tap no longer sends it.
+   *
+   * It did, and that is what made the decorative bell on the player's face a
+   * spam button: the badge was `pointer-events-none`, so every tap aimed at
+   * it fell through to the row and called the person again, silently (owner:
+   * "i can click so many times on this bell and it sends many notifications
+   * to the user and i see nothing"). Calling somebody back is the paper
+   * plane's job alone now, and it goes through handleCallPlayer, which sends
+   * once and then shows a tick.
+   */
+  it("and lets the host invite them back — from the paper plane, once", () => {
+    expect(lobby).toMatch(/onCall: isHost && p\.user_id !== user\?\.id \? \(\) => void handleCallPlayer\(p\.user_id\) : undefined,/);
     expect(lobby).toMatch(/call: t\("lobby\.uInvite"\),/);
+    // The send itself is unchanged — handleCallPlayer wraps it.
+    expect(lobby).toMatch(/await handleInvitePlayer\(userId\);/);
   });
 });

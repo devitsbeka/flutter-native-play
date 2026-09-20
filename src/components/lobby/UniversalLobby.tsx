@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState, type ReactNode, useCallback } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { ArrowLeft, Bell, BellRing, Check, Loader2, Pencil, Plus, Send, Trash2, UserPlus, X } from "lucide-react";
+import { ArrowLeft, Bell, Check, Loader2, Pencil, Plus, Send, Trash2, UserPlus, X } from "lucide-react";
 import SpotlightSearch from "@/components/search/SpotlightSearch";
 import { MyTriviaLiveLogo } from "@/components/shared/MyTriviaLiveLogo";
 import { CategoryArtwork } from "@/components/shared/CategoryArtwork";
@@ -63,11 +63,14 @@ export interface LobbyPlayer {
    *
    * A room waits on people who have wandered off, and from inside it that
    * is invisible: their row looks exactly like everyone else's, so the
-   * host waits, and waits. Marked here, with a bell that pings them back.
+   * host waits, and waits. Marked by greying the face, and by the paper
+   * plane that only appears on a row that is away.
    */
   offline?: boolean;
   /** Ping an absent player. Absent when there is nobody to call. */
   onCall?: () => void;
+  /** They have been called already, so the plane is a tick and does nothing. */
+  called?: boolean;
   /**
    * The host's bin, on everybody else's row: a seated player, or an
    * invitation nobody answered. The room used to have no way to be rid of
@@ -194,8 +197,10 @@ export interface UniversalLobbyProps {
     captain?: string;
     /** Read out for the bell. */
     notifications?: string;
-    /** Read out for the bell on an absent player's row. */
+    /** Read out for the paper plane on an absent player's row, and for the
+        tick it becomes once they have been called. */
     call?: string;
+    called?: string;
     /** Read out for the + that asks to be friends, and for the tick once asked. */
     addFriend?: string;
     friendRequested?: string;
@@ -1230,6 +1235,7 @@ export function UniversalLobby({
                               roundsLabel={labels.rounds}
                               captainLabel={labels.captain ?? "Captain"}
                               callLabel={labels.call ?? "Call"}
+                            calledLabel={labels.called ?? "Sent"}
                               addFriendLabel={labels.addFriend ?? "Add friend"}
                               friendRequestedLabel={labels.friendRequested ?? "Sent"}
                               removeLabel={labels.remove ?? "Remove"}
@@ -1263,6 +1269,7 @@ export function UniversalLobby({
                             roundsLabel={labels.rounds}
                             captainLabel={labels.captain ?? "Captain"}
                             callLabel={labels.call ?? "Call"}
+                            calledLabel={labels.called ?? "Sent"}
                             addFriendLabel={labels.addFriend ?? "Add friend"}
                             friendRequestedLabel={labels.friendRequested ?? "Sent"}
                               removeLabel={labels.remove ?? "Remove"}
@@ -1919,6 +1926,7 @@ function PlayerRow({
   roundsLabel,
   captainLabel,
   callLabel,
+  calledLabel,
   addFriendLabel,
   friendRequestedLabel,
   removeLabel,
@@ -1931,6 +1939,7 @@ function PlayerRow({
   roundsLabel: (count: number) => string;
   captainLabel: string;
   callLabel: string;
+  calledLabel: string;
   addFriendLabel: string;
   friendRequestedLabel: string;
   removeLabel: string;
@@ -2001,21 +2010,14 @@ function PlayerRow({
               mascot they wear everywhere else. */}
           <LobbyFace url={player.avatarUrl ?? null} seed={player.name} />
         </span>
-        {/* The bell belongs ON the grey face, not at the far end of the
-            row: the face is what says "away", and the two read as one
-            thing — this person, and the way to fetch them. At the row's
-            edge it was a loose amber circle a whole name away from what
-            it referred to. */}
-        {player.offline && (
-          <span
-            className={cn(
-              "pointer-events-none absolute -bottom-0.5 -right-0.5 flex items-center justify-center rounded-full bg-amber-400 text-[#402666] shadow-[0_1px_3px_rgba(0,0,0,0.3)]",
-              compact ? "h-[18px] w-[18px]" : "h-[22px] w-[22px]",
-            )}
-          >
-            <BellRing className={compact ? "h-2.5 w-2.5" : "h-3 w-3"} strokeWidth={2.75} />
-          </span>
-        )}
+        {/* An amber bell used to sit on the face here. It was decorative —
+            `pointer-events-none` — so every tap aimed at it fell through to
+            the row behind, which re-sent the invitation. It looked dead and
+            it was the spam button (owner: "i can click so many times on
+            this bell and it sends many notifications to the user and i see
+            nothing ... remove that bell we already have invite icon").
+            "Away" is still said twice without it: the face is greyed out,
+            and the paper plane only exists on a row that is. */}
       </span>
       <span
         className={cn(
@@ -2108,17 +2110,32 @@ function PlayerRow({
   // The badge on their face says "away"; this is the way to do something
   // about it (owner: "if player is offline i can't start game ... we need
   // invite button before the delete icon to invite player again").
+  //
+  // Once tapped it becomes a tick and stops responding, which is the same
+  // shape the add-friend + uses two icons along. Before that it looked
+  // identical after sending as before, so the only way to find out whether
+  // the call had gone was to send another one — and the person on the far
+  // end got every one of them.
   const call =
     player.offline && player.onCall ? (
-      <motion.button
-        type="button"
-        whileTap={{ scale: 0.94 }}
-        onClick={player.onCall}
-        aria-label={callLabel}
-        className={cn(bareIconClass, "text-[#8858d5]")}
-      >
-        <Send className={compact ? "h-4 w-4" : "h-[18px] w-[18px]"} strokeWidth={2.25} />
-      </motion.button>
+      player.called ? (
+        <span
+          aria-label={calledLabel}
+          className={cn(bareIconClass, "bg-[#10b981]/15 text-[#10b981]")}
+        >
+          <Check className={compact ? "h-4 w-4" : "h-[18px] w-[18px]"} strokeWidth={2.75} />
+        </span>
+      ) : (
+        <motion.button
+          type="button"
+          whileTap={{ scale: 0.94 }}
+          onClick={player.onCall}
+          aria-label={callLabel}
+          className={cn(bareIconClass, "text-[#8858d5]")}
+        >
+          <Send className={compact ? "h-4 w-4" : "h-[18px] w-[18px]"} strokeWidth={2.25} />
+        </motion.button>
+      )
     ) : null;
 
   // The way to become friends, on the row of somebody who is not one yet:

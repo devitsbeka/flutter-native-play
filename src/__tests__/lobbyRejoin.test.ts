@@ -48,16 +48,38 @@ describe("the lobby's bell", () => {
 });
 
 describe("an absent player is visible, and callable", () => {
-  it("the face greys and wears the bell, and the row says the word", () => {
+  /**
+   * The bell on the face is gone.
+   *
+   * It was `pointer-events-none`, so it could not be pressed — every tap
+   * aimed at it fell through to the row behind, which re-sent the
+   * invitation. It looked dead and it was the spam button (owner: "i can
+   * click so many times on this bell and it sends many notifications to the
+   * user and i see nothing ... remove that bell we already have invite
+   * icon"). "Away" is still said twice without it: the greyed face, and a
+   * paper plane that exists only on a row that is away.
+   */
+  it("the face greys, and the plane beside it is the way to call them", () => {
     expect(universal).toMatch(/offline\?: boolean;/);
     expect(universal).toMatch(/onCall\?: \(\) => void;/);
     expect(universal).toMatch(/player\.offline && "opacity-45 grayscale"/);
-    // The badge sits ON the avatar: the face is what says "away", and a
-    // loose amber circle at the far end of the row was a whole name away
-    // from what it referred to.
-    expect(universal).toMatch(/\{player\.offline && \(\s*\n\s*<span[^]*?-bottom-0\.5 -right-0\.5[^]*?BellRing/);
+    expect(universal).not.toMatch(/BellRing/);
     expect(universal).toMatch(/player\.offline && player\.onCall \?/);
     expect(universal).toMatch(/\{callLabel\}/);
+  });
+
+  it("and the plane becomes a tick once pressed, so it cannot be pressed again", () => {
+    // It looked identical after sending as before, so the only way to learn
+    // whether the call had gone was to send another one.
+    expect(universal).toMatch(/called\?: boolean;/);
+    expect(universal).toMatch(/player\.called \? \(/);
+    expect(universal).toMatch(/aria-label=\{calledLabel\}/);
+    const lobby = read("src/components/team/RoomLobbyV2.tsx");
+    expect(lobby).toMatch(/if \(calledPlayers\.has\(userId\)\) return;/);
+    expect(lobby).toMatch(/called: calledPlayers\.has\(p\.user_id\),/);
+    // A send that failed puts the plane back, so a call that never happened
+    // can be made again.
+    expect(lobby).toMatch(/\} catch \{\s*\n\s*setCalledPlayers\(\(prev\) => \{/);
   });
 
   it("the arena reads presence and pings the person who is missing", () => {

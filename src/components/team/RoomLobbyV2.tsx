@@ -257,6 +257,14 @@ export function RoomLobbyV2() {
    * the + seat is for once people are arriving.
    */
   const [queuedInvites, setQueuedInvites] = useState<Set<string>>(new Set());
+  /**
+   * Who has been called back this visit, so the plane on their row is a tick.
+   *
+   * Per visit rather than persisted: coming back to the lobby later is a new
+   * occasion to call somebody, and a tick that outlived the reason for it
+   * would be a button permanently spent.
+   */
+  const [calledPlayers, setCalledPlayers] = useState<Set<string>>(new Set());
   const [startAfterPick, setStartAfterPick] = useState(false); // Flag to auto-start game after category pick
   const [madeNewSelection, setMadeNewSelection] = useState(false); // Track if user made a new selection after returning from results
   const [hasCheckedTVSession, setHasCheckedTVSession] = useState(false);
@@ -1140,6 +1148,33 @@ export function RoomLobbyV2() {
     }
   };
 
+  /**
+   * Call somebody back, once.
+   *
+   * The paper plane turns into a tick the moment it is pressed rather than
+   * when the send returns, because the send is what must not happen twice:
+   * this was a button that looked the same after sending as before, so the
+   * only way to learn whether the call had gone was to press it again, and
+   * the person on the far end got every press (owner: "i can click so many
+   * times ... it sends many notifications to the user and i see nothing").
+   *
+   * A failed send puts the plane back, so a call that did not happen can be
+   * made again — the toast in handleInvitePlayer has already said why.
+   */
+  const handleCallPlayer = async (userId: string) => {
+    if (calledPlayers.has(userId)) return;
+    setCalledPlayers((prev) => new Set(prev).add(userId));
+    try {
+      await handleInvitePlayer(userId);
+    } catch {
+      setCalledPlayers((prev) => {
+        const next = new Set(prev);
+        next.delete(userId);
+        return next;
+      });
+    }
+  };
+
   // handleStartTVMode removed - now using toggle with handleTVModeToggle
 
   // iconUrl is null when the sheet was opened to rename and nothing new was
@@ -1710,7 +1745,8 @@ export function RoomLobbyV2() {
       p.user_id !== user?.id &&
       (p.status as string) !== "invited" &&
       !onlineInRoom.has(p.user_id),
-    onCall: isHost && p.user_id !== user?.id ? () => void handleInvitePlayer(p.user_id) : undefined,
+    onCall: isHost && p.user_id !== user?.id ? () => void handleCallPlayer(p.user_id) : undefined,
+    called: calledPlayers.has(p.user_id),
     // The host's bin, on everybody else's row while the room waits. A
     // question first: a tap on a 36px circle beside a name is not a thing
     // to be sure of.
@@ -1719,16 +1755,23 @@ export function RoomLobbyV2() {
         ? () => setRemoveTarget({ userId: p.user_id, name: p.nickname })
         : undefined,
     // Your own row opens the way out (owner's ask: a leave-room button
-    // behind your name). The host's tap on somebody else: "come and play"
-    // for a seated player, the invitation again for a placeholder who never
-    // arrived.
+    // behind your name).
+    //
+    // The host's tap on a SEATED player used to re-send the invitation. That
+    // is what made the bell on their face a spam button: the badge was
+    // decorative, so every tap aimed at it landed here instead and called
+    // the person again. Calling somebody back is the paper plane's job, on
+    // that same row, and it now says when it has been done — so the row
+    // itself does nothing (owner: "remove that bell we already have invite
+    // icon which sends notification to user").
+    //
+    // A placeholder who never arrived keeps its row tap: there is no paper
+    // plane on an invited seat, so it is the only way to ask again.
     onPress:
       p.user_id === user?.id
         ? () => setShowLeaveConfirm(true)
-        : isHost
-          ? (p.status as string) === "invited"
-            ? () => void handleResendInvitation(p.user_id)
-            : () => void handleInvitePlayer(p.user_id)
+        : isHost && (p.status as string) === "invited"
+          ? () => void handleResendInvitation(p.user_id)
           : undefined,
   }));
   /**
@@ -2145,6 +2188,9 @@ export function RoomLobbyV2() {
         friendRequested: t("extra.lobbyFriendRequested"),
         remove: t("extra.lobbyRemovePlayer"),
         call: t("lobby.uInvite"),
+        // The tick the plane becomes. Same words the toast uses, because it
+        // is the same fact — no new string for a second way to say it.
+        called: t("extra.inviteSent"),
         left: t("lobby.uLeftNote"),
         invited: t("lobby.uInvitedNote"),
       }}
