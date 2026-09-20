@@ -2566,6 +2566,8 @@ export const en: KaTranslations = {
     notifDecline: "Decline",
     notifAccepted: "Accepted",
     notifDeclined: "Declined",
+    notifPlayed: "Played",
+    notifOpened: "Opened",
     notifRequestGone: "Request withdrawn",
     notifRequestAlreadyAnswered: "That request was already answered.",
     rematchAskCta: "Ask for a rematch",

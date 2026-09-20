@@ -58,6 +58,19 @@ export interface NotificationsContextType {
   loading: boolean;
   isConnected: boolean;
   markAsRead: (notificationId: string) => Promise<void>;
+  /**
+   * Record that this card's button has been pressed.
+   *
+   * Accept and Decline have always written `data.action_taken`, which is
+   * what makes those cards settle into a line of text instead of going on
+   * offering a choice that has been made. The single-action cards — Play,
+   * View, Open — wrote nothing, so a game invitation kept its green Play
+   * for ever and said nothing about having been played (owner: "if i
+   * played, notification should show relevant text not same green play
+   * button ... overall when we click some buttons in notification center we
+   * should show it").
+   */
+  markActionTaken: (notificationId: string, taken: string) => Promise<void>;
   markAllAsRead: () => Promise<void>;
   markManyAsRead: (ids: string[]) => Promise<void>;
   deleteNotification: (notificationId: string) => Promise<void>;
@@ -228,6 +241,30 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     }
   }, [user]);
 
+  const markActionTaken = useCallback(async (notificationId: string, taken: string) => {
+    if (!user) return;
+    // Merged into whatever the row already carries — room ids, sender
+    // names, everything the card reads to draw itself.
+    const current = notifications.find((n) => n.id === notificationId)?.data ?? {};
+    const readAt = new Date().toISOString();
+    const data = { ...current, action_taken: taken };
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === notificationId ? { ...n, data, read_at: n.read_at ?? readAt } : n)),
+    );
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ read_at: readAt, data })
+        .eq('id', notificationId)
+        .eq('user_id', user.id);
+      if (error) throw error;
+    } catch (error) {
+      // The card has already settled on screen; it comes back on the next
+      // fetch if this failed, which is the honest outcome either way.
+      console.error('[Notifications] Error recording the action taken:', error);
+    }
+  }, [user, notifications]);
+
   /**
    * Mark a specific set read in one round trip.
    *
@@ -334,6 +371,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       loading,
       isConnected,
       markAsRead,
+      markActionTaken,
       markAllAsRead,
       markManyAsRead,
       deleteNotification,
@@ -346,6 +384,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       loading,
       isConnected,
       markAsRead,
+      markActionTaken,
       markAllAsRead,
       markManyAsRead,
       deleteNotification,

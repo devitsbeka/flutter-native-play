@@ -60,7 +60,7 @@ interface NotificationsPanelProps {
 export function NotificationsPanel({ isOpen, onClose, defaultTab }: NotificationsPanelProps) {
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const { notifications: allNotifications, unreadCount, loading, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
+  const { notifications: allNotifications, unreadCount, loading, markAsRead, markActionTaken, markAllAsRead, deleteNotification } = useNotifications();
   // Blocked players do not get to knock. Same filter as the /notifications
   // page, fail-open for the same reason: this is a read-only list, and the
   // buttons on each card re-check the pair before they act. Closing the
@@ -553,6 +553,7 @@ export function NotificationsPanel({ isOpen, onClose, defaultTab }: Notification
                         key={notification.id}
                         notification={notification}
                         onMarkRead={markAsRead}
+                        onActionTaken={(id, taken) => void markActionTaken(id, taken)}
                         onNavigate={handleNavigate}
                         onAcceptFriend={handleAcceptFriend}
                         onDeclineFriend={handleDeclineFriend}

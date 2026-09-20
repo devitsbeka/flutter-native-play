@@ -2240,6 +2240,8 @@ export const de: KaTranslations = {
     notifDecline: "Ablehnen",
     notifAccepted: "Angenommen",
     notifDeclined: "Abgelehnt",
+    notifPlayed: "Gespielt",
+    notifOpened: "Geöffnet",
     notifRequestGone: "Anfrage zurückgezogen",
     notifRequestAlreadyAnswered: "Diese Anfrage wurde bereits beantwortet.",
     rematchAskCta: "Revanche anfragen",

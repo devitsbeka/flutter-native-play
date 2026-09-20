@@ -48,6 +48,8 @@ interface CompactNotificationCardProps {
   onAcceptRematch?: (notification: Notification) => void;
   onDeclineRematch?: (notification: Notification) => void;
   onDismiss?: (id: string) => void;
+  /** Records that this card's one button was pressed — see markActionTaken. */
+  onActionTaken?: (id: string, taken: string) => void;
   actionLoading?: string | null;
   timeAgo: string;
 }
@@ -67,6 +69,7 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
   onAcceptRematch,
   onDeclineRematch,
   onDismiss,
+  onActionTaken,
   actionLoading,
   timeAgo,
 }: CompactNotificationCardProps) {
@@ -105,11 +108,22 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
 
   // 'gone': a knock withdrawn before it could be answered — neither answer
   // is true of it, so the card says that rather than either.
-  const actionTaken = notification.data?.action_taken as 'accepted' | 'declined' | 'gone' | undefined;
+  const actionTaken = notification.data?.action_taken as
+    | 'accepted'
+    | 'declined'
+    | 'gone'
+    | 'played'
+    | 'opened'
+    | undefined;
   const hasActionTaken = !!actionTaken;
 
   const hasDualActions = (isFriendRequest || isGameInvite || isJoinRequest || isRematch) && !hasActionTaken;
-  const hasSingleAction = (isRoomInvite || isGameStarted || isGameResult || isTriviaLikedOrSaved) && !hasDualActions;
+  // …and stops offering it once it has been taken, the same way the pair
+  // above stops offering a choice that has been made.
+  const hasSingleAction =
+    (isRoomInvite || isGameStarted || isGameResult || isTriviaLikedOrSaved) &&
+    !hasDualActions &&
+    !hasActionTaken;
 
   const isLoading = actionLoading === notification.id;
 
@@ -355,8 +369,21 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
 
   const handleSingleAction = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (isUnread) onMarkRead(notification.id);
+    recordSingleAction();
     onNavigate(notification);
+  };
+
+  /**
+   * What this card's button was, in the past tense, once it is pressed.
+   *
+   * Recording it is what turns the button into a line of text. The card
+   * stays tappable afterwards — a room you have played is still a room you
+   * may want to go back to — but it no longer holds out a fresh green Play
+   * for something already done.
+   */
+  const recordSingleAction = () => {
+    if (isUnread) onMarkRead(notification.id);
+    if (!hasActionTaken) onActionTaken?.(notification.id, isPlayButton ? 'played' : 'opened');
   };
 
   const getActionButtonLabel = () => {
@@ -370,7 +397,11 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
   const handleClick = () => {
     // Allow card click for all notifications except those with dual actions (accept/decline)
     if (!hasDualActions) {
-      if (isUnread) onMarkRead(notification.id);
+      // The whole card is the same press as the button on it, so it settles
+      // the same way — tapping the row and tapping Play cannot leave the
+      // card saying two different things about what happened.
+      if (hasSingleAction) recordSingleAction();
+      else if (isUnread) onMarkRead(notification.id);
       onNavigate(notification);
     }
   };
@@ -615,7 +646,9 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
             </div>
           )}
 
-          {/* The answer, once given, as a line of text — not a button.
+          {/* What was done, once it is done, as a line of text — not a
+              button. The pair's answer (Accepted, Declined) and the single
+              button's own press (Played, Opened) settle the same way.
               It wore the same pill the question wore, which made a settled
               card look like it was still asking: a thing shaped like a
               button invites the tap it no longer takes, and an "Accepted"
@@ -626,15 +659,13 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
 
               The check and the X stay: they are what makes the answer
               readable at a glance down a list of cards. */}
-          {hasActionTaken && (isFriendRequest || isJoinRequest || isRematch) && (
+          {hasActionTaken && (
             <p
               className={cn(
                 "mt-3 flex items-center gap-1.5 text-sm font-bold",
-                actionTaken === 'accepted'
+                actionTaken === 'accepted' || actionTaken === 'played'
                   ? "text-emerald-600"
-                  : actionTaken === 'declined'
-                    ? "text-muted-foreground"
-                    : "text-muted-foreground",
+                  : "text-muted-foreground",
               )}
             >
               {actionTaken === 'accepted' ? (
@@ -646,6 +677,16 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
                 <>
                   <X className="w-4 h-4" strokeWidth={3} />
                   {t("extra.notifDeclined")}
+                </>
+              ) : actionTaken === 'played' ? (
+                <>
+                  <Check className="w-4 h-4" strokeWidth={3} />
+                  {t("extra.notifPlayed")}
+                </>
+              ) : actionTaken === 'opened' ? (
+                <>
+                  <Check className="w-4 h-4" strokeWidth={3} />
+                  {t("extra.notifOpened")}
                 </>
               ) : (
                 t("extra.notifRequestGone")

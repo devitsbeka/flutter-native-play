@@ -2568,6 +2568,8 @@ export const ka = {
     notifDecline: "უარყოფა",
     notifAccepted: "მიღებულია",
     notifDeclined: "უარყოფილია",
+    notifPlayed: "ნათამაშებია",
+    notifOpened: "გახსნილია",
     notifRequestGone: "მოთხოვნა გაუქმდა",
     notifRequestAlreadyAnswered: "ამ მოთხოვნას უკვე გაეცა პასუხი.",
     rematchAskCta: "მოითხოვე რევანში",

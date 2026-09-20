@@ -67,7 +67,7 @@ export default function Notifications() {
     (location.state as { backTo?: string } | null)?.backTo ??
     (currentRoom && roomPhase !== "idle" ? routeForRoom(currentRoom) : null);
   const { language, t } = useLanguage();
-  const { notifications: allNotifications, unreadCount, loading, markAsRead, markAllAsRead, markManyAsRead, deleteNotification, clearAllNotifications } = useNotifications();
+  const { notifications: allNotifications, unreadCount, loading, markAsRead, markActionTaken, markAllAsRead, markManyAsRead, deleteNotification, clearAllNotifications } = useNotifications();
   const { generationNotifications, hasActiveGenerations } = useGenerationNotifications();
   const { acceptFriendRequest, declineFriendRequest } = useFriends();
   const { acceptInvitation, declineInvitation } = useGameInvitations();
@@ -581,6 +581,7 @@ export default function Notifications() {
                   key={notification.id}
                   notification={notification}
                   onMarkRead={markAsRead}
+                  onActionTaken={(id, taken) => void markActionTaken(id, taken)}
                   onNavigate={handleNavigate}
                   onAcceptFriend={handleAcceptFriend}
                   onDeclineFriend={handleDeclineFriend}

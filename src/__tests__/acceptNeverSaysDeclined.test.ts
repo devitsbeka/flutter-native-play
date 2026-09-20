@@ -87,8 +87,10 @@ describe("what the card records", () => {
     });
   });
 
-  it("draws the withdrawn knock in its own words, in the settled pill", () => {
-    expect(card).toMatch(/as 'accepted' \| 'declined' \| 'gone' \| undefined/);
+  it("draws the withdrawn knock in its own words, in the settled line", () => {
+    // The union grew: a single-action card records its own press too
+    // (Played, Opened), and every one of them settles through this block.
+    expect(card).toMatch(/\| 'gone'/);
     expect(card).toMatch(/\) : actionTaken === 'declined' \? \(/);
     expect(card).toMatch(/t\("extra\.notifRequestGone"\)/);
   });
