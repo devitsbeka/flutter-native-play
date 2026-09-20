@@ -7,6 +7,7 @@ import { toast } from "@/hooks/use-toast";
 import { t } from "@/lib/i18n";
 import type { Json } from "@/integrations/supabase/types";
 import { cloneJson, newId } from "@/utils/compat";
+import { randomCoverGradient } from "@/config/coverGradients";
 
 /**
  * Making a trivia is something the app does, not something the player waits
@@ -87,14 +88,6 @@ interface GeneratedQuestion {
  * The cover gradients the trivia save already used, kept identical so a
  * trivia made this way looks like every other one.
  */
-const COVER_GRADIENTS = [
-  "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-  "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-  "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
-  "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
-  "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
-  "linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)",
-];
 
 /** The same client-side safety net the wizard applied to a batch. */
 function withoutDuplicates(questions: GeneratedQuestion[]): GeneratedQuestion[] {
@@ -181,7 +174,7 @@ export function TriviaCreationProvider({ children }: { children: ReactNode }) {
               hashtags,
               cover_gradient:
                 request.coverGradient ??
-                COVER_GRADIENTS[Math.floor(Math.random() * COVER_GRADIENTS.length)],
+                randomCoverGradient(),
               question_count: generated.length,
               answer_format:
                 generated[0]?.incorrect_answers?.length === 1 ? "true_false" : "4_answers",

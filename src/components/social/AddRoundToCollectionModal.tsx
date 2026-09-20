@@ -16,6 +16,7 @@ import { anyBlockedText } from "@/utils/contentFilter";
 import confetti from "canvas-confetti";
 import { useQueryClient } from "@tanstack/react-query";
 import { cloneJson } from "@/utils/compat";
+import { randomCoverGradient } from "@/config/coverGradients";
 
 interface GeneratedQuestion {
   question_text: string;
@@ -35,14 +36,6 @@ interface AddRoundToCollectionModalProps {
 
 const QUESTION_COUNTS = [5, 10, 15, 20];
 
-const COVER_GRADIENTS = [
-  "linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%)",
-  "linear-gradient(135deg, #3B82F6 0%, #06B6D4 100%)",
-  "linear-gradient(135deg, #F97316 0%, #EF4444 100%)",
-  "linear-gradient(135deg, #10B981 0%, #34D399 100%)",
-  "linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)",
-  "linear-gradient(135deg, #F59E0B 0%, #F97316 100%)",
-];
 
 // Creative topic pool - specific, fun topics that inspire users
 const TRIVIA_TOPIC_POOL = [
@@ -100,7 +93,7 @@ export function AddRoundToCollectionModal({
   const [questions, setQuestions] = useState<GeneratedQuestion[]>([]);
   const [title, setTitle] = useState("");
   const [isPosting, setIsPosting] = useState(false);
-  const [selectedGradient, setSelectedGradient] = useState(COVER_GRADIENTS[0]);
+  const [selectedGradient, setSelectedGradient] = useState(() => randomCoverGradient());
   
   // Topic suggestions state
   const [topicSuggestions, setTopicSuggestions] = useState<TopicSuggestion[]>([]);
@@ -153,7 +146,7 @@ export function AddRoundToCollectionModal({
     setQuestions([]);
     setTitle(t("extra.arcRoundDefaultTitle", { n: roundNumber }));
     setGenerationProgress(0);
-    setSelectedGradient(COVER_GRADIENTS[Math.floor(Math.random() * COVER_GRADIENTS.length)]);
+    setSelectedGradient(randomCoverGradient());
   };
 
   const handleClose = () => {

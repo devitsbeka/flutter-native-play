@@ -2961,6 +2961,8 @@ export const fr: KaTranslations = {
     privateVisibility: "Privé",
     deleteRoundBtn: "Supprimer la manche",
     uploadBtn: "Téléverser",
+    shuffleGradientBtn: "Mélanger",
+    coverBackgroundLabel: "Arrière-plan",
     generateBtn: "Générer",
     generatingCover: "Génération",
     addIconLabel: "Ajouter une icône",

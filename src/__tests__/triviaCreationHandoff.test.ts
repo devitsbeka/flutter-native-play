@@ -145,7 +145,11 @@ describe("what the player sees instead of the wait", () => {
     expect(context).toMatch(/iconSlug: q\.icon_slug \|\| null,/);
     expect(context).toMatch(/incorrect_answers\?\.length === 1 \? "true_false" : "4_answers"/);
     expect(context).toMatch(/is_blind: true,/);
-    expect(context).toMatch(/COVER_GRADIENTS\[Math\.floor\(Math\.random\(\)/);
+    // The pick moved behind randomCoverGradient(), which every creating
+    // path now shares — the list had drifted into four different lists
+    // across six files. Still random, still the same set as the modal's.
+    expect(context).toMatch(/randomCoverGradient\(\),/);
+    expect(context).toMatch(/from "@\/config\/coverGradients"/);
   });
 
   it("and reuses the app's own 'it landed' pair rather than a second one", () => {

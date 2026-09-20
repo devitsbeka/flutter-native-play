@@ -9,6 +9,12 @@ import { generateAndRecordPortrait } from "@/utils/portraitAvatar";
 import { SCENE_AVATAR_PROMPT } from "@/config/sceneAvatarPrompt";
 import { useLanguage } from "@/contexts/LanguageContext";
 
+/**
+ * "cover" no longer starts: a trivia cover is a gradient or an uploaded
+ * photo (config/coverGradients), so nothing calls `generate-cover-image`
+ * any more. The type keeps the member because notification rows written by
+ * the old path are still in the table and still have to be read back.
+ */
 export type GenerationType = "avatar" | "cover";
 
 export interface GenerationJob {
@@ -27,10 +33,6 @@ interface BackgroundGenerationContextType {
   startAvatarGeneration: (
     uploadedImageBase64: string, 
     onComplete?: (avatarUrl: string) => void
-  ) => Promise<string>;
-  startCoverGeneration: (
-    params: { title: string; subject: string; roundId?: string; skipNotification?: boolean },
-    onComplete?: (imageUrl: string) => void
   ) => Promise<string>;
   getJob: (id: string) => GenerationJob | undefined;
   isGenerating: (type?: GenerationType) => boolean;
@@ -230,90 +232,10 @@ export function BackgroundGenerationProvider({ children }: { children: ReactNode
     return jobId;
   }, [user, updateProfile, showNotification, updateJob, scheduleJobCleanup]);
 
-  const startCoverGeneration = useCallback(async (
-    params: { title: string; subject: string; roundId?: string; skipNotification?: boolean },
-    onComplete?: (imageUrl: string) => void
-  ) => {
-    if (!user) throw new Error("User not authenticated");
-
-    const MAX_GENERATIONS = 3;
-
-    // Get current generation count for this round
-    let currentCount = 0;
-    if (params.roundId) {
-      const { count } = await supabase
-        .from("cover_image_generations")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", user.id)
-        .eq("round_id", params.roundId);
-      currentCount = count || 0;
-    }
-
-    const remainingAfterThis = MAX_GENERATIONS - currentCount - 1;
-
-    const jobId = `cover_${Date.now()}`;
-    const job: GenerationJob = {
-      id: jobId,
-      type: "cover",
-      status: "generating",
-      startedAt: new Date(),
-      estimatedTime: 20,
-      metadata: { ...params, remainingTries: remainingAfterThis },
-      onComplete,
-    };
-
-    jobsRef.current.set(jobId, job);
-    setActiveJobs(prev => [...prev, job]);
-
-    // Show toast with estimated time
-    toast.info(t("extra.imageGeneratingToast"), {
-      description: t("extra.imageGeneratingDesc"),
-      duration: 5000,
-    });
-
-    // Run generation in background
-    (async () => {
-      try {
-        const { data, error } = await supabase.functions.invoke("generate-cover-image", {
-          body: {
-            title: params.title,
-            subject: params.subject,
-            roundId: params.roundId
-          }
-        });
-
-        if (error) throw error;
-
-        if (data?.imageUrl) {
-          updateJob(jobId, { status: "completed", imageUrl: data.imageUrl });
-
-          // Always auto-apply cover without blocking popup
-          onComplete?.(data.imageUrl);
-          toast.success(t("extra.coverCreatedToast"));
-          
-          // Invalidate cache so My Trivia shows latest cover image if user saved
-          queryClient.invalidateQueries({ queryKey: ["my-quiz-posts"] });
-          queryClient.invalidateQueries({ queryKey: ["cover-generations"] });
-        }
-
-        scheduleJobCleanup(jobId);
-
-      } catch (error) {
-        console.error("Background cover generation failed:", error);
-        updateJob(jobId, { status: "failed" });
-        toast.error(t("extra.genErrorDesc"));
-        scheduleJobCleanup(jobId, 60000);
-      }
-    })();
-
-    return jobId;
-  }, [user, showNotification, updateJob, scheduleJobCleanup]);
-
   return (
     <BackgroundGenerationContext.Provider value={{
       activeJobs,
       startAvatarGeneration,
-      startCoverGeneration,
       getJob,
       isGenerating,
     }}>

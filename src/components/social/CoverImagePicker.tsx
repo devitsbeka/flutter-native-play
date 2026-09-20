@@ -1,85 +1,49 @@
-import { useState, useRef, useEffect } from "react";
+import { useRef, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Upload, Sparkles, Loader2, X, Check } from "lucide-react";
+import { Upload, Loader2, X, Check, Shuffle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { useBackgroundGeneration } from "@/contexts/BackgroundGenerationContext";
+import { COVER_GRADIENTS, randomCoverGradient } from "@/config/coverGradients";
 
-const COVER_GRADIENTS = [
-  "linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%)",
-  "linear-gradient(135deg, #3B82F6 0%, #06B6D4 100%)",
-  "linear-gradient(135deg, #F97316 0%, #EF4444 100%)",
-  "linear-gradient(135deg, #10B981 0%, #34D399 100%)",
-  "linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)",
-  "linear-gradient(135deg, #F59E0B 0%, #F97316 100%)",
-  "radial-gradient(ellipse 120% 80% at 20% 30%, rgba(139,92,246,0.8) 0%, transparent 50%), radial-gradient(ellipse 100% 120% at 80% 70%, rgba(236,72,153,0.7) 0%, transparent 50%), linear-gradient(135deg, #4C1D95 0%, #831843 100%)",
-  "radial-gradient(ellipse 80% 100% at 70% 20%, rgba(59,130,246,0.8) 0%, transparent 45%), radial-gradient(ellipse 100% 80% at 20% 80%, rgba(6,182,212,0.7) 0%, transparent 45%), linear-gradient(150deg, #1E3A8A 0%, #0E7490 100%)",
-  "radial-gradient(ellipse 90% 110% at 30% 60%, rgba(16,185,129,0.8) 0%, transparent 50%), radial-gradient(ellipse 120% 90% at 75% 25%, rgba(52,211,153,0.6) 0%, transparent 50%), linear-gradient(160deg, #064E3B 0%, #047857 100%)",
-  "radial-gradient(ellipse 100% 80% at 60% 30%, rgba(249,115,22,0.75) 0%, transparent 45%), radial-gradient(ellipse 80% 100% at 25% 75%, rgba(239,68,68,0.7) 0%, transparent 45%), linear-gradient(145deg, #7C2D12 0%, #991B1B 100%)",
-];
-
-interface Generation {
-  id: string;
-  image_url: string;
-  is_selected: boolean;
-  created_at: string;
-}
-
+/**
+ * A cover is a gradient or a photo. It is not generated.
+ *
+ * This offered three goes at `generate-cover-image` per round, kept the
+ * results in `cover_image_generations` and showed them back as a grid to
+ * re-pick from. The gradient was the fallback underneath, and the fallback
+ * is the whole feature now: pick one, or shuffle, or use a photo from the
+ * camera roll (owner: "use random background gradients, or upload photo
+ * option, no generations for trivia covers").
+ *
+ * `onGradientChange` had been a prop nothing ever called -- there was no way
+ * to choose a gradient at all, only to accept whichever one the creating
+ * modal happened to seed. The swatches below are what it is for.
+ *
+ * The upload still goes through `validate-cover-image`. That is a content
+ * screen on somebody's camera roll, not generation, and it is what keeps a
+ * public cover inside guideline 1.2.
+ */
 interface CoverImagePickerProps {
   currentImage?: string | null;
   currentGradient: string;
   onImageChange: (imageUrl: string | null) => void;
   onGradientChange: (gradient: string) => void;
-  suggestPrompt?: string;
   title?: string;
-  roundId?: string;
 }
-
-const MAX_GENERATIONS = 3;
 
 export function CoverImagePicker({
   currentImage,
   currentGradient,
   onImageChange,
   onGradientChange,
-  suggestPrompt,
   title,
-  roundId
 }: CoverImagePickerProps) {
   const [isUploading, setIsUploading] = useState(false);
-  const [previousGenerations, setPreviousGenerations] = useState<Generation[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { user } = useAuth();
-  const { startCoverGeneration, isGenerating } = useBackgroundGeneration();
   const { t } = useLanguage();
-
-  const generationCount = previousGenerations.length;
-  const remainingGenerations = MAX_GENERATIONS - generationCount;
-  const isCoverGenerating = isGenerating("cover");
-
-  // Fetch previous generations on mount
-  useEffect(() => {
-    if (roundId && user) {
-      fetchPreviousGenerations();
-    }
-  }, [roundId, user]);
-
-  const fetchPreviousGenerations = async () => {
-    if (!roundId || !user) return;
-
-    const { data } = await supabase
-      .from("cover_image_generations")
-      .select("*")
-      .eq("user_id", user.id)
-      .eq("round_id", roundId)
-      .order("created_at", { ascending: false });
-
-    if (data) {
-      setPreviousGenerations(data as Generation[]);
-    }
-  };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -166,57 +130,16 @@ export function CoverImagePicker({
     }
   };
 
-  const handleGenerateAI = async () => {
-    if (!user) return;
-
-    if (remainingGenerations <= 0) {
-      toast({
-        title: t("extra.limitReachedTitle"),
-        description: t("extra.alreadyGenerated3"),
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    try {
-      // Start background generation with skipNotification to auto-apply
-      await startCoverGeneration(
-        {
-          title: title || suggestPrompt || "Quiz",
-          subject: suggestPrompt || title || "trivia quiz",
-          roundId: roundId,
-          skipNotification: true  // Auto-apply without popup
-        },
-        (imageUrl) => {
-          // Called automatically when generation completes
-          onImageChange(imageUrl);
-          // Refresh generations list
-          fetchPreviousGenerations();
-        }
-      );
-
-    } catch (error: unknown) {
-      console.error("Error starting generation:", error);
-      
-      const errorMessage = error instanceof Error ? error.message : "";
-      if (errorMessage.includes("limit")) {
-        toast({
-          title: t("extra.limitReachedTitle"),
-          description: t("extra.alreadyGenerated3"),
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: t("extra.errorTitle"),
-          description: t("extra.genErrorDesc"),
-          variant: "destructive",
-        });
-      }
-    }
-  };
-
-  const handleSelectGeneration = (imageUrl: string) => {
-    onImageChange(imageUrl);
+  /**
+   * Choosing a gradient clears the photo.
+   *
+   * They occupy the same slot -- the preview draws the image when there is
+   * one and the gradient when there is not -- so a tapped swatch that left
+   * an image in place would look like it did nothing.
+   */
+  const pickGradient = (gradient: string) => {
+    onGradientChange(gradient);
+    if (currentImage) onImageChange(null);
   };
 
   const handleRemoveImage = () => {
@@ -257,7 +180,7 @@ export function CoverImagePicker({
         )}
       </div>
 
-      {/* Upload/Generate buttons */}
+      {/* Photo, or a gradient rolled again */}
       <div className="flex gap-2">
         <button
           onClick={() => fileInputRef.current?.click()}
@@ -275,21 +198,11 @@ export function CoverImagePicker({
         </button>
 
         <button
-          onClick={handleGenerateAI}
-          disabled={isCoverGenerating || remainingGenerations <= 0}
-          className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+          onClick={() => pickGradient(randomCoverGradient())}
+          className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 border-border hover:border-primary/50 transition-colors text-sm font-medium text-muted-foreground hover:text-foreground active:scale-95"
         >
-          {isCoverGenerating ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              <span>{t("extra.generatingCover")}...</span>
-            </>
-          ) : (
-            <>
-              <Sparkles className="w-4 h-4" />
-              <span>{t("extra.generateBtn")} {roundId && `(${remainingGenerations})`}</span>
-            </>
-          )}
+          <Shuffle className="w-4 h-4" />
+          <span>{t("extra.shuffleGradientBtn")}</span>
         </button>
 
         <input
@@ -301,40 +214,38 @@ export function CoverImagePicker({
         />
       </div>
 
-      {/* Previous Generations */}
-      {previousGenerations.length > 0 && (
-        <div className="space-y-2">
-          <label className="text-xs font-medium text-muted-foreground">
-            {t("extra.yourGenerations", { current: previousGenerations.length, max: MAX_GENERATIONS })}
-          </label>
-          <div className="grid grid-cols-3 gap-2">
-            {previousGenerations.map((gen) => (
+      {/* The whole set, so shuffling is not the only way to reach one */}
+      <div className="space-y-2">
+        <label className="text-xs font-medium text-muted-foreground">
+          {t("extra.coverBackgroundLabel")}
+        </label>
+        <div className="grid grid-cols-8 gap-2">
+          {COVER_GRADIENTS.map((gradient) => {
+            const isCurrent = !currentImage && currentGradient === gradient;
+            return (
               <button
-                key={gen.id}
-                onClick={() => handleSelectGeneration(gen.image_url)}
-                className={`relative aspect-[16/9] rounded-lg overflow-hidden border-2 transition-all ${
-                  currentImage === gen.image_url 
-                    ? "border-primary ring-2 ring-primary/30" 
-                    : "border-border hover:border-primary/50"
+                key={gradient}
+                type="button"
+                onClick={() => pickGradient(gradient)}
+                aria-label={t("extra.coverBackgroundLabel")}
+                aria-pressed={isCurrent}
+                className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all active:scale-95 ${
+                  isCurrent ? "border-primary ring-2 ring-primary/30" : "border-border hover:border-primary/50"
                 }`}
+                style={{ background: gradient }}
               >
-                <img 
-                  src={gen.image_url} 
-                  alt="Generated cover" 
-                  className="w-full h-full object-cover"
-                />
-                {currentImage === gen.image_url && (
-                  <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                    <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
-                      <Check className="w-4 h-4 text-primary-foreground" />
-                    </div>
-                  </div>
+                {isCurrent && (
+                  <span className="absolute inset-0 flex items-center justify-center">
+                    <span className="w-4 h-4 rounded-full bg-white/90 flex items-center justify-center">
+                      <Check className="w-3 h-3 text-primary" />
+                    </span>
+                  </span>
                 )}
               </button>
-            ))}
-          </div>
+            );
+          })}
         </div>
-      )}
+      </div>
     </div>
   );
 }

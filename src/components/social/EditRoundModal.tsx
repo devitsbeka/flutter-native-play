@@ -393,9 +393,7 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                     currentGradient={selectedGradient}
                     onImageChange={setCoverImage}
                     onGradientChange={setSelectedGradient}
-                    suggestPrompt={round.subject}
                     title={title}
-                    roundId={round.id}
                   />
 
                   {/* Title */}

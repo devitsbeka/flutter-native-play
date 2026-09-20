@@ -15,6 +15,7 @@ import iconCollections from "@/assets/icon-collections.png";
 import triviaBuzzer from "@/assets/trivia-buzzer.png";
 import { shuffleArray } from "@/utils/shuffle";
 import { edgeFunctionMessage } from "@/utils/edgeFunctionError";
+import { randomCoverGradient } from "@/config/coverGradients";
 
 type DifficultyLevel = "mixed" | "easy" | "medium" | "hard";
 type CreatorMode = "edit" | "play" | null;
@@ -73,14 +74,6 @@ const COLLECTION_TOPIC_POOL = [
   { label: "Social Media", icon_slug: "share" },
 ];
 
-const COVER_GRADIENTS = [
-  "linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%)",
-  "linear-gradient(135deg, #3B82F6 0%, #06B6D4 100%)",
-  "linear-gradient(135deg, #F97316 0%, #EF4444 100%)",
-  "linear-gradient(135deg, #10B981 0%, #34D399 100%)",
-  "linear-gradient(135deg, #6366F1 0%, #8B5B95 100%)",
-  "linear-gradient(135deg, #F59E0B 0%, #F97316 100%)",
-];
 
 const DEFAULT_QUESTIONS_PER_ROUND = 5;
 
@@ -116,7 +109,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
   const [step, setStep] = useState(2);
   const [creatorMode, setCreatorMode] = useState<CreatorMode>("play");
   const [title, setTitle] = useState("");
-  const [coverGradient] = useState(COVER_GRADIENTS[0]);
+  const [coverGradient] = useState(() => randomCoverGradient());
   const [isPublic, setIsPublic] = useState(false);
   const [isPosting, setIsPosting] = useState(false);
   const [currentDraftId, setCurrentDraftId] = useState<string | null>(null);

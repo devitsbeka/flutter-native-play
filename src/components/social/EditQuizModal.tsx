@@ -20,6 +20,7 @@ import { IconOnboardingTooltip } from "@/components/shared/IconOnboardingTooltip
 import { validateIconKeyword } from "@/utils/iconAnswerValidation";
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
 import { cloneJson } from "@/utils/compat";
+import { COVER_GRADIENTS } from "@/config/coverGradients";
 
 interface Question {
   question_text: string;
@@ -44,14 +45,6 @@ interface EditQuizModalProps {
   onDeleted?: () => void;
 }
 
-const COVER_GRADIENTS = [
-  "linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%)",
-  "linear-gradient(135deg, #3B82F6 0%, #06B6D4 100%)",
-  "linear-gradient(135deg, #F97316 0%, #EF4444 100%)",
-  "linear-gradient(135deg, #10B981 0%, #34D399 100%)",
-  "linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)",
-  "linear-gradient(135deg, #F59E0B 0%, #F97316 100%)",
-];
 
 type ViewMode = "info" | "questions";
 
@@ -327,9 +320,7 @@ export function EditQuizModal({ quiz, isOpen, onClose, onDeleted }: EditQuizModa
                     currentGradient={selectedGradient}
                     onImageChange={setCoverImage}
                     onGradientChange={setSelectedGradient}
-                    suggestPrompt={quiz?.subject}
                     title={title}
-                    roundId={quiz?.id}
                   />
 
                   {/* Title Input */}

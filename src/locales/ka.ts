@@ -3392,6 +3392,8 @@ export const ka = {
     privateVisibility: "პირადი",
     deleteRoundBtn: "რაუნდის წაშლა",
     uploadBtn: "ატვირთვა",
+    shuffleGradientBtn: "არევა",
+    coverBackgroundLabel: "ფონი",
     generateBtn: "გენერაცია",
     generatingCover: "გენერირდება",
     addIconLabel: "აიკონის დამატება",

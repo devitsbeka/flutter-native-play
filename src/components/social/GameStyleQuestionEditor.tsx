@@ -57,9 +57,13 @@ interface GameStyleQuestionEditorProps {
   selectedGradient?: string;
   isPublic?: boolean;
   onPublicChange?: (isPublic: boolean) => void;
-  onRegenerateCover?: () => void;
-  isGeneratingCover?: boolean;
-  coverGenerationCount?: number;
+  /**
+   * Roll the cover's backdrop again. This was `onRegenerateCover`, which
+   * asked a model for a picture -- slow, rationed to three, and answered
+   * with a gradient when it failed. It shuffles the gradient now, so there
+   * is nothing to wait for and no count to keep.
+   */
+  onShuffleGradient?: () => void;
 }
 
 // Convert from GeneratedQuestion format to EditorQuestion format
@@ -283,9 +287,7 @@ export function GameStyleQuestionEditor({
   selectedGradient,
   isPublic,
   onPublicChange,
-  onRegenerateCover,
-  isGeneratingCover,
-  coverGenerationCount = 0,
+  onShuffleGradient,
 }: GameStyleQuestionEditorProps) {
   const { toast } = useToast();
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false });
@@ -1099,12 +1101,6 @@ export function GameStyleQuestionEditor({
                 : selectedGradient || 'linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%)'
             }}
           >
-            {isGeneratingCover && (
-              <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
-                <Loader2 className="w-5 h-5 animate-spin text-white" />
-              </div>
-            )}
-
             <div className="flex-1 min-w-0">
               {isEditingTitle ? (
                 <Input
@@ -1138,13 +1134,12 @@ export function GameStyleQuestionEditor({
                   {isPublic ? <Globe className="w-4 h-4 text-white" /> : <Lock className="w-4 h-4 text-white" />}
                 </button>
               )}
-              {onRegenerateCover && (
+              {onShuffleGradient && (
                 <button
-                  onClick={onRegenerateCover}
-                  disabled={isGeneratingCover || coverGenerationCount >= 3}
-                  className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center disabled:opacity-50"
+                  onClick={onShuffleGradient}
+                  className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center active:scale-90 transition-transform"
                 >
-                  <RefreshCw className={cn("w-4 h-4 text-white", isGeneratingCover && "animate-spin")} />
+                  <RefreshCw className="w-4 h-4 text-white" />
                 </button>
               )}
             </div>

@@ -3000,6 +3000,8 @@ export const es: KaTranslations = {
     privateVisibility: "Privado",
     deleteRoundBtn: "Eliminar ronda",
     uploadBtn: "Subir",
+    shuffleGradientBtn: "Cambiar",
+    coverBackgroundLabel: "Fondo",
     generateBtn: "Generar",
     generatingCover: "Generando",
     addIconLabel: "Añadir icono",

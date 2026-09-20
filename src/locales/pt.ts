@@ -2997,6 +2997,8 @@ export const pt: KaTranslations = {
     privateVisibility: "Privado",
     deleteRoundBtn: "Excluir rodada",
     uploadBtn: "Enviar",
+    shuffleGradientBtn: "Baralhar",
+    coverBackgroundLabel: "Fundo",
     generateBtn: "Gerar",
     generatingCover: "Gerando",
     addIconLabel: "Adicionar ícone",
