@@ -151,9 +151,25 @@ export function RoomLobbyV2() {
    * (owner: "i invited friend but it doesn't show create button") — so
    * there the device's memory decides, as it always did.
    */
+  /**
+   * Whether this table has played: the roster's round counts say so. It is
+   * what makes the next Start a rematch ask rather than a start (below) —
+   * and it is proof the room was created, whatever this device remembers.
+   */
+  const roomHasPlayed = participants.some((p) => (p.total_rounds_played ?? 0) > 0);
   const roomCreated =
     pressedCreate ||
-    (Boolean(currentRoom?.is_public) && typeof currentRoom?.is_draft === "boolean" && !currentRoom.is_draft);
+    (Boolean(currentRoom?.is_public) && typeof currentRoom?.is_draft === "boolean" && !currentRoom.is_draft) ||
+    // A game has been played in here. Whatever the row says and whatever
+    // this device remembers, the room exists — the table is sitting in it,
+    // having just finished a match. Without this the footer offered Create
+    // again after every game on any device that had not pressed it (a
+    // second phone, a reinstall, the guest who was promoted to host), and
+    // the sheet asked "Create this room?" of a room everyone had just
+    // played in (owner: "we already have room, we just played one game and
+    // we want to continue"). Start then asks the table for a rematch,
+    // which is the question that actually fits.
+    roomHasPlayed;
   /**
    * Does an invitation wait for Create? Only while this host still has a
    * Create to press — the same question `roomCreated` answers, read the
@@ -1819,12 +1835,6 @@ export function RoomLobbyV2() {
    * private: on a public one the door still needs answering.
    */
   const playsOwnTrivia = roomPlaysOwnTrivia(currentRoom, isPublicRoom, queue);
-
-  /**
-   * Whether this table has played: the roster's round counts say so. It is
-   * what makes the next Start a rematch ask rather than a start (below).
-   */
-  const roomHasPlayed = participants.some((p) => (p.total_rounds_played ?? 0) > 0);
 
   const lobbyRules: LobbyRuleRow[] = [
     // No player-count picker on a classic room (owner's ask): the cap is 10

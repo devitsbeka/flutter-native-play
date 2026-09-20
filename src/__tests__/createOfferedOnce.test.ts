@@ -184,10 +184,36 @@ describe("created is what the row says first", () => {
     // room, i clicked and it shows create button instead start game").
     const lobby = readFileSync(join(process.cwd(), "src/components/team/RoomLobbyV2.tsx"), "utf8");
     // A PUBLISHED, settled row; a private room (a My Trivia Party room is
-    // born private and not a draft) still goes by the device's memory.
+    // born private and not a draft) still goes by the device's memory —
+    // unless the table has played, which no device has to remember.
     expect(lobby).toMatch(
-      /const roomCreated =\s*\n\s*pressedCreate \|\|\s*\n\s*\(Boolean\(currentRoom\?\.is_public\) && typeof currentRoom\?\.is_draft === "boolean" && !currentRoom\.is_draft\);/,
+      /const roomCreated =\s*\n\s*pressedCreate \|\|\s*\n\s*\(Boolean\(currentRoom\?\.is_public\) && typeof currentRoom\?\.is_draft === "boolean" && !currentRoom\.is_draft\) \|\|/,
     );
     expect(lobby).toMatch(/const publishedRoom = isPublicRoom && roomCreated && !needsCategorySelection;/);
+  });
+
+  /**
+   * A game was played here, so the room exists.
+   *
+   * Create was offered again after every match on any device that had not
+   * pressed it — a second phone, a reinstall, a guest promoted to host —
+   * and the summary sheet then asked "Create this room?" of a room the
+   * table had just played a game in (owner: "we already have room, we just
+   * played one game and we want to continue"). Start asks them for a
+   * rematch instead, which is the question that fits.
+   */
+  it("a table that has played is in a room, whatever the device remembers", () => {
+    const lobby = readFileSync(join(process.cwd(), "src/components/team/RoomLobbyV2.tsx"), "utf8");
+    expect(lobby).toMatch(
+      /const roomHasPlayed = participants\.some\(\(p\) => \(p\.total_rounds_played \?\? 0\) > 0\);/,
+    );
+    // One definition, read by both the Create offer and the rematch ask.
+    expect(lobby.match(/const roomHasPlayed =/g)?.length).toBe(1);
+    expect(lobby).toMatch(/\n    roomHasPlayed;/);
+    expect(lobby).toMatch(/const isRematch = roomHasPlayed;/);
+    // Which makes the footer Start, and Start ask the table.
+    expect(lobby).toMatch(/const offerCreate = !needsCategorySelection && !isStarting && !roomCreated;/);
+    expect(lobby).toMatch(/onPress: offerCreate \? handleCreatePress : handleStartOrPick,/);
+    expect(lobby).toMatch(/if \(asksTable\) \{/);
   });
 });
