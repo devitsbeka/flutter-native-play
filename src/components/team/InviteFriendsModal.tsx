@@ -29,6 +29,7 @@ import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { PingPongVideo } from "@/components/shared/PingPongVideo";
 import { MAP_VIDEOS } from "@/config/videoConfig";
 import { useMissions } from "@/hooks/useMissions";
+import { inviteUsersToRoom } from "@/utils/roomInvites";
 import { PlayerProfileModal } from "@/components/profile/PlayerProfileModal";
 import { GreenPlayButton } from "@/components/shared/GreenPlayButton";
 
@@ -413,62 +414,20 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
     setSendingInvites(true);
     setInviteSendError(false);
     try {
-      const ids = [...pickedForRoom];
-      const { data: existing } = await supabase
-        .from("room_participants")
-        .select("user_id")
-        .eq("room_id", roomId)
-        .in("user_id", ids);
-      const already = new Set((existing ?? []).map(r => r.user_id));
-      const toInvite = ids.filter(id => !already.has(id));
+      // The seat and the two notifications, in one place — the lobby's
+      // queued invitations flush through the same function when a draft
+      // room's Create settles it. See utils/roomInvites.
+      const { invited } = await inviteUsersToRoom({
+        roomId,
+        userIds: [...pickedForRoom],
+        senderId: user?.id,
+        onInvited: (n) => void trackMissionEvent("invited_to_room", n),
+      });
 
-      if (toInvite.length === 0) {
+      if (invited.length === 0) {
         toast.info(t("extra.userAlreadyInRoom"));
         handleClose();
         return;
-      }
-
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, nickname, avatar_url, country_code")
-        .in("user_id", toInvite);
-      const prof = new Map((profiles ?? []).map(p => [p.user_id, p]));
-
-      const { error } = await supabase.from("room_participants").insert(
-        toInvite.map(id => ({
-          room_id: roomId,
-          user_id: id,
-          status: "invited" as const,
-          nickname: prof.get(id)?.nickname || "Player",
-          avatar_url: prof.get(id)?.avatar_url,
-          country_code: prof.get(id)?.country_code || "GE",
-          is_host: false,
-        })),
-      );
-      if (error) throw error;
-
-      // "მოიწვიე მეგობარი თამაშში" — every one of these is that.
-      void trackMissionEvent("invited_to_room", toInvite.length);
-
-      // The participants insert above rings the in-app bell (the
-      // notify_room_invite trigger) — which only reaches a player with the
-      // app open. The push is what reaches everyone else, and it rides a
-      // game_invitations row per friend: send-game-invite-push re-reads the
-      // invitation server-side and composes its own text, so this cannot put
-      // arbitrary words on a lock screen. Fire-and-forget, never fatal — the
-      // invitations are already in the database either way.
-      if (user) {
-        void (async () => {
-          const { data: invRows } = await supabase
-            .from("game_invitations")
-            .insert(toInvite.map(id => ({ sender_id: user.id, receiver_id: id, room_id: roomId })))
-            .select("id");
-          for (const row of invRows ?? []) {
-            void supabase.functions
-              .invoke("send-game-invite-push", { body: { invitationId: row.id } })
-              .catch(e => console.warn("[invite] push failed:", e));
-          }
-        })().catch(e => console.warn("[invite] push failed:", e));
       }
 
       toast.success(t("extra.inviteSent"));

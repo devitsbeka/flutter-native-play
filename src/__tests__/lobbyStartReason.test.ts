@@ -35,8 +35,10 @@ describe("the count on screen is the count the button judges", () => {
   it("and the room hands it the seated count, not the seats spoken for", () => {
     expect(room).toMatch(/seated: seatedPlayers,/);
     // `taken` still counts invitations — that is what fills the room and
-    // decides whether there is space to invite anyone else.
-    expect(room).toMatch(/taken: participants\.length,/);
+    // decides whether there is space to invite anyone else. A friend picked
+    // while the room is a draft is spoken for in exactly the same way: no
+    // row yet, one Create away from one.
+    expect(room).toMatch(/taken: participants\.length \+ queuedPlayers\.length,/);
     expect(room).toMatch(
       /const seatedPlayers = participants\.filter\(\(p\) => \(p\.status as string\) !== "invited"\)\.length;/,
     );

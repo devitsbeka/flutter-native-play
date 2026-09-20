@@ -106,7 +106,7 @@ describe("left, and no longer joined", () => {
     expect(room).toMatch(/const SEAT_NOTE_MS = 3500;/);
     expect(room).toMatch(/gone\.forEach\(\(id\) => next\.set\(id, "left"\)\);/);
     expect(room).toMatch(/note: seatNotes\.get\(p\.user_id\),/);
-    expect(room).toMatch(/players=\{\[\.\.\.lobbyPlayers, \.\.\.departedPlayers\]\}/);
+    expect(room).toMatch(/players=\{\[\.\.\.lobbyPlayers, \.\.\.queuedPlayers, \.\.\.departedPlayers\]\}/);
     expect(room).toMatch(/left: t\("lobby\.uLeftNote"\),/);
     expect(room).not.toMatch(/joined: t\("lobby\.uJoinedNote"\)/);
   });

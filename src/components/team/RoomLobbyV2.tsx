@@ -36,6 +36,7 @@ import { RoomScoreboard } from "./RoomScoreboard";
 import { TVSetupInline } from "./TVSetupInline";
 import { GradientPicker } from "./GradientPicker";
 import { InviteFriendsModal } from "./InviteFriendsModal";
+import { inviteUsersToRoom } from "@/utils/roomInvites";
 import { getGradientById } from "@/config/roomGradients";
 import { ChallengeResultsSection } from "./ChallengeResultsSection";
 import { getCategoryIconSlug } from "@/data/categoryIconMap";
@@ -154,6 +155,13 @@ export function RoomLobbyV2() {
     pressedCreate ||
     (Boolean(currentRoom?.is_public) && typeof currentRoom?.is_draft === "boolean" && !currentRoom.is_draft);
   /**
+   * Does an invitation wait for Create? Only while this host still has a
+   * Create to press — the same question `roomCreated` answers, read the
+   * other way round. Once the room is created the + seat invites at once,
+   * which is what it is for while people are arriving.
+   */
+  const invitesWaitForCreate = isHost && !roomCreated;
+  /**
    * Whether the room can start, for the handler rather than the button.
    *
    * `enoughPlayers` is worked out far below, after the early returns —
@@ -216,6 +224,23 @@ export function RoomLobbyV2() {
   const [tvHintGlow, setTvHintGlow] = useState(() => searchParams.get("tvHint") === "true");
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
+  /**
+   * Friends picked while the room is still a DRAFT.
+   *
+   * A private room is a draft until the host presses Create, and backing out
+   * alone deletes it — so an invitation sent before that points at a room
+   * that may never exist, and arrives before the host has chosen the rounds
+   * or the question count. Friends were getting "come and play" for a room
+   * that was still being built, and sometimes for one that was then thrown
+   * away (owner: "room is ready only after i click create button and we
+   * should send invitations after that").
+   *
+   * So while the room is a draft the invite sheet only PICKS: the faces show
+   * here as pending seats, nothing is written, and Create sends the lot. A
+   * room that is already created keeps inviting immediately, which is what
+   * the + seat is for once people are arriving.
+   */
+  const [queuedInvites, setQueuedInvites] = useState<Set<string>>(new Set());
   const [startAfterPick, setStartAfterPick] = useState(false); // Flag to auto-start game after category pick
   const [madeNewSelection, setMadeNewSelection] = useState(false); // Track if user made a new selection after returning from results
   const [hasCheckedTVSession, setHasCheckedTVSession] = useState(false);
@@ -779,6 +804,24 @@ export function RoomLobbyV2() {
      * A public room needs the my-rooms half too — the Private tab keeps the
      * rooms you host, whichever kind they are.
      */
+    // The invitations held back while this was a draft. After publishDraft,
+    // so nobody is called to a room that failed to settle; before the exit
+    // below, which walks the host off this screen.
+    if (queuedInvites.size > 0 && currentRoom) {
+      try {
+        await inviteUsersToRoom({
+          roomId: currentRoom.id,
+          userIds: [...queuedInvites],
+          senderId: user?.id,
+        });
+        setQueuedInvites(new Set());
+      } catch (err) {
+        // The room IS created — that write succeeded — so this says what
+        // did not happen rather than pretending the whole press failed.
+        console.error("[RoomLobbyV2] queued invitations failed", err);
+        toast.error(t("extra.invitationResendFailed"));
+      }
+    }
     void queryClient.invalidateQueries({ queryKey: [MY_ROOMS_KEY] });
     if (isPublic) void queryClient.invalidateQueries({ queryKey: PUBLIC_ROOMS_KEY });
     rememberPressedCreate(currentRoom?.id);
@@ -1672,6 +1715,29 @@ export function RoomLobbyV2() {
             : () => void handleInvitePlayer(p.user_id)
           : undefined,
   }));
+  /**
+   * The friends waiting on Create, drawn as the pending seats they are about
+   * to become. They have no row in the database yet — that is the point —
+   * so their faces come from the friends list, and tapping one takes the
+   * pick back rather than resending an invitation nobody has had.
+   */
+  const queuedPlayers: LobbyPlayer[] = [...queuedInvites].map((id) => {
+    const friend = friends.find((f) => f.friendId === id);
+    return {
+      id: `queued-${id}`,
+      name: friend?.nickname || t("extra.friendFallback"),
+      avatarUrl: friend?.avatarUrl ?? undefined,
+      isHost: false,
+      isYou: false,
+      pending: true,
+      onRemove: () =>
+        setQueuedInvites((prev) => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        }),
+    };
+  });
   // A departed player's row, kept a moment to say "left": faded, no tally,
   // no tap.
   const departedPlayers: LobbyPlayer[] = departed.map((d) => ({
@@ -2102,7 +2168,7 @@ export function RoomLobbyV2() {
         { key: "rules", heading: t("lobby.rulesHeading"), body: t("lobby.rulesClassic") },
         { key: "time", heading: t("lobby.timeHeading"), body: t("lobby.timeClassic") },
       ]}
-      players={[...lobbyPlayers, ...departedPlayers]}
+      players={[...lobbyPlayers, ...queuedPlayers, ...departedPlayers]}
       // No playersHint here: the footer caption below the Start button says
       // exactly this, word for word, and the two were on screen together —
       // once under the player rows and once under the CTA. The arena keeps
@@ -2113,8 +2179,11 @@ export function RoomLobbyV2() {
         min: willBeObserver ? 2 : 1,
         // Never below who is actually here, so an under-set cap can't read
         // as "2/2" over three seated players.
-        max: Math.max(currentRoom.max_players || 10, participants.length),
-        taken: participants.length,
+        max: Math.max(currentRoom.max_players || 10, participants.length + queuedPlayers.length),
+        // A queued invitation takes a seat as surely as a sent one — it is
+        // the same person, one Create away — so the cap counts it. `seated`
+        // below deliberately does not: that is who is HERE.
+        taken: participants.length + queuedPlayers.length,
         // The headline count is the people who are HERE. Counting an
         // invitation nobody has accepted read "3/10 players" over a room
         // that could not start, because starting counts answerers.
@@ -2225,8 +2294,22 @@ export function RoomLobbyV2() {
         isOpen={showInviteModal}
         onClose={() => setShowInviteModal(false)}
         inviteLink={getShareLink(currentRoom.room_code)}
-        roomId={currentRoom.id}
         roomCode={currentRoom.room_code}
+        // A draft sends nothing yet: the sheet's own pre-room mode picks
+        // friends and hands the ids back, and Create sends them. Passing
+        // roomId is what makes it write, so a draft must not.
+        {...(invitesWaitForCreate
+          ? {
+              onFriendSelect: (friendId: string) =>
+                setQueuedInvites((prev) => {
+                  const next = new Set(prev);
+                  if (next.has(friendId)) next.delete(friendId);
+                  else next.add(friendId);
+                  return next;
+                }),
+              selectedFriends: queuedInvites,
+            }
+          : { roomId: currentRoom.id })}
       />
 
       {/* What Create commits to, shown before it does it. */}
