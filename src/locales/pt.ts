@@ -3070,6 +3070,7 @@ export const pt: KaTranslations = {
     ptUploadFailed: "Falha ao enviar a imagem",
     ptAIFilled: "✨ Pergunta preenchida!",
     ptAIFailed: "A geração por IA falhou. Tente de novo.",
+    ptNoMoreLibrary: "São todas as perguntas da biblioteca — edite esta.",
     ptQuestionEmpty: "A pergunta não está preenchida",
     ptAnswerEmpty: "A resposta não está preenchida",
     ptValidationError: "⚠️ Erro",

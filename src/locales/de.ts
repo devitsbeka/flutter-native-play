@@ -3050,6 +3050,7 @@ export const de: KaTranslations = {
     ptUploadFailed: "Bild-Upload fehlgeschlagen",
     ptAIFilled: "✨ Frage ausgefüllt!",
     ptAIFailed: "KI-Generierung fehlgeschlagen. Bitte versuche es erneut.",
+    ptNoMoreLibrary: "Das sind alle Fragen der Bibliothek — bearbeite diese stattdessen.",
     ptQuestionEmpty: "Frage ist nicht ausgefüllt",
     ptAnswerEmpty: "Antwort ist nicht ausgefüllt",
     ptValidationError: "⚠️ Fehler",

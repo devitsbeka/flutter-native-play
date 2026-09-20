@@ -10,12 +10,11 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { QuestionIconPicker } from "@/components/social/QuestionIconPicker";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import useEmblaCarousel from "embla-carousel-react";
 import { useTriviaDrafts } from "@/hooks/useTriviaDrafts";
 import { IconOnboardingTooltip } from "@/components/shared/IconOnboardingTooltip";
-import { partyStarterPack } from "@/config/partyStarterPack";
+import { drawStarterQuestion, partyStarterPack, partyStarterPool } from "@/config/partyStarterPack";
 
 const ICON_STORAGE_URL = "https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library";
 
@@ -292,8 +291,6 @@ export function GameStylePersonalTrivia({
   const { user } = useAuth();
   const [title, setTitle] = useState(initialData?.title || "");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
-  const [generatingIndex, setGeneratingIndex] = useState<number | null>(null);
   const [errorField, setErrorField] = useState<{questionIndex: number; field: string; answerId?: string} | null>(null);
   const [iconPickerIndex, setIconPickerIndex] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -619,72 +616,47 @@ export function GameStylePersonalTrivia({
     setQuestions(newQuestions);
   };
 
-  const handleGenerateAI = async (index: number) => {
-    setIsGeneratingAI(true);
-    setGeneratingIndex(index);
-    
-    try {
-      // Get ALL existing question texts including current one to avoid similar results
-      const existingQuestions = questions
-        .filter(q => q.question.trim())
-        .map(q => q.question);
+  /**
+   * Change-question: another card from the library, not a generated one.
+   *
+   * This asked `generate-single-question` for a fresh question — a round trip
+   * to a model, a spinner, and a failure mode, for a card the party already
+   * opens on ten of. The pool in config/partyStarterPack is written for this
+   * game and is bigger than any party can be, so a draw from it is instant,
+   * works offline, costs nothing, and is in the right language by
+   * construction rather than by a parameter the function might default away
+   * from (owner: "replace it with new question from our questions library
+   * ... no Ai generation would be needed").
+   *
+   * Every question on the board is excluded, the one being replaced included,
+   * so a press always visibly changes the card.
+   */
+  const handleReplaceQuestion = (index: number) => {
+    const next = drawStarterQuestion(
+      partyStarterPool(language),
+      questions.map((q) => q.question),
+    );
 
-      // Generate random seed for variety on each click
-      const randomSeed = Math.random().toString(36).substring(2, 10);
-
-      const { data, error } = await supabase.functions.invoke('generate-single-question', {
-        body: { 
-          subject: title || t("extra.familyFriendsSubject"),
-          answerFormat: '4_answers',
-          difficulty: 'medium',
-          existingQuestions,
-          randomSeed,
-          mode: 'personal', // Personal/family questions for MyTrivia Party
-          // The party opens on a starter pack in this language
-          // (config/partyStarterPack), so change-question has to answer in it
-          // too. Without this the function defaults to Georgian and an
-          // English party turned Georgian on the first press.
-          language,
-        }
-      });
-      
-      if (error) throw error;
-      
-      if (data?.question_text) {
-        const newQuestions = [...questions];
-        newQuestions[index] = {
-          ...newQuestions[index],
-          question: data.question_text || "",
-          answers: [
-            { id: `a-ai-${Date.now()}-0`, text: data.correct_answer || "", isCorrect: true },
-            ...(data.incorrect_answers || []).slice(0, 3).map((ans: string, i: number) => ({
-              id: `a-ai-${Date.now()}-${i+1}`,
-              text: ans,
-              isCorrect: false,
-            })),
-          ],
-          iconSlug: data.icon_slug || undefined,
-        };
-        setQuestions(newQuestions);
-        
-        toast({
-          title: t("extra.ptAIFilled"),
-          duration: 2000,
-        });
-      } else {
-        throw new Error("No question data returned");
-      }
-    } catch (error) {
-      console.error('AI generation error:', error);
-      toast({
-        title: t("common.error"),
-        description: t("extra.ptAIFailed"),
-        variant: "destructive",
-      });
-    } finally {
-      setIsGeneratingAI(false);
-      setGeneratingIndex(null);
+    if (!next) {
+      toast({ title: t("extra.ptNoMoreLibrary"), duration: 2000 });
+      return;
     }
+
+    const stamp = Date.now();
+    const newQuestions = [...questions];
+    newQuestions[index] = {
+      ...newQuestions[index],
+      question: next.question,
+      answers: next.answers.map((text, i) => ({
+        id: `a-swap-${stamp}-${i}`,
+        text,
+        // The pack marks its first answer correct for the same reason the
+        // starter cards do: a card needs one before anybody has decided.
+        isCorrect: i === 0,
+      })),
+      iconSlug: next.iconSlug,
+    };
+    setQuestions(newQuestions);
   };
 
   const validateQuestions = (): ValidationError[] => {
@@ -920,18 +892,18 @@ export function GameStylePersonalTrivia({
                         {index + 1}/{questions.length}
                       </div>
 
-                      {/* AI Generate Button */}
+                      {/* Change question — another card from the library. No
+                          spinner: the draw is synchronous, and a spinner for
+                          something that has already happened reads as a
+                          stall. */}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleGenerateAI(index);
+                          handleReplaceQuestion(index);
                         }}
-                        disabled={isGeneratingAI}
-                        className="absolute top-3 right-3 z-30 w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-all disabled:opacity-50"
+                        className="absolute top-3 right-3 z-30 w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-all active:scale-90"
                       >
-                        {isGeneratingAI && generatingIndex === index ? (
-                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        ) : question.question.trim() ? (
+                        {question.question.trim() ? (
                           <RefreshCw className="w-4 h-4" />
                         ) : (
                           <Lightbulb className="w-4 h-4" />

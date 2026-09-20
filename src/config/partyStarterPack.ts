@@ -169,3 +169,39 @@ export function partyStarterPack(
 ): StarterQuestion[] {
   return pickStarterQuestions(partyStarterPool(language), count, rng);
 }
+
+/**
+ * Two questions are the same question if they read the same.
+ *
+ * The cards on the board have been through the editor and carry their own
+ * ids, so a drawn question can only be matched against them by its text.
+ */
+function sameQuestion(text: string): string {
+  return text.trim().toLowerCase();
+}
+
+/**
+ * One question from the pool that is not already on the board.
+ *
+ * Change-question used to ask `generate-single-question` for a new card. That
+ * is a round trip to a model for something this file already has: the pool is
+ * written for exactly this game — questions about the people in the room,
+ * answers that are those people — and it is bigger than any party can be, 36
+ * against a 20-card maximum, so there is always something left to draw.
+ *
+ * `taken` is every question on the board, the one being replaced included, so
+ * a press cannot hand back the card it was pressed on.
+ *
+ * Null when the pool is spent, which the caller says out loud. Swapping a
+ * card for one already on the board would look like the button did nothing.
+ */
+export function drawStarterQuestion(
+  pool: StarterQuestion[],
+  taken: Iterable<string>,
+  rng: () => number = Math.random,
+): StarterQuestion | null {
+  const used = new Set([...taken].map(sameQuestion));
+  const fresh = pool.filter((q) => !used.has(sameQuestion(q.question)));
+  if (fresh.length === 0) return null;
+  return fresh[Math.min(fresh.length - 1, Math.floor(rng() * fresh.length))];
+}

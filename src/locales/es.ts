@@ -3072,6 +3072,7 @@ export const es: KaTranslations = {
     ptUploadFailed: "Error al subir la imagen",
     ptAIFilled: "✨ ¡Pregunta rellenada!",
     ptAIFailed: "La generación con IA falló. Inténtalo de nuevo.",
+    ptNoMoreLibrary: "Son todas las preguntas de la biblioteca: edita esta.",
     ptQuestionEmpty: "La pregunta está vacía",
     ptAnswerEmpty: "La respuesta está vacía",
     ptDeleteQuestionTitle: "¿Eliminar pregunta?",

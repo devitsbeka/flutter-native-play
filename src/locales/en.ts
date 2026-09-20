@@ -3466,6 +3466,7 @@ export const en: KaTranslations = {
     ptUploadFailed: "Image upload failed",
     ptAIFilled: "✨ Question filled!",
     ptAIFailed: "AI generation failed. Please try again.",
+    ptNoMoreLibrary: "That's every question in the library — edit this one instead.",
     ptQuestionEmpty: "Question is not filled",
     ptAnswerEmpty: "Answer is not filled",
     ptValidationError: "⚠️ Error",

@@ -3032,6 +3032,7 @@ export const fr: KaTranslations = {
     ptUploadFailed: "Échec de l'envoi de l'image",
     ptAIFilled: "✨ Question remplie !",
     ptAIFailed: "La génération IA a échoué. Réessaie.",
+    ptNoMoreLibrary: "C'est toute la bibliothèque — modifie plutôt celle-ci.",
     ptQuestionEmpty: "La question est vide",
     ptAnswerEmpty: "La réponse est vide",
     ptValidationError: "⚠️ Erreur",

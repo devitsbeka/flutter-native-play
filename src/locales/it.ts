@@ -3065,6 +3065,7 @@ export const it: KaTranslations = {
     ptUploadFailed: "Caricamento immagine fallito",
     ptAIFilled: "✨ Domanda compilata!",
     ptAIFailed: "Generazione IA fallita. Riprova.",
+    ptNoMoreLibrary: "Sono tutte le domande della libreria: modifica questa.",
     ptQuestionEmpty: "La domanda non è compilata",
     ptAnswerEmpty: "La risposta non è compilata",
     ptValidationError: "⚠️ Errore",

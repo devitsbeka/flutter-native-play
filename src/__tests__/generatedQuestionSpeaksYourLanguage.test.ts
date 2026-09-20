@@ -32,15 +32,25 @@ const PARTY = read("src/components/team/GameStylePersonalTrivia.tsx");
 const EDITOR = read("src/components/social/GameStyleQuestionEditor.tsx");
 
 describe("every caller says which language", () => {
-  it.each([
-    ["the party editor", PARTY],
-    ["the trivia editor", EDITOR],
-  ])("%s passes it", (_label, source) => {
-    const call = source.slice(
-      source.indexOf("invoke('generate-single-question'"),
-      source.indexOf("if (error) throw error", source.indexOf("invoke('generate-single-question'")),
+  it("the trivia editor passes it", () => {
+    const call = EDITOR.slice(
+      EDITOR.indexOf("invoke('generate-single-question'"),
+      EDITOR.indexOf("if (error) throw error", EDITOR.indexOf("invoke('generate-single-question'")),
     );
     expect(call).toMatch(/\blanguage,/);
+  });
+
+  /**
+   * The party editor no longer asks at all.
+   *
+   * Change-question draws from config/partyStarterPack instead — see
+   * partyChangeQuestionUsesTheLibrary.test.ts. That closes this bug harder
+   * than passing the parameter did: a pool chosen by `language` cannot come
+   * back in the wrong one, whatever a function defaults to.
+   */
+  it("the party editor asks nobody, and draws in the reader's language", () => {
+    expect(PARTY).not.toMatch(/invoke\('generate-single-question'/);
+    expect(PARTY).toMatch(/partyStarterPool\(language\)/);
   });
 
   it("and reads it from the language context rather than guessing", () => {

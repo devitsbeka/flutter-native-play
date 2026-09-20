@@ -3468,6 +3468,7 @@ export const ka = {
     ptUploadFailed: "სურათის ატვირთვა ვერ მოხერხდა",
     ptAIFilled: "✨ კითხვა შეივსო!",
     ptAIFailed: "AI გენერაცია ვერ მოხერხდა. სცადეთ თავიდან.",
+    ptNoMoreLibrary: "ბიბლიოთეკაში სხვა კითხვა აღარ არის — შეცვალეთ ეს.",
     ptQuestionEmpty: "კითხვა არ არის შევსებული",
     ptAnswerEmpty: "პასუხი არ არის შევსებული",
     ptValidationError: "⚠️ შეცდომა",
