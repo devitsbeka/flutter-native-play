@@ -162,7 +162,9 @@ describe("what each PRO plan costs and how many friends it carries", () => {
    * then reads. Left at `pro`, an iOS annual buyer gets one seat.
    */
   it("grants the annual product the same tier on the App Store rail", () => {
-    const iap = src("supabase/functions/_shared/iap.ts");
+    const iap =
+      src("supabase/functions/_shared/iap.ts") +
+      src("supabase/functions/_shared/iapEntitlements.ts");
     expect(iap).toContain(
       '[PRODUCTS.PRO_ANNUAL]: { kind: "subscription", tier: "pro_plus" }',
     );

@@ -139,12 +139,54 @@ export function VipProvider({ children }: { children: ReactNode }) {
   // owns, so the effect publishes it here.
   const fetchVipStatusRef = useRef<(() => void) | null>(null);
 
+  /**
+   * How long a just-purchased entitlement outranks the database.
+   *
+   * applyEntitlement turns PRO on from a StoreKit-verified purchase and then
+   * asks the server to confirm it. Those two raced, and the server won: the
+   * re-read landed a few hundred milliseconds later, found the OLD row — absent,
+   * or present and expired — and set isVip back to false before verify-receipt
+   * had written anything. The optimistic update reverted itself, so a completed
+   * PRO purchase showed its success modal over a UI that still said non-PRO.
+   *
+   * Inside this window a fetch may only ever UPGRADE. If the row does not yet
+   * confirm the purchase, it retries instead of revoking. verify-receipt takes
+   * ~3.5s on a device, so this has to outlast that with room to spare.
+   */
+  const optimisticUntilRef = useRef<number>(0);
+
+  /**
+   * Whether a fetch has ever confirmed an active subscription this session.
+   *
+   * The read below can come back with **no row** for reasons that have nothing
+   * to do with owning PRO: the query fires before the session token is fully
+   * attached and RLS hides the row — on launch, on resume, and around a token
+   * refresh. It retried twice and then revoked, so PRO blinked off on a live
+   * subscriber, the shop card fell back to a Buy button, and tapping it got
+   * Apple's "you're already subscribed" followed by our own congratulations.
+   *
+   * A genuine downgrade — cancelled, expired, refunded — always arrives as a
+   * row whose expires_at is in the past, and that still revokes immediately.
+   * An absent row after we have already seen a live one does not, because
+   * "the server did not answer" is not the same fact as "you no longer own
+   * this". Entitlements are still enforced server-side; this only governs what
+   * the screen draws.
+   */
+  const confirmedActiveRef = useRef(false);
+
   useEffect(() => {
     if (!user) {
       setSubscription(null);
       setIsVip(false);
       setLoading(false);
       fetchVipStatusRef.current = null;
+      // The cache seeds `isVip` on the next mount, so leaving it set means the
+      // next person to sign in on this phone starts the session believing they
+      // are PRO — and a signed-out device keeps showing PRO surfaces. It is a
+      // paint-time hint belonging to one account, not a device fact.
+      try { localStorage.removeItem(VIP_CACHE_KEY); } catch { /* private mode */ }
+      confirmedActiveRef.current = false;
+      optimisticUntilRef.current = 0;
       return;
     }
 
@@ -158,17 +200,43 @@ export function VipProvider({ children }: { children: ReactNode }) {
 
         if (error) throw error;
 
+        const active = data ? isAfter(new Date(data.expires_at), new Date()) : false;
+
+        // A purchase this session outranks a row that has not caught up yet.
+        // Never revoke inside the grace window — come back instead.
+        if (!active && Date.now() < optimisticUntilRef.current) {
+          setTimeout(() => fetchVipStatus(0), 1000);
+          return;
+        }
+
         if (data) {
           setSubscription(data as VipSubscription);
-          const isActive = isAfter(new Date(data.expires_at), new Date());
-          setIsVip(isActive);
-          try { localStorage.setItem(VIP_CACHE_KEY, String(isActive)); } catch {}
+          setIsVip(active);
+          // Confirmed by the server: the optimistic window has served its
+          // purpose and must not keep suppressing a later, genuine downgrade
+          // (a cancellation, an expiry, a refund).
+          if (active) {
+            optimisticUntilRef.current = 0;
+            confirmedActiveRef.current = true;
+          } else {
+            // An expired row is the server stating a fact. Believe it.
+            confirmedActiveRef.current = false;
+          }
+          try { localStorage.setItem(VIP_CACHE_KEY, String(active)); } catch {}
         } else if (retryCount < 2) {
           // "No row" on a fresh load can be an auth race — the query fires
           // before the session token is fully attached and RLS hides the row.
           // Re-check before revoking a cached PRO state, otherwise the badge
           // flickers off on refresh and returns seconds later.
           setTimeout(() => fetchVipStatus(retryCount + 1), 1200);
+          return;
+        } else if (confirmedActiveRef.current) {
+          // No row, but this session has already seen a live one. That is the
+          // RLS/auth race described on confirmedActiveRef, not a cancellation.
+          // Keep what we know and come back for it rather than revoking — a
+          // real downgrade arrives as a row with a past expires_at, which is
+          // handled above and still takes effect immediately.
+          setTimeout(() => fetchVipStatus(0), 5000);
           return;
         } else {
           setSubscription(null);
@@ -261,6 +329,8 @@ export function VipProvider({ children }: { children: ReactNode }) {
       ({ ...(previous ?? {}), vip_tier: tier, expires_at: expiresAt }) as VipSubscription,
     );
     setIsVip(true);
+    // Outrank the database until it catches up — see optimisticUntilRef.
+    optimisticUntilRef.current = Date.now() + 30_000;
     try {
       localStorage.setItem(VIP_CACHE_KEY, "true");
     } catch {

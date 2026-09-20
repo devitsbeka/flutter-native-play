@@ -487,6 +487,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       console.error('Sign out error:', err);
     }
+
+    // Tell the store the account has left.
+    //
+    // Without this the RevenueCat SDK stayed identified as the user who just
+    // signed out, and the purchase hook's own "already reconciled" marker
+    // still named them — so signing back in, even as the same account,
+    // skipped every entitlement check and the app forgot they were PRO. A
+    // *different* account signing in on the same phone was worse: until
+    // `logIn` landed, its purchases were attributed to the previous identity.
+    //
+    // Imported dynamically because useInAppPurchases imports this module; a
+    // static import would close the cycle. Awaited but never allowed to fail
+    // the sign-out — leaving is not something to refuse over a store call.
+    try {
+      const { resetPurchaseIdentity } = await import('@/hooks/useInAppPurchases');
+      await resetPurchaseIdentity();
+    } catch (err) {
+      console.warn('[auth] could not reset purchase identity on sign out:', err);
+    }
+
     setUser(null);
     setSession(null);
     setProfile(null);

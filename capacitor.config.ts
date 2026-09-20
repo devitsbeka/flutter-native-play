@@ -4,18 +4,12 @@ const config: CapacitorConfig = {
   appId: 'io.mytrivia.app',
   appName: 'MyTrivia',
   webDir: 'dist',
-  // Forward webview console output to the native log, in release builds too.
+  // TEMPORARY — diagnosis only, and it comes back out before submission.
   //
-  // The default ('debug') drops it, which is why a device attached with
-  // `devicectl device process launch --console` showed Capacitor's own plugin
-  // lines and not one of the `[iap]` breadcrumbs the purchase path writes at
-  // warn level specifically so they would survive a production build. They
-  // survive esbuild; they were being discarded by the bridge.
-  //
-  // This is here to diagnose purchases that take the money and credit nothing.
-  // It exposes nothing secret — the app logs product ids and outcomes, never
-  // tokens — but it is noise on a shipping build, so it comes back out once
-  // the crediting failure is understood.
+  // Without this the bridge drops both the [iap] breadcrumbs and the
+  // RevenueCat request/response traffic, so a device console shows nothing of
+  // the purchase path. Build 68 is the submission candidate and does NOT carry
+  // it; this build exists to watch the PRO entitlement behave.
   loggingBehavior: 'production',
   ios: {
     // Capacitor 8's own podspec sets ios.deployment_target = '15.0'. Declaring

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -405,6 +405,17 @@ export interface PurchaseAnnouncement {
   failed?: boolean;
   /** What the server said, shown so a failure can be diagnosed from a screenshot. */
   reason?: string;
+  /**
+   * This Apple ID already had the subscription before this tap.
+   *
+   * StoreKit does not refuse a second purchase of a subscription already
+   * owned — it shows its own "you're already subscribed" sheet and then
+   * resolves normally, with customerInfo. Treating that as a fresh purchase
+   * congratulated the player for subscribing again, every time they tapped,
+   * which is how the UI failing to show PRO turned into a loop: the screen said
+   * non-PRO, so they bought again, and were congratulated again.
+   */
+  alreadyActive?: boolean;
 }
 
 const purchaseSubscribers = new Set<(a: PurchaseAnnouncement) => void>();
@@ -587,6 +598,87 @@ async function initStore(): Promise<IAPProduct[]> {
 let identifiedAs: string | null = null;
 let identifyInFlight: Promise<boolean> | null = null;
 
+/**
+ * Who this process has reconciled with the store, and when.
+ *
+ * Module scope rather than a ref: the hook is mounted by the shop, the
+ * paywall, Settings and `useStorePrice`, and every navigation between them
+ * would otherwise be another round trip to verify-receipt.
+ *
+ * It was a `Set` of user ids that was never emptied, and that was the bug
+ * behind "I signed out and signed in again and it forgot I am PRO". Sign-out
+ * left the id in the set, so signing back in — even as the same account —
+ * matched it and skipped the check. Combined with `identifiedAs` surviving
+ * too, nothing in the app asked the store anything after a re-sign-in.
+ *
+ * A single id, cleared on sign-out, makes "reconcile once per SIGN-IN"
+ * expressible. `lastReconcileAt` bounds the resume trigger, which exists
+ * because the Apple ID can be changed while the app is in the background and
+ * the app user id does not move when it is.
+ */
+let reconciledUserId: string | null = null;
+let lastReconcileAt = 0;
+
+/**
+ * The reconcile currently running, for anything that must not act on an
+ * entitlement picture that has not settled yet — `purchase()` above all.
+ */
+let reconcileInFlight: Promise<void> | null = null;
+
+/** Least time between two resume-triggered syncs. */
+const RECONCILE_THROTTLE_MS = 60_000;
+
+/**
+ * What the mounted hooks want done when the app comes back.
+ *
+ * Read by the single process-wide resume listener, so that mounting this hook
+ * on four screens does not attach four `appStateChange` listeners.
+ *
+ * A Set rather than one slot: the shop renders this hook and so does every
+ * `useStorePrice` on the same page, and with a single slot the last one to
+ * mount overwrote the others — then unmounting *that* one left nobody
+ * registered, and the app silently stopped re-checking on resume for the rest
+ * of the session. Every registered hook is called; the throttle inside
+ * `reconcile` collapses them to one actual sync, because it claims the window
+ * synchronously before its first await.
+ */
+const resumeReconcilers = new Set<() => void>();
+
+/**
+ * Forget who the store thinks we are.
+ *
+ * Sign-out used to tear down the Supabase session and tell RevenueCat
+ * nothing, which left the SDK still identified as the account that had just
+ * left. Two consequences, both seen on a device:
+ *
+ *  - signing back in skipped every entitlement check, because `identifiedAs`
+ *    and the reconcile guard both still named that user;
+ *  - a *different* account signing in on the same phone inherited the
+ *    previous one's RevenueCat identity until `logIn` landed, which is how a
+ *    subscription came to be attributed across two app user ids.
+ *
+ * Exported for `AuthContext.signOut`, which imports it dynamically — a static
+ * import would close a cycle, since this module imports `useAuth`.
+ */
+export async function resetPurchaseIdentity(): Promise<void> {
+  reconciledUserId = null;
+  lastReconcileAt = 0;
+  identifiedAs = null;
+  identifyInFlight = null;
+
+  if (!Capacitor.isNativePlatform()) return;
+
+  try {
+    const plugin = (await loadPurchasesPlugin())?.plugin;
+    // Throws when the current id is already anonymous, which is a normal
+    // state to sign out from and not worth reporting as a failure.
+    await withTimeout(plugin?.logOut(), "logOut");
+    iapLog("signed out of RevenueCat");
+  } catch (e) {
+    iapLog("RevenueCat logOut did not complete:", String(e));
+  }
+}
+
 function ensureIdentified(userId: string): Promise<boolean> {
   if (identifiedAs === userId) return Promise.resolve(true);
   if (identifyInFlight) return identifyInFlight;
@@ -693,6 +785,15 @@ function attachResumeListener() {
     .then(({ App }) => {
       void App.addListener("appStateChange", ({ isActive }) => {
         if (!isActive) return;
+
+        // Before the catalogue check, and not conditional on it. Returning
+        // from the background is also where the Apple ID has just been
+        // changed — the App Store sign-out a tester does between sandbox
+        // accounts happens in Settings, with this app suspended. The app user
+        // id does not move when that happens, so nothing else would ever
+        // notice.
+        resumeReconcilers.forEach((fn) => fn());
+
         if (storeProducts.length > 0) return;
         iapLog("app resumed with an empty catalogue — asking the store again");
         void retryStore();
@@ -801,7 +902,122 @@ export function useInAppPurchases() {
    * server-side, but this is the deterministic half: the client knows exactly
    * when it has bought something, and asks.
    */
-  const { refresh: refreshVip, applyEntitlement } = useVipStatus();
+  const { refresh: refreshVip, applyEntitlement, isVip } = useVipStatus();
+
+  // `purchase` is a useCallback that awaits before reading this, and a
+  // captured `isVip` would be whatever it was when the callback was built —
+  // false, on the sign-in where it matters most.
+  const isVipRef = useRef(isVip);
+  isVipRef.current = isVip;
+
+  /**
+   * Establish what this account owns, from the store, on every sign-in.
+   *
+   * There used to be no such process. `syncEntitlements` ran from a purchase,
+   * a restore and the gem poll, and nowhere else — so a subscription the
+   * database had failed to record stayed unrecorded until the player thought
+   * to press Restore Purchases. Relaunching did not help: that is what "I
+   * exited the app and launched it again and it still showed the Subscribe
+   * button" was.
+   *
+   * The first version of this ran once per *app process* and kept a set of
+   * user ids that was never emptied, which reproduced the same complaint one
+   * step along: "it works until i sign out and sign in again, then it didn't
+   * remember I am pro". Signing out left the id in the set, so signing back
+   * in matched it and skipped the check.
+   *
+   * Two triggers now, and the state they key on is cleared on sign-out:
+   *
+   *   sign-in  — always, once per sign-in. Not once per process, and not once
+   *              per mount either; `reconciledUserId` is module scope so the
+   *              four screens that mount this hook share one answer.
+   *   resume   — throttled. The Apple ID can be swapped in Settings while the
+   *              app is suspended, and the app user id does not move when it
+   *              is, so nothing else in the app would notice.
+   *
+   * Detached and quiet on purpose. Nothing awaits it and nothing is
+   * announced — the purchase announcement channel belongs to `purchase()`,
+   * and a sign-in must never produce a congratulations modal. It refreshes
+   * what the screen is already showing, and only when the sync found
+   * something.
+   */
+  useEffect(() => {
+    if (!user?.id || !Capacitor.isNativePlatform()) {
+      // Signed out — including a session that expired or was revoked, which
+      // never reaches AuthContext.signOut. The next sign-in has to ask the
+      // store again even if it is the same account.
+      //
+      // `identifiedAs` is cleared here as well as in resetPurchaseIdentity,
+      // deliberately. That makes the guarantee independent of whether the
+      // sign-out went through AuthContext at all: whatever route the session
+      // left by, the next sign-in re-identifies and re-syncs. The AuthContext
+      // call remains worth making because it also signs the RevenueCat SDK
+      // itself out, which this cannot do without a plugin round trip on a
+      // path that runs on every render pass with no user.
+      reconciledUserId = null;
+      identifiedAs = null;
+      return;
+    }
+
+    const userId = user.id;
+
+    const reconcile = (trigger: "sign-in" | "resume") => {
+      if (trigger === "sign-in" && reconciledUserId === userId) return;
+      if (trigger === "resume" && Date.now() - lastReconcileAt < RECONCILE_THROTTLE_MS) return;
+
+      // Claimed before the awaits, so two triggers landing together — a
+      // resume that arrives while the sign-in sync is still in flight — do
+      // not both call verify-receipt.
+      reconciledUserId = userId;
+      lastReconcileAt = Date.now();
+
+      // Published so `purchase()` can wait for it. Tapping Subscribe seconds
+      // after signing in used to read an entitlement picture that had not
+      // settled, and charge — or celebrate — on the strength of it.
+      let work: Promise<void>;
+      work = (async () => {
+      const identified = await ensureIdentified(userId);
+      if (!identified) {
+        // Syncing against an id RevenueCat is not holding would report
+        // "nothing owned" for someone who owns something, so don't ask.
+        iapLog(`${trigger} reconcile skipped — not identified to RevenueCat`);
+        reconciledUserId = null;
+        return;
+      }
+
+      const synced = await syncEntitlements();
+      if (!synced.success) {
+        // Let the next trigger try again rather than marking it done.
+        reconciledUserId = null;
+        iapLog(`${trigger} reconcile did not complete:`, synced.error ?? "unknown");
+        return;
+      }
+
+      iapLog(`${trigger} reconcile: tier=${synced.tier ?? "none"} gems=${synced.gemsCredited}`);
+
+      // refreshVip unconditionally, not only when a tier came back. A sync
+      // that reports nothing owned is also news — it is how a cancellation,
+      // an expiry and a sign-in as a non-subscriber reach the screen.
+      refreshVip();
+      if (synced.gemsCredited > 0) await refreshBalance();
+      })().finally(() => {
+        if (reconcileInFlight === work) reconcileInFlight = null;
+      });
+
+      reconcileInFlight = work;
+    };
+
+    reconcile("sign-in");
+
+    const handler = () => reconcile("resume");
+    resumeReconcilers.add(handler);
+    return () => {
+      resumeReconcilers.delete(handler);
+    };
+    // refreshVip/refreshBalance are stable per user; re-running on their
+    // identity would defeat the once-per-sign-in guard.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   // Purchase a product
   const purchase = useCallback(async (productId: string): Promise<PurchaseResult> => {
@@ -816,17 +1032,6 @@ export function useInAppPurchases() {
     }
 
     setPurchasing(true);
-
-    // Elapsed timings for the whole purchase path.
-    //
-    // "It takes about eight seconds" is not something the existing breadcrumbs
-    // could confirm or place: they say what happened, never when, so the wait
-    // inside StoreKit's payment sheet (the player's own Face ID and tap, which
-    // is not the app being slow) could not be told apart from the wait after
-    // it returns (which is). Every line below carries milliseconds since the
-    // tap, so the gap can be attributed rather than guessed at.
-    const startedAt = Date.now();
-    const ms = () => `+${Date.now() - startedAt}ms`;
 
     try {
       const plugin = (await loadPurchasesPlugin())?.plugin;
@@ -851,6 +1056,18 @@ export function useInAppPurchases() {
       // available outcome, so this stops instead. The store has not been
       // touched at this point — nothing is charged, nothing needs refunding —
       // and the player gets a message rather than a silent failure.
+      // Ask the store, not our own database.
+      //
+      // This used to read `isVip` from VipContext, which is a view of
+      // vip_subscriptions — and that row goes briefly unreadable around a token
+      // refresh (see confirmedActiveRef). When it did, a live subscriber looked
+      // unsubscribed, so a repeat purchase was announced as a brand new one:
+      // Apple's "you're already subscribed" sheet, and then our congratulations
+      // on top of it.
+      //
+      // customerInfo.activeSubscriptions comes from StoreKit via RevenueCat and
+      // does not care what our database can see this second. `isVip` stays as
+      // the fallback for when the call fails.
       const identified = await ensureIdentified(user.id);
       if (!identified) {
         console.error(
@@ -859,6 +1076,42 @@ export function useInAppPurchases() {
         );
         toast.error(tStandalone("extra.iapActivationFailed"));
         return { success: false, error: "not_identified" };
+      }
+
+      // Settle the entitlement picture before deciding anything about it.
+      //
+      // Both inputs below were read too early, and on a fresh sign-in both
+      // were wrong at the same time:
+      //
+      //   - `getCustomerInfo()` used to run BEFORE `ensureIdentified`, so it
+      //     asked RevenueCat about whatever identity the SDK still held — the
+      //     previous account, or its own anonymous id — which reports no
+      //     active subscriptions for someone who has one.
+      //   - `isVip`, the fallback, is false until the sign-in reconcile lands,
+      //     which takes a verify-receipt round trip.
+      //
+      // So tapping Subscribe seconds after signing in produced Apple's own
+      // "you're already subscribed" sheet followed by our congratulations on
+      // a subscription bought weeks earlier. Identify first, then wait for any
+      // reconcile already in flight, and only then ask.
+      if (reconcileInFlight) {
+        try {
+          await withTimeout(reconcileInFlight, "pending reconcile");
+        } catch (e) {
+          iapLog("pending reconcile did not settle before purchase:", String(e));
+        }
+      }
+
+      let wasSubscribed = isVipRef.current && Boolean(SUBSCRIPTION_TIERS[productId]);
+      if (SUBSCRIPTION_TIERS[productId]) {
+        try {
+          const info = await withTimeout(plugin.getCustomerInfo(), "getCustomerInfo");
+          const active: string[] =
+            info?.customerInfo?.activeSubscriptions ?? info?.activeSubscriptions ?? [];
+          if (Array.isArray(active)) wasSubscribed = active.includes(productId);
+        } catch (e) {
+          iapLog("getCustomerInfo failed, falling back to VipContext:", String(e));
+        }
       }
 
       // Get offerings to find the package for this product
@@ -893,9 +1146,7 @@ export function useInAppPurchases() {
       
       if (targetPackage) {
         // Purchase using package (preferred method)
-        iapLog(`opening payment sheet (package) ${ms()}`);
         const result = await plugin.purchasePackage({ aPackage: targetPackage });
-        iapLog(`StoreKit returned ${ms()} — everything after this is the app`);
         customerInfo = result.customerInfo;
       } else {
         // No package carries this product, which always means the RevenueCat
@@ -947,9 +1198,7 @@ export function useInAppPurchases() {
           return { success: false, error: "product_not_found" };
         }
 
-        iapLog(`opening payment sheet (direct product) ${ms()}`);
         const result = await plugin.purchaseStoreProduct({ product: storeProduct });
-        iapLog(`StoreKit returned ${ms()} — everything after this is the app`);
         customerInfo = result.customerInfo;
       }
 
@@ -988,8 +1237,12 @@ export function useInAppPurchases() {
         // failure branch below announces over this one if it did not — which
         // is the honest ordering, because the charge really did happen either
         // way.
-        announcePurchase({ productId, gems: gemsForProduct(productId) });
-        iapLog(`confirmation on screen ${ms()}`);
+        announcePurchase({
+          productId,
+          gems: gemsForProduct(productId),
+          // Captured before the store was called: see `alreadyActive`.
+          alreadyActive: wasSubscribed,
+        });
 
         // Show the gems on the balance now, for the same reason.
         //
@@ -1028,9 +1281,7 @@ export function useInAppPurchases() {
         // no gems, so waiting on that would be waiting for something that is
         // never coming.
         const expectsGems = Object.values(GEM_PACK_PRODUCTS).includes(productId);
-        iapLog(`calling verify-receipt ${ms()}`);
         const synced = await syncEntitlements();
-        iapLog(`verify-receipt answered ${ms()} (tier=${synced.tier ?? "none"}, gems=${synced.gemsCredited})`);
 
         if (expectsGems && synced.success && synced.gemsCredited === 0) {
           // Not credited on the first ask. Stop waiting in front of the user
@@ -1096,6 +1347,39 @@ export function useInAppPurchases() {
         // the non-PRO UI over a row that says otherwise until it is relaunched.
         if (synced.tier) refreshVip();
 
+        // A subscription that bought this account nothing must not be
+        // celebrated.
+        //
+        // The confirmation goes up the instant StoreKit returns, which is right
+        // for a purchase that lands — but StoreKit answers for the **Apple ID**,
+        // while the entitlement is granted to the **app account**. Those come
+        // apart whenever the Apple ID already owns the subscription under a
+        // different app user id: iOS shows "you're already subscribed",
+        // RevenueCat keeps it where it was, and this account receives nothing.
+        //
+        // Observed on a device: an Apple ID holding PRO under app user
+        // a22491af… bought PRO again while signed in as 215a70e6…. Apple
+        // refused to charge, nothing attached to the new account, and the app
+        // congratulated them on subscribing.
+        //
+        // verify-receipt has just told us what this account actually owns. If a
+        // subscription purchase produced no tier, the entitlement went
+        // somewhere else, and the honest thing is to say so and point at
+        // Restore rather than to cheer.
+        if (SUBSCRIPTION_TIERS[productId] && !synced.tier) {
+          console.error(
+            `[iap] ${productId} completed at the store but granted this ` +
+              `account no tier. The Apple ID most likely owns it under a ` +
+              `different app user id — Restore is the way across.`,
+          );
+          announcePurchase({
+            productId,
+            failed: true,
+            reason: tStandalone("iap.subscriptionOnAnotherAccount"),
+          });
+          return { success: false, error: "entitlement_not_granted" };
+        }
+
         toast.success(tStandalone("iap.purchaseComplete"));
         // Already confirmed on screen, above, the moment StoreKit completed
         // the purchase. Announcing again here would re-open the modal several
@@ -1153,7 +1437,7 @@ export function useInAppPurchases() {
     } finally {
       setPurchasing(false);
     }
-  }, [user, profile, setProfileLocal, refreshBalance, refreshVip, applyEntitlement]);
+  }, [user, profile, isVip, setProfileLocal, refreshBalance, refreshVip, applyEntitlement]);
 
   /**
    * Restore previous purchases.
@@ -1263,7 +1547,7 @@ export function useInAppPurchases() {
     } finally {
       setRestoring(false);
     }
-  }, [user, profile, setProfileLocal, refreshBalance, refreshVip, applyEntitlement]);
+  }, [user, profile, isVip, setProfileLocal, refreshBalance, refreshVip, applyEntitlement]);
 
   // Get product by ID
   const getProduct = useCallback((productId: string): IAPProduct | undefined => {

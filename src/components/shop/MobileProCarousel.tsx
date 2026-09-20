@@ -80,7 +80,7 @@ export function ProBannerReel({ purchasedItems, isPurchasing, onItemClick, slide
   const monthLabel = t("extra.perMonthShort");
   const { dailyDeal, hourlyDeal, dailyRemaining, hourlyRemaining } = useLiveDeals();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const { subscription, isVip } = useVipStatus();
+  const { subscription, isVip, loading: vipLoading } = useVipStatus();
   const { initiateProCheckout, isProcessing, storeReady } = useProPurchase();
   // No catalogue, no sale: on a phone `storeReady` is false whenever
   // StoreKit has not answered, and the price beside this button is a
@@ -423,7 +423,7 @@ export function ProBannerReel({ purchasedItems, isPurchasing, onItemClick, slide
                     // store can answer (see utils/introOffer), and this reel
                     // does not ask it.
                     actionLabel={
-                      isProcessing ? (
+                      isProcessing || vipLoading ? (
                         <Loader2 className="size-5 animate-spin" />
                       ) : state.isActive ? (
                         state.text
@@ -436,7 +436,16 @@ export function ProBannerReel({ purchasedItems, isPurchasing, onItemClick, slide
                         t("shop.buyFor").replace("{price}", `${price.display}${monthLabel}`)
                       )
                     }
-                    actionDisabled={state.isActive || busy}
+                    // Unknown is not "no".
+                    //
+                    // Until the subscription has been read, `currentTier` is
+                    // undefined and every tier therefore rendered as one to
+                    // buy. On a fresh sign-in that is a Subscribe button
+                    // offered to somebody who is already subscribed — and
+                    // tapping it produced Apple's own "you're already
+                    // subscribed" sheet, which is where the whole confusing
+                    // sequence started. Offer nothing until we know.
+                    actionDisabled={state.isActive || busy || vipLoading}
                     actionActive={state.isActive && !busy}
                     onAction={() => handleUpgrade(slide.id as SimplifiedTier)}
                   />

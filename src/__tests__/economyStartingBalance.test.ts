@@ -44,7 +44,13 @@ const migrationFiles = (): string[] =>
     .sort()
     .map((f) => `supabase/migrations/${f}`);
 const migration = read("supabase/migrations/20261102100000_starting_balance_and_pro_welcome.sql");
-const iap = read("supabase/functions/_shared/iap.ts");
+// The server's IAP module is two files: `iap.ts` is the Deno layer
+// (secret key, fetch) and `iapEntitlements.ts` holds the rules, so that a
+// test can import them — see noDenoInBrowserTypecheck.test.ts. Read both,
+// so moving a rule between them is not a failing test.
+const iap =
+  read("supabase/functions/_shared/iap.ts") +
+  read("supabase/functions/_shared/iapEntitlements.ts");
 const economyHook = read("src/hooks/useEconomyConfig.ts");
 
 /** `('id', 5000, ...)` → 5000. */
