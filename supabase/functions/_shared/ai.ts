@@ -123,3 +123,34 @@ export const AI_API_KEY: string = provider.apiKey;
 export function aiModel(model: string): string {
   return provider.mapModel(model);
 }
+
+/**
+ * Describe an AI gateway failure well enough to act on it.
+ *
+ * Call sites threw `AI API error: ${status}` and dropped both the upstream
+ * body and which provider produced it. That is the same mistake verify-receipt
+ * paid for with `"Unknown error"`: a 403 that says nothing cannot be told
+ * apart from a wrong key, an unbilled project, a model the key has no access
+ * to, or a gateway that has stopped accepting the account entirely — and the
+ * reason only existed in a function log nobody outside the Supabase dashboard
+ * can read.
+ *
+ * The provider name matters most. `resolveProvider()` picks at cold start in
+ * precedence order — custom gateway, then GEMINI_API_KEY, then the legacy
+ * LOVABLE_API_KEY — so an app still on `legacy` is not calling Google at all,
+ * and fixing Google billing would change nothing. Naming it in the error is
+ * the difference between that being obvious and being guessed at.
+ *
+ * Anything key-shaped in the upstream body is redacted: these strings reach a
+ * client, and a provider that echoes the credential back in its own error
+ * message must not have it forwarded.
+ */
+export function describeAiFailure(status: number, body: string): string {
+  const redacted = body
+    .replace(/AIza[0-9A-Za-z_-]{10,}/g, "[redacted-key]")
+    .replace(/\bsk-[0-9A-Za-z_-]{10,}/g, "[redacted-key]")
+    .replace(/Bearer\s+[0-9A-Za-z._-]{10,}/gi, "Bearer [redacted]")
+    .slice(0, 400);
+
+  return `AI API error: ${status} (provider=${AI_PROVIDER}) ${redacted}`.trim();
+}

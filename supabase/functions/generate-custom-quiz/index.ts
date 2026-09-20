@@ -3,7 +3,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getCorsHeaders } from "../_shared/cors.ts";
 import { factCheckQuestions } from "../_shared/factCheck.ts";
-import { AI_CHAT_URL, AI_API_KEY, aiModel } from "../_shared/ai.ts";
+import { AI_CHAT_URL, AI_API_KEY, aiModel, describeAiFailure } from "../_shared/ai.ts";
 import {
   CONTENT_SAFETY_PROMPT,
   containsBlockedText,
@@ -369,7 +369,7 @@ Return ONLY valid JSON.`;
           { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
-      throw new Error(`AI API error: ${response.status}`);
+      throw new Error(describeAiFailure(response.status, errorText));
     }
 
     const data = await response.json();
