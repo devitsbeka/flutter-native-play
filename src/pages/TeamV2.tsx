@@ -466,6 +466,34 @@ function TeamContentV2() {
       if (frame) cancelAnimationFrame(frame);
     };
   }, [headerEl, headerHeight]);
+  /**
+   * The retracted header does not survive a trip into a room.
+   *
+   * Entering one does not unmount this page — `phase === "lobby"` simply
+   * returns the lobby instead of the list further down — so every piece of
+   * state here, `headerCollapsed` included, is still set on the way back.
+   * And the only thing that ever clears it is a scroll event: the listener
+   * below is what decides, and it needs six pixels of movement to fire.
+   *
+   * So a list scrolled down, a room opened, and back again left the chrome
+   * transformed up off the top of the screen while its layout box stayed
+   * where it was — a blank strip above the first card, exactly as tall as
+   * the header it was hiding, until the next scroll (owner: "i see this
+   * white empty space on online game page sometimes ... when i open the
+   * room and click back button i think i see this white empty space").
+   *
+   * Reading the scroller settles it against what is actually on screen
+   * rather than what was true before the room, and it covers the countdown,
+   * the match and the results screen for the same reason — none of them
+   * unmounts this page either.
+   */
+  const onList = phase === "idle" || !currentRoom;
+  useEffect(() => {
+    if (!onList) return;
+    const scroller = document.getElementById("main-scroll-container");
+    setHeaderCollapsed((scroller?.scrollTop ?? 0) > headerHeight);
+  }, [onList, headerHeight]);
+
   const chromeShift = headerCollapsed ? `translateY(-${headerHeight}px)` : "translateY(0)";
   const CHROME_EASE = "transform 320ms cubic-bezier(0.22, 0.61, 0.36, 1)";
   useEffect(() => {
