@@ -2743,7 +2743,7 @@ export const de: KaTranslations = {
     proSeatsHow: "Wähle jemanden aus deiner Freundesliste. Die Person bekommt volles PRO, solange dein Abo läuft.",
     proSeatsGive: "An einen Freund senden",
     proSeatsRevoke: "Zurücknehmen",
-    proSeatsSend: "PRO senden",
+    proSeatsSend: "Geschenk",
     proSeatsSentBadge: "PRO gesendet",
     proSeatsNoFriends: "Füge zuerst einen Freund hinzu, dann kannst du PRO verschenken.",
     proSeatsAllHavePro: "Alle in deiner Freundesliste haben bereits PRO.",

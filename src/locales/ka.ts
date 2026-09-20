@@ -3133,7 +3133,7 @@ export const ka = {
     proSeatsHow: "აირჩიე მეგობარი სიიდან. ის მიიღებს სრულ PRO-ს მანამ, სანამ შენი გამოწერა აქტიურია.",
     proSeatsGive: "გაუგზავნე მეგობარს",
     proSeatsRevoke: "დაბრუნება",
-    proSeatsSend: "PRO-ს გაგზავნა",
+    proSeatsSend: "საჩუქარი",
     proSeatsSentBadge: "PRO გაგზავნილია",
     proSeatsNoFriends: "ჯერ დაამატე მეგობარი, შემდეგ შეძლებ PRO-ს ჩუქებას.",
     proSeatsAllHavePro: "შენს ყველა მეგობარს უკვე აქვს PRO.",

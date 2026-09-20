@@ -2756,7 +2756,7 @@ export const it: KaTranslations = {
     proSeatsHow: "Scegli qualcuno dalla tua lista di amici. Avrà il PRO completo finché dura il tuo abbonamento.",
     proSeatsGive: "Invia a un amico",
     proSeatsRevoke: "Riprendi",
-    proSeatsSend: "Invia PRO",
+    proSeatsSend: "Regala",
     proSeatsSentBadge: "PRO inviato",
     proSeatsNoFriends: "Aggiungi prima un amico, poi potrai regalargli PRO.",
     proSeatsAllHavePro: "Tutti i tuoi amici hanno già PRO.",
