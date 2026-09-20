@@ -2566,6 +2566,7 @@ export const ka = {
     notifAccepted: "მიღებულია",
     notifDeclined: "უარყოფილია",
     notifRequestGone: "მოთხოვნა გაუქმდა",
+    notifRequestAlreadyAnswered: "ამ მოთხოვნას უკვე გაეცა პასუხი.",
     rematchAskCta: "მოითხოვე რევანში",
     rematchAskSent: "რევანშის მოთხოვნა გაიგზავნა",
     rematchRequestTitle: "რევანში?",

@@ -217,6 +217,63 @@ export function joinAnswerTaken(outcome: JoinAnswer): "accepted" | "declined" | 
   return outcome === "approved" ? "accepted" : outcome === "declined" ? "declined" : "gone";
 }
 
+/**
+ * Write that answer onto EVERY notification about this knock.
+ *
+ * One knock can leave more than one card: a request re-sent after a
+ * withdrawal, a re-notify, two rows written by different paths. Answering
+ * settled only the card that was tapped, so the others kept their live
+ * Accept and Decline — and pressing one of those reached a row that was no
+ * longer pending, which `answerJoinRequest` truthfully answers with what
+ * already happened. Decline then stamped "Accepted", which reads as the app
+ * ignoring the tap (owner: "if i click decline it still shows accepted").
+ *
+ * Settling all of them is the fix: after the first answer there is no second
+ * live button to disagree with it. The cards are the host's own rows, which
+ * is all RLS will let this update anyway.
+ */
+export async function settleJoinNotifications(opts: {
+  roomId: string;
+  requesterId: string;
+  taken: "accepted" | "declined" | "gone";
+  /** Answered from this card; settled even if the match below misses it. */
+  notificationId: string;
+}): Promise<void> {
+  const { roomId, requesterId, taken, notificationId } = opts;
+
+  const { data: rows, error } = await supabase
+    .from("notifications")
+    .select("id, data")
+    .eq("type", "room_join_request")
+    .eq("data->>room_id", roomId)
+    .eq("data->>requester_id", requesterId);
+
+  if (error) console.error("[joinRequests] could not read sibling cards", error);
+
+  const byId = new Map<string, Record<string, unknown>>();
+  for (const row of rows ?? []) {
+    byId.set(row.id as string, ((row.data as Record<string, unknown>) ?? {}));
+  }
+  if (!byId.has(notificationId)) {
+    const { data: own } = await supabase
+      .from("notifications")
+      .select("data")
+      .eq("id", notificationId)
+      .maybeSingle();
+    byId.set(notificationId, ((own?.data as Record<string, unknown>) ?? {}));
+  }
+
+  const readAt = new Date().toISOString();
+  await Promise.all(
+    [...byId].map(([id, data]) =>
+      supabase
+        .from("notifications")
+        .update({ read_at: readAt, data: { ...data, action_taken: taken } })
+        .eq("id", id),
+    ),
+  );
+}
+
 /** Shut the door for good, from anywhere — see block_room_join. */
 export async function blockJoinRequest(requestId: string): Promise<boolean> {
   const { error } = await supabase.rpc("block_room_join", { p_request_id: requestId });

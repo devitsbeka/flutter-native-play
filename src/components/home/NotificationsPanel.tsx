@@ -12,7 +12,7 @@ import { useGameInvitations } from '@/hooks/useGameInvitations';
 import { useNavigate } from 'react-router-dom';
 import { routeForRoom, ROOM_KIND_COLUMNS } from "@/utils/roomRoutes";
 import { supabase } from '@/integrations/supabase/client';
-import { answerJoinRequest, joinAnswerTaken } from '@/hooks/useRoomJoinRequests';
+import { answerJoinRequest, joinAnswerTaken, settleJoinNotifications } from '@/hooks/useRoomJoinRequests';
 import { answerRematchRequest } from '@/utils/rematchRequests';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from "@/lib/toast";
@@ -265,24 +265,25 @@ export function NotificationsPanel({ isOpen, onClose, defaultTab }: Notification
     setActionLoading(notificationId);
     try {
       const outcome = await answerJoinRequest(roomId, requesterId, approve);
-      const { data: current } = await supabase
-        .from('notifications')
-        .select('data')
-        .eq('id', notificationId)
-        .single();
-      await supabase
-        .from('notifications')
-        .update({
-          read_at: new Date().toISOString(),
-          data: {
-            ...((current?.data as Record<string, unknown>) || {}),
-            action_taken: joinAnswerTaken(outcome),
-          },
-        })
-        .eq('id', notificationId);
+      // Every card about this knock, not only the one that was tapped —
+      // otherwise a second card keeps live buttons that can disagree with
+      // the answer already given. See settleJoinNotifications.
+      await settleJoinNotifications({
+        roomId,
+        requesterId,
+        notificationId,
+        taken: joinAnswerTaken(outcome),
+      });
       // What happened, in its own words: a knock answered elsewhere says
       // how it was answered; one withdrawn says so, not "Declined".
+      //
+      // And when what happened is not what was tapped — a Decline landing on
+      // a knock somebody had already let in — say THAT, rather than the
+      // opposite of the button just pressed.
+      const contradicted =
+        (approve && outcome === 'declined') || (!approve && outcome === 'approved');
       if (outcome === 'gone') toast.info(t("extra.notifRequestGone"));
+      else if (contradicted) toast.info(t("extra.notifRequestAlreadyAnswered"));
       else toast.success(outcome === 'approved' ? t("extra.notifAccepted") : t("extra.notifDeclined"));
     } catch (error) {
       console.error('[notifications] join answer failed', error);

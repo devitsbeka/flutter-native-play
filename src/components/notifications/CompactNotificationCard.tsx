@@ -615,32 +615,42 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
             </div>
           )}
 
-          {/* The answer, once given, in the same pill the question wore: the
-              mint one with its check for yes, the unfilled one with its X
-              for no — settled, so it no longer takes a tap (owner:
-              "'accepted' button looks different, make sure we have style
-              consistency here"). */}
+          {/* The answer, once given, as a line of text — not a button.
+              It wore the same pill the question wore, which made a settled
+              card look like it was still asking: a thing shaped like a
+              button invites the tap it no longer takes, and an "Accepted"
+              pill sitting where "Accept" had been read as an unpressed
+              choice (owner: "when notification is clicked - either accept
+              or decline show only text - not as button ... say accepted or
+              declined").
+
+              The check and the X stay: they are what makes the answer
+              readable at a glance down a list of cards. */}
           {hasActionTaken && (isFriendRequest || isJoinRequest || isRematch) && (
-            <RoomCardPlayButton
-              tone={actionTaken === 'accepted' ? "mint" : "outline"}
-              aria-disabled
-              tabIndex={-1}
-              className="pointer-events-none mt-3 min-h-[40px] px-5"
+            <p
+              className={cn(
+                "mt-3 flex items-center gap-1.5 text-sm font-bold",
+                actionTaken === 'accepted'
+                  ? "text-emerald-600"
+                  : actionTaken === 'declined'
+                    ? "text-muted-foreground"
+                    : "text-muted-foreground",
+              )}
             >
               {actionTaken === 'accepted' ? (
                 <>
-                  <Check className="w-3.5 h-3.5" strokeWidth={3} />
+                  <Check className="w-4 h-4" strokeWidth={3} />
                   {t("extra.notifAccepted")}
                 </>
               ) : actionTaken === 'declined' ? (
                 <>
-                  <X className="w-3.5 h-3.5" strokeWidth={3} />
+                  <X className="w-4 h-4" strokeWidth={3} />
                   {t("extra.notifDeclined")}
                 </>
               ) : (
                 t("extra.notifRequestGone")
               )}
-            </RoomCardPlayButton>
+            </p>
           )}
 
           {hasSingleAction && (
