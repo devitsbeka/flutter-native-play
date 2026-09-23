@@ -1,27 +1,16 @@
 import {open,snap,save,clickables,W} from './walklib.tmp.mjs';
 const {browser,ctx,page}=await open();
 page.setDefaultTimeout(6000);
-await page.goto('http://localhost:3172/game',{waitUntil:'domcontentloaded'}); await page.waitForTimeout(7000);
-console.log('LS', await page.evaluate(()=>localStorage.getItem('mytrivia_guest_plays')));
-const btns=page.locator('button:visible'); const n=await btns.count();
-for(let i=0;i<n;i++){ const t=(await btns.nth(i).innerText()).trim(); const a=await btns.nth(i).getAttribute('aria-label'); if(!t&&!a){ await btns.nth(i).click().catch(()=>{}); break; } }
-await page.waitForTimeout(1500);
-await page.getByText('Start!',{exact:true}).click();
-const SAFE=/^(Next Question|Continue|Next|Claim|Collect|Done|OK|Got it|Skip|See results|Results)$/i;
-let lastQ='', same=0, shot=0;
-for(let q=1;q<=60;q++){
-  await page.waitForTimeout(2000);
-  if(!page.url().startsWith('http://localhost:3172/game')){ console.log('LEFT GAME', page.url()); await snap(page,`31-left-game`); break; }
-  const txt=await page.evaluate(()=>document.body.innerText);
-  const c=await clickables(page);
-  const safe=c.find(t=>SAFE.test(t));
-  const isQ=/\nA\n/.test(txt) && /\nD\n/.test(txt);
-  const qline=txt.split('\n').find(l=>l.endsWith('?'))||'';
-  if(isQ && qline!==lastQ){ shot++; await snap(page,`29-q${shot}`); lastQ=qline; same=0;
-    // tap option C
-    const loc=page.getByText('C',{exact:true}).first(); await loc.click().catch(e=>console.log('optfail')); await page.waitForTimeout(1200); await snap(page,`29-q${shot}-answered`); continue; }
-  if(isQ){ same++; if(same===3) await snap(page,`29-q${shot}-stuck`); if(same>8){console.log('STUCK'); break;} }
-  if(safe){ console.log('CLICK',safe); await page.getByText(safe,{exact:true}).first().click().catch(()=>{}); continue; }
-  if(!isQ){ await snap(page,`32-post-${q}`); console.log('BTN',JSON.stringify(c)); if(c.some(t=>/play again|rematch|home|new game/i.test(t))) break; }
+await page.goto('http://localhost:3172/words',{waitUntil:'domcontentloaded'}); await page.waitForTimeout(5000);
+const P={A:[195,590],B:[285,655],O:[250,760],U:[140,760],T:[105,655]};
+async function word(w){ const pts=[...w].map(c=>P[c]); await page.mouse.move(...pts[0]); await page.mouse.down(); for(const p of pts.slice(1)){ await page.mouse.move(p[0],p[1],{steps:6}); await page.waitForTimeout(80);} await page.mouse.up(); await page.waitForTimeout(1500); }
+let k=0;
+for(const w of ['ABOUT','AUTO','BOAT','TUBA','TAB','BUT','OUT','TUB','OAT','BOA','BAT','TAU','BOUT']){
+  await word(w); k++;
+  const t=await page.evaluate(()=>document.body.innerText);
+  console.log(w, t.replace(/\n+/g,' | ').slice(0,200));
+  if(k===1) await snap(page,'36-words-after-first');
+  if(!/MOUNTAIN 1\/3/.test(t) || /complete|bonus|great|excellent|next/i.test(t)){ await snap(page,`37-words-event-${w}`); }
 }
+await page.waitForTimeout(3000); await snap(page,'38-words-end'); console.log(await clickables(page));
 await save(ctx); await browser.close();

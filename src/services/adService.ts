@@ -275,7 +275,11 @@ class AdService {
         npa: true as const,
       };
     }
-    return {};
+    // An adult is capped at Teen too. The app is rated 13+ on the App Store,
+    // and the ads inside it answer to that rating, not to the viewer's age:
+    // with no cap here, AdMob could serve a Mature-rated creative in a 13+
+    // app to anyone whose profile said 18.
+    return { maxAdContentRating: 'Teen' as const };
   }
 
   /**

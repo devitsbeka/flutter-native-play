@@ -43,4 +43,10 @@ describe("ad settings survive the bridge", () => {
     expect(source).toMatch(/npa:\s*true as const/);
     expect(source).not.toMatch(/npa:\s*'1'/);
   });
+
+  it("caps an adult at Teen too, because the app is rated 13+", () => {
+    // The ads answer to the App Store rating, not the viewer's age: without
+    // this, a profile that said 18 could be served a Mature creative.
+    expect(raw).toMatch(/return \{ maxAdContentRating: 'Teen' as const \};/);
+  });
 });
