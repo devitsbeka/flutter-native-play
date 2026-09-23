@@ -218,13 +218,17 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
       };
     }, [imageUrl]);
 
-    // The clock waits for this (see onMediaReady above). Read through a ref
-    // so a caller's fresh closure never re-fires the effect.
-    const onMediaReadyRef = React.useRef(onMediaReady);
-    onMediaReadyRef.current = onMediaReady;
+    // The clock waits for this (see onMediaReady above). It re-fires when the
+    // callback changes, because that is how a new question arrives: the card
+    // is not remounted per question, and two text-only questions in a row
+    // have the same imageUrl (none) and the same status — keyed on those
+    // alone, the second question never said it was ready and its clock and
+    // its opponent both sat still until the player answered.
+    // QuizGameScreenProd's markMediaReady is memoised per question index, so
+    // an ordinary re-render does not re-fire it.
     React.useEffect(() => {
-      if (!imageUrl || imageStatus === "loaded" || imageStatus === "error") onMediaReadyRef.current?.();
-    }, [imageUrl, imageStatus]);
+      if (!imageUrl || imageStatus === "loaded" || imageStatus === "error") onMediaReady?.();
+    }, [imageUrl, imageStatus, onMediaReady]);
 
     // Wikimedia rate-limits, so its images are fetched through our own edge
     // cache rather than once per player. See questionImageSrc.

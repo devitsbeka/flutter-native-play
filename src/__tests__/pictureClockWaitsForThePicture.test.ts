@@ -30,9 +30,16 @@ const quick = read("src/components/game/QuizGameScreenProd.tsx");
 describe("the card says when it can be read", () => {
   it("at once without a picture, and once a picture is on screen or has given up", () => {
     expect(card).toMatch(/onMediaReady\?: \(\) => void;/);
-    expect(card).toMatch(/if \(!imageUrl \|\| imageStatus === "loaded" \|\| imageStatus === "error"\) onMediaReadyRef\.current\?\.\(\);/);
-    // Through a ref, so a caller's fresh closure never re-fires it.
-    expect(card).toMatch(/const onMediaReadyRef = React\.useRef\(onMediaReady\);/);
+    expect(card).toMatch(/if \(!imageUrl \|\| imageStatus === "loaded" \|\| imageStatus === "error"\) onMediaReady\?\.\(\);/);
+    // And again for every new question. The card is not remounted per
+    // question, so keyed on the picture alone, the second of two text-only
+    // questions never said it was ready — its clock and its opponent froze.
+    expect(card).toMatch(/\}, \[imageUrl, imageStatus, onMediaReady\]\);/);
+    // Which is only safe because both screens memoise the callback per
+    // question: a fresh closure on every render would re-fire it each time.
+    for (const src of [quick, read("src/pages/CategoryQuizPage.tsx")]) {
+      expect(src).toMatch(/const markMediaReady = useCallback\(\(\) => setMediaReadyFor\(currentQuestionIndex\), \[currentQuestionIndex\]\);/);
+    }
   });
 });
 
