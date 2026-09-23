@@ -29,7 +29,7 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { CoinDeltaPill } from "@/components/game/CoinDeltaPill";
 import { resolveAvatarUrl } from "@/utils/avatarUtils";
 import { resolveMatchOutcome } from "@/utils/matchOutcome";
-import { REWARDS } from "@/config/rewardConfig";
+import { REWARDS, levelUpPowerUp } from "@/config/rewardConfig";
 import coinIcon from "@/assets/icons/icon-coin.png";
 
 // Compact number formatter (1.3m, 2.5k, etc.)
@@ -411,19 +411,19 @@ export function MatchResultScreen() {
         const newMilestone = Math.floor(newTotalCorrect / threshold);
 
         let levelUpCoins = 0;
-        let randomPowerUp: string | undefined;
+        let levelPowerUp: string | undefined;
 
         if (newMilestone > oldMilestone) {
           levelUpCoins = REWARDS.LEVEL_UP_COINS;
-          const powerUpTypes = REWARDS.LEVEL_UP_POWER_UP_TYPES;
-          randomPowerUp = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
-          setAwardedPowerUp(randomPowerUp);
+          // Taken in turn by milestone, never drawn (levelUpPowerUp).
+          levelPowerUp = levelUpPowerUp(newMilestone);
+          setAwardedPowerUp(levelPowerUp);
 
           // Atomic upsert-increment — the read-add-write it replaces could
           // drop a grant landing at the same moment as a mission's.
-          if (randomPowerUp) {
+          if (levelPowerUp) {
             const { error: powerError } = await supabase.rpc("adjust_power_up", {
-              p_type: randomPowerUp,
+              p_type: levelPowerUp,
               p_delta: 1,
             });
             if (powerError) console.error("Level-up power-up grant failed:", powerError);

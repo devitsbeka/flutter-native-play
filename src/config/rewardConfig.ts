@@ -58,15 +58,17 @@ export const REWARDS = {
   // The gems land on days 3, 5 and 7, and the other days carry one named
   // power-up (replace, freeze, 50/50, time-drain x2). Nothing is rolled:
   // 20261108100000_no_wagering made the day's reward a calendar.
+  // The power-ups are claim_daily_reward's too, and the reward cards print
+  // the whole day before it is opened.
   DAILY_REWARDS: [
-    { day: 1, coins: 50, gems: 0 },
-    { day: 2, coins: 75, gems: 0 },
-    { day: 3, coins: 100, gems: 1 },
-    { day: 4, coins: 125, gems: 0 },
-    { day: 5, coins: 150, gems: 2 },
-    { day: 6, coins: 200, gems: 0 },
-    { day: 7, coins: 300, gems: 5 },
-  ],
+    { day: 1, coins: 50, gems: 0, powerUp: "replace", powerUpCount: 1 },
+    { day: 2, coins: 75, gems: 0, powerUp: "freeze", powerUpCount: 1 },
+    { day: 3, coins: 100, gems: 1, powerUp: null, powerUpCount: 0 },
+    { day: 4, coins: 125, gems: 0, powerUp: "5050", powerUpCount: 1 },
+    { day: 5, coins: 150, gems: 2, powerUp: null, powerUpCount: 0 },
+    { day: 6, coins: 200, gems: 0, powerUp: "time-drain", powerUpCount: 2 },
+    { day: 7, coins: 300, gems: 5, powerUp: null, powerUpCount: 0 },
+  ] as { day: number; coins: number; gems: number; powerUp: string | null; powerUpCount: number }[],
 
   // ===== CHEST REWARDS (once a day) =====
   // A fixed amount: the chest is not a draw (see getChestCoins).
@@ -199,6 +201,17 @@ export const REWARDS = {
 };
 
 /** What the daily chest pays in coins. Fixed — the chest is never a draw. */
+/**
+ * The power-up a level-up grants: the four take turns by level (50/50,
+ * freeze, replace, time-drain, then round again), so the reward is known
+ * before it lands — never a draw.
+ */
+export function levelUpPowerUp(level: number): string {
+  const types = REWARDS.LEVEL_UP_POWER_UP_TYPES;
+  const i = (((Math.floor(level) - 1) % types.length) + types.length) % types.length;
+  return types[i];
+}
+
 export function getChestCoins(): number {
   return REWARDS.CHEST_COINS;
 }

@@ -21,7 +21,8 @@ import { RestorePurchasesLink } from "@/components/purchases/RestorePurchasesLin
 // know Pro by (owner's ask).
 import crownIcon from "@/assets/crown-3d.png";
 import benefitPlay from "@/assets/pro-banner/banner-gamepad.webp";
-import benefitWheel from "@/assets/pro-banner/banner-wheel.webp";
+// A trophy where a prize wheel was: nothing in PRO is a game of chance.
+import benefitTrophy from "@/assets/icons/icon-trophy-3d.png";
 import benefitNoAds from "@/assets/pro-banner/banner-no-ads.webp";
 import benefitTimer from "@/assets/pro-banner/banner-timer.webp";
 import benefitDiscount from "@/assets/pro-banner/banner-discount.webp";
@@ -316,7 +317,7 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
     { art: benefitPlay, title: t("paywall.benefitPlayTitle"), blurb: t("paywall.benefitPlayBlurb") },
     { art: benefitFriends, title: t("paywall.benefitInviteTitle"), blurb: inviteBlurb },
     { art: benefitNoAds, title: t("paywall.benefitNoAdsTitle"), blurb: t("paywall.benefitNoAdsBlurb") },
-    { art: benefitWheel, title: t("paywall.benefitLevelsTitle"), blurb: t("paywall.benefitLevelsBlurb") },
+    { art: benefitTrophy, title: t("paywall.benefitLevelsTitle"), blurb: t("paywall.benefitLevelsBlurb") },
     { art: benefitTimer, title: t("paywall.benefitXpTitle"), blurb: t("paywall.benefitXpBlurb") },
     { art: benefitDiscount, title: t("paywall.benefitShopTitle"), blurb: t("playRewards.paywallShopBlurb") },
   ];

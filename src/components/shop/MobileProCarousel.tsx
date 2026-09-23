@@ -8,7 +8,7 @@ import { useProPurchase, type ProTierId } from "@/hooks/useProPurchase";
 import { useStorePrice } from "@/hooks/useStorePrice";
 import { useLanguage } from "@/contexts/LanguageContext";
 import gamepadIcon from "@/assets/pro-banner/banner-gamepad.webp";
-import wheelIcon from "@/assets/pro-banner/banner-wheel.webp";
+import trophyIcon from "@/assets/icons/icon-trophy-3d.png";
 import noAdsIcon from "@/assets/pro-banner/banner-no-ads.webp";
 import heroSolo from "@/assets/pro-banner/pro-hero-solo.webp";
 import heroFriends from "@/assets/pro-banner/pro-hero-friends.webp";
@@ -53,7 +53,9 @@ type SlideType = "pro" | "family" | "deal";
 // Ours keep the glyphs that match what the tiers actually give, at the one
 // size the mock's tiles are drawn to.
 const BENEFIT_PLAY = gamepadIcon;
-const BENEFIT_FEATURES = wheelIcon;
+// A trophy, not a prize wheel: a wheel of fortune on a paywall reads as a
+// game of chance, and nothing in PRO is left to one.
+const BENEFIT_FEATURES = trophyIcon;
 const BENEFIT_NO_ADS = noAdsIcon;
 
 interface ProBannerReelProps {

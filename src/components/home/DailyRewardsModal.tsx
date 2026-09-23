@@ -20,6 +20,7 @@ import powerFreeze from "@/assets/powers/freeze.png";
 import powerReplace from "@/assets/powers/replace.png";
 import { TimeIcon } from "@/components/shared/TimeIcon";
 import { mergeDailyReceipts, type ClaimedReward } from "@/utils/dailyRewardReceipts";
+import { REWARDS } from "@/config/rewardConfig";
 
 /**
  * The footprint every state of a day card's bottom slot shares: the Claim
@@ -135,6 +136,18 @@ export const weekOf = (today: Date): Date[] => {
   });
 };
 
+/**
+ * What day `offset` days from today pays, counted the way claim_daily_reward
+ * counts: today's streak is yesterday's + 1 (or today's own row, once
+ * claimed), day = ((streak - 1) mod 7) + 1. A future day assumes the streak
+ * is kept, which is what the row is there to encourage.
+ */
+export function dailyRewardFor(todayStreak: number, offset: number): ClaimedReward {
+  const day = (((todayStreak - 1 + offset) % 7) + 7) % 7;
+  const r = REWARDS.DAILY_REWARDS[day];
+  return { coins: r.coins, gems: r.gems, powerUp: r.powerUp, powerUpCount: r.powerUpCount };
+}
+
 type DayState = "claimed" | "missed" | "today" | "future";
 type ClaimPhase = "idle" | "opening" | "revealed";
 
@@ -159,6 +172,7 @@ function DayRewardCard({
   phase,
   awarded,
   claimedReward,
+  preview,
   canClaim,
   timeLeft,
   onClaim,
@@ -173,6 +187,8 @@ function DayRewardCard({
   awarded: ClaimedReward | null;
   /** The receipt for an already-claimed day; null for pre-receipt claims. */
   claimedReward: ClaimedReward | null;
+  /** What an unclaimed day pays, printed before it is opened; null if unknown. */
+  preview: ClaimedReward | null;
   canClaim: boolean;
   /** How long until the next reward, for the not-yet-claimable state. */
   timeLeft: string;
@@ -216,43 +232,65 @@ function DayRewardCard({
         {formatWeekday(date, language)}
       </span>
 
-      {/* The middle: a gift until it is opened. What is inside is fixed per
-          day of the streak (claim_daily_reward's calendar since
-          20261108100000_no_wagering — nothing is left to chance); the
-          gift is only the wrapping. */}
+      {/* The middle. An unclaimed day prints exactly what it pays — coins,
+          gems, the power-up — because claim_daily_reward pays a fixed
+          calendar (20261108100000_no_wagering) and a closed box with hidden
+          contents reads as a loot box. A claimed day shows the opened gift,
+          with the receipt below. */}
       <div className="relative flex h-[96px] items-center justify-center">
-        {/* Always the gift — closed, then open. What was inside is shown once,
-            on the button, where the day's receipt already lives.
-
-            It used to be shown twice: the prize replaced the gift here AND
-            the receipt appeared below it, so the moment of opening had the
-            answer in two places and the opened box — the thing that says
-            "you opened it" — was never seen at all. */}
-        <motion.img
-          key={showOpenGift ? "open" : "closed"}
-          src={showOpenGift ? giftOpenIcon : giftClosedIcon}
-          alt=""
-          className="h-[88px] w-[88px] object-contain drop-shadow-[0_4px_8px_rgba(0,0,0,0.2)]"
-          style={{ opacity: isMissed ? 0.55 : 1 }}
-          animate={
-            phase === "opening"
-              ? { rotate: [0, -10, 10, -8, 8, -5, 5, 0], scale: [1, 1.08, 1.08, 1.12, 1.12, 1.15, 1.15, 1.2] }
-              : phase === "revealed"
-                // Lands: the lid comes off and it settles, rather than
-                // carrying on bobbing as though still waiting to be opened.
-                ? { scale: [1.2, 0.95, 1], rotate: 0 }
+        {!showOpenGift && preview && !isMissed ? (
+          <motion.div
+            className="flex flex-col items-center gap-1.5"
+            animate={
+              phase === "opening"
+                ? { scale: [1, 1.12, 1.2] }
                 : state === "today" && canClaim
-                  ? { y: [0, -5, 0] }
+                  ? { y: [0, -4, 0] }
                   : undefined
-          }
-          transition={
-            phase === "opening"
-              ? { duration: 0.85 }
-              : phase === "revealed"
-                ? { duration: 0.45 }
+            }
+            transition={
+              phase === "opening"
+                ? { duration: 0.85 }
                 : { repeat: Infinity, duration: 1.8, ease: "easeInOut" }
-          }
-        />
+            }
+          >
+            <span className="flex items-center gap-1.5 font-display text-[28px] font-bold leading-none text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.2)]">
+              <img src={coinIcon} alt="" width={30} height={30} className="shrink-0" />
+              {preview.coins}
+            </span>
+            {(preview.gems > 0 || preview.powerUp) && (
+              <span className="flex items-center gap-3">
+                {preview.gems > 0 && <ClaimedAmount icon={gemIcon} value={`+${preview.gems}`} />}
+                {preview.powerUp && (
+                  <span className="flex shrink-0 items-center gap-[5px] text-sm font-black text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)]">
+                    {preview.powerUp === "time-drain" ? (
+                      <TimeIcon size={POWER_ICON_PX} />
+                    ) : (
+                      <img
+                        src={POWER_ICONS[preview.powerUp] || power5050}
+                        alt=""
+                        width={POWER_ICON_PX}
+                        height={POWER_ICON_PX}
+                        className="shrink-0 object-contain"
+                      />
+                    )}
+                    +{preview.powerUpCount}
+                  </span>
+                )}
+              </span>
+            )}
+          </motion.div>
+        ) : (
+          <motion.img
+            key={showOpenGift ? "open" : "closed"}
+            src={showOpenGift ? giftOpenIcon : giftClosedIcon}
+            alt=""
+            className="h-[88px] w-[88px] object-contain drop-shadow-[0_4px_8px_rgba(0,0,0,0.2)]"
+            style={{ opacity: isMissed ? 0.55 : 1 }}
+            animate={phase === "revealed" ? { scale: [1.2, 0.95, 1] } : undefined}
+            transition={{ duration: 0.45 }}
+          />
+        )}
       </div>
 
       {/* State row */}
@@ -419,11 +457,15 @@ export function DailyRewardsModal({ isOpen, onClose, onClaim }: DailyRewardsModa
   // Per-day receipts (what each claim paid), keyed the same way. Days claimed
   // before the receipt columns existed have none and show a plain "Claimed".
   const [claimedRewards, setClaimedRewards] = useState<Record<string, ClaimedReward>>({});
-  // What the server actually granted. The gift hides the amount until the
-  // claim comes back; PRO Plus multipliers and the once-per-day guard are all
-  // decided server-side, so what is revealed is what was actually paid.
+  // What the server actually granted. The card prints the calendar's amount
+  // before the claim; PRO Plus multipliers and the once-per-day guard are
+  // decided server-side, so the receipt is what was actually paid.
   const [awarded, setAwarded] = useState<{ coins: number; gems: number; powerUp: string | null; powerUpCount: number } | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  // Today's streak as claim_daily_reward will count it, so each unclaimed
+  // card can print what it pays. null until read (cards fall back to the
+  // gift), and for a guest.
+  const [todayStreak, setTodayStreak] = useState<number | null>(null);
 
   const week = weekOf(new Date());
   const todayISO = rewardISO(new Date());
@@ -484,6 +526,28 @@ export function DailyRewardsModal({ isOpen, onClose, onClaim }: DailyRewardsModa
     };
     // week is derived from "now" and stable within a day — the open flag is
     // what should re-run this.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, user]);
+
+  useEffect(() => {
+    if (!isOpen || !user) return;
+    let cancelled = false;
+    const yesterday = new Date();
+    yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+    void supabase
+      .from("user_daily_rewards")
+      .select("reward_date, streak_count")
+      .in("reward_date", [rewardISO(yesterday), todayISO])
+      .then(({ data }) => {
+        if (cancelled || !data) return;
+        const rows = data as { reward_date: string; streak_count: number | null }[];
+        const today = rows.find((r) => r.reward_date === todayISO);
+        const prev = rows.find((r) => r.reward_date === rewardISO(yesterday));
+        setTodayStreak(today?.streak_count ?? (prev ? (prev.streak_count ?? 0) + 1 : 1));
+      });
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, user]);
 
@@ -685,6 +749,11 @@ export function DailyRewardsModal({ isOpen, onClose, onClaim }: DailyRewardsModa
                     phase={index === todayIndex ? phase : "idle"}
                     awarded={index === todayIndex ? awarded : null}
                     claimedReward={claimedRewards[rewardISO(date)] ?? null}
+                    preview={
+                      todayStreak !== null && index >= todayIndex
+                        ? dailyRewardFor(todayStreak, index - todayIndex)
+                        : null
+                    }
                     canClaim={canClaimDaily && !claimedToday}
                     timeLeft={dailyTimeLeft}
                     onClaim={handleClaim}

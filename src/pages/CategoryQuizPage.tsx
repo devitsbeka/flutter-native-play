@@ -23,7 +23,7 @@ import { getGuestProgress } from "@/hooks/useGuestProgress";
 import { useMissions } from "@/hooks/useMissions";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useGameStake } from "@/hooks/useGameStake";
-import { REWARDS } from "@/config/rewardConfig";
+import { REWARDS, levelUpPowerUp } from "@/config/rewardConfig";
 import confetti from "canvas-confetti";
 import { calculateLevel } from "@/utils/levelCalculation";
 import { answerStateFor, type QuizAnswerRecord } from "@/utils/quizAnswerState";
@@ -619,8 +619,8 @@ export default function CategoryQuizPage() {
           
           // Credit simplified level-up rewards
           const levelUpCoins = REWARDS.LEVEL_UP_COINS;
-          const powerUpTypes = REWARDS.LEVEL_UP_POWER_UP_TYPES;
-          const randomPowerUp = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
+          // Taken in turn by level, never drawn (levelUpPowerUp).
+          const levelPowerUp = levelUpPowerUp(newLevel);
           
           // Add coins — await and retry once so a transient network blip at
           // the level-up moment doesn't silently swallow the reward the
@@ -635,12 +635,12 @@ export default function CategoryQuizPage() {
             .from("user_power_ups")
             .select("quantity")
             .eq("user_id", user.id)
-            .eq("power_up_type", randomPowerUp)
+            .eq("power_up_type", levelPowerUp)
             .maybeSingle();
           
           await supabase.from("user_power_ups").upsert({
             user_id: user.id,
-            power_up_type: randomPowerUp,
+            power_up_type: levelPowerUp,
             quantity: (existingPowerUp?.quantity || 0) + 1,
           });
           

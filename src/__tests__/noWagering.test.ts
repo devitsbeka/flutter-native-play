@@ -58,7 +58,18 @@ describe("no game is a wager", () => {
     const daily = fnBody(sql, "claim_daily_reward");
     expect(daily).not.toMatch(/random\s*\(/);
     for (const [i, r] of REWARDS.DAILY_REWARDS.entries()) {
-      expect(daily, `day ${i + 1}`).toMatch(new RegExp(`\\(${r.day},\\s*${r.coins},\\s*${r.gems},`));
+      const power = r.powerUp ? `'${r.powerUp}'` : "NULL";
+      expect(daily, `day ${i + 1}`).toMatch(
+        new RegExp(`\\(${r.day},\\s*${r.coins},\\s*${r.gems},\\s*${power},\\s*${r.powerUpCount}\\)`),
+      );
+    }
+  });
+
+  it("rotates the level-up power-up instead of drawing it", () => {
+    for (const f of ["src/components/game/MatchResultScreen.tsx", "src/pages/CategoryQuizPage.tsx"]) {
+      const src = read(f);
+      expect(src, f).toContain("levelUpPowerUp(");
+      expect(src, f).not.toMatch(/LEVEL_UP_POWER_UP_TYPES[^\n]*Math\.random|Math\.random[^\n]*powerUpTypes/);
     }
   });
 

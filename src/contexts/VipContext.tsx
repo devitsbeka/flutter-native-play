@@ -43,7 +43,6 @@ export type VipDuration = "day" | "2days" | "week" | "month" | "10days";
 // VIP_BENEFITS uses translation keys - consumers should call t() on descriptions
 export const VIP_BENEFITS = [
   { icon: "⭐", title: "2x XP", descriptionKey: "extra.vip2xXpDesc" },
-  { icon: "🎰", title: "+3 Spins", descriptionKey: "extra.vipExtraSpinsDesc" },
   { icon: "⚡", title: "Free Powers", descriptionKey: "extra.vipFreePowersDesc" },
   { icon: "👑", title: "VIP Badge", descriptionKey: "extra.vipBadgeDesc" },
   { icon: "🚫", title: "No Ads", descriptionKey: "extra.vipNoAdsDesc" },
@@ -53,13 +52,11 @@ export const VIP_BENEFITS = [
 export const VIP_BENEFITS_BY_TIER = {
   pro: [
     { icon: "⭐", title: "2x XP", descriptionKey: "extra.vip2xXpDesc" },
-    { icon: "🎰", title: "+3 Spins", descriptionKey: "extra.vipExtraSpinsDesc" },
     { icon: "🚫", title: "No Ads", descriptionKey: "extra.vipNoAdsDesc" },
     { icon: "👑", title: "VIP Badge", descriptionKey: "extra.vipBadgeDesc" },
   ],
   pro_plus: [
     { icon: "⭐", title: "2x XP", descriptionKey: "extra.vip2xXpDesc" },
-    { icon: "🎰", title: "+3 Spins", descriptionKey: "extra.vipExtraSpinsDesc" },
     { icon: "🚫", title: "No Ads", descriptionKey: "extra.vipNoAdsDesc" },
     { icon: "👑", title: "VIP Badge", descriptionKey: "extra.vipBadgeDesc" },
     { icon: "⚡", title: "Free Powers", descriptionKey: "extra.vipFreePowersDesc" },

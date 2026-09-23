@@ -192,7 +192,7 @@ describe("the words", () => {
   it("are in all seven", () => {
     for (const lang of ["en", "ka", "de", "es", "fr", "it", "pt"]) {
       const src = read(`src/locales/${lang}.ts`);
-      for (const key of ["duelTitle", "duelOpponent", "duelWin", "duelLose", "duelDraw", "duelBackToGuess", "duelIntroHint", "duelRulesHint"]) {
+      for (const key of ["duelTitle", "duelOpponent", "duelWin", "duelLose", "duelDraw", "duelBackToGuess", "duelIntroHint"]) {
         expect(src, `${lang}.${key}`).toMatch(new RegExp(`\\n\\s+${key}: "[^"]+",`));
       }
     }

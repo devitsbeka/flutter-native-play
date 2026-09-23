@@ -62,7 +62,7 @@ describe("the public list's answers", () => {
     expect(list).toMatch(/toast\.error\(t\(\/full\/i\.test\(message\) \? "extra\.joinRoomFull" : "extra\.joinAskFailed"\)\);/);
     for (const lang of LANGS) {
       const src = read(`src/locales/${lang}.ts`);
-      for (const key of ["joinBlocked", "joinRoomFull", "settleDailyCap", "settleNoBalance"]) {
+      for (const key of ["joinBlocked", "joinRoomFull", "settleDailyCap"]) {
         expect(src, `${lang}.${key}`).toMatch(new RegExp(`\\n\\s+${key}: "[^"]+",`));
       }
     }

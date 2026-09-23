@@ -44,7 +44,7 @@ export function useProBenefits(): ProBenefit[] {
       { id: "noAds", icon: noAdsIcon, title: t("paywall.benefitNoAdsTitle"), blurb: t("paywall.benefitNoAdsBlurb") },
       { id: "levels", icon: levelsIcon, title: t("paywall.benefitLevelsTitle"), blurb: t("paywall.benefitLevelsBlurb") },
       { id: "xp", icon: xpIcon, title: t("paywall.benefitXpTitle"), blurb: t("paywall.benefitXpBlurb") },
-      { id: "shop", icon: shopIcon, title: t("paywall.benefitShopTitle"), blurb: t("paywall.benefitShopBlurb") },
+      { id: "shop", icon: shopIcon, title: t("paywall.benefitShopTitle"), blurb: t("playRewards.paywallShopBlurb") },
     ];
   }, [products, t]);
 }

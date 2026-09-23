@@ -155,10 +155,10 @@ describe("what a room pays, and what it costs", () => {
 });
 
 describe("the sheet is written in every language", () => {
-  it("all six strings, all seven languages", () => {
+  it("all five strings, all seven languages", () => {
     for (const lang of ["en", "ka", "de", "es", "fr", "it", "pt"]) {
       const locale = read(`src/locales/${lang}.ts`);
-      for (const key of ["summaryTitle", "summaryHint", "summaryRounds", "summaryStake", "summaryFree", "summaryChange"]) {
+      for (const key of ["summaryTitle", "summaryHint", "summaryRounds", "summaryFree", "summaryChange"]) {
         expect(locale, `${lang}.${key}`).toMatch(new RegExp(`\\n\\s+${key}: "[^"]+",`));
       }
       // The hint is one sentence that fits three lines of the sheet. It was

@@ -201,6 +201,41 @@ try {
   failures.push("dist/assets is missing.");
 }
 
+// ── Nothing that reads as gambling ─────────────────────────────────────────
+//
+// 1.0 (74) was rejected under App Review's simulated-gambling rule, which an
+// individual developer account can no longer ship at all. The wager itself is
+// gone (20261108100000_no_wagering.sql), but a prize-wheel picture on the
+// paywall and "Winner takes" baked into a banner survived the first pass —
+// the words and the art are what a reviewer sees first. A build that carries
+// either does not go out.
+const GAMBLING_PHRASES = [
+  /Lucky Spin/i, /Test your luck/i, /Spin now/i, /Winner takes/i, /Stake per player/i,
+  /take the pot/i, /stake lost/i, /jackpot/i, /\bcasino\b/i, /double or nothing/i,
+];
+const GAMBLING_ASSETS = /(wheel|roulette|slot-?machine|casino|jackpot)[^/]*\.(png|webp|jpe?g|svg|gif)$/i;
+try {
+  const assetsDir = join(DIST, "assets");
+  const assetOffenders = files
+    .map((f) => relative(DIST, f))
+    .filter((f) => GAMBLING_ASSETS.test(f));
+  const phraseOffenders = readdirSync(assetsDir)
+    .filter((f) => f.endsWith(".js"))
+    .flatMap((f) => {
+      const src = readFileSync(join(assetsDir, f), "utf8");
+      return GAMBLING_PHRASES.filter((re) => re.test(src)).map((re) => `${f}: ${re}`);
+    });
+  if (assetOffenders.length || phraseOffenders.length) {
+    failures.push(
+      "Something in the bundle reads as gambling (App Review simulated-gambling\n" +
+        "      rule). Remove it, don't rename around it:\n" +
+        [...assetOffenders, ...phraseOffenders].map((x) => `      ${x}`).join("\n"),
+    );
+  }
+} catch {
+  failures.push("dist/assets is missing.");
+}
+
 // ── Size ceiling ───────────────────────────────────────────────────────────
 //
 // Capacitor copies dist/ into the app, so this is a close proxy for the
