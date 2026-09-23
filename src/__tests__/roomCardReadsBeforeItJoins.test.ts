@@ -93,19 +93,19 @@ describe("what opening it says", () => {
     expect(sheet).toMatch(/\{i \+ 1\}/);
   });
 
-  it("the questions per round and the stake a seat pays", () => {
+  it("the questions per round, and that a seat is free", () => {
     expect(sheet).toMatch(/t\("lobby\.uQuestionsPerRound"\)/);
-    expect(sheet).toMatch(/const stake = REWARDS\.GAME_STAKE;/);
-    expect(sheet).toMatch(/t\("lobby\.summaryStake"\)/);
+    expect(sheet).toMatch(/t\("playRewards\.freeToPlay"\)/);
+    expect(sheet).not.toMatch(/GAME_STAKE|summaryStake/);
   });
 
-  it("and the pot, only where there is one", () => {
-    // Under two players settle_room_round settles nothing: that is practice,
-    // and quoting a pot for it would be a promise the database will not keep.
-    // And the number under "Winner takes" is first place's share of it,
-    // which is the whole pot only at two players (roomPot.test.ts).
-    expect(sheet).toMatch(/const pot = firstPlaceShare\(players, stake\);/);
-    expect(sheet).toMatch(/\{pot !== null && \(/);
+  it("and the prizes, counted off who is seated", () => {
+    // Nobody pays in; the house pays the places (20261108100000_no_wagering),
+    // only first at two players — so the line never promises more than the
+    // table will be paid (roomPrizes.test.ts).
+    expect(sheet).toMatch(/<PrizeLadder t=\{t\} players=\{players\} \/>/);
+    expect(sheet).toMatch(/t\("playRewards\.prizesLabel"\)/);
+    expect(sheet).not.toMatch(/winnerTakes|firstPlaceShare/);
   });
 
   it("with nothing of its own that joins — the way in is the card's own button, handed to it", () => {

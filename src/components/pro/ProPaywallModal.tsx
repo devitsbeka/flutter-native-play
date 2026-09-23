@@ -318,7 +318,7 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
     { art: benefitNoAds, title: t("paywall.benefitNoAdsTitle"), blurb: t("paywall.benefitNoAdsBlurb") },
     { art: benefitWheel, title: t("paywall.benefitLevelsTitle"), blurb: t("paywall.benefitLevelsBlurb") },
     { art: benefitTimer, title: t("paywall.benefitXpTitle"), blurb: t("paywall.benefitXpBlurb") },
-    { art: benefitDiscount, title: t("paywall.benefitShopTitle"), blurb: t("paywall.benefitShopBlurb") },
+    { art: benefitDiscount, title: t("paywall.benefitShopTitle"), blurb: t("playRewards.paywallShopBlurb") },
   ];
 
   return (

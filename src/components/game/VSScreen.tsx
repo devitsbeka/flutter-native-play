@@ -67,22 +67,23 @@ interface CategoryPlateProps {
   iconSlug?: string;
   iconUrl?: string;
   isLocked: boolean;
-  stake: number;
-  canSpin: boolean;
-  spinLabel: string;
-  onSpin: () => void;
+  /** What winning the match pays, printed in the plate's coin pill. */
+  reward: number;
+  canShuffle: boolean;
+  shuffleLabel: string;
+  onShuffle: () => void;
   /**
-   * A reel to turn, instead of a name to swap.
+   * A category being picked, instead of a name to show.
    *
-   * Both wheels used to be timed swaps of the name and the icon — twelve
-   * or fourteen of them — and however the steps were paced they read as a
-   * flicker, not a spin (owner, twice: "it rolls very fast, we need smooth
-   * animation"). With a reel, the plate IS a slot machine: every game is
-   * a row on one strip, the strip travels REEL_LOOPS full turns and lands
-   * on `target` in one continuous motion of REEL_SECONDS, and the icon
-   * rides a strip of its own in step. Nothing blinks, because nothing is
-   * swapped. `turnKey` changing turns it again; `onLanded` is the moment
-   * to lock and pop. The quick game and the Guess card both turn it.
+   * This used to be a reel — every category a row on one strip, travelling
+   * two full turns and landing on the winner over four seconds. That is a
+   * slot machine, and on a screen that also prints coins it reads as one;
+   * App Review rejected 1.0 (74) under the simulated-gambling rule. Now the
+   * plate shuffles: the name and icon soften into a short "picking" beat of
+   * SHUFFLE_SECONDS and the chosen category settles in with the plate's
+   * pop. Nothing scrolls past, so nothing looks like it could have landed
+   * elsewhere. `turnKey` changing shuffles again; `onLanded` is the moment
+   * to lock and pop. The quick game and the Guess card both use it.
    */
   reel?: PlateReel;
 }
@@ -95,83 +96,60 @@ export interface PlateReel {
   onLanded: () => void;
 }
 
+/** How long the plate shuffles before the category settles, both screens. */
+export const SHUFFLE_SECONDS = 1.1;
 /**
- * Full turns the reel makes before it lands. Two, not three: at three, the
- * rows went by too fast to be rows (owner: "we need smooth loader, not too
- * fast").
- */
-export const REEL_LOOPS = 2;
-/**
- * One motion: a gentle start, a long slow-down onto the row it lands on.
- * The old curve put 80% of the travel in the first 12% of the time, which
- * is a blur, not a spin.
- */
-export const REEL_EASE = [0.32, 0.08, 0.16, 1] as const;
-/** How long the reel turns, both wheels. */
-export const REEL_SECONDS = 4.4;
-/**
- * The reel's geometry. The plate is PLATE_H tall; the icon (90×96) hangs 30
+ * The plate's geometry. The plate is PLATE_H tall; the icon (90×96) hangs 30
  * off its left edge and the name starts at 76, so there is clear water
  * between the two (owner: "increase category loader in height to fit well
- * … enough space between logo and category title"). Each strip's window is
- * exactly one row tall and its rows are the window's height, so a row at
- * rest is centred with room above and below — and the window fades at both
- * ends (REEL_MASK) so the neighbouring rows slide in and out instead of
- * being cut off mid-glyph, which read as ghost squares behind the name and
- * the icon (owner: "i see ghosted dark squares behind the icon and behind
- * the categories … while they rolling they look bad").
- *
- * Nothing on a moving strip carries a `filter` or sits over a
- * `backdrop-filter`: on WebKit either one turns the strip's column into a
- * flat lighter box over the plate's gradient for as long as it moves.
+ * … enough space between logo and category title").
  */
 const PLATE_H = 128;
 const NAME_ROW_H = 36;
-const ICON_ROW_H = PLATE_H;
-const REEL_MASK = "linear-gradient(to bottom, transparent 0%, #000 22%, #000 78%, transparent 100%)";
 const PLATE_ICON_CLASS = "-left-[30px] top-[16px] w-[90px] h-[96px]";
 /** The name's size: the plate has 223px for it, and Slackey is wide. */
 const nameSizeClass = (name: string) => (name.length > 16 ? "text-[16px]" : "text-[20px]");
-
-/** The strip: every game REEL_LOOPS times over, then up to the one to land on. */
-function reelRows(reel: PlateReel) {
-  const rows: PlateReel["items"] = [];
-  for (let loop = 0; loop < REEL_LOOPS; loop++) rows.push(...reel.items);
-  rows.push(...reel.items.slice(0, reel.target + 1));
-  return rows;
-}
 
 /**
  * The category plate — Figma 1147:9013.
  *
  * A chunky lozenge with the category's icon hanging off its left edge, the
- * coin stake tucked under the name, and the re-roll button sunk into its
- * right end. While the wheel is still spinning the plate itself is the slot:
- * the name and icon cycle inside it, so nothing moves on the lock-in but the
- * content.
+ * win reward tucked under the name, and the re-roll button sunk into its
+ * right end. While a category is being picked the plate shows a soft
+ * "picking" beat, so nothing moves on the lock-in but the content.
  */
 export function CategoryPlate({
   name,
   iconSlug,
   iconUrl,
   isLocked,
-  stake,
-  canSpin,
-  spinLabel,
-  onSpin,
+  reward,
+  canShuffle,
+  shuffleLabel,
+  onShuffle,
   reel,
 }: CategoryPlateProps) {
   const resolvedIcon = iconUrl || (iconSlug ? `${ICON_STORAGE_URL}/${iconSlug}.png` : undefined);
   const turning = !!reel && !isLocked && reel.items.length > 0;
-  const rows = turning ? reelRows(reel) : [];
-  const travel = rows.length - 1;
-  const reelTransition = { duration: REEL_SECONDS, ease: REEL_EASE };
+
+  // The shuffle is a beat, not a motion to watch land: when it is over, the
+  // screen locks the category it already chose. Keyed on turnKey so a
+  // re-roll shuffles again. The ref keeps a parent re-render from restarting
+  // the timer with a fresh callback.
+  const onLandedRef = useRef(reel?.onLanded);
+  onLandedRef.current = reel?.onLanded;
+  const turnKey = reel?.turnKey;
+  useEffect(() => {
+    if (!turning) return;
+    const id = window.setTimeout(() => onLandedRef.current?.(), SHUFFLE_SECONDS * 1000);
+    return () => window.clearTimeout(id);
+  }, [turning, turnKey]);
 
   return (
     <div className="relative w-full max-w-[371px] mx-auto">
-      {/* The plate. It IS the slot machine: while the wheel turns, the name
-          and the icon roll through it; when it stops, the plate itself pops
-          once so the reveal has a beat of its own. */}
+      {/* The plate. While a category is being picked it shows a short
+          "picking" beat; when it settles, the plate itself pops once so the
+          reveal has a beat of its own. */}
       <motion.div
         className="relative flex flex-col justify-center gap-[6px] pl-[76px] pr-[72px] overflow-hidden"
         animate={isLocked ? { scale: [1, 1.06, 0.99, 1] } : { scale: 1 }}
@@ -185,28 +163,21 @@ export function CategoryPlate({
         }}
       >
         {turning ? (
-          <div
-            className="relative overflow-hidden"
-            style={{ height: NAME_ROW_H, WebkitMaskImage: REEL_MASK, maskImage: REEL_MASK }}
+          <motion.div
+            key={reel!.turnKey}
+            className="flex items-center gap-[8px]"
+            style={{ height: NAME_ROW_H }}
+            aria-hidden
           >
-            <motion.div
-              key={reel!.turnKey}
-              initial={{ y: 0 }}
-              animate={{ y: -travel * NAME_ROW_H }}
-              transition={reelTransition}
-              onAnimationComplete={reel!.onLanded}
-            >
-              {rows.map((row, i) => (
-                <p
-                  key={i}
-                  className={`font-slackey ${nameSizeClass(row.name)} text-[#454376] tracking-[-0.14px] truncate`}
-                  style={{ height: NAME_ROW_H, lineHeight: `${NAME_ROW_H}px`, textShadow: "0 2px 0 #E0EAFF" }}
-                >
-                  {row.name}
-                </p>
-              ))}
-            </motion.div>
-          </div>
+            {[0, 1, 2].map((i) => (
+              <motion.span
+                key={i}
+                className="block w-[10px] h-[10px] rounded-full bg-[#454376]"
+                animate={{ opacity: [0.25, 1, 0.25], y: [0, -4, 0] }}
+                transition={{ duration: 0.7, repeat: Infinity, delay: i * 0.15, ease: "easeInOut" }}
+              />
+            ))}
+          </motion.div>
         ) : (
           <AnimatePresence mode="wait">
             <motion.p
@@ -223,7 +194,8 @@ export function CategoryPlate({
           </AnimatePresence>
         )}
 
-        {/* Coin stake — Figma 1147:8890 */}
+        {/* Win reward — Figma 1147:8890. What beating this match pays; a
+            loss costs nothing, so there is no price to print. */}
         <motion.div
           className="inline-flex items-center gap-[5px] h-[32px] w-fit pl-[6px] pr-[12px]"
           style={{
@@ -241,31 +213,14 @@ export function CategoryPlate({
             className="font-slackey text-[15.57px] leading-[20.76px] text-[#454376] tracking-[-0.12px]"
             style={{ textShadow: "0 1.73px 0 #E0EAFF" }}
           >
-            {stake.toLocaleString()}
+            +{reward.toLocaleString()}
           </span>
         </motion.div>
       </motion.div>
 
       {/* Category icon, overhanging the plate's left edge — Figma 1149:9049.
-          While the reel turns, the icons ride a strip of their own, in step
-          with the names. */}
-      {turning ? (
-        <div
-          className="absolute -left-[30px] top-0 w-[90px] overflow-hidden pointer-events-none"
-          style={{ height: ICON_ROW_H, WebkitMaskImage: REEL_MASK, maskImage: REEL_MASK }}
-        >
-          <motion.div key={reel!.turnKey} initial={{ y: 0 }} animate={{ y: -travel * ICON_ROW_H }} transition={reelTransition}>
-            {rows.map((row, i) => {
-              const src = row.iconUrl ?? (row.iconSlug ? `${ICON_STORAGE_URL}/${row.iconSlug}.png` : undefined);
-              return (
-                <div key={i} className="flex items-center justify-center" style={{ height: ICON_ROW_H }}>
-                  {src && <img src={src} alt="" className="w-[90px] h-[96px] object-contain" />}
-                </div>
-              );
-            })}
-          </motion.div>
-        </div>
-      ) : (
+          Hidden while a category is being picked. */}
+      {!turning && (
         <AnimatePresence mode="wait">
           {resolvedIcon && (
             <motion.img
@@ -283,19 +238,19 @@ export function CategoryPlate({
         </AnimatePresence>
       )}
 
-      {/* Re-roll — Figma 1147:8862. Three free spins, then it is gone.
+      {/* Re-roll — Figma 1147:8862. Three free shuffles, then it is gone.
           Centred by a plain wrapper rather than `-translate-y-1/2`: the
           button animates `scale`, and motion writes its own `transform`
           inline, which wins over the utility class and drops the button
           half its height down the plate. */}
       <div className="absolute right-[20px] top-0 bottom-0 flex items-center pointer-events-none">
       <AnimatePresence>
-        {canSpin && (
+        {canShuffle && (
           <motion.button
             type="button"
-            onClick={onSpin}
-            aria-label={spinLabel}
-            title={spinLabel}
+            onClick={onShuffle}
+            aria-label={shuffleLabel}
+            title={shuffleLabel}
             className="pointer-events-auto w-[45px] h-[45px] rounded-full flex items-center justify-center"
             style={{
               backgroundImage: "linear-gradient(42.44deg, #E9EFFF 27.03%, #F0C8FF 100%)",
@@ -311,7 +266,7 @@ export function CategoryPlate({
             <RefreshCw className="w-[19.5px] h-[19.5px] text-[#583763]" strokeWidth={2} />
             {/* The design carries no counter on the button; how many free
                 re-rolls are left is in the label it announces. */}
-            <span className="sr-only">{spinLabel}</span>
+            <span className="sr-only">{shuffleLabel}</span>
           </motion.button>
         )}
       </AnimatePresence>
@@ -338,10 +293,10 @@ export function VSScreen() {
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [connectionError, setConnectionError] = useState(false);
   
-  // Slot avatars: mascots + AI-generated, fetched at mount
-  const [slotAvatars, setSlotAvatars] = useState<string[]>(baseMascotAvatars);
+  // Search avatars: mascots + AI-generated, fetched at mount
+  const [searchAvatars, setSearchAvatars] = useState<string[]>(baseMascotAvatars);
   
-  // Opponent slot state
+  // Opponent search state
   const [currentAvatar, setCurrentAvatar] = useState<string>(baseMascotAvatars[0]);
   const opponentIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
@@ -381,7 +336,7 @@ export function VSScreen() {
           .map(p => p.avatar_url)
           .filter((url): url is string => !!url);
         if (aiUrls.length > 0) {
-          setSlotAvatars(shuffleArray([...baseMascotAvatars, ...aiUrls]));
+          setSearchAvatars(shuffleArray([...baseMascotAvatars, ...aiUrls]));
         }
       }
     };
@@ -398,7 +353,7 @@ export function VSScreen() {
     }
   }, [categories]);
 
-  // Stage 1: Opponent slot machine animation
+  // Stage 1: looking for an opponent — faces cycle until one is found
   useEffect(() => {
     if (stage !== "finding-opponent") return;
 
@@ -412,13 +367,13 @@ export function VSScreen() {
       return 350;
     };
 
-    const cycleSlot = () => {
+    const cycleSearch = () => {
       cycleCount++;
-      const randomAvatar = slotAvatars[Math.floor(Math.random() * slotAvatars.length)];
+      const randomAvatar = searchAvatars[Math.floor(Math.random() * searchAvatars.length)];
       setCurrentAvatar(randomAvatar);
 
       if (cycleCount < maxCycles) {
-        opponentIntervalRef.current = setTimeout(cycleSlot, getDelay(cycleCount));
+        opponentIntervalRef.current = setTimeout(cycleSearch, getDelay(cycleCount));
       } else {
         // Lock in opponent
         if (opponent) {
@@ -428,14 +383,14 @@ export function VSScreen() {
       }
     };
 
-    opponentIntervalRef.current = setTimeout(cycleSlot, 200);
+    opponentIntervalRef.current = setTimeout(cycleSearch, 200);
 
     return () => {
       if (opponentIntervalRef.current) clearTimeout(opponentIntervalRef.current);
     };
   }, [stage, opponent]);
 
-  // Stage 2: Brief pause after opponent found, then start category slot
+  // Stage 2: Brief pause after opponent found, then pick the category
   useEffect(() => {
     if (stage !== "opponent-found") return;
 
@@ -450,7 +405,7 @@ export function VSScreen() {
    * The category the player ALREADY chose, when they chose one.
    *
    * `startMatchmaking` has always taken a category — `/game?category=` — and
-   * nothing here read it, so the slot machine spun to a random winner and
+   * nothing here read it, so the plate picked a random category and
    * the choice was thrown away. That was invisible while the only caller
    * passed nothing; it matters now that picking a picture game comes
    * straight here (a solo Guess used to create a whole room to play one
@@ -461,10 +416,10 @@ export function VSScreen() {
     [selectedCategoryId, categories],
   );
 
-  // Stage 3: the category is either the one the player picked — no spin,
-  // there is nothing to decide — or the reel picks one: the winner is
-  // drawn now, the plate's reel turns to it (CategoryPlate.reel, the
-  // Guess card's wheel), and says when it is there.
+  // Stage 3: the category is either the one the player picked — no
+  // shuffle, there is nothing to decide — or one is drawn now and the plate
+  // shuffles to it (CategoryPlate.reel, shared with the Guess card), saying
+  // when it has settled.
   useEffect(() => {
     if (stage !== "finding-category") return;
     if (chosenCategory) {
@@ -559,14 +514,14 @@ export function VSScreen() {
     }
   };
 
-  // Free category re-spins: the rolled category can be re-rolled up to three
-  // times before the match starts. Only the category wheel re-spins — the
-  // opponent stays — and a spin invalidates any questions prefetched for the
+  // Free category shuffles: the drawn category can be swapped up to three
+  // times before the match starts. Only the category changes — the opponent
+  // stays — and a shuffle invalidates any questions prefetched for the
   // discarded category.
-  const [categorySpinsLeft, setCategorySpinsLeft] = useState(3);
-  const handleCategorySpin = useCallback(() => {
-    if (categorySpinsLeft <= 0) return;
-    setCategorySpinsLeft((n) => n - 1);
+  const [categoryShufflesLeft, setCategoryShufflesLeft] = useState(3);
+  const handleCategoryShuffle = useCallback(() => {
+    if (categoryShufflesLeft <= 0) return;
+    setCategoryShufflesLeft((n) => n - 1);
     setSelectedCategory(null);
     prefetchedQuestionsRef.current = null;
     setIsStarting(false);
@@ -582,9 +537,9 @@ export function VSScreen() {
     setReelTarget(pool.length > 0 ? Math.floor(Math.random() * pool.length) : null);
     setReelTurn((k) => k + 1);
     setStage("finding-category");
-  }, [categorySpinsLeft, categories, categoryPool]);
+  }, [categoryShufflesLeft, categories, categoryPool]);
 
-  // Handle refresh - re-spin for new opponent and category
+  // Handle refresh - a new opponent and category
   const handleRefresh = useCallback(() => {
     // Reset local state
     setStage("finding-opponent");
@@ -593,7 +548,7 @@ export function VSScreen() {
     setConnectionError(false);
     categoryPoolSetForStageRef.current = false;
     prefetchedQuestionsRef.current = null;
-    setCategorySpinsLeft(3); // a full restart is a fresh match — fresh spins too
+    setCategoryShufflesLeft(3); // a full restart is a fresh match — fresh shuffles too
     setIsStarting(false);
     
     // Shuffle category pool for new selection - includes Mixed Category
@@ -638,7 +593,7 @@ export function VSScreen() {
   const isCategoryLocked = stage === "category-found" || stage === "ready";
   const showStartButton = stage === "ready";
   const startButtonDisabled = !showStartButton || isStarting;
-  const showCategorySlot = stage === "finding-category" || stage === "category-found" || stage === "ready";
+  const showCategoryPlate = stage === "finding-category" || stage === "category-found" || stage === "ready";
 
   return (
     <div
@@ -704,9 +659,9 @@ export function VSScreen() {
           transition={{ duration: 0.5, ease: "easeOut" }}
         >
           <div className="flex items-center gap-3 pl-[7%]">
-            {/* Avatar container - fixed size to prevent layout shift. The
-                slot machine still spins in here; it just lands with a pop
-                now, so the moment the opponent stops changing is visible. */}
+            {/* Avatar container - fixed size to prevent layout shift. Faces
+                cycle in here while the search runs and the found opponent
+                lands with a pop, so the moment it stops changing is visible. */}
             <motion.div
               className="w-[88px] h-[88px] rounded-full bg-white/20 flex items-center justify-center shrink-0"
               animate={isOpponentLocked ? { scale: [1, 1.12, 0.97, 1] } : { scale: 1 }}
@@ -743,7 +698,7 @@ export function VSScreen() {
         <motion.div
           className="absolute left-5 right-5 top-[45.6%]"
           initial={{ opacity: 0, scale: 0.85 }}
-          animate={{ opacity: showCategorySlot ? 1 : 0, scale: showCategorySlot ? 1 : 0.85 }}
+          animate={{ opacity: showCategoryPlate ? 1 : 0, scale: showCategoryPlate ? 1 : 0.85 }}
           transition={{ duration: 0.4 }}
         >
           <CategoryPlate
@@ -751,10 +706,10 @@ export function VSScreen() {
             iconSlug={displayCategoryIconSlug}
             iconUrl={displayCategoryIconUrl}
             isLocked={isCategoryLocked}
-            stake={REWARDS.GAME_WIN_REWARD}
-            canSpin={isCategoryLocked && !chosenCategory && categorySpinsLeft > 0}
-            onSpin={handleCategorySpin}
-            spinLabel={t("extra.spinCategoryBtn", { count: categorySpinsLeft })}
+            reward={REWARDS.GAME_WIN_REWARD}
+            canShuffle={isCategoryLocked && !chosenCategory && categoryShufflesLeft > 0}
+            onShuffle={handleCategoryShuffle}
+            shuffleLabel={t("playRewards.newCategory", { count: categoryShufflesLeft })}
             reel={
               reelTarget !== null && !chosenCategory
                 ? { items: reelItems, target: reelTarget, turnKey: reelTurn, onLanded: reelLanded }

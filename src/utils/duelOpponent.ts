@@ -2,10 +2,9 @@
  * Trivia King, as an opponent.
  *
  * A picture game from the Guess card is played against the app's own
- * mascot: 200 in, and whoever scores more takes the pot (owner: "we should
- * handle like one game vs trivia king (our app) and player pays 200 coins
- * and if wins against our mascot named Trivia King ... we should give user
- * +200, if not - loses 200 coins").
+ * mascot (owner: "we should handle like one game vs trivia king (our
+ * app)"). Beating him pays REWARDS.GUESS_WIN_REWARD; losing to him costs
+ * nothing — nothing is staked (20261108100000_no_wagering).
  *
  * How the two of them score (owner: "if user answers correctly in 5 seconds
  * point is theirs but if they answer correctly after 5 seconds point gets
@@ -22,7 +21,7 @@
  *    SLOW_ANSWER_STEP a second down to SLOW_ANSWER_FLOOR — less than the
  *    King's, so that question is his. A wrong answer, or none, is nothing.
  *
- * So ten right answers inside five seconds is 1000 against 900 and the pot;
+ * So ten right answers inside five seconds is 1000 against 900 and the win;
  * nine of them and a miss is 900 against 900, a draw; one slow answer among
  * nine fast ones still wins (980); and anyone who guesses loses. Hard to
  * beat, beatable by exactly the player the owner described.

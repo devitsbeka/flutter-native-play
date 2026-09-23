@@ -144,7 +144,6 @@ function ItemContentsDisplay({ item, t }: { item: { id: string; description: str
         </span>
         <div className="flex flex-wrap justify-center gap-2 text-xs text-muted-foreground">
           <span className="bg-muted px-2 py-1 rounded-lg">{t('shop.doubleXp')}</span>
-          <span className="bg-muted px-2 py-1 rounded-lg">{t('shop.unlimitedSpin')}</span>
         </div>
         <span className="bg-muted px-2 py-1 rounded-lg text-xs text-muted-foreground">{t('shop.exclusiveFrames')}</span>
       </div>

@@ -12,10 +12,9 @@ export interface EconomyConfigItem {
 }
 
 export interface EconomyConfig {
-  // Game Stakes
-  gameStake: number;
+  // Game rewards — nothing is staked; a win or draw is paid by the house
   gameWinReward: number;
-  gameDrawRefund: number;
+  gameDrawReward: number;
   
   // Level Up
   levelUpCoinsPerLevel: number;
@@ -78,9 +77,8 @@ export interface EconomyConfig {
  * economy_config values").
  */
 const DEFAULT_CONFIG: EconomyConfig = {
-  gameStake: REWARDS.GAME_STAKE,
   gameWinReward: REWARDS.GAME_WIN_REWARD,
-  gameDrawRefund: REWARDS.GAME_DRAW_REFUND,
+  gameDrawReward: REWARDS.GAME_DRAW_REWARD,
   levelUpCoinsPerLevel: REWARDS.LEVEL_UP_COINS,
   dailyRewards: REWARDS.DAILY_REWARDS.map((d) => d.coins),
   chestCoinsMin: REWARDS.CHEST_COINS_MIN,
@@ -118,9 +116,8 @@ function parseConfigItems(items: EconomyConfigItem[]): EconomyConfig {
   };
 
   return {
-    gameStake: getVal("game_stake", DEFAULT_CONFIG.gameStake),
     gameWinReward: getVal("game_win_reward", DEFAULT_CONFIG.gameWinReward),
-    gameDrawRefund: getVal("game_draw_refund", DEFAULT_CONFIG.gameDrawRefund),
+    gameDrawReward: getVal("game_draw_reward", DEFAULT_CONFIG.gameDrawReward),
     levelUpCoinsPerLevel: getVal("level_up_coins_per_level", DEFAULT_CONFIG.levelUpCoinsPerLevel),
     // Per-day fallbacks off the same defaults as everything else: they were
     // a second, older copy of the ladder, so a database missing one row

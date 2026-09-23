@@ -35,12 +35,13 @@ describe("the lobby's Start asks the table on a later match", () => {
     expect(lobby).toMatch(/\(p\) => p\.user_id !== user\?\.id && \(p\.status as string\) !== "invited",/);
   });
 
-  it("with the rounds, the question count and the stake on the ask", () => {
+  it("with the rounds and the question count on the ask, and no stake", () => {
     const ask = lobby.slice(lobby.indexOf("const askTableForRematch"), lobby.indexOf("const startWithWhoSaidYes"));
     expect(ask).toMatch(/kind: "host_new_game",/);
     expect(ask).toMatch(/rounds: summaryRounds\.map\(\(r\) => \(\{ name: r\.name, icon_slug: r\.iconSlug \}\)\),/);
     expect(ask).toMatch(/questions_per_round: playsUserTrivia \? null : questionsPerRound\(currentRoom\.total_questions\),/);
-    expect(ask).toMatch(/stake: REWARDS\.GAME_STAKE,/);
+    // Nothing is staked (20261108100000_no_wagering), so an ask names no price.
+    expect(ask).not.toMatch(/stake/);
     expect(ask).toMatch(/setRematchAsked\(true\);/);
     // The card carries them.
     expect(util).toMatch(/rounds\?: \{ name: string; icon_slug: string \| null \}\[\];/);
@@ -83,16 +84,16 @@ describe("the answer", () => {
 });
 
 describe("the host starts with whoever said yes", () => {
-  it("the wait sheet shows the table's answers and the pot for those in", () => {
+  it("the wait sheet shows the table's answers and the prizes for those in", () => {
     expect(wait).toMatch(/const ready = seats\.filter\(\(s\) => s\.answer === "ready"\)\.length;/);
-    // First place's share of the table's pot, not the pot (roomPot.test.ts).
-    expect(wait).toMatch(/showsPot \? \(firstPlaceShare\(playing, stake\) \?\? 0\) : stake/);
+    // The places are paid off whoever said yes (roomPrizes.test.ts).
+    expect(wait).toMatch(/const tablePlayers = asked && ready > 0 \? playing : seats\.length \+ 1;/);
     expect(wait).toMatch(/disabled=\{starting \|\| \(asked && ready === 0\)\}/);
     // Who said what: see rematchAnswersAreShown.test.ts.
     expect(lobby).toMatch(/answer: !seated \? "declined" : \(seated\.status as string\) === "ready" \? "ready" : "waiting",/);
   });
 
-  it("and the undecided leave the table before the stake is taken", () => {
+  it("and the undecided leave the table before the round starts", () => {
     const start = lobby.slice(lobby.indexOf("const startWithWhoSaidYes"), lobby.indexOf("return (\n    <UniversalLobby"));
     // Only the seats that were ASKED: somebody who sat down during the ask
     // never got a card (roundsThatCannotHang.test.ts).

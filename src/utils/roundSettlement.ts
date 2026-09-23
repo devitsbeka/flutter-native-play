@@ -1,13 +1,13 @@
 import { activeRoundPlayers, type RoundContext, type RoundPlayerLike } from "@/utils/roundPlayers";
 
 /**
- * When a round's pot is allowed to settle.
+ * When a round's prizes are allowed to settle.
  *
  * A PUBLIC room is played through: everyone is in the app, answering now,
  * and the results screen names a winner while they are all still looking at
  * it. It used to settle the moment the FIRST player's round ended — and
- * that player arrived at the results with a scoreboard of one, so the pot
- * was ranked on whoever answered fastest while the others were still on
+ * that player arrived at the results with a scoreboard of one, so the prizes
+ * were ranked on whoever answered fastest while the others were still on
  * question four. Now it waits for every seat that can still answer, like a
  * private round does, with a much shorter deadline: a public round is
  * minutes long, so the wait for a player who closed the app is too.
@@ -19,7 +19,7 @@ import { activeRoundPlayers, type RoundContext, type RoundPlayerLike } from "@/u
  * invited players play the round we give rewards after that").
  *
  * So a private round waits for everyone who can still answer. `settle` is
- * held, nobody is charged a stake, and the early finishers see the scores so
+ * held, nobody is paid yet, and the early finishers see the scores so
  * far with a line saying the rewards come when everyone has played.
  *
  * The wait cannot be unbounded — somebody always forgets — so a deadline
@@ -27,8 +27,8 @@ import { activeRoundPlayers, type RoundContext, type RoundPlayerLike } from "@/u
  * job watching the clock; like the room-retirement rule (migration
  * 20261013100000), it holds at READ time: the next device to open the
  * results screen after the deadline is the one that settles. Nothing is lost
- * while nobody looks, because the stakes are collected by the settlement
- * itself — an unsettled round has taken no money from anyone.
+ * while nobody looks: the prizes are paid by the settlement itself, and a
+ * round never takes coins from anyone.
  */
 
 /**
@@ -107,7 +107,7 @@ export interface SettleTimingInput {
 /**
  * May this device settle the round now, and if not, why it is holding.
  *
- * One answer for the whole chain — the round snapshot, the stats and the pot
+ * One answer for the whole chain — the round snapshot, the stats and the prizes
  * are settled together or not at all, so anything that gates one has to gate
  * all three.
  */

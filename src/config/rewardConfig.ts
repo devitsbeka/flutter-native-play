@@ -2,7 +2,7 @@
 // 
 // ECONOMY BALANCE:
 // - 1 Gem = 500 Coins
-// - Game stake: 500 coins (win = 1000, lose = 0, draw = 250)
+// - Games are free: a win pays, a loss costs nothing (no stakes, no pots)
 // - New player gets 5000 coins (10 free games) + 3 gems (1500 coins value)
 //
 // No lari figures here. Gem prices are global and money prices are not, so a
@@ -12,16 +12,17 @@
 // The money side lives in src/config/pricing.ts alone.
 
 export const REWARDS = {
-  // ===== GAME STAKE SYSTEM =====
-  GAME_STAKE: 500,           // Entry fee per game (1 gem value)
-  GAME_WIN_REWARD: 500,      // Winner gets +500 (post-game)
-  // A solo picture game (the Guess card): 200 to play, +200 for a pass,
-  // -200 for a fail. Decided by settle_guess_game server-side; this is the
-  // number the card prints (owner: "guess game cost should be 200 instead
-  // 500, player plays solo and wins +200 if wins, -200 if looses").
-  GUESS_STAKE: 200,
-  GAME_DRAW_REFUND: 0,       // No coin change on draw
-  GAME_LOSE_REWARD: 0,       // Loser already paid stake
+  // ===== GAME REWARDS — nothing is staked, nothing is lost =====
+  // Every game is free to enter. The house pays for a good result and a bad
+  // one costs nothing. Decided server-side by settle_quick_game,
+  // settle_guess_game and settle_room_round
+  // (20261108100000_no_wagering.sql); these are the numbers the screens
+  // print, and noWagering.test.ts holds them to the migration.
+  GAME_WIN_REWARD: 200,      // quick game, win
+  GAME_DRAW_REWARD: 50,      // quick game, draw
+  GUESS_WIN_REWARD: 100,     // the Guess card, beat Trivia King
+  // A room round, by place. At two players only first is paid.
+  ROOM_PLACE_PRIZES: [200, 100, 50] as readonly number[],
 
   // ===== PLAY REGENERATION SYSTEM =====
   PLAY_REGEN_HOURS: 3,       // 1 play every 3 hours after free games used
@@ -54,9 +55,9 @@ export const REWARDS = {
   // that ends up on a marketing page. Change it HERE and it changes nothing;
   // change the migration.
   //
-  // The gems land on days 3, 5 and 7. On top of all of it the function rolls
-  // a surprise — doubled coins, gems, or a power-up, weighted further towards
-  // power-ups as the streak grows.
+  // The gems land on days 3, 5 and 7, and the other days carry one named
+  // power-up (replace, freeze, 50/50, time-drain x2). Nothing is rolled:
+  // 20261108100000_no_wagering made the day's reward a calendar.
   DAILY_REWARDS: [
     { day: 1, coins: 50, gems: 0 },
     { day: 2, coins: 75, gems: 0 },
@@ -67,9 +68,13 @@ export const REWARDS = {
     { day: 7, coins: 300, gems: 5 },
   ],
 
-  // ===== CHEST REWARDS (every 6 hours) =====
-  CHEST_COINS_MIN: 50,       // Minimum coins from chest
-  CHEST_COINS_MAX: 250,      // Maximum coins from chest
+  // ===== CHEST REWARDS (once a day) =====
+  // A fixed amount: the chest is not a draw (see getChestCoins).
+  CHEST_COINS: 150,
+  // Legacy: mirrored by economy_config's chest_coins_min/max rows, which the
+  // admin economy tab still lists. Nothing draws from this range any more.
+  CHEST_COINS_MIN: 50,
+  CHEST_COINS_MAX: 250,
   CHEST_GEMS: 0,             // Base gems (0 on normal days)
   CHEST_WEEKEND_GEMS: 1,     // Bonus gem on special days (Saturday/Sunday)
   CHEST_COOLDOWN_HOURS: 24,   // 1x per day max
@@ -123,9 +128,8 @@ export const REWARDS = {
   //
   // A welcome bundle, once per tier per person, credited by the store sync
   // when the subscription first lands (supabase/functions/_shared/iap.ts).
-  // PRO's benefit is unlimited plays; it does not waive a room stake — the
-  // pot is other players' money — so the bundle is what makes the first
-  // weeks of a subscription feel paid for.
+  // PRO's benefit is unlimited plays and no ads; the bundle is what makes
+  // the first weeks of a subscription feel paid for.
   PRO_WELCOME: {
     pro: { coins: 25000, gems: 10 },       // PRO, one seat
     pro_plus: { coins: 50000, gems: 20 },  // Friends PRO, six seats
@@ -169,7 +173,7 @@ export const REWARDS = {
     month: 570,
   },
 
-  // ===== MULTIPLAYER STAKE REWARDS =====
+  // ===== MULTIPLAYER PLACEMENT REWARDS (legacy client payout) =====
   // Winner bonus scales with opponents actually beaten:
   //   min(WIN_COINS_PER_BEATEN × playersBeaten, 1ST_COINS cap) + own score.
   // 2nd/3rd get half their score; everyone else gets the participation
@@ -194,22 +198,10 @@ export const REWARDS = {
   GAME_DRAW_COINS: 0,
 };
 
-// Helper to get random chest coins (50-250)
-//
-// Uniform: every whole number in the range is equally likely, which is what
-// `ChestRewardModal` discloses. App Store guideline 3.1.1 asks a randomised
-// reward to publish its odds, and the chest is randomised — so if the
-// distribution is ever weighted, the disclosure has to change with it.
-export function getRandomChestCoins(): number {
-  return Math.floor(Math.random() * (REWARDS.CHEST_COINS_MAX - REWARDS.CHEST_COINS_MIN + 1)) + REWARDS.CHEST_COINS_MIN;
+/** What the daily chest pays in coins. Fixed — the chest is never a draw. */
+export function getChestCoins(): number {
+  return REWARDS.CHEST_COINS;
 }
-
-/** How many distinct coin amounts the chest can pay. */
-export const CHEST_COIN_OUTCOMES =
-  REWARDS.CHEST_COINS_MAX - REWARDS.CHEST_COINS_MIN + 1;
-
-/** The chance of any one of them, as a percentage. */
-export const CHEST_COIN_CHANCE_PERCENT = 100 / CHEST_COIN_OUTCOMES;
 
 // Check if today is a special day (weekend: Saturday or Sunday)
 export function isSpecialDay(): boolean {

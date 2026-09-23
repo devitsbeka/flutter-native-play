@@ -1,19 +1,15 @@
 /**
- * What a finished quick game costs or pays.
+ * What a finished quick game pays.
  *
- * Win +500, lose -500, draw nothing, for everybody — a subscription buys
- * unlimited plays, not a private price list. The loss has an edge the rule as
- * stated does not cover, and it is the one that was going wrong: the currency
- * RPC refuses any debit that would take a balance below zero. Asking it for
- * the full 500 against 300 coins therefore took NOTHING, and the result
- * screen still announced -500. The player was told they had paid and had not.
+ * Win +200, draw +50, lose nothing — for everybody. Nothing is staked to
+ * play and nothing is taken for a loss: MyTrivia is a trivia game, and a
+ * game you pay into and can lose coins from is a wager, which App Review
+ * rejected 1.0 (74) for. The server decides the real amounts in
+ * `settle_quick_game` (20261108100000_no_wagering.sql); this is what the
+ * result screen expects to see and what the fallback credits when the
+ * function has not reached a project yet.
  *
- * So a loss takes the stake or the balance, whichever is smaller, and says
- * which. A player should never reach that state — every way into a game
- * checks the stake is covered first — but "should never" is what the old code
- * assumed, and a balance can still move between starting a game and finishing
- * one, so the last step in the chain reports what it did rather than what it
- * meant to do.
+ * The file keeps its old name so the imports across the app need not move.
  */
 
 import { REWARDS } from "@/config/rewardConfig";
@@ -22,43 +18,19 @@ export type GameOutcome = "win" | "draw" | "lose";
 
 export interface GameSettlementInput {
   outcome: GameOutcome;
-  /** The player's balance as the game ends. */
-  coins: number;
-  /**
-   * Unused by the arithmetic, kept so callers need not change shape.
-   *
-   * PRO used to skip the loss here and in settle_quick_game. A quick game
-   * costs 500 for everybody now (owner: "per match cost is 500 coins, for
-   * PRO and no PRO users, same"), matching a room, where PRO has always
-   * staked. See 20261102140000_quick_game_charges_everyone.sql.
-   */
-  isVip?: boolean;
 }
 
 export interface GameSettlement {
-  /** Coins to credit. Zero unless the game was won. */
+  /** Coins to credit. Never negative. */
   credit: number;
-  /** Coins to debit. Never more than the player has. */
-  debit: number;
   /** What the balance should move by, for the result screen to show. */
   delta: number;
 }
 
-export function resolveGameSettlement({
-  outcome,
-  coins,
-}: GameSettlementInput): GameSettlement {
-  if (outcome === "win") {
-    const credit = REWARDS.GAME_WIN_REWARD;
-    return { credit, debit: 0, delta: credit };
-  }
-
-  if (outcome === "draw") {
-    return { credit: 0, debit: 0, delta: 0 };
-  }
-
-  const debit = Math.min(REWARDS.GAME_STAKE, Math.max(0, Math.floor(coins)));
-  // `-0` where nothing moved: harmless arithmetic, but it reaches a badge as
-  // the string "-0".
-  return { credit: 0, debit, delta: debit === 0 ? 0 : -debit };
+export function resolveGameSettlement({ outcome }: GameSettlementInput): GameSettlement {
+  const credit =
+    outcome === "win" ? REWARDS.GAME_WIN_REWARD
+    : outcome === "draw" ? REWARDS.GAME_DRAW_REWARD
+    : 0;
+  return { credit, delta: credit };
 }

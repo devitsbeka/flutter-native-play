@@ -42,10 +42,14 @@ describe("one sheet, three states", () => {
     expect(sheet).toMatch(/\{t\("extra\.rematchWaitStart", \{ count: playing \}\)\}/);
   });
 
-  it("the stake tile becomes the pot only once somebody is in it", () => {
-    expect(sheet).toMatch(/const showsPot = asked && ready > 0;/);
-    expect(sheet).toMatch(/\{showsPot \? t\("lobby\.winnerTakes"\) : t\("lobby\.summaryStake"\)\}/);
-    expect(sheet).toMatch(/\{\(showsPot \? \(firstPlaceShare\(playing, stake\) \?\? 0\) : stake\)\.toLocaleString\(\)\}/);
+  it("the prize tile counts whoever is in once somebody is, and the whole table until then", () => {
+    // Nothing is staked (20261108100000_no_wagering): the tile says what the
+    // places are paid, and that the game is free.
+    expect(sheet).toMatch(/const tablePlayers = asked && ready > 0 \? playing : seats\.length \+ 1;/);
+    expect(sheet).toMatch(/\{t\("playRewards\.prizesLabel"\)\}/);
+    expect(sheet).toMatch(/<PrizeLadder t=\{t\} players=\{tablePlayers\} \/>/);
+    expect(sheet).toMatch(/\{t\("playRewards\.freeToPlay"\)\}/);
+    expect(sheet).not.toMatch(/stake|winnerTakes/);
   });
 
   it("a face carries an answer only after the table has been asked", () => {

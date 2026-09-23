@@ -276,7 +276,7 @@ describe("the lobby says what the game is", () => {
     }
   });
 
-  it("the stake is one strip in the rules, not a shape per mode", () => {
+  it("the prize is one strip in the rules, not a shape per mode", () => {
     // It was a hand-built box on the King's couch, a rule row in the arena,
     // and nothing at all on the other two.
     expect(universal).toMatch(/reward\?: \{ label: string; icon\?: string; amount: ReactNode \};/);
@@ -294,7 +294,9 @@ describe("the lobby says what the game is", () => {
     // And the card's foot no longer changes shape for it.
     expect(universal).not.toMatch(/reward \? "pb-\[22px\]"/);
     for (const file of ["src/pages/KingPage.tsx", "src/pages/TeamBattlePage.tsx"]) {
-      expect(read(file), file).toMatch(/reward=\{\{ label: t\("lobby\.winnerTakes"\), icon: coinIconAsset/);
+      // The label is the mode's own (it said "Winner takes" while rooms were
+      // played for a pot); the strip is the shared one.
+      expect(read(file), file).toMatch(/reward=\{\{ label: t\("[\w.]+"\), icon: coinIconAsset/);
     }
     // And the room's size is said once, under its name — the rules tab used
     // to repeat it as a "Players 1–10" row two inches below.

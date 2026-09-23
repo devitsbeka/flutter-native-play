@@ -7,11 +7,11 @@
  * a list they had to go and find. This is the same card the room's other
  * asks wear - the host's face, what they want, the two answers - with what
  * is being proposed under it: the room, the rounds in order, the question
- * count and the stake (owner: "ask other players if they want rematch or
+ * count, and that it is free (owner: "ask other players if they want rematch or
  * not, show that it is a rematch, show new match categories and rules").
  *
  * Yes marks the seat ready and goes to the room; no gives the seat up - a
- * seat that stays at the table is staked when the round settles - and, for
+ * seat that stays at the table is counted when the round settles - and, for
  * a player standing in that room, walks them out of it.
  *
  * Mounted once, app-wide, beside the other gates.
@@ -30,17 +30,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { ROOM_KIND_COLUMNS, routeForRoom } from "@/utils/roomRoutes";
 import { answerRematchRequest, type RematchRequestData } from "@/utils/rematchRequests";
-import coinIcon from "@/assets/tb-lobby/coin.png";
 
-/** The proposed match: rounds in play order, questions per round, stake. */
+/**
+ * The proposed match: rounds in play order, questions per round, and that it
+ * is free. An ask from an older build still carries a `stake`; it is never
+ * shown, because no room takes one now (20261108100000_no_wagering).
+ */
 export function RematchMatchCard({
   rounds,
   questionsPerRound,
-  stake,
 }: {
   rounds: { name: string; icon_slug: string | null }[];
   questionsPerRound: number | null;
-  stake: number | null;
 }) {
   const { t } = useLanguage();
   return (
@@ -70,14 +71,7 @@ export function RematchMatchCard({
           </span>
         )}
         <span className="ml-auto inline-flex shrink-0 items-center gap-1 rounded-full bg-background px-2 py-0.5 font-bold text-foreground">
-          {stake ? (
-            <>
-              <img src={coinIcon} alt="" className="h-3.5 w-3.5 object-contain" />
-              {stake.toLocaleString()}
-            </>
-          ) : (
-            t("lobby.summaryFree")
-          )}
+          {t("playRewards.freeToPlay")}
         </span>
       </div>
     </div>
@@ -165,7 +159,6 @@ export function GlobalRematchGate() {
             <RematchMatchCard
               rounds={data.rounds}
               questionsPerRound={data.questions_per_round ?? null}
-              stake={data.stake ?? null}
             />
           )}
         </>

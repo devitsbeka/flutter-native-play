@@ -7,6 +7,7 @@ import chestBoxIcon from "@/assets/icons/icon-chest-box.png";
 import powersIcon from "@/assets/icons/icon-powers.png";
 import adFreeIcon from "@/assets/icons/icon-ad-free.png";
 import { useRewardTimers } from "@/hooks/useRewardTimers";
+import { getChestCoins } from "@/config/rewardConfig";
 import { useMissions } from "@/hooks/useMissions";
 import { useUserPowerUps } from "@/hooks/useUserPowerUps";
 import { useVipStatus } from "@/hooks/useVipStatus";
@@ -303,7 +304,7 @@ export function DesktopActionCards({
         iconSrc={chestBoxIcon}
         title={t("extra.chest")}
         statusText={canClaimChest ? t("extra.chestOpenNow") : t("extra.chestTimeLeft", { time: chestTimeLeft || "00:00:00" })}
-        expandedDetails={t("extra.chestDetails")}
+        expandedDetails={t("playRewards.chestFixed", { amount: getChestCoins() })}
         actionLabel={canClaimChest ? t("extra.openChest") : t("extra.viewDetails")}
         onClick={onChestClick}
         isReady={canClaimChest}

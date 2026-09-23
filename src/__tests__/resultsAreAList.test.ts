@@ -10,13 +10,13 @@
  * The podium is back, by the same owner's next word: "show 1,2,3 places how
  * we had, besides in top, first player with bigger avatar in middle". What
  * the list was FOR stays under it — fourth down as rows, and the room's
- * whole history: "below show all rounds pot not only last game and show all
- * coins users won or lose, like summery of the all games".
+ * whole history: "below show all rounds not only last game, like summery of
+ * the all games".
  *
  *   podium              the three the round was about
  *   this round, 4th+    one row per seat (only when there are more than three)
- *   every game          each round's category, pot, and its seats in a column
- *   all games · totals  every seat's coins over the whole room
+ *   every game          each round's category, and its seats in a column
+ *   all games · totals  every seat's prizes over the whole room
  */
 
 import { describe, expect, it } from "vitest";
@@ -49,7 +49,7 @@ describe("one row per player, from fourth down", () => {
     const face = row.indexOf("<SafeAvatar");
     const name = row.indexOf("{name}");
     const score = row.indexOf("{detail && <p");
-    const coins = row.indexOf("<PotLine net={net} compact />");
+    const coins = row.indexOf("<PrizeLine prize={prize} compact />");
     expect(place).toBeGreaterThan(-1);
     expect(face).toBeGreaterThan(place);
     expect(name).toBeGreaterThan(face);

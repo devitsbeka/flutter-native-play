@@ -26,10 +26,7 @@ import { QuizCategoryIcon } from "@/components/ui/quiz-category-icon";
 import { supabase } from "@/integrations/supabase/client";
 import { TVMirrorModal } from "@/components/tv/TVMirrorModal";
 import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
-import { NotEnoughStakeModal } from "@/components/home/NotEnoughStakeModal";
 import { PREVIEW_BUTTON_CLASS, PREVIEW_BUTTON_TONE, RoomPreviewSheet, type PreviewActionFactory } from "@/components/team/RoomPreviewSheet";
-import { useCurrency } from "@/hooks/useCurrency";
-import { REWARDS } from "@/config/rewardConfig";
 import { Capacitor } from "@capacitor/core";
 import { formatDistanceToNow } from "date-fns";
 import { dateLocaleFor } from "@/utils/dateLocale";
@@ -267,26 +264,13 @@ export function MyRoomsSection({
   // of writes before the screen changes, so without this the card looks dead
   // and every extra tap starts the chain again.
   const [joiningRoomId, setJoiningRoomId] = useState<string | null>(null);
-  const [showNoStake, setShowNoStake] = useState(false);
-  /** The room whose rounds and cost are being read, with its card's button when it has one. */
+  /** The room whose rounds and prizes are being read, with its card's button when it has one. */
   const [previewing, setPreviewing] = useState<{ room: MyRoom; action?: PreviewActionFactory } | null>(null);
-  const { coins } = useCurrency();
 
   const handleJoin = async (room: MyRoom) => {
     if (joiningRoomId) return;
-    // Taking a seat at somebody else's table is agreeing to stake into its
-    // pot, so the tap that takes it is where a balance that cannot is said
-    // out loud (owner: "room matches also needs 500 coins to participate,
-    // if not it should show the reason after click").
-    //
-    // The HOST is not stopped: their room is theirs to open, edit and
-    // invite into, and Start is already gated on the same stake. Nor are
-    // the lounges — the party, the arena and the King's couch carry their
-    // own stakes and are not settled by settle_room_round.
-    if (roomKind(room) === "classic" && !room.is_host && coins < REWARDS.GAME_STAKE) {
-      setShowNoStake(true);
-      return;
-    }
+    // No balance is asked for: a seat is free and the house pays the
+    // places (20261108100000_no_wagering).
     // Confirm answers the invite first, so the card stops asking once the
     // seat is taken (owner: "do not show confirm button again").
     if (room.has_pending_invite && room.pending_invite_from) {
@@ -431,8 +415,6 @@ export function MyRoomsSection({
 
       {/* The host's invite sheet, opened by the "+" on a room card — the
           same one the Public tab's cards already open. */}
-      {/* Why the tap did nothing: a seat at that table costs the stake. */}
-      <NotEnoughStakeModal isOpen={showNoStake} onClose={() => setShowNoStake(false)} />
 
       {/* What the card is, opened by tapping it. */}
       <RoomPreviewSheet
@@ -1425,7 +1407,7 @@ export function RoomCardGrid({ room, index, onJoin, onPreview, onDelete, onLeave
     // categories list and cost for participating").
     //
     // Except a lounge — the King's couch, the arena — which carries its own
-    // stake and its own idea of a round, so the sheet would describe it
+    // rules and its own idea of a round, so the sheet would describe it
     // wrongly. Their card keeps the tap it had.
     if (!isSwiping.current && !isJoining) {
       if (roomKind(room) === "classic") onPreview(playButton);

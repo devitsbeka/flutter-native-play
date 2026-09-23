@@ -241,7 +241,6 @@ export default function HomeShot() {
               { name: "Architecture", icon_slug: "castle" },
             ]}
             questionsPerRound={10}
-            stake={500}
           />
         </PersonAskModal>
       </div>
@@ -249,7 +248,7 @@ export default function HomeShot() {
   }
   if (params.get("view") === "rematch-wait" || params.get("view") === "rematch-ask") {
     // The rematch sheet, in both of its states: the question (the table, the
-    // rounds, the stake) and the answers under the same faces.
+    // rounds, the prizes) and the answers under the same faces.
     const asked = params.get("view") === "rematch-wait";
     return (
       <div className="h-[100dvh] w-full bg-[#e9dcf7]">
@@ -264,7 +263,6 @@ export default function HomeShot() {
             { user_id: "2", nickname: "Gloria", avatar_url: null, answer: "waiting", online: true, isWinner: true },
             { user_id: "3", nickname: "Marco", avatar_url: null, answer: asked ? "declined" : "waiting" },
           ]}
-          stake={500}
           onCancel={noop}
           onAsk={noop}
           onStart={noop}
@@ -274,7 +272,7 @@ export default function HomeShot() {
   }
   if (params.get("view") === "preview") {
     // The card's preview sheet: a random round (mystery box), a real one,
-    // and a mixed one (the question mark), beside the stake and the card's
+    // and a mixed one (the question mark), beside the prizes and the card's
     // own Join. Close is the unfilled pill.
     return (
       <div className="h-[100dvh] w-full bg-[#e9dcf7]">
@@ -329,7 +327,7 @@ export default function HomeShot() {
     );
   }
   if (params.get("view") === "summary") {
-    // The host's last look before a match starts: rounds, questions, stake.
+    // The host's last look before a match starts: rounds, questions, prizes.
     // `?solo=1` shows the free, one-player version.
     return (
       <div className="h-[100dvh] w-full bg-[#e9dcf7]">
@@ -341,8 +339,6 @@ export default function HomeShot() {
             { name: "Random", iconSlug: null },
           ]}
           questionsPerRound={Number(params.get("q") ?? 10)}
-          stake={500}
-          soloFree={Boolean(params.get("solo"))}
           onChange={noop}
           onConfirm={noop}
         />

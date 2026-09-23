@@ -1,12 +1,11 @@
 /**
- * Plate Shot — a dev-server render target for the category plate's reel
- * (VSScreen.CategoryPlate), the way /dev/lobby is for the lobby: the reel
+ * Plate Shot — a dev-server render target for the category plate
+ * (VSScreen.CategoryPlate), the way /dev/lobby is for the lobby: the plate
  * lives on two screens that both need a signed-in player and a category
- * list, which a screenshot pass cannot have. This page turns the plate over
- * the six picture games on the quick game's purple.
+ * list, which a screenshot pass cannot have. This page shuffles the plate
+ * over the six picture games on the quick game's purple.
  *
- *   /dev/plate?target=3&hold=1   (hold: render the reel's strips at rest,
- *   frozen on their first row, so the window's geometry can be looked at)
+ *   /dev/plate?target=3
  */
 import { useCallback, useState } from "react";
 import { useSearchParams } from "react-router-dom";
@@ -37,10 +36,10 @@ export default function PlateShot() {
           name={item.name}
           iconUrl={item.iconUrl}
           isLocked={locked}
-          stake={200}
-          canSpin={locked}
-          spinLabel="Spin"
-          onSpin={() => {
+          reward={100}
+          canShuffle={locked}
+          shuffleLabel="New category"
+          onShuffle={() => {
             setLocked(false);
             setTurn((k) => k + 1);
           }}

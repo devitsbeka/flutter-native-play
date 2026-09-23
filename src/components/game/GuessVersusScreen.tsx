@@ -1,20 +1,23 @@
 /**
- * The Guess card's versus screen: Trivia King, the wheel, and you.
+ * The Guess card's versus screen: Trivia King, the category, and you.
  *
  * The Guess card used to ask a question — "what will you guess?" — on a
  * grid of picture games, and then, on the level page, show a second screen
- * with the King's face and the pot. The owner wants the quick game's
+ * with the King's face and the prize. The owner wants the quick game's
  * versus screen here instead (Figma 1147:8835): the opponent top-left, the
- * category plate across the middle with the wheel spinning inside it, the
+ * category plate across the middle picking the category, the
  * player bottom-right, one Play. Two things differ from the quick game, by
  * the owner's word:
  *
- *  - the opponent is Trivia King, at once. No slot machine over the
+ *  - the opponent is Trivia King, at once. No search over the
  *    avatar, no level, no coins — the King's face (Figma 1173:11905) and
  *    his name, and nothing under it;
- *  - the wheel spins the PICTURE games only — flag, logo, celebrity, movie,
- *    city, sportsman — and lands on the one the player will guess. Three
- *    free re-rolls, as the quick game gives.
+ *  - the plate picks from the PICTURE games only — flag, logo, celebrity,
+ *    movie, city, sportsman — and settles on the one the player will
+ *    guess. Three free shuffles, as the quick game gives.
+ *
+ * Nothing is staked: the plate's coin pill is what beating the King pays
+ * (REWARDS.GUESS_WIN_REWARD), and losing to him costs nothing.
  *
  * (owner: "show this screen (quick game screen) on guess game screen too,
  * show this avatar for Trivia King avatar instantly and instead choosing
@@ -49,17 +52,15 @@ export interface GuessCategory {
 }
 
 /*
- * How the wheel turns: it is a reel (CategoryPlate.reel). Every picture
- * game is a row on one strip; the strip makes REEL_LOOPS full turns and
- * lands on a random game in one continuous motion of REEL_SECONDS — the
- * plate's own numbers, shared with the quick game. Twelve timed swaps came
- * before this, at two cadences, and both read as a flicker (owner, twice:
- * "it rolls very fast, we need smooth animation").
+ * How the category is picked: the plate shuffles (CategoryPlate.reel) for
+ * SHUFFLE_SECONDS and settles on a random picture game — the plate's own
+ * timing, shared with the quick game. It used to be a slot-machine reel;
+ * see CategoryPlate for why it is not any more.
  */
 /** The two cards' inset from their own edge of the screen, the same on both sides. */
 const CARD_INSET = "px-[4%]";
-/** Three free re-rolls, as the quick game gives. */
-const FREE_SPINS = 3;
+/** Three free shuffles, as the quick game gives. */
+const FREE_SHUFFLES = 3;
 
 interface GuessVersusScreenProps {
   categories: GuessCategory[];
@@ -75,35 +76,35 @@ export function GuessVersusScreen({ categories, onPlay, onBack, busy = false }: 
   const playerLevel = calculateLevel(profile?.total_points || 0).level;
   const playerCoins = profile?.coins || 0;
 
-  // The wheel: an index into the games, rolling, then still.
-  const [wheelIndex, setWheelIndex] = useState(0);
+  // The pick: an index into the games, shuffling, then still.
+  const [pickIndex, setPickIndex] = useState(0);
   const [locked, setLocked] = useState(false);
-  const [spinsLeft, setSpinsLeft] = useState(FREE_SPINS);
-  const [spinKey, setSpinKey] = useState(0);
+  const [shufflesLeft, setShufflesLeft] = useState(FREE_SHUFFLES);
+  const [shuffleKey, setShuffleKey] = useState(0);
 
-  // Each turn picks where the reel will land; the reel does the rest and
-  // says when it is there.
+  // Each shuffle draws the category now; the plate does the rest and says
+  // when it has settled.
   useEffect(() => {
     if (categories.length === 0) return;
     setLocked(false);
-    setWheelIndex(Math.floor(Math.random() * categories.length));
-  }, [categories.length, spinKey]);
+    setPickIndex(Math.floor(Math.random() * categories.length));
+  }, [categories.length, shuffleKey]);
   const landed = useCallback(() => setLocked(true), []);
 
-  const spin = useCallback(() => {
-    if (spinsLeft <= 0 || !locked) return;
-    setSpinsLeft((n) => n - 1);
-    setSpinKey((k) => k + 1);
-  }, [spinsLeft, locked]);
+  const shuffle = useCallback(() => {
+    if (shufflesLeft <= 0 || !locked) return;
+    setShufflesLeft((n) => n - 1);
+    setShuffleKey((k) => k + 1);
+  }, [shufflesLeft, locked]);
 
-  const category = categories[wheelIndex];
+  const category = categories[pickIndex];
   const ready = locked && !!category && !busy;
 
-  // The reel's rows wear the picture their category card wears: the six
+  // The plate's items wear the picture their category card wears: the six
   // picture games ship a 3D icon of their own, and the icon-library slug
   // they carry is a generic stand-in (a magnifier for Guess the Logo).
   // CategoryArtwork makes the same choice for every card.
-  const reelItems = useMemo(
+  const plateItems = useMemo(
     () => categories.map((c) => ({ name: c.name, iconSlug: c.icon_slug ?? undefined, iconUrl: popularCategoryIcon(c.category_id) ?? undefined })),
     [categories],
   );
@@ -158,7 +159,7 @@ export function GuessVersusScreen({ categories, onPlay, onBack, busy = false }: 
             </div>
           </motion.div>
 
-          {/* The wheel, in the plate — the picture games only. */}
+          {/* The category, in the plate — the picture games only. */}
           <motion.div
             className="absolute left-5 right-5 top-[45.6%]"
             initial={{ opacity: 0, scale: 0.85 }}
@@ -170,11 +171,11 @@ export function GuessVersusScreen({ categories, onPlay, onBack, busy = false }: 
               iconSlug={category?.icon_slug ?? undefined}
               iconUrl={popularCategoryIcon(category?.category_id) ?? undefined}
               isLocked={locked}
-              stake={REWARDS.GUESS_STAKE}
-              canSpin={locked && spinsLeft > 0 && !busy}
-              onSpin={spin}
-              spinLabel={t("extra.spinCategoryBtn", { count: spinsLeft })}
-              reel={{ items: reelItems, target: wheelIndex, turnKey: spinKey, onLanded: landed }}
+              reward={REWARDS.GUESS_WIN_REWARD}
+              canShuffle={locked && shufflesLeft > 0 && !busy}
+              onShuffle={shuffle}
+              shuffleLabel={t("playRewards.newCategory", { count: shufflesLeft })}
+              reel={{ items: plateItems, target: pickIndex, turnKey: shuffleKey, onLanded: landed }}
             />
             {/* No rules line under the plate: it was there, narrow, and the
                 owner asked for it gone ("remove description below"). The

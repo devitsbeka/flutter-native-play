@@ -13,7 +13,7 @@
  *    category, and shows New Game only once the match is over - while
  *    rounds are queued, Continue is the one way on;
  *  - and when the last round is in, the match's standings: every seat's
- *    coins over all of its rounds, summed from each round's settled pot.
+ *    prizes over all of its rounds, summed from each round's ledger.
  */
 
 import { describe, expect, it } from "vitest";
@@ -58,15 +58,15 @@ describe("the results screen", () => {
     expect(results).toMatch(/\{queue\.length === 0 && \(\s*<ChunkyButton\s*variant="mint"/);
   });
 
-  it("sums every round's settled pot into the room's standings", () => {
+  it("sums every round's prizes into the room's standings", () => {
     // Through useRoomRounds now: every round the room has played read back
     // off the ledger, game by game, the totals folded from all of them
-    // (owner: "show all rounds pot not only last game"). useMatchRounds
+    // (owner: "show all rounds not only last game"). useMatchRounds
     // keeps the per-match read and the ranking the totals use.
-    expect(results).toMatch(/const roomRounds = useRoomRounds\(currentRoom\?\.id, hasPotLines, readRoomRound\);/);
+    expect(results).toMatch(/const roomRounds = useRoomRounds\(currentRoom\?\.id, hasPrizeLines, readRoomRound\);/);
     expect(results).toMatch(/const roomTotals = roomRounds && roomRounds\.length >= 2 \? matchTotals\(roomRounds\) : null;/);
     const hook = read("src/hooks/useMatchRounds.ts");
-    expect(hook).toMatch(/\.sort\(\(a, b\) => b\.net - a\.net\)/);
+    expect(hook).toMatch(/\.sort\(\(a, b\) => b\.prize - a\.prize\)/);
     const room = read("src/hooks/useRoomRounds.ts");
     // Read through room_round_ledger — a look at the summary settles nothing.
     expect(room).toMatch(/const settlements = await Promise\.all\(rows\.map\(\(r\) => readRoomRound\(r\.id\)\)\);/);

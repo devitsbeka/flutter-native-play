@@ -242,11 +242,11 @@ describe("what the results screen does with it", () => {
     }
   });
 
-  it("and shows no coins while it waits — nothing has been staked or paid", () => {
-    // netFor falls back to this player's own settled numbers, which are
-    // still zero, so the podium draws no pot pills.
-    expect(results).toMatch(/if \(p\.isMe && \(coinsEarned > 0 \|\| coinsLost > 0\)\) return coinsEarned - coinsLost;/);
-    expect(results).toMatch(/if \(net === undefined\) return null;/);
+  it("and shows no coins while it waits — nothing has been paid", () => {
+    // prizeFor falls back to this player's own settled prize, which is still
+    // zero, so the podium draws no prize pills.
+    expect(results).toMatch(/if \(p\.isMe && coinsEarned > 0\) return coinsEarned;/);
+    expect(results).toMatch(/if \(prize === undefined \|\| prize <= 0\) return null;/);
   });
 });
 

@@ -6,8 +6,7 @@ import { markNotificationActioned } from "@/utils/notificationActions";
  *
  * A round used to roll straight into the next: the host picked a category on
  * the results screen and every other player was pulled into it by the room's
- * realtime status, whether they were still looking or not — and, since a
- * room is played for a pot now, staked for it. The owner's rule is that a new
+ * realtime status, whether they were still looking or not. The owner's rule is that a new
  * game is ASKED: the host presses New Game, the room goes back to its lobby,
  * and everyone at the table is told "do you want a rematch?" with the host's
  * name on it, to accept or decline. And a PRO player who is not the host can
@@ -56,15 +55,20 @@ export interface RematchRequestData {
   action_taken?: "accepted" | "declined";
   /**
    * What the table is being asked to play, when the ask comes from the
-   * lobby's Start: the rounds in order, the question count and the stake.
-   * Absent on a player's own ask, which names one pick.
+   * lobby's Start: the rounds in order and the question count. Absent on a
+   * player's own ask, which names one pick.
    */
   rounds?: { name: string; icon_slug: string | null }[];
   questions_per_round?: number | null;
+  /**
+   * Written by builds from before rooms stopped taking a stake
+   * (20261108100000_no_wagering). Never sent now, and never shown: a room
+   * is free to play whatever an old ask says.
+   */
   stake?: number | null;
 }
 
-export type RematchMatch = Pick<RematchRequestData, "rounds" | "questions_per_round" | "stake">;
+export type RematchMatch = Pick<RematchRequestData, "rounds" | "questions_per_round">;
 
 interface SendArgs {
   room: {

@@ -52,10 +52,10 @@ describe("Guess replaced Random on the create screen", () => {
     // on the pick, then the versus flow; each put something between the
     // pick and the game. A room meant a row, a lobby route, a start and a
     // walk-in, and was left behind afterwards; the versus screen meant an
-    // opponent, a stake and a reveal to sit through (owner: "no need to
-    // show the versus game page here").
-    // ...and, since the Guess card got its own stake, the level is told it
-    // is a staked run (guessStake.test) — and, since the versus screen
+    // opponent and a reveal to sit through (owner: "no need to show the
+    // versus game page here").
+    // ...and the level is told it is a Guess run (the `guessStake` flag,
+    // named before anything stopped being staked) — and, since the versus screen
     // took the duel intro's job, that the intro has already been shown.
     expect(create).toMatch(
       /const level = getCategoryProgress\(cat\.category_id \?\? cat\.id\) \|\| 1;\s*\n(\s*\/\/[^\n]*\n)*\s*handoff\(`\/play\/\$\{cat\.category_id \?\? cat\.id\}\/\$\{level\}`, \{ state: \{ countdown: true, guessStake: true, versus: true \} \}\);/,
@@ -171,7 +171,7 @@ describe("Guess replaced Random on the create screen", () => {
     // goes there.
     const vs = read("src/components/game/VSScreen.tsx");
     expect(vs).toMatch(/const chosenCategory = useMemo\(/);
-    expect(vs).toMatch(/isCategoryLocked && !chosenCategory && categorySpinsLeft > 0/);
+    expect(vs).toMatch(/isCategoryLocked && !chosenCategory && categoryShufflesLeft > 0/);
   });
 
   it("and startGame can be told which room, so it cannot read a stale one", () => {

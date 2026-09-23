@@ -212,15 +212,18 @@ describe("and the database grants it too, without waiting on a deploy", () => {
 });
 
 describe("economy_config tells the truth about the rest of it too", () => {
-  it("the stake, the win and the draw", () => {
-    expect(configValue("game_stake")).toBe(REWARDS.GAME_STAKE);
-    expect(configValue("game_win_reward")).toBe(REWARDS.GAME_WIN_REWARD);
-    expect(configValue("game_draw_refund")).toBe(REWARDS.GAME_DRAW_REFUND);
+  it("the win and the draw are what settle_quick_game pays, and nothing is staked", () => {
+    // Since 20261108100000_no_wagering the amounts live in the settlement
+    // function itself, not in economy_config: a win and a draw are paid by
+    // the house and a loss costs nothing.
+    const noWager = read("supabase/migrations/20261108100000_no_wagering.sql");
+    expect(noWager).toContain(`v_win     constant integer := ${REWARDS.GAME_WIN_REWARD};`);
+    expect(noWager).toContain(`v_draw    constant integer := ${REWARDS.GAME_DRAW_REWARD};`);
+    expect(REWARDS).not.toHaveProperty("GAME_STAKE");
   });
 
-  it("one gem is one stake, which is what exchange_currency has always paid", () => {
+  it("the gem rate is what exchange_currency has always paid", () => {
     expect(configValue("gem_to_coins_rate")).toBe(REWARDS.GEM_TO_COINS_RATE);
-    expect(REWARDS.GEM_TO_COINS_RATE).toBe(REWARDS.GAME_STAKE);
   });
 
   it("the daily ladder — the DATABASE's, which is the one that pays", () => {
@@ -298,8 +301,9 @@ describe("economy_config tells the truth about the rest of it too", () => {
   it("the app's own fallback is the same config, not a second copy of it", () => {
     // DEFAULT_CONFIG was typed out by hand and drifted: a win paying 1000
     // against a 500 stake, a gem worth 50 coins. It reads REWARDS now, so
-    // there is nothing left to drift.
-    expect(economyHook).toMatch(/gameStake: REWARDS\.GAME_STAKE,/);
+    // there is nothing left to drift — and there is no stake left in it.
+    expect(economyHook).toMatch(/gameWinReward: REWARDS\.GAME_WIN_REWARD,/);
+    expect(economyHook).not.toMatch(/gameStake/);
     expect(economyHook).toMatch(/gemToCoinsRate: REWARDS\.GEM_TO_COINS_RATE,/);
     expect(economyHook).toMatch(/newPlayerCoins: REWARDS\.NEW_PLAYER_COINS,/);
     expect(economyHook).toMatch(/newPlayerGems: REWARDS\.NEW_PLAYER_GEMS,/);

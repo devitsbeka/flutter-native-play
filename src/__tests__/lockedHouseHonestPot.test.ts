@@ -11,9 +11,13 @@
  * won, the daily ceiling burned a share of the pot, and a screen that only
  * meant to SHOW earlier rounds settled them.
  *
- * The arithmetic and the policies are proved against Postgres in
- * supabase/tests/22-lock-the-house.sql and 23-honest-pot.sql. This pins the
- * shape the client relies on and that CI runs both.
+ * Phase B's settlement has since been replaced: 20261108100000_no_wagering
+ * collects nothing and pays the places from the house, keeping the seating,
+ * observer and tie rules pinned below and the ledger read. The policies are
+ * proved against Postgres in supabase/tests/22-lock-the-house.sql and the
+ * rooms in 26-no-wagering.sql (23-honest-pot.sql asserted the stake, and
+ * went with it). This pins the shape the client relies on and that CI runs
+ * both.
  */
 
 import { describe, expect, it } from "vitest";
@@ -84,13 +88,16 @@ describe("the pot is honest", () => {
     expect(pot).toMatch(/'reason', 'practice'/);
   });
 
-  it("the observing host neither stakes nor wins", () => {
+  it("the observing host neither stakes nor wins — and still does not win now nothing is staked", () => {
     expect(pot).toMatch(/g\.host_is_observer IS TRUE THEN g\.host_user_id/);
+    expect(read("supabase/migrations/20261108100000_no_wagering.sql")).toMatch(/g\.host_is_observer IS TRUE THEN g\.host_user_id/);
   });
 
-  it("tied scores split the tied places' shares", () => {
-    expect(pot).toMatch(/rank\(\) OVER \(ORDER BY COALESCE\(rp\.score, 0\) DESC\)/);
-    expect(pot).toMatch(/count\(\*\) OVER \(PARTITION BY COALESCE\(rp\.score, 0\)\)/);
+  it("tied scores split the tied places' shares, then and now", () => {
+    for (const src of [pot, read("supabase/migrations/20261108100000_no_wagering.sql")]) {
+      expect(src).toMatch(/rank\(\) OVER \(ORDER BY COALESCE\(rp\.score, 0\) DESC\)/);
+      expect(src).toMatch(/count\(\*\) OVER \(PARTITION BY COALESCE\(rp\.score, 0\)\)/);
+    }
   });
 
   it("the daily ceiling does not burn a share of the pot", () => {
@@ -102,7 +109,7 @@ describe("the pot is honest", () => {
     expect(pot).toMatch(/CREATE OR REPLACE FUNCTION public\.room_round_ledger\(p_game_id uuid\)/);
     expect(pot).toMatch(/REVOKE ALL ON FUNCTION public\.room_round_ledger\(uuid\) FROM PUBLIC, anon;/);
     expect(pot).toMatch(/GRANT EXECUTE ON FUNCTION public\.room_round_ledger\(uuid\) TO authenticated;/);
-    const hook = read("src/hooks/useRoomPot.ts");
+    const hook = read("src/hooks/useRoomPrizes.ts");
     expect(hook).toMatch(/client\.rpc\("room_round_ledger", \{ p_game_id: gameId \}\)/);
   });
 
@@ -121,6 +128,7 @@ describe("the pot is honest", () => {
 describe("CI proves both against Postgres", () => {
   it("runs the two suites", () => {
     expect(ci).toContain("supabase/tests/22-lock-the-house.sql");
-    expect(ci).toContain("supabase/tests/23-honest-pot.sql");
+    expect(ci).toContain("supabase/tests/26-no-wagering.sql");
+    expect(ci).not.toContain("supabase/tests/23-honest-pot.sql");
   });
 });

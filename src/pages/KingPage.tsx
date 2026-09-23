@@ -1116,7 +1116,9 @@ export default function KingPage() {
     ];
     // No faces on the invite line: see UniversalLobby's `inviteFaces`. Three
     // friends drawn beside the + read as three friends already in the room.
-    const coins = 200 * Math.max(1, kingParts.length);
+    // What a win pays each player (king_team_member, 200 from the house).
+    // Nobody pays in, so there is no pot to count up by seats.
+    const coins = 200;
     return (
       <UniversalLobby
         sceneArt={LOBBY_SCENES.king}
@@ -1148,7 +1150,7 @@ export default function KingPage() {
           { key: "rules", heading: t("lobby.rulesHeading"), body: t("lobby.rulesKing") },
           { key: "time", heading: t("lobby.timeHeading"), body: t("lobby.timeKing") },
         ]}
-        reward={{ label: t("lobby.winnerTakes"), icon: coinIconAsset, amount: coins }}
+        reward={{ label: t("playRewards.winnerEarns"), icon: coinIconAsset, amount: coins }}
         players={couch}
         playersHint={null}
         // The couch: one to ten humans against the King (the room row's

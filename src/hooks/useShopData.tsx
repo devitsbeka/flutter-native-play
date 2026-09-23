@@ -274,8 +274,8 @@ export function useShopData() {
     // halves of that loop were both in the shipped UI. See the migration
     // 20261104110000_shop_purchase_and_exchange_spread.sql.
     const COINS_ART: Record<string, { descriptionKey: string; gradient: string; badge?: ShopItem["badge"] }> = {
-      coins_500: { descriptionKey: "shop.coinsDescSmall", gradient: "linear-gradient(135deg, hsl(45 90% 60%) 0%, hsl(40 85% 50%) 100%)" },
-      coins_1500: { descriptionKey: "shop.coinsDescMedium", gradient: "linear-gradient(135deg, hsl(40 90% 55%) 0%, hsl(35 85% 48%) 100%)" },
+      coins_500: { descriptionKey: "playRewards.coinsDescSmall", gradient: "linear-gradient(135deg, hsl(45 90% 60%) 0%, hsl(40 85% 50%) 100%)" },
+      coins_1500: { descriptionKey: "playRewards.coinsDescMedium", gradient: "linear-gradient(135deg, hsl(40 90% 55%) 0%, hsl(35 85% 48%) 100%)" },
       coins_5000: { descriptionKey: "shop.coinsDescLarge", gradient: "linear-gradient(135deg, hsl(35 90% 52%) 0%, hsl(25 85% 45%) 100%)", badge: "popular" },
       coins_15000: { descriptionKey: "shop.coinsDescMega", gradient: "linear-gradient(135deg, hsl(25 90% 50%) 0%, hsl(15 85% 45%) 100%)", badge: "best-value" },
     };

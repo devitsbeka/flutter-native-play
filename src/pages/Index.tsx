@@ -16,7 +16,6 @@ import { SideMenuDrawer } from "@/components/home/SideMenuDrawer";
 import { DailyRewardsModal } from "@/components/home/DailyRewardsModal";
 import { MissionsModal } from "@/components/home/MissionsModal";
 import { LevelInfoModal } from "@/components/home/LevelInfoModal";
-import { NotEnoughStakeModal } from "@/components/home/NotEnoughStakeModal";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { BackgroundVideo } from "@/components/shared/BackgroundVideo";
@@ -56,7 +55,6 @@ import { GemShopModal } from "@/components/home/GemShopModal";
 import { MyPowersModal } from "@/components/home/MyPowersModal";
 import { ActionButtonWithParticles } from "@/components/home/ActionButtonWithParticles";
 import { PlayLimitModal } from "@/components/home/PlayLimitModal";
-import { useGameStake } from "@/hooks/useGameStake";
 import { REWARDS } from "@/config/rewardConfig";
 
 import gemIcon from "@/assets/icons/icon-gem.png";
@@ -289,7 +287,6 @@ export default function Index() {
   const { playsRemaining, maxPlays, canPlay, isVip, loading: vipLoading, regenPlayAvailable, timeUntilNextPlay, resetsAt, useRegenPlay, freeGamesExhausted } = usePlayLimit();
   const { subscription } = useVipStatus();
   const { unreadCount } = useNotifications();
-  const { hasEnoughCoins, stakeAmount } = useGameStake();
   const totalPowerUps = Object.values(powerUps).reduce((sum, count) => sum + count, 0);
   
   // Calculate incomplete missions count
@@ -329,7 +326,6 @@ export default function Index() {
   const [showMyPowersModal, setShowMyPowersModal] = useState(false);
   const [showWatchAdModal, setShowWatchAdModal] = useState(false);
   const [showGuestMaxPlaysModal, setShowGuestMaxPlaysModal] = useState(false);
-  const [showNotEnoughCoinsModal, setShowNotEnoughCoinsModal] = useState(false);
   const [isAnimatingFromHome, setIsAnimatingFromHome] = useState(false);
   const [showWelcomeOnboarding, setShowWelcomeOnboarding] = useState(false);
   const [showChangeNameModal, setShowChangeNameModal] = useState(false);
@@ -514,16 +510,10 @@ export default function Index() {
         return;
       }
 
-      // Check if user has enough coins for stake
-      if (!hasEnoughCoins) {
-        setShowNotEnoughCoinsModal(true);
-        return;
-      }
-
       // Regen consumption is now handled centrally by PlayGuardContext/Game.tsx
       navigate("/game");
     }
-  }, [user, profile, navigate, openAvatarModal, isVip, canPlay, hasEnoughCoins, regenPlayAvailable, playsRemaining, useRegenPlay]);
+  }, [user, profile, navigate, openAvatarModal, isVip, canPlay, regenPlayAvailable, playsRemaining, useRegenPlay]);
 
   // The main play button goes straight to the online-game screen — the
   // chooser modal is gone; that screen's own card row now offers every game
@@ -847,11 +837,6 @@ export default function Index() {
             navigate("/game");
           }}
         />
-        <NotEnoughStakeModal
-          isOpen={showNotEnoughCoinsModal}
-          onClose={() => setShowNotEnoughCoinsModal(false)}
-          onDailyRewards={() => setIsDailyRewardsOpen(true)}
-        />
         <DailyRewardsModal
           isOpen={isDailyRewardsOpen}
           onClose={() => setIsDailyRewardsOpen(false)}
@@ -937,11 +922,6 @@ export default function Index() {
         timeUntilNextPlay={timeUntilNextPlay}
         resetsAt={resetsAt}
         onPlayWithRegen={handlePlayWithRegen}
-      />
-      <NotEnoughStakeModal
-        isOpen={showNotEnoughCoinsModal}
-        onClose={() => setShowNotEnoughCoinsModal(false)}
-        onDailyRewards={() => setIsDailyRewardsOpen(true)}
       />
       {/* Main layout with desktop navigation */}
       <MainLayout

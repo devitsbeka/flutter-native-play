@@ -89,7 +89,7 @@ export function acceptRoomInvite(notificationIds: readonly string[]): void {
  * No, from the card.
  *
  * The seat the host reserved is given up — a seat that stays at the table
- * is staked when a round settles — and the invite's notification is marked
+ * is counted when a round settles — and the invite's notification is marked
  * declined, which is what takes the grey face and the buttons off the card.
  */
 export async function declineRoomInvite(roomId: string, userId: string, notificationIds: readonly string[]): Promise<void> {

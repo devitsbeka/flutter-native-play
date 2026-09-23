@@ -440,12 +440,9 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
   const iAmSeated = participants.some((p) => p.user_id === user?.id);
   const myTeamlessSeat = iAmSeated && !myTeam;
   const perSide = Math.max(2, Math.min(5, Math.floor((room?.max_players ?? 10) / 2)));
-  // The pot, counted by players (owner's ask): every seat stakes 200 coins,
-  // and the winning team splits the losing side's stakes — 200 to each
-  // winning human. So the winning TEAM's take is 200 × the side's size (a
-  // 2-2 pays 400, a 5-5 pays 1000), which is what the strip shows. The
-  // server (tb_settle) credits each winner their 200.
-  const potValue = 200 * perSide;
+  // What a win pays each winning human: 200 from the house (tb_settle).
+  // Nobody stakes anything, so the strip shows the prize, not a pot.
+  const winValue = 200;
   const oppositeBench = useMemo((): TBTeam | null => {
     const hostTeam = (participants.find((p) => p.is_host)?.team as TBTeam | null) ?? null;
     if (!hostTeam) return null;
@@ -976,9 +973,8 @@ function TBLobby({ handoff }: { handoff?: MutableRefObject<LoungeInvite[] | null
         { key: "rules", heading: t("lobby.rulesHeading"), body: t("lobby.tbRules") },
         { key: "time", heading: t("lobby.timeHeading"), body: t("lobby.timeBattle") },
       ]}
-      // The pot: the winning team's take — 200 to every winning human
-      // (tb_settle), so 200 × the side's size on the strip.
-      reward={{ label: t("lobby.winnerTakes"), icon: coinIconAsset, amount: potValue }}
+      // What each winning human earns (tb_settle), paid by the house.
+      reward={{ label: t("playRewards.winnerEarns"), icon: coinIconAsset, amount: winValue }}
       rulesExtra={
         <>
           {/* The size the host set on the create screen, and the match

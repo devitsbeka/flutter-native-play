@@ -9,7 +9,6 @@ import { ComingSoonModal } from "@/components/game/ComingSoonModal";
 import { PowerUpDetailModal } from "@/components/game/PowerUpDetailModal";
 import { PowerUpTutorialModal } from "@/components/game/PowerUpTutorialModal";
 import { GameLoseModal } from "@/components/game/GameLoseModal";
-import { LuckySpinModal } from "@/components/game/LuckySpinModal";
 import { VSMatchHelpModal } from "@/components/game/VSMatchHelpModal";
 import { PlayLimitModal } from "@/components/home/PlayLimitModal";
 import { GameModal } from "@/components/ui/game-modal";
@@ -40,7 +39,6 @@ const MODALS = [
   { id: "power-up-time-drain", name: "Power-Up: Time Drain" },
   { id: "power-up-tutorial", name: "Power-Up Tutorial" },
   { id: "game-lose", name: "Game Lose Modal" },
-  { id: "lucky-spin", name: "Lucky Spin Modal" },
   { id: "vs-help", name: "VS Match Help Modal" },
   { id: "game-modal-base", name: "Game Modal (Base)" },
   // Home modals
@@ -371,14 +369,6 @@ export default function ModalsShowcase() {
             opponentName="Player2"
             opponentAvatarUrl={null}
             coinsEarned={50}
-          />
-        );
-      
-      case "lucky-spin":
-        return (
-          <LuckySpinModal 
-            isOpen={isModalOpen} 
-            onClose={handleClose} 
           />
         );
       

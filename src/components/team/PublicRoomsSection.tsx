@@ -20,10 +20,7 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { acceptRoomInvite, declineRoomInvite, pendingRoomInvites, type PendingInviteFrom } from "@/utils/pendingRoomInvites";
 import { RoomCardPlayButton } from "@/components/team/RoomCardPlayButton";
 import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
-import { NotEnoughStakeModal } from "@/components/home/NotEnoughStakeModal";
 import { PREVIEW_BUTTON_CLASS, PREVIEW_BUTTON_TONE, RoomPreviewSheet, type PreviewActionFactory } from "@/components/team/RoomPreviewSheet";
-import { useCurrency } from "@/hooks/useCurrency";
-import { REWARDS } from "@/config/rewardConfig";
 import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
 import { GradientBackground, ROOM_GRADIENT_PRESETS } from "@/components/ui/noisy-gradient-backgrounds";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
@@ -375,7 +372,7 @@ function PublicRoomCard({
       // to commit to it (owner: "only button click opens room, sends
       // request to a host etc.. click on card shows categories list and
       // cost for participating").
-      // A lounge — the King's couch, the arena — carries its own stake and
+      // A lounge — the King's couch, the arena — carries its own rules and
       // its own idea of a round, so the sheet would describe it wrongly.
       // Their card keeps the tap it had.
       onClick={() => (lounge ? (inside ? enter() : onAsk(room)) : onPreview(room, playButton))}
@@ -772,10 +769,8 @@ export function PublicRoomsSection({
   const { data, isLoading, refetch } = usePublicRooms();
   const queryClient = useQueryClient();
   const [busyId, setBusyId] = useState<string | null>(null);
-  const [showNoStake, setShowNoStake] = useState(false);
-  /** The room whose rounds and cost are being read, with its card's button. */
+  /** The room whose rounds and prizes are being read, with its card's button. */
   const [previewing, setPreviewing] = useState<{ room: PublicRoom; action: PreviewActionFactory } | null>(null);
-  const { coins } = useCurrency();
   // The room whose delete/leave is being confirmed, if any.
   const [removing, setRemoving] = useState<PublicRoom | null>(null);
   /**
@@ -1134,17 +1129,8 @@ export function PublicRoomsSection({
 
   const ask = async (room: PublicRoom) => {
     if (busyId) return;
-    // A room is played for a pot and every seat pays the stake into it, so
-    // the door is where that is said — not the settlement, by which point
-    // the answer is a balance that already moved, and not the host's Start,
-    // which is somebody else's screen (owner: "room matches also needs 500
-    // coins to participate, if not it should show the reason after click").
-    // The modal is the one every other screen uses, and it carries the way
-    // out of it: gems exchanged for coins, or the daily reward.
-    if (coins < REWARDS.GAME_STAKE) {
-      setShowNoStake(true);
-      return;
-    }
+    // No balance is asked for: a seat is free and the house pays the
+    // places (20261108100000_no_wagering).
     setBusyId(room.id);
     try {
       // One door at a time, and the player closes it themselves: an ask
@@ -1282,8 +1268,6 @@ export function PublicRoomsSection({
         roomCode={inviting?.room_code}
       />
 
-      {/* Why the knock did nothing: a seat costs the stake. */}
-      <NotEnoughStakeModal isOpen={showNoStake} onClose={() => setShowNoStake(false)} />
 
       {/* What the card is, opened by tapping it. */}
       <RoomPreviewSheet

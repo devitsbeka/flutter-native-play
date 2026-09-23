@@ -1,5 +1,5 @@
 /**
- * The duel, decided: the two scores, who took the pot, and the ways on.
+ * The duel, decided: the two scores, what it paid, and the ways on.
  *
  * Not the level result. A level result offers the next level and the
  * category's map, and a picture game from the Guess card is not a level of
@@ -36,7 +36,7 @@ interface DuelResultProps {
 
 export function DuelResult({ outcome, score, mascotScore, correct, total, delta, saving, playerAvatarUrl, onPlayAgain, onBack }: DuelResultProps) {
   const { t } = useLanguage();
-  const title = outcome === "win" ? t("extra.duelWin") : outcome === "lose" ? t("extra.duelLose") : t("extra.duelDraw");
+  const title = outcome === "win" ? t("extra.duelWin") : outcome === "lose" ? t("extra.duelLose") : t("playRewards.duelDraw");
 
   return (
     <div className="h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] overflow-y-auto bg-gradient-to-b from-[#7C6AE5] to-[#9B89F5] flex flex-col">
@@ -72,13 +72,16 @@ export function DuelResult({ outcome, score, mascotScore, correct, total, delta,
         </div>
         <p className="mt-3 text-[13px] text-white/70">{t("extra.quizCorrectAnswers", { score: correct, total })}</p>
 
-        {/* The stake, as it actually moved. Nothing on a draw, or while the
-            server has not answered, or when it declined (an empty balance,
-            a daily ceiling). */}
-        {!saving && delta !== null && delta !== 0 && (
+        {/* The reward, as it actually landed — only ever a credit. A loss
+            costs nothing and says so; a draw or a declined reward (the
+            daily ceiling) shows no pill. */}
+        {!saving && delta !== null && delta > 0 && (
           <div className="mt-5">
             <CoinDeltaPill delta={delta} />
           </div>
+        )}
+        {!saving && outcome === "lose" && (
+          <p className="mt-5 text-sm font-semibold text-white/80">{t("playRewards.duelLoseNoCost")}</p>
         )}
         {saving && <p className="mt-5 text-sm text-white/70">{t("extra.quizSavingProgress")}</p>}
 

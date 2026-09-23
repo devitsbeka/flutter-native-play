@@ -20,7 +20,6 @@ import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { cn } from "@/lib/utils";
 import confetti from "canvas-confetti";
 import { REWARDS } from "@/config/rewardConfig";
-import coinIcon from "@/assets/icons/icon-coin.png";
 import { toast } from "@/lib/toast";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { CategoryPickerModal } from "./CategoryPickerModal";
@@ -29,7 +28,7 @@ import { isUndecidedRound, UNDECIDED_ICON_SLUG } from "@/utils/undecidedRound";
 import { useCategoryIdentity } from "@/hooks/useCategoryIdentity";
 import { RoomQueueSheet } from "./RoomQueueSheet";
 import { calculateMultiplayerPayout } from "@/utils/multiplayerPayout";
-import { useRoomPot, type RoomPotLine } from "@/hooks/useRoomPot";
+import { useRoomPrizes, type RoomPrizeLine } from "@/hooks/useRoomPrizes";
 import { useMatchInfo } from "@/hooks/useMatchInfo";
 import { matchTotals } from "@/hooks/useMatchRounds";
 import { useRoomRounds, type RoomRound } from "@/hooks/useRoomRounds";
@@ -66,22 +65,17 @@ const placeMark = (idx: number, rank: number) =>
   idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `#${rank}`;
 
 /**
- * What a seat's place was worth, under its medal: the prize less the stake,
- * signed, and nothing at all while the round is still settling or when it
- * settled nothing (practice, or a function that predates the deltas). Read
- * from the ledger via settle_room_round, never worked out here: the client
- * names no amounts (roomPot.test).
+ * What a seat's place was worth, under its medal: the prize the house paid
+ * it, in the pill every results screen shares (owner: "use them everywhere
+ * on results pages") — and nothing at all for a place that was not paid,
+ * while the round is still settling, or when it settled nothing (practice).
+ * Nobody loses coins in a room (20261108100000_no_wagering), so there is no
+ * red line to draw. Read from the ledger via settle_room_round, never worked
+ * out here: the client names no amounts.
  */
-/**
- * A seat's line, in the pill every results screen shares: green for a
- * place that paid, red for one that did not, a quiet pill for zero
- * (owner: "use them everywhere on results pages"). It used to be gold,
- * silver, bronze and white by place, which said where a seat came, not
- * what it won — the medal already says where.
- */
-function PotLine({ net, compact }: { net: number | undefined; compact?: boolean }) {
-  if (net === undefined) return null;
-  return <CoinDeltaPill delta={net} size={compact ? "sm" : "md"} className={compact ? undefined : "mt-1.5"} />;
+function PrizeLine({ prize, compact }: { prize: number | undefined; compact?: boolean }) {
+  if (prize === undefined || prize <= 0) return null;
+  return <CoinDeltaPill delta={prize} size={compact ? "sm" : "md"} className={compact ? undefined : "mt-1.5"} />;
 }
 
 /**
@@ -94,26 +88,13 @@ const TILE =
   "rounded-[24px] border-2 border-[rgba(255,217,217,0.1)] bg-[rgba(255,222,222,0.2)] px-3 py-3 shadow-[0px_2px_8px_0px_rgba(102,51,153,0.06),0px_8px_0px_0px_rgba(232,185,185,0.4)]";
 const EYEBROW = "text-[12px] font-bold uppercase leading-[18px] tracking-[0.3px] text-white/60";
 
-/** A round's pot, on the tile's title row. */
-function PotPill({ amount }: { amount: number }) {
-  const { t } = useLanguage();
-  return (
-    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[12px] font-bold text-white">
-      <img src={coinIcon} alt="" className="h-3.5 w-3.5 object-contain" />
-      {t("extra.roundPotLabel", { amount: amount.toLocaleString() })}
-    </span>
-  );
-}
-
 /** A titled tile holding a list of StandingRows. */
 function StandingsCard({
   title,
-  pot,
   delay = 0.3,
   children,
 }: {
   title: string;
-  pot?: number;
   delay?: number;
   children: ReactNode;
 }) {
@@ -127,7 +108,6 @@ function StandingsCard({
     >
       <div className="mb-2 flex items-center justify-between gap-2 px-1">
         <p className={EYEBROW}>{title}</p>
-        {pot !== undefined && pot > 0 && <PotPill amount={pot} />}
       </div>
       <ol className="space-y-1">{children}</ol>
     </motion.section>
@@ -161,7 +141,7 @@ function StandingRow({
   avatarUrl,
   isMe,
   detail,
-  net,
+  prize,
   onTap,
 }: {
   idx: number;
@@ -171,7 +151,7 @@ function StandingRow({
   isMe: boolean;
   /** Under the name: the score, where the row has one. */
   detail?: string;
-  net: number | undefined;
+  prize: number | undefined;
   onTap?: () => void;
 }) {
   const ring = PLACE_RING[idx] ?? "border-white/40";
@@ -203,7 +183,7 @@ function StandingRow({
         </p>
         {detail && <p className="truncate text-[12px] leading-4 text-white/60">{detail}</p>}
       </div>
-      <PotLine net={net} compact />
+      <PrizeLine prize={prize} compact />
     </li>
   );
 }
@@ -224,16 +204,13 @@ export function GameResultsScreenV2() {
   const { playSound, vibrate } = useSound();
   const { t } = useLanguage();
   const localizeCategory = useLocalizedCategoryName();
-  const { settleRoomRound, readRoomRound } = useRoomPot();
+  const { settleRoomRound, readRoomRound } = useRoomPrizes();
   const { trackMissionEvent } = useMissions();
   const { openProfile } = usePlayerProfile();
   const [coinsEarned, setCoinsEarned] = useState(0);
-  // What the stake cost when the pot went elsewhere — said out loud rather
-  // than left as a balance that quietly dropped.
-  const [coinsLost, setCoinsLost] = useState(0);
-  // Every seat's line in the pot — what each place won or paid — so the
-  // podium can say it under the medals, not only this player's own.
-  const [potLines, setPotLines] = useState<Record<string, RoomPotLine>>({});
+  // Every seat's prize — what each place was paid — so the podium can say
+  // it under the medals, not only this player's own.
+  const [prizeLines, setPrizeLines] = useState<Record<string, RoomPrizeLine>>({});
   /** The round-by-round sheet, open. */
   const [showRounds, setShowRounds] = useState(false);
   /**
@@ -310,7 +287,7 @@ export function GameResultsScreenV2() {
    * Private rooms are invited friends playing at different times, so the
    * first player to finish arrives here with a scoreboard of one. Settling
    * then would rank a full room against that and pay out on it. The whole
-   * chain — the round snapshot, the stats and the pot — waits until every
+   * chain — the round snapshot, the stats and the prizes — waits until every
    * seat that can still answer has, or until the round's own deadline ends
    * the wait with whoever played (owner: "private rooms can be played in
    * different times and when all invited players play the round we give
@@ -318,7 +295,7 @@ export function GameResultsScreenV2() {
    *
    * A public room waits the same way, for minutes rather than a day
    * (PUBLIC_ROUND_DEADLINE_MS): it used to settle on the first player to
-   * finish, and ranked the pot on a scoreboard of one.
+   * finish, and ranked the prizes on a scoreboard of one.
    */
   const isPublicRoom = Boolean((currentRoom as { is_public?: boolean } | null)?.is_public);
   const roundCtx = { hostIsObserver, hostUserId: currentRoom?.host_user_id };
@@ -381,12 +358,12 @@ export function GameResultsScreenV2() {
   const roundScoreOf = (p: { user_id: string; score?: number | null }) =>
     Math.max(bestSeenScores.current.get(p.user_id) ?? 0, p.score || 0);
 
-  // Sort participants by score and assign ranks — the seats the POT ranks,
-  // which are the ones the round was played by. An invitation nobody
+  // Sort participants by score and assign ranks — the seats the PRIZES
+  // rank, which are the ones the round was played by. An invitation nobody
   // accepted and the observing host stood on the list on 0 points ("#4
   // Friend — 0 points" for someone who never arrived), and the places the
-  // screen showed were not the places the pot paid. A seat that left
-  // mid-round stays: it was staked, and the ledger has a line for it.
+  // screen showed were not the places the prizes paid. A seat that left
+  // mid-round stays: it played, and it is ranked on what it scored.
   const rankedParticipants: RankedParticipant[] = participants
     .filter((p) => (p.status as string) !== "invited")
     .filter((p) => !(hostIsObserver && p.user_id === currentRoom?.host_user_id))
@@ -440,15 +417,13 @@ export function GameResultsScreenV2() {
   const myRankForPayout = myRank ?? rankedParticipants.length;
 
   /**
-   * A seat's line in the pot, for the podium. The server's per-seat lines
-   * first; failing those, this player's own result — which the settlement
-   * reports even when the function predates per-seat reporting — and
-   * nothing for anyone else.
+   * A seat's prize, for the podium. The server's per-seat lines first;
+   * failing those, this player's own result, and nothing for anyone else.
    */
-  const netFor = (p: RankedParticipant): number | undefined => {
-    const line = potLines[p.user_id];
-    if (line) return line.net;
-    if (p.isMe && (coinsEarned > 0 || coinsLost > 0)) return coinsEarned - coinsLost;
+  const prizeFor = (p: RankedParticipant): number | undefined => {
+    const line = prizeLines[p.user_id];
+    if (line) return line.prize;
+    if (p.isMe && coinsEarned > 0) return coinsEarned;
     return undefined;
   };
 
@@ -460,27 +435,26 @@ export function GameResultsScreenV2() {
   const matchInfo = useMatchInfo(currentRoom?.id, currentRoom?.current_game_id);
 
   /**
-   * The room, round by round: which category each round was, what its pot
-   * was, and who won and who lost it — the ledger READ through
+   * The room, round by round: which category each round was, who placed,
+   * and what the house paid them — the ledger READ through
    * room_round_ledger for every round, once the current round's own lines
    * are in. Nothing settles on that read: it used to go through
    * settle_room_round, and a screen that only meant to look settled rounds
    * other players had not finished. The podium says what THIS round paid;
-   * this says what every round paid (owner: "show what happened in rounds,
-   * per match has its pot - we need to show it clear who won who lose per
-   * round").
+   * this says what every round paid (owner: "show what happened in rounds
+   * - we need to show it clear who won who lose per round").
    */
-  const hasPotLines = Object.keys(potLines).length > 0;
+  const hasPrizeLines = Object.keys(prizeLines).length > 0;
   /**
    * Every round the room has played, game by game (useRoomRounds), and every
-   * seat's coins over all of them. The summary used to start at the current
-   * match; a room on its third game could not say what game one paid
-   * (owner: "show all rounds pot not only last game and show all coins
-   * users won or lose, like summery of the all games"). Null until the
+   * seat's prizes over all of them. The summary used to start at the
+   * current match; a room on its third game could not say what game one
+   * paid (owner: "show all rounds not only last game, like summery of the
+   * all games"). Null until the
    * current round's own lines are in, so it never reads before the round
    * that just happened has been settled.
    */
-  const roomRounds = useRoomRounds(currentRoom?.id, hasPotLines, readRoomRound);
+  const roomRounds = useRoomRounds(currentRoom?.id, hasPrizeLines, readRoomRound);
   /** Newest game first, its rounds in play order — the one just played on top. */
   const roomGames = useMemo(() => {
     const byGame = new Map<number, RoomRound[]>();
@@ -488,8 +462,6 @@ export function GameResultsScreenV2() {
     return [...byGame.entries()].sort((a, b) => b[0] - a[0]);
   }, [roomRounds]);
   const roomTotals = roomRounds && roomRounds.length >= 2 ? matchTotals(roomRounds) : null;
-  /** Everything staked into this round — the pot the podium was played for. */
-  const thisRoundPot = Object.values(potLines).reduce((sum, line) => sum + line.staked, 0);
   /** A past round's icon, off its stored name, when its questions carried none. */
   const iconForCategoryName = useCategoryIconByName();
 
@@ -545,9 +517,8 @@ export function GameResultsScreenV2() {
     // snapshot cumulative totals before the majority points exist.
     if (!mltAllVotersDone) return;
     // A private round holds the whole chain until everyone has played (or
-    // the deadline ends the wait). Nothing is charged meanwhile: the stakes
-    // are collected by the settlement itself, so an unsettled round has
-    // taken nothing from anyone.
+    // the deadline ends the wait). Nothing is paid meanwhile, and nothing is
+    // ever taken: the house pays the places when the round settles.
     if (waitingForPlayers) return;
     if (user && profile && currentRoom && !hasUpdatedStats.current && !(statsKey && processedResultsGames.has(statsKey))) {
       hasUpdatedStats.current = true;
@@ -581,17 +552,15 @@ export function GameResultsScreenV2() {
           }
         }
 
-        // The pot. Everybody at the table put 500 in and the table is what
-        // gets paid out — winner takes all at two players, 70/20/10 at three
-        // or more (owner's ask). The client names neither the stake nor the
-        // prize: settle_room_round collects, ranks and pays server-side, once
-        // per round however many devices call it, and hands back what
-        // actually moved for THIS player.
+        // The prizes. Nobody pays in: the house pays first, second and third
+        // (only first at two players), and nobody loses coins
+        // (20261108100000_no_wagering). The client names no prize:
+        // settle_room_round ranks and pays server-side, once per round
+        // however many devices call it, inside a daily ceiling, and hands
+        // back what it paid.
         //
         // The old path credited a number this device worked out from
-        // placement and raw score and then granted it to itself. Nobody paid
-        // anything in, so a room was free money — the more players, the more
-        // of it. What survives of that function is the practice rule and
+        // placement and raw score and then granted it to itself. What survives of that function is the practice rule and
         // whether the win counts, which are not money.
         const { isPractice, countsAsWin } = calculateMultiplayerPayout({
           playerCount: participants.length,
@@ -608,8 +577,7 @@ export function GameResultsScreenV2() {
         // round the server did not settle pays nobody.
         const settlement = await settleRoomRound(currentRoom.id, currentRoom.current_game_id ?? null);
         setCoinsEarned(Math.max(0, settlement.applied));
-        setCoinsLost(Math.max(0, -settlement.applied));
-        setPotLines(settlement.lines);
+        setPrizeLines(settlement.lines);
 
         // Tell the players who are not here.
         //
@@ -755,13 +723,12 @@ export function GameResultsScreenV2() {
    *
    * It used to start the round on the spot: category written, startGame(),
    * and every other player pulled into it by the room's realtime status
-   * whether they were still looking or not — and, since a room is played
-   * for a pot, staked for it. A new game is asked now (owner: "host starts
-   * new match with new pot and we should notify players in that room - do
-   * you want rematch showing host"): the room takes the pick and goes back
-   * to its lobby, everyone at the table gets "Rematch?" with the host's
-   * name on it, and the host presses Start in the lobby — where the stake
-   * is shown and a seat that cannot pay is refused — with whoever said yes.
+   * whether they were still looking or not. A new game is asked now
+   * (owner: "host starts new match and we should notify players in that
+   * room - do you want rematch showing host"): the room takes the pick and
+   * goes back to its lobby, everyone at the table gets "Rematch?" with the
+   * host's name on it, and the host presses Start in the lobby — where the
+   * prizes are shown — with whoever said yes.
    */
   const everyoneElse = () =>
     participants.filter((p) => p.user_id !== user?.id && (p.status as string) !== "invited").map((p) => p.user_id);
@@ -1011,15 +978,14 @@ export function GameResultsScreenV2() {
           a column that scrolls: the rest of this round as rows, every game
           the room has played round by round, and every seat's coins over all
           of it (owner: "show 1,2,3 places how we had, besides in top, first
-          player with bigger avatar in middle and below show all rounds pot
-          not only last game and show all coins users won or lose, like
-          summery of the all games"). The list is for the many; the podium is
+          player with bigger avatar in middle and below show all rounds not
+          only last game, like summery of the all games"). The list is for the many; the podium is
           for the three the round was about. */}
       <div className="flex-1 min-h-0 flex flex-col items-center gap-3 px-4 pt-4 overflow-hidden">
         {/* A private round still out with somebody. The scores so far are
             right there under this line — they are real, they are just not
             everyone's yet — and the rows carry no coin pills, because
-            nothing has been staked or paid while the round is open. Said
+            nothing has been paid while the round is open. Said
             here rather than as a toast: it is the answer to "where are my
             coins", and it has to be on screen when that is asked. */}
         {waitingForPlayers && (
@@ -1101,7 +1067,7 @@ export function GameResultsScreenV2() {
                 <span className="w-full text-center font-display text-[20px] font-bold leading-6 tracking-[-0.16px] text-white truncate">
                   {p.isMe ? t("game.you") : p.nickname}
                 </span>
-                <PotLine net={netFor(p)} />
+                <PrizeLine prize={prizeFor(p)} />
               </div>
             );
           })}
@@ -1126,7 +1092,6 @@ export function GameResultsScreenV2() {
                     ? t("extra.matchRoundLabel", { game: matchInfo.game, round: matchInfo.round })
                     : t("extra.resultsStandingsTitle")
                 }
-                pot={thisRoundPot}
               >
                 {rankedParticipants.slice(PODIUM_ORDER.length).map((p, i) => (
                   <StandingRow
@@ -1137,7 +1102,7 @@ export function GameResultsScreenV2() {
                     avatarUrl={p.avatar_url}
                     isMe={p.isMe}
                     detail={t("extra.resultsPoints", { n: p.score })}
-                    net={netFor(p)}
+                    prize={prizeFor(p)}
                     onTap={!p.isMe ? () => openProfile(p.user_id) : undefined}
                   />
                 ))}
@@ -1165,7 +1130,7 @@ export function GameResultsScreenV2() {
       </div>
 
       {/* The sheet the text button opens: every earlier round of every
-          game — its category and pot and, under it, every seat with what
+          game — its category and, under it, every seat with what
           the round paid them, the winner first — and then the room's
           totals over all its games. The same tiles the screen used to
           stack under the podium, on the screen's own purple so they read
@@ -1237,7 +1202,6 @@ export function GameResultsScreenV2() {
                                   {t("lobby.uRoundLabel", { count: round.number })}
                                 </span>
                               </span>
-                              {round.pot > 0 && <PotPill amount={round.pot} />}
                             </div>
                             {/* Every seat, one under the other — never wrapped
                                 across the row, which is what put ten faces at
@@ -1257,7 +1221,7 @@ export function GameResultsScreenV2() {
                                     <span className="min-w-0 flex-1 truncate text-[14px] font-semibold text-white">
                                       {seat.user_id === user?.id ? t("game.you") : who?.nickname || "?"}
                                     </span>
-                                    <PotLine net={seat.net} compact />
+                                    <PrizeLine prize={seat.prize} compact />
                                   </li>
                                 );
                               })}
@@ -1285,7 +1249,7 @@ export function GameResultsScreenV2() {
                           name={me ? t("game.you") : seat?.nickname || "?"}
                           avatarUrl={seat?.avatar_url ?? null}
                           isMe={me}
-                          net={row.net}
+                          prize={row.prize}
                           onTap={!me ? () => openProfile(row.user_id) : undefined}
                         />
                       );

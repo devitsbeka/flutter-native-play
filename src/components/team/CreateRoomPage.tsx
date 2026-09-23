@@ -92,8 +92,6 @@ import lockRender from "@/assets/play-chooser/lock-friends.png";
 import playersIcon from "@/assets/play-chooser/players.svg";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import { GAME_MODE_META } from "@/config/gameModeMeta";
-import { REWARDS } from "@/config/rewardConfig";
-import { NotEnoughStakeModal } from "@/components/home/NotEnoughStakeModal";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { markProgrammaticScroll } from "@/utils/scrollTapGuard";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
@@ -742,12 +740,6 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     // so it leads to the PRO page instead (owner: "show lock icon and
     // clicking on it to create one - we should show become pro page").
     if (key === "mytrivias" && myTriviasLocked) return requirePro("trivia", () => launchMode(key));
-    // A quick game costs the stake, and /game's refusal dropped the player
-    // home (the handoff had replaced this entry). Asked here, like Guess.
-    if (key === "quick" && coins < REWARDS.GAME_STAKE) {
-      setShowQuickStake(true);
-      return;
-    }
     launchMode(key);
   };
 
@@ -1266,7 +1258,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     }
 
     // Quick game is the /game matchmaking flow — no room to create; its
-    // own guards (limits, stake) live centrally in the game flow.
+    // own guards (limits) live centrally in the game flow.
     if (gameChoice === "quick") {
       onClose();
       handoff("/game");
@@ -1647,16 +1639,9 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
    * opens, on that category. The tap IS the choice, so it arms Create the
    * way every other card's tap does.
    */
-  // The Guess card's stake is checked at the door, like the quick game's:
-  // a player short of it is offered the ways to cover it, not a game that
-  // cannot pay out (owner: "-200 if looses").
-  const [showGuessStake, setShowGuessStake] = useState(false);
-  const [showQuickStake, setShowQuickStake] = useState(false);
+  // No coin check at the door: the Guess card is free to play whatever the
+  // balance. Beating Trivia King pays; losing to him costs nothing.
   const pickGuessCategory = (cat: Category) => {
-    if (coins < REWARDS.GUESS_STAKE) {
-      setShowGuessStake(true);
-      return;
-    }
     // Straight into the round: a countdown, then questions.
     //
     // A solo picture game used to CREATE A ROOM to play one round in: a
@@ -1669,20 +1654,21 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     //
     // Not the quick game's versus screen, which waits on a stranger. The
     // level page opens on the duel's own intro instead — the category,
-    // Trivia King's face and the pot, one button — because the round is a
+    // Trivia King's face and the prize, one button — because the round is a
     // match against the app's mascot now, and the player should see all
     // three before the first picture (owner: "show category what player is
-    // going to play, show trivia king mascot and pot"). Earlier, "no need
+    // going to play, show trivia king mascot"). Earlier, "no need
     // to show the versus game page here" took the stranger's screen away;
     // this is a different screen for a different game.
     //
     // Playing a picture game WITH friends is still the Library's room,
     // which is where that belongs.
-    // `guessStake` is what the level page settles on: 200 in, +200 on a
-    // pass, -200 on a fail (settle_guess_game). A level reached from the
-    // library map carries no such flag and stays what it was.
+    // `guessStake` (the name is historical) marks a Guess run for the level
+    // page to settle: beating Trivia King pays REWARDS.GUESS_WIN_REWARD, a
+    // loss pays nothing and costs nothing (settle_guess_game). A level
+    // reached from the library map carries no such flag and stays what it was.
     const level = getCategoryProgress(cat.category_id ?? cat.id) || 1;
-    // `versus`: the King, the game and the stake were just shown on the
+    // `versus`: the King, the game and the prize were just shown on the
     // versus screen, so the level page goes straight to its 3-2-1 rather
     // than opening on the duel intro that said the same things again.
     handoff(`/play/${cat.category_id ?? cat.id}/${level}`, { state: { countdown: true, guessStake: true, versus: true } });
@@ -2742,10 +2728,6 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* A Guess pick short of its 200: the ways to cover it. */}
-      <NotEnoughStakeModal isOpen={showGuessStake} onClose={() => setShowGuessStake(false)} stake={REWARDS.GUESS_STAKE} />
-      <NotEnoughStakeModal isOpen={showQuickStake} onClose={() => setShowQuickStake(false)} stake={REWARDS.GAME_STAKE} />
 
       {/* Deliberate crest choice — the same icon picker the lobby uses. */}
       {crestPickerFor && (

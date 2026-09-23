@@ -235,7 +235,7 @@ export interface UniversalLobbyProps {
    */
   rulesText?: { key: string; heading: string; body: string }[];
   /**
-   * The stake, on a strip at the foot of the card: "Winner takes: 200".
+   * The prize, on a strip at the foot of the card: "Winner earns: 200".
    *
    * It was a rule row on the arena and a hand-built box on the King's
    * couch, in two different shapes, and on the other two modes it was not
@@ -1016,7 +1016,7 @@ export function UniversalLobby({
             className={cn(
               "relative mb-[20px] mt-[16px] w-full shrink-0 overflow-clip rounded-[24px] border-2 border-[rgba(255,255,255,0.6)] bg-[rgba(252,247,255,0.6)] px-[9px] pt-[9px]",
               CARD_SHADOW,
-              // The stake used to sit here, below the tabs, and brought its
+              // The prize strip used to sit here, below the tabs, and brought its
               // own 22px foot with it. It is a row inside the Rules tab now,
               // so whichever tab is open is the last thing in the card and
               // pays for its own bottom.
@@ -1140,7 +1140,7 @@ export function UniversalLobby({
                     )}
                     {rulesExtra}
                   </div>
-                  {/* The stake: what this room is played for.
+                  {/* The prize: what winning this room is worth.
 
                       It sat on the card's own foot, below whichever tab was
                       open, which put it under the benches on the Players tab
@@ -1166,7 +1166,7 @@ export function UniversalLobby({
                     </div>
                   )}
                   {/* What the game IS, written out — under the controls and
-                      the stake (owner's ask). An uppercase label over a
+                      the prize (owner's ask). An uppercase label over a
                       paragraph, one section each (Figma 1059:532). */}
                   {rulesText && rulesText.length > 0 && (
                     <div className="mt-[36px] flex flex-col gap-[36px] px-[23px] pb-[6px]">
@@ -1451,7 +1451,7 @@ export function LobbyInviteRow({
 
 /**
  * A rule-shaped row that states something rather than offering a choice —
- * the pot, the rounds, the team size. Same box as a rule row (1018:5464),
+ * the prize, the rounds, the team size. Same box as a rule row (1018:5464),
  * with whatever the mode wants on the right.
  */
 export function LobbyInfoRow({

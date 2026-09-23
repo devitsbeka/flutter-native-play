@@ -62,10 +62,7 @@ import { roomIsPublicKind } from "@/utils/roomKind";
 import { roomDraftFields } from "@/utils/roomVisibility";
 import { useParticipantPresence } from "@/hooks/useParticipantPresence";
 import coinIconAsset from "@/assets/tb-lobby/coin.png";
-import { NotEnoughStakeModal } from "@/components/home/NotEnoughStakeModal";
-import { useCurrency } from "@/hooks/useCurrency";
-import { REWARDS } from "@/config/rewardConfig";
-import { firstPlaceShare } from "@/utils/roomPot";
+import { firstPlacePrize } from "@/utils/roomPrizes";
 import { triviaDisplayTitle } from "@/utils/triviaTitle";
 import { useFriends } from "@/hooks/useFriends";
 import {
@@ -202,22 +199,6 @@ export function RoomLobbyV2() {
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   /** The player the host's bin is asking about, until they answer. */
   const [removeTarget, setRemoveTarget] = useState<{ userId: string; name: string } | null>(null);
-  // Can this player cover a seat at the table? The pot is collected when the
-  // round ends, but being told then is being told too late.
-  /**
-   * Can this player cover a seat at the table?
-   *
-   * The BALANCE, not useGameStake's `hasEnoughCoins`, which is
-   * `isVipFreePlay || canAfford` — PRO is exempt from a quick game's loss,
-   * because nobody is on the other side of one. A room pot is other
-   * players' money and PRO stakes into it like everyone else
-   * (settle_room_round: "Everyone stakes, PRO included"), so a PRO player
-   * with nothing waved through here reached the settlement and paid what
-   * they had, leaving the pot short and the table funding them.
-   */
-  const { coins } = useCurrency();
-  const canCoverStake = coins >= REWARDS.GAME_STAKE;
-  const [showNoStake, setShowNoStake] = useState(false);
   const [showMatchSummary, setShowMatchSummary] = useState(false);
   /** The rematch sheet, and whether the table has been asked yet. */
   const [showRematch, setShowRematch] = useState(false);
@@ -869,7 +850,7 @@ export function RoomLobbyV2() {
   /**
    * Create shows what it is about to commit to, and then commits.
    *
-   * The summary — the rounds, the question count, the stake — used to stand
+   * The summary — the rounds, the question count, the prizes — used to stand
    * in front of Start. It belongs here: this is the tap that settles a
    * public room, and afterwards the rounds and the count cannot be changed
    * from the lobby at all, so it is the last honest moment to show the host
@@ -1580,15 +1561,6 @@ export function RoomLobbyV2() {
       setStartAfterPick(false);
       setShowCategoryPicker(true);
     } else {
-      // A round with somebody else in it is played for a pot, and every seat
-      // pays the stake into it. Asked here rather than at the end, where the
-      // answer is a balance that already moved (owner: "when user enters room
-      // to play they should have 500 coins to participate"). A solo room is
-      // practice and costs nothing, so it is never blocked.
-      if (seatedPlayers >= 2 && !canCoverStake) {
-        setShowNoStake(true);
-        return;
-      }
       // Straight into it. The summary used to stand here, and by then it was
       // asking the wrong question: a host pressing Start has people waiting
       // on them and nothing left to decide — the room was settled when it
@@ -1598,12 +1570,12 @@ export function RoomLobbyV2() {
       //
       // Except on a later match with people at the table: Start then asks
       // them first, through the same sheet in its rematch dress - the
-      // rounds, the question count and the stake, and "Ask for rematch"
+      // rounds, the question count and the prizes, and "Ask for rematch"
       // where Create was (owner's ask; see askTableForRematch).
       if (asksTable) {
         // The rematch has its own sheet, and it is the SAME sheet from the
         // question to the start: the table's faces, the rounds and the
-        // stake, then the answers under those faces (owner: "instead what
+        // prizes, then the answers under those faces (owner: "instead what
         // we show on rematch flow we should show like on screenshot 2 than
         // show waiting ... and when i or more players would confirm to play
         // new game we show start game button").
@@ -1928,11 +1900,11 @@ export function RoomLobbyV2() {
    * A later match is asked, not sprung.
    *
    * The first match starts on the host's Start. Once the table has played,
-   * Start on the next one asks everyone seated first - with the rounds, the
-   * question count and the stake on the card - and the host starts with
-   * whoever said yes. A seat that declines is given up; one still deciding
-   * when the host starts is removed, because every seat that stays is
-   * staked and nobody pays for a game they did not agree to (owner's ask).
+   * Start on the next one asks everyone seated first - with the rounds and
+   * the question count on the card - and the host starts with whoever said
+   * yes. A seat that declines is given up; one still deciding when the host
+   * starts is removed, because nobody is seated for a game they did not
+   * agree to (owner's ask).
    * Solo, or with nobody else seated, there is nobody to ask.
    */
   const isRematch = roomHasPlayed;
@@ -1963,7 +1935,6 @@ export function RoomLobbyV2() {
         match: {
           rounds: summaryRounds.map((r) => ({ name: r.name, icon_slug: r.iconSlug })),
           questions_per_round: playsUserTrivia ? null : questionsPerRound(currentRoom.total_questions),
-          stake: REWARDS.GAME_STAKE,
         },
       });
     } catch (e) {
@@ -2033,7 +2004,7 @@ export function RoomLobbyV2() {
   const startWithWhoSaidYes = async () => {
     if (!currentRoom) return;
     // Whoever was ASKED and has not said yes leaves the table before the
-    // stake is taken. Their row, not their status: the host may delete a
+    // round starts. Their row, not their status: the host may delete a
     // seat but not rewrite it (RLS), and a deleted seat is exactly "not
     // playing". Only the asked: somebody who sat down during the ask never
     // got a card, and was being removed for not answering a question they
@@ -2063,8 +2034,8 @@ export function RoomLobbyV2() {
     setShowRematch(false);
     // Counted off the table as it stands AFTER the undecided left, not off
     // last render's gate: with nobody saying yes the host used to start a
-    // solo round, which settles as practice, under a lobby that had shown a
-    // pot.
+    // solo round, which settles as practice, under a lobby that had shown
+    // prizes.
     const gone = new Set(undecided.map((p) => p.id));
     const staying = participants.filter((p) => !gone.has(p.id) && (p.status as string) !== "invited");
     if (staying.length < 2) {
@@ -2209,27 +2180,22 @@ export function RoomLobbyV2() {
         invited: t("lobby.uInvitedNote"),
       }}
       /**
-       * What the round is played for.
+       * What the round pays.
        *
-       * Every seat puts REWARDS.GAME_STAKE in and the pot goes to the top
-       * three — so the host has to be able to read the number BEFORE Start,
-       * not discover it on the coin counter afterwards. The number is what
-       * FIRST PLACE takes (firstPlaceShare): the whole pot at two players,
-       * 70% of it at three or more. It used to print the whole pot under
-       * "Winner takes" and a three-player winner then got 70% of what they
-       * were promised. Counted off the seated players, which is what
-       * settle_room_round collects from: an invitation nobody accepted
-       * neither pays in nor is paid out.
+       * Nobody pays in: the house pays first, second and third (only first
+       * at two players), so the host can read what winning is worth BEFORE
+       * Start. Counted off the seated players, which is what
+       * settle_room_round ranks: an invitation nobody accepted is not paid.
        *
-       * Hidden below two players, where there is no pot: the arena and the
-       * King's couch carry their own stake strips and are not this screen.
+       * Hidden below two players, where the round is practice and pays
+       * nothing.
        */
       reward={
         seatedPlayers >= 2
           ? {
-              label: t("lobby.winnerTakes"),
+              label: t("playRewards.winnerEarns"),
               icon: coinIconAsset,
-              amount: firstPlaceShare(seatedPlayers) ?? 0,
+              amount: firstPlacePrize(seatedPlayers) ?? 0,
             }
           : undefined
       }
@@ -2387,8 +2353,6 @@ export function RoomLobbyV2() {
         open={showMatchSummary}
         rounds={summaryRounds}
         questionsPerRound={playsUserTrivia ? null : questionsPerRound(currentRoom.total_questions)}
-        stake={REWARDS.GAME_STAKE}
-        soloFree={seatedPlayers < 2}
         starting={isStarting}
         onChange={() => setShowMatchSummary(false)}
         onConfirm={() => {
@@ -2405,17 +2369,10 @@ export function RoomLobbyV2() {
         winnerName={lastWinner ? (lastWinner.user_id === user?.id ? t("game.you") : lastWinner.nickname) : null}
         rounds={summaryRounds}
         questionsPerRound={playsUserTrivia ? null : questionsPerRound(currentRoom.total_questions)}
-        stake={REWARDS.GAME_STAKE}
         starting={isStarting}
         onCancel={() => setShowRematch(false)}
         onAsk={() => void askTableForRematch()}
         onStart={() => void startWithWhoSaidYes()}
-      />
-
-      {/* Not enough for a seat at the table. */}
-      <NotEnoughStakeModal
-        isOpen={showNoStake}
-        onClose={() => setShowNoStake(false)}
       />
 
       {/* Play on TV: the pairing code entry, as a sheet over the lobby.

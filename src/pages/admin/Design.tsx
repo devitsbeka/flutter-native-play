@@ -86,7 +86,6 @@ const SettingsModal = lazy(() => import("@/components/home/SettingsModal").then(
 const SoundSettingsModal = lazy(() => import("@/components/home/SoundSettingsModal").then(m => ({ default: m.SoundSettingsModal })));
 const PointsModal = lazy(() => import("@/components/home/PointsModal").then(m => ({ default: m.PointsModal })));
 const PrivacyModal = lazy(() => import("@/components/home/PrivacyModal").then(m => ({ default: m.PrivacyModal })));
-const NotEnoughCoinsModal = lazy(() => import("@/components/home/NotEnoughCoinsModal").then(m => ({ default: m.NotEnoughCoinsModal })));
 const GuestMaxPlaysModal = lazy(() => import("@/components/home/GuestMaxPlaysModal").then(m => ({ default: m.GuestMaxPlaysModal })));
 const RegisterPromptModal = lazy(() => import("@/components/home/RegisterPromptModal").then(m => ({ default: m.RegisterPromptModal })));
 const GemShopModal = lazy(() => import("@/components/home/GemShopModal").then(m => ({ default: m.GemShopModal })));
@@ -102,7 +101,6 @@ const ShopItemDetailModal = lazy(() => import("@/components/shop/ShopItemDetailM
 // Game Modals
 const GameLoseModal = lazy(() => import("@/components/game/GameLoseModal").then(m => ({ default: m.GameLoseModal })));
 const ComingSoonModal = lazy(() => import("@/components/game/ComingSoonModal").then(m => ({ default: m.ComingSoonModal })));
-const LuckySpinModal = lazy(() => import("@/components/game/LuckySpinModal").then(m => ({ default: m.LuckySpinModal })));
 const VSMatchHelpModal = lazy(() => import("@/components/game/VSMatchHelpModal").then(m => ({ default: m.VSMatchHelpModal })));
 
 // Map Modals  
@@ -273,7 +271,6 @@ const modalCategories: CategoryDefinition[] = [
       { id: "sound-settings-modal", label: "Sound Settings", labelGe: "ხმის პარამეტრები", Component: SoundSettingsModal, isModal: true, modalProps: {} },
       { id: "points-modal", label: "Points", labelGe: "ქულები", Component: PointsModal, isModal: true, modalProps: { totalPoints: 5000, gamesPlayed: 42, averageScore: 85, bestGame: 100 } },
       { id: "privacy-modal", label: "Privacy", labelGe: "კონფიდენციალურობა", Component: PrivacyModal, isModal: true, modalProps: {} },
-      { id: "not-enough-coins-modal", label: "Not Enough Coins", labelGe: "არ გყოფნი მონეტები", Component: NotEnoughCoinsModal, isModal: true, modalProps: { requiredAmount: 500, currentAmount: 100 } },
       { id: "guest-max-plays-modal", label: "Guest Max Plays", labelGe: "სტუმრის ლიმიტი", Component: GuestMaxPlaysModal, isModal: true, modalProps: {} },
       { id: "register-prompt-modal", label: "Register Prompt", labelGe: "რეგისტრაცია", Component: RegisterPromptModal, isModal: true, modalProps: {} },
       { id: "gem-shop-modal", label: "Gem Shop", labelGe: "ჯემების მაღაზია", Component: GemShopModal, isModal: true, modalProps: {} },
@@ -303,7 +300,6 @@ const modalCategories: CategoryDefinition[] = [
     pages: [
       { id: "game-lose-modal", label: "Game Lose", labelGe: "წაგება", Component: GameLoseModal, isModal: true, modalProps: { userScore: 1500, opponentScore: 2000, opponentName: "Player2", coinsEarned: 10 } },
       { id: "coming-soon-modal", label: "Coming Soon", labelGe: "მალე", Component: ComingSoonModal, isModal: true, modalProps: { categoryName: "Science", levelNumber: 5 } },
-      { id: "lucky-spin-modal", label: "Lucky Spin", labelGe: "იღბლიანი სპინი", Component: LuckySpinModal, isModal: true, modalProps: {} },
       { id: "vs-match-help-modal", label: "VS Match Help", labelGe: "VS დახმარება", Component: VSMatchHelpModal, isModal: true, modalProps: {} },
     ],
   },

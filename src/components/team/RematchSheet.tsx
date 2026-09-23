@@ -2,10 +2,10 @@
  * The rematch, from the question to the start, on one sheet.
  *
  * It used to be two: the match summary in a "rematch dress" asked the
- * question (a buzzer, the rounds, the stake), and a second sheet appeared
+ * question (a buzzer, the rounds, the prizes), and a second sheet appeared
  * afterwards with the faces and the answers. So the table — the people the
  * host is actually asking — was absent from the ask, and the rounds and the
- * stake were absent from the wait, and the two screens shared nothing but a
+ * prizes were absent from the wait, and the two screens shared nothing but a
  * corner radius.
  *
  * One sheet now, three states, and what does not change stays put (owner:
@@ -14,17 +14,17 @@
  * confirm to play new game we show start game button"):
  *
  *   ask     the faces, whoever won the last round named in the title, the
- *           rounds and what a seat pays. Ask Rematch.
+ *           rounds and what the places are paid. Ask Rematch.
  *   asked   the same sheet with every face waiting on an answer: "Deciding…"
  *           under each, and a button that says it is waiting too.
- *   asked,  the moment anybody says yes: the answers in colour, the stake
- *   with a  tile becomes what first place takes from the pot those yeses
- *   yes     make, and the button starts the game.
+ *   asked,  the moment anybody says yes: the answers in colour, the prize
+ *   with a  tile counted off the host plus every yes, and the button starts
+ *   yes     the game.
  *
  * A seat still deciding when the host starts is removed from the room,
- * because whoever plays is staked and nobody is staked for a game they did
- * not say yes to (owner: "who accepts plays the match, who do not leaves the
- * room, and pot changes based on players count").
+ * because nobody is seated for a game they did not say yes to (owner: "who
+ * accepts plays the match, who do not leaves the room"). The game costs
+ * nobody anything either way (20261108100000_no_wagering).
  *
  * "Who did not" includes the noes, which is why a seat's answer is passed in
  * rather than read here: declining gives the seat up, so the row is gone
@@ -41,8 +41,7 @@ import { CategoryArtwork } from "@/components/shared/CategoryArtwork";
 import type { SummaryRound } from "@/components/team/MatchSummarySheet";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
-import coinIcon from "@/assets/tb-lobby/coin.png";
-import { firstPlaceShare } from "@/utils/roomPot";
+import { PrizeLadder } from "@/components/team/PrizeLadder";
 
 /** Said yes, still deciding, or gave the seat up. */
 export type RematchAnswer = "ready" | "waiting" | "declined";
@@ -71,11 +70,6 @@ interface RematchSheetProps {
   rounds: SummaryRound[];
   /** Null when the room plays a trivia that brings its own question count. */
   questionsPerRound: number | null;
-  /**
-   * Per seat; once somebody has said yes the tile shows what first place
-   * takes from a pot of the host plus every yes (firstPlaceShare).
-   */
-  stake: number;
   starting?: boolean;
   onCancel: () => void;
   onAsk: () => void;
@@ -89,7 +83,6 @@ export function RematchSheet({
   winnerName,
   rounds,
   questionsPerRound,
-  stake,
   starting = false,
   onCancel,
   onAsk,
@@ -100,9 +93,9 @@ export function RematchSheet({
   const undecided = seats.filter((s) => s.answer === "waiting").length;
   const playing = ready + 1;
   const asked = phase === "asked";
-  // The pot is only real once somebody is in it: until then the tile says
-  // what a seat pays, which is the number the host is deciding on.
-  const showsPot = asked && ready > 0;
+  // The prizes are counted off whoever is really playing once somebody has
+  // said yes; until then, off the whole table being asked.
+  const tablePlayers = asked && ready > 0 ? playing : seats.length + 1;
 
   return (
     <AnimatePresence>
@@ -146,7 +139,7 @@ export function RematchSheet({
                       : t("lobby.summaryRematchTitle")}
                 </h3>
                 <p className="mt-2 max-w-[300px] text-[14px] leading-[20px] text-[#402666]/70">
-                  {asked ? t("extra.rematchWaitHint") : t("lobby.summaryRematchHint")}
+                  {asked ? t("playRewards.rematchWaitHint") : t("playRewards.rematchHint")}
                 </p>
               </div>
 
@@ -181,13 +174,9 @@ export function RematchSheet({
                   </div>
                 )}
                 <div className="rounded-xl border border-[#e8e0f5] bg-white/70 px-3 py-2.5">
-                  <p className="text-[12px] text-[#402666]/60">
-                    {showsPot ? t("lobby.winnerTakes") : t("lobby.summaryStake")}
-                  </p>
-                  <p className="flex items-center gap-1.5 font-display text-[20px] font-bold leading-6 text-[#402666]">
-                    <img src={coinIcon} alt="" className="h-5 w-5 object-contain" />
-                    {(showsPot ? (firstPlaceShare(playing, stake) ?? 0) : stake).toLocaleString()}
-                  </p>
+                  <p className="text-[12px] text-[#402666]/60">{t("playRewards.prizesLabel")}</p>
+                  <PrizeLadder t={t} players={tablePlayers} />
+                  <p className="mt-0.5 text-[11px] font-bold leading-4 text-[#2bc889]">{t("playRewards.freeToPlay")}</p>
                 </div>
               </div>
 

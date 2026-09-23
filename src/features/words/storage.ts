@@ -44,6 +44,8 @@ const KEY = "mytrivia.words.v1";
 export const STARTING_COINS = 350;
 export const HINT_COST = 25;
 export const LEVEL_REWARD = 20;
+/** Paid on top of LEVEL_REWARD after every second level — fixed, never a draw. */
+export const LEVEL_BONUS = 25;
 export const BONUS_PAYOUT = 5;
 export const BONUS_EVERY = 5;
 

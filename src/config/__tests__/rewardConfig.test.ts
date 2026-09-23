@@ -1,11 +1,11 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { REWARDS, getChestGems, getRandomChestCoins, isSpecialDay } from "@/config/rewardConfig";
+import { REWARDS, getChestCoins, getChestGems, isSpecialDay } from "@/config/rewardConfig";
 
-// The economy is balanced around 1 gem = 500 coins = one game stake. These
-// tests hold that balance in place: a tweak that quietly breaks the ratio
-// (or hands out a free game) fails here instead of on production.
+// The economy is balanced around 1 gem = 500 coins, and games are free to
+// enter. These tests hold that balance in place: a tweak that quietly breaks
+// it fails here instead of on production.
 
 afterEach(() => {
   vi.useRealTimers();
@@ -13,29 +13,34 @@ afterEach(() => {
 });
 
 describe("economy invariants", () => {
-  it("keeps one gem worth exactly one game stake", () => {
+  // Every game is free since 20261108100000_no_wagering: the house pays for a
+  // result and nothing is staked. These hold the new balance in place.
+  it("keeps one gem worth 500 coins", () => {
     expect(REWARDS.GEM_TO_COINS_RATE).toBe(500);
-    expect(REWARDS.GAME_STAKE).toBe(REWARDS.GEM_TO_COINS_RATE);
   });
 
-  it("keeps a loss and a draw from paying out", () => {
-    expect(REWARDS.GAME_LOSE_REWARD).toBe(0);
-    expect(REWARDS.GAME_DRAW_REFUND).toBe(0);
+  it("pays a win, a little for a draw, and nothing is ever taken", () => {
+    expect(REWARDS.GAME_WIN_REWARD).toBeGreaterThan(REWARDS.GAME_DRAW_REWARD);
+    expect(REWARDS.GAME_DRAW_REWARD).toBeGreaterThan(0);
+    expect(REWARDS.GUESS_WIN_REWARD).toBeGreaterThan(0);
+    expect(REWARDS).not.toHaveProperty("GAME_STAKE");
+    expect(REWARDS).not.toHaveProperty("GUESS_STAKE");
   });
 
-  it("never lets a win pay more than twice the stake", () => {
-    expect(REWARDS.GAME_WIN_REWARD).toBeGreaterThan(0);
-    expect(REWARDS.GAME_WIN_REWARD).toBeLessThanOrEqual(REWARDS.GAME_STAKE);
+  it("pays room places in falling order", () => {
+    const [first, second, third] = REWARDS.ROOM_PLACE_PRIZES;
+    expect(first).toBeGreaterThan(second);
+    expect(second).toBeGreaterThan(third);
+    expect(third).toBeGreaterThan(0);
   });
 
-  it("gives new players a whole number of free games", () => {
-    expect(REWARDS.NEW_PLAYER_COINS % REWARDS.GAME_STAKE).toBe(0);
-    expect(REWARDS.NEW_PLAYER_COINS / REWARDS.GAME_STAKE).toBe(10);
+  it("gives new players a whole number of gems' worth of coins", () => {
+    expect(REWARDS.NEW_PLAYER_COINS % REWARDS.GEM_TO_COINS_RATE).toBe(0);
   });
 
-  it("and a subscriber a bundle in whole games too, the bigger tier the bigger one", () => {
+  it("and a subscriber a bigger bundle, the bigger tier the bigger one", () => {
     for (const [tier, bundle] of Object.entries(REWARDS.PRO_WELCOME)) {
-      expect(bundle.coins % REWARDS.GAME_STAKE, `${tier} coins`).toBe(0);
+      expect(bundle.coins % REWARDS.GEM_TO_COINS_RATE, `${tier} coins`).toBe(0);
       expect(bundle.gems, `${tier} gems`).toBeGreaterThan(0);
     }
     expect(REWARDS.PRO_WELCOME.pro_plus.coins).toBe(REWARDS.PRO_WELCOME.pro.coins * 2);
@@ -44,10 +49,10 @@ describe("economy invariants", () => {
     expect(REWARDS.PRO_WELCOME.pro.coins).toBeGreaterThan(REWARDS.NEW_PLAYER_COINS);
   });
 
-  it("prices every power-up below a full game stake", () => {
+  it("prices every power-up below what one win pays", () => {
     for (const [type, price] of Object.entries(REWARDS.POWER_UP_PRICES)) {
       expect(price, `${type} price`).toBeGreaterThan(0);
-      expect(price, `${type} price`).toBeLessThan(REWARDS.GAME_STAKE);
+      expect(price, `${type} price`).toBeLessThan(REWARDS.GAME_WIN_REWARD);
     }
   });
 
@@ -102,15 +107,14 @@ describe("daily rewards", () => {
     }
   });
 
-  it("keeps a full week worth less than a handful of games", () => {
+  it("keeps a full week at 5,000 coins' worth", () => {
     const weekValue = REWARDS.DAILY_REWARDS.reduce(
       (sum, r) => sum + r.coins + r.gems * REWARDS.GEM_TO_COINS_RATE,
       0
     );
-    // 1,000 coins and 8 gems: ten games' worth for seven days of showing
+    // 1,000 coins and 8 gems for seven days of showing
     // up, before the surprise the function rolls on top.
     expect(weekValue).toBe(5000);
-    expect(weekValue).toBeLessThan(REWARDS.GAME_STAKE * 15);
   });
 
   it("and says what the database pays, since the database pays it", () => {
@@ -129,27 +133,14 @@ describe("daily rewards", () => {
 });
 
 describe("chest", () => {
-  it("stays inside its advertised coin range", () => {
+  it("pays a fixed amount — the chest is never a draw", () => {
     const spy = vi.spyOn(Math, "random");
     for (const roll of [0, 0.5, 0.999999]) {
       spy.mockReturnValue(roll);
-      const coins = getRandomChestCoins();
-      expect(coins).toBeGreaterThanOrEqual(REWARDS.CHEST_COINS_MIN);
-      expect(coins).toBeLessThanOrEqual(REWARDS.CHEST_COINS_MAX);
-      expect(Number.isInteger(coins)).toBe(true);
+      expect(getChestCoins()).toBe(REWARDS.CHEST_COINS);
     }
-  });
-
-  it("can reach both ends of the range", () => {
-    const spy = vi.spyOn(Math, "random");
-    spy.mockReturnValue(0);
-    expect(getRandomChestCoins()).toBe(REWARDS.CHEST_COINS_MIN);
-    spy.mockReturnValue(0.9999999);
-    expect(getRandomChestCoins()).toBe(REWARDS.CHEST_COINS_MAX);
-  });
-
-  it("never pays a full game stake in one chest", () => {
-    expect(REWARDS.CHEST_COINS_MAX).toBeLessThan(REWARDS.GAME_STAKE);
+    expect(Number.isInteger(REWARDS.CHEST_COINS)).toBe(true);
+    expect(REWARDS.CHEST_COINS).toBeGreaterThan(0);
   });
 
   it("opens at most once a day", () => {
@@ -198,24 +189,5 @@ describe("level up", () => {
       "replace",
       "time-drain",
     ]);
-  });
-});
-
-describe("lucky spin", () => {
-  it("never puts more than one game stake on a single spin", () => {
-    for (const reward of REWARDS.SPIN_REWARDS) {
-      const value =
-        reward.type === "gems" ? reward.value * REWARDS.GEM_TO_COINS_RATE : reward.value;
-      if (reward.type === "powerup") continue;
-      expect(value, reward.label).toBeLessThanOrEqual(REWARDS.GAME_STAKE);
-    }
-  });
-
-  it("has a reward for every slot", () => {
-    expect(REWARDS.SPIN_REWARDS.length).toBeGreaterThan(0);
-    for (const reward of REWARDS.SPIN_REWARDS) {
-      expect(reward.value).toBeGreaterThan(0);
-      expect(reward.label.length).toBeGreaterThan(0);
-    }
   });
 });

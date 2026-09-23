@@ -42,11 +42,14 @@ describe("one pill", () => {
     expect(quick).not.toMatch(/"bg-emerald-500"\s*\n\s*: "bg-red-500"/);
     expect(duel).toMatch(/<CoinDeltaPill delta=\{delta\} \/>/);
     expect(duel).not.toMatch(/bg-\[#ffbb00\]/);
-    expect(room).toMatch(/return <CoinDeltaPill delta=\{net\} size=\{compact \? "sm" : "md"\}/);
-    expect(room).not.toMatch(/POT_TONES|PotTone/);
-    expect(room).toMatch(/<PotLine net=\{netFor\(p\)\} \/>/);
-    expect(room).toMatch(/<PotLine net=\{net\} compact \/>/);
-    expect(room).toMatch(/<PotLine net=\{seat\.net\} compact \/>/);
+    // A room only ever pays (20261108100000_no_wagering), so its pill is
+    // only ever up — and absent for a place that was not paid.
+    expect(room).toMatch(/if \(prize === undefined \|\| prize <= 0\) return null;/);
+    expect(room).toMatch(/return <CoinDeltaPill delta=\{prize\} size=\{compact \? "sm" : "md"\}/);
+    expect(room).not.toMatch(/POT_TONES|PotTone|PotLine/);
+    expect(room).toMatch(/<PrizeLine prize=\{prizeFor\(p\)\} \/>/);
+    expect(room).toMatch(/<PrizeLine prize=\{prize\} compact \/>/);
+    expect(room).toMatch(/<PrizeLine prize=\{seat\.prize\} compact \/>/);
   });
 });
 

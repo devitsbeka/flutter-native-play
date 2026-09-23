@@ -319,9 +319,9 @@ END $$;
 
 -- ── settling a quick game ──────────────────────────────────────────────────
 --
--- Player C plays out the rule the product states: 500 to play, +500 for a
--- win, -500 for a loss. A separate player so the ledger counts above stay
--- what they were.
+-- Player C plays out the rule since 20261108100000_no_wagering: nothing to
+-- play, +200 for a win, +50 for a draw, a loss costs nothing. A separate
+-- player so the ledger counts above stay what they were.
 
 INSERT INTO auth.users (id, email) VALUES
   ('33333333-3333-3333-3333-333333333333','c@test')
@@ -334,49 +334,39 @@ DELETE FROM public.vip_subscriptions WHERE user_id = '33333333-3333-3333-3333-33
 SELECT set_config('test.uid','33333333-3333-3333-3333-333333333333', false);
 
 SELECT pg_temp.must_equal(
-  (public.settle_quick_game('win', 'm1') ->> 'coins')::integer, 1100,
+  (public.settle_quick_game('win', 'm1') ->> 'coins')::integer, 800,
   '600 coins, one win');
 SELECT pg_temp.must_equal(
-  (public.settle_quick_game('lose', 'm2') ->> 'coins')::integer, 600,
-  'and one loss');
+  (public.settle_quick_game('lose', 'm2') ->> 'coins')::integer, 800,
+  'a loss costs nothing');
 SELECT pg_temp.must_equal(
-  (public.settle_quick_game('draw', 'm3') ->> 'coins')::integer, 600,
-  'a draw moves nothing');
+  (public.settle_quick_game('draw', 'm3') ->> 'coins')::integer, 850,
+  'a draw pays a little');
 
--- The bug this function was written for: the daily ceiling counted credits
--- and ignored the debits that cancelled them, so a player whose net for the
--- day was zero stopped being paid at their 41st win. 60 matched pairs is
--- half again the old limit.
-DO $$
-DECLARE i integer; v_paid integer := 0;
-BEGIN
-  FOR i IN 1..60 LOOP
-    IF public.settle_quick_game('win', 'pair-w-' || i) ->> 'reason' = 'settled' THEN
-      v_paid := v_paid + 1;
-    END IF;
-    PERFORM public.settle_quick_game('lose', 'pair-l-' || i);
-  END LOOP;
-  IF v_paid <> 60 THEN
-    RAISE EXCEPTION 'ASSERTION FAILED: % of 60 matched wins paid, expected all of them', v_paid;
-  END IF;
-END $$;
+-- A player with nothing loses nothing and still plays.
+UPDATE public.profiles SET coins = 0
+ WHERE user_id = '33333333-3333-3333-3333-333333333333';
 SELECT pg_temp.must_equal(
-  (SELECT coins FROM public.profiles WHERE user_id = '33333333-3333-3333-3333-333333333333'), 600,
-  '60 wins and 60 losses end where they began');
+  (public.settle_quick_game('lose', 'broke-1') ->> 'applied')::integer, 0,
+  'losing with an empty balance');
+SELECT pg_temp.must_equal(
+  (SELECT count(*)::integer FROM public.currency_grants
+    WHERE user_id = '33333333-3333-3333-3333-333333333333' AND coins < 0), 0,
+  'no quick game ever writes a debit');
 
--- The ceiling is still a ceiling. A client claiming nothing but wins stops.
+-- A reward nobody can lose is worth farming, so the ceiling still holds.
 DELETE FROM public.currency_grants WHERE user_id = '33333333-3333-3333-3333-333333333333';
 DO $$
 DECLARE i integer; v_paid integer := 0;
 BEGIN
-  FOR i IN 1..60 LOOP
+  FOR i IN 1..120 LOOP
     IF public.settle_quick_game('win', 'greedy-' || i) ->> 'reason' = 'settled' THEN
       v_paid := v_paid + 1;
     END IF;
   END LOOP;
-  -- 20000 a day at 500 a win
-  IF v_paid <> 40 THEN
-    RAISE EXCEPTION 'ASSERTION FAILED: % unmatched wins paid, expected 40', v_paid;
+  -- 20000 a day at 200 a win
+  IF v_paid <> 100 THEN
+    RAISE EXCEPTION 'ASSERTION FAILED: % unmatched wins paid, expected 100', v_paid;
   END IF;
 END $$;
 
@@ -389,53 +379,8 @@ SELECT pg_temp.must_equal(
   (public.settle_quick_game('win', 'same-match') ->> 'reason'), 'already_settled',
   'settling one match twice');
 SELECT pg_temp.must_equal(
-  (SELECT coins FROM public.profiles WHERE user_id = '33333333-3333-3333-3333-333333333333'), 1100,
+  (SELECT coins FROM public.profiles WHERE user_id = '33333333-3333-3333-3333-333333333333'), 800,
   'and it was only paid once');
-
--- A loss takes the stake or the balance, whichever is smaller. Asking the
--- currency RPC for more than the balance used to take nothing at all while
--- the result screen still announced -500.
-UPDATE public.profiles SET coins = 300
- WHERE user_id = '33333333-3333-3333-3333-333333333333';
-SELECT pg_temp.must_equal(
-  (public.settle_quick_game('lose', 'short-1') ->> 'applied')::integer, -300,
-  'losing with less than the stake');
-SELECT pg_temp.must_equal(
-  (public.settle_quick_game('lose', 'short-2') ->> 'reason'), 'no_balance',
-  'losing with nothing left');
-SELECT pg_temp.must_equal(
-  (SELECT coins FROM public.profiles WHERE user_id = '33333333-3333-3333-3333-333333333333'), 0,
-  'a balance never goes below zero');
-
--- PRO pays the stake like everybody else, and is still paid for a win.
---
--- It used to return 'vip_free' and take nothing. One price now, matching a
--- room, where PRO has always staked because the pot is the other players'
--- money (owner: "per match cost is 500 coins, for PRO and no PRO users,
--- same"). What a subscription buys is unlimited plays and the welcome
--- bundle — not a discount on every loss.
-UPDATE public.profiles SET coins = 600
- WHERE user_id = '33333333-3333-3333-3333-333333333333';
-INSERT INTO public.vip_subscriptions (user_id, vip_tier, expires_at)
-VALUES ('33333333-3333-3333-3333-333333333333','pro', now() + interval '30 days')
-ON CONFLICT (user_id) DO UPDATE SET expires_at = EXCLUDED.expires_at;
--- Taken AFTER the subscription is written, because writing it pays the
--- welcome bundle (20261102110000) — 25,000 coins the moment a tier lands.
--- The pair below has to net to zero against whatever that left, not against
--- the balance before it.
-CREATE TEMP TABLE pro_baseline AS
-  SELECT coins FROM public.profiles WHERE user_id = '33333333-3333-3333-3333-333333333333';
-
-SELECT pg_temp.must_equal(
-  (public.settle_quick_game('lose', 'pro-1') ->> 'applied')::integer, -500,
-  'a PRO player pays the stake like everybody else');
-SELECT pg_temp.must_equal(
-  (public.settle_quick_game('win', 'pro-2') ->> 'applied')::integer, 500,
-  'and still earns a win');
-SELECT pg_temp.must_equal(
-  (SELECT coins FROM public.profiles WHERE user_id = '33333333-3333-3333-3333-333333333333'),
-  (SELECT coins FROM pro_baseline),
-  'so a win and a loss leave a subscriber exactly where they began');
 
 -- The amount is never the client's to name, and the outcome is checked.
 SELECT pg_temp.must_fail(
@@ -447,7 +392,7 @@ SELECT pg_temp.must_fail(
   'settling a game while signed out');
 SELECT set_config('test.uid','11111111-1111-1111-1111-111111111111', false);
 
--- And the debit kind can never be turned into a credit.
+-- And the retired loss kind can never be turned into a credit.
 SELECT pg_temp.must_fail(
   $$SELECT public.credit_gameplay_reward('stake_loss', 500, 0, NULL)$$,
   'granting coins under the loss ledger kind');

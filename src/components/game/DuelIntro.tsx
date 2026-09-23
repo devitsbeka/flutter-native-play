@@ -1,12 +1,13 @@
 /**
- * The duel, before it starts: what is being played, who against, and for
- * how much.
+ * The duel, before it starts: what is being played, who against, and what
+ * winning pays.
  *
  * A picture game from the Guess card is one match against Trivia King, the
- * app's own mascot, for a pot of two stakes. The player should see all three
- * before the first picture — the category, the King's face, the pot — which
- * is what a match screen is for (owner: "show category what player is going
- * to play, show trivia king mascot and pot").
+ * app's own mascot. Beating him pays REWARDS.GUESS_WIN_REWARD; losing to him
+ * costs nothing — there is no stake and no pot (20261108100000_no_wagering).
+ * The player should see all three before the first picture — the category,
+ * the King's face, the prize — which is what a match screen is for (owner:
+ * "show category what player is going to play, show trivia king mascot").
  *
  * It is not the versus screen the quick game uses: that one waits on a
  * stranger. This one has nobody to wait for and one button.
@@ -35,8 +36,7 @@ interface DuelIntroProps {
 
 export function DuelIntro({ categoryId, categoryName, iconSlug, playerAvatarUrl, loading, onPlay, onBack }: DuelIntroProps) {
   const { t } = useLanguage();
-  const stake = REWARDS.GUESS_STAKE;
-  const pot = stake * 2;
+  const reward = REWARDS.GUESS_WIN_REWARD;
 
   return (
     <div className="h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] overflow-y-auto bg-gradient-to-b from-[#7C6AE5] to-[#9B89F5] flex flex-col">
@@ -74,24 +74,18 @@ export function DuelIntro({ categoryId, categoryName, iconSlug, playerAvatarUrl,
           </div>
         </div>
 
-        {/* For how much. */}
+        {/* What winning pays. Nothing is paid in, so there is no second
+            row: a loss costs nothing. */}
         <div className="mt-8 w-full rounded-2xl border border-white/20 bg-white/15 px-4 py-3 backdrop-blur-sm">
           <div className="flex items-center justify-between">
-            <span className="text-[13px] text-white/70">{t("lobby.summaryStake")}</span>
-            <span className="flex items-center gap-1.5 font-display text-[18px] font-bold text-white">
-              <img src={coinIcon} alt="" className="h-5 w-5 object-contain" />
-              {stake.toLocaleString()}
-            </span>
-          </div>
-          <div className="mt-2 flex items-center justify-between border-t border-white/15 pt-2">
-            <span className="text-[13px] text-white/70">{t("lobby.winnerTakes")}</span>
+            <span className="text-[13px] text-white/70">{t("playRewards.winnerEarns")}</span>
             <span className="flex items-center gap-1.5 font-display text-[22px] font-bold text-[#ffe08a]">
               <img src={coinIcon} alt="" className="h-6 w-6 object-contain" />
-              {pot.toLocaleString()}
+              +{reward.toLocaleString()}
             </span>
           </div>
         </div>
-        <p className="mt-3 text-[13px] leading-5 text-white/70">{t("extra.duelIntroHint")}</p>
+        <p className="mt-3 text-[13px] leading-5 text-white/70">{t("playRewards.duelIntroHint", { amount: reward })}</p>
 
         <ChunkyButton
           variant="mint"

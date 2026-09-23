@@ -100,7 +100,7 @@ describe("before", () => {
     );
   });
 
-  it("shows the category, the King, and the pot of two stakes; Play waits on the questions", () => {
+  it("shows the category, the King, and what winning pays — no stake, no pot; Play waits on the questions", () => {
     expect(intro).toMatch(/<CategoryArtwork categoryId=\{categoryId\} iconSlug=\{iconSlug\} size=\{96\}/);
     expect(intro).toMatch(/\{categoryName\}<\/p>/);
     // His face is the one the versus screen wears (owner: "show this
@@ -111,10 +111,11 @@ describe("before", () => {
     expect(result).toMatch(/<QuizPlayerAvatar avatarUrl=\{triviaKingAvatar\} size="large" score=\{mascotScore\}/);
     for (const src of [intro, result, level]) expect(src).not.toMatch(/crown-mascot/);
     expect(intro).toMatch(/t\("extra\.duelOpponent"\)/);
-    expect(intro).toMatch(/const stake = REWARDS\.GUESS_STAKE;\s*\n\s*const pot = stake \* 2;/);
-    expect(REWARDS.GUESS_STAKE * 2).toBe(400);
-    expect(intro).toMatch(/t\("lobby\.summaryStake"\)[\s\S]*?\{stake\.toLocaleString\(\)\}/);
-    expect(intro).toMatch(/t\("lobby\.winnerTakes"\)[\s\S]*?\{pot\.toLocaleString\(\)\}/);
+    expect(intro).toMatch(/const reward = REWARDS\.GUESS_WIN_REWARD;/);
+    expect(REWARDS.GUESS_WIN_REWARD).toBe(100);
+    expect(intro).toMatch(/t\("playRewards\.winnerEarns"\)[\s\S]*?\+\{reward\.toLocaleString\(\)\}/);
+    expect(intro).toMatch(/t\("playRewards\.duelIntroHint", \{ amount: reward \}\)/);
+    expect(intro).not.toMatch(/summaryStake|winnerTakes|GUESS_STAKE/);
     expect(intro).toMatch(/onClick=\{onPlay\}\s*\n\s*disabled=\{loading\}/);
     expect(level).toMatch(/loading=\{loading \|\| questions\.length === 0\}/);
     // A page of its own on iOS: a fixed box that scrolls itself.
@@ -174,9 +175,12 @@ describe("after", () => {
     expect(branch).not.toMatch(/\/category\//);
     expect(result).not.toMatch(/\/category\//);
     expect(result).not.toMatch(/nextLevel|NextLevel/);
-    // The delta pill: only what actually moved, once settled.
-    expect(result).toMatch(/\{!saving && delta !== null && delta !== 0 && \(/);
-    expect(result).toMatch(/const title = outcome === "win" \? t\("extra\.duelWin"\) : outcome === "lose" \? t\("extra\.duelLose"\) : t\("extra\.duelDraw"\);/);
+    // The reward pill: only a credit that actually landed, once settled —
+    // and a loss says it cost nothing.
+    expect(result).toMatch(/\{!saving && delta !== null && delta > 0 && \(/);
+    expect(result).toMatch(/\{!saving && outcome === "lose" && \(/);
+    expect(result).toMatch(/t\("playRewards\.duelLoseNoCost"\)/);
+    expect(result).toMatch(/const title = outcome === "win" \? t\("extra\.duelWin"\) : outcome === "lose" \? t\("extra\.duelLose"\) : t\("playRewards\.duelDraw"\);/);
   });
 
   it("a rematch is a new run, from nil", () => {

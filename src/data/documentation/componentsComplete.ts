@@ -233,14 +233,7 @@ export const COMPONENTS_HOME = [
     props: ["isOpen", "onClose", "onRegister"],
     usedIn: ["HomeScreen"]
   },
-  {
-    name: "NotEnoughCoinsModal",
-    path: "src/components/home/NotEnoughCoinsModal.tsx",
-    description: "Modal with options to earn coins when balance is low.",
-    props: ["isOpen", "onClose", "coinsNeeded", "currentCoins"],
-    usedIn: ["CategoryGame", "ShopPage"]
-  },
-  {
+    {
     name: "SoundSettingsModal",
     path: "src/components/home/SoundSettingsModal.tsx",
     description: "Audio settings with toggles for music, SFX, vibration.",

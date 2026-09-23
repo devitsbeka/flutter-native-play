@@ -316,10 +316,10 @@ export function MultiplayerGameScreenV2() {
   /**
    * Leaving a live round is asked first.
    *
-   * The back arrow used to leave on one tap, and a seat that leaves
-   * mid-round is still staked when the pot settles — a brushed arrow cost
-   * the player 500 coins with no word said. The observing host is not
-   * staked and is not asked.
+   * The back arrow used to leave on one tap, and a brushed arrow walked the
+   * player out of a round with no word said. Leaving costs nothing — the
+   * others play on, and the house pays the places. The observing host is
+   * not playing and is not asked.
    */
   const [confirmLeave, setConfirmLeave] = useState(false);
   const leaveRound = () => {
@@ -465,7 +465,7 @@ export function MultiplayerGameScreenV2() {
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{t("extra.leaveRoundTitle")}</AlertDialogTitle>
-          <AlertDialogDescription>{t("extra.leaveRoundBody")}</AlertDialogDescription>
+          <AlertDialogDescription>{t("playRewards.leaveRoundBody")}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>

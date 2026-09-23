@@ -8,11 +8,10 @@ import { useEconomyConfigAdmin, EconomyConfigItem } from "@/hooks/useEconomyConf
 import { toast } from "@/lib/toast";
 
 const CATEGORY_LABELS: Record<string, string> = {
-  game_stakes: "🎮 Game Stakes",
+  game_rewards: "🎮 Game Rewards",
   rewards: "🎁 Rewards",
   daily_rewards: "📅 Daily Rewards",
   chests: "📦 Chests",
-  spin_wheel: "🎡 Spin Wheel",
   ads: "📺 Ads",
   ratios: "🔄 Ratios",
   onboarding: "👋 New Players",
@@ -22,11 +21,10 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 const CATEGORY_ORDER = [
-  "game_stakes",
+  "game_rewards",
   "rewards",
   "daily_rewards",
   "chests",
-  "spin_wheel",
   "ads",
   "ratios",
   "onboarding",

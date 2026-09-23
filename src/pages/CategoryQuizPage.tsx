@@ -193,35 +193,34 @@ export default function CategoryQuizPage() {
   const wantsCountdown = Boolean((location.state as { countdown?: boolean } | null)?.countdown);
   const duelFromState = Boolean((location.state as { guessStake?: boolean } | null)?.guessStake);
   // The Guess card's versus screen already showed the King, the game and
-  // the stake (GuessVersusScreen); a level it sends here needs no second
+  // the prize (GuessVersusScreen); a level it sends here needs no second
   // intro and starts on its 3-2-1.
   const versusShown = Boolean((location.state as { versus?: boolean } | null)?.versus);
-  // A duel opens on its own screen first — the category, the King, the pot
+  // A duel opens on its own screen first — the category, the King, the prize
   // — and the 3-2-1 starts from its Play, not from arrival.
   const [countdown, setCountdown] = useState<number | null>(wantsCountdown && (!duelFromState || versusShown) ? 3 : null);
   const [showDuelIntro, setShowDuelIntro] = useState(duelFromState && !versusShown);
   /**
-   * The Guess card's stake.
+   * A Guess card run — `guessStake` is the flag's historical name.
    *
-   * A level opened from the Guess card is a staked solo game: 200 in, +200
-   * on a pass, -200 on a fail (owner: "guess game cost should be 200 ...
-   * player plays solo and wins +200 if wins, -200 if looses"). The same
-   * level opened from the library map carries no flag and costs nothing,
-   * as it always has. The run's id is minted once here so the settlement
-   * cannot be applied twice for one game, however the results screen
-   * re-renders or the request retries.
+   * A level opened from the Guess card is a duel against Trivia King: beat
+   * him and it pays REWARDS.GUESS_WIN_REWARD, lose and it costs nothing.
+   * Nothing is staked (20261108100000_no_wagering). The same level opened
+   * from the library map carries no flag and pays no duel reward, as it
+   * always has. The run's id is minted once here so the reward cannot be
+   * paid twice for one game, however the results screen re-renders or the
+   * request retries.
    */
   const guessStake = duelFromState;
   const mintRunId = () => newId("guess");
   const guessRunId = useRef<string>(mintRunId());
   const [guessDelta, setGuessDelta] = useState<number | null>(null);
   /**
-   * Trivia King's score. The staked game is a match against the app's own
-   * mascot now, not a pass/fail on stars (owner: "we should handle like one
-   * game vs trivia king ... if wins against our mascot named Trivia King
-   * ... +200, if not - loses 200"). The King answers every question the
-   * player does — see duelOpponent — and whoever has more at the end takes
-   * the pot.
+   * Trivia King's score. The Guess run is a match against the app's own
+   * mascot, not a pass/fail on stars (owner: "we should handle like one
+   * game vs trivia king"). The King answers every question the player does
+   * — see duelOpponent — and the player wins the reward by finishing ahead
+   * of him.
    */
   const [mascotScore, setMascotScore] = useState(0);
   /**
@@ -288,7 +287,7 @@ export default function CategoryQuizPage() {
    * home's Play rail, not to the library: sending its player to the
    * category's level map afterwards put them somewhere they had never
    * been (owner: "after game ends i still see category page"). The next
-   * level keeps the stake and the 3-2-1 it arrived with.
+   * level keeps the duel and the 3-2-1 it arrived with.
    */
   const leaveTo = guessStake ? "/" : `/category/${categoryId}`;
   const nextLevelState = guessStake ? { state: { countdown: true, guessStake: true } } : undefined;
@@ -580,8 +579,9 @@ export default function CategoryQuizPage() {
       const earned = score * 10 + result.stars * 20;
       setPointsEarned(earned);
 
-      // A pass is a win at the Guess card's stake, a fail a loss. Settled
-      // once per run; what comes back is what actually moved.
+      // Beating the King pays the Guess reward; anything else pays nothing
+      // and costs nothing. Settled once per run; what comes back is what
+      // actually landed.
       if (guessStake) {
         const applied = await settleGuessGame(duelOutcome(duelPoints, mascotScore), guessRunId.current);
         setGuessDelta(applied);
@@ -1442,24 +1442,6 @@ export default function CategoryQuizPage() {
               </motion.p>
             )}
             
-            {/* The Guess card's stake, as it actually moved: +200 on a
-                pass, -200 on a fail, nothing when the server declined
-                (a daily ceiling, an empty balance). */}
-            {guessStake && !isSaving && guessDelta !== null && guessDelta !== 0 && (
-              <motion.p
-                initial={{ scale: 0, y: 20 }}
-                animate={{ scale: 1, y: 0 }}
-                transition={{ delay: 0.4, type: "spring" }}
-                className={`mb-3 flex items-center justify-center gap-1.5 text-lg font-bold ${guessDelta > 0 ? "text-emerald-600" : "text-rose-600"}`}
-              >
-                {guessDelta > 0 ? `+${guessDelta}` : guessDelta}
-                <img src={coinIcon} alt="" className="w-5 h-5 inline" />
-                <span className="text-sm font-semibold text-muted-foreground">
-                  {guessDelta > 0 ? t("extra.quizStakeWon") : t("extra.quizStakeLost")}
-                </span>
-              </motion.p>
-            )}
-
             {/* Inline Level-Up Banner */}
             {didLevelUp && !isSaving && (
               <motion.div

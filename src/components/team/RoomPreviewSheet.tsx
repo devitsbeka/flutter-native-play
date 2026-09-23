@@ -11,10 +11,10 @@
  * host etc.. click on card shows categories list and cost for
  * participating"). The BUTTON still joins, enters, plays — one deliberate
  * target with a word on it. The CARD opens this: every round in order, the
- * questions in each, and the stake, before anything is committed to.
+ * questions in each, and the prizes, before anything is committed to.
  *
  * The same sheet on both tabs. A public room and a private one are the same
- * question — what am I about to play, and what does it cost — and answering
+ * question — what am I about to play, and what can I win — and answering
  * it twice would eventually answer it two different ways.
  */
 
@@ -27,9 +27,7 @@ import { roundIconSlug } from "@/utils/ownTriviaRound";
 import { undecidedRoundKind } from "@/utils/undecidedRound";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCategoryIconByName, useCategoryIdByName, useLocalizedCategoryName } from "@/utils/categoryDisplayName";
-import { REWARDS } from "@/config/rewardConfig";
-import { firstPlaceShare } from "@/utils/roomPot";
-import coinIcon from "@/assets/tb-lobby/coin.png";
+import { PrizeLadder } from "@/components/team/PrizeLadder";
 import questionIcon from "@/assets/lobby/chip-question.webp";
 
 export interface PreviewRound {
@@ -77,7 +75,7 @@ export const PREVIEW_BUTTON_CLASS = "flex-1 justify-center py-3 text-[15px]";
 /**
  * The sheet's button is green whatever the card's was. On the card the
  * colour says which room is one tap from a game; in the sheet the reader
- * has just read the rounds and the stake and is one tap from it by
+ * has just read the rounds and the prizes and is one tap from it by
  * definition, so it wears the mint every such button wears (owner: "show
  * join button as green button on room preview modals").
  */
@@ -89,7 +87,7 @@ interface RoomPreviewSheetProps {
   rounds: PreviewRound[];
   /** Null when the room brings its own trivia and its own question count. */
   questionsPerRound: number | null;
-  /** How many are seated — the pot is that many stakes. */
+  /** How many are seated — at three or more every podium place is paid. */
   players: number;
   /** The card's button, already sized for the sheet; nothing when the card has none. */
   action?: ReactNode;
@@ -121,13 +119,6 @@ export function RoomPreviewSheet({
   // beside it drew the category's face off its name. Same resolver.
   const iconForCategory = useCategoryIconByName();
   const idForCategory = useCategoryIdByName();
-  // A seat costs the stake wherever it is taken — a room, a quick game, PRO
-  // or not (see 20261102140000_quick_game_charges_everyone.sql). Under two
-  // players there is no pot at all: settle_room_round calls that practice.
-  // "Winner takes" is first place's share of the pot, not the pot
-  // (firstPlaceShare): 70% of it at three or more players.
-  const stake = REWARDS.GAME_STAKE;
-  const pot = firstPlaceShare(players, stake);
   // No queue is a mixed round, not no round (MIXED_ROUND).
   const shown = rounds.length > 0 ? rounds : [MIXED_ROUND];
 
@@ -232,24 +223,11 @@ export function RoomPreviewSheet({
                   </div>
                 )}
                 <div className="rounded-xl border border-[#e8e0f5] bg-white/70 px-3 py-2.5">
-                  <p className="text-[12px] text-[#402666]/60">{t("lobby.summaryStake")}</p>
-                  <p className="flex items-center gap-1.5 font-display text-[20px] font-bold leading-6 text-[#402666]">
-                    <img src={coinIcon} alt="" className="h-5 w-5 object-contain" />
-                    {stake.toLocaleString()}
-                  </p>
+                  <p className="text-[12px] text-[#402666]/60">{t("playRewards.prizesLabel")}</p>
+                  <PrizeLadder t={t} players={players} />
+                  <p className="mt-0.5 text-[11px] font-bold leading-4 text-[#2bc889]">{t("playRewards.freeToPlay")}</p>
                 </div>
               </div>
-
-              {/* What the table is playing for, when there is a table. */}
-              {pot !== null && (
-                <div className="mb-5 flex items-center justify-between rounded-xl border border-[#e8e0f5] bg-white/70 px-3 py-2.5">
-                  <span className="text-[12px] text-[#402666]/60">{t("lobby.winnerTakes")}</span>
-                  <span className="flex items-center gap-1.5 font-display text-[20px] font-bold leading-6 text-[#402666]">
-                    <img src={coinIcon} alt="" className="h-5 w-5 object-contain" />
-                    {pot.toLocaleString()}
-                  </span>
-                </div>
-              )}
 
               {/* Close, and beside it the card's own button — the same
                   pill the card draws, same tone and same word, so the way

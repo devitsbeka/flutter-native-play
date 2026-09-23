@@ -216,9 +216,10 @@ function DayRewardCard({
         {formatWeekday(date, language)}
       </span>
 
-      {/* The middle: a gift until it is opened. What is inside is the
-          server's decision, so nothing is promised here — the surprise IS
-          the feature. */}
+      {/* The middle: a gift until it is opened. What is inside is fixed per
+          day of the streak (claim_daily_reward's calendar since
+          20261108100000_no_wagering — nothing is left to chance); the
+          gift is only the wrapping. */}
       <div className="relative flex h-[96px] items-center justify-center">
         {/* Always the gift — closed, then open. What was inside is shown once,
             on the button, where the day's receipt already lives.

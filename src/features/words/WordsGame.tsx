@@ -20,6 +20,7 @@ import {
   BONUS_EVERY,
   BONUS_PAYOUT,
   HINT_COST,
+  LEVEL_BONUS,
   LEVEL_REWARD,
   clearSave,
   freshProgress,
@@ -32,8 +33,6 @@ import { emptyShared, mergeShared, type SharedState } from "./shared";
 import { loadSharedState, persistSharedState, useWordsRoom, type Seat } from "./useWordsRoom";
 import { LetterWheel, type WheelLetter } from "./LetterWheel";
 import { Board } from "./Board";
-import { LuckWheel } from "./LuckWheel";
-import { describePrize, type Prize } from "./prizes";
 import { Scrapbook } from "./Scrapbook";
 import { WordInfoModal } from "./WordInfoModal";
 
@@ -55,7 +54,7 @@ import { WordInfoModal } from "./WordInfoModal";
  */
 
 type Feedback = { kind: "correct" | "bonus" | "wrong" | "dup" | "poor" | "friend"; text: string; id: number };
-type Phase = "play" | "complete" | "luck" | "unlock";
+type Phase = "play" | "complete" | "bonus" | "unlock";
 
 function useSize<T extends HTMLElement>() {
   const ref = useRef<T>(null);
@@ -86,8 +85,12 @@ const levelAt = (bank: Level[], n: number): Level => bank[(n - 1) % bank.length]
 /** A placeholder board while a language's bank is on its way. */
 const LOADING_LEVEL: Level = { number: 1, sceneId: "mountain", letters: "", words: [], bonus: [] };
 
-/** Luck wheel after every second level; a scrapbook page after every pack. */
-const luckAfter = (level: Level) => level.number % 2 === 0;
+/**
+ * A fixed bonus after every second level; a scrapbook page after every pack.
+ * The bonus used to be a luck wheel. It is a set amount now — nothing in the
+ * app is left to chance, which App Review reads as simulated gambling.
+ */
+const bonusAfter = (level: Level) => level.number % 2 === 0;
 const unlocksSceneAfter = (level: Level) => level.number % LEVELS_PER_SCENE === 0;
 
 const SOLO = "me";
@@ -173,7 +176,6 @@ export default function WordsGame() {
   const [authOpen, setAuthOpen] = useState(false);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [inviteOpening, setInviteOpening] = useState(false);
-  const [lastPrize, setLastPrize] = useState<Prize | null>(null);
   const [roomGone, setRoomGone] = useState(false);
   const [hintKey, setHintKey] = useState<string | null>(null);
   const [wordInfo, setWordInfo] = useState<string | null>(null);
@@ -210,7 +212,6 @@ export default function WordsGame() {
         // than ours); follow them.
         setPhase("play");
         setWave([]);
-        setLastPrize(null);
         return;
       }
       // Their new words land with the same wave ours do.
@@ -463,7 +464,6 @@ export default function WordsGame() {
 
   const advance = () => {
     setWave([]);
-    setLastPrize(null);
     setPhase("play");
     commit((s) => ({ ...emptyShared(s.level + 1, s.lang), rev: s.rev }));
   };
@@ -477,15 +477,19 @@ export default function WordsGame() {
         unlocksSceneAfter(level) && !s.scrapbook.includes(scene.id) ? [...s.scrapbook, scene.id] : s.scrapbook,
     }));
     playSound("button-click");
-    if (luckAfter(level)) setPhase("luck");
+    if (bonusAfter(level)) setPhase("bonus");
     else if (unlocksSceneAfter(level)) setPhase("unlock");
     else advance();
   };
 
-  const collectPrize = (prize: Prize) => {
-    if (prize.kind === "coins") credit(prize.amount, "spin", `words:spin:${Date.now()}`);
-    else setSave((s) => ({ ...s, freeHints: s.freeHints + prize.amount }));
-    setLastPrize(prize);
+  /**
+   * From the level-bonus card. Credited under the ledger kind the wheel used
+   * ('spin'), so the same server ceiling bounds it; the reference is the
+   * level, so one level pays its bonus once.
+   */
+  const collectBonus = () => {
+    credit(LEVEL_BONUS, "spin", `words:bonus:${roomRef.current?.code ?? "solo"}:${level.number}:${myId}`);
+    playSound("button-click");
     if (unlocksSceneAfter(level)) setPhase("unlock");
     else advance();
   };
@@ -883,19 +887,22 @@ export default function WordsGame() {
         )}
       </GameModal>
 
-      {/* Luck wheel */}
+      {/* Every second level: a fixed bonus */}
       <GameModal
-        isOpen={phase === "luck"}
+        isOpen={phase === "bonus"}
         fullScreen={false}
         variant="gold"
         showStars
         hideCloseButton
-        hideFooter
         disableBackdropClick
-        title={t("words.testYourLuck")}
+        iconEmoji="🎁"
+        title={t("playRewards.levelBonusTitle")}
+        subtitle={t("playRewards.levelBonusBody")}
+        primaryLabel={t("playRewards.collect")}
+        onPrimaryClick={collectBonus}
       >
-        <div className="flex justify-center pt-2">
-          <LuckWheel size={Math.min(shell.width - 96, 260)} onDone={collectPrize} />
+        <div className="flex justify-center">
+          <GameModalStat icon={<img src={coinIcon} alt="" className="h-6 w-6" />} value={`+${LEVEL_BONUS}`} label={t("words.coinsTitle")} highlight />
         </div>
       </GameModal>
 
@@ -908,7 +915,6 @@ export default function WordsGame() {
         hideCloseButton
         disableBackdropClick
         title={t("words.scrapbookTitle")}
-        subtitle={lastPrize ? t("words.youWon", { prize: describePrize(t, lastPrize) }) : undefined}
         primaryLabel={t("words.nextScene")}
         onPrimaryClick={advance}
         secondaryLabel={t("words.viewScrapbook")}

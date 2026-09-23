@@ -6,7 +6,6 @@ import { useGame } from "@/contexts/GameContext";
 import { useAuth } from "@/hooks/useAuth";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import { GuestMaxPlaysModal } from "@/components/home/GuestMaxPlaysModal";
-import { NotEnoughStakeModal } from "@/components/home/NotEnoughStakeModal";
 import { hasReachedGuestPlayLimit, recordGuestPlay } from "@/hooks/useGuestPlays";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useSound } from "@/contexts/SoundContext";
@@ -224,10 +223,11 @@ const PlayerCard = ({
     </motion.div>
     
 
-    {/* What the match did to their coins: the one pill every results
-        screen wears (CoinDeltaPill). Nothing on a draw. */}
+    {/* What the match paid: the one pill every results screen wears
+        (CoinDeltaPill). Only ever a reward — a loss costs nothing, so it
+        draws nothing. */}
     <div className="h-8 flex items-center justify-center mt-2">
-      {coinChange !== undefined && coinChange !== 0 && <CoinDeltaPill delta={coinChange} delay={0.6} />}
+      {coinChange !== undefined && coinChange > 0 && <CoinDeltaPill delta={coinChange} delay={0.6} />}
     </div>
   </motion.div>
 );
@@ -240,7 +240,7 @@ export function MatchResultScreen() {
   const { playSound } = useSound();
   const { trackMissionEvent } = useMissions();
   const { t } = useLanguage();
-  const { settleGameDetailed, hasEnoughCoins } = useGameStake();
+  const { settleGameDetailed } = useGameStake();
   /** Why the badge shows nothing, when the server moved nothing on purpose. */
   const [settleNote, setSettleNote] = useState<string | null>(null);
   const { exhaustionInfo } = useTrivia();
@@ -250,7 +250,6 @@ export function MatchResultScreen() {
   
   // State for showing PRO upgrade modal when limit reached
   const [showPlayLimitModal, setShowPlayLimitModal] = useState(false);
-  const [showNotEnoughCoinsModal, setShowNotEnoughCoinsModal] = useState(false);
   const [showGuestModal, setShowGuestModal] = useState(false);
   const [guestModalBlocking, setGuestModalBlocking] = useState(false);
 
@@ -313,15 +312,6 @@ export function MatchResultScreen() {
       return;
     }
 
-    // And can they cover the stake? Home asks this before starting a quick
-    // game; this button did not, so a player under 500 coins could keep
-    // playing games whose loss they could not be charged for — which is one
-    // of the ways a lost game ended up costing nothing.
-    if (!hasEnoughCoins) {
-      setShowNotEnoughCoinsModal(true);
-      return;
-    }
-
     void consumePlay();
     startMatchmaking();
   };
@@ -370,34 +360,27 @@ export function MatchResultScreen() {
         const oldLevelInfo = calculateLevel(oldPoints);
         const newLevelInfo = calculateLevel(newPoints);
 
-        // Post-game settlement: Win +500, Lose -500, Draw 0 — decided by the
-        // server, which is also the only thing that knows whether it landed.
+        // Post-game reward: win +200, draw +50, a loss nothing — decided
+        // by the server, which is also the only thing that knows whether it
+        // landed. Nothing is ever taken.
         //
-        // The badge shows what actually moved, not what it set out to move:
-        // a credit the day's ceiling refused, or a debit larger than the
-        // balance, both used to be announced as a full ±500 that never
-        // reached the profile.
-        const { applied, reason } = await settleGameDetailed(isWin ? "win" : isDraw ? "draw" : "lose", matchId);
-        if (applied !== 0) {
+        // The badge shows what actually landed, not what it set out to pay:
+        // a credit the day's ceiling refused used to be announced as a full
+        // reward that never reached the profile.
+        const outcome = isWin ? "win" : isDraw ? "draw" : "lose";
+        const { applied, reason } = await settleGameDetailed(outcome, matchId);
+        if (applied > 0) {
           setCoinChange(applied);
-        } else if (reason === "daily_cap" || reason === "no_balance") {
-          // The server refused on purpose — the day's ceiling, or nothing
-          // to stake — and the counter did not move. Announcing the
-          // intended ±500 here was a lie the coin counter contradicted a
-          // second later; the badge stays empty and the reason is said.
+        } else if (reason === "daily_cap") {
+          // The server refused on purpose and the counter did not move, so
+          // the badge stays empty and the reason is said.
           setCoinChange(0);
-          setSettleNote(t(reason === "daily_cap" ? "extra.settleDailyCap" : "extra.settleNoBalance"));
+          setSettleNote(t("playRewards.dailyCapReached"));
         } else {
-          // Nothing moved (PRO loss exemption, cap, or settle refused) —
-          // show the intended stake outcome so a win/lose always reads as
-          // one, computed by the same rules the server applies (PRO loss
-          // stays 0: the player genuinely lost nothing).
-          const intended = resolveGameSettlement({
-            outcome: isWin ? "win" : isDraw ? "draw" : "lose",
-            coins: currentProfile.coins || 0,
-            isVip,
-          });
-          setCoinChange(intended.credit > 0 ? intended.credit : -intended.debit);
+          // Nothing landed for another reason (a loss, a second settlement of
+          // the same match, a failed call) — show what the rules pay for
+          // this result, which for a loss is nothing.
+          setCoinChange(resolveGameSettlement({ outcome }).credit);
         }
 
         // === Settle the profile counters in ONE atomic increment ===
@@ -580,15 +563,6 @@ export function MatchResultScreen() {
           setShowPlayLimitModal(false);
           void consumePlay();
           startMatchmaking();
-        }}
-      />
-
-      <NotEnoughStakeModal
-        isOpen={showNotEnoughCoinsModal}
-        onClose={() => setShowNotEnoughCoinsModal(false)}
-        onDailyRewards={() => {
-          resetGame();
-          navigate("/?daily=1");
         }}
       />
 

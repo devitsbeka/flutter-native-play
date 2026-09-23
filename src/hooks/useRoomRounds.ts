@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import type { RoomPotLine, RoomPotSettlement } from "@/hooks/useRoomPot";
+import type { RoomPrizeLine, RoomPrizeSettlement } from "@/hooks/useRoomPrizes";
 import type { MatchRound } from "@/hooks/useMatchRounds";
 
 /** One round of the room, with the game it was played in. */
@@ -23,30 +23,29 @@ interface StoredScore {
 }
 
 /**
- * Every round the room has ever played, game by game: which category, what
- * the pot was, and who won and who lost it.
+ * Every round the room has ever played, game by game: which category, and
+ * who placed and what the house paid them.
  *
  * useMatchRounds tells the CURRENT match. The results screen used to stop
  * there, so a room on its third game had a summary that started at game
- * three (owner: "show all rounds pot not only last game and show all coins
- * users won or lose, like summery of the all games"). This is the same
- * read over all of room_games for the room rather than one match's ids —
- * the category and scores off each row, the money off the ledger through
- * room_round_ledger, a READ that reports every seat's stake and prize for a
- * round that has settled and nothing for one that has not. It used to go
- * through settle_room_round, which settles — so opening the results of
+ * three (owner: "show all rounds not only last game, like summery of the
+ * all games"). This is the same read over all of room_games for the room
+ * rather than one match's ids — the category and scores off each row, the
+ * money off the ledger through room_round_ledger, a READ that reports every
+ * seat's prize for a round that has settled and nothing for one that has
+ * not. It used to go through settle_room_round, which settles — so opening the results of
  * round three settled round two for anyone who had not finished it. The
  * client still names no amounts.
  *
  * In play order, oldest first; `game` and `number` say where each one sat.
  * Null until read, and null when there is nothing to tell: no room, or no
- * pot lines yet for the current round (the money is still settling, and a
+ * prize lines yet for the current round (the money is still settling, and a
  * summary that read before it would miss the round that just happened).
  */
 export function useRoomRounds(
   roomId: string | null | undefined,
   ready: boolean,
-  readRoomRound: (gameId: string) => Promise<RoomPotSettlement>,
+  readRoomRound: (gameId: string) => Promise<RoomPrizeSettlement>,
 ): RoomRound[] | null {
   const [rounds, setRounds] = useState<RoomRound[] | null>(null);
 
@@ -74,14 +73,14 @@ export function useRoomRounds(
           const first = questions[0];
           const scores = (Array.isArray(row.player_scores) ? row.player_scores : []) as StoredScore[];
           const scoreOf = new Map(scores.map((s) => [s.user_id ?? "", s.score ?? 0]));
-          const lines: Record<string, RoomPotLine> = settlements[i]?.lines ?? {};
+          const lines: Record<string, RoomPrizeLine> = settlements[i]?.lines ?? {};
           const seats = Object.entries(lines).map(([user_id, line]) => ({
             user_id,
-            net: line.net,
+            prize: line.prize,
             score: scoreOf.has(user_id) ? scoreOf.get(user_id)! : null,
           }));
-          // The winner first: by what they took from the pot, then by score.
-          seats.sort((a, b) => b.net - a.net || (b.score ?? 0) - (a.score ?? 0));
+          // The winner first: by score, then by what they were paid.
+          seats.sort((a, b) => (b.score ?? 0) - (a.score ?? 0) || b.prize - a.prize);
           // A row nobody played — a round start that lost the race to
           // another client's, which cannot delete the row it made (RLS) —
           // has no seats and is not a round anyone needs told about.
@@ -95,7 +94,6 @@ export function useRoomRounds(
             number,
             categoryName: first?.category ?? null,
             iconSlug: first?.categoryIconSlug ?? first?.iconSlug ?? first?.questionIconSlug ?? null,
-            pot: settlements[i]?.pot ?? 0,
             seats,
           });
       });

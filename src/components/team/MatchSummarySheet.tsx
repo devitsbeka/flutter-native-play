@@ -2,12 +2,11 @@
  * The host's look at the room they are about to make.
  *
  * Everything Create commits to — which rounds, how many questions, what
- * every seat pays in — is spread over the rules tab, the category chip and
- * the pot line, and the moment it is all settled would otherwise be the
+ * the places are paid — is spread over the rules tab, the category chip and
+ * the prize line, and the moment it is all settled would otherwise be the
  * moment nobody is looking at any of it (owner: "show hosts when they click
  * create a mini resume, with a last chance to modify room rules and
- * categories, what they gonna play, how many questions per round, and the
- * cost").
+ * categories, what they gonna play, how many questions per round").
  *
  * It stood in front of Start for a while and asked the wrong question
  * there: a host pressing Start has people waiting on them and nothing left
@@ -32,7 +31,7 @@ import { CategoryArtwork } from "@/components/shared/CategoryArtwork";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
 import buzzerIcon from "@/assets/trivia-buzzer.png";
-import coinIcon from "@/assets/tb-lobby/coin.png";
+import { PrizeLadder } from "@/components/team/PrizeLadder";
 
 export interface SummaryRound {
   name: string;
@@ -46,16 +45,6 @@ interface MatchSummarySheetProps {
   rounds: SummaryRound[];
   /** Null when the room plays a trivia that brings its own question count. */
   questionsPerRound: number | null;
-  /** What a seat pays into the pot, always — see the note on soloFree. */
-  stake: number;
-  /**
-   * True while the host is the only one seated, which costs nothing: a room
-   * of one settles as practice (settle_room_round returns 'practice' below
-   * two players — no stake, no pot, no prize). Shown as a footnote under the
-   * stake rather than in place of it, because a room is created for people
-   * to join and the seat costs the stake the moment one does.
-   */
-  soloFree: boolean;
   starting?: boolean;
   onChange: () => void;
   onConfirm: () => void;
@@ -65,8 +54,6 @@ export function MatchSummarySheet({
   open,
   rounds,
   questionsPerRound,
-  stake,
-  soloFree,
   starting = false,
   onChange,
   onConfirm,
@@ -131,21 +118,13 @@ export function MatchSummarySheet({
                   </div>
                 )}
                 <div className="rounded-xl border border-[#e8e0f5] bg-white/70 px-3 py-2.5">
-                  <p className="text-[12px] text-[#402666]/60">{t("lobby.summaryStake")}</p>
-                  {/* The number, always. It read "Free — solo practice" while
-                      the host was the only one seated, which is true of a
-                      round played alone and the wrong answer to "what will
-                      this room cost?": every seat pays the stake as soon as
-                      somebody sits down, and a room is made for that (owner:
-                      "why it says free - solo practice ... per match cost is
-                      500 coins"). The free case is the footnote below. */}
-                  <p className="flex items-center gap-1.5 font-display text-[20px] font-bold leading-6 text-[#402666]">
-                    <img src={coinIcon} alt="" className="h-5 w-5 object-contain" />
-                    {stake.toLocaleString()}
-                  </p>
-                  {soloFree && (
-                    <p className="mt-0.5 text-[11px] font-bold leading-4 text-[#2bc889]">{t("lobby.summaryFree")}</p>
-                  )}
+                  <p className="text-[12px] text-[#402666]/60">{t("playRewards.prizesLabel")}</p>
+                  {/* What the places are paid, by the house: nobody pays in
+                      and nobody loses coins (20261108100000_no_wagering). A
+                      full table's ladder, since a room is made for people to
+                      join; at two players only first is paid. */}
+                  <PrizeLadder t={t} />
+                  <p className="mt-0.5 text-[11px] font-bold leading-4 text-[#2bc889]">{t("playRewards.freeToPlay")}</p>
                 </div>
               </div>
 

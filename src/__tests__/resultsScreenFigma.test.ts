@@ -50,7 +50,7 @@ describe("the podium", () => {
 
   it("the name at 22px display, then the place's coins", () => {
     expect(results).toMatch(/w-full text-center font-display text-\[20px\] font-bold leading-6 tracking-\[-0\.16px\] text-white truncate/);
-    expect(results).toMatch(/<PotLine net=\{netFor\(p\)\} \/>/);
+    expect(results).toMatch(/<PrizeLine prize=\{prizeFor\(p\)\} \/>/);
   });
 
   it("no score under the name — the design carries the coins alone", () => {
@@ -79,7 +79,7 @@ describe("fourth down", () => {
     expect(results).toMatch(/"flex h-\[60px\] items-center gap-3 rounded-2xl px-2",/);
     expect(results).toMatch(/w-8 shrink-0 text-center font-display text-\[20px\] font-bold leading-none text-\[#ffe9a8\]/);
     expect(results).toMatch(/className=\{cn\("h-11 w-11 border-2", ring\)\}/);
-    expect(results).toMatch(/<PotLine net=\{net\} compact \/>/);
+    expect(results).toMatch(/<PrizeLine prize=\{prize\} compact \/>/);
     expect(results).toMatch(/detail=\{t\("extra\.resultsPoints", \{ n: p\.score \}\)\}/);
   });
 

@@ -173,21 +173,23 @@ describe("Creative Commons images are attributed", () => {
   });
 });
 
-describe("randomised rewards disclose their odds", () => {
-  it("the luck wheel states each wedge's chance", () => {
-    // The wedges are not equally weighted — the file's own comment says
-    // "Cheap prizes come up more than rich ones" — so the odds cannot be
-    // inferred from the picture.
-    const body = read(join(SRC, "features/words/LuckWheel.tsx"));
-    expect(body).toContain("WEIGHTS");
-    expect(body).toMatch(/chanceOf|percent|%/);
-    expect(body.toLowerCase()).toContain("chance");
+// App Review rejected 1.0 (74) as simulated gambling. The luck wheel and
+// the chest's random draw are gone rather than disclosed: nothing in the app
+// is left to chance.
+describe("no reward is left to chance", () => {
+  it("the Words luck wheel is gone", () => {
+    expect(existsSync(join(SRC, "features/words/LuckWheel.tsx"))).toBe(false);
+    expect(read(join(SRC, "features/words/WordsGame.tsx"))).not.toMatch(/LuckWheel|testYourLuck/);
   });
 
-  it("the chest states its range", () => {
+  it("the chest pays a fixed amount", () => {
     const body = read(join(SRC, "components/home/ChestRewardModal.tsx"));
-    expect(body.toLowerCase()).toContain("chance");
-    expect(body).toContain("CHEST_COINS_MIN");
-    expect(body).toContain("CHEST_COINS_MAX");
+    expect(body).toContain("getChestCoins");
+    expect(body).not.toMatch(/getRandomChestCoins|Math\.random/);
+  });
+
+  it("the spin modals are gone", () => {
+    expect(existsSync(join(SRC, "components/game/LuckySpinModal.tsx"))).toBe(false);
+    expect(existsSync(join(SRC, "components/home/WatchAdForSpinsModal.tsx"))).toBe(false);
   });
 });

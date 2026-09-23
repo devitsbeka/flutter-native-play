@@ -95,8 +95,9 @@ describe("the modes that ask a question back are not handed off", () => {
     const body = startMode.slice(0, startMode.indexOf("autoStart.current = true;"));
     expect(body).toMatch(/if \(key === "words"\)/);
     expect(body).toMatch(/if \(key === "guess"\)/);
-    // isCreating, signed out, the quick stake, Words, Guess — five doors
-    // out before the handoff is armed (chooserGates.test.ts).
-    expect(body.match(/return;/g) ?? []).toHaveLength(5);
+    // isCreating, signed out, Words, Guess — four doors out before the
+    // handoff is armed (chooserGates.test.ts). The quick game's coin check
+    // was the fifth; games are free now, so there is nothing to check.
+    expect(body.match(/return;/g) ?? []).toHaveLength(4);
   });
 });

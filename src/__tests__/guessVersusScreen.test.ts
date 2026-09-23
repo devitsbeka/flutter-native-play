@@ -4,14 +4,14 @@ import { join } from "node:path";
 
 /**
  * The Guess card opens on the quick game's versus screen: Trivia King, the
- * wheel of picture games, and you.
+ * picture game picked for the round, and you.
  *
  * It used to ask "what will you guess?" on a grid, and then, on the level
  * page, show a second screen with the King's face and the pot. The owner
  * wants the versus screen the quick game has (Figma 1147:8835) here too,
  * with two differences: the opponent is Trivia King at once — his face
- * (Figma 1173:11905) and his name, no slot machine, no level, no coins —
- * and the wheel spins the picture games only, landing on the one to guess
+ * (Figma 1173:11905) and his name, no search animation, no level, no coins —
+ * and the plate picks from the picture games only, settling on the one to guess
  * (owner: "show this screen (quick game screen) on guess game screen too,
  * show this avatar for Trivia King avatar instantly and instead choosing
  * what to guess show this randomizer ... trivia king has no levels or
@@ -46,9 +46,10 @@ describe("the screen is the quick game's", () => {
   it("Trivia King is there at once, face and name, nothing under it", () => {
     expect(screen).toMatch(/<SmartAvatar avatarUrl=\{triviaKingAvatar\} fallback="K" size="2xl"/);
     expect(screen).toMatch(/\{t\("extra\.duelOpponent"\)\}/);
-    // No wheel over the avatar, no level line, no coin line on his card.
-    const king = screen.slice(screen.indexOf("Trivia King — upper left"), screen.indexOf("The wheel, in the plate"));
-    expect(king).not.toMatch(/common\.level|toLocaleString|slotAvatars|setCurrentAvatar/);
+    // Nothing cycling over the avatar, no level line, no coin line on his card.
+    const king = screen.slice(screen.indexOf("Trivia King — upper left"), screen.indexOf("The category, in the plate"));
+    expect(king.length).toBeGreaterThan(0);
+    expect(king).not.toMatch(/common\.level|toLocaleString|searchAvatars|setCurrentAvatar/);
   });
 
   it("the King's face is the frame's own asset, cropped to its circle", () => {
@@ -57,38 +58,33 @@ describe("the screen is the quick game's", () => {
     expect(size).toBeLessThan(600_000);
   });
 
-  it("the wheel spins the picture games and lands on one, with three re-rolls", () => {
-    expect(screen).toMatch(/setWheelIndex\(Math\.floor\(Math\.random\(\) \* categories\.length\)\);/);
-    expect(screen).toMatch(/const FREE_SPINS = 3;/);
-    expect(screen).toMatch(/canSpin=\{locked && spinsLeft > 0 && !busy\}/);
-    expect(screen).toMatch(/stake=\{REWARDS\.GUESS_STAKE\}/);
+  it("the plate picks a picture game and settles on one, with three free shuffles", () => {
+    expect(screen).toMatch(/setPickIndex\(Math\.floor\(Math\.random\(\) \* categories\.length\)\);/);
+    expect(screen).toMatch(/const FREE_SHUFFLES = 3;/);
+    expect(screen).toMatch(/canShuffle=\{locked && shufflesLeft > 0 && !busy\}/);
+    expect(screen).toMatch(/shuffleLabel=\{t\("playRewards\.newCategory", \{ count: shufflesLeft \}\)\}/);
+    // The plate's coin pill is what beating the King pays, never a price.
+    expect(screen).toMatch(/reward=\{REWARDS\.GUESS_WIN_REWARD\}/);
+    expect(screen).not.toMatch(/GUESS_STAKE|spinCategoryBtn/);
   });
 
-  it("is a reel: one continuous motion that lands, not timed swaps", () => {
-    // Twelve swaps at 60ms, then twelve on an ease-out curve — both read as
-    // a flicker (owner, twice: "it rolls very fast, we need smooth
-    // animation"). Now every game is a row on one strip that travels three
-    // full turns and lands in one ease-out motion; nothing is swapped.
+  it("shuffles rather than spins: no reel, nothing that reads as a slot machine", () => {
+    // It was a reel — every game a row on one strip, two full turns over
+    // 4.4s, landing on the winner. Next to a coin pill that is a slot
+    // machine, and App Review rejected 1.0 (74) as simulated gambling. The
+    // plate now shows a short "picking" beat and the category settles in.
     const plate = read("src/components/game/VSScreen.tsx");
-    // Two turns over 4.4s on a gentle curve: three turns in 3s, front-loaded
-    // (80% of the travel in the first 12% of the time), was a blur again
-    // (owner: "we need smooth loader, not too fast").
-    expect(plate).toMatch(/export const REEL_LOOPS = 2;/);
-    expect(plate).toMatch(/export const REEL_EASE = \[0\.32, 0\.08, 0\.16, 1\] as const;/);
-    expect(plate).toMatch(/export const REEL_SECONDS = 4\.4;/);
-    expect(plate).toMatch(/const reelTransition = \{ duration: REEL_SECONDS, ease: REEL_EASE \};/);
-    expect(plate).toMatch(/animate=\{\{ y: -travel \* NAME_ROW_H \}\}/);
-    expect(plate).toMatch(/animate=\{\{ y: -travel \* ICON_ROW_H \}\}/);
-    expect(plate).toMatch(/onAnimationComplete=\{reel!\.onLanded\}/);
-    expect(screen).toMatch(/reel=\{\{ items: reelItems, target: wheelIndex, turnKey: spinKey, onLanded: landed \}\}/);
-    expect(screen).toMatch(/const landed = useCallback\(\(\) => setLocked\(true\), \[\]\);/);
-    expect(screen).not.toMatch(/setTimeout|wheelDelay|WHEEL_CYCLES|REEL_SECONDS =/);
+    expect(plate).toMatch(/export const SHUFFLE_SECONDS = 1\.1;/);
+    expect(plate).toMatch(/window\.setTimeout\(\(\) => onLandedRef\.current\?\.\(\), SHUFFLE_SECONDS \* 1000\)/);
+    expect(plate).not.toMatch(/REEL_LOOPS|REEL_SECONDS|REEL_EASE|reelRows|REEL_MASK|travel \*/);
     expect(plate).toMatch(/const turning = !!reel && !isLocked && reel\.items\.length > 0;/);
-    // The quick game turns the same reel now — its fourteen swaps are gone
-    // (owner: "we have same loader on quick game … we need smooth loader").
-    expect(plate).not.toMatch(/cycleCategory|categoryIntervalRef|currentCategoryIndex/);
+    expect(plate).toMatch(/\+\{reward\.toLocaleString\(\)\}/);
+    expect(plate).not.toMatch(/\bstake\b/);
+    expect(screen).toMatch(/reel=\{\{ items: plateItems, target: pickIndex, turnKey: shuffleKey, onLanded: landed \}\}/);
+    expect(screen).toMatch(/const landed = useCallback\(\(\) => setLocked\(true\), \[\]\);/);
+    // The quick game shares the same plate.
     expect(plate).toMatch(/reel=\{\s*reelTarget !== null && !chosenCategory\s*\? \{ items: reelItems, target: reelTarget, turnKey: reelTurn, onLanded: reelLanded \}\s*: undefined\s*\}/);
-    expect(plate).toMatch(/setReelTarget\(pool\.length > 0 \? Math\.floor\(Math\.random\(\) \* pool\.length\) : null\);/);
+    expect(plate).toMatch(/reward=\{REWARDS\.GAME_WIN_REWARD\}/);
     // No rules line under the plate any more (owner: "remove description below").
     expect(screen).not.toMatch(/duelRulesHint/);
   });
@@ -100,40 +96,25 @@ describe("the screen is the quick game's", () => {
     const plate = read("src/components/game/VSScreen.tsx");
     expect(plate).toMatch(/const PLATE_H = 128;/);
     expect(plate).toMatch(/const NAME_ROW_H = 36;/);
-    expect(plate).toMatch(/const ICON_ROW_H = PLATE_H;/);
     expect(plate).toMatch(/className="relative flex flex-col justify-center gap-\[6px\] pl-\[76px\] pr-\[72px\] overflow-hidden"/);
     expect(plate).toMatch(/const PLATE_ICON_CLASS = "-left-\[30px\] top-\[16px\] w-\[90px\] h-\[96px\]";/);
-    expect(plate).toMatch(/className="absolute -left-\[30px\] top-0 w-\[90px\] overflow-hidden pointer-events-none"/);
-    expect(plate).toMatch(/className="w-\[90px\] h-\[96px\] object-contain"/);
   });
 
-  it("the strips fade at their ends and carry no filter, so nothing ghosts while they move", () => {
-    // WebKit drew the moving strip's column as a flat lighter box over the
-    // plate (a backdrop-filter under it, a drop-shadow filter on it), and
-    // the rows above and below were cut off mid-glyph (owner: "ghosted dark
-    // squares behind the icon and behind the categories … while they
-    // rolling they look bad").
+  it("the name fits its 223px at one rule, and only the landed icon carries a shadow", () => {
     const plate = read("src/components/game/VSScreen.tsx");
     expect(plate).not.toMatch(/pr-\[72px\] backdrop-blur/);
-    expect(plate).toMatch(/const REEL_MASK = "linear-gradient\(to bottom, transparent 0%, #000 22%, #000 78%, transparent 100%\)";/);
-    expect(plate.match(/WebkitMaskImage: REEL_MASK, maskImage: REEL_MASK/g) ?? []).toHaveLength(2);
-    // The only drop-shadow left is on the landed icon, which does not move.
     expect(plate.match(/drop-shadow\(0 4px 16px/g) ?? []).toHaveLength(1);
-    expect(plate).toMatch(/\{src && <img src=\{src\} alt="" className="w-\[90px\] h-\[96px\] object-contain" \/>\}/);
-    // And the name fits its 223px, rolling or landed, at one rule.
     expect(plate).toMatch(/const nameSizeClass = \(name: string\) => \(name\.length > 16 \? "text-\[16px\]" : "text-\[20px\]"\);/);
-    expect(plate.match(/nameSizeClass\(/g) ?? []).toHaveLength(2);
   });
 
   it("the picture games wear their card art on the plate, not the library stand-in", () => {
     // guess_logo's icon_slug is a magnifier; its card shows the logo art
-    // (CategoryArtwork → POPULAR_CATEGORY_ICONS). The plate — landed and
-    // every reel row — makes the same choice (owner: "i still see other icon
+    // (CategoryArtwork → POPULAR_CATEGORY_ICONS). The plate makes the same
+    // choice (owner: "i still see other icon
     // on guess the logo, we should use what we have in categories").
     const plate = read("src/components/game/VSScreen.tsx");
     expect(screen).toMatch(/iconUrl=\{popularCategoryIcon\(category\?\.category_id\) \?\? undefined\}/);
     expect(screen).toMatch(/iconUrl: popularCategoryIcon\(c\.category_id\) \?\? undefined/);
-    expect(plate).toMatch(/const src = row\.iconUrl \?\? \(row\.iconSlug \? `\$\{ICON_STORAGE_URL\}\/\$\{row\.iconSlug\}\.png` : undefined\);/);
     expect(plate).toMatch(/iconUrl: popularCategoryIcon\(match\?\.category_id\) \?\? undefined,/);
     expect(plate).toMatch(/iconUrl: popularCategoryIcon\(c\.category_id\) \?\? undefined \}/);
   });

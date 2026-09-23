@@ -306,16 +306,16 @@ jobs:
           psql -h localhost -p 5432 -U postgres \
             -v ON_ERROR_STOP=1 -f supabase/tests/14-streak-milestones.sql
 
-      # The room pot. A room round is played for a stake, settled once,
-      # server-side: every seat pays in, the table is paid out, nothing is
-      # minted — and every device that asks is told what moved, not only
-      # the first. The file existed; CI had never run it.
-      - name: Assert room pot rules
+      # 20261108100000_no_wagering: nothing is staked and nothing is lost.
+      # A room pays 200/100/50 by place from the house, the Guess card pays a
+      # pass, and no settlement ever writes a debit. Replaces the room-pot,
+      # guess-stake and honest-pot suites, which asserted the wager itself.
+      - name: Assert no game is a wager
         env:
           PGPASSWORD: postgres
         run: |
           psql -h localhost -p 5432 -U postgres \
-            -v ON_ERROR_STOP=1 -f supabase/tests/15-room-pot.sql
+            -v ON_ERROR_STOP=1 -f supabase/tests/26-no-wagering.sql
 
       # The subscription welcome. It is granted by a trigger on
       # vip_subscriptions, which the webhook writes on every renewal — so
@@ -370,15 +370,6 @@ jobs:
           psql -h localhost -p 5432 -U postgres \
             -v ON_ERROR_STOP=1 -f supabase/tests/20-room-icons.sql
 
-      # The Guess card's stake: 200 in, +200 on a pass, -200 on a fail, once
-      # per run, floored at the balance, out of anon's reach.
-      - name: Assert the guess game settles at its own stake
-        env:
-          PGPASSWORD: postgres
-        run: |
-          psql -h localhost -p 5432 -U postgres \
-            -v ON_ERROR_STOP=1 -f supabase/tests/21-guess-stake.sql
-
       # The doors the audit found open: participants cannot rewrite the
       # room, prices are the admins', only player rewards can be claimed,
       # a PRO seat pays no welcome, a yes needs a free seat in a waiting
@@ -389,16 +380,6 @@ jobs:
         run: |
           psql -h localhost -p 5432 -U postgres \
             -v ON_ERROR_STOP=1 -f supabase/tests/22-lock-the-house.sql
-
-      # The pot: paid to the seats that staked it, split as the table was
-      # told, ties shared, observers out, never burned; the ledger readable
-      # without settling.
-      - name: Assert the pot is honest
-        env:
-          PGPASSWORD: postgres
-        run: |
-          psql -h localhost -p 5432 -U postgres \
-            -v ON_ERROR_STOP=1 -f supabase/tests/23-honest-pot.sql
 
       - name: Assert drafts live on the row
         env:

@@ -31,7 +31,7 @@ const buttonCatalog = {
     ],
     success: [
       { id: "chunky-success-ready", label: "მზადაა", icon: <Check className="w-5 h-5" />, usage: ["RoomLobby.tsx"], size: "lg" },
-      { id: "chunky-success-claim", label: "აიღე ჯილდო", icon: null, usage: ["LuckySpinModal.tsx", "ChestRewardModal.tsx"], size: "lg" },
+      { id: "chunky-success-claim", label: "აიღე ჯილდო", icon: null, usage: ["ChestRewardModal.tsx"], size: "lg" },
       { id: "chunky-success-retry", label: "თავიდან სცადე", icon: <RotateCcw className="w-5 h-5" />, usage: ["GameLoseModal.tsx"], size: "lg" },
       { id: "chunky-success-create", label: "შექმნა", icon: <Gamepad2 className="w-5 h-5" />, usage: ["CreateRoomModal.tsx"], size: "lg" },
     ],

@@ -45,9 +45,9 @@ describe("startMode's doors", () => {
     expect(start).toMatch(/if \(friendsOnlyMode\(key\) && !isVip\) return requirePro\("rooms", \(\) => launchMode\(key\)\);/);
   });
 
-  it("a quick game checks the stake before the handoff", () => {
-    expect(start).toMatch(/if \(key === "quick" && coins < REWARDS\.GAME_STAKE\) \{\s*\n\s*setShowQuickStake\(true\);\s*\n\s*return;\s*\n\s*\}/);
-    expect(chooser).toMatch(/<NotEnoughStakeModal isOpen=\{showQuickStake\} onClose=\{\(\) => setShowQuickStake\(false\)\} stake=\{REWARDS\.GAME_STAKE\} \/>/);
+  it("a quick game asks no coin balance before the handoff — games are free", () => {
+    expect(start).not.toMatch(/coins </);
+    expect(chooser).not.toMatch(/NotEnoughStakeModal|showQuickStake|GAME_STAKE/);
   });
 
   it("My Trivias with nothing authored leaves through handoff", () => {
@@ -92,10 +92,11 @@ describe("a settlement that moved nothing on purpose", () => {
     expect(hook).toMatch(/settleGame,\s*\n\s*settleGameDetailed,/);
   });
 
-  it("and the result screen shows nothing and says so, instead of an intended ±500", () => {
+  it("and the result screen shows nothing and says so, instead of an intended reward", () => {
     const screen = read("src/components/game/MatchResultScreen.tsx");
-    expect(screen).toMatch(/\} else if \(reason === "daily_cap" \|\| reason === "no_balance"\) \{/);
-    expect(screen).toMatch(/setCoinChange\(0\);\s*\n\s*setSettleNote\(t\(reason === "daily_cap" \? "extra\.settleDailyCap" : "extra\.settleNoBalance"\)\);/);
+    expect(screen).toMatch(/\} else if \(reason === "daily_cap"\) \{/);
+    expect(screen).toMatch(/setCoinChange\(0\);\s*\n\s*setSettleNote\(t\("playRewards\.dailyCapReached"\)\);/);
     expect(screen).toMatch(/\{settleNote && \(/);
+    expect(screen).not.toMatch(/settleNoBalance|no_balance/);
   });
 });
