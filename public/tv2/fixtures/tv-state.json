@@ -1,0 +1,379 @@
+{
+  "ended": {
+    "code": "4821",
+    "language": "en",
+    "partyID": "6F1C2A8E-3B7D-4E52-9A10-2C4B5D6E7F80",
+    "phase": "ended",
+    "players": [],
+    "poll": [],
+    "revision": 120,
+    "roundNumber": 0,
+    "sentAt": 1790000600.0,
+    "standings": [],
+    "totalRounds": 0,
+    "v": 1
+  },
+  "lobby": {
+    "code": "4821",
+    "language": "en",
+    "partyID": "6F1C2A8E-3B7D-4E52-9A10-2C4B5D6E7F80",
+    "phase": "lobby",
+    "phaseEndsAt": 1790000015.0,
+    "phaseStartsAt": 1789999980.0,
+    "players": [
+      {
+        "answered": false,
+        "id": "host-1",
+        "isConnected": true,
+        "isHost": true,
+        "isObserver": false,
+        "name": "Beka",
+        "roundScore": 0,
+        "score": 0
+      },
+      {
+        "answered": false,
+        "id": "p-2",
+        "isConnected": true,
+        "isHost": false,
+        "isObserver": false,
+        "name": "Nino",
+        "roundScore": 0,
+        "score": 0
+      },
+      {
+        "answered": false,
+        "id": "p-3",
+        "isConnected": false,
+        "isHost": false,
+        "isObserver": false,
+        "name": "Luka",
+        "roundScore": 0,
+        "score": 0
+      }
+    ],
+    "poll": [],
+    "revision": 3,
+    "roomName": "Friday Quiz Owls",
+    "roundNumber": 0,
+    "sentAt": 1790000000.0,
+    "standings": [],
+    "totalRounds": 0,
+    "v": 1
+  },
+  "poll": {
+    "code": "4821",
+    "language": "en",
+    "partyID": "6F1C2A8E-3B7D-4E52-9A10-2C4B5D6E7F80",
+    "phase": "poll",
+    "phaseEndsAt": 1790000060.0,
+    "phaseStartsAt": 1790000030.0,
+    "players": [
+      {
+        "answered": true,
+        "id": "host-1",
+        "isConnected": true,
+        "isHost": true,
+        "isObserver": false,
+        "name": "Beka",
+        "roundScore": 240,
+        "score": 240
+      },
+      {
+        "answered": false,
+        "id": "p-2",
+        "isConnected": true,
+        "isHost": false,
+        "isObserver": false,
+        "name": "Nino",
+        "roundScore": 130,
+        "score": 130
+      },
+      {
+        "answered": false,
+        "id": "p-3",
+        "isConnected": false,
+        "isHost": false,
+        "isObserver": false,
+        "name": "Luka",
+        "roundScore": 0,
+        "score": 0
+      }
+    ],
+    "poll": [
+      {
+        "id": "geo",
+        "suggestedBy": "Beka",
+        "title": "Geography",
+        "votes": 2
+      },
+      {
+        "id": "film",
+        "title": "Movies",
+        "votes": 0
+      }
+    ],
+    "revision": 12,
+    "roomName": "Friday Quiz Owls",
+    "roundNumber": 0,
+    "roundTitle": null,
+    "sentAt": 1790000030.0,
+    "standings": [],
+    "totalRounds": 0,
+    "v": 1
+  },
+  "question": {
+    "code": "4821",
+    "language": "en",
+    "partyID": "6F1C2A8E-3B7D-4E52-9A10-2C4B5D6E7F80",
+    "phase": "question",
+    "phaseEndsAt": 1790000116.5,
+    "phaseStartsAt": 1790000101.5,
+    "players": [
+      {
+        "answered": true,
+        "id": "host-1",
+        "isConnected": true,
+        "isHost": true,
+        "isObserver": false,
+        "name": "Beka",
+        "roundScore": 240,
+        "score": 240
+      },
+      {
+        "answered": false,
+        "id": "p-2",
+        "isConnected": true,
+        "isHost": false,
+        "isObserver": false,
+        "name": "Nino",
+        "roundScore": 130,
+        "score": 130
+      },
+      {
+        "answered": false,
+        "id": "p-3",
+        "isConnected": false,
+        "isHost": false,
+        "isObserver": false,
+        "name": "Luka",
+        "roundScore": 0,
+        "score": 0
+      }
+    ],
+    "poll": [],
+    "question": {
+      "count": 10,
+      "index": 2,
+      "options": [
+        "Tbilisi",
+        "Batumi",
+        "Kutaisi",
+        "Rustavi"
+      ],
+      "text": "What is the capital of Georgia?"
+    },
+    "revision": 41,
+    "roomName": "Friday Quiz Owls",
+    "roundNumber": 1,
+    "roundTitle": "Geography",
+    "sentAt": 1790000100.0,
+    "standings": [],
+    "totalRounds": 2,
+    "v": 1
+  },
+  "questionPicture": {
+    "code": "4821",
+    "language": "en",
+    "partyID": "6F1C2A8E-3B7D-4E52-9A10-2C4B5D6E7F80",
+    "phase": "question",
+    "phaseEndsAt": 1790000116.5,
+    "phaseStartsAt": 1790000101.5,
+    "players": [
+      {
+        "answered": true,
+        "id": "host-1",
+        "isConnected": true,
+        "isHost": true,
+        "isObserver": false,
+        "name": "Beka",
+        "roundScore": 240,
+        "score": 240
+      },
+      {
+        "answered": false,
+        "id": "p-2",
+        "isConnected": true,
+        "isHost": false,
+        "isObserver": false,
+        "name": "Nino",
+        "roundScore": 130,
+        "score": 130
+      },
+      {
+        "answered": false,
+        "id": "p-3",
+        "isConnected": false,
+        "isHost": false,
+        "isObserver": false,
+        "name": "Luka",
+        "roundScore": 0,
+        "score": 0
+      }
+    ],
+    "poll": [],
+    "question": {
+      "count": 10,
+      "image": "picture",
+      "index": 2,
+      "options": [
+        "Eiffel Tower",
+        "Big Ben",
+        "Colosseum",
+        "Parthenon"
+      ],
+      "text": ""
+    },
+    "revision": 41,
+    "roomName": "Friday Quiz Owls",
+    "roundNumber": 1,
+    "roundTitle": "Geography",
+    "sentAt": 1790000100.0,
+    "standings": [],
+    "totalRounds": 2,
+    "v": 1
+  },
+  "reveal": {
+    "code": "4821",
+    "language": "en",
+    "partyID": "6F1C2A8E-3B7D-4E52-9A10-2C4B5D6E7F80",
+    "phase": "reveal",
+    "phaseEndsAt": 1790000113.0,
+    "phaseStartsAt": 1790000110.0,
+    "players": [
+      {
+        "answered": true,
+        "id": "host-1",
+        "isConnected": true,
+        "isHost": true,
+        "isObserver": false,
+        "name": "Beka",
+        "roundScore": 240,
+        "score": 240
+      },
+      {
+        "answered": false,
+        "id": "p-2",
+        "isConnected": true,
+        "isHost": false,
+        "isObserver": false,
+        "name": "Nino",
+        "roundScore": 130,
+        "score": 130
+      },
+      {
+        "answered": false,
+        "id": "p-3",
+        "isConnected": false,
+        "isHost": false,
+        "isObserver": false,
+        "name": "Luka",
+        "roundScore": 0,
+        "score": 0
+      }
+    ],
+    "poll": [],
+    "question": {
+      "correctIndex": 0,
+      "count": 10,
+      "index": 2,
+      "options": [
+        "Tbilisi",
+        "Batumi",
+        "Kutaisi",
+        "Rustavi"
+      ],
+      "tally": [
+        1,
+        1,
+        0,
+        0
+      ],
+      "text": "What is the capital of Georgia?"
+    },
+    "revision": 44,
+    "roomName": "Friday Quiz Owls",
+    "roundNumber": 1,
+    "roundTitle": "Geography",
+    "sentAt": 1790000110.0,
+    "standings": [],
+    "totalRounds": 2,
+    "v": 1
+  },
+  "roundResults": {
+    "code": "4821",
+    "language": "en",
+    "partyID": "6F1C2A8E-3B7D-4E52-9A10-2C4B5D6E7F80",
+    "phase": "roundResults",
+    "players": [
+      {
+        "answered": true,
+        "id": "host-1",
+        "isConnected": true,
+        "isHost": true,
+        "isObserver": false,
+        "name": "Beka",
+        "roundScore": 240,
+        "score": 240
+      },
+      {
+        "answered": false,
+        "id": "p-2",
+        "isConnected": true,
+        "isHost": false,
+        "isObserver": false,
+        "name": "Nino",
+        "roundScore": 130,
+        "score": 130
+      },
+      {
+        "answered": false,
+        "id": "p-3",
+        "isConnected": false,
+        "isHost": false,
+        "isObserver": false,
+        "name": "Luka",
+        "roundScore": 0,
+        "score": 0
+      }
+    ],
+    "poll": [],
+    "revision": 90,
+    "roomName": "Friday Quiz Owls",
+    "roundNumber": 1,
+    "roundTitle": "Geography",
+    "sentAt": 1790000300.0,
+    "standings": [
+      {
+        "name": "Beka",
+        "place": 1,
+        "playerID": "host-1",
+        "score": 240
+      },
+      {
+        "name": "Nino",
+        "place": 2,
+        "playerID": "p-2",
+        "score": 130
+      },
+      {
+        "name": "Luka",
+        "place": 3,
+        "playerID": "p-3",
+        "score": 0
+      }
+    ],
+    "totalRounds": 2,
+    "v": 1
+  }
+}

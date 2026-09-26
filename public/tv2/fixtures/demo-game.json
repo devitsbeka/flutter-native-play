@@ -1,0 +1,2088 @@
+[
+ {
+  "hold": 2.5,
+  "state": {
+   "v": 1,
+   "language": "en",
+   "roomName": "Friday Quiz Owls",
+   "roundNumber": 0,
+   "totalRounds": 2,
+   "poll": [],
+   "standings": [],
+   "phase": "lobby",
+   "players": [
+    {
+     "id": "host-1",
+     "name": "Beka",
+     "isHost": true,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 0,
+     "roundScore": 0
+    },
+    {
+     "id": "p-2",
+     "name": "Nino",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 0,
+     "roundScore": 0
+    }
+   ]
+  }
+ },
+ {
+  "hold": 2.5,
+  "state": {
+   "v": 1,
+   "language": "en",
+   "roomName": "Friday Quiz Owls",
+   "roundNumber": 0,
+   "totalRounds": 2,
+   "poll": [],
+   "standings": [],
+   "phase": "lobby",
+   "players": [
+    {
+     "id": "host-1",
+     "name": "Beka",
+     "isHost": true,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 0,
+     "roundScore": 0
+    },
+    {
+     "id": "p-2",
+     "name": "Nino",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 0,
+     "roundScore": 0
+    },
+    {
+     "id": "p-3",
+     "name": "Luka",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 0,
+     "roundScore": 0
+    },
+    {
+     "id": "p-4",
+     "name": "Ana Maria",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 0,
+     "roundScore": 0
+    }
+   ]
+  }
+ },
+ {
+  "hold": 4,
+  "state": {
+   "v": 1,
+   "language": "en",
+   "roomName": "Friday Quiz Owls",
+   "roundNumber": 0,
+   "totalRounds": 2,
+   "poll": [],
+   "standings": [],
+   "phase": "lobby",
+   "players": [
+    {
+     "id": "host-1",
+     "name": "Beka",
+     "isHost": true,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 0,
+     "roundScore": 0
+    },
+    {
+     "id": "p-2",
+     "name": "Nino",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 0,
+     "roundScore": 0
+    },
+    {
+     "id": "p-3",
+     "name": "Luka",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 0,
+     "roundScore": 0
+    },
+    {
+     "id": "p-4",
+     "name": "Ana Maria",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 0,
+     "roundScore": 0
+    },
+    {
+     "id": "p-5",
+     "name": "Giorgi",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 0,
+     "roundScore": 0
+    },
+    {
+     "id": "p-6",
+     "name": "Sofia",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 0,
+     "roundScore": 0
+    }
+   ]
+  },
+  "phaseSecs": 15
+ },
+ {
+  "hold": 3,
+  "state": {
+   "v": 1,
+   "language": "en",
+   "roomName": "Friday Quiz Owls",
+   "roundNumber": 1,
+   "totalRounds": 2,
+   "poll": [],
+   "standings": [],
+   "phase": "roundIntro",
+   "roundTitle": "Geography",
+   "players": [
+    {
+     "id": "host-1",
+     "name": "Beka",
+     "isHost": true,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 0,
+     "roundScore": 0
+    },
+    {
+     "id": "p-2",
+     "name": "Nino",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 0,
+     "roundScore": 0
+    },
+    {
+     "id": "p-3",
+     "name": "Luka",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 0,
+     "roundScore": 0
+    },
+    {
+     "id": "p-4",
+     "name": "Ana Maria",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 0,
+     "roundScore": 0
+    },
+    {
+     "id": "p-5",
+     "name": "Giorgi",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 0,
+     "roundScore": 0
+    },
+    {
+     "id": "p-6",
+     "name": "Sofia",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 0,
+     "roundScore": 0
+    }
+   ]
+  }
+ },
+ {
+  "hold": 3.2,
+  "state": {
+   "v": 1,
+   "language": "en",
+   "roomName": "Friday Quiz Owls",
+   "roundNumber": 1,
+   "totalRounds": 2,
+   "poll": [],
+   "standings": [],
+   "phase": "countdown",
+   "roundTitle": "Geography",
+   "players": [
+    {
+     "id": "host-1",
+     "name": "Beka",
+     "isHost": true,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 0,
+     "roundScore": 0
+    },
+    {
+     "id": "p-2",
+     "name": "Nino",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 0,
+     "roundScore": 0
+    },
+    {
+     "id": "p-3",
+     "name": "Luka",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 0,
+     "roundScore": 0
+    },
+    {
+     "id": "p-4",
+     "name": "Ana Maria",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 0,
+     "roundScore": 0
+    },
+    {
+     "id": "p-5",
+     "name": "Giorgi",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 0,
+     "roundScore": 0
+    },
+    {
+     "id": "p-6",
+     "name": "Sofia",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 0,
+     "roundScore": 0
+    }
+   ]
+  },
+  "phaseSecs": 3
+ },
+ {
+  "hold": 3,
+  "state": {
+   "v": 1,
+   "language": "en",
+   "roomName": "Friday Quiz Owls",
+   "roundNumber": 1,
+   "totalRounds": 2,
+   "poll": [],
+   "standings": [],
+   "phase": "question",
+   "roundTitle": "Geography",
+   "question": {
+    "index": 0,
+    "count": 3,
+    "text": "What is the capital of Georgia?",
+    "options": [
+     "Tbilisi",
+     "Batumi",
+     "Kutaisi",
+     "Rustavi"
+    ]
+   },
+   "players": [
+    {
+     "id": "host-1",
+     "name": "Beka",
+     "isHost": true,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 0,
+     "roundScore": 0
+    },
+    {
+     "id": "p-2",
+     "name": "Nino",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 0,
+     "roundScore": 0
+    },
+    {
+     "id": "p-3",
+     "name": "Luka",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 0,
+     "roundScore": 0
+    },
+    {
+     "id": "p-4",
+     "name": "Ana Maria",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 0,
+     "roundScore": 0
+    },
+    {
+     "id": "p-5",
+     "name": "Giorgi",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 0,
+     "roundScore": 0
+    },
+    {
+     "id": "p-6",
+     "name": "Sofia",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 0,
+     "roundScore": 0
+    }
+   ]
+  },
+  "phaseSecs": 15
+ },
+ {
+  "hold": 3,
+  "state": {
+   "v": 1,
+   "language": "en",
+   "roomName": "Friday Quiz Owls",
+   "roundNumber": 1,
+   "totalRounds": 2,
+   "poll": [],
+   "standings": [],
+   "phase": "question",
+   "roundTitle": "Geography",
+   "question": {
+    "index": 0,
+    "count": 3,
+    "text": "What is the capital of Georgia?",
+    "options": [
+     "Tbilisi",
+     "Batumi",
+     "Kutaisi",
+     "Rustavi"
+    ]
+   },
+   "players": [
+    {
+     "id": "host-1",
+     "name": "Beka",
+     "isHost": true,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 0,
+     "roundScore": 0
+    },
+    {
+     "id": "p-2",
+     "name": "Nino",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 0,
+     "roundScore": 0
+    },
+    {
+     "id": "p-3",
+     "name": "Luka",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 0,
+     "roundScore": 0
+    },
+    {
+     "id": "p-4",
+     "name": "Ana Maria",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 0,
+     "roundScore": 0
+    },
+    {
+     "id": "p-5",
+     "name": "Giorgi",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 0,
+     "roundScore": 0
+    },
+    {
+     "id": "p-6",
+     "name": "Sofia",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 0,
+     "roundScore": 0
+    }
+   ]
+  },
+  "phaseSecs": 15,
+  "remaining": 9
+ },
+ {
+  "hold": 4,
+  "state": {
+   "v": 1,
+   "language": "en",
+   "roomName": "Friday Quiz Owls",
+   "roundNumber": 1,
+   "totalRounds": 2,
+   "poll": [],
+   "standings": [],
+   "phase": "reveal",
+   "roundTitle": "Geography",
+   "question": {
+    "index": 0,
+    "count": 3,
+    "text": "What is the capital of Georgia?",
+    "options": [
+     "Tbilisi",
+     "Batumi",
+     "Kutaisi",
+     "Rustavi"
+    ],
+    "correctIndex": 0,
+    "tally": [
+     4,
+     1,
+     1,
+     0
+    ]
+   },
+   "players": [
+    {
+     "id": "host-1",
+     "name": "Beka",
+     "isHost": true,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 80,
+     "roundScore": 80
+    },
+    {
+     "id": "p-2",
+     "name": "Nino",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 100,
+     "roundScore": 100
+    },
+    {
+     "id": "p-3",
+     "name": "Luka",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 0,
+     "roundScore": 0
+    },
+    {
+     "id": "p-4",
+     "name": "Ana Maria",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 80,
+     "roundScore": 80
+    },
+    {
+     "id": "p-5",
+     "name": "Giorgi",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 80,
+     "roundScore": 80
+    },
+    {
+     "id": "p-6",
+     "name": "Sofia",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 140,
+     "roundScore": 140
+    }
+   ]
+  },
+  "phaseSecs": 3
+ },
+ {
+  "hold": 3,
+  "state": {
+   "v": 1,
+   "language": "en",
+   "roomName": "Friday Quiz Owls",
+   "roundNumber": 1,
+   "totalRounds": 2,
+   "poll": [],
+   "standings": [],
+   "phase": "question",
+   "roundTitle": "Geography",
+   "question": {
+    "index": 1,
+    "count": 3,
+    "text": "Which is the longest river in Europe?",
+    "options": [
+     "Danube",
+     "Volga",
+     "Rhine",
+     "Dnieper"
+    ]
+   },
+   "players": [
+    {
+     "id": "host-1",
+     "name": "Beka",
+     "isHost": true,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 80,
+     "roundScore": 80
+    },
+    {
+     "id": "p-2",
+     "name": "Nino",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 100,
+     "roundScore": 100
+    },
+    {
+     "id": "p-3",
+     "name": "Luka",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 0,
+     "roundScore": 0
+    },
+    {
+     "id": "p-4",
+     "name": "Ana Maria",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 80,
+     "roundScore": 80
+    },
+    {
+     "id": "p-5",
+     "name": "Giorgi",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 80,
+     "roundScore": 80
+    },
+    {
+     "id": "p-6",
+     "name": "Sofia",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 140,
+     "roundScore": 140
+    }
+   ]
+  },
+  "phaseSecs": 15
+ },
+ {
+  "hold": 3,
+  "state": {
+   "v": 1,
+   "language": "en",
+   "roomName": "Friday Quiz Owls",
+   "roundNumber": 1,
+   "totalRounds": 2,
+   "poll": [],
+   "standings": [],
+   "phase": "question",
+   "roundTitle": "Geography",
+   "question": {
+    "index": 1,
+    "count": 3,
+    "text": "Which is the longest river in Europe?",
+    "options": [
+     "Danube",
+     "Volga",
+     "Rhine",
+     "Dnieper"
+    ]
+   },
+   "players": [
+    {
+     "id": "host-1",
+     "name": "Beka",
+     "isHost": true,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 80,
+     "roundScore": 80
+    },
+    {
+     "id": "p-2",
+     "name": "Nino",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 100,
+     "roundScore": 100
+    },
+    {
+     "id": "p-3",
+     "name": "Luka",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 0,
+     "roundScore": 0
+    },
+    {
+     "id": "p-4",
+     "name": "Ana Maria",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 80,
+     "roundScore": 80
+    },
+    {
+     "id": "p-5",
+     "name": "Giorgi",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 80,
+     "roundScore": 80
+    },
+    {
+     "id": "p-6",
+     "name": "Sofia",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 140,
+     "roundScore": 140
+    }
+   ]
+  },
+  "phaseSecs": 15,
+  "remaining": 9
+ },
+ {
+  "hold": 4,
+  "state": {
+   "v": 1,
+   "language": "en",
+   "roomName": "Friday Quiz Owls",
+   "roundNumber": 1,
+   "totalRounds": 2,
+   "poll": [],
+   "standings": [],
+   "phase": "reveal",
+   "roundTitle": "Geography",
+   "question": {
+    "index": 1,
+    "count": 3,
+    "text": "Which is the longest river in Europe?",
+    "options": [
+     "Danube",
+     "Volga",
+     "Rhine",
+     "Dnieper"
+    ],
+    "correctIndex": 1,
+    "tally": [
+     2,
+     3,
+     1,
+     0
+    ]
+   },
+   "players": [
+    {
+     "id": "host-1",
+     "name": "Beka",
+     "isHost": true,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 160,
+     "roundScore": 160
+    },
+    {
+     "id": "p-2",
+     "name": "Nino",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 240,
+     "roundScore": 240
+    },
+    {
+     "id": "p-3",
+     "name": "Luka",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 80,
+     "roundScore": 80
+    },
+    {
+     "id": "p-4",
+     "name": "Ana Maria",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 180,
+     "roundScore": 180
+    },
+    {
+     "id": "p-5",
+     "name": "Giorgi",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 160,
+     "roundScore": 160
+    },
+    {
+     "id": "p-6",
+     "name": "Sofia",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 140,
+     "roundScore": 140
+    }
+   ]
+  },
+  "phaseSecs": 3
+ },
+ {
+  "hold": 5,
+  "state": {
+   "v": 1,
+   "language": "en",
+   "roomName": "Friday Quiz Owls",
+   "roundNumber": 1,
+   "totalRounds": 2,
+   "poll": [],
+   "standings": [],
+   "phase": "question",
+   "roundTitle": "Geography",
+   "question": {
+    "index": 2,
+    "count": 3,
+    "text": "",
+    "options": [
+     "Georgia",
+     "England",
+     "Switzerland",
+     "Denmark"
+    ],
+    "image": "picture"
+   },
+   "players": [
+    {
+     "id": "host-1",
+     "name": "Beka",
+     "isHost": true,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 0,
+     "roundScore": 0
+    },
+    {
+     "id": "p-2",
+     "name": "Nino",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 0,
+     "roundScore": 0
+    },
+    {
+     "id": "p-3",
+     "name": "Luka",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 0,
+     "roundScore": 0
+    },
+    {
+     "id": "p-4",
+     "name": "Ana Maria",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 0,
+     "roundScore": 0
+    },
+    {
+     "id": "p-5",
+     "name": "Giorgi",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 0,
+     "roundScore": 0
+    },
+    {
+     "id": "p-6",
+     "name": "Sofia",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 0,
+     "roundScore": 0
+    }
+   ]
+  },
+  "phaseSecs": 15,
+  "remaining": 11,
+  "picture": "fixtures/demo-picture.svg"
+ },
+ {
+  "hold": 4,
+  "state": {
+   "v": 1,
+   "language": "en",
+   "roomName": "Friday Quiz Owls",
+   "roundNumber": 1,
+   "totalRounds": 2,
+   "poll": [],
+   "standings": [],
+   "phase": "reveal",
+   "roundTitle": "Geography",
+   "question": {
+    "index": 2,
+    "count": 3,
+    "text": "",
+    "options": [
+     "Georgia",
+     "England",
+     "Switzerland",
+     "Denmark"
+    ],
+    "correctIndex": 0,
+    "tally": [
+     5,
+     1,
+     0,
+     0
+    ],
+    "image": "picture"
+   },
+   "players": [
+    {
+     "id": "host-1",
+     "name": "Beka",
+     "isHost": true,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 80,
+     "roundScore": 80
+    },
+    {
+     "id": "p-2",
+     "name": "Nino",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 100,
+     "roundScore": 100
+    },
+    {
+     "id": "p-3",
+     "name": "Luka",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 0,
+     "roundScore": 0
+    },
+    {
+     "id": "p-4",
+     "name": "Ana Maria",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 80,
+     "roundScore": 80
+    },
+    {
+     "id": "p-5",
+     "name": "Giorgi",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 80,
+     "roundScore": 80
+    },
+    {
+     "id": "p-6",
+     "name": "Sofia",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 140,
+     "roundScore": 140
+    }
+   ]
+  },
+  "phaseSecs": 3,
+  "picture": "fixtures/demo-picture.svg"
+ },
+ {
+  "hold": 5,
+  "state": {
+   "v": 1,
+   "language": "en",
+   "roomName": "Friday Quiz Owls",
+   "roundNumber": 1,
+   "totalRounds": 2,
+   "poll": [],
+   "standings": [
+    {
+     "playerID": "p-2",
+     "name": "Nino",
+     "score": 240,
+     "place": 1
+    },
+    {
+     "playerID": "p-4",
+     "name": "Ana Maria",
+     "score": 180,
+     "place": 2
+    },
+    {
+     "playerID": "host-1",
+     "name": "Beka",
+     "score": 160,
+     "place": 3
+    },
+    {
+     "playerID": "p-5",
+     "name": "Giorgi",
+     "score": 160,
+     "place": 4
+    },
+    {
+     "playerID": "p-6",
+     "name": "Sofia",
+     "score": 140,
+     "place": 5
+    },
+    {
+     "playerID": "p-3",
+     "name": "Luka",
+     "score": 80,
+     "place": 6
+    }
+   ],
+   "phase": "roundResults",
+   "roundTitle": "Geography",
+   "players": [
+    {
+     "id": "host-1",
+     "name": "Beka",
+     "isHost": true,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 160,
+     "roundScore": 160
+    },
+    {
+     "id": "p-2",
+     "name": "Nino",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 240,
+     "roundScore": 240
+    },
+    {
+     "id": "p-3",
+     "name": "Luka",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 80,
+     "roundScore": 80
+    },
+    {
+     "id": "p-4",
+     "name": "Ana Maria",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 180,
+     "roundScore": 180
+    },
+    {
+     "id": "p-5",
+     "name": "Giorgi",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 160,
+     "roundScore": 160
+    },
+    {
+     "id": "p-6",
+     "name": "Sofia",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 140,
+     "roundScore": 140
+    }
+   ]
+  }
+ },
+ {
+  "hold": 3,
+  "state": {
+   "v": 1,
+   "language": "en",
+   "roomName": "Friday Quiz Owls",
+   "roundNumber": 2,
+   "totalRounds": 2,
+   "poll": [],
+   "standings": [],
+   "phase": "roundIntro",
+   "roundTitle": "Movies",
+   "players": [
+    {
+     "id": "host-1",
+     "name": "Beka",
+     "isHost": true,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 160,
+     "roundScore": 0
+    },
+    {
+     "id": "p-2",
+     "name": "Nino",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 240,
+     "roundScore": 0
+    },
+    {
+     "id": "p-3",
+     "name": "Luka",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 80,
+     "roundScore": 0
+    },
+    {
+     "id": "p-4",
+     "name": "Ana Maria",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 180,
+     "roundScore": 0
+    },
+    {
+     "id": "p-5",
+     "name": "Giorgi",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 160,
+     "roundScore": 0
+    },
+    {
+     "id": "p-6",
+     "name": "Sofia",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 140,
+     "roundScore": 0
+    }
+   ]
+  }
+ },
+ {
+  "hold": 3.2,
+  "state": {
+   "v": 1,
+   "language": "en",
+   "roomName": "Friday Quiz Owls",
+   "roundNumber": 2,
+   "totalRounds": 2,
+   "poll": [],
+   "standings": [],
+   "phase": "countdown",
+   "roundTitle": "Movies",
+   "players": [
+    {
+     "id": "host-1",
+     "name": "Beka",
+     "isHost": true,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 160,
+     "roundScore": 0
+    },
+    {
+     "id": "p-2",
+     "name": "Nino",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 240,
+     "roundScore": 0
+    },
+    {
+     "id": "p-3",
+     "name": "Luka",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 80,
+     "roundScore": 0
+    },
+    {
+     "id": "p-4",
+     "name": "Ana Maria",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 180,
+     "roundScore": 0
+    },
+    {
+     "id": "p-5",
+     "name": "Giorgi",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 160,
+     "roundScore": 0
+    },
+    {
+     "id": "p-6",
+     "name": "Sofia",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 140,
+     "roundScore": 0
+    }
+   ]
+  },
+  "phaseSecs": 3
+ },
+ {
+  "hold": 3,
+  "state": {
+   "v": 1,
+   "language": "en",
+   "roomName": "Friday Quiz Owls",
+   "roundNumber": 2,
+   "totalRounds": 2,
+   "poll": [],
+   "standings": [],
+   "phase": "question",
+   "roundTitle": "Movies",
+   "question": {
+    "index": 0,
+    "count": 2,
+    "text": "Which film won the Academy Award for Best Picture in 1998, the year it swept eleven Oscars?",
+    "options": [
+     "Titanic",
+     "Good Will Hunting",
+     "L.A. Confidential",
+     "As Good as It Gets"
+    ]
+   },
+   "players": [
+    {
+     "id": "host-1",
+     "name": "Beka",
+     "isHost": true,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 160,
+     "roundScore": 0
+    },
+    {
+     "id": "p-2",
+     "name": "Nino",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 240,
+     "roundScore": 0
+    },
+    {
+     "id": "p-3",
+     "name": "Luka",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 80,
+     "roundScore": 0
+    },
+    {
+     "id": "p-4",
+     "name": "Ana Maria",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 180,
+     "roundScore": 0
+    },
+    {
+     "id": "p-5",
+     "name": "Giorgi",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 160,
+     "roundScore": 0
+    },
+    {
+     "id": "p-6",
+     "name": "Sofia",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 140,
+     "roundScore": 0
+    }
+   ]
+  },
+  "phaseSecs": 15
+ },
+ {
+  "hold": 3,
+  "state": {
+   "v": 1,
+   "language": "en",
+   "roomName": "Friday Quiz Owls",
+   "roundNumber": 2,
+   "totalRounds": 2,
+   "poll": [],
+   "standings": [],
+   "phase": "question",
+   "roundTitle": "Movies",
+   "question": {
+    "index": 0,
+    "count": 2,
+    "text": "Which film won the Academy Award for Best Picture in 1998, the year it swept eleven Oscars?",
+    "options": [
+     "Titanic",
+     "Good Will Hunting",
+     "L.A. Confidential",
+     "As Good as It Gets"
+    ]
+   },
+   "players": [
+    {
+     "id": "host-1",
+     "name": "Beka",
+     "isHost": true,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 160,
+     "roundScore": 0
+    },
+    {
+     "id": "p-2",
+     "name": "Nino",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 240,
+     "roundScore": 0
+    },
+    {
+     "id": "p-3",
+     "name": "Luka",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 80,
+     "roundScore": 0
+    },
+    {
+     "id": "p-4",
+     "name": "Ana Maria",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 180,
+     "roundScore": 0
+    },
+    {
+     "id": "p-5",
+     "name": "Giorgi",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 160,
+     "roundScore": 0
+    },
+    {
+     "id": "p-6",
+     "name": "Sofia",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 140,
+     "roundScore": 0
+    }
+   ]
+  },
+  "phaseSecs": 15,
+  "remaining": 9
+ },
+ {
+  "hold": 4,
+  "state": {
+   "v": 1,
+   "language": "en",
+   "roomName": "Friday Quiz Owls",
+   "roundNumber": 2,
+   "totalRounds": 2,
+   "poll": [],
+   "standings": [],
+   "phase": "reveal",
+   "roundTitle": "Movies",
+   "question": {
+    "index": 0,
+    "count": 2,
+    "text": "Which film won the Academy Award for Best Picture in 1998, the year it swept eleven Oscars?",
+    "options": [
+     "Titanic",
+     "Good Will Hunting",
+     "L.A. Confidential",
+     "As Good as It Gets"
+    ],
+    "correctIndex": 0,
+    "tally": [
+     5,
+     0,
+     1,
+     0
+    ]
+   },
+   "players": [
+    {
+     "id": "host-1",
+     "name": "Beka",
+     "isHost": true,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 260,
+     "roundScore": 100
+    },
+    {
+     "id": "p-2",
+     "name": "Nino",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 320,
+     "roundScore": 80
+    },
+    {
+     "id": "p-3",
+     "name": "Luka",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 180,
+     "roundScore": 100
+    },
+    {
+     "id": "p-4",
+     "name": "Ana Maria",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 300,
+     "roundScore": 120
+    },
+    {
+     "id": "p-5",
+     "name": "Giorgi",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 240,
+     "roundScore": 80
+    },
+    {
+     "id": "p-6",
+     "name": "Sofia",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 220,
+     "roundScore": 80
+    }
+   ]
+  },
+  "phaseSecs": 3
+ },
+ {
+  "hold": 3,
+  "state": {
+   "v": 1,
+   "language": "en",
+   "roomName": "Friday Quiz Owls",
+   "roundNumber": 2,
+   "totalRounds": 2,
+   "poll": [],
+   "standings": [],
+   "phase": "question",
+   "roundTitle": "Movies",
+   "question": {
+    "index": 1,
+    "count": 2,
+    "text": "Who directed 'Spirited Away'?",
+    "options": [
+     "Mamoru Hosoda",
+     "Hayao Miyazaki",
+     "Makoto Shinkai",
+     "Isao Takahata"
+    ]
+   },
+   "players": [
+    {
+     "id": "host-1",
+     "name": "Beka",
+     "isHost": true,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 260,
+     "roundScore": 100
+    },
+    {
+     "id": "p-2",
+     "name": "Nino",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 320,
+     "roundScore": 80
+    },
+    {
+     "id": "p-3",
+     "name": "Luka",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 180,
+     "roundScore": 100
+    },
+    {
+     "id": "p-4",
+     "name": "Ana Maria",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 300,
+     "roundScore": 120
+    },
+    {
+     "id": "p-5",
+     "name": "Giorgi",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 240,
+     "roundScore": 80
+    },
+    {
+     "id": "p-6",
+     "name": "Sofia",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 220,
+     "roundScore": 80
+    }
+   ]
+  },
+  "phaseSecs": 15
+ },
+ {
+  "hold": 3,
+  "state": {
+   "v": 1,
+   "language": "en",
+   "roomName": "Friday Quiz Owls",
+   "roundNumber": 2,
+   "totalRounds": 2,
+   "poll": [],
+   "standings": [],
+   "phase": "question",
+   "roundTitle": "Movies",
+   "question": {
+    "index": 1,
+    "count": 2,
+    "text": "Who directed 'Spirited Away'?",
+    "options": [
+     "Mamoru Hosoda",
+     "Hayao Miyazaki",
+     "Makoto Shinkai",
+     "Isao Takahata"
+    ]
+   },
+   "players": [
+    {
+     "id": "host-1",
+     "name": "Beka",
+     "isHost": true,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 260,
+     "roundScore": 100
+    },
+    {
+     "id": "p-2",
+     "name": "Nino",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 320,
+     "roundScore": 80
+    },
+    {
+     "id": "p-3",
+     "name": "Luka",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 180,
+     "roundScore": 100
+    },
+    {
+     "id": "p-4",
+     "name": "Ana Maria",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 300,
+     "roundScore": 120
+    },
+    {
+     "id": "p-5",
+     "name": "Giorgi",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 240,
+     "roundScore": 80
+    },
+    {
+     "id": "p-6",
+     "name": "Sofia",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 220,
+     "roundScore": 80
+    }
+   ]
+  },
+  "phaseSecs": 15,
+  "remaining": 9
+ },
+ {
+  "hold": 4,
+  "state": {
+   "v": 1,
+   "language": "en",
+   "roomName": "Friday Quiz Owls",
+   "roundNumber": 2,
+   "totalRounds": 2,
+   "poll": [],
+   "standings": [],
+   "phase": "reveal",
+   "roundTitle": "Movies",
+   "question": {
+    "index": 1,
+    "count": 2,
+    "text": "Who directed 'Spirited Away'?",
+    "options": [
+     "Mamoru Hosoda",
+     "Hayao Miyazaki",
+     "Makoto Shinkai",
+     "Isao Takahata"
+    ],
+    "correctIndex": 1,
+    "tally": [
+     1,
+     4,
+     0,
+     1
+    ]
+   },
+   "players": [
+    {
+     "id": "host-1",
+     "name": "Beka",
+     "isHost": true,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 400,
+     "roundScore": 240
+    },
+    {
+     "id": "p-2",
+     "name": "Nino",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 320,
+     "roundScore": 80
+    },
+    {
+     "id": "p-3",
+     "name": "Luka",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 300,
+     "roundScore": 220
+    },
+    {
+     "id": "p-4",
+     "name": "Ana Maria",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 420,
+     "roundScore": 240
+    },
+    {
+     "id": "p-5",
+     "name": "Giorgi",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 240,
+     "roundScore": 80
+    },
+    {
+     "id": "p-6",
+     "name": "Sofia",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": true,
+     "score": 320,
+     "roundScore": 180
+    }
+   ]
+  },
+  "phaseSecs": 3
+ },
+ {
+  "hold": 5,
+  "state": {
+   "v": 1,
+   "language": "en",
+   "roomName": "Friday Quiz Owls",
+   "roundNumber": 2,
+   "totalRounds": 2,
+   "poll": [],
+   "standings": [
+    {
+     "playerID": "host-1",
+     "name": "Beka",
+     "score": 240,
+     "place": 1
+    },
+    {
+     "playerID": "p-4",
+     "name": "Ana Maria",
+     "score": 240,
+     "place": 2
+    },
+    {
+     "playerID": "p-3",
+     "name": "Luka",
+     "score": 220,
+     "place": 3
+    },
+    {
+     "playerID": "p-6",
+     "name": "Sofia",
+     "score": 180,
+     "place": 4
+    },
+    {
+     "playerID": "p-2",
+     "name": "Nino",
+     "score": 80,
+     "place": 5
+    },
+    {
+     "playerID": "p-5",
+     "name": "Giorgi",
+     "score": 80,
+     "place": 6
+    }
+   ],
+   "phase": "roundResults",
+   "roundTitle": "Movies",
+   "players": [
+    {
+     "id": "host-1",
+     "name": "Beka",
+     "isHost": true,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 400,
+     "roundScore": 240
+    },
+    {
+     "id": "p-2",
+     "name": "Nino",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 320,
+     "roundScore": 80
+    },
+    {
+     "id": "p-3",
+     "name": "Luka",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 300,
+     "roundScore": 220
+    },
+    {
+     "id": "p-4",
+     "name": "Ana Maria",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 420,
+     "roundScore": 240
+    },
+    {
+     "id": "p-5",
+     "name": "Giorgi",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 240,
+     "roundScore": 80
+    },
+    {
+     "id": "p-6",
+     "name": "Sofia",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 320,
+     "roundScore": 180
+    }
+   ]
+  }
+ },
+ {
+  "hold": 8,
+  "state": {
+   "v": 1,
+   "language": "en",
+   "roomName": "Friday Quiz Owls",
+   "roundNumber": 2,
+   "totalRounds": 2,
+   "poll": [],
+   "standings": [
+    {
+     "playerID": "p-4",
+     "name": "Ana Maria",
+     "score": 420,
+     "place": 1
+    },
+    {
+     "playerID": "host-1",
+     "name": "Beka",
+     "score": 400,
+     "place": 2
+    },
+    {
+     "playerID": "p-2",
+     "name": "Nino",
+     "score": 320,
+     "place": 3
+    },
+    {
+     "playerID": "p-6",
+     "name": "Sofia",
+     "score": 320,
+     "place": 4
+    },
+    {
+     "playerID": "p-3",
+     "name": "Luka",
+     "score": 300,
+     "place": 5
+    },
+    {
+     "playerID": "p-5",
+     "name": "Giorgi",
+     "score": 240,
+     "place": 6
+    }
+   ],
+   "phase": "completed",
+   "players": [
+    {
+     "id": "host-1",
+     "name": "Beka",
+     "isHost": true,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 400,
+     "roundScore": 0
+    },
+    {
+     "id": "p-2",
+     "name": "Nino",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 320,
+     "roundScore": 0
+    },
+    {
+     "id": "p-3",
+     "name": "Luka",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 300,
+     "roundScore": 0
+    },
+    {
+     "id": "p-4",
+     "name": "Ana Maria",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 420,
+     "roundScore": 0
+    },
+    {
+     "id": "p-5",
+     "name": "Giorgi",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 240,
+     "roundScore": 0
+    },
+    {
+     "id": "p-6",
+     "name": "Sofia",
+     "isHost": false,
+     "isConnected": true,
+     "isObserver": false,
+     "answered": false,
+     "score": 320,
+     "roundScore": 0
+    }
+   ]
+  }
+ }
+]
