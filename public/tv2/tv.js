@@ -271,15 +271,19 @@
   }
 
   // ---------- Answer lane (question + reveal) ----------
-  // The 1.x TV's lane, rebuilt for the 1920 stage: every player's avatar sits
-  // centred with a yellow ring while the question is open; at the reveal the
-  // right ones slide to the right edge (green), wrong / no answer to the left
-  // edge (red), staggered, with a springy ease; the next question pulls them all
-  // back to the middle. The lane lives outside the swapped screen so the same
-  // nodes move between phases instead of being redrawn.
-  const LANE_W = 1728, AV = 96, GAP = 20, HALF = LANE_W * 0.47;
+  // The 1.x TV's lane (TVQuestionScreenV4), rebuilt for the 1920 stage: every
+  // player's avatar sits centred with a yellow ring while they think; the
+  // moment their answer arrives (`correct` is published per player as soon as
+  // they answer) it springs to the right edge (green) if right, the left edge
+  // (red) if wrong. At the time-out the ones who never answered go left too.
+  // Arrivals stack inward from each edge in answer order, so nobody already
+  // there moves; several arrivals in one poll are staggered. The next question
+  // pulls everyone back to the middle. The lane lives outside the swapped
+  // screen so the same nodes move between phases instead of being redrawn.
+  const LANE_W = 1728, AV = 96, GAP = 20, HALF = LANE_W * 0.47, SIDE_GAP = 48;
   const laneEls = new Map();
-  let laneQ = null;
+  let laneQ = null, laneSeq = 0;
+  const laneOrder = new Map();  // player id → arrival order on its side (this question)
   const ICON = {
     wait: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="3"/><path d="M12 8v4.5l3 2" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>',
     locked: '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
@@ -287,37 +291,55 @@
   ICON.right = ICON.locked;
   ICON.wrong = '<svg viewBox="0 0 24 24"><path d="M7 7l10 10M17 7L7 17" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round"/></svg>';
   function spread(n, width) { return n > 1 ? Math.min(AV + GAP, (width - AV) / (n - 1)) : 0; }
+  function natural(n) { return n ? AV + (n - 1) * (AV + GAP) : 0; }
+  function laneState(p, revealed) {
+    if (p.correct === true) return 'right';
+    if (p.correct === false || revealed) return 'wrong';
+    return p.answered ? 'locked' : 'wait';
+  }
   function updateLane(s) {
     const q = s.question;
     const on = !!q && (s.phase === 'question' || s.phase === 'reveal');
     $lane.classList.toggle('on', on);
     if (!on) {
-      if (laneEls.size) setTimeout(() => { if (!$lane.classList.contains('on')) { $lane.innerHTML = ''; laneEls.clear(); laneQ = null; } }, 500);
+      if (laneEls.size) setTimeout(() => { if (!$lane.classList.contains('on')) { $lane.innerHTML = ''; laneEls.clear(); laneOrder.clear(); laneQ = null; } }, 500);
       return;
     }
     const players = (s.players || []).filter((p) => !p.isObserver);
     const revealed = s.phase === 'reveal';
     const qid = s.partyID + ':' + s.roundNumber + ':' + q.index;
     const nextQ = laneQ !== null && laneQ !== qid;
+    if (laneQ !== qid) { laneOrder.clear(); laneSeq = 0; }
     laneQ = qid;
     const ids = new Set(players.map((p) => p.id));
     for (const [id, el] of laneEls) {
-      if (!ids.has(id)) { el.classList.add('gone'); setTimeout(() => el.remove(), 450); laneEls.delete(id); }
+      if (!ids.has(id)) { el.classList.add('gone'); setTimeout(() => el.remove(), 450); laneEls.delete(id); laneOrder.delete(id); }
     }
-    const isRight = (p) => p.correct === true;
-    const right = players.filter(isRight), wrong = players.filter((p) => !isRight(p));
+    const states = new Map(players.map((p) => [p.id, laneState(p, revealed)]));
+    // Arrival order per side: already-placed ones keep theirs; new arrivals in
+    // this poll follow the roster order.
+    players.forEach((p) => {
+      const st = states.get(p.id);
+      if ((st === 'right' || st === 'wrong') && !laneOrder.has(p.id)) laneOrder.set(p.id, laneSeq++);
+      if (st !== 'right' && st !== 'wrong') laneOrder.delete(p.id);
+    });
+    const byArrival = (x, y) => laneOrder.get(x.id) - laneOrder.get(y.id);
+    const right = players.filter((p) => states.get(p.id) === 'right').sort(byArrival);
+    const wrong = players.filter((p) => states.get(p.id) === 'wrong').sort(byArrival);
+    const mid = players.filter((p) => { const st = states.get(p.id); return st !== 'right' && st !== 'wrong'; });
+    const sided = right.length + wrong.length > 0;
+    const midW = mid.length ? Math.min(natural(mid.length), sided ? LANE_W * 0.36 : LANE_W) : 0;
+    const sideW = mid.length ? (LANE_W - midW) / 2 - SIDE_GAP : HALF;
     const pos = new Map();
-    if (revealed) {
-      const sw = spread(wrong.length, HALF), sr = spread(right.length, HALF);
-      wrong.forEach((p, i) => pos.set(p.id, i * sw));
-      right.forEach((p, i) => pos.set(p.id, LANE_W - AV - (right.length - 1 - i) * sr));
-    } else {
-      const st = spread(players.length, LANE_W);
-      const x0 = (LANE_W - (AV + st * (players.length - 1))) / 2;
-      players.forEach((p, i) => pos.set(p.id, x0 + i * st));
-    }
+    const sl = spread(wrong.length, sideW), sr = spread(right.length, sideW);
+    wrong.forEach((p, i) => pos.set(p.id, i * sl));                      // first wrong at the left edge
+    right.forEach((p, i) => pos.set(p.id, LANE_W - AV - i * sr));         // first right at the right edge
+    const sm = spread(mid.length, midW);
+    const x0 = (LANE_W - (AV + sm * (mid.length - 1))) / 2;
+    mid.forEach((p, i) => pos.set(p.id, x0 + i * sm));
+    let movers = 0;
     players.forEach((p, i) => {
-      const state = revealed ? (isRight(p) ? 'right' : 'wrong') : (p.answered ? 'locked' : 'wait');
+      const state = states.get(p.id);
       let el = laneEls.get(p.id);
       const x = pos.get(p.id);
       if (!el) {
@@ -334,15 +356,17 @@
       const face = avatarInner(p);
       if (el.dataset.face !== face) { el.querySelector('.face').innerHTML = face; el.dataset.face = face; }
       const prev = el.dataset.state;
+      const moves = prev !== state && (state === 'right' || state === 'wrong');
       if (prev !== state) {
         el.dataset.state = state;
         el.querySelector('.badge').innerHTML = ICON[state];
         if (prev === 'wait' && state === 'locked') { el.classList.remove('hop'); void el.offsetWidth; el.classList.add('hop'); }
       }
-      // Stagger the reveal slide left→right; the reset to the middle is quicker.
-      el.style.transitionDelay = revealed && prev !== state ? `${120 + i * 70}ms` : nextQ ? `${i * 25}ms` : '0ms';
+      // Arrivals in the same poll slide one after another; the reset to the
+      // middle ripples quickly; everyone else just settles.
+      el.style.transitionDelay = moves ? `${60 + 110 * movers++}ms` : nextQ ? `${i * 25}ms` : '0ms';
       el.style.transform = `translateX(${x}px)`;
-      el.style.zIndex = String(100 + i);
+      el.style.zIndex = String(state === 'right' ? 300 - (laneOrder.get(p.id) || 0) : 100 + i);
       el.querySelector('.sc').textContent = nf(p.score || 0);
       el.classList.toggle('scored', revealed);
     });
@@ -494,6 +518,7 @@
   // ---------- Demo mode (?demo=1) — replays fixtures/demo-game.json locally ----------
   // ?demo=1           plays pairing → lobby → … → podium, then loops
   // ?demo=1&step=N    shows step N (0 = pairing) and holds it (for screenshots)
+  // ?demo=1&step=N&then=1   shows step N, 1.5 s later step N+1, then holds (mid-animation shots)
   async function demo() {
     const steps = await (await fetch('fixtures/demo-game.json', { cache: 'no-store' })).json();
     const hold = params.has('step') ? parseInt(params.get('step'), 10) : null;
@@ -508,7 +533,7 @@
       if (st.remaining != null && s.phaseEndsAt) { s.phaseStartsAt = now - (st.phaseSecs - st.remaining); s.phaseEndsAt = now + st.remaining; }
       mode = 'bound'; pinnedParty = 'demo';
       accept(s, st.picture ? { picture: st.picture } : {});
-      if (hold != null) return;
+      if (hold != null) { if (params.has('then') && i === hold) setTimeout(() => play(i + 1), 1500); return; }
       setTimeout(() => (i >= steps.length ? play(0) : play(i + 1)), (st.hold || 3) * 1000);
     };
     if (hold != null && hold > 0) { newCode(); play(hold); } else play(0);
