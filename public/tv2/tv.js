@@ -26,6 +26,7 @@
   const $stage = document.getElementById('stage');
   const $root = document.getElementById('root');
   const $net = document.getElementById('net');
+  const $lane = document.getElementById('lane');
 
   // ---------- Stage scaling (1920×1080 grid → any screen) ----------
   function fit() {
@@ -40,15 +41,30 @@
   const nf = (n) => { try { return new Intl.NumberFormat(window.MTLang).format(n); } catch (_) { return String(n); } };
   const PALETTE = [['#8B5CF6', '#EC4899'], ['#38BDF8', '#6366F1'], ['#F59E0B', '#EF4444'], ['#10B981', '#0EA5E9'], ['#F472B6', '#A855F7'], ['#22D3EE', '#14B8A6'], ['#FB923C', '#F43F5E'], ['#A3E635', '#16A34A']];
   function hash(s) { let h = 0; for (const c of String(s)) h = (h * 31 + c.codePointAt(0)) | 0; return Math.abs(h); }
-  function initials(name) {
+  function initials(name) { // kept for i18n-less fallbacks
     const parts = String(name || '?').trim().split(/\s+/).filter(Boolean);
     const a = Array.from(parts[0] || '?')[0] || '?';
     const b = parts.length > 1 ? Array.from(parts[parts.length - 1])[0] : '';
     return (a + b).toUpperCase();
   }
-  function avatar(p, cls, tick) {
+  // Avatar: the state's preset id ("a1"…"a10" → assets/avatars/), an https
+  // image URL, or an emoji; older payloads carry none → a stable preset from
+  // the player id (FNV-1a, the same pick MTTV makes host-side).
+  function preset(id) {
+    let h = 2166136261;
+    for (const b of new TextEncoder().encode(String(id || ''))) h = Math.imul(h ^ b, 16777619) >>> 0;
+    return 'a' + ((h % 10) + 1);
+  }
+  function avatarInner(p) {
+    const a = p.avatar;
+    if (typeof a === 'string' && /^a\d{1,2}$/.test(a)) return `<img src="assets/avatars/${a}.png" alt="">`;
+    if (typeof a === 'string' && /^https:\/\//.test(a)) return `<img src="${esc(a)}" alt="" referrerpolicy="no-referrer">`;
+    if (typeof a === 'string' && a && Array.from(a).length <= 2) return `<span class="emo">${esc(a)}</span>`;
+    return `<img src="assets/avatars/${preset(p.id || p.name)}.png" alt="">`;
+  }
+  function avatar(p, cls) {
     const [c1, c2] = PALETTE[hash(p.id || p.name) % PALETTE.length];
-    return `<span class="av ${cls || ''}" style="--c1:${c1};--c2:${c2}">${esc(initials(p.name))}${tick ? '<span class="tick">✓</span>' : ''}</span>`;
+    return `<span class="av ${cls || ''}" style="--c1:${c1};--c2:${c2}">${avatarInner(p)}</span>`;
   }
   const digits = (code) => `<div class="digits">${Array.from(code).map((d) => `<div class="digit">${esc(d)}</div>`).join('')}</div>`;
   const wordmark = '<img class="wordmark" src="assets/art/wordmark.svg" alt="MyTrivia">';
@@ -218,15 +234,14 @@
         }).join('');
         const nobody = revealed && !(tally[q.correctIndex] > 0);
         html = `
+          <div class="lanegap"></div>
           <div class="qhead">
             <span class="pill">${esc(t('questionOf', { i: q.index + 1, n: q.count }))}</span>${headPills(s)}
             <span class="grow"></span>
-            ${revealed ? `<span class="banner ${nobody ? 'none' : ''}">${nobody ? esc(t('nobody')) : '✓ ' + esc(t('correct'))}</span>` : ring()}
+            ${revealed ? `<span class="banner ${nobody ? 'none' : ''}">${nobody ? esc(t('nobody')) : '✓ ' + esc(t('correct'))}</span>` : `<span class="pill cnt" data-answered>${esc(t('answered', { n: answeredN }))}</span>${ring()}`}
           </div>
           <div class="card qcard ${long ? 'long' : ''} ${pic ? 'pic' : ''}">${pic || `<div class="qt">${esc(q.text)}</div>`}</div>
-          <div class="answers ${revealed ? 'reveal' : ''}">${tiles}</div>
-          <div class="faces">${players.slice(0, 14).map((p) => avatar(p, 'sm', !revealed && p.answered)).join('')}
-            ${!revealed ? `<span class="pill" style="margin-left:14px">${esc(t('answered', { n: answeredN }))}</span>` : ''}</div>`;
+          <div class="answers ${revealed ? 'reveal' : ''}">${tiles}</div>`;
         html = `<div class="${revealed ? 'reveal' : ''}" style="display:contents">${html}</div>`;
         break;
       }
@@ -237,7 +252,8 @@
       case 'completed': {
         const st = standingsOf(s);
         const [a, b, c] = [st[0], st[1], st[2]];
-        const step = (p, n, img) => p ? `<div class="step p${n}"><img src="assets/art/${img}.png" alt=""><div class="who">${esc(p.name)}</div><div class="pts">${nf(p.score)} ${esc(t('pts'))}</div><div class="block">${n}</div></div>` : '';
+        const byId = {}; (s.players || []).forEach((pl) => { byId[pl.id] = pl; });
+        const step = (p, n, img) => p ? `<div class="step p${n}"><img class="trophy" src="assets/art/${img}.png" alt="">${avatar(Object.assign({ id: p.playerID, name: p.name }, byId[p.playerID] ? { avatar: byId[p.playerID].avatar } : {}), 'big')}<div class="who">${esc(p.name)}</div><div class="pts">${nf(p.score)} ${esc(t('pts'))}</div><div class="block">${n}</div></div>` : '';
         html = `
           <div class="topbar">${wordmark}<span class="pill">🏆 ${esc(t('finalResults'))}</span></div>
           <div class="podium">${step(b, 2, 'trophy-silver')}${step(a, 1, 'trophy-gold')}${step(c, 3, 'trophy-bronze')}</div>
@@ -251,6 +267,85 @@
         html = `<div class="center"><div class="sub">${esc(t('waitingHost'))}</div></div>`;
     }
     swap(key, html, same && !fresh);
+    updateLane(s);
+  }
+
+  // ---------- Answer lane (question + reveal) ----------
+  // The 1.x TV's lane, rebuilt for the 1920 stage: every player's avatar sits
+  // centred with a yellow ring while the question is open; at the reveal the
+  // right ones slide to the right edge (green), wrong / no answer to the left
+  // edge (red), staggered, with a springy ease; the next question pulls them all
+  // back to the middle. The lane lives outside the swapped screen so the same
+  // nodes move between phases instead of being redrawn.
+  const LANE_W = 1728, AV = 96, GAP = 20, HALF = LANE_W * 0.47;
+  const laneEls = new Map();
+  let laneQ = null;
+  const ICON = {
+    wait: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="3"/><path d="M12 8v4.5l3 2" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>',
+    locked: '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  };
+  ICON.right = ICON.locked;
+  ICON.wrong = '<svg viewBox="0 0 24 24"><path d="M7 7l10 10M17 7L7 17" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round"/></svg>';
+  function spread(n, width) { return n > 1 ? Math.min(AV + GAP, (width - AV) / (n - 1)) : 0; }
+  function updateLane(s) {
+    const q = s.question;
+    const on = !!q && (s.phase === 'question' || s.phase === 'reveal');
+    $lane.classList.toggle('on', on);
+    if (!on) {
+      if (laneEls.size) setTimeout(() => { if (!$lane.classList.contains('on')) { $lane.innerHTML = ''; laneEls.clear(); laneQ = null; } }, 500);
+      return;
+    }
+    const players = (s.players || []).filter((p) => !p.isObserver);
+    const revealed = s.phase === 'reveal';
+    const qid = s.partyID + ':' + s.roundNumber + ':' + q.index;
+    const nextQ = laneQ !== null && laneQ !== qid;
+    laneQ = qid;
+    const ids = new Set(players.map((p) => p.id));
+    for (const [id, el] of laneEls) {
+      if (!ids.has(id)) { el.classList.add('gone'); setTimeout(() => el.remove(), 450); laneEls.delete(id); }
+    }
+    const isRight = (p) => p.correct === true;
+    const right = players.filter(isRight), wrong = players.filter((p) => !isRight(p));
+    const pos = new Map();
+    if (revealed) {
+      const sw = spread(wrong.length, HALF), sr = spread(right.length, HALF);
+      wrong.forEach((p, i) => pos.set(p.id, i * sw));
+      right.forEach((p, i) => pos.set(p.id, LANE_W - AV - (right.length - 1 - i) * sr));
+    } else {
+      const st = spread(players.length, LANE_W);
+      const x0 = (LANE_W - (AV + st * (players.length - 1))) / 2;
+      players.forEach((p, i) => pos.set(p.id, x0 + i * st));
+    }
+    players.forEach((p, i) => {
+      const state = revealed ? (isRight(p) ? 'right' : 'wrong') : (p.answered ? 'locked' : 'wait');
+      let el = laneEls.get(p.id);
+      const x = pos.get(p.id);
+      if (!el) {
+        el = document.createElement('div');
+        el.className = 'lav';
+        el.innerHTML = `<span class="face"></span><span class="badge"></span><span class="sc"></span>`;
+        el.style.transition = 'none';
+        el.style.transform = `translateX(${x}px)`;
+        el.style.setProperty('--d', `${i * 45}ms`);
+        el.classList.add('pop');
+        $lane.appendChild(el); laneEls.set(p.id, el);
+        void el.offsetWidth; el.style.transition = '';
+      }
+      const face = avatarInner(p);
+      if (el.dataset.face !== face) { el.querySelector('.face').innerHTML = face; el.dataset.face = face; }
+      const prev = el.dataset.state;
+      if (prev !== state) {
+        el.dataset.state = state;
+        el.querySelector('.badge').innerHTML = ICON[state];
+        if (prev === 'wait' && state === 'locked') { el.classList.remove('hop'); void el.offsetWidth; el.classList.add('hop'); }
+      }
+      // Stagger the reveal slide left→right; the reset to the middle is quicker.
+      el.style.transitionDelay = revealed && prev !== state ? `${120 + i * 70}ms` : nextQ ? `${i * 25}ms` : '0ms';
+      el.style.transform = `translateX(${x}px)`;
+      el.style.zIndex = String(100 + i);
+      el.querySelector('.sc').textContent = nf(p.score || 0);
+      el.classList.toggle('scored', revealed);
+    });
   }
 
   function standingsOf(s) {
@@ -264,7 +359,7 @@
     const rows = st.slice(0, 6).map((p, i) => {
       const pl = byId[p.playerID] || { id: p.playerID, name: p.name };
       const delta = pl.roundScore && pl.score !== p.score ? `<span class="delta">+${nf(pl.roundScore)}</span>` : '';
-      return `<div class="row ${p.place === 1 ? 'first' : ''}" style="animation-delay:${0.08 * i}s"><span class="rk">${p.place || i + 1}</span>${avatar({ id: p.playerID, name: p.name })}<span class="nm">${esc(p.name)}</span>${delta}<span class="sc" data-to="${p.score}">${nf(p.score)}</span></div>`;
+      return `<div class="row ${p.place === 1 ? 'first' : ''}" style="animation-delay:${0.08 * i}s"><span class="rk">${p.place || i + 1}</span>${avatar({ id: p.playerID, name: p.name, avatar: pl.avatar })}<span class="nm">${esc(p.name)}</span>${delta}<span class="sc" data-to="${p.score}">${nf(p.score)}</span></div>`;
     }).join('');
     return `
       <div class="topbar">${wordmark}<span style="display:flex;gap:18px">${headPills(s)}<span class="pill">🏆 ${esc(title)}</span></span></div>
