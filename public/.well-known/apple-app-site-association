@@ -21,7 +21,6 @@
           "/words",
           "/words/*",
           "/tv/*",
-          "/tv2/j/*",
           "/controller/*",
           "/collection/*",
           "/trivia/*",
