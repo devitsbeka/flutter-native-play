@@ -98,6 +98,27 @@
   let seenPlayers = new Set();
   let failures = 0;
 
+  // A reload (or the TV browser restarting the tab) mid-party keeps the same code and
+  // bound party, so the host doesn't have to pair again: {code, shownAt, party, at}.
+  const KEEP_KEY = 'mt.tv2.screen';
+  const KEEP_MS = 15 * 60 * 1000;         // = the record's expiry window
+  function keep() {
+    if (DEMO) return;
+    try { localStorage.setItem(KEEP_KEY, JSON.stringify({ code, shownAt, party: pinnedParty, at: Date.now() })); } catch (_) { /* private mode */ }
+  }
+  function restore() {
+    try {
+      const k = JSON.parse(localStorage.getItem(KEEP_KEY) || 'null');
+      if (!k || !/^[1-9]\d{3}$/.test(k.code) || Date.now() - k.at > KEEP_MS) return false;
+      code = k.code; shownAt = k.shownAt; pinnedParty = k.party || null;
+      mode = pinnedParty ? 'bound' : 'pairing';
+      lastGood = Date.now();
+      // Pairing again (no party yet): the code may be near its rotation — that's fine.
+      renderPairing(!!pinnedParty);
+      return true;
+    } catch (_) { return false; }
+  }
+
   function newCode() {
     const a = new Uint32Array(1);
     (window.crypto || window.msCrypto).getRandomValues(a);
@@ -105,6 +126,7 @@
     shownAt = Date.now();
     mode = 'pairing'; pinnedParty = null; state = null; assetURLs = {};
     seenPlayers = new Set();
+    keep();
     renderPairing();
   }
 
@@ -487,12 +509,14 @@
         if (mode === 'pairing') {
           // Only a claim made after this code appeared, still live, can bind the screen.
           if (live && claimedAt != null && claimedAt >= shownAt - CLAIM_GRACE_MS - skewMs && party) {
-            mode = 'bound'; pinnedParty = party;
+            mode = 'bound'; pinnedParty = party; keep();
           }
         }
-        if (mode === 'bound' && party === pinnedParty) {
+        if (mode === 'bound' && party !== pinnedParty && Date.now() - lastGood > LOST_AFTER_MS) newCode();
+        else if (mode === 'bound' && party === pinnedParty) {
           if (!live) { newCode(); }
           else {
+            if (Date.now() - lastGood > 60000) keep();   // refresh the reload window now and then
             lastGood = Date.now();
             let s = null;
             try { s = JSON.parse(f.payload.value); } catch (_) { /* malformed payload: ignore this read */ }
@@ -551,5 +575,5 @@
 
   if (params.has('fixture')) fixture(params.get('fixture'));
   else if (DEMO) demo();
-  else { newCode(); schedule(300); }
+  else { if (!restore()) newCode(); schedule(300); }
 })();
