@@ -1,0 +1,405 @@
+{
+ "lobby-1": {
+  "v": 1,
+  "partyID": "6F1C2A8E-3B7D-4E52-9A10-2C4B5D6E7F80",
+  "code": "4821",
+  "revision": 3,
+  "sentAt": 1790000000.0,
+  "language": "en",
+  "phase": "lobby",
+  "roomName": "Friday Quiz Owls",
+  "roundNumber": 0,
+  "totalRounds": 4,
+  "players": [
+   {
+    "id": "host-1",
+    "name": "Beka",
+    "isHost": true,
+    "isConnected": true,
+    "isObserver": false,
+    "answered": false,
+    "score": 0,
+    "roundScore": 0,
+    "avatar": "a1"
+   }
+  ],
+  "poll": [],
+  "standings": [],
+  "rounds": [
+   {
+    "title": "Mixed",
+    "icon": "mixed"
+   }
+  ],
+  "joinURL": "https://mytrivia.io/tv2/j/?p=4821-6f1c2a8e"
+ },
+ "lobby-4": {
+  "v": 1,
+  "partyID": "6F1C2A8E-3B7D-4E52-9A10-2C4B5D6E7F80",
+  "code": "4821",
+  "revision": 3,
+  "sentAt": 1790000000.0,
+  "language": "en",
+  "phase": "lobby",
+  "roomName": "Friday Quiz Owls",
+  "roundNumber": 0,
+  "totalRounds": 4,
+  "players": [
+   {
+    "id": "host-1",
+    "name": "Beka",
+    "isHost": true,
+    "isConnected": true,
+    "isObserver": false,
+    "answered": false,
+    "score": 0,
+    "roundScore": 0,
+    "avatar": "a1"
+   },
+   {
+    "id": "p-2",
+    "name": "Nino",
+    "isHost": false,
+    "isConnected": true,
+    "isObserver": false,
+    "answered": false,
+    "score": 0,
+    "roundScore": 0,
+    "avatar": "a2"
+   },
+   {
+    "id": "p-3",
+    "name": "Luka",
+    "isHost": false,
+    "isConnected": true,
+    "isObserver": false,
+    "answered": false,
+    "score": 0,
+    "roundScore": 0,
+    "avatar": "a3"
+   },
+   {
+    "id": "p-4",
+    "name": "Ana Maria",
+    "isHost": false,
+    "isConnected": true,
+    "isObserver": false,
+    "answered": false,
+    "score": 0,
+    "roundScore": 0,
+    "avatar": "a4"
+   }
+  ],
+  "poll": [],
+  "standings": [],
+  "rounds": [
+   {
+    "title": "Mixed",
+    "icon": "mixed"
+   },
+   {
+    "title": "Music",
+    "icon": "music"
+   },
+   {
+    "title": "History",
+    "icon": "history"
+   },
+   {
+    "title": "Geography",
+    "icon": "geography"
+   }
+  ],
+  "joinURL": "https://mytrivia.io/tv2/j/?p=4821-6f1c2a8e"
+ },
+ "lobby-8": {
+  "v": 1,
+  "partyID": "6F1C2A8E-3B7D-4E52-9A10-2C4B5D6E7F80",
+  "code": "4821",
+  "revision": 3,
+  "sentAt": 1790000000.0,
+  "language": "en",
+  "phase": "lobby",
+  "roomName": "The Very Long Room Name Of Champions",
+  "roundNumber": 0,
+  "totalRounds": 4,
+  "players": [
+   {
+    "id": "host-1",
+    "name": "Beka",
+    "isHost": true,
+    "isConnected": true,
+    "isObserver": false,
+    "answered": false,
+    "score": 0,
+    "roundScore": 0,
+    "avatar": "a1"
+   },
+   {
+    "id": "p-2",
+    "name": "Nino",
+    "isHost": false,
+    "isConnected": true,
+    "isObserver": false,
+    "answered": false,
+    "score": 0,
+    "roundScore": 0,
+    "avatar": "a2"
+   },
+   {
+    "id": "p-3",
+    "name": "Luka",
+    "isHost": false,
+    "isConnected": true,
+    "isObserver": false,
+    "answered": false,
+    "score": 0,
+    "roundScore": 0,
+    "avatar": "a3"
+   },
+   {
+    "id": "p-4",
+    "name": "Ana Maria",
+    "isHost": false,
+    "isConnected": true,
+    "isObserver": false,
+    "answered": false,
+    "score": 0,
+    "roundScore": 0,
+    "avatar": "a4"
+   },
+   {
+    "id": "p-5",
+    "name": "Giorgi",
+    "isHost": false,
+    "isConnected": true,
+    "isObserver": false,
+    "answered": false,
+    "score": 0,
+    "roundScore": 0,
+    "avatar": "a5"
+   },
+   {
+    "id": "p-6",
+    "name": "Sofia",
+    "isHost": false,
+    "isConnected": true,
+    "isObserver": false,
+    "answered": false,
+    "score": 0,
+    "roundScore": 0,
+    "avatar": "a6"
+   },
+   {
+    "id": "p-7",
+    "name": "Mariami Beridze",
+    "isHost": false,
+    "isConnected": false,
+    "isObserver": false,
+    "answered": false,
+    "score": 0,
+    "roundScore": 0,
+    "avatar": "a7"
+   },
+   {
+    "id": "p-8",
+    "name": "Dato",
+    "isHost": false,
+    "isConnected": true,
+    "isObserver": false,
+    "answered": false,
+    "score": 0,
+    "roundScore": 0,
+    "avatar": "a8"
+   }
+  ],
+  "poll": [],
+  "standings": [],
+  "rounds": [
+   {
+    "title": "Mixed",
+    "icon": "mixed"
+   },
+   {
+    "title": "Music",
+    "icon": "music"
+   },
+   {
+    "title": "History",
+    "icon": "history"
+   },
+   {
+    "title": "Geography",
+    "icon": "geography"
+   }
+  ],
+  "joinURL": "https://mytrivia.io/tv2/j/?p=4821-6f1c2a8e"
+ },
+ "lobby-12": {
+  "v": 1,
+  "partyID": "6F1C2A8E-3B7D-4E52-9A10-2C4B5D6E7F80",
+  "code": "4821",
+  "revision": 3,
+  "sentAt": 1790000000.0,
+  "language": "en",
+  "phase": "lobby",
+  "roomName": "Friday Quiz Owls",
+  "roundNumber": 0,
+  "totalRounds": 4,
+  "players": [
+   {
+    "id": "host-1",
+    "name": "Beka",
+    "isHost": true,
+    "isConnected": true,
+    "isObserver": false,
+    "answered": false,
+    "score": 0,
+    "roundScore": 0,
+    "avatar": "a1"
+   },
+   {
+    "id": "p-2",
+    "name": "Nino",
+    "isHost": false,
+    "isConnected": true,
+    "isObserver": false,
+    "answered": false,
+    "score": 0,
+    "roundScore": 0,
+    "avatar": "a2"
+   },
+   {
+    "id": "p-3",
+    "name": "Luka",
+    "isHost": false,
+    "isConnected": true,
+    "isObserver": false,
+    "answered": false,
+    "score": 0,
+    "roundScore": 0,
+    "avatar": "a3"
+   },
+   {
+    "id": "p-4",
+    "name": "Ana Maria",
+    "isHost": false,
+    "isConnected": true,
+    "isObserver": false,
+    "answered": false,
+    "score": 0,
+    "roundScore": 0,
+    "avatar": "a4"
+   },
+   {
+    "id": "p-5",
+    "name": "Giorgi",
+    "isHost": false,
+    "isConnected": true,
+    "isObserver": false,
+    "answered": false,
+    "score": 0,
+    "roundScore": 0,
+    "avatar": "a5"
+   },
+   {
+    "id": "p-6",
+    "name": "Sofia",
+    "isHost": false,
+    "isConnected": true,
+    "isObserver": false,
+    "answered": false,
+    "score": 0,
+    "roundScore": 0,
+    "avatar": "a6"
+   },
+   {
+    "id": "p-7",
+    "name": "Mariami Beridze",
+    "isHost": false,
+    "isConnected": false,
+    "isObserver": false,
+    "answered": false,
+    "score": 0,
+    "roundScore": 0,
+    "avatar": "a7"
+   },
+   {
+    "id": "p-8",
+    "name": "Dato",
+    "isHost": false,
+    "isConnected": true,
+    "isObserver": false,
+    "answered": false,
+    "score": 0,
+    "roundScore": 0,
+    "avatar": "a8"
+   },
+   {
+    "id": "p-9",
+    "name": "Elene",
+    "isHost": false,
+    "isConnected": true,
+    "isObserver": false,
+    "answered": false,
+    "score": 0,
+    "roundScore": 0,
+    "avatar": "a9"
+   },
+   {
+    "id": "p-10",
+    "name": "Saba",
+    "isHost": false,
+    "isConnected": true,
+    "isObserver": false,
+    "answered": false,
+    "score": 0,
+    "roundScore": 0,
+    "avatar": "a10"
+   },
+   {
+    "id": "p-11",
+    "name": "Tamar",
+    "isHost": false,
+    "isConnected": true,
+    "isObserver": false,
+    "answered": false,
+    "score": 0,
+    "roundScore": 0,
+    "avatar": "a1"
+   },
+   {
+    "id": "p-12",
+    "name": "Levan",
+    "isHost": false,
+    "isConnected": true,
+    "isObserver": false,
+    "answered": false,
+    "score": 0,
+    "roundScore": 0,
+    "avatar": "a2"
+   }
+  ],
+  "poll": [],
+  "standings": [],
+  "rounds": [
+   {
+    "title": "Mixed",
+    "icon": "mixed"
+   },
+   {
+    "title": "Music",
+    "icon": "music"
+   },
+   {
+    "title": "History",
+    "icon": "history"
+   },
+   {
+    "title": "Geography",
+    "icon": "geography"
+   }
+  ],
+  "joinURL": "https://mytrivia.io/tv2/j/?p=4821-6f1c2a8e"
+ }
+}

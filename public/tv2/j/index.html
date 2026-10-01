@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#3B0FA0">
+<title>Join the TV game · MyTrivia</title>
+<!-- mytrivia.io/tv2/j/?p=<code>-<party>: the TV lobby's QR. With MyTrivia installed, iOS opens the
+     app straight into the party (universal link, AASA path /tv2/j/*); this page is the fallback. -->
+<style>
+  @font-face { font-family: "Slackey"; src: url("../assets/fonts/Slackey-Regular.ttf") format("truetype"); font-display: swap; }
+  @font-face { font-family: "Google Sans"; src: url("../assets/fonts/GoogleSans-Bold.ttf") format("truetype"); font-weight: 700; font-display: swap; }
+  :root { --ink: #2A2550; --violet-deep: #6D28D9; --lip: #CBD5E1; --go: #15803D; --go-lip: #14532D; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { min-height: 100%; }
+  body {
+    font-family: "Google Sans", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; font-weight: 700;
+    color: #fff; -webkit-font-smoothing: antialiased; min-height: 100vh; min-height: 100dvh;
+    background: radial-gradient(700px 500px at 20% 0%, rgba(139, 92, 246, .55), transparent 60%), linear-gradient(180deg, #5B21B6, #3B0FA0);
+    display: flex; flex-direction: column; align-items: center; padding: max(32px, env(safe-area-inset-top)) 20px max(28px, env(safe-area-inset-bottom));
+  }
+  main { width: 100%; max-width: 420px; flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .wordmark { height: 40px; margin-top: 8px; filter: drop-shadow(0 4px 0 rgba(30, 10, 90, .35)); }
+  .art { width: 168px; margin: 44px 0 20px; filter: drop-shadow(0 14px 18px rgba(20, 5, 70, .4)); }
+  h1 { font-family: "Slackey", "Google Sans", system-ui, sans-serif; font-weight: 400; font-size: 36px; line-height: 1.1; text-shadow: 0 4px 0 rgba(30, 10, 90, .35); }
+  :lang(ka) h1 { font-family: "Google Sans", system-ui, sans-serif; font-weight: 700; }
+  p { margin-top: 14px; font-size: 19px; line-height: 1.4; color: #fff; }
+  .actions { width: 100%; margin-top: auto; padding-top: 36px; display: flex; flex-direction: column; gap: 16px; }
+  .btn { display: flex; align-items: center; justify-content: center; min-height: 60px; border-radius: 30px; font-size: 20px; text-decoration: none; }
+  .btn.go { background: var(--go); color: #fff; box-shadow: 0 6px 0 var(--go-lip); }
+  .btn.open { background: #fff; color: var(--violet-deep); box-shadow: 0 6px 0 var(--lip); }
+  [hidden] { display: none !important; }
+  .btn:active { transform: translateY(4px); box-shadow: none; }
+</style>
+</head>
+<body>
+<main>
+  <img class="wordmark" src="../assets/art/wordmark.svg" alt="MyTrivia">
+  <img class="art" src="../assets/art/retro-tv-3d.png" alt="">
+  <h1 id="title">Join the TV game</h1>
+  <p id="body">Get MyTrivia, then scan the code on the TV again — you'll join straight away.</p>
+  <div class="actions">
+    <a class="btn open" id="open" hidden>Open in MyTrivia</a>
+    <a class="btn go" id="get" href="https://apps.apple.com/app/id6801567649">Get MyTrivia</a>
+  </div>
+</main>
+<script>
+(function () {
+  'use strict';
+  var S = {
+    en: ['Join the TV game', 'Get MyTrivia, then scan the code on the TV again — you’ll join straight away.', 'Open in MyTrivia', 'Get MyTrivia'],
+    ka: ['შეუერთდი TV თამაშს', 'ჩამოტვირთე MyTrivia და ხელახლა დაასკანერე კოდი ტელევიზორზე — მაშინვე შემოხვალ.', 'გახსენი MyTrivia-ში', 'ჩამოტვირთე MyTrivia'],
+    de: ['Mach beim TV-Spiel mit', 'Lade MyTrivia und scanne den Code auf dem TV noch einmal – du bist sofort dabei.', 'In MyTrivia öffnen', 'MyTrivia laden'],
+    es: ['Únete al juego en la TV', 'Descarga MyTrivia y vuelve a escanear el código de la TV: entrarás al momento.', 'Abrir en MyTrivia', 'Descargar MyTrivia'],
+    fr: ['Rejoins la partie sur la TV', 'Installe MyTrivia, puis scanne à nouveau le code de la TV : tu rejoins tout de suite.', 'Ouvrir dans MyTrivia', 'Obtenir MyTrivia'],
+    it: ['Unisciti al gioco in TV', 'Scarica MyTrivia, poi inquadra di nuovo il codice sulla TV: entri subito.', 'Apri in MyTrivia', 'Scarica MyTrivia'],
+    pt: ['Entre no jogo da TV', 'Baixe o MyTrivia e escaneie o código da TV de novo — você entra na hora.', 'Abrir no MyTrivia', 'Baixar o MyTrivia']
+  };
+  var q = new URLSearchParams(location.search);
+  var langs = [q.get('lang')].concat(navigator.languages || [navigator.language || 'en']);
+  var lang = 'en';
+  for (var i = 0; i < langs.length; i++) { var l = String(langs[i] || '').toLowerCase().slice(0, 2); if (S[l]) { lang = l; break; } }
+  var s = S[lang];
+  document.documentElement.lang = lang;
+  document.title = s[0] + ' · MyTrivia';
+  document.getElementById('title').textContent = s[0];
+  document.getElementById('body').textContent = s[1];
+  var open = document.getElementById('open');
+  open.textContent = s[2];
+  document.getElementById('get').textContent = s[3];
+  var p = (q.get('p') || '').toLowerCase();
+  if (/^\d{4}-[0-9a-f]{8}$/.test(p)) { open.href = 'mytrivia://tv2/j/?p=' + p; open.hidden = false; }
+})();
+</script>
+</body>
+</html>

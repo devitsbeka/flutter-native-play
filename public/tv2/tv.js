@@ -66,6 +66,14 @@
     const [c1, c2] = PALETTE[hash(p.id || p.name) % PALETTE.length];
     return `<span class="av ${cls || ''}" style="--c1:${c1};--c2:${c2}">${avatarInner(p)}</span>`;
   }
+  // The QR's link: the host's `joinURL`, else built from code + party (older payloads).
+  function joinURL(s) {
+    if (typeof s.joinURL === 'string' && /^https:\/\//.test(s.joinURL)) return s.joinURL;
+    const c = String(s.code || code || ''), pid = String(s.partyID || '').replace(/-/g, '').toLowerCase().slice(0, 8);
+    return /^\d{4}$/.test(c) && pid ? `https://mytrivia.io/tv2/j/?p=${c}-${pid}` : '';
+  }
+  const ROUND_ICONS = ['mixed', 'music', 'movies', 'history', 'art', 'science', 'anime', 'fashion', 'ai', 'memes', 'sports', 'tv', 'geography', 'star'];
+  const roundIcon = (k) => (ROUND_ICONS.indexOf(k) >= 0 ? k : 'star');
   const digits = (code) => `<div class="digits">${Array.from(code).map((d) => `<div class="digit">${esc(d)}</div>`).join('')}</div>`;
   const wordmark = '<img class="wordmark" src="assets/art/wordmark.svg" alt="MyTrivia">';
   const RING_R = 56, RING_C = 2 * Math.PI * RING_R;
@@ -154,15 +162,10 @@
       <div class="pair">
         <div>
           <h1 class="display">${esc(t('pairTitle'))}</h1>
-          <ol class="steps">
-            <li><span class="n">1</span><span>${esc(t('step1'))}</span></li>
-            <li><span class="n">2</span><span>${t('step2') /* trusted: our own strings with <br>/<small> */}</span></li>
-            <li class="hot"><span class="n">3</span><span>${esc(t('step3'))}</span></li>
-          </ol>
+          <p class="pairhow">${esc(t('pairHow'))}</p>
         </div>
         <div class="card codecard">
           <img class="tvart" src="assets/art/retro-tv-3d.png" alt="">
-          <div class="label">${esc(t('step3'))}</div>
           ${digits(code)}
           <div class="wait">${connected ? esc(t('connected')) : esc(t('waitingHost'))} <span class="dots"><i></i><i></i><i></i></span></div>
         </div>
@@ -186,25 +189,32 @@
     let html = '';
     switch (s.phase) {
       case 'lobby': {
-        const connected = (s.players || []).filter((p) => p.isConnected);
-        const chips = (s.players || []).slice(0, 12).map((p) => {
+        // Owner (2026-10-01): room name, a QR to join (players never type a code),
+        // the rounds with their 3D icons, and every player (≤12) in a grid sized by count.
+        const all = (s.players || []).slice(0, 12);
+        const size = all.length <= 4 ? 'l' : all.length <= 8 ? 'm' : 's';
+        const tiles = all.map((p) => {
           const isNew = !seenPlayers.has(p.id); seenPlayers.add(p.id);
-          return `<div class="chip ${isNew ? 'new' : ''} ${p.isConnected ? '' : 'off'}">${avatar(p)}<span class="nm">${esc(p.name)}</span>${p.isHost ? '<img class="crown" src="assets/art/crown-3d.png" alt="">' : ''}</div>`;
+          return `<div class="ptile ${isNew ? 'new' : ''} ${p.isConnected ? '' : 'off'}">${avatar(p)}<span class="nm">${esc(p.name)}</span>${p.isHost ? '<img class="crown" src="assets/art/crown-3d.png" alt="">' : ''}</div>`;
         }).join('');
+        const rounds = (s.rounds || []).slice(0, 5).map((r, i) =>
+          `<div class="rchip" style="animation-delay:${i * 0.06}s"><img src="assets/categories/${roundIcon(r.icon)}.png" alt=""><span>${esc(r.title)}</span></div>`).join('');
+        const alone = all.filter((p) => p.isConnected).length < 2;
         const counting = s.phaseEndsAt && s.phaseEndsAt > hostNow();
+        const url = joinURL(s);
         html = `
-          <div class="topbar">${wordmark}${s.roomName ? `<span class="pill">${esc(s.roomName)}</span>` : ''}</div>
+          <div class="topbar">${wordmark}</div>
           <div class="lobby">
-            <div>
-              <h1 class="display">${esc(t('lobbyTitle'))}</h1>
-              <div class="how">${t('lobbyHow')}</div>
-              ${digits(s.code || code)}
-              <div class="status">${counting ? ring('sm') + `<span class="gold">${esc(t('startingSoon'))}</span>` : `<span class="muted">${esc(t('waitingPlayers'))}</span> <span class="dots"><i></i><i></i><i></i></span>`}</div>
+            <div class="joinqr">
+              <div class="card qrcard">${url && window.MTQR ? MTQR.svg(url, { quiet: 3 }) : ''}</div>
+              <div class="scan display">${esc(t('scanToJoin'))}</div>
             </div>
-            <div class="roster">
-              <h2>${esc(t('players', { n: connected.length }))}</h2>
-              <div class="grid">${chips}</div>
-              ${(s.players || []).length > 12 ? `<div class="more">+${(s.players || []).length - 12}</div>` : ''}
+            <div class="lobbymain">
+              <h1 class="display">${esc(s.roomName || t('lobbyTitle'))}</h1>
+              ${rounds ? `<div><div class="sect">${esc(t('rounds'))}</div><div class="rounds">${rounds}</div></div>` : ''}
+              <div><div class="sect">${esc(t('players', { n: all.filter((p) => p.isConnected).length }))}</div>
+              <div class="pgrid ${size}">${tiles}</div></div>
+              <div class="status">${counting ? ring('sm') + `<span class="gold">${esc(t('startingSoon'))}</span>` : alone ? `<span>${esc(t('waitingPlayers'))}</span> <span class="dots"><i></i><i></i><i></i></span>` : ''}</div>
             </div>
           </div>`;
         break;
@@ -565,7 +575,7 @@
 
   // ?fixture=<name>  draws one example from fixtures/tv-state.json (the shared contract's samples).
   async function fixture(name) {
-    const all = await (await fetch('fixtures/tv-state.json', { cache: 'no-store' })).json();
+    const all = await (await fetch(`fixtures/${/^[a-z-]+$/.test(params.get('file') || '') ? params.get('file') : 'tv-state'}.json`, { cache: 'no-store' })).json();
     const s = all[name]; if (!s) return;
     const shift = Date.now() / 1000 - s.sentAt;
     ['sentAt', 'phaseStartsAt', 'phaseEndsAt'].forEach((k) => { if (typeof s[k] === 'number') s[k] += shift; });
