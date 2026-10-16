@@ -3,11 +3,11 @@
 import { ka, type KaTranslations } from './ka';
 import { en } from './en';
 
-import { es } from './es';
-import { fr } from './fr';
-import { de } from './de';
-import { it } from './it';
-import { pt } from './pt';
+import { es, refreshEnglishFallback as refreshEsEnglish } from './es';
+import { fr, refreshEnglishFallback as refreshFrEnglish } from './fr';
+import { de, refreshEnglishFallback as refreshDeEnglish } from './de';
+import { it, refreshEnglishFallback as refreshItEnglish } from './it';
+import { pt, refreshEnglishFallback as refreshPtEnglish } from './pt';
 
 // All available translations
 export const translations: Record<string, KaTranslations> = {
@@ -76,12 +76,23 @@ export function subscribeTranslationUpdates(listener: () => void): () => void {
 }
 
 if (import.meta.hot) {
+  const englishRefreshers = { es: refreshEsEnglish, fr: refreshFrEnglish, de: refreshDeEnglish, it: refreshItEnglish, pt: refreshPtEnglish };
   import.meta.hot.accept(['./ka', './en', './es', './fr', './de', './it', './pt'], (modules) => {
-    const updates = [
+    const updates: (readonly [string, KaTranslations | undefined])[] = [
       ['ka', modules[0]?.ka], ['en', modules[1]?.en],
       ['es', modules[2]?.es], ['fr', modules[3]?.fr],
       ['de', modules[4]?.de], ['it', modules[5]?.it], ['pt', modules[6]?.pt],
-    ] as const;
+    ];
+    if (modules[2]?.refreshEnglishFallback) englishRefreshers.es = modules[2].refreshEnglishFallback;
+    if (modules[3]?.refreshEnglishFallback) englishRefreshers.fr = modules[3].refreshEnglishFallback;
+    if (modules[4]?.refreshEnglishFallback) englishRefreshers.de = modules[4].refreshEnglishFallback;
+    if (modules[5]?.refreshEnglishFallback) englishRefreshers.it = modules[5].refreshEnglishFallback;
+    if (modules[6]?.refreshEnglishFallback) englishRefreshers.pt = modules[6].refreshEnglishFallback;
+    if (modules[1]?.en) {
+      for (const [language, rebuild] of Object.entries(englishRefreshers)) {
+        updates.push([language, rebuild(modules[1].en)]);
+      }
+    }
     let updated = false;
     for (const [language, replacement] of updates) {
       if (!replacement) continue;

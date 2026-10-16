@@ -2,7 +2,7 @@
 import type { KaTranslations } from './ka';
 import { en } from './en';
 
-export const pt: KaTranslations = {
+const buildLocale = (en: KaTranslations): KaTranslations => ({
   ...en,
   common: {
     backToTop: "Voltar ao topo",
@@ -4687,4 +4687,18 @@ export const pt: KaTranslations = {
     coinsDescMedium: "Bastante para power-ups e extras",
     dailyCapReached: "Limite diário de recompensas atingido — volte amanhã",
   },
-};
+});
+
+export const pt: KaTranslations = buildLocale(en);
+
+// Re-evaluate the exact original spread/override expression without fetching this
+// large module again when only its English dependency changes.
+export function refreshEnglishFallback(english: KaTranslations): KaTranslations {
+  const next = buildLocale(english);
+  for (const key of Object.keys(pt)) if (!(key in next)) delete (pt as unknown as Record<string, unknown>)[key];
+  Object.assign(pt, next);
+  return pt;
+}
+
+if (import.meta.hot) import.meta.hot.accept('./en', () => {});
+
