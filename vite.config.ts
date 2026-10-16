@@ -3,6 +3,7 @@ import { defineConfig, type Plugin } from "vite";
 import { gzipSync, constants } from "node:zlib";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
+import localeDeltaPlugin from "./tools/spark-locale-delta";
 
 // Dev modules otherwise cross the remote preview tunnel as uncompressed source
 // plus inline maps. Compress only complete textual module responses; streaming
@@ -149,6 +150,7 @@ export default defineConfig(({ mode }) => ({
     __BUILD_ID__: JSON.stringify(BUILD_ID),
   },
   plugins: [
+    localeDeltaPlugin(),
     devModuleCompression(),
     react(),
     requireBackendEnv(),

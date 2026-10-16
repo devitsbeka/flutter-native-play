@@ -77,6 +77,24 @@ export function subscribeTranslationUpdates(listener: () => void): () => void {
 
 if (import.meta.hot) {
   const englishRefreshers = { es: refreshEsEnglish, fr: refreshFrEnglish, de: refreshDeEnglish, it: refreshItEnglish, pt: refreshPtEnglish };
+
+  // Dev-only: the Vite plugin has verified the actual source write and exact dictionary path.
+  const dictionaryUpdated = (event: Event) => {
+    const detail = (event as CustomEvent<{ exportName?: unknown; hash?: unknown; dictionary?: unknown }>).detail;
+    if (!detail || typeof detail.exportName !== 'string' || !Object.prototype.hasOwnProperty.call(translations, detail.exportName) || typeof detail.hash !== 'string' || !/^[a-f0-9]{64}$/.test(detail.hash) || !detail.dictionary || typeof detail.dictionary !== 'object' || Array.isArray(detail.dictionary)) return;
+    const replace = (language: string, replacement: KaTranslations) => {
+      const current = translations[language] as unknown as Record<string, unknown>;
+      for (const key of Object.keys(current)) if (!Object.prototype.hasOwnProperty.call(replacement, key)) delete current[key];
+      Object.assign(current, replacement);
+    };
+    replace(detail.exportName, detail.dictionary as KaTranslations);
+    if (detail.exportName === 'en') {
+      for (const [language, rebuild] of Object.entries(englishRefreshers)) replace(language, rebuild(translations.en));
+    }
+    for (const listener of translationUpdateListeners) listener();
+  };
+  window.addEventListener('spark:dictionary-updated', dictionaryUpdated);
+  import.meta.hot.dispose(() => window.removeEventListener('spark:dictionary-updated', dictionaryUpdated));
   import.meta.hot.accept(['./ka', './en', './es', './fr', './de', './it', './pt'], (modules) => {
     const updates: (readonly [string, KaTranslations | undefined])[] = [
       ['ka', modules[0]?.ka], ['en', modules[1]?.en],
