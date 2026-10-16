@@ -1,7 +1,70 @@
 /// <reference types="vitest" />
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
+import { gzipSync, constants } from "node:zlib";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
+
+// Dev modules otherwise cross the remote preview tunnel as uncompressed source
+// plus inline maps. Compress only complete textual module responses; streaming
+// documents, upgrades and the production build keep their existing behavior.
+function devModuleCompression(): Plugin {
+  return {
+    name: "dev-module-compression",
+    apply: "serve",
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        if (req.method !== "GET" || req.headers.range || req.headers.upgrade) return next();
+        const accepts = String(req.headers["accept-encoding"] ?? "").split(",").map((part) => {
+          const [name, ...parameters] = part.trim().toLowerCase().split(";");
+          const quality = parameters.find((p) => p.trim().startsWith("q="));
+          const q = quality ? Number(quality.trim().slice(2)) : 1;
+          return { name: name.trim(), q: Number.isFinite(q) && q >= 0 && q <= 1 ? q : 0 };
+        });
+        const gzipQuality = accepts.find((item) => item.name === "gzip")?.q
+          ?? accepts.find((item) => item.name === "*")?.q ?? 0;
+        const originalWrite = res.write;
+        const originalEnd = res.end;
+        let streamed = false;
+        res.write = function (...args: any[]) {
+          streamed = true;
+          return originalWrite.apply(res, args as any);
+        } as typeof res.write;
+        res.end = function (...args: any[]) {
+          res.write = originalWrite;
+          res.end = originalEnd;
+          const [chunk, encoding, callback] = args;
+          const type = String(res.getHeader("content-type") ?? "").toLowerCase();
+          const textualModule = /^(?:application|text)\/(?:javascript|ecmascript|json)(?:\s*;|$)/.test(type)
+            || /^text\/css(?:\s*;|$)/.test(type);
+          if (streamed || res.headersSent || res.statusCode !== 200
+            || !textualModule || res.getHeader("content-encoding")
+            || /(?:^|,)\s*no-transform\b/i.test(String(res.getHeader("cache-control") ?? ""))
+            || !(typeof chunk === "string" || Buffer.isBuffer(chunk) || chunk instanceof Uint8Array)) {
+            return originalEnd.apply(res, args as any);
+          }
+          const vary = String(res.getHeader("vary") ?? "");
+          if (vary !== "*" && !vary.split(",").some((v) => v.trim().toLowerCase() === "accept-encoding")) {
+            res.setHeader("vary", vary ? `${vary}, Accept-Encoding` : "Accept-Encoding");
+          }
+          if (gzipQuality <= 0) return originalEnd.apply(res, args as any);
+          const body = typeof chunk === "string" ? Buffer.from(chunk, typeof encoding === "string" ? encoding as BufferEncoding : undefined) : Buffer.from(chunk);
+          let compressed: Buffer;
+          try { compressed = gzipSync(body, { level: constants.Z_BEST_SPEED }); }
+          catch { return originalEnd.apply(res, args as any); }
+          // Keep identity when gzip adds bytes; both variants still advertise Vary.
+          if (compressed.length >= body.length) return originalEnd.apply(res, args as any);
+          res.removeHeader("content-length");
+          res.setHeader("content-encoding", "gzip");
+          const etag = res.getHeader("etag");
+          if (typeof etag === "string" && !etag.startsWith("W/")) res.setHeader("etag", `W/${etag}`);
+          const done = typeof encoding === "function" ? encoding : callback;
+          return originalEnd.call(res, compressed, done);
+        } as typeof res.end;
+        next();
+      });
+    },
+  };
+}
 
 // One id per build. It is compiled into the bundle AND written to
 // dist/version.json, which lets a long-lived tab ask "is the build I am
@@ -86,6 +149,7 @@ export default defineConfig(({ mode }) => ({
     __BUILD_ID__: JSON.stringify(BUILD_ID),
   },
   plugins: [
+    devModuleCompression(),
     react(),
     requireBackendEnv(),
     buildVersionFile(),
