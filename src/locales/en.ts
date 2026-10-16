@@ -2101,7 +2101,7 @@ export const en: KaTranslations = {
     landingOrEmail: "or enter your email",
     landingOnlyOnMyTrivia: "Only on MyTrivia",
     landingFeature1Title: "Your trivia",
-    landingFeature1Desc: "Create your character and build your world.",
+    landingFeature1Desc: "Create your character and your own world.",
     landingFeature2Title: "100+ categories",
     landingFeature2Desc: "Thousands of questions about everything you love.",
     landingFeature3Title: "Rankings and prizes",
