@@ -158,7 +158,7 @@ export function DesktopGuestLanding({ onApple, onGoogle, onEmailContinue }: Desk
             .relative, so a passed-in `absolute` loses and the button stays in
             flow. With one button that happened to land in the right place;
             with two it compounds and the second drifts. */}
-        <div className="absolute left-[19px] top-[240px] w-[260px]">
+        <div className="absolute left-[19px] top-[228px] w-[260px]">
           <AppleSignInButton onClick={onApple} className="w-full" />
         </div>
         {/* Google (612:1981) */}
