@@ -63,3 +63,34 @@ export const CONTENT_LANGUAGE = 'ka';
 // Re-export types
 export type { KaTranslations };
 export { ka, en, es, fr, de, it, pt };
+
+
+// A locale edit updates the existing dictionaries instead of invalidating every
+// component that imports the language context. Runtime language state stays put.
+const translationUpdateListeners = new Set<() => void>();
+
+export function subscribeTranslationUpdates(listener: () => void): () => void {
+  if (!import.meta.hot) return () => {};
+  translationUpdateListeners.add(listener);
+  return () => { translationUpdateListeners.delete(listener); };
+}
+
+if (import.meta.hot) {
+  import.meta.hot.accept(['./ka', './en', './es', './fr', './de', './it', './pt'], (modules) => {
+    const updates = [
+      ['ka', modules[0]?.ka], ['en', modules[1]?.en],
+      ['es', modules[2]?.es], ['fr', modules[3]?.fr],
+      ['de', modules[4]?.de], ['it', modules[5]?.it], ['pt', modules[6]?.pt],
+    ] as const;
+    let updated = false;
+    for (const [language, replacement] of updates) {
+      if (!replacement) continue;
+      const current = translations[language] as unknown as Record<string, unknown>;
+      // Keep root identity shared by translations and the public named exports.
+      for (const key of Object.keys(current)) if (!(key in replacement)) delete current[key];
+      Object.assign(current, replacement);
+      updated = true;
+    }
+    if (updated) for (const listener of translationUpdateListeners) listener();
+  });
+}

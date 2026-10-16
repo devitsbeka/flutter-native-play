@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useCallback, useMemo, useState, useEffect } from 'react';
-import { translations, LANGUAGES, DEFAULT_LANGUAGE, getLanguage, getRegionForLanguage } from '@/locales';
+import { translations, LANGUAGES, DEFAULT_LANGUAGE, getLanguage, getRegionForLanguage, subscribeTranslationUpdates } from '@/locales';
 import { languageOverride } from '@/utils/languageOverride';
 import { stripEmojisExceptFlags } from '@/utils/stripEmojisExceptFlags';
 import { supabase } from '@/integrations/supabase/client';
@@ -94,6 +94,11 @@ function translateWithFallback(lang: string, key: string, params?: Record<string
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguageState] = useState<string>(getStoredLanguage);
 
+  const [translationRevision, setTranslationRevision] = useState(0);
+  useEffect(() => subscribeTranslationUpdates(() => {
+    setTranslationRevision((revision) => revision + 1);
+  }), []);
+
   // Compute region based on language
   const region = useMemo(() => getRegionForLanguage(language), [language]);
 
@@ -103,7 +108,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   // Translation function
   const t = useCallback((key: string, params?: Record<string, string | number>): string => {
     return translateWithFallback(language, key, params);
-  }, [language]);
+  }, [language, translationRevision]);
 
   // The landscape-lock overlay is pure CSS (body::after in index.css), so it
   // cannot call t() — its text is handed over through a custom property. The
@@ -113,7 +118,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       "--rotate-to-portrait-message",
       JSON.stringify(translateWithFallback(language, "extra.rotateToPortrait")),
     );
-  }, [language]);
+  }, [language, translationRevision]);
 
   // Persist language choice and dispatch storage event for other hooks
   const setLanguage = useCallback((lang: string) => {
