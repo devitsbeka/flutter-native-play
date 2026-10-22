@@ -2093,7 +2093,7 @@ export const en: KaTranslations = {
     landingPlayersCount: "100,000+ players",
     landingJoinFreeHeading: "Join\nfor free",
     landingJoinFree: "Join for free",
-    landingJoinSubtitle: "Join thousands of players worldwide",
+    landingJoinSubtitle: "Join thousands of trivia players worldwide",
     notFoundTitle: "Page not found",
     notFoundBody: "This page does not exist or has moved.",
     notFoundHome: "Back to home",
