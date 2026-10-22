@@ -2090,7 +2090,7 @@ export const en: KaTranslations = {
     guestTermsAnd: "and",
     guestTermsConditions: "Conditions.",
     // Desktop logged-out landing (Figma 612:1888)
-    landingPlayersCount: "100,000+ players",
+    landingPlayersCount: "Thousands of trivia players",
     landingJoinFreeHeading: "Join\nfor free",
     landingJoinFree: "Join for free",
     landingJoinSubtitle: "Join thousands of trivia players worldwide",
